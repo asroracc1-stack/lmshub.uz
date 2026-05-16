@@ -108,6 +108,19 @@ export function useUpcomingEvents() {
   });
 }
 
+// 3.1 🔴 ETISHMAYOTGAN HOOK: Teacher Dashboard Stats Hook (Vercel Build xatosini tuzatish)
+export function useTeacherDashboard() {
+  return useQuery({
+    queryKey: ["teacher-dashboard-stats"],
+    queryFn: async () => {
+      const response = await api.get("/teacher/dashboard/summary");
+      return response.data;
+    },
+    staleTime: 5 * 60 * 1000,
+    retry: 0,
+  });
+}
+
 // 4. Quick Action Mutations
 export function useDashboardMutations() {
   const queryClient = useQueryClient();
@@ -138,7 +151,8 @@ export function useDashboardMutations() {
     onSuccess: (data) => {
       const url = window.URL.createObjectURL(new Blob([data]));
       const link = document.createElement("a");
-      link.href = url;
+      const linkHref = url;
+      link.href = linkHref;
       link.setAttribute("download", "organization-report.pdf");
       document.body.appendChild(link);
       link.click();
@@ -191,6 +205,10 @@ export function usePrefetchHelper() {
     if (to === "/admin/dashboard") {
       await prefetch(["admin-dashboard-stats"], "/admin/dashboard/summary");
       await prefetch(["upcoming-events"], "/admin/dashboard/events/upcoming");
+    }
+    // O'qituvchi navigatsiyasi uchun prefetch qo'shildi
+    if (to === "/teacher/dashboard") {
+      await prefetch(["teacher-dashboard-stats"], "/teacher/dashboard/summary");
     }
   };
 
