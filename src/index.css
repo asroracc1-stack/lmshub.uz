@@ -79,11 +79,16 @@
 }
 
 @layer base {
-  * { @apply border-border; }
+  * { 
+    @apply border-border; 
+    transition: background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1), 
+                color 0.5s cubic-bezier(0.4, 0, 0.2, 1), 
+                border-color 0.5s cubic-bezier(0.4, 0, 0.2, 1), 
+                box-shadow 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
   body { 
-    @apply bg-background text-foreground antialiased;
+    @apply bg-background text-foreground antialiased selection:bg-primary/20;
     font-feature-settings: "ss01", "cv11", "rsjt";
-    transition: background-color 0.5s ease, color 0.5s ease;
   }
 }
 

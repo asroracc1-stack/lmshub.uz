@@ -93,7 +93,6 @@ export const getSidebarRoutes = (role: string, t: TFunction, options: { ielts?: 
     case "user":
       return [
         { to: "/user/dashboard", label: "Dashboard", icon: LayoutDashboard },
-        { to: "/user/profile", label: "Hisob", icon: User },
         { to: "/user/subscriptions", label: "Obunalar", icon: Package },
         { to: "/user/speaking", label: "AI Speaking", icon: Mic },
         { to: "/user/achievements", label: "Yutuqlar", icon: Award },

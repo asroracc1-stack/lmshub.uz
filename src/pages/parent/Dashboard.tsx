@@ -38,7 +38,7 @@ const GRADIENT_BY_IDX = [
 ];
 
 export default function ParentDashboard() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
@@ -118,7 +118,7 @@ export default function ParentDashboard() {
             </div>
             <div>
               <h1 className="font-display text-2xl font-bold">
-                Xush kelibsiz, {user?.name || "Ota-ona"} 👋
+                Xush kelibsiz, {profile?.full_name || profile?.username || "Ota-ona"} 👋
               </h1>
               <p className="text-white/80 text-sm mt-0.5">
                 {children.length > 0

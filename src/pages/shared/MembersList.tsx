@@ -24,7 +24,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { api } from "@/lib/axios";
-import { Search, Plus, Pencil, Trash2, KeyRound, Loader2, UserCircle, Phone, Mail, BookOpen } from "lucide-react";
+import { Search, Plus, Pencil, Trash2, KeyRound, Loader2, UserCircle, Phone, Mail, BookOpen, Send, Copy, Hash } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import TigerLoader from "@/components/TigerLoader";
@@ -39,10 +39,11 @@ interface Member {
   is_active: boolean;
   role: string;
   subject?: string | null;
+  parent_telegram_username?: string | null;
 }
 
 interface Props {
-  role: "teacher" | "student";
+  role: "teacher" | "student" | "administrator" | "parent";
   title: string;
   description: string;
   canManage?: boolean;
@@ -60,6 +61,7 @@ const schema = z.object({
   email: z.string().trim().email("Noto'g'ri email").or(z.literal("")),
   phone_number: z.string().trim().max(30).or(z.literal("")),
   subject: z.string().trim().max(100).optional(),
+  parent_telegram_username: z.string().trim().max(100).optional(),
 });
 
 export default function MembersList({ role, title, description, canManage }: Props) {
@@ -78,6 +80,7 @@ export default function MembersList({ role, title, description, canManage }: Pro
     email: "",
     phone_number: "",
     subject: "",
+    parent_telegram_username: "",
   });
   const [newPwd, setNewPwd] = useState("");
 
@@ -107,6 +110,7 @@ export default function MembersList({ role, title, description, canManage }: Pro
       email: "", 
       phone_number: "",
       subject: "",
+      parent_telegram_username: "",
     });
     setEditing(null);
   };
@@ -125,6 +129,7 @@ export default function MembersList({ role, title, description, canManage }: Pro
       email: m.email || "",
       phone_number: m.phone_number || "",
       subject: m.subject || "",
+      parent_telegram_username: m.parent_telegram_username || "",
     });
     setDialogOpen(true);
   };
@@ -187,13 +192,14 @@ export default function MembersList({ role, title, description, canManage }: Pro
     setSubmitting(true);
     try {
       await api.post(`/admin/users/${pwdTarget.id}/password`, {
-        password: newPwd 
+        password: newPwd
       });
       toast.success("Parol yangilandi! 🔐");
       setPwdTarget(null);
       setNewPwd("");
     } catch (error) {
       console.error("Reset pass error:", error);
+      toast.error("Parolni yangilashda xatolik");
     } finally {
       setSubmitting(false);
     }
@@ -318,6 +324,25 @@ export default function MembersList({ role, title, description, canManage }: Pro
                           <span>{m.phone_number}</span>
                         </div>
                       )}
+                      {role === "student" && m.parent_telegram_username && (
+                        <div className="flex items-center gap-2 text-xs text-primary font-medium">
+                          <Send className="h-3 w-3 shrink-0" />
+                          <span>Ota-ona: {m.parent_telegram_username.startsWith('@') ? m.parent_telegram_username : `@${m.parent_telegram_username}`}</span>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-2 pt-1">
+                        <div 
+                          onClick={() => {
+                            navigator.clipboard.writeText(m.id);
+                            toast.success("ID nusxalandi");
+                          }}
+                          className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-slate-100 dark:bg-white/5 text-[10px] text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors cursor-pointer border border-transparent hover:border-primary/20"
+                        >
+                          <Hash className="h-2.5 w-2.5" />
+                          <span className="font-mono">{m.id.substring(0, 8)}...</span>
+                          <Copy className="h-2.5 w-2.5 ml-1" />
+                        </div>
+                      </div>
                     </div>
 
                     {canManage && (
@@ -364,7 +389,10 @@ export default function MembersList({ role, title, description, canManage }: Pro
               {editing ? "Ma'lumotlarni tahrirlash" : "Yangi a'zo qo'shish"}
             </DialogTitle>
             <DialogDescription id="member-dialog-description">
-              {role === "teacher" ? "O'qituvchi" : "Talaba"} ma'lumotlarini to'g'ri va to'liq kiriting.
+              {role === "teacher" ? "O'qituvchi"
+               : role === "administrator" ? "Administrator"
+               : role === "parent" ? "Ota-ona"
+               : "Talaba"} ma'lumotlarini to'g'ri va to'liq kiriting.
             </DialogDescription>
           </DialogHeader>
           
@@ -439,6 +467,26 @@ export default function MembersList({ role, title, description, canManage }: Pro
                   />
                 </div>
               </div>
+
+              {role === "student" && (
+                <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-white/5">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-primary">
+                    Ota-ona Telegram Username
+                  </Label>
+                  <div className="relative">
+                    <Send className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-primary/50" />
+                    <Input
+                      value={form.parent_telegram_username}
+                      onChange={(e) => setForm({ ...form, parent_telegram_username: e.target.value })}
+                      placeholder="@username"
+                      className="rounded-lg h-11 pl-10 border-primary/20 focus:border-primary"
+                    />
+                  </div>
+                  <p className="text-[10px] text-muted-foreground italic">
+                    * Ushbu telegram orqali ota-onaga avtomatik xabarnomalar yuboriladi.
+                  </p>
+                </div>
+              )}
             </div>
             
             <DialogFooter className="p-8 pt-4 border-t border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-slate-900/80 backdrop-blur-md">

@@ -66,9 +66,9 @@ function SectionCard({
       whileInView="show"
       viewport={{ once: true, margin: "-60px" }}
       variants={fadeUp}
-      className="group relative rounded-2xl p-[1px] bg-gradient-to-br from-primary/30 via-border/40 to-secondary/30 hover:from-primary/60 hover:to-secondary/60 transition-smooth"
+      className="group relative rounded-2xl p-[1px] bg-gradient-to-br from-primary/30 via-border/40 to-secondary/30 hover:from-primary/60 hover:to-secondary/60 transition-all duration-500"
     >
-      <div className="rounded-2xl glass p-6 md:p-7 h-full">
+      <div className="rounded-2xl glass dark:bg-slate-900/50 dark:border-slate-800 p-6 md:p-7 h-full transition-all duration-500">
         <div className="flex items-start gap-3 mb-5">
           <div className="h-10 w-10 rounded-xl bg-gradient-primary grid place-items-center shadow-glow shrink-0">
             <Icon className="h-5 w-5 text-primary-foreground" />
@@ -204,7 +204,7 @@ export default function Profile() {
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="text-center space-y-2"
+          className="text-center space-y-2 transition-all duration-500"
         >
           <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight text-slate-900 dark:text-white">
             Profil <span className="text-emerald-500">sozlamalari</span>
@@ -219,9 +219,9 @@ export default function Profile() {
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.05 }}
-          className="relative rounded-3xl p-[1.5px] bg-gradient-to-br from-primary/60 via-secondary/40 to-accent/60 shadow-elegant"
+          className="relative rounded-3xl p-[1.5px] bg-gradient-to-br from-primary/60 via-secondary/40 to-accent/60 shadow-elegant transition-all duration-500"
         >
-          <div className="rounded-3xl glass p-6 md:p-8">
+          <div className="rounded-3xl glass dark:bg-slate-900/50 dark:border-slate-800 p-6 md:p-8">
             <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
               {/* Simplified Avatar with single elegant glow */}
               <div className="relative group">
@@ -272,7 +272,7 @@ export default function Profile() {
                 <Label className="text-xs font-bold text-slate-600 dark:text-slate-300">F.I.O</Label>
                 <Input
                   {...profileForm.register("full_name")}
-                  className="h-11 rounded-xl bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white"
+                  className="h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 transition-all duration-500"
                 />
                 {profileForm.formState.errors.full_name && (
                   <p className="text-[10px] text-destructive">{profileForm.formState.errors.full_name.message}</p>
@@ -283,7 +283,7 @@ export default function Profile() {
                 <Input
                   type="email"
                   {...profileForm.register("email")}
-                  className="h-11 rounded-xl bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white"
+                  className="h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 transition-all duration-500"
                 />
                 {profileForm.formState.errors.email && (
                   <p className="text-[10px] text-destructive">{profileForm.formState.errors.email.message}</p>
@@ -294,7 +294,7 @@ export default function Profile() {
                 <Input
                   {...profileForm.register("phone")}
                   placeholder="+998..."
-                  className="h-11 rounded-xl bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white"
+                  className="h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 transition-all duration-500"
                 />
                 {profileForm.formState.errors.phone && (
                   <p className="text-[10px] text-destructive">{profileForm.formState.errors.phone.message}</p>
@@ -310,7 +310,7 @@ export default function Profile() {
             <form onSubmit={usernameForm.handleSubmit(onUpdateUsername)} className="grid gap-3">
               <Input
                 {...usernameForm.register("username")}
-                className="font-mono h-11 rounded-xl bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white"
+                className="font-mono h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 transition-all duration-500"
               />
               {usernameForm.formState.errors.username && (
                 <p className="text-[10px] text-destructive">{usernameForm.formState.errors.username.message}</p>
@@ -338,7 +338,7 @@ export default function Profile() {
                     type="password"
                     {...passwordForm.register("current")}
                     autoComplete="new-password"
-                    className="h-11 rounded-xl bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white"
+                    className="h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 transition-all duration-500"
                   />
                   {passwordForm.formState.errors.current && (
                     <p className="text-[10px] text-destructive">{passwordForm.formState.errors.current.message}</p>
@@ -350,7 +350,7 @@ export default function Profile() {
                     type="password"
                     {...passwordForm.register("next")}
                     autoComplete="new-password"
-                    className="h-11 rounded-xl bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white"
+                    className="h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 transition-all duration-500"
                   />
                   {passwordForm.formState.errors.next && (
                     <p className="text-[10px] text-destructive">{passwordForm.formState.errors.next.message}</p>
@@ -362,7 +362,7 @@ export default function Profile() {
                     type="password"
                     {...passwordForm.register("confirm")}
                     autoComplete="new-password"
-                    className="h-11 rounded-xl bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white"
+                    className="h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 transition-all duration-500"
                   />
                   {passwordForm.formState.errors.confirm && (
                     <p className="text-[10px] text-destructive">{passwordForm.formState.errors.confirm.message}</p>

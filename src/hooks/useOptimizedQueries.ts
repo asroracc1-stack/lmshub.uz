@@ -25,6 +25,7 @@ export interface OrgPoint {
 export interface AdminStatsDto {
   teachersCount: number;
   studentsCount: number;
+  parentsCount: number;        // ← ota-onalar soni
   superAdminsCount: number;
   orgAdminsCount: number;
   eventsCount: number;
@@ -39,7 +40,12 @@ export interface AdminStatsDto {
     email: string;
     phone: string;
     logoUrl?: string;
-    address?: string;
+    address?: string | {
+      region?: string;
+      district?: string;
+      street_address?: string;
+      full_address?: string;
+    };
   } | null;
   subscriptionStatus: "ACTIVE" | "EXPIRING" | "EXPIRED";
 }

@@ -88,14 +88,14 @@ export default function AuditLogs() {
         <p className="text-slate-500 dark:text-slate-400">Tizimdagi barcha muhim amallar tarixi</p>
       </div>
 
-      <div className="glass rounded-2xl p-4">
+      <div className="glass dark:bg-slate-900/50 dark:border-slate-800 rounded-2xl p-4 transition-all duration-500">
         <div className="relative mb-6">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Amal, obyekt yoki foydalanuvchi bo'yicha qidirish..."
-            className="pl-10 h-11 bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white rounded-xl shadow-sm"
+            className="pl-10 h-11 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 rounded-xl shadow-sm transition-all duration-500"
           />
         </div>
 
@@ -107,12 +107,12 @@ export default function AuditLogs() {
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="hover:bg-transparent border-slate-200 dark:border-white/5">
-                  <TableHead className="font-bold text-slate-900 dark:text-slate-200">Amal</TableHead>
-                  <TableHead className="font-bold text-slate-900 dark:text-slate-200">Obyekt</TableHead>
-                  <TableHead className="font-bold text-slate-900 dark:text-slate-200">Foydalanuvchi</TableHead>
-                  <TableHead className="font-bold text-slate-900 dark:text-slate-200">Tafsilotlar</TableHead>
-                  <TableHead className="text-right font-bold text-slate-900 dark:text-slate-200">Vaqt</TableHead>
+                <TableRow className="hover:bg-transparent border-slate-200 dark:border-slate-800 transition-all duration-500">
+                  <TableHead className="font-bold text-slate-900 dark:text-slate-300 dark:bg-slate-900/50">Amal</TableHead>
+                  <TableHead className="font-bold text-slate-900 dark:text-slate-300 dark:bg-slate-900/50">Obyekt</TableHead>
+                  <TableHead className="font-bold text-slate-900 dark:text-slate-300 dark:bg-slate-900/50">Foydalanuvchi</TableHead>
+                  <TableHead className="font-bold text-slate-900 dark:text-slate-300 dark:bg-slate-900/50">Tafsilotlar</TableHead>
+                  <TableHead className="text-right font-bold text-slate-900 dark:text-slate-300 dark:bg-slate-900/50">Vaqt</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -168,7 +168,7 @@ export default function AuditLogs() {
                 size="sm"
                 disabled={page === 0}
                 onClick={() => setPage((p) => p - 1)}
-                className="rounded-xl border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-slate-900 dark:text-white hover:bg-slate-50 dark:hover:bg-white/10"
+                className="rounded-xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all duration-500"
               >
                 Oldingi
               </Button>
@@ -177,7 +177,7 @@ export default function AuditLogs() {
                 size="sm"
                 disabled={page >= totalPages - 1}
                 onClick={() => setPage((p) => p + 1)}
-                className="rounded-xl border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-slate-900 dark:text-white hover:bg-slate-50 dark:hover:bg-white/10"
+                className="rounded-xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all duration-500"
               >
                 Keyingi
               </Button>

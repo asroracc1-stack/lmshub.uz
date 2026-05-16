@@ -41,13 +41,24 @@ export default function OrganizationSettingsModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
+  // Helper to safely convert address (object or string) → display string
+  const resolveAddress = (addr: any): string => {
+    if (!addr) return "";
+    if (typeof addr === "string") return addr;
+    if (typeof addr === "object") {
+      return [addr.full_address, addr.street_address, addr.district, addr.region]
+        .filter(Boolean).join(", ");
+    }
+    return "";
+  };
+
   useEffect(() => {
     if (orgData) {
       setFormData({
         name: orgData.name || "",
         email: orgData.email || "",
         phone: orgData.phone || "",
-        address: orgData.address || "",
+        address: resolveAddress(orgData.address),
         logoUrl: orgData.logoUrl || ""
       });
       setPreviewUrl(orgData.logoUrl || null);
