@@ -1,0 +1,924 @@
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useParams, useNavigate, useBlocker, useBeforeUnload } from "react-router-dom";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { api } from "@/lib/axios";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { 
+  Loader2, Sparkles, CheckCircle2, Clock, AlertCircle, Headphones, 
+  BookOpen, ChevronLeft, ChevronRight, Flag, Play, Pause, 
+  Volume2, VolumeX, Maximize2, Mic 
+} from "lucide-react";
+import { toast } from "sonner";
+import { rawToBand, checkAnswer } from "@/lib/ielts";
+import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
+import TigerPlayer from "@/components/TigerPlayer";
+// Icons are already imported above
+
+// Java API dan keluvchi tuzilma
+interface QuestionOption { id: string; text: string; isCorrect?: boolean; positionOrder: number; }
+interface Q { id: string; text: string; questionType: string; correctAnswer: string | null; points: number; positionOrder: number; passageId: string; options: QuestionOption[] | null; }
+interface Passage { id: string; title: string; content: string; imageUrl?: string; positionOrder: number; questions: Q[]; }
+interface ExamData { id: string; title: string; description?: string; type: string; difficulty?: string; audio_url?: string; duration_minutes: number; passages: Passage[]; }
+
+// MockTake ichki state uchun normallashtirish
+interface NormalQ { id: string; position: number; section_index: number; prompt: string; qtype: string; options: string[] | null; correct_answer: string | null; points: number; }
+
+/** Java'dan kelgan questionType → frontend qtype ga mapping */
+function mapQtype(raw: string | null | undefined): string {
+  const t = (raw ?? "short").toLowerCase().replace(/-/g, "_");
+  if (t === "multiple_choice" || t === "multiplechoice") return "mcq";
+  if (t === "fill_in_blank" || t === "fill_in_blanks" || t === "fillinblank") return "fill";
+  if (t === "true_false_not_given" || t === "tfng") return "tfng";
+  if (t === "yes_no_not_given" || t === "ynng") return "ynng";
+  if (t === "short_answer" || t === "shortanswer") return "short";
+  if (t === "map_labeling" || t === "map") return "mcq"; // Treat as mcq or short depending on input
+  return t; // mcq, fill, short, tfng, ynng, matching, headings — already correct
+}
+
+function normalize(exam: ExamData): { sections: { title: string; passage: string; imageUrl: string }[]; questions: NormalQ[] } {
+  const sections: { title: string; passage: string; imageUrl: string }[] = [];
+  const questions: NormalQ[] = [];
+  (exam.passages ?? []).forEach((p, sIdx) => {
+    sections.push({ title: p.title ?? "", passage: p.content ?? "", imageUrl: p.imageUrl ?? "" });
+    (p.questions ?? []).forEach((q) => {
+      const qtype = mapQtype(q.questionType);
+      // Options: faqat mcq/matching/headings uchun kerak
+      const rawOpts = q.options?.map((o) => o.text).filter(Boolean) ?? [];
+      questions.push({
+        id: q.id,
+        position: questions.length + 1, // Global question number
+        section_index: sIdx,
+        prompt: q.text ?? "",
+        qtype,
+        options: rawOpts.length > 0 ? rawOpts : null,
+        correct_answer: q.correctAnswer ?? null,
+        points: q.points ?? 1,
+      });
+    });
+  });
+  return { sections, questions };
+}
+
+const getFullAudioUrl = (url?: string) => {
+  if (!url) return "";
+  if (url.startsWith("http")) return url;
+  
+  // Tozalamoq (Trim leading slashes)
+  const cleanPath = url.startsWith("/") ? url.slice(1) : url;
+
+  // Agar URL allaqachon /api bilan boshlansa, uni o'zgartirmaymiz
+  if (cleanPath.startsWith("api/")) return `/${cleanPath}`;
+
+  // Agar bu /uploads bilan boshlanadigan eski format bo'lsa
+  if (cleanPath.startsWith("uploads/")) {
+     // Uni /api/v1/files/view formatiga o'tkazishga harakat qilamiz 
+     // yoki to'g'ridan-to'g'ri /uploads orqali so'raymiz (proxy orqali)
+     return `/${cleanPath}`;
+  }
+  
+  // Standart holatda API orqali faylni ko'rish
+  return `/api/v1/files/view/${cleanPath}`;
+};
+
+function CustomAudioPlayer({ src, isExternalPaused }: { src: string, isExternalPaused?: boolean }) {
+  const fullSrc = useMemo(() => getFullAudioUrl(src), [src]);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [playing, setPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(1);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+
+  useEffect(() => {
+    if (fullSrc) console.log("DEBUG: Final Audio Source:", fullSrc);
+  }, [fullSrc]);
+
+  const playingRef = useRef(playing);
+  useEffect(() => { playingRef.current = playing; }, [playing]);
+
+  const [isBuffering, setIsBuffering] = useState(false);
+
+  useEffect(() => {
+    if (!fullSrc) {
+      setLoadError(true);
+      return;
+    }
+    
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const onTimeUpdate = () => {
+      setCurrentTime(audio.currentTime);
+      setProgress((audio.currentTime / audio.duration) * 100);
+    };
+    const onLoadedMetadata = () => {
+      setDuration(audio.duration);
+      setLoadError(false);
+    };
+    const onCanPlay = () => {
+      setIsLoaded(true);
+      setIsBuffering(false);
+      setLoadError(false);
+    };
+    const onEnded = () => setPlaying(false);
+    const onError = (e: any) => {
+      console.error("Audio Load Error:", audio.error);
+      setLoadError(true);
+      setIsBuffering(false);
+    };
+    const onWaiting = () => setIsBuffering(true);
+    const onPlaying = () => {
+      setIsBuffering(false);
+      setLoadError(false);
+    };
+
+    audio.addEventListener("timeupdate", onTimeUpdate);
+    audio.addEventListener("loadedmetadata", onLoadedMetadata);
+    audio.addEventListener("canplay", onCanPlay);
+    audio.addEventListener("canplaythrough", onCanPlay);
+    audio.addEventListener("ended", onEnded);
+    audio.addEventListener("error", onError);
+    audio.addEventListener("waiting", onWaiting);
+    audio.addEventListener("playing", onPlaying);
+
+    const handleVisibility = () => {
+      if (document.hidden && playingRef.current && audioRef.current) {
+        audioRef.current.pause();
+        setPlaying(false);
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      audio.removeEventListener("timeupdate", onTimeUpdate);
+      audio.removeEventListener("loadedmetadata", onLoadedMetadata);
+      audio.removeEventListener("canplay", onCanPlay);
+      audio.removeEventListener("canplaythrough", onCanPlay);
+      audio.removeEventListener("ended", onEnded);
+      audio.removeEventListener("error", onError);
+      audio.removeEventListener("waiting", onWaiting);
+      audio.removeEventListener("playing", onPlaying);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, [fullSrc]); // Only re-run if the source changes
+
+  useEffect(() => {
+    if (isExternalPaused && playing && audioRef.current) {
+      audioRef.current.pause();
+      setPlaying(false);
+    }
+  }, [isExternalPaused, playing]);
+
+  const togglePlay = () => {
+    if (!audioRef.current || !isLoaded) return;
+    if (playing) audioRef.current.pause();
+    else {
+      console.log('DEBUG: Playing Audio URL:', fullSrc);
+      audioRef.current.play();
+    }
+    setPlaying(!playing);
+  };
+
+  const onProgressChange = (val: number[]) => {
+    if (!audioRef.current) return;
+    const time = (val[0] / 100) * duration;
+    audioRef.current.currentTime = time;
+    setProgress(val[0]);
+  };
+
+  const fmtTime = (s: number) => {
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60);
+    return `${m}:${sec.toString().padStart(2, "0")}`;
+  };
+
+  return (
+    <div className="w-full bg-slate-900/40 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] p-3 pl-4 pr-8 shadow-[0_20px_50px_-20px_rgba(139,92,246,0.3)] relative overflow-hidden group flex items-center gap-6">
+      <audio ref={audioRef} src={fullSrc} preload="auto" />
+      
+      {(!isLoaded || isBuffering) && !loadError && (
+        <div className="absolute inset-0 z-20 bg-slate-950/40 backdrop-blur-sm flex flex-col items-center justify-center rounded-[2.5rem]">
+          <div className="h-16 w-16 animate-pulse">
+            <TigerPlayer />
+          </div>
+          <p className="text-[8px] font-bold text-primary animate-pulse uppercase tracking-[0.2em] mt-1">
+            {isBuffering ? "Kutilmoqda..." : "Yuklanmoqda..."}
+          </p>
+        </div>
+      )}
+
+      {(loadError || !src) && (
+        <div className="absolute inset-0 z-20 bg-slate-950/80 flex items-center justify-center rounded-[2.5rem] border border-rose-500/20 px-6 text-center">
+          <p className="text-[10px] font-bold text-rose-500 uppercase tracking-widest">Audio xatolik ➔ Iltimos sahifani yangilang</p>
+        </div>
+      )}
+
+      {/* Main Controls Section */}
+      <div className="flex items-center gap-4 relative z-10">
+        <button 
+          onClick={togglePlay}
+          className="h-14 w-14 rounded-full bg-gradient-to-br from-violet-600 to-indigo-700 flex items-center justify-center text-white shadow-[0_0_20px_rgba(139,92,246,0.4)] hover:scale-105 active:scale-95 transition-all"
+        >
+          {playing ? <Pause className="fill-current h-6 w-6" /> : <Play className="fill-current h-6 w-6 translate-x-0.5" />}
+        </button>
+        <div className="flex items-center gap-0.5">
+          <button className="p-2 text-white/40 hover:text-white transition-colors"><ChevronLeft className="h-5 w-5" /></button>
+          <button className="p-2 text-white/40 hover:text-white transition-colors"><ChevronRight className="h-5 w-5" /></button>
+        </div>
+      </div>
+
+      {/* Waveform & Progress Section */}
+      <div className="flex-1 flex items-center gap-6 relative z-10">
+        <div className="flex-1 h-14 relative flex items-center">
+          {/* Animated Waveform Background */}
+          <div className="absolute inset-0 flex items-center justify-center gap-1.5 pointer-events-none">
+            {[...Array(40)].map((_, i) => (
+              <div 
+                key={i} 
+                className={cn(
+                  "w-1 rounded-full bg-gradient-to-t from-violet-500/40 to-indigo-400/40 transition-all duration-300",
+                  playing ? "animate-pulse" : "h-1 opacity-20"
+                )}
+                style={{ 
+                  height: playing ? `${20 + Math.sin(i * 0.4) * 60}%` : '4px',
+                  animationDelay: `${i * 0.05}s`
+                }}
+              />
+            ))}
+          </div>
+
+          {/* Transparent Range Input Overlay */}
+          <input 
+            type="range" 
+            min="0" max="100" 
+            value={progress} 
+            onChange={(e) => {
+              if (!audioRef.current) return;
+              const time = (+e.target.value / 100) * duration;
+              audioRef.current.currentTime = time;
+              setProgress(+e.target.value);
+            }}
+            className="absolute inset-0 w-full opacity-0 cursor-pointer z-10"
+          />
+          
+          {/* Visual Progress Bar Overlay */}
+          <div className="absolute inset-0 flex items-center pointer-events-none">
+            <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-violet-500 to-fuchsia-500 shadow-[0_0_15px_rgba(139,92,246,0.5)]"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            <div 
+              className="absolute h-3 w-3 bg-white rounded-full shadow-[0_0_10px_#fff] border-2 border-violet-600"
+              style={{ left: `calc(${progress}% - 6px)` }}
+            />
+          </div>
+        </div>
+
+        {/* Time Display */}
+        <div className="flex items-center gap-2 font-mono text-sm tabular-nums whitespace-nowrap">
+          <span className="text-white font-bold">{fmtTime(currentTime)}</span>
+          <span className="text-white/20">/</span>
+          <span className="text-white/40">{fmtTime(duration)}</span>
+        </div>
+      </div>
+
+      {/* Volume Section */}
+      <div className="flex items-center gap-4 relative z-10 group/vol">
+        <button 
+          onClick={() => {
+            if (!audioRef.current) return;
+            const newMute = !isMuted;
+            setIsMuted(newMute);
+            audioRef.current.volume = newMute ? 0 : volume;
+          }}
+          className="text-white/30 group-hover/vol:text-white/60 transition-colors"
+        >
+          {isMuted || volume === 0 ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+        </button>
+        <div className="w-24 relative flex items-center">
+          <input 
+            type="range" 
+            min="0" max="100" 
+            value={isMuted ? 0 : volume * 100} 
+            onChange={(e) => {
+              const v = +e.target.value / 100;
+              setVolume(v);
+              if (audioRef.current) audioRef.current.volume = v;
+              if (v > 0) setIsMuted(false);
+            }}
+            className="w-full h-1 bg-white/10 rounded-full appearance-none cursor-pointer accent-violet-500"
+          />
+        </div>
+        <button className="text-white/20 hover:text-white transition-colors"><Mic className="h-4 w-4" /></button>
+      </div>
+    </div>
+  );
+}
+
+export default function MockTake() {
+  const { testId } = useParams();
+  const nav = useNavigate();
+
+  const [exam, setExam] = useState<ExamData | null>(null);
+  const [sections, setSections] = useState<{ title: string; passage: string; imageUrl: string }[]>([]);
+  const [questions, setQuestions] = useState<NormalQ[]>([]);
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [flagged, setFlagged] = useState<Set<string>>(new Set());
+  const [writingAnswer, setWritingAnswer] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [result, setResult] = useState<any>(null);
+  const [sectionIdx, setSectionIdx] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [started, setStarted] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [grading, setGrading] = useState(false);
+  const startedAt = useRef<number>(0);
+  const questionStartRef = useRef<Record<string, number>>({});
+  const timeSpentRef = useRef<Record<string, number>>({});
+
+  const blocker = useBlocker(
+    ({ currentLocation, nextLocation }) =>
+      started && !result && currentLocation.pathname !== nextLocation.pathname
+  );
+
+  useBeforeUnload(
+    (event) => {
+      if (started && !result) {
+        event.preventDefault();
+        return (event.returnValue = "Test davom etmoqda. Chiqmoqchimisiz?");
+      }
+    },
+    { capture: true }
+  );
+
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.hidden && started && !result && !isPaused) {
+        toast.warning("Diqqat! Test vaqtida tablarni almashtirish IELTS qoidalariga zid. Taymer to'xtamadi!", {
+          duration: 5000,
+          icon: <AlertCircle className="text-amber-500" />,
+        });
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
+  }, [started, result, isPaused]);
+
+  useEffect(() => {
+    if (started && !result) {
+      document.body.classList.add("exam-mode");
+      return () => document.body.classList.remove("exam-mode");
+    }
+  }, [started, result]);
+
+  useEffect(() => {
+    if (!testId) return;
+    setLoading(true);
+    setLoadError(null);
+    api.get<ExamData>(`/admin/exams/${testId}?t=${Date.now()}`)
+      .then((res) => {
+        const data = res.data;
+        setExam(data);
+        const { sections: s, questions: q } = normalize(data);
+        setSections(s);
+        setQuestions(q);
+        setTimeLeft((data.duration_minutes ?? 60) * 60);
+      })
+      .catch((err) => {
+        const msg = err?.response?.data?.message ?? err?.message ?? "Exam yuklanmadi";
+        setLoadError(msg);
+        toast.error(msg);
+      })
+      .finally(() => setLoading(false));
+  }, [testId]);
+
+  useEffect(() => {
+    if (!started || result || isPaused) return;
+    const id = setInterval(() => {
+      setTimeLeft((t) => {
+        if (t <= 1) { clearInterval(id); submit(true); return 0; }
+        return t - 1;
+      });
+    }, 1000);
+    return () => clearInterval(id);
+  }, [started, result, isPaused]);
+
+  const sectionQs = useMemo(() => questions.filter((q) => q.section_index === sectionIdx), [questions, sectionIdx]);
+
+  const onAnswer = (qid: string, val: string) => {
+    if (!questionStartRef.current[qid]) questionStartRef.current[qid] = Date.now();
+    setAnswers((p) => ({ ...p, [qid]: val }));
+  };
+
+  const trackQuestionTime = (qid: string) => {
+    const start = questionStartRef.current[qid];
+    if (start) {
+      timeSpentRef.current[qid] = (timeSpentRef.current[qid] ?? 0) + (Date.now() - start);
+      questionStartRef.current[qid] = Date.now();
+    }
+  };
+
+  const toggleFlag = (qid: string) => setFlagged((p) => { const n = new Set(p); n.has(qid) ? n.delete(qid) : n.add(qid); return n; });
+
+  const submit = async (auto = false) => {
+    if (submitting || !exam) return;
+    if (!auto && !window.confirm("Testni topshirmoqchimisiz?")) return;
+    
+    setSubmitting(true);
+    try {
+      Object.keys(questionStartRef.current).forEach(trackQuestionTime);
+      const kind = (exam.type ?? "").toLowerCase();
+      
+      const payload = {
+        exam_id: exam.id,
+        answers: answers,
+        time_spent: timeSpentRef.current,
+        writing_answer: writingAnswer || null
+      };
+
+      const res = await api.post("/exams/submit", payload);
+      setResult({ ...res.data, kind });
+      toast.success("Natijangiz hisoblandi!");
+    } catch (err: any) {
+      console.error("Submission error:", err);
+      toast.error("Natijani yuborishda xatolik: " + (err.response?.data?.message || err.message));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (grading) return (
+    <div className="min-h-[60vh] flex flex-col items-center justify-center gap-6">
+      <div className="relative">
+        <Loader2 className="h-20 w-20 animate-spin text-primary opacity-20" />
+        <motion.div 
+          animate={{ scale: [1, 1.2, 1], rotate: [0, 180, 360] }}
+          transition={{ duration: 3, repeat: Infinity }}
+          className="absolute inset-0 flex items-center justify-center"
+        >
+          <Sparkles className="h-10 w-10 text-primary" />
+        </motion.div>
+      </div>
+      <div className="text-center space-y-2">
+        <h2 className="text-2xl font-bold animate-pulse">AI javobingizni tahlil qilmoqda...</h2>
+        <p className="text-muted-foreground text-sm max-w-xs mx-auto">
+          Tajribali IELTS imtihonchisi kabi kriteriyalar asosida baholanmoqda. Bu taxminan 10-20 soniya vaqt oladi.
+        </p>
+      </div>
+    </div>
+  );
+
+  if (loading) return (
+    <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
+      <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      <p className="text-sm text-muted-foreground">Test yuklanmoqda...</p>
+    </div>
+  );
+
+  if (loadError || !exam) return (
+    <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 text-center px-4">
+      <AlertCircle className="h-12 w-12 text-rose-500" />
+      <h2 className="text-xl font-bold">Test topilmadi</h2>
+      <p className="text-sm text-muted-foreground">{loadError ?? "Noma'lum xatolik"}</p>
+      <Button variant="outline" onClick={() => nav(-1)}>Orqaga</Button>
+    </div>
+  );
+
+  const kind = (exam.type ?? "").toLowerCase();
+
+  if (result) {
+    const isExam = result.kind === "reading" || result.kind === "listening";
+    const band = result.bandScore ?? result.band;
+
+    return (
+      <div className="max-w-5xl mx-auto space-y-6 pb-20">
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+          <Card className="p-8 text-center bg-gradient-to-br from-primary/10 via-violet-500/5 to-emerald-500/10 border-primary/30 relative overflow-hidden">
+            <div className="absolute -top-12 -right-12 w-48 h-48 bg-primary/10 rounded-full blur-3xl" />
+            <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-violet-500/10 rounded-full blur-3xl" />
+            <div className="h-32 w-32 mx-auto mb-4 relative z-10">
+              <TigerPlayer />
+            </div>
+            <h2 className="text-4xl font-display font-bold mb-2 relative z-10">Tabriklaymiz!</h2>
+            <p className="text-muted-foreground mb-6 relative z-10">Test muvaffaqiyatli topshirildi</p>
+
+            <CheckCircle2 className="h-12 w-12 text-emerald-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-display font-bold">Test yakunlandi!</h2>
+            
+            <div className="mt-8 flex flex-col items-center">
+              <div className="relative h-40 w-40 flex items-center justify-center">
+                <svg className="h-full w-full -rotate-90">
+                  <circle 
+                    cx="80" cy="80" r="70" 
+                    fill="transparent" 
+                    stroke="currentColor" 
+                    strokeWidth="8" 
+                    className="text-muted/20"
+                  />
+                  <circle 
+                    cx="80" cy="80" r="70" 
+                    fill="transparent" 
+                    stroke="currentColor" 
+                    strokeWidth="8" 
+                    strokeDasharray={440}
+                    strokeDashoffset={440 - (440 * (Number(band) || 0)) / 9}
+                    strokeLinecap="round"
+                    className="text-primary transition-all duration-1000 ease-out"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-5xl font-display font-bold bg-gradient-to-br from-primary to-violet-500 bg-clip-text text-transparent">
+                    {band || "0.0"}
+                  </span>
+                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-tighter">Band Score</span>
+                </div>
+              </div>
+              <p className="text-sm text-muted-foreground mt-4 font-medium uppercase tracking-widest">IELTS {result.kind}</p>
+            </div>
+
+            {isExam && (
+              <div className="mt-8 grid grid-cols-3 gap-4 max-w-md mx-auto">
+                <Card className="p-4 bg-background/50 backdrop-blur border-emerald-500/20">
+                  <p className="text-[10px] uppercase font-bold text-muted-foreground">To'g'ri</p>
+                  <p className="text-2xl font-bold text-emerald-500">{result.correct}</p>
+                </Card>
+                <Card className="p-4 bg-background/50 backdrop-blur">
+                  <p className="text-[10px] uppercase font-bold text-muted-foreground">Jami</p>
+                  <p className="text-2xl font-bold">{result.total}</p>
+                </Card>
+                <Card className="p-4 bg-background/50 backdrop-blur border-primary/20">
+                  <p className="text-[10px] uppercase font-bold text-muted-foreground">%</p>
+                  <p className="text-2xl font-bold text-primary">
+                    {Math.round((result.correct / Math.max(result.total, 1)) * 100)}%
+                  </p>
+                </Card>
+              </div>
+            )}
+          </Card>
+        </motion.div>
+        <div className="flex gap-3 mt-4">
+          <Button onClick={() => nav(-1)} variant="outline" size="lg" className="flex-1">
+            Chiqish
+          </Button>
+          <Button onClick={() => window.location.reload()} size="lg" className="flex-1">
+            Qaytadan topshirish
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!started) {
+    return (
+      <div className="max-w-2xl mx-auto">
+        <Card className="p-8 space-y-5">
+          <div className="flex items-center gap-3">
+            {kind === "reading" ? <BookOpen className="h-8 w-8 text-violet-500" /> : kind === "listening" ? <Headphones className="h-8 w-8 text-amber-500" /> : <Sparkles className="h-8 w-8 text-emerald-500" />}
+            <div>
+              <Badge variant="outline">{exam.type}</Badge>
+              <h1 className="text-2xl md:text-3xl font-display font-bold">{exam.title}</h1>
+            </div>
+          </div>
+          {exam.description && <p className="text-muted-foreground">{exam.description}</p>}
+          
+          {(kind === "listening" || exam.title.toLowerCase().includes("listening")) && (
+            <div className="py-2">
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2 ml-1">Sound Check</p>
+              <CustomAudioPlayer src={exam.audio_url || (exam as any).audioUrl} />
+            </div>
+          )}
+
+          <div className="grid grid-cols-3 gap-3">
+            <Card className="p-3 text-center"><Clock className="h-5 w-5 mx-auto mb-1 text-primary" /><p className="text-xs text-muted-foreground">Vaqt</p><p className="font-bold">{exam.duration_minutes} daq</p></Card>
+            <Card className="p-3 text-center"><Flag className="h-5 w-5 mx-auto mb-1 text-primary" /><p className="text-xs text-muted-foreground">Savollar</p><p className="font-bold">{questions.length}</p></Card>
+            <Card className="p-3 text-center"><Sparkles className="h-5 w-5 mx-auto mb-1 text-primary" /><p className="text-xs text-muted-foreground">Qiyinlik</p><p className="font-bold capitalize">{exam.difficulty ?? "—"}</p></Card>
+          </div>
+          <Button size="lg" className="w-full" onClick={() => { setStarted(true); startedAt.current = Date.now(); }}>
+            Boshlash
+          </Button>
+        </Card>
+      </div>
+    );
+  }
+
+  const fmt = (s: number) => `${Math.floor(s / 60).toString().padStart(2, "0")}:${(s % 60).toString().padStart(2, "0")}`;
+  const lowTime = timeLeft < 300;
+
+  if (kind === "writing" || kind === "speaking") {
+    return (
+      <div className="max-w-3xl mx-auto space-y-4">
+        <Card className={cn("p-3 flex items-center justify-between sticky top-0 z-10", lowTime && "border-rose-500")}>
+          <Badge variant="outline">{exam.title}</Badge>
+          <div className={cn("flex items-center gap-2 font-mono font-bold", lowTime && "text-rose-500 animate-pulse")}>
+            <Clock className="h-4 w-4" />{fmt(timeLeft)}
+          </div>
+        </Card>
+        {sections[0]?.passage && <Card className="p-6 whitespace-pre-wrap">{sections[0].passage}</Card>}
+        <Card className="p-4 space-y-2">
+          <Textarea rows={16} value={writingAnswer} onChange={(e) => setWritingAnswer(e.target.value)} placeholder="Javobingizni yozing..." />
+        </Card>
+        <Button size="lg" className="w-full" onClick={() => submit()} disabled={submitting}>
+          {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}Topshirish
+        </Button>
+      </div>
+    );
+  }
+
+  const currentSection = sections[sectionIdx];
+  const answeredCount = Object.values(answers).filter(Boolean).length;
+
+  const renderInlineInput = (q: NormalQ) => (
+    <input type="text" value={answers[q.id] ?? ""} onChange={(e) => onAnswer(q.id, e.target.value)}
+      onFocus={() => { if (!questionStartRef.current[q.id]) questionStartRef.current[q.id] = Date.now(); }}
+      onBlur={() => trackQuestionTime(q.id)}
+      className={cn("inline-block mx-1 px-2 h-7 text-sm rounded border bg-background align-middle min-w-[110px] max-w-[180px] text-center",
+        answers[q.id] ? "border-primary/60 bg-primary/5 font-semibold" : "border-input")}
+      placeholder={String(q.position)} />
+  );
+
+  const renderInlinePrompt = (q: NormalQ) => {
+    const parts = (q.prompt ?? "").split(/_{2,}|\[\s*_+\s*\]|\{\{\s*\d+\s*\}\}|\[\s*\.{3}\s*\]|\[\s*…\s*\]|\[\s*\d+\s*\]|\.{3,}/);
+    if (parts.length <= 1) return <span className="inline-flex items-center flex-wrap gap-1"><span className="text-sm">{q.prompt}</span>{renderInlineInput(q)}</span>;
+    return (
+      <span className="inline-flex items-baseline flex-wrap text-sm leading-8">
+        {parts.map((p, idx) => <span key={idx} className="contents"><span>{p}</span>{idx < parts.length - 1 && renderInlineInput(q)}</span>)}
+      </span>
+    );
+  };
+
+  return (
+    <div className="space-y-3 max-w-7xl mx-auto pb-40">
+      <Card className={cn("p-3 flex items-center justify-between gap-3 sticky top-0 z-20 backdrop-blur bg-background/85", lowTime && "border-rose-500")}>
+        <div className="flex items-center gap-2 min-w-0">
+          {kind === "reading" ? <BookOpen className="h-4 w-4" /> : <Headphones className="h-4 w-4" />}
+          <p className="font-semibold text-sm truncate">{exam.title}</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className={cn("flex items-center gap-1.5 font-mono font-bold text-sm px-3 py-1 rounded-md", lowTime ? "bg-rose-500 text-white animate-pulse" : "bg-primary/10 text-primary")}>
+            <Clock className="h-3.5 w-3.5" />{fmt(timeLeft)}
+          </div>
+          <Button 
+            size="sm" 
+            variant="ghost" 
+            onClick={() => setIsPaused(!isPaused)}
+            className="h-8 w-8 rounded-full bg-primary/5 hover:bg-primary/10 text-primary"
+          >
+            {isPaused ? <Play className="h-4 w-4 fill-current" /> : <Pause className="h-4 w-4 fill-current" />}
+          </Button>
+        </div>
+      </Card>
+
+      {(kind === "listening" || exam.title.toLowerCase().includes("listening")) && (
+        <div className="sticky top-[60px] z-30 px-1 py-2">
+          <CustomAudioPlayer 
+            src={exam.audio_url || (exam as any).audioUrl} 
+            isExternalPaused={isPaused}
+          />
+        </div>
+      )}
+
+      <AnimatePresence>
+        {isPaused && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center"
+          >
+            <div className="h-48 w-48 mb-6">
+              <TigerPlayer />
+            </div>
+            <h2 className="text-3xl font-display font-bold text-white mb-2">Test to'xtatildi</h2>
+            <p className="text-slate-400 max-w-md mb-8">Hozir dam olib oling. Testni davom ettirish uchun pastdagi tugmani bosing.</p>
+            <Button 
+              size="lg" 
+              onClick={() => setIsPaused(false)}
+              className="bg-primary hover:bg-primary/90 text-white px-12 rounded-full shadow-glow"
+            >
+              <Play className="h-5 w-5 mr-2 fill-current" /> Davom ettirish
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className={cn("grid gap-4", kind === "reading" && (currentSection?.passage || currentSection?.imageUrl) ? "lg:grid-cols-2" : "grid-cols-1")}>
+        {kind === "reading" && (currentSection?.passage || currentSection?.imageUrl) && (
+          <Card className="p-6 overflow-y-auto custom-scrollbar max-h-[calc(100vh-280px)]">
+            {currentSection.title && <h2 className="font-display font-bold text-xl mb-3">{currentSection.title}</h2>}
+            {currentSection.imageUrl && (
+              <div className="mb-4">
+                <img src={currentSection.imageUrl} alt="Map/Diagram" className="max-w-full h-auto mx-auto rounded-lg shadow-sm" />
+              </div>
+            )}
+            <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap leading-relaxed">{currentSection.passage}</div>
+          </Card>
+        )}
+
+        <Card className="p-6 overflow-y-auto custom-scrollbar max-h-[calc(100vh-320px)]">
+          {currentSection?.title && <div className="text-center mb-5"><h2 className="font-display font-bold text-xl">{currentSection.title}</h2></div>}
+          
+          {kind === "listening" && currentSection?.imageUrl && (
+             <div className="mb-6 rounded-xl overflow-hidden border bg-white p-2 shadow-sm">
+                <img src={currentSection.imageUrl} alt="Map/Diagram" className="max-w-full h-auto mx-auto" />
+                <p className="text-[10px] text-center text-muted-foreground mt-1 uppercase tracking-widest font-bold">Visual Reference</p>
+             </div>
+          )}
+          {sectionQs.length === 0 ? (
+            <p className="text-muted-foreground text-center py-8">Bu qismda savol yo'q</p>
+          ) : (
+            <div className="space-y-3">
+              {sectionQs.map((q) => {
+                const isInline = q.qtype === "fill" || q.qtype === "short";
+                const LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H"];
+                return (
+                  <div key={q.id} id={`q-${q.id}`}
+                    className={cn("group rounded-lg px-3 py-2 transition-all",
+                      flagged.has(q.id) && "bg-amber-50 dark:bg-amber-900/10",
+                      answers[q.id] && !flagged.has(q.id) && "bg-emerald-50/50 dark:bg-emerald-900/5")}>
+                    <div className="flex items-start gap-2">
+                      <span className="font-bold text-primary shrink-0 w-7 text-sm pt-1">{q.position}.</span>
+                      <div className="flex-1 min-w-0">
+                        {isInline ? renderInlinePrompt(q) : (
+                          <>
+                            <p className="text-sm font-medium mb-2">{q.prompt}</p>
+                            {(q.qtype === "mcq" && Array.isArray(q.options) && q.options.length > 0) ? (
+                              <div className="space-y-1.5 mt-2">
+                                {q.options.map((opt, idx) => {
+                                  const letter = LETTERS[idx] ?? String(idx + 1);
+                                  const selected = answers[q.id] === opt;
+                                  return (
+                                    <button key={opt} type="button"
+                                      onClick={() => onAnswer(q.id, opt)}
+                                      className={cn(
+                                        "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border text-sm text-left transition-all",
+                                        selected
+                                          ? "bg-primary text-primary-foreground border-primary font-medium"
+                                          : "bg-card hover:bg-muted border-border hover:border-primary/40"
+                                      )}>
+                                      <span className={cn(
+                                        "flex-none w-6 h-6 rounded-full border flex items-center justify-center text-xs font-bold",
+                                        selected ? "bg-primary-foreground text-primary border-primary-foreground" : "border-current"
+                                      )}>{letter}</span>
+                                      <span className="flex-1">{opt}</span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            ) : (q.qtype === "mcq") ? (
+                              <div className="mt-2">
+                                {renderInlineInput(q)}
+                              </div>
+                            ) : null}
+                            {(q.qtype === "tfng" || q.qtype === "ynng") && (
+                              <div className="grid grid-cols-3 gap-1.5">
+                                {(q.qtype === "tfng" ? ["TRUE", "FALSE", "NOT GIVEN"] : ["YES", "NO", "NOT GIVEN"]).map((v) => (
+                                  <button key={v} onClick={() => onAnswer(q.id, v)}
+                                    className={cn("py-1.5 rounded-md text-xs font-bold border transition-all",
+                                      answers[q.id] === v ? "bg-primary text-primary-foreground border-primary" : "bg-card hover:border-primary/40")}>
+                                    {v}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                            {(q.qtype === "matching" || q.qtype === "headings") && Array.isArray(q.options) && (
+                              <select className="w-full h-9 px-2 rounded-md border bg-background text-sm"
+                                value={answers[q.id] ?? ""} onChange={(e) => onAnswer(q.id, e.target.value)}>
+                                <option value="">— tanlang —</option>
+                                {q.options.map((o) => <option key={o} value={o}>{o}</option>)}
+                              </select>
+                            )}
+                          </>
+                        )}
+                      </div>
+                      <button onClick={() => toggleFlag(q.id)}
+                        className={cn("p-1 rounded opacity-40 group-hover:opacity-100 transition", flagged.has(q.id) ? "text-amber-500 opacity-100" : "text-muted-foreground hover:text-foreground")}
+                        title="Belgilash"><Flag className="h-3.5 w-3.5" /></button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          <div className="flex justify-between pt-4 mt-4 border-t">
+            <Button variant="outline" size="sm" onClick={() => setSectionIdx((i) => Math.max(0, i - 1))} disabled={sectionIdx === 0}><ChevronLeft className="h-4 w-4" /> Oldingi</Button>
+            <Button variant="outline" size="sm" onClick={() => setSectionIdx((i) => Math.min(sections.length - 1, i + 1))} disabled={sectionIdx === sections.length - 1}>Keyingi <ChevronRight className="h-4 w-4" /></Button>
+          </div>
+        </Card>
+      </div>
+
+      <div className="fixed bottom-0 left-0 right-0 z-30 border-t bg-background/95 backdrop-blur shadow-[0_-8px_30px_-10px_rgba(0,0,0,0.15)] pb-safe">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4 overflow-x-auto scroll-smooth no-scrollbar touch-pan-x">
+          <div className="flex items-center gap-2 flex-nowrap shrink-0">
+            {sections.map((s, i) => {
+              const sQs = questions.filter((q) => q.section_index === i);
+              const isActive = sectionIdx === i;
+              const partLabel = kind === "reading" ? `Passage ${i + 1}` : `Part ${i + 1}`;
+              return (
+                <div key={i} className="flex items-center gap-2 shrink-0">
+                  <button onClick={() => setSectionIdx(i)}
+                    className={cn("px-4 py-1.5 rounded-lg text-xs font-black whitespace-nowrap transition-all border",
+                      isActive 
+                        ? "bg-emerald-500 text-white border-emerald-500 shadow-lg shadow-emerald-500/20" 
+                        : "bg-muted/50 text-slate-500 border-transparent hover:bg-muted hover:text-slate-900 dark:hover:text-white")}>
+                    {partLabel}
+                  </button>
+                  {isActive ? (
+                    <div className="flex items-center gap-1.5 flex-nowrap">
+                      {sQs.map((q) => (
+                        <button 
+                          key={q.id} 
+                          onClick={() => { const el = document.getElementById(`q-${q.id}`); el?.scrollIntoView({ behavior: "smooth", block: "center" }); }}
+                          className={cn("h-8 w-8 rounded-lg text-[11px] font-black border transition-all shrink-0",
+                            answers[q.id] 
+                              ? "bg-emerald-500 text-white border-emerald-500 shadow-sm" :
+                              flagged.has(q.id) 
+                                ? "bg-amber-100 text-amber-700 border-amber-400" 
+                                : "bg-card border-slate-200 dark:border-white/10 hover:border-emerald-500/50 text-slate-600 dark:text-slate-400")}>
+                          {q.position}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-[10px] font-black text-slate-400 whitespace-nowrap px-1">
+                      {sQs.filter((q) => answers[q.id]).length}/{sQs.length}
+                    </span>
+                  )}
+                  {i < sections.length - 1 && <div className="w-px h-5 bg-slate-200 dark:bg-white/5 mx-1 shrink-0" />}
+                </div>
+              );
+            })}
+          </div>
+          
+          <div className="flex-1 min-w-[20px]" />
+          
+          <Button 
+            size="default" 
+            onClick={() => submit()} 
+            disabled={submitting} 
+            className="shrink-0 bg-slate-900 dark:bg-white text-white dark:text-slate-950 font-black rounded-xl hover:scale-105 active:scale-95 transition-all shadow-xl"
+          >
+            {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            Testni yakunlash
+          </Button>
+        </div>
+        <Progress value={(answeredCount / Math.max(questions.length, 1)) * 100} className="h-1 bg-slate-100 dark:bg-white/5" />
+      </div>
+      {/* Navigation Guard Alert */}
+      <AlertDialog open={blocker.state === "blocked"}>
+        <AlertDialogContent className="max-w-[400px] border-rose-500/20 shadow-2xl">
+          <AlertDialogHeader>
+            <div className="flex justify-center mb-4">
+              <div className="p-3 bg-rose-500/10 rounded-full">
+                <AlertCircle className="h-10 w-10 text-rose-500 animate-pulse" />
+              </div>
+            </div>
+            <AlertDialogTitle className="text-center text-xl font-bold">Diqqat! Test davom etmoqda</AlertDialogTitle>
+            <AlertDialogDescription className="text-center text-base">
+              Agar sahifadan hozir chiqsangiz, barcha belgilangan javoblaringiz va mehnatotingiz saqlanmasligi mumkin.
+              <br /><br />
+              Chindan ham chiqmoqchimisiz?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2 mt-4">
+            <AlertDialogCancel 
+              onClick={() => blocker.reset?.()} 
+              className="flex-1 border-primary/20 hover:bg-primary/5 font-semibold"
+            >
+              Testda qolish
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => {
+                // If they insist on leaving, we could trigger a partial save here
+                blocker.proceed?.();
+              }}
+              className="flex-1 bg-rose-500 hover:bg-rose-600 text-white font-semibold"
+            >
+              Testni yakunlash va chiqish
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}

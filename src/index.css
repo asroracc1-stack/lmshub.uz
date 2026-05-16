@@ -1,0 +1,139 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Backgrounds & Surfaces — Light Mode (Apple-style Slate 50) */
+    --background: 210 40% 98%; /* slate-50 */
+    --foreground: 222 47% 11%; /* slate-900 */
+    
+    --card: 0 0% 100%; /* white */
+    --card-foreground: 222 47% 11%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    /* Brand — Mint Green Aesthetic (Emerald 500) */
+    --primary: 142 71% 45%; /* emerald-500 */
+    --primary-foreground: 142 80% 2%;
+    --primary-glow: 142 71% 55%;
+
+    --secondary: 173 80% 40%; /* teal-500 */
+    --secondary-foreground: 0 0% 100%;
+
+    --accent: 142 71% 45%;
+    --accent-foreground: 142 80% 2%;
+
+    --muted: 210 40% 94%;
+    --muted-foreground: 215 16% 47%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 142 71% 45%;
+
+    --radius: 12px;
+
+    /* Sidebar - Light */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 215 25% 27%; /* Darker for better visibility */
+    --sidebar-primary: 142 71% 45%;
+    --sidebar-accent: 210 40% 96.1%;
+    --sidebar-border: 220 13% 91%;
+
+    --transition-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .dark {
+    /* Backgrounds & Surfaces — Dark Mode (Slate 950) */
+    --background: 222 47% 5%; /* slate-950 */
+    --foreground: 210 40% 98%; /* slate-100 */
+    
+    --card: 222 47% 7%; /* slate-900 at 0.7 */
+    --card-foreground: 210 40% 98%;
+    
+    --popover: 222 47% 7%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 142 71% 45%; /* Keep emerald primary */
+    --primary-foreground: 142 80% 2%;
+    
+    --secondary: 173 80% 40%;
+    --muted: 217 33% 13%;
+    --muted-foreground: 215 20% 65%;
+    
+    --border: 217 33% 13%;
+    --input: 217 33% 13%;
+    
+    --sidebar-background: 222 47% 4%;
+    --sidebar-foreground: 215 20% 65%;
+    --sidebar-primary: 142 71% 45%;
+    --sidebar-accent: 217 33% 12%;
+    --sidebar-border: 217 33% 13%;
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+  body { 
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "ss01", "cv11", "rsjt";
+    transition: background-color 0.5s ease, color 0.5s ease;
+  }
+}
+
+@layer components {
+  /* Premium Glassmorphism */
+  .glass-premium, .glass {
+    @apply backdrop-blur-xl border transition-all duration-300;
+    background: hsla(var(--card) / 0.8); /* More opaque for light mode visibility */
+    border-color: hsla(var(--border) / 0.8);
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  }
+  
+  .dark .glass-premium, .dark .glass {
+    background: hsla(var(--card) / 0.4);
+    border-color: hsla(var(--border) / 0.3);
+    box-shadow: none;
+  }
+
+  .glass-premium:hover, .glass:hover {
+    @apply border-primary/40 shadow-xl shadow-primary/5;
+    background: hsla(var(--card) / 0.95);
+  }
+
+  /* Standard Button Animations */
+  .btn-premium {
+    @apply inline-flex items-center justify-center rounded-[12px] font-semibold transition-all duration-300 active:scale-95 disabled:opacity-50 disabled:pointer-events-none;
+  }
+}
+
+@layer utilities {
+  .shadow-glow-emerald {
+    box-shadow: 0 0 20px -5px hsla(var(--primary) / 0.3);
+  }
+  
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-br from-emerald-500 to-teal-500;
+  }
+
+  .bg-gradient-premium {
+    @apply bg-gradient-to-br from-emerald-500 to-teal-600;
+  }
+}
+
+/* Slim Scrollbar Customization */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: hsla(var(--muted-foreground) / 0.2);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsla(var(--primary) / 0.4);
+}

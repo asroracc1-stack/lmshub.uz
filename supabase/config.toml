@@ -1,0 +1,34 @@
+project_id = "ehhodpxctyiuaqfbkuot"
+
+[functions.signup-request]
+verify_jwt = false
+
+[functions.admin-users]
+verify_jwt = false
+
+[functions.org-users]
+verify_jwt = false
+
+[functions.ai-speaking]
+verify_jwt = false
+
+[functions.ai-grade-mock]
+verify_jwt = false
+
+[functions.pack-request]
+verify_jwt = false
+
+[functions.parse-ielts-content]
+verify_jwt = false
+
+[functions.seed-pack-manager]
+verify_jwt = false
+
+[functions.speaking-feedback]
+verify_jwt = false
+
+[functions.speaking-helper]
+verify_jwt = false
+
+[functions.telegram-notify]
+verify_jwt = false
