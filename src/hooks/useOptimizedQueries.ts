@@ -136,6 +136,7 @@ export function useDashboardMutations() {
     mutationFn: async (data: any) => await api.post("/admin/users", { ...data, role: "TEACHER" }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-dashboard-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["super-admin-dashboard-stats"] });
       toast.success("O'qituvchi muvaffaqiyatli qo'shildi! 🐯🚀");
     },
     onError: () => toast.error("O'qituvchi qo'shishda xatolik!"),
@@ -145,6 +146,7 @@ export function useDashboardMutations() {
     mutationFn: async (data: any) => await api.post("/admin/users", { ...data, role: "STUDENT" }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-dashboard-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["super-admin-dashboard-stats"] });
       toast.success("Talaba muvaffaqiyatli qo'shildi! 🐯🚀");
     },
     onError: () => toast.error("Talaba qo'shishda xatolik!"),

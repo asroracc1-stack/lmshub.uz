@@ -366,6 +366,7 @@ const AppRoutes = () => {
           <Route path="profile" element={<SharedProfile />} />
           <Route path="packs" element={<Packs />} />
           <Route path="settings" element={<SettingsPage />} />
+          <Route path="calendar" element={<OrgEvents />} />
           <Route path="notifications" element={<NotificationsPage />} />
         </Route>
 

@@ -11,6 +11,7 @@ import {
   Zap,
   RefreshCw,
   Heart,
+  Users2,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -38,6 +39,7 @@ interface Stats {
   administrators: number;
   users: number;
   parents: number;
+  groups: number;
 }
 
 interface MonthPoint {
@@ -53,11 +55,12 @@ interface OrgPoint {
 const MONTH_LABELS = ["Yan", "Fev", "Mar", "Apr", "May", "Iyn", "Iyl", "Avg", "Sen", "Okt", "Noy", "Dek"];
 
 import { useSuperAdminDashboard } from "@/hooks/useOptimizedQueries";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
 import { toast } from "sonner";
 
 export default function SuperAdminDashboard() {
+  const qc = useQueryClient();
   const { data, isLoading } = useSuperAdminDashboard();
 
   const rawStats = data?.stats || {};
@@ -70,6 +73,7 @@ export default function SuperAdminDashboard() {
     administrators: rawStats.administrators || 0,
     users: rawStats.users || 0,
     parents: rawStats.parents || 0,
+    groups: rawStats.groups || 0,
   };
   const growth = data?.growth ?? [];
   const topOrgs = data?.topOrgs ?? [];
@@ -91,6 +95,7 @@ export default function SuperAdminDashboard() {
     },
     onSuccess: () => {
       toast.success("Tizim keshi tozalandi va yangilandi!");
+      qc.invalidateQueries({ queryKey: ["super-admin-dashboard-stats"] });
     },
     onError: () => {
       toast.error("Xatolik yuz berdi");
@@ -105,6 +110,7 @@ export default function SuperAdminDashboard() {
     { label: "Adminlar", value: stats.admins, icon: UserCog, accent: "from-secondary to-accent" },
     { label: "Administratorlar", value: stats.administrators, icon: UserCog, accent: "from-primary to-accent" },
     { label: "Ota-onalar", value: stats.parents, icon: Heart, accent: "from-pink-500 to-rose-500" },
+    { label: "Guruhlar", value: stats.groups, icon: Users2, accent: "from-emerald-400 to-teal-500" },
     { label: "Oddiy Userlar", value: stats.users, icon: Users, accent: "from-blue-500 to-cyan-500" },
   ];
 

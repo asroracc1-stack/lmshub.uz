@@ -5,7 +5,7 @@ import {
   Calendar as CalendarIcon, Plus, Send, Settings, ShieldCheck, 
   Mail, Phone, MapPin, Globe, ArrowUpRight, TrendingUp,
   LayoutDashboard, UserPlus, FilePlus, BellRing, Sparkles, Crown,
-  ArrowRight, Info, AlertCircle, ShoppingCart, Heart,
+  ArrowRight, Info, AlertCircle, ShoppingCart, Heart, Users2,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
@@ -41,6 +41,7 @@ export default function AdminDashboard() {
     { label: "Talabalar",     value: stats?.studentsCount  ?? 0, growth: stats?.studentGrowth  ?? 0, icon: Users,         color: "text-emerald-500", bg: "bg-emerald-500/10", to: "/admin/students",  accent: "#10b981" },
     { label: "Ota-onalar",   value: stats?.parentsCount   ?? 0, growth: 0,                          icon: Heart,         color: "text-pink-500",    bg: "bg-pink-500/10",    to: "/admin/parents",   accent: "#ec4899" },
     { label: "Administratorlar", value: stats?.orgAdminsCount ?? 0, growth: stats?.orgAdminGrowth ?? 0, icon: UserCog,   color: "text-indigo-500", bg: "bg-indigo-500/10", to: "/admin/administrators", accent: "#6366f1" },
+    { label: "Guruhlar",     value: stats?.groupsCount     ?? 0, growth: 0,                          icon: Users2,        color: "text-cyan-500",   bg: "bg-cyan-500/10",    to: "/admin/groups",         accent: "#06b6d4" },
     { label: "Tadbirlar",    value: stats?.eventsCount    ?? 0, growth: stats?.eventGrowth     ?? 0, icon: CalendarIcon,  color: "text-amber-500",  bg: "bg-amber-500/10",  to: "/admin/calendar",  accent: "#f59e0b" },
   ], [stats]);
 

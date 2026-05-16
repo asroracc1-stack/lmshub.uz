@@ -26,6 +26,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Inbox, Megaphone, Plus, Send, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { api } from "@/lib/axios";
 
 interface Message {
   id: string;
@@ -87,6 +88,17 @@ export default function OrgMessages() {
 
   const loadOrgUsers = async () => {
     if (!profile?.organization_id) return;
+
+    if (role === 'parent') {
+      try {
+        const { data } = await api.get("/parent/teachers");
+        setOrgUsers(data ?? []);
+      } catch (e) {
+        console.error("O'qituvchilarni yuklashda xatolik:", e);
+      }
+      return;
+    }
+
     const { data } = await supabase
       .from("profiles")
       .select("id, username, full_name")

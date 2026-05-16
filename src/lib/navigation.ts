@@ -106,9 +106,11 @@ export const getSidebarRoutes = (role: string, t: TFunction, options: { ielts?: 
       return [
         { to: "/parent/dashboard", label: "Dashboard", icon: LayoutDashboard },
         { to: "/parent/children", label: "Farzandlarim", icon: Heart },
-        { to: "/parent/leaderboard", label: "Peshqadamlar", icon: Trophy },
-        { to: "/parent/packs", label: "Obunalar", icon: Package },
+        { to: "/parent/calendar", label: "Kalendar", icon: Calendar },
         { to: "/parent/messages", label: "Xabarlar", icon: MessagesSquare },
+        { to: "/parent/packs", label: "Obunalar", icon: Package },
+        { to: "/parent/profile", label: "Profil", icon: User },
+        { to: "/parent/settings", label: "Sozlamalar", icon: Settings },
       ];
     case "super_admin":
       return [

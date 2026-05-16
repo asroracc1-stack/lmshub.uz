@@ -122,6 +122,7 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
           fullName: fullName.trim(),
           phone: "+" + cleanPhone,
           password,
+          confirmPassword: password, // Sending same password as confirmation
           otpCode: "777777", // Default bypass as requested previously
         });
         handleAuthSuccess(response.data, true);
@@ -139,7 +140,8 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
         const res = await api.post("/auth/google", { token: tokenResponse.access_token });
         handleAuthSuccess(res.data, false);
       } catch (err: any) {
-        toast.error("Google auth failed");
+        const errorMsg = err.response?.data?.message || err.message || "Google auth failed";
+        toast.error(errorMsg);
       } finally {
         setGoogleLoading(false);
       }
@@ -168,19 +170,19 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
     <div className="h-screen w-full grid grid-cols-1 lg:grid-cols-2 bg-white dark:bg-[#030712] selection:bg-emerald-500/30 selection:text-emerald-900 dark:selection:text-emerald-200 overflow-hidden">
       
       {/* LEFT COLUMN: Auth Forms */}
-      <div className="relative flex flex-col items-center justify-center p-4 sm:p-8 md:p-12 z-10 h-full overflow-hidden">
+      <div className="relative flex flex-col items-center justify-center p-4 sm:p-8 md:p-12 pt-24 lg:pt-12 z-10 h-full overflow-hidden">
         
-        {/* Top Controls: Back Button redesigned as a compact green button */}
-        <div className="absolute top-6 lg:top-10 left-1/2 -translate-x-1/2 lg:left-10 lg:translate-x-0 z-20">
+        {/* Top Controls: Back Button centered on mobile, top-left on large screens */}
+        <div className="absolute top-6 left-1/2 -translate-x-1/2 lg:top-10 lg:left-10 lg:translate-x-0 z-20">
           <Link 
             to="/"
             className={cn(
-              "flex items-center gap-1.5 px-2 py-0.5 rounded-[6px] text-[10px] font-bold transition-all duration-300",
-              "bg-emerald-50 border border-emerald-100 shadow-sm text-emerald-700 hover:bg-emerald-100 hover:border-emerald-200",
+              "flex items-center gap-1.5 px-3 py-1 rounded-[8px] text-[10px] font-bold transition-all duration-300 shadow-md",
+              "bg-emerald-50 border border-emerald-100 text-emerald-700 hover:bg-emerald-100 hover:border-emerald-200",
               "dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400 dark:hover:bg-emerald-500/20"
             )}
           >
-            <ArrowLeft className="w-2.5 h-2.5" />
+            <ArrowLeft className="w-3 h-3" />
             {t("auth.backToLanding")}
           </Link>
         </div>

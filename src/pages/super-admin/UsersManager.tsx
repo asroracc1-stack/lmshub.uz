@@ -222,7 +222,8 @@ export default function UsersManager({ filterRole, title, description }: Props) 
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
-      queryClient.invalidateQueries({ queryKey: ["super-admin-dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["super-admin-dashboard-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-dashboard-stats"] });
       const entityName = filterRole === "student" ? "Talaba" : filterRole === "teacher" ? "O'qituvchi" : filterRole === "administrator" ? "Administrator" : "Foydalanuvchi";
       toast.success(editing ? `${entityName} muvaffaqiyatli yangilandi` : `${entityName} muvaffaqiyatli qo'shildi`);
       setOpen(false);
@@ -329,7 +330,8 @@ export default function UsersManager({ filterRole, title, description }: Props) 
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
-      queryClient.invalidateQueries({ queryKey: ["super-admin-dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["super-admin-dashboard-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-dashboard-stats"] });
       toast.success("O'chirildi");
     },
     onError: (error: any) => {

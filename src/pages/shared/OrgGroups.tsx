@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/axios";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -36,17 +37,18 @@ interface Group {
   name: string;
   description: string | null;
   direction: string | null;
-  teacherId: string | null;
-  organizationId: string | null;
+  teacher_id: string | null;
+  organization_id: string | null;
   color: string;
-  studentCount: number;
-  isActive: boolean;
+  student_count: number;
+  is_active: boolean;
 }
 
 interface Teacher {
   id: string;
-  fullName: string;
+  full_name: string;
   username: string;
+  organization_id?: string;
 }
 
 const COLORS = [
@@ -59,13 +61,16 @@ const COLORS = [
 
 export default function OrgGroups() {
   const { user } = useAuth();
+  const qc = useQueryClient();
   const [groups, setGroups] = useState<Group[]>([]);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [organizations, setOrganizations] = useState<{id: string, name: string}[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
   // Role check
   const role = user?.role?.toLowerCase();
+  const isSuper = role === "super_admin";
   const canManage = ["super_admin", "admin", "administrator"].includes(role || "");
   const isTeacher = role === "teacher";
 
@@ -79,7 +84,8 @@ export default function OrgGroups() {
     name: "",
     description: "",
     direction: "",
-    teacherId: "",
+    teacher_id: "",
+    organization_id: "",
     color: "#10b981",
   });
 
@@ -89,11 +95,16 @@ export default function OrgGroups() {
       const endpoint = isTeacher ? "/teacher/groups" : "/admin/groups";
       const [{ data: groupsData }, { data: teachersData }] = await Promise.all([
         api.get(endpoint, { params: { size: 1000 } }),
-        canManage ? api.get("/admin/users/by-role/TEACHER") : Promise.resolve({ data: { content: [] } })
+        canManage ? api.get("/admin/users/by-role/TEACHER", { params: { size: 1000 } }) : Promise.resolve({ data: [] })
       ]);
       
       setGroups(isTeacher ? groupsData : (groupsData.content || []));
-      setTeachers(teachersData.content || []);
+      setTeachers(canManage ? (Array.isArray(teachersData) ? teachersData : (teachersData.content || [])) : []);
+
+      if (isSuper) {
+        const { data: orgsData } = await api.get("/organizations", { params: { size: 1000 } });
+        setOrganizations(orgsData.content || []);
+      }
     } catch (e) {
       toast.error("Ma'lumotlarni yuklab bo'lmadi");
     } finally {
@@ -109,7 +120,8 @@ export default function OrgGroups() {
       name: "",
       description: "",
       direction: "",
-      teacherId: "",
+      teacher_id: "",
+      organization_id: "",
       color: "#10b981",
     });
   };
@@ -120,7 +132,8 @@ export default function OrgGroups() {
       name: g.name,
       description: g.description || "",
       direction: g.direction || "",
-      teacherId: g.teacherId || "",
+      teacher_id: g.teacher_id || "",
+      organization_id: g.organization_id || "",
       color: g.color || "#10b981",
     });
     setOpen(true);
@@ -128,6 +141,8 @@ export default function OrgGroups() {
 
   const submit = async () => {
     if (!form.name.trim()) return toast.error("Guruh nomini kiriting");
+    if (isSuper && !form.organization_id) return toast.error("Tashkilotni tanlang");
+    
     setSaving(true);
     try {
       if (editing) {
@@ -137,6 +152,8 @@ export default function OrgGroups() {
         await api.post("/admin/groups", form);
         toast.success("Guruh yaratildi");
       }
+      qc.invalidateQueries({ queryKey: ["super-admin-dashboard-stats"] });
+      qc.invalidateQueries({ queryKey: ["admin-dashboard-stats"] });
       setOpen(false);
       resetForm();
       load();
@@ -150,6 +167,8 @@ export default function OrgGroups() {
   const handleDelete = async (id: string) => {
     try {
       await api.delete(`/admin/groups/${id}`);
+      qc.invalidateQueries({ queryKey: ["super-admin-dashboard-stats"] });
+      qc.invalidateQueries({ queryKey: ["admin-dashboard-stats"] });
       toast.success("Guruh o'chirildi");
       load();
     } catch (e) {
@@ -165,7 +184,7 @@ export default function OrgGroups() {
   const getTeacherName = (id: string | null) => {
     if (!id) return "—";
     const t = teachers.find(x => x.id === id);
-    return t ? t.fullName : "Yuklanmoqda...";
+    return t ? t.full_name : "Yuklanmoqda...";
   };
 
   if (loading && groups.length === 0) return <TigerLoader />;
@@ -211,6 +230,27 @@ export default function OrgGroups() {
                   </div>
                 </div>
 
+                {isSuper && (
+                  <div className="space-y-2">
+                    <Label>Tashkilot *</Label>
+                    <Select
+                      value={form.organization_id}
+                      onValueChange={(v) => {
+                        setForm({ ...form, organization_id: v, teacher_id: "" });
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Tashkilotni tanlang" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {organizations.map((org) => (
+                          <SelectItem key={org.id} value={org.id}>{org.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
                 <div className="space-y-2">
                   <Label>O'qituvchi</Label>
                   <Popover open={teacherSearchOpen} onOpenChange={setTeacherSearchOpen}>
@@ -220,8 +260,8 @@ export default function OrgGroups() {
                         role="combobox"
                         className="w-full justify-between font-normal"
                       >
-                        {form.teacherId
-                          ? teachers.find((t) => t.id === form.teacherId)?.fullName
+                        {form.teacher_id
+                          ? teachers.find((t) => t.id === form.teacher_id)?.full_name
                           : "O'qituvchini tanlang..."}
                         <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
@@ -232,24 +272,26 @@ export default function OrgGroups() {
                         <CommandList>
                           <CommandEmpty>O'qituvchi topilmadi.</CommandEmpty>
                           <CommandGroup>
-                            {teachers.map((t) => (
-                              <CommandItem
-                                key={t.id}
-                                value={t.fullName}
-                                onSelect={() => {
-                                  setForm({ ...form, teacherId: t.id });
-                                  setTeacherSearchOpen(false);
-                                }}
-                              >
-                                <Check
-                                  className={cn(
-                                    "mr-2 h-4 w-4",
-                                    form.teacherId === t.id ? "opacity-100" : "opacity-0"
-                                  )}
-                                />
-                                {t.fullName}
-                              </CommandItem>
-                            ))}
+                            {teachers
+                              .filter(t => !isSuper || !form.organization_id || (t as any).organization_id === form.organization_id)
+                              .map((t) => (
+                                <CommandItem
+                                  key={t.id}
+                                  value={t.full_name}
+                                  onSelect={() => {
+                                    setForm({ ...form, teacher_id: t.id });
+                                    setTeacherSearchOpen(false);
+                                  }}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      form.teacher_id === t.id ? "opacity-100" : "opacity-0"
+                                    )}
+                                  />
+                                  {t.full_name}
+                                </CommandItem>
+                              ))}
                           </CommandGroup>
                         </CommandList>
                       </Command>
@@ -335,17 +377,17 @@ export default function OrgGroups() {
                     <div>
                       <div className="flex items-center gap-2">
                         <h3 className="font-bold text-xl">{g.name}</h3>
-                        {!g.isActive && <Badge variant="destructive" className="text-[10px]">Nofaol</Badge>}
+                        {!g.is_active && <Badge variant="destructive" className="text-[10px]">Nofaol</Badge>}
                       </div>
                       <div className="flex flex-wrap items-center gap-y-1 gap-x-4 mt-1 text-sm text-muted-foreground">
                         <span className="flex items-center gap-1.5">
                           <Target className="h-3.5 w-3.5" /> {g.direction || "Yo'nalishsiz"}
                         </span>
                         <span className="flex items-center gap-1.5">
-                          <GraduationCap className="h-3.5 w-3.5" /> {getTeacherName(g.teacherId)}
+                          <GraduationCap className="h-3.5 w-3.5" /> {getTeacherName(g.teacher_id)}
                         </span>
                         <span className="flex items-center gap-1.5 font-medium text-emerald-600 dark:text-emerald-400">
-                          <Users className="h-3.5 w-3.5" /> {g.studentCount || 0} ta o'quvchi
+                          <Users className="h-3.5 w-3.5" /> {g.student_count || 0} ta o'quvchi
                         </span>
                       </div>
                     </div>

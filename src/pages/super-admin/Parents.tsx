@@ -17,12 +17,19 @@ import { toast } from "sonner";
 import {
   Heart, Plus, Search, Trash2, Users,
   Phone, Mail, CheckCircle2, XCircle, UserPlus,
-  Pencil, Ban, Unlock, Loader2, KeyRound
+  Pencil, Ban, Unlock, Loader2, KeyRound, ChevronDown, Check
 } from "lucide-react";
 import { motion } from "framer-motion";
 import TigerPlayer from "@/components/TigerPlayer";
 import { formatDistanceToNow } from "date-fns";
 import { uz } from "date-fns/locale";
+import {
+  Popover, PopoverContent, PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,
+} from "@/components/ui/command";
+import { cn } from "@/lib/utils";
 
 interface Parent {
   id: string;
@@ -61,6 +68,33 @@ export default function ParentsPage() {
     fullName: "", phoneOrUsername: "", email: "",
     password: "", studentId: "", relationship: "OTA-ONA",
   });
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+  const [groupSearchOpen, setGroupSearchOpen] = useState(false);
+  const [studentSearchOpen, setStudentSearchOpen] = useState(false);
+
+  // Fetch groups
+  const { data: groupsData } = useQuery({
+    queryKey: ["groups-for-parents"],
+    queryFn: async () => {
+      const { data } = await api.get("/admin/groups", { params: { size: 1000 } });
+      return data.content || data;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+  const groups = Array.isArray(groupsData) ? groupsData : [];
+
+  // Fetch students for selection - now depends on selectedGroupId
+  const { data: studentsData } = useQuery({
+    queryKey: ["students-for-parents", selectedGroupId],
+    queryFn: async () => {
+      const { data } = await api.get("/admin/users", { 
+        params: { role: "STUDENT", groupId: selectedGroupId || undefined } 
+      });
+      return data; // List<UserSummaryDto>
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+  const students = Array.isArray(studentsData) ? studentsData : [];
 
   const { data, isLoading, isError } = useQuery<ParentsPage>({
     queryKey: ["parents", page, search],
@@ -78,6 +112,8 @@ export default function ParentsPage() {
     onSuccess: () => {
       toast.success("Ota-ona muvaffaqiyatli qo'shildi!");
       qc.invalidateQueries({ queryKey: ["parents"] });
+      qc.invalidateQueries({ queryKey: ["super-admin-dashboard-stats"] });
+      qc.invalidateQueries({ queryKey: ["admin-dashboard-stats"] });
       setOpen(false);
       setForm({ fullName: "", phoneOrUsername: "", email: "", password: "", studentId: "", relationship: "OTA-ONA" });
     },
@@ -110,6 +146,8 @@ export default function ParentsPage() {
     onSuccess: () => {
       toast.success("O'chirildi");
       qc.invalidateQueries({ queryKey: ["parents"] });
+      qc.invalidateQueries({ queryKey: ["super-admin-dashboard-stats"] });
+      qc.invalidateQueries({ queryKey: ["admin-dashboard-stats"] });
     },
     onError: () => toast.error("O'chirib bo'lmadi"),
   });
@@ -331,14 +369,13 @@ export default function ParentsPage() {
             </DialogTitle>
           </DialogHeader>
 
-          <div className="grid gap-4 py-2">
+          <div className="grid gap-4 py-2 max-h-[65vh] overflow-y-auto pr-2 thin-scrollbar">
             {[
               { id: "fullName", label: "To'liq ismi", placeholder: "Abdullayev Jasur", type: "text" },
               { id: "phoneOrUsername", label: "Telefon / Username *", placeholder: "+998901234567", type: "text" },
               { id: "email", label: "Email (ixtiyoriy)", placeholder: "parent@example.com", type: "email" },
               ...(!editing ? [
                 { id: "password", label: "Parol (bo'sh qolsa: Parent@123)", placeholder: "••••••••", type: "password" },
-                { id: "studentId", label: "Farzand ID (UUID, ixtiyoriy)", placeholder: "uuid...", type: "text" },
               ] : [])
             ].map(({ id, label, placeholder, type }) => (
               <div key={id} className="space-y-1.5">
@@ -356,6 +393,126 @@ export default function ParentsPage() {
                 />
               </div>
             ))}
+
+            {!editing && (
+              <>
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                    Farzandining guruhi
+                  </Label>
+                  <Popover open={groupSearchOpen} onOpenChange={setGroupSearchOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        className="w-full justify-between font-normal bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 rounded-xl h-10"
+                      >
+                        {selectedGroupId
+                          ? groups.find((g) => g.id === selectedGroupId)?.name
+                          : "Guruhni tanlang (ixtiyoriy)..."}
+                        <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+                      <Command>
+                        <CommandInput placeholder="Guruh ismini yozing..." />
+                        <CommandList>
+                          <CommandEmpty>Guruh topilmadi.</CommandEmpty>
+                          <CommandGroup>
+                            <CommandItem
+                              value="all"
+                              onSelect={() => {
+                                setSelectedGroupId(null);
+                                setGroupSearchOpen(false);
+                                setForm({ ...form, studentId: "" });
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  !selectedGroupId ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              Barcha guruhlar
+                            </CommandItem>
+                            {groups.map((g) => (
+                              <CommandItem
+                                key={g.id}
+                                value={g.name}
+                                onSelect={() => {
+                                  setSelectedGroupId(g.id);
+                                  setGroupSearchOpen(false);
+                                  setForm({ ...form, studentId: "" }); // Reset student when group changes
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    selectedGroupId === g.id ? "opacity-100" : "opacity-0"
+                                  )}
+                                />
+                                {g.name}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                    Farzandini biriktirish
+                  </Label>
+                  <Popover open={studentSearchOpen} onOpenChange={setStudentSearchOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        disabled={!selectedGroupId && groups.length > 0} // Optional: require group first if you want
+                        className="w-full justify-between font-normal bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 rounded-xl h-10"
+                      >
+                        {form.studentId
+                          ? students.find((s) => s.id === form.studentId)?.full_name || students.find((s) => s.id === form.studentId)?.username
+                          : "Talabani qidirish..."}
+                        <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+                      <Command>
+                        <CommandInput placeholder="Talaba ismini yozing..." />
+                        <CommandList>
+                          <CommandEmpty>
+                            {!selectedGroupId ? "Avval guruhni tanlang yoki barcha guruhlarni tanlang." : "Ushbu guruhda talaba topilmadi."}
+                          </CommandEmpty>
+                          <CommandGroup>
+                            {students.map((s) => (
+                              <CommandItem
+                                key={s.id}
+                                value={s.full_name || s.username}
+                                onSelect={() => {
+                                  setForm({ ...form, studentId: s.id });
+                                  setStudentSearchOpen(false);
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    form.studentId === s.id ? "opacity-100" : "opacity-0"
+                                  )}
+                                />
+                                {s.full_name} <span className="text-xs text-slate-500 font-medium ml-2">@{s.username}</span>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </>
+            )}
           </div>
 
           <DialogFooter className="gap-2">
