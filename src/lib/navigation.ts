@@ -44,10 +44,11 @@ export const getSidebarRoutes = (role: string, t: TFunction, options: { ielts?: 
           label: "Foydalanuvchilar", 
           icon: Users,
           children: [
-            { to: `${base}/users`, label: "👥 Jami foydalanuvchilar", icon: Users2 },
-            { to: `${base}/teachers`, label: "👨‍🏫 O'qituvchilar", icon: GraduationCap },
-            { to: `${base}/students`, label: "🎓 Talabalar", icon: Users },
-            { to: `${base}/administrators`, label: "🛡️ Administratorlar", icon: ShieldCheck },
+            { to: `${base}/users`, label: "Jami foydalanuvchilar", icon: Users2 },
+            { to: `${base}/teachers`, label: "O'qituvchilar", icon: GraduationCap },
+            { to: `${base}/students`, label: "Talabalar", icon: Users },
+            { to: `${base}/parents`, label: "Ota-onalar", icon: Heart },
+            { to: `${base}/administrators`, label: "Administratorlar", icon: ShieldCheck },
           ]
         },
         { to: `${base}/subjects`, label: t("nav.subjects"), icon: BookOpen },
@@ -102,11 +103,11 @@ export const getSidebarRoutes = (role: string, t: TFunction, options: { ielts?: 
       ];
     case "parent":
       return [
-        { to: "/parent/dashboard", label: t("nav.dashboard"), icon: LayoutDashboard },
-        { to: "/parent/children", label: t("nav.myChildren"), icon: Heart },
-        { to: "/parent/messages", label: t("nav.messages"), icon: MessagesSquare },
-        { to: "/parent/leaderboard", label: t("nav.leaderboard"), icon: Trophy },
-        { to: "/parent/packs", label: t("nav.packs"), icon: Package },
+        { to: "/parent/dashboard", label: "Dashboard", icon: LayoutDashboard },
+        { to: "/parent/children", label: "Farzandlarim", icon: Heart },
+        { to: "/parent/leaderboard", label: "Peshqadamlar", icon: Trophy },
+        { to: "/parent/packs", label: "Obunalar", icon: Package },
+        { to: "/parent/messages", label: "Xabarlar", icon: MessagesSquare },
       ];
     case "super_admin":
       return [
@@ -121,6 +122,7 @@ export const getSidebarRoutes = (role: string, t: TFunction, options: { ielts?: 
             { to: "/super-admin/administrators", label: "Administratorlar", icon: ShieldCheck },
             { to: "/super-admin/teachers", label: "O'qituvchilar", icon: GraduationCap },
             { to: "/super-admin/students", label: "Talabalar", icon: Users },
+            { to: "/super-admin/parents", label: "Ota-onalar", icon: Heart },
             { to: "/super-admin/regular-users", label: "Userlar", icon: User },
           ]
         },

@@ -294,11 +294,7 @@ export default function AdminDashboard() {
               <div className="space-y-3">
                 <h3 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">{stats?.organization?.name || "Tashkilot nomi"}</h3>
                 <p className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-primary" /> {
-                    typeof stats?.organization?.address === 'object' && stats?.organization?.address !== null
-                      ? stats.organization.address.fullAddress || `${stats.organization.address.region || ''} ${stats.organization.address.district || ''}`.trim() || "Toshkent shahri, O'zbekiston"
-                      : stats?.organization?.address || "Toshkent shahri, O'zbekiston"
-                  }
+                  <MapPin className="h-4 w-4 text-primary" /> {stats?.organization?.address || "Toshkent shahri, O'zbekiston"}
                 </p>
                 <div className="flex flex-wrap gap-2 pt-1">
                   <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-white/5 px-3 py-2 rounded-lg border border-slate-100 dark:border-white/5">

@@ -120,6 +120,7 @@ const PaymentReceivers = lazy(() => import("./pages/super-admin/PaymentReceivers
 const SuperAdminPackages = lazy(() => import("./pages/super-admin/Packages"));
 const TelegramLinks = lazy(() => import("./pages/super-admin/TelegramLinks"));
 const LMSNews = lazy(() => import("./pages/super-admin/LMSNews"));
+const SuperAdminParents = lazy(() => import("./pages/super-admin/Parents"));
 const AdminUsers = lazy(() => import("./pages/admin/Users"));
 
 const AdminDashboard = lazy(() => import("./pages/admin/Dashboard"));
@@ -222,6 +223,7 @@ const AppRoutes = () => {
           <Route path="profile" element={<Profile />} />
           <Route path="telegram" element={<TelegramLinks />} />
           <Route path="news" element={<LMSNews />} />
+          <Route path="parents" element={<SuperAdminParents />} />
           <Route path="grant-coins" element={<PMGrantCoins />} />
           <Route path="notifications" element={<NotificationsPage />} />
         </Route>
@@ -232,6 +234,7 @@ const AppRoutes = () => {
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="users" element={<AdminUsers />} />
           <Route path="administrators" element={<AdminAdministrators />} />
+          <Route path="parents" element={<SuperAdminParents />} />
           <Route path="teachers" element={<MembersList role="teacher" title={t("nav.teachers")} description="" canManage />} />
           <Route path="students" element={<MembersList role="student" title={t("nav.students")} description="" canManage />} />
           <Route path="subjects" element={<OrgSubjects />} />
