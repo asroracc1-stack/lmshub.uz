@@ -48,8 +48,8 @@ export default function Logo({
       >
         <defs>
           <linearGradient id="tealGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color={variant === "light" ? "#6ee7b7" : "#34d399"}/>
-            <stop offset="100%" stop-color={variant === "light" ? "#10b981" : "#059669"}/>
+            <stop offset="0%" stopColor={variant === "light" ? "#6ee7b7" : "#34d399"}/>
+            <stop offset="100%" stopColor={variant === "light" ? "#10b981" : "#059669"}/>
           </linearGradient>
           <filter id="glow" x="-25%" y="-25%" width="150%" height="150%">
             <feGaussianBlur stdDeviation="4" result="blur" />

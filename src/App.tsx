@@ -210,6 +210,8 @@ const AppRoutes = () => {
           <Route path="mocks/edit/:testId" element={<MockEditor basePath="/super-admin" />} />
           <Route path="mocks/c/:kind" element={<MockCategory basePath="/super-admin" />} />
           <Route path="mocks/take/:testId" element={<MockTake />} />
+          <Route path="sat" element={<MockCategory basePath="/super-admin" forcedKind="sat" />} />
+          <Route path="national-cert" element={<MockCategory basePath="/super-admin" forcedKind="national_cert" />} />
           <Route path="packs" element={<Packs />} />
           <Route path="subscriptions" element={<Subscriptions />} />
           <Route path="payment-receivers" element={<PaymentReceivers />} />
@@ -224,6 +226,7 @@ const AppRoutes = () => {
           <Route path="telegram" element={<TelegramLinks />} />
           <Route path="news" element={<LMSNews />} />
           <Route path="parents" element={<SuperAdminParents />} />
+          <Route path="groups" element={<OrgGroups />} />
           <Route path="grant-coins" element={<PMGrantCoins />} />
           <Route path="notifications" element={<NotificationsPage />} />
         </Route>
@@ -263,6 +266,7 @@ const AppRoutes = () => {
           <Route path="dashboard" element={<AdministratorDashboard />} />
           <Route path="teachers" element={<MembersList role="teacher" title={t("nav.teachers")} description="" canManage />} />
           <Route path="students" element={<MembersList role="student" title={t("nav.students")} description="" canManage />} />
+          <Route path="parents" element={<SuperAdminParents />} />
           <Route path="subjects" element={<OrgSubjects />} />
           <Route path="groups" element={<OrgGroups />} />
           <Route path="lessons" element={<OrgLessons canManage basePath="/administrator" />} />
@@ -288,6 +292,8 @@ const AppRoutes = () => {
           <Route index element={<TeacherDashboard />} />
           <Route path="dashboard" element={<TeacherDashboard />} />
           <Route path="students" element={<MembersList role="student" title={t("nav.myStudents")} description="" />} />
+          <Route path="parents" element={<SuperAdminParents />} />
+          <Route path="groups" element={<OrgGroups />} />
           <Route path="lessons" element={<OrgLessons canManage basePath="/teacher" filter="teacher" />} />
           <Route path="attendance/:lessonId" element={<AttendancePage />} />
           <Route path="grades" element={<TeacherGrades />} />

@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import {
   Heart, Plus, Search, Trash2, Users,
   Phone, Mail, CheckCircle2, XCircle, UserPlus,
+  Pencil, Ban, Unlock, Loader2, KeyRound
 } from "lucide-react";
 import { motion } from "framer-motion";
 import TigerPlayer from "@/components/TigerPlayer";
@@ -55,6 +56,7 @@ export default function ParentsPage() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
   const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<Parent | null>(null);
   const [form, setForm] = useState({
     fullName: "", phoneOrUsername: "", email: "",
     password: "", studentId: "", relationship: "OTA-ONA",
@@ -82,8 +84,29 @@ export default function ParentsPage() {
     onError: () => toast.error("Xatolik yuz berdi"),
   });
 
+  const editMutation = useMutation({
+    mutationFn: (payload: any) => api.put(`/admin/users/${payload.id}`, payload),
+    onSuccess: () => {
+      toast.success("Ma'lumotlar yangilandi!");
+      qc.invalidateQueries({ queryKey: ["parents"] });
+      setOpen(false);
+      setEditing(null);
+    },
+    onError: () => toast.error("Yangilab bo'lmadi"),
+  });
+
+  const toggleActiveMutation = useMutation({
+    mutationFn: ({ id, active }: { id: string, active: boolean }) => 
+      api.patch(`/admin/users/${id}/active`, { active }),
+    onSuccess: (_, variables) => {
+      toast.success(variables.active ? "Faollashtirildi" : "Bloklandi");
+      qc.invalidateQueries({ queryKey: ["parents"] });
+    },
+    onError: () => toast.error("Xatolik yuz berdi"),
+  });
+
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => api.delete(`/admin/parents/${id}`),
+    mutationFn: (id: string) => api.delete(`/admin/users/${id}`),
     onSuccess: () => {
       toast.success("O'chirildi");
       qc.invalidateQueries({ queryKey: ["parents"] });
@@ -112,7 +135,7 @@ export default function ParentsPage() {
             </p>
           </div>
         </div>
-        <Button onClick={() => setOpen(true)}
+        <Button onClick={() => { setEditing(null); setForm({ fullName: "", phoneOrUsername: "", email: "", password: "", studentId: "", relationship: "OTA-ONA" }); setOpen(true); }}
           className="gap-2 bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600
                      hover:to-rose-700 text-white border-0 shadow-lg shadow-pink-500/25">
           <UserPlus className="h-4 w-4" /> Yangi ota-ona
@@ -229,17 +252,45 @@ export default function ParentsPage() {
                     {safeDate(p.createdAt)}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      variant="ghost" size="icon"
-                      className="h-8 w-8 text-rose-500 hover:text-rose-700 hover:bg-rose-500/10"
-                      onClick={() => {
-                        if (confirm(`"${p.fullName}" ni o'chirmoqchimisiz?`)) {
-                          deleteMutation.mutate(p.id);
-                        }
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <div className="flex items-center justify-end gap-1">
+                      <Button
+                        variant="ghost" size="icon"
+                        className={p.active ? "h-8 w-8 text-amber-500" : "h-8 w-8 text-emerald-500"}
+                        onClick={() => toggleActiveMutation.mutate({ id: p.id, active: !p.active })}
+                        disabled={toggleActiveMutation.isPending}
+                      >
+                        {toggleActiveMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : (p.active ? <Ban className="h-4 w-4" /> : <Unlock className="h-4 w-4" />)}
+                      </Button>
+                      <Button
+                        variant="ghost" size="icon"
+                        className="h-8 w-8 text-primary"
+                        onClick={() => {
+                          setEditing(p);
+                          setForm({
+                            fullName: p.fullName || "",
+                            phoneOrUsername: p.username || "",
+                            email: p.email || "",
+                            password: "",
+                            studentId: "",
+                            relationship: "OTA-ONA"
+                          });
+                          setOpen(true);
+                        }}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost" size="icon"
+                        className="h-8 w-8 text-rose-500 hover:text-rose-700 hover:bg-rose-500/10"
+                        onClick={() => {
+                          if (confirm(`"${p.fullName}" ni o'chirmoqchimisiz?`)) {
+                            deleteMutation.mutate(p.id);
+                          }
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </motion.tr>
               ))}
@@ -276,7 +327,7 @@ export default function ParentsPage() {
                               grid place-items-center">
                 <Plus className="h-4 w-4 text-white" />
               </div>
-              Yangi ota-ona qo'shish
+              {editing ? "Ota-ona ma'lumotlarini tahrirlash" : "Yangi ota-ona qo'shish"}
             </DialogTitle>
           </DialogHeader>
 
@@ -285,8 +336,10 @@ export default function ParentsPage() {
               { id: "fullName", label: "To'liq ismi", placeholder: "Abdullayev Jasur", type: "text" },
               { id: "phoneOrUsername", label: "Telefon / Username *", placeholder: "+998901234567", type: "text" },
               { id: "email", label: "Email (ixtiyoriy)", placeholder: "parent@example.com", type: "email" },
-              { id: "password", label: "Parol (bo'sh qolsa: Parent@123)", placeholder: "••••••••", type: "password" },
-              { id: "studentId", label: "Farzand ID (UUID, ixtiyoriy)", placeholder: "uuid...", type: "text" },
+              ...(!editing ? [
+                { id: "password", label: "Parol (bo'sh qolsa: Parent@123)", placeholder: "••••••••", type: "password" },
+                { id: "studentId", label: "Farzand ID (UUID, ixtiyoriy)", placeholder: "uuid...", type: "text" },
+              ] : [])
             ].map(({ id, label, placeholder, type }) => (
               <div key={id} className="space-y-1.5">
                 <Label htmlFor={id} className="text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -311,10 +364,10 @@ export default function ParentsPage() {
               Bekor
             </Button>
             <Button
-              disabled={!form.phoneOrUsername || createMutation.isPending}
-              onClick={() => createMutation.mutate(form)}
+              disabled={!form.phoneOrUsername || createMutation.isPending || editMutation.isPending}
+              onClick={() => editing ? editMutation.mutate({ ...form, id: editing.id, username: form.phoneOrUsername }) : createMutation.mutate(form)}
               className="bg-gradient-to-r from-pink-500 to-rose-600 text-white border-0">
-              {createMutation.isPending ? "Saqlanmoqda..." : "Saqlash"}
+              {createMutation.isPending || editMutation.isPending ? "Saqlanmoqda..." : "Saqlash"}
             </Button>
           </DialogFooter>
         </DialogContent>

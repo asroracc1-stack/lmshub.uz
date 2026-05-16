@@ -65,6 +65,8 @@ export const getSidebarRoutes = (role: string, t: TFunction, options: { ielts?: 
       return [
         { to: "/teacher/dashboard", label: t("nav.dashboard"), icon: LayoutDashboard },
         { to: "/teacher/students", label: t("nav.students"), icon: Users },
+        { to: "/teacher/parents", label: "Ota-onalar", icon: Heart },
+        { to: "/teacher/groups", label: t("nav.groups"), icon: Users2 },
         { to: "/teacher/lessons", label: t("nav.myLessons"), icon: CalendarClock },
         { to: "/teacher/grades", label: t("nav.grades"), icon: Award },
         { to: "/teacher/calendar", label: t("nav.schedule"), icon: Calendar },
@@ -113,34 +115,43 @@ export const getSidebarRoutes = (role: string, t: TFunction, options: { ielts?: 
         { to: "/super-admin/dashboard", label: t("nav.dashboard"), icon: LayoutDashboard },
         { to: "/super-admin/organizations", label: t("nav.organizations"), icon: Landmark },
         { 
-          label: "Foydalanuvchilar", 
+          label: t("nav.usersMenu"), 
           icon: Users,
           children: [
-            { to: "/super-admin/users", label: "Hammasi", icon: Users2 },
-            { to: "/super-admin/admins", label: "Adminlar", icon: ShieldCheck },
-            { to: "/super-admin/administrators", label: "Administratorlar", icon: ShieldCheck },
-            { to: "/super-admin/teachers", label: "O'qituvchilar", icon: GraduationCap },
-            { to: "/super-admin/students", label: "Talabalar", icon: Users },
-            { to: "/super-admin/parents", label: "Ota-onalar", icon: Heart },
-            { to: "/super-admin/regular-users", label: "Userlar", icon: User },
+            { to: "/super-admin/users", label: t("nav.allUsers"), icon: Users2 },
+            { to: "/super-admin/admins", label: t("nav.admins"), icon: ShieldCheck },
+            { to: "/super-admin/administrators", label: t("nav.administrators"), icon: ShieldCheck },
+            { to: "/super-admin/teachers", label: t("nav.teachers"), icon: GraduationCap },
+            { to: "/super-admin/students", label: t("nav.students"), icon: Users },
+            { to: "/super-admin/parents", label: t("nav.parents"), icon: Heart },
+            { to: "/super-admin/regular-users", label: t("nav.regularUsers"), icon: User },
           ]
         },
         { to: "/super-admin/finance", label: t("nav.finance"), icon: Wallet },
         { to: "/super-admin/calendar", label: t("nav.calendar"), icon: Calendar },
         { to: "/super-admin/messages", label: t("nav.messages"), icon: MessagesSquare },
-        { to: "/super-admin/leaderboard", label: "Peshqadamlar", icon: Trophy },
+        { to: "/super-admin/leaderboard", label: t("nav.leaderboard"), icon: Trophy },
         { 
-          label: "IELTS & AI", 
+          label: t("nav.ieltsAi"), 
           icon: GraduationCap,
           children: [
-            { to: "/super-admin/mocks", label: "IELTS Mocks", icon: FileText },
-            { to: "/super-admin/speaking", label: "AI Speaking", icon: Mic },
+            { to: "/super-admin/mocks", label: t("nav.mocks"), icon: FileText },
+            { to: "/super-admin/speaking", label: t("nav.speakingAi"), icon: Mic },
           ]
         },
+        { 
+          label: t("nav.subjectsMenu"), 
+          icon: Target,
+          children: [
+            { to: "/super-admin/sat", label: t("nav.sat"), icon: Target },
+            { to: "/super-admin/national-cert", label: t("nav.nationalCert"), icon: Landmark },
+          ]
+        },
+        { to: "/super-admin/groups", label: t("nav.groups"), icon: Users2 },
         { to: "/super-admin/packs", label: t("nav.packs"), icon: Package },
-        { to: "/super-admin/packages", label: "Tariflar boshqaruvi", icon: Package },
-        { to: "/super-admin/telegram", label: "Telegram Bot", icon: Send },
-        { to: "/super-admin/activity", label: "Faollik loglari", icon: Activity },
+        { to: "/super-admin/packages", label: t("nav.pricingPlans"), icon: Package },
+        { to: "/super-admin/telegram", label: t("common.telegramBot"), icon: Send },
+        { to: "/super-admin/activity", label: t("nav.activityLogs"), icon: Activity },
       ];
     case "payment_manager":
       return [

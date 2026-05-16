@@ -10,6 +10,7 @@ import {
   Server,
   Zap,
   RefreshCw,
+  Heart,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -36,6 +37,7 @@ interface Stats {
   admins: number;
   administrators: number;
   users: number;
+  parents: number;
 }
 
 interface MonthPoint {
@@ -67,6 +69,7 @@ export default function SuperAdminDashboard() {
     admins: rawStats.admins || 0,
     administrators: rawStats.administrators || 0,
     users: rawStats.users || 0,
+    parents: rawStats.parents || 0,
   };
   const growth = data?.growth ?? [];
   const topOrgs = data?.topOrgs ?? [];
@@ -101,6 +104,7 @@ export default function SuperAdminDashboard() {
     { label: "Talabalar", value: stats.students, icon: Users, accent: "from-primary to-secondary" },
     { label: "Adminlar", value: stats.admins, icon: UserCog, accent: "from-secondary to-accent" },
     { label: "Administratorlar", value: stats.administrators, icon: UserCog, accent: "from-primary to-accent" },
+    { label: "Ota-onalar", value: stats.parents, icon: Heart, accent: "from-pink-500 to-rose-500" },
     { label: "Oddiy Userlar", value: stats.users, icon: Users, accent: "from-blue-500 to-cyan-500" },
   ];
 
@@ -109,6 +113,7 @@ export default function SuperAdminDashboard() {
     { name: "O'qituvchilar", value: stats.teachers, color: "hsl(var(--secondary))" },
     { name: "Adminlar", value: stats.admins, color: "hsl(var(--accent))" },
     { name: "Administratorlar", value: stats.administrators, color: "hsl(var(--warning))" },
+    { name: "Ota-onalar", value: stats.parents, color: "#ec4899" },
     { name: "Userlar", value: stats.users, color: "#3b82f6" },
   ].filter((r) => r.value > 0);
 

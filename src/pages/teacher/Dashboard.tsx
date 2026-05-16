@@ -1,5 +1,4 @@
-import { motion } from "framer-motion";
-import { Users, Calendar as CalendarIcon, Inbox, BookOpen } from "lucide-react";
+import { Users, Calendar as CalendarIcon, Inbox, BookOpen, Heart } from "lucide-react";
 import RoleDashboard, { StatCard } from "@/components/RoleDashboard";
 import { Card } from "@/components/ui/card";
 import { useTeacherDashboard } from "@/hooks/useOptimizedQueries";
@@ -9,9 +8,10 @@ export default function TeacherDashboard() {
 
   const stats: StatCard[] = [
     { label: "Mening talabalarim", value: data?.myStudents || 0, icon: Users, color: "primary" },
+    { label: "Ota-onalar", value: data?.parentsCount || 0, icon: Heart, color: "accent" },
     { label: "Imtihonlar", value: data?.assignedExams || 0, icon: BookOpen, color: "success" },
     { label: "Tekshirilmagan", value: data?.pendingGrades || 0, icon: Inbox, color: "secondary" },
-    { label: "Tadbirlar", value: "—", icon: CalendarIcon, color: "accent" },
+    { label: "Tadbirlar", value: data?.eventsCount || 0, icon: CalendarIcon, color: "primary" },
   ];
 
   return (

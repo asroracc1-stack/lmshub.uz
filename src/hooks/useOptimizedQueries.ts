@@ -10,6 +10,7 @@ export interface SuperAdminStats {
   students: number;
   admins: number;
   administrators: number;
+  parents: number;
 }
 
 export interface MonthPoint {

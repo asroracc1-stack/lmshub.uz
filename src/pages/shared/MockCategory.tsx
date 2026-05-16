@@ -39,8 +39,9 @@ const DIFFICULTY_META: Record<string, { label: string; cls: string; icon: any }>
   hard:   { label: "Qiyin", cls: "bg-rose-500/15 text-rose-700 border-rose-500/30",          icon: FileText },
 };
 
-export default function MockCategory({ basePath = "/user" }: { basePath?: string }) {
-  const { kind } = useParams<{ kind: Kind }>();
+export default function MockCategory({ basePath = "/user", forcedKind }: { basePath?: string; forcedKind?: Kind }) {
+  const { kind: paramKind } = useParams<{ kind: Kind }>();
+  const kind = forcedKind || paramKind;
   const nav = useNavigate();
   const { role } = useAuth();
   const canManage = role === "super_admin" || role === "payment_manager";

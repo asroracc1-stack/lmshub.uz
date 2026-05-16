@@ -110,7 +110,7 @@ const createSchema = z.object({
   full_name: z.string().min(2, "F.I.O kiriting").max(100),
   role: z.enum(["super_admin", "admin", "administrator", "teacher", "student", "user", "parent", "payment_manager"]),
   phone_number: z.string().min(5, "Telefon kiriting").max(30),
-  organization_id: z.string().uuid().optional().or(z.literal("")),
+  organization_id: z.string().uuid("Tashkilot ID noto'g'ri").optional().or(z.literal("")),
   group_id: z.string().optional().or(z.literal("")),
   subject: z.string().optional().or(z.literal("")),
   telegram_chat_id: z.string().optional().or(z.literal("")),
@@ -194,6 +194,19 @@ export default function UsersManager({ filterRole, title, description }: Props) 
     },
   });
 
+  const { data: groups = [] } = useQuery({
+    queryKey: ["groups-list", form.organization_id],
+    queryFn: async () => {
+      const { data } = await api.get<any>("/admin/groups", { 
+        params: { 
+          size: 1000, 
+          organizationId: form.organization_id || null 
+        } 
+      });
+      return data.content || [];
+    },
+  });
+
   // Backend Page object qaytaradi (content, totalPages, etc.)
   // Agar to'g'ridan-to'g'ri array kelsa ham ishlaydigan qilamiz
   const users = Array.isArray(data) ? data : (data?.content || []);
@@ -272,12 +285,15 @@ export default function UsersManager({ filterRole, title, description }: Props) 
         username: form.username,
         full_name: form.full_name,
         phone_number: form.phone_number || null,
-        organization_id: form.organization_id || null,
+        organizationId: form.organization_id && form.organization_id !== "" ? form.organization_id : null,
+        organization_id: form.organization_id && form.organization_id !== "" ? form.organization_id : null,
         subject: form.subject || null,
         telegram_chat_id: form.telegram_chat_id || null,
         telegram_username: form.telegram_username || null,
         card_number: form.card_number || null,
         card_holder: form.card_holder || null,
+        groupId: form.group_id || null,
+        group_id: form.group_id || null,
         role: form.role.toUpperCase(),
       });
     } else {
@@ -286,18 +302,24 @@ export default function UsersManager({ filterRole, title, description }: Props) 
         toast.error(parsed.error.errors[0].message); 
         return; 
       }
-      mutation.mutate({
+      
+      const payload = {
         ...parsed.data,
         username: parsed.data.username,
         role: parsed.data.role.toUpperCase(),
         phone_number: parsed.data.phone_number || null,
-        organization_id: parsed.data.organization_id || null,
+        organizationId: parsed.data.organization_id && parsed.data.organization_id !== "" ? parsed.data.organization_id : null,
+        organization_id: parsed.data.organization_id && parsed.data.organization_id !== "" ? parsed.data.organization_id : null,
         subject: parsed.data.subject || null,
         telegram_chat_id: parsed.data.telegram_chat_id || null,
         telegram_username: parsed.data.telegram_username || null,
         card_number: parsed.data.card_number || null,
         card_holder: parsed.data.card_holder || null,
-      });
+        groupId: form.group_id || null,
+        group_id: form.group_id || null,
+      };
+
+      mutation.mutate(payload);
     }
   };
 
@@ -488,6 +510,23 @@ export default function UsersManager({ filterRole, title, description }: Props) 
                   </Select>
                 </div>
               </div>
+
+              {/* Guruh selektori */}
+              {(form.role === "student" || form.role === "teacher") && (
+                <div className="grid gap-2">
+                  <Label>Guruh (Ixtiyoriy)</Label>
+                  <Select
+                    value={form.group_id || "none"}
+                    onValueChange={(v) => setForm((f) => ({ ...f, group_id: v === "none" ? "" : v }))}
+                  >
+                    <SelectTrigger><SelectValue placeholder="Guruhni tanlang" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">— Guruhsiz —</SelectItem>
+                      {groups.map((g) => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
               {/* 4-qator: Email va Telefon */}
               <div className="grid grid-cols-2 gap-3">

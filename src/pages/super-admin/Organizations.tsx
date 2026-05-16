@@ -106,7 +106,7 @@ export default function Organizations() {
     try {
       const [{ data }, { data: plansData }] = await Promise.all([
         api.get<any>("/organizations", { params: { page: p, size: pageSize, query: q } }),
-        api.get<Plan[]>("/packages"),
+        api.get<Plan[]>("/super-admin/packages"),
       ]);
       setOrgs(data.content || []);
       setTotalPages(data.totalPages || 0);
