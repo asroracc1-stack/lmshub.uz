@@ -23,56 +23,101 @@ export default function Logo({
   };
 
   const finalSize = typeof size === "number" ? size : sizeMap[size];
-  const strokeColor = variant === "light" ? "#ffffff" : "currentColor";
+  
+  // Aspect ratio for full logo with text is 460/160 = 2.875
+  // For icon only it's square (160/160)
+  
+  const width = showText ? finalSize * 2.875 : finalSize;
+  const height = finalSize;
+
+  const primaryColor = variant === "light" ? "#34d399" : "#10b981"; // Brighter emerald for dark mode
+  const secondaryColor = variant === "light" ? "#10b981" : "#059669";
+  const textColor = variant === "light" ? "#ffffff" : "#10b981"; // Keep text white in dark mode for contrast
+  const hubColor = variant === "light" ? "#34d399" : "#059669";
+  const glowColor = variant === "light" ? "rgba(52,211,153,0.5)" : "rgba(16,185,129,0.4)";
 
   return (
-    <div className={cn("inline-flex items-center gap-2 transition-all duration-300", className)}>
+    <div className={cn("inline-flex items-center transition-all duration-300", className)}>
       <svg 
-        width={finalSize} 
-        height={finalSize} 
-        viewBox="0 0 24 24" 
+        width={width} 
+        height={height} 
+        viewBox={showText ? "0 0 460 160" : "0 0 160 160"} 
         fill="none" 
         xmlns="http://www.w3.org/2000/svg"
-        className="shrink-0"
+        className="shrink-0 drop-shadow-[0_0_15px_rgba(16,185,129,0.2)]"
       >
-        <path 
-          d="M12 22C12 22 20 18 20 12V5L12 2L4 5V12C4 18 12 22 12 22Z" 
-          stroke={strokeColor} 
-          strokeWidth="2" 
-          strokeLinecap="round" 
-          strokeLinejoin="round"
-        />
-        <path 
-          d="M12 11V17" 
-          stroke="#22c55e" 
-          strokeWidth="2" 
-          strokeLinecap="round" 
-          strokeLinejoin="round"
-        />
-        <path 
-          d="M12 17C10.5 16.5 9 16.5 7.5 16.5V10.5C9 10.5 10.5 10.5 12 11.5" 
-          stroke="#22c55e" 
-          strokeWidth="2" 
-          strokeLinecap="round" 
-          strokeLinejoin="round"
-        />
-        <path 
-          d="M12 17C13.5 16.5 15 16.5 16.5 16.5V10.5C15 10.5 13.5 10.5 12 11.5" 
-          stroke="#22c55e" 
-          strokeWidth="2" 
-          strokeLinecap="round" 
-          strokeLinejoin="round"
-        />
+        <defs>
+          <linearGradient id="tealGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color={variant === "light" ? "#6ee7b7" : "#34d399"}/>
+            <stop offset="100%" stop-color={variant === "light" ? "#10b981" : "#059669"}/>
+          </linearGradient>
+          <filter id="glow" x="-25%" y="-25%" width="150%" height="150%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          </filter>
+        </defs>
+
+        <g transform={showText ? "" : "translate(2, 0)"}>
+          {/* Outer orbit ring, tilted */}
+          <ellipse cx="78" cy="80" rx="60" ry="20"
+            fill="none" stroke={primaryColor} strokeWidth="2"
+            transform="rotate(-35 78 80)" opacity={variant === "light" ? 0.8 : 1}/>
+
+          {/* Orbit dot top-left */}
+          <circle cx="43" cy="33" r="4.5" fill={primaryColor}/>
+          <circle cx="43" cy="33" r="2.5" fill={variant === "light" ? "#2DC78A" : "white"}/>
+
+          {/* Orbit dot bottom-right */}
+          <circle cx="118" cy="118" r="3" fill={primaryColor} opacity="0.7"/>
+
+          {/* Outer circle */}
+          <circle cx="78" cy="80" r="44" fill="none" stroke={primaryColor} strokeWidth="3.5"/>
+
+          {/* Mid circle */}
+          <circle cx="78" cy="80" r="30" fill="none" stroke={primaryColor} strokeWidth="2.5" opacity="0.5"/>
+
+          {/* LMS text inside icon - Now without background for cleaner look */}
+          <text x="78" y="86"
+            fontFamily="'Arial Black', 'Helvetica Neue', Arial, sans-serif"
+            fontSize="16" fontWeight="900" 
+            fill={variant === "light" ? "white" : secondaryColor}
+            textAnchor="middle" letterSpacing="0.5">LMS</text>
+        </g>
+
+        {showText && (
+          <>
+            {/* Divider line */}
+            <line x1="152" y1="36" x2="152" y2="124"
+              stroke={primaryColor} strokeWidth="1.5" opacity="0.3"/>
+
+            {/* LMS text */}
+            <text x="172" y="107"
+              fontFamily="'Arial Black', 'Helvetica Neue', Arial, sans-serif"
+              fontSize="60" fontWeight="900" fill={textColor} letterSpacing="-1" filter="url(#glow)">LMS</text>
+
+            {/* H */}
+            <text x="318" y="107"
+              fontFamily="'Arial Black', 'Helvetica Neue', Arial, sans-serif"
+              fontSize="60" fontWeight="900" fill={hubColor} letterSpacing="-1">H</text>
+
+            {/* u */}
+            <text x="364" y="107"
+              fontFamily="'Arial Black', 'Helvetica Neue', Arial, sans-serif"
+              fontSize="60" fontWeight="900" fill={hubColor} letterSpacing="-1">u</text>
+
+            {/* b */}
+            <text x="401" y="107"
+              fontFamily="'Arial Black', 'Helvetica Neue', Arial, sans-serif"
+              fontSize="60" fontWeight="900" fill={textColor} letterSpacing="-1">b</text>
+
+            {/* Underline accent under Hub */}
+            <rect x="318" y="113" width="128" height="2.5" rx="1.2" fill={primaryColor} opacity="0.5"/>
+
+            {/* Accent dot */}
+            <circle cx="452" cy="114.5" r="3.5" fill={primaryColor}/>
+          </>
+        )}
       </svg>
-      {showText && (
-        <span className={cn(
-          "font-display font-bold tracking-tight",
-          finalSize >= 48 ? "text-2xl" : finalSize >= 32 ? "text-xl" : "text-lg",
-          variant === "light" ? "text-white" : "text-slate-900 dark:text-white"
-        )}>
-          LMS<span className="text-emerald-500">Hub</span>
-        </span>
-      )}
     </div>
   );
 }

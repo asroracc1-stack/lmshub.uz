@@ -110,7 +110,7 @@ export default function RoleLayout({ brand = "LMSHub", subtitle, nav: initialNav
       <div className="p-6 border-b border-sidebar-border shrink-0 flex items-center justify-between gap-3">
         <div className={cn("flex items-center gap-3 min-w-0", mini ? "justify-center" : "")}>
           <Logo 
-            size={mini ? 32 : 36} 
+            size={mini ? 36 : 52} 
             showText={!mini} 
             variant={theme === "dark" ? "light" : "dark"} 
             className="transition-all duration-300"

@@ -1,6 +1,25 @@
-<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M12 22C12 22 20 18 20 12V5L12 2L4 5V12C4 18 12 22 12 22Z" stroke="#0f172a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-  <path d="M12 11V17" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-  <path d="M12 17C10.5 16.5 9 16.5 7.5 16.5V10.5C9 10.5 10.5 10.5 12 11.5" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-  <path d="M12 17C13.5 16.5 15 16.5 16.5 16.5V10.5C15 10.5 13.5 10.5 12 11.5" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+<svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="tealGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34d399"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+  </defs>
+
+  <!-- High-contrast version for small browser tab icons -->
+  <g transform="translate(0, 0)">
+    <!-- Outer orbit ring - Thicker -->
+    <ellipse cx="80" cy="80" rx="70" ry="25"
+      fill="none" stroke="#10b981" stroke-width="8"
+      transform="rotate(-35 80 80)"/>
+
+    {/* Outer circle - Thicker */}
+    <circle cx="80" cy="80" r="50" fill="none" stroke="#10b981" stroke-width="10"/>
+
+    {/* Inner filled circle - Much Larger for visibility */}
+    <circle cx="80" cy="80" r="30" fill="url(#tealGrad)"/>
+    
+    {/* Center white dot for maximum pop */}
+    <circle cx="80" cy="80" r="10" fill="white" opacity="0.9"/>
+  </g>
 </svg>

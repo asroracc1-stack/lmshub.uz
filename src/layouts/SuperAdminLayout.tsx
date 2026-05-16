@@ -97,7 +97,7 @@ export default function SuperAdminLayout() {
     <>
       <div className="p-4 border-b border-sidebar-border shrink-0 flex items-center justify-between gap-2">
         <div className={cn("flex items-center gap-2 min-w-0", mini && "justify-center w-full")}>
-          <BrandLogo size={mini ? 36 : 64} />
+          <BrandLogo size={mini ? 38 : 56} />
           {!mini && <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-black">{t("roles.super_admin")}</p>}
         </div>
         {!mini && (
