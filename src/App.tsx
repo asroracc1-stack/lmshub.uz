@@ -367,6 +367,10 @@ const AppRoutes = () => {
           <Route path="packs" element={<Packs />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="calendar" element={<OrgEvents />} />
+          <Route path="speaking" element={<SpeakingHub basePath="/parent" />} />
+          <Route path="speaking/ai" element={<AISpeaking />} />
+          <Route path="speaking/topics" element={<SpeakingTopics basePath="/parent" />} />
+          <Route path="speaking/topics/:slug" element={<SpeakingTopicDetail basePath="/parent" />} />
           <Route path="notifications" element={<NotificationsPage />} />
         </Route>
 

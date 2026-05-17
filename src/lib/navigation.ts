@@ -109,6 +109,7 @@ export const getSidebarRoutes = (role: string, t: TFunction, options: { ielts?: 
         { to: "/parent/calendar", label: "Kalendar", icon: Calendar },
         { to: "/parent/messages", label: "Xabarlar", icon: MessagesSquare },
         { to: "/parent/packs", label: "Obunalar", icon: Package },
+        { to: "/parent/speaking", label: "AI Speaking", icon: Mic },
         { to: "/parent/profile", label: "Profil", icon: User },
         { to: "/parent/settings", label: "Sozlamalar", icon: Settings },
       ];
