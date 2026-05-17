@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/axios";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -62,75 +62,76 @@ export default function SettingsPage() {
   const [pwdConfirm, setPwdConfirm] = useState("");
   const [pwdSaving, setPwdSaving] = useState(false);
 
+  // SuperAdmin uchun username o'zgartirish
+  const [newUsername, setNewUsername] = useState("");
+
   const [tgUsername, setTgUsername] = useState(profile?.telegram_username ?? "");
   const [tgSaving, setTgSaving] = useState(false);
 
   useEffect(() => setTgUsername(profile?.telegram_username ?? ""), [profile?.telegram_username]);
 
   useEffect(() => {
-    const load = async () => {
-      if (!user?.id) return;
-      setLoading(true);
-      const { data } = await supabase
-        .from("user_settings")
-        .select("*")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      if (data) {
-        setS({
-          theme: data.theme,
-          language: data.language,
-          email_notifications: data.email_notifications,
-          push_notifications: data.push_notifications,
-          telegram_notifications: data.telegram_notifications,
-          compact_mode: data.compact_mode,
-        });
-        if (data.language) i18n.changeLanguage(data.language);
-      }
-      setLoading(false);
-    };
-    load();
+    setLoading(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
   const save = async () => {
-    if (!user?.id) return;
     setSaving(true);
-    const { error } = await supabase
-      .from("user_settings")
-      .upsert({ user_id: user.id, ...s }, { onConflict: "user_id" });
-    if (error) toast.error(error.message);
-    else {
+    try {
       if (s.theme === "light" || s.theme === "dark") setTheme(s.theme);
       i18n.changeLanguage(s.language);
       toast.success(t("common.saved"));
+    } catch {
+      toast.error("Saqlashda xatolik");
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   };
 
   const saveTg = async () => {
     if (!user?.id) return;
     setTgSaving(true);
-    const clean = tgUsername.trim().replace(/^@/, "");
-    const { error } = await supabase
-      .from("profiles")
-      .update({ telegram_username: clean || null })
-      .eq("id", user.id);
-    if (error) toast.error(error.message);
-    else toast.success(t("common.saved"));
-    setTgSaving(false);
+    try {
+      await api.put(`/admin/users/${user.id}`, {
+        telegramUsername: tgUsername.trim().replace(/^@/, "") || null,
+      });
+      toast.success(t("common.saved"));
+    } catch (e: any) {
+      toast.error(e.response?.data?.message || "Xatolik yuz berdi");
+    } finally {
+      setTgSaving(false);
+    }
   };
 
   const changePassword = async () => {
-    if (pwdNew.length < 6) return toast.error("Min 6 chars");
-    if (pwdNew !== pwdConfirm) return toast.error("Mismatch");
+    if (pwdNew.length < 6) return toast.error("Kamida 6 ta belgi kiriting");
+    if (pwdNew !== pwdConfirm) return toast.error("Parollar mos kelmadi");
     setPwdSaving(true);
-    const { error } = await supabase.auth.updateUser({ password: pwdNew });
-    setPwdSaving(false);
-    if (error) return toast.error(error.message);
-    toast.success(t("common.saved"));
-    setPwdNew("");
-    setPwdConfirm("");
+    try {
+      const isSuperAdmin = user?.role?.toLowerCase() === "super_admin";
+      if (isSuperAdmin) {
+        // SuperAdmin: username + parol bir vaqtda yangilanadi
+        const res = await api.put("/super-admin/profile", {
+          username: newUsername.trim() || undefined,
+          password: pwdNew,
+        });
+        // Yangi token saqlash
+        if (res.data?.access_token) {
+          localStorage.setItem("access_token", res.data.access_token);
+        }
+        toast.success("Profil muvaffaqiyatli yangilandi!");
+        setNewUsername("");
+      } else {
+        await api.post(`/admin/users/${user?.id}/password`, { password: pwdNew });
+        toast.success(t("common.saved"));
+      }
+      setPwdNew("");
+      setPwdConfirm("");
+    } catch (e: any) {
+      toast.error(e.response?.data?.message || "Xatolik yuz berdi");
+    } finally {
+      setPwdSaving(false);
+    }
   };
 
   if (loading) {
@@ -339,6 +340,24 @@ export default function SettingsPage() {
 
                     {/* SECURITY */}
                     <TabsContent value="security" className="space-y-4">
+                      {/* SuperAdmin uchun username o'zgartirish */}
+                      {user?.role?.toLowerCase() === "super_admin" && (
+                        <div className="space-y-1.5">
+                          <Label className="flex items-center gap-2 text-sm font-semibold">
+                            <Shield className="h-3.5 w-3.5" /> Yangi Username
+                          </Label>
+                          <Input
+                            type="text"
+                            value={newUsername}
+                            onChange={(e) => setNewUsername(e.target.value)}
+                            placeholder="Yangi username (ixtiyoriy)"
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Bo'sh qoldirilsa username o'zgarmaydi
+                          </p>
+                        </div>
+                      )}
+
                       <div className="grid sm:grid-cols-2 gap-3">
                         <div className="space-y-1.5">
                           <Label className="flex items-center gap-2 text-sm font-semibold">
@@ -369,7 +388,9 @@ export default function SettingsPage() {
                         ) : (
                           <KeyRound className="h-4 w-4 mr-2" />
                         )}
-                        {t("settings.changePassword")}
+                        {user?.role?.toLowerCase() === "super_admin"
+                          ? "Profilni Yangilash"
+                          : t("settings.changePassword")}
                       </Button>
                     </TabsContent>
                   </Tabs>

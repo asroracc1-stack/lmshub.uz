@@ -10,8 +10,18 @@ import {
 } from "@/components/ui/table";
 import {
   Dialog, DialogContent, DialogHeader,
-  DialogTitle, DialogFooter,
+  DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import {
@@ -32,6 +42,13 @@ import {
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 
+interface Child {
+  id: string;
+  fullName?: string;
+  full_name?: string;
+  username: string;
+}
+
 interface Parent {
   id: string;
   fullName?: string;
@@ -45,6 +62,7 @@ interface Parent {
   created_at?: any;
   childrenNames?: string[];
   children_names?: string[];
+  children?: Child[];
 }
 
 interface ParentsPage {
@@ -73,6 +91,11 @@ export default function ParentsPage() {
   // Link Child Modal State
   const [linkOpen, setLinkOpen] = useState(false);
   const [linkingParent, setLinkingParent] = useState<Parent | null>(null);
+  
+  // Custom Reset Password & Delete State
+  const [delTarget, setDelTarget] = useState<Parent | null>(null);
+  const [pwdTarget, setPwdTarget] = useState<Parent | null>(null);
+  const [newPwd, setNewPwd] = useState("");
 
   const [form, setForm] = useState({
     fullName: "", phoneOrUsername: "", email: "",
@@ -82,6 +105,16 @@ export default function ParentsPage() {
   const [groupSearchOpen, setGroupSearchOpen] = useState(false);
   const [studentSearchOpen, setStudentSearchOpen] = useState(false);
 
+  const resetPasswordMutation = useMutation({
+    mutationFn: ({ id, password }: any) => api.post(`/admin/users/${id}/password`, { password }),
+    onSuccess: () => {
+      toast.success("Parol muvaffaqiyatli yangilandi! 🔐");
+      setPwdTarget(null);
+      setNewPwd("");
+    },
+    onError: () => toast.error("Parolni yangilashda xatolik"),
+  });
+
   // Fetch groups
   const { data: groupsData } = useQuery({
     queryKey: ["groups-for-parents"],
@@ -89,7 +122,6 @@ export default function ParentsPage() {
       const { data } = await api.get("/admin/groups", { params: { size: 1000 } });
       return data.content || data;
     },
-    staleTime: 5 * 60 * 1000,
   });
   const groups = Array.isArray(groupsData) ? groupsData : [];
 
@@ -102,7 +134,6 @@ export default function ParentsPage() {
       });
       return data; // List<UserSummaryDto>
     },
-    staleTime: 5 * 60 * 1000,
   });
   const students = Array.isArray(studentsData) ? studentsData : [];
 
@@ -119,8 +150,23 @@ export default function ParentsPage() {
 
   const createMutation = useMutation({
     mutationFn: (payload: typeof form) => api.post("/admin/parents", payload),
-    onSuccess: () => {
-      toast.success("Ota-ona muvaffaqiyatli qo'shildi!");
+    onSuccess: (res) => {
+      const createdParent = res.data;
+      const pwd = createdParent?.card_number || createdParent?.cardNumber;
+      if (pwd) {
+        toast.success(
+          <div className="flex flex-col gap-1 text-slate-800 dark:text-slate-200">
+            <span className="font-bold text-emerald-600 dark:text-emerald-400">Ota-ona muvaffaqiyatli qo'shildi!</span>
+            <div className="text-xs space-y-0.5 mt-1">
+              <p>Login: <code className="bg-slate-100 dark:bg-white/10 px-1 py-0.5 rounded font-mono font-bold text-primary select-all">@{createdParent.username}</code></p>
+              <p>Parol: <code className="bg-emerald-50 dark:bg-emerald-950/20 px-1 py-0.5 rounded font-mono font-bold text-emerald-600 dark:text-emerald-400 select-all">{pwd}</code></p>
+            </div>
+          </div>,
+          { duration: 15000 }
+        );
+      } else {
+        toast.success("Ota-ona muvaffaqiyatli qo'shildi!");
+      }
       qc.invalidateQueries({ queryKey: ["parents"] });
       qc.invalidateQueries({ queryKey: ["super-admin-dashboard-stats"] });
       qc.invalidateQueries({ queryKey: ["admin-dashboard-stats"] });
@@ -281,11 +327,18 @@ export default function ParentsPage() {
                                       grid place-items-center text-white font-bold text-sm shrink-0">
                         {((p.fullName || p.full_name || p.username || "?")[0]).toUpperCase()}
                       </div>
-                      <div>
+                      <div className="space-y-0.5">
                         <p className="font-semibold text-slate-900 dark:text-white text-sm">
                           {p.fullName || p.full_name || "—"}
                         </p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">@{p.username}</p>
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                          <span className="text-xs text-slate-500 dark:text-slate-400 font-mono select-all font-medium">@{p.username}</span>
+                          {p.children && p.children.length > 0 && (
+                            <span className="text-[10px] bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 px-1 py-0.2 rounded font-mono select-all font-semibold">
+                              Parol: {p.children[0].id.substring(0, 8)}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </TableCell>
@@ -348,17 +401,23 @@ export default function ParentsPage() {
                         variant="ghost" size="icon"
                         className="h-8 w-8 text-primary"
                         onClick={() => openEdit(p)}
+                        title="Tahrirlash"
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="ghost" size="icon"
+                        className="h-8 w-8 text-amber-500 hover:text-amber-700 hover:bg-amber-500/10"
+                        onClick={() => setPwdTarget(p)}
+                        title="Parolni yangilash"
+                      >
+                        <KeyRound className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost" size="icon"
                         className="h-8 w-8 text-rose-500 hover:text-rose-700 hover:bg-rose-500/10"
-                        onClick={() => {
-                          if (confirm(`"${p.fullName}" ni o'chirmoqchimisiz?`)) {
-                            deleteMutation.mutate(p.id);
-                          }
-                        }}
+                        onClick={() => setDelTarget(p)}
+                        title="O'chirish"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -503,7 +562,12 @@ export default function ParentsPage() {
               <Popover open={studentSearchOpen} onOpenChange={setStudentSearchOpen}>
                 <PopoverTrigger asChild>
                   <Button variant="outline" role="combobox" className="w-full justify-between font-normal bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 rounded-xl h-10">
-                    {form.studentId ? students.find((s) => s.id === form.studentId)?.fullName || students.find((s) => s.id === form.studentId)?.username : "Talabani qidirish..."}
+                    {form.studentId ? (
+                      (() => {
+                        const s = students.find((st) => st.id === form.studentId);
+                        return s ? (s.full_name || s.fullName || s.username) : "Talabani qidirish...";
+                      })()
+                    ) : "Talabani qidirish..."}
                     <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
@@ -513,11 +577,22 @@ export default function ParentsPage() {
                     <CommandList>
                       <CommandEmpty>Talaba topilmadi.</CommandEmpty>
                       <CommandGroup>
-                        {students.map((s) => (
-                          <CommandItem key={s.id} value={s.fullName || s.username} onSelect={() => { setForm({ ...form, studentId: s.id }); setStudentSearchOpen(false); }}>
-                            <Check className={cn("mr-2 h-4 w-4", form.studentId === s.id ? "opacity-100" : "opacity-0")} /> {s.fullName || s.username}
-                          </CommandItem>
-                        ))}
+                        {students.map((s) => {
+                          const studentName = s.full_name || s.fullName || s.username;
+                          return (
+                            <CommandItem 
+                              key={s.id} 
+                              value={studentName} 
+                              onSelect={() => { 
+                                setForm({ ...form, studentId: s.id }); 
+                                setStudentSearchOpen(false); 
+                              }}
+                            >
+                              <Check className={cn("mr-2 h-4 w-4", form.studentId === s.id ? "opacity-100" : "opacity-0")} /> 
+                              {studentName}
+                            </CommandItem>
+                          );
+                        })}
                       </CommandGroup>
                     </CommandList>
                   </Command>
@@ -541,6 +616,68 @@ export default function ParentsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Password Reset Dialog */}
+      <Dialog open={!!pwdTarget} onOpenChange={(v) => { if (!v) { setPwdTarget(null); setNewPwd(""); } }}>
+        <DialogContent className="max-w-md p-0 overflow-hidden border-none shadow-2xl rounded-xl bg-white dark:bg-slate-900 border-slate-200 dark:border-white/10" aria-describedby="parents-pwd-desc">
+          <DialogHeader className="p-8 pb-4 bg-slate-50 dark:bg-slate-900/50">
+            <DialogTitle className="text-xl font-bold flex items-center gap-2 text-slate-900 dark:text-white">
+              <KeyRound className="h-5 w-5 text-amber-500" />
+              Parolni yangilash
+            </DialogTitle>
+            <DialogDescription id="parents-pwd-desc">
+              Foydalanuvchi <span className="font-bold text-slate-900 dark:text-white">@{pwdTarget?.username}</span> uchun yangi parol o'rnating.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={(e) => { e.preventDefault(); if (pwdTarget) resetPasswordMutation.mutate({ id: pwdTarget.id, password: newPwd }); }}>
+            <div className="p-8 pt-4 space-y-4">
+              <div className="space-y-1.5">
+                <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">Yangi parol *</Label>
+                <Input
+                  type="password"
+                  value={newPwd}
+                  onChange={(e) => setNewPwd(e.target.value)}
+                  placeholder="Kamida 6 ta belgi"
+                  className="bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white rounded-xl h-10"
+                  required
+                />
+              </div>
+            </div>
+
+            <DialogFooter className="p-8 pt-4 border-t border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-slate-900/80 backdrop-blur-md">
+              <Button variant="ghost" type="button" onClick={() => { setPwdTarget(null); setNewPwd(""); }} className="rounded-xl">
+                Bekor qilish
+              </Button>
+              <Button type="submit" disabled={resetPasswordMutation.isPending || newPwd.length < 6} className="bg-gradient-to-r from-pink-500 to-rose-600 text-white rounded-xl px-8 min-w-[120px]">
+                {resetPasswordMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                Yangilash
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation AlertDialog */}
+      <AlertDialog open={!!delTarget} onOpenChange={(v) => !v && setDelTarget(null)}>
+        <AlertDialogContent className="rounded-xl border-none shadow-2xl bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-bold">O'chirishni tasdiqlang</AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-500 dark:text-slate-400">
+              Ota-ona <span className="font-bold text-slate-900 dark:text-white">@{delTarget?.username}</span> tizimdan butunlay o'chiriladi. Ushbu amalni ortga qaytarib bo'lmaydi.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-6">
+            <AlertDialogCancel className="rounded-xl border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300">Bekor qilish</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => { if (delTarget) deleteMutation.mutate(delTarget.id); setDelTarget(null); }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-xl px-6"
+            >
+              O'chirish
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

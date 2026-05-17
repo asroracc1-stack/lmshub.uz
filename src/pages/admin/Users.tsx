@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useDebounce } from "@/hooks/useDebounce";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -57,8 +57,7 @@ import {
   Mail,
   Phone,
   BookOpen,
-  Users2,
-  Parent as ParentIcon, // Added ParentIcon
+  Users2 as ParentIcon,
   AtSign, // Added AtSign for telegram username
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -94,8 +93,6 @@ const parentSchema = z.object({
 
 export default function Users() {
   const { t } = useTranslation();
-  const [loading, setLoading] = useState(true);
-  const [users, setUsers] = useState<User[]>([]);
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 300);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -103,7 +100,6 @@ export default function Users() {
   const [pwdTarget, setPwdTarget] = useState<User | null>(null);
   const [delTarget, setDelTarget] = useState<User | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [globalError, setGlobalError] = useState(false);
   const [tigerAction, setTigerAction] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
@@ -118,24 +114,19 @@ export default function Users() {
   });
   const [newPwd, setNewPwd] = useState("");
 
-  const load = async () => {
-    setLoading(true);
-    try {
-      // Fetch only parents for this view
-      const response = await api.get("/api/v1/admin/parents");
-      setUsers(response.data);
-    } catch (error: any) {
-      console.error("Failed to load parents:", error);
-      if (error.response?.status >= 500) setGlobalError(true);
-      toast.error("Ota-onalarni yuklab bo'lmadi");
-    } finally {
-      setLoading(false);
+  // TanStack Query integration with search parameter and dynamic key
+  const { data: responseData, isLoading: loading, isError: globalError, refetch } = useQuery({
+    queryKey: ["admin-parents", debouncedSearch],
+    queryFn: async () => {
+      const response = await api.get("/admin/parents", {
+        params: { query: debouncedSearch || undefined, size: 1000 }
+      });
+      return response.data;
     }
-  };
+  });
 
-  useEffect(() => {
-    load();
-  }, []);
+  const users = Array.isArray(responseData) ? responseData : (responseData?.content || []);
+
 
   const resetForm = () => {
     setForm({
@@ -193,16 +184,16 @@ export default function Users() {
 
       let response;
       if (editing) {
-        response = await api.put(`/api/v1/admin/parents/${editing.id}`, payload);
+        response = await api.put(`/admin/parents/${editing.id}`, payload);
         toast.success("Ota-ona ma'lumotlari yangilandi! ✨");
       } else {
-        response = await api.post('/api/v1/admin/parents', payload);
+        response = await api.post('/admin/parents', payload);
         toast.success(`Ota-ona muvaffaqiyatli qo'shildi! Parol: ${response.data.defaultPassword} 🚀`);
       }
 
       setDialogOpen(false);
       resetForm();
-      load();
+      refetch();
     } catch (error: any) {
       console.error("Submit error:", error);
       toast.error(error.response?.data?.message || "Xatolik yuz berdi!");
@@ -223,7 +214,7 @@ export default function Users() {
       setTigerAction(u.active ? "Tartib o'rnatildi! 🐯🛠️" : "Foydalanuvchi yana safimizda! 🐯✨");
       setTimeout(() => setTigerAction(null), 3000);
       queryClient.invalidateQueries({ queryKey: ["admin-dashboard-stats"] });
-      load();
+      refetch();
     } catch (error) {
       console.error("Toggle status error:", error);
     }
@@ -232,13 +223,13 @@ export default function Users() {
   const remove = async () => {
     if (!delTarget) return;
     try {
-      await api.delete(`/api/v1/admin/parents/${delTarget.id}`);
+      await api.delete(`/admin/parents/${delTarget.id}`);
       toast.success("Ota-ona o'chirib tashlandi");
       setTigerAction("Tartib o'rnatildi! 🐯🛠️");
       setTimeout(() => setTigerAction(null), 3000);
       setDelTarget(null);
       queryClient.invalidateQueries({ queryKey: ["admin-dashboard-stats"] });
-      load();
+      refetch();
     } catch (error) {
       console.error("Delete error:", error);
       toast.error(error.response?.data?.message || "Xatolik yuz berdi!");
@@ -331,7 +322,7 @@ export default function Users() {
           <Table>
             <TableHeader className="bg-slate-50/50 dark:bg-slate-900/50">
               <TableRow className="hover:bg-transparent border-primary/5">
-                <TableHead className="w-[300px] font-bold text-slate-900 dark:text-white uppercase tracking-wider text-[10px]">Ota-ona</TableHead> {/* Changed header */}
+                <TableHead className="w-[300px] font-bold text-slate-900 dark:text-white uppercase tracking-wider text-[10px]">Ota-ona</TableHead>
                 <TableHead className="font-bold text-slate-900 dark:text-white uppercase tracking-wider text-[10px]">Rol</TableHead>
                 <TableHead className="font-bold text-slate-900 dark:text-white uppercase tracking-wider text-[10px]">Aloqa</TableHead>
                 <TableHead className="font-bold text-slate-900 dark:text-white uppercase tracking-wider text-[10px]">Status</TableHead>
@@ -429,7 +420,15 @@ export default function Users() {
                           >
                             <Pencil size={14} />
                           </Button>
-                          {/* Password reset is removed for parents as it's auto-generated */}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 rounded-lg text-slate-400 hover:text-amber-500 hover:bg-amber-50 transition-all"
+                            onClick={() => setPwdTarget(u)}
+                            title="Parolni yangilash"
+                          >
+                            <KeyRound size={14} />
+                          </Button>
                           <Button
                             variant="ghost"
                             size="icon"
@@ -550,7 +549,46 @@ export default function Users() {
         </DialogContent>
       </Dialog>
 
-      {/* Password Reset Dialog - Removed for parents */}
+      {/* Password Reset Dialog */}
+      <Dialog open={!!pwdTarget} onOpenChange={(v) => { if (!v) { setPwdTarget(null); setNewPwd(""); } }}>
+        <DialogContent className="max-w-md p-0 overflow-hidden border-none shadow-2xl rounded-xl" aria-describedby="pwd-dialog-description">
+          <DialogHeader className="p-8 pb-4 bg-slate-50 dark:bg-slate-900/50">
+            <DialogTitle className="text-xl font-bold flex items-center gap-2">
+              <KeyRound className="h-5 w-5 text-amber-500" />
+              Parolni yangilash
+            </DialogTitle>
+            <DialogDescription id="pwd-dialog-description">
+              Foydalanuvchi <span className="font-bold text-slate-900 dark:text-white">@{pwdTarget?.username}</span> uchun yangi parol o'rnating.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={(e) => { e.preventDefault(); resetPassword(); }}>
+            <div className="p-8 pt-4 space-y-4">
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-wider opacity-70">Yangi parol *</Label>
+                <Input
+                  type="password"
+                  value={newPwd}
+                  onChange={(e) => setNewPwd(e.target.value)}
+                  placeholder="Kamida 6 ta belgi"
+                  className="rounded-lg h-11 border-primary/10 focus:border-primary"
+                  required
+                />
+              </div>
+            </div>
+
+            <DialogFooter className="p-8 pt-4 border-t border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-slate-900/80 backdrop-blur-md">
+              <Button variant="ghost" type="button" onClick={() => { setPwdTarget(null); setNewPwd(""); }} className="rounded-lg h-11">
+                Bekor qilish
+              </Button>
+              <Button type="submit" disabled={submitting || newPwd.length < 6} variant="hero" className="rounded-lg h-11 px-8 min-w-[120px]">
+                {submitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                Yangilash
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
       {/* Delete Confirmation */}
       <AlertDialog open={!!delTarget} onOpenChange={(v) => !v && setDelTarget(null)}>
         <AlertDialogContent className="rounded-xl border-none shadow-2xl">

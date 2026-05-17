@@ -19,13 +19,14 @@ import { Progress } from "@/components/ui/progress";
 import { 
   Loader2, Sparkles, CheckCircle2, Clock, AlertCircle, Headphones, 
   BookOpen, ChevronLeft, ChevronRight, Flag, Play, Pause, 
-  Volume2, VolumeX, Maximize2, Mic 
+  Volume2, VolumeX, Maximize2, Minimize2, Mic 
 } from "lucide-react";
 import { toast } from "sonner";
 import { rawToBand, checkAnswer } from "@/lib/ielts";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import TigerPlayer from "@/components/TigerPlayer";
+import { useTheme } from "@/contexts/ThemeContext";
 // Icons are already imported above
 
 // Java API dan keluvchi tuzilma
@@ -335,10 +336,35 @@ function CustomAudioPlayer({ src, isExternalPaused }: { src: string, isExternalP
 }
 
 export default function MockTake() {
+  const { theme } = useTheme();
   const { testId } = useParams();
   const nav = useNavigate();
 
   const [exam, setExam] = useState<ExamData | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().then(() => {
+        setIsFullscreen(true);
+      }).catch(err => {
+        toast.error("To'liq ekranga o'tishda xatolik: " + err.message);
+      });
+    } else {
+      document.exitFullscreen().then(() => {
+        setIsFullscreen(false);
+      }).catch(() => {});
+    }
+  };
+
+  useEffect(() => {
+    const handleFsChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener("fullscreenchange", handleFsChange);
+    return () => document.removeEventListener("fullscreenchange", handleFsChange);
+  }, []);
+
   const [sections, setSections] = useState<{ title: string; passage: string; imageUrl: string }[]>([]);
   const [questions, setQuestions] = useState<NormalQ[]>([]);
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -518,7 +544,7 @@ export default function MockTake() {
             <div className="absolute -top-12 -right-12 w-48 h-48 bg-primary/10 rounded-full blur-3xl" />
             <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-violet-500/10 rounded-full blur-3xl" />
             <div className="h-32 w-32 mx-auto mb-4 relative z-10">
-              <TigerPlayer />
+              <TigerPlayer text="" />
             </div>
             <h2 className="text-4xl font-display font-bold mb-2 relative z-10">Tabriklaymiz!</h2>
             <p className="text-muted-foreground mb-6 relative z-10">Test muvaffaqiyatli topshirildi</p>
@@ -591,33 +617,35 @@ export default function MockTake() {
 
   if (!started) {
     return (
-      <div className="max-w-2xl mx-auto">
-        <Card className="p-8 space-y-5">
-          <div className="flex items-center gap-3">
-            {kind === "reading" ? <BookOpen className="h-8 w-8 text-violet-500" /> : kind === "listening" ? <Headphones className="h-8 w-8 text-amber-500" /> : <Sparkles className="h-8 w-8 text-emerald-500" />}
-            <div>
-              <Badge variant="outline">{exam.type}</Badge>
-              <h1 className="text-2xl md:text-3xl font-display font-bold">{exam.title}</h1>
+      <div className="min-h-[85vh] w-full flex flex-col items-center justify-center p-4">
+        <div className="w-full max-w-2xl">
+          <Card className="p-8 space-y-5 shadow-xl border border-slate-200/50 dark:border-white/5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md">
+            <div className="flex items-center gap-3">
+              {kind === "reading" ? <BookOpen className="h-8 w-8 text-violet-500" /> : kind === "listening" ? <Headphones className="h-8 w-8 text-amber-500" /> : <Sparkles className="h-8 w-8 text-emerald-500" />}
+              <div>
+                <Badge variant="outline">{exam.type}</Badge>
+                <h1 className="text-2xl md:text-3xl font-display font-bold">{exam.title}</h1>
+              </div>
             </div>
-          </div>
-          {exam.description && <p className="text-muted-foreground">{exam.description}</p>}
-          
-          {(kind === "listening" || exam.title.toLowerCase().includes("listening")) && (
-            <div className="py-2">
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2 ml-1">Sound Check</p>
-              <CustomAudioPlayer src={exam.audio_url || (exam as any).audioUrl} />
-            </div>
-          )}
+            {exam.description && <p className="text-muted-foreground">{exam.description}</p>}
+            
+            {(kind === "listening" || exam.title.toLowerCase().includes("listening")) && (
+              <div className="py-2">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2 ml-1">Sound Check</p>
+                <CustomAudioPlayer src={exam.audio_url || (exam as any).audioUrl} />
+              </div>
+            )}
 
-          <div className="grid grid-cols-3 gap-3">
-            <Card className="p-3 text-center"><Clock className="h-5 w-5 mx-auto mb-1 text-primary" /><p className="text-xs text-muted-foreground">Vaqt</p><p className="font-bold">{exam.duration_minutes} daq</p></Card>
-            <Card className="p-3 text-center"><Flag className="h-5 w-5 mx-auto mb-1 text-primary" /><p className="text-xs text-muted-foreground">Savollar</p><p className="font-bold">{questions.length}</p></Card>
-            <Card className="p-3 text-center"><Sparkles className="h-5 w-5 mx-auto mb-1 text-primary" /><p className="text-xs text-muted-foreground">Qiyinlik</p><p className="font-bold capitalize">{exam.difficulty ?? "—"}</p></Card>
-          </div>
-          <Button size="lg" className="w-full" onClick={() => { setStarted(true); startedAt.current = Date.now(); }}>
-            Boshlash
-          </Button>
-        </Card>
+            <div className="grid grid-cols-3 gap-3">
+              <Card className="p-3 text-center"><Clock className="h-5 w-5 mx-auto mb-1 text-primary" /><p className="text-xs text-muted-foreground">Vaqt</p><p className="font-bold">{exam.duration_minutes} daq</p></Card>
+              <Card className="p-3 text-center"><Flag className="h-5 w-5 mx-auto mb-1 text-primary" /><p className="text-xs text-muted-foreground">Savollar</p><p className="font-bold">{questions.length}</p></Card>
+              <Card className="p-3 text-center"><Sparkles className="h-5 w-5 mx-auto mb-1 text-primary" /><p className="text-xs text-muted-foreground">Qiyinlik</p><p className="font-bold capitalize">{exam.difficulty ?? "—"}</p></Card>
+            </div>
+            <Button size="lg" className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold transition-all duration-300 shadow-md shadow-emerald-500/10" onClick={() => { setStarted(true); startedAt.current = Date.now(); }}>
+              Boshlash
+            </Button>
+          </Card>
+        </div>
       </div>
     );
   }
@@ -668,29 +696,100 @@ export default function MockTake() {
   };
 
   return (
-    <div className="space-y-3 max-w-7xl mx-auto pb-40">
-      <Card className={cn("p-3 flex items-center justify-between gap-3 sticky top-0 z-20 backdrop-blur bg-background/85", lowTime && "border-rose-500")}>
-        <div className="flex items-center gap-2 min-w-0">
-          {kind === "reading" ? <BookOpen className="h-4 w-4" /> : <Headphones className="h-4 w-4" />}
-          <p className="font-semibold text-sm truncate">{exam.title}</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className={cn("flex items-center gap-1.5 font-mono font-bold text-sm px-3 py-1 rounded-md", lowTime ? "bg-rose-500 text-white animate-pulse" : "bg-primary/10 text-primary")}>
-            <Clock className="h-3.5 w-3.5" />{fmt(timeLeft)}
+    <div className="w-full min-h-screen bg-slate-50 dark:bg-[#070b19] text-slate-900 dark:text-slate-100 flex flex-col select-none overflow-x-hidden font-sans">
+      {/* 🚀 PREMIUM HUD HEADER */}
+      <header className={cn(
+        "h-16 shrink-0 border-b flex items-center justify-between px-4 md:px-8 sticky top-0 z-40 backdrop-blur-xl transition-all duration-300",
+        theme === "dark" 
+          ? "bg-slate-950/80 border-white/5 shadow-lg shadow-black/20" 
+          : "bg-white/80 border-slate-200/80 shadow-sm"
+      )}>
+        {/* Left Side: Brand & Title (Hidden on Mobile) */}
+        <div className="hidden md:flex items-center gap-4 min-w-0">
+          <div className="flex items-center gap-2.5 shrink-0">
+            <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-white font-bold shadow-md shadow-emerald-500/20">
+              L
+            </div>
+            <span className="font-display font-extrabold text-base tracking-tight hidden sm:block">
+              LMS<span className="text-emerald-500">Hub</span>
+            </span>
           </div>
+          <div className="h-5 w-px bg-slate-200 dark:bg-white/10 shrink-0" />
+          <div className="flex items-center gap-2 min-w-0">
+            <Badge variant="outline" className="capitalize text-[10px] font-extrabold border-emerald-500/30 text-emerald-600 bg-emerald-500/5 px-2.5 py-0.5 shrink-0">
+              IELTS {exam.type}
+            </Badge>
+            <h1 className="font-bold text-sm truncate opacity-90 hidden md:block max-w-[240px] xl:max-w-[400px]" title={exam.title}>
+              {exam.title}
+            </h1>
+          </div>
+        </div>
+
+        {/* Center: Glowing Pulse Timer (Absolute on Desktop, Normal flow on Mobile) */}
+        <div className="md:absolute md:left-1/2 md:-translate-x-1/2 flex items-center gap-3">
+          <div className={cn(
+            "flex items-center gap-2.5 px-4 md:px-5 py-2 md:py-2.5 rounded-2xl font-mono font-black text-xs md:text-sm transition-all duration-500 shadow-sm",
+            lowTime 
+              ? "bg-rose-500 text-white animate-pulse shadow-rose-500/20 border border-rose-400/20" 
+              : "bg-slate-100 dark:bg-white/5 text-slate-800 dark:text-emerald-400 border border-slate-200/50 dark:border-white/5"
+          )}>
+            <Clock className={cn("h-4 w-4", lowTime ? "animate-spin" : "text-emerald-500")} />
+            <span className="tracking-widest">{fmt(timeLeft)}</span>
+          </div>
+        </div>
+
+        {/* Right Side: Stats & Utility Controls */}
+        <div className="flex items-center gap-2 md:gap-4 ml-auto md:ml-0">
+          {/* Progress Tracker */}
+          <div className="hidden lg:flex flex-col items-end text-xs shrink-0">
+            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+              Topshirildi
+            </span>
+            <span className="font-black text-slate-700 dark:text-slate-300">
+              {answeredCount} / {questions.length} savol
+            </span>
+          </div>
+
+          <div className="h-5 w-px bg-slate-200 dark:bg-white/10 shrink-0 hidden lg:block" />
+
+          {/* Pause Button */}
           <Button 
-            size="sm" 
+            size="icon" 
             variant="ghost" 
             onClick={() => setIsPaused(!isPaused)}
-            className="h-8 w-8 rounded-full bg-primary/5 hover:bg-primary/10 text-primary"
+            className="h-10 w-10 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300 transition-all shrink-0"
+            title={isPaused ? "Davom ettirish" : "Vaqtincha to'xtatish"}
           >
-            {isPaused ? <Play className="h-4 w-4 fill-current" /> : <Pause className="h-4 w-4 fill-current" />}
+            {isPaused ? <Play className="h-4.5 w-4.5 fill-current text-emerald-500" /> : <Pause className="h-4.5 w-4.5 fill-current" />}
+          </Button>
+
+          {/* Fullscreen Button (Hidden on Mobile) */}
+          <Button 
+            size="icon" 
+            variant="ghost" 
+            onClick={toggleFullscreen}
+            className="h-10 w-10 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300 transition-all shrink-0 hidden sm:inline-flex"
+            title="To'liq ekran rejimi"
+          >
+            {isFullscreen ? <Minimize2 className="h-4.5 w-4.5" /> : <Maximize2 className="h-4.5 w-4.5" />}
+          </Button>
+
+          {/* Direct Submit Button */}
+          <Button 
+            size="sm"
+            onClick={() => submit()} 
+            disabled={submitting} 
+            className="bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-extrabold px-4 md:px-5 py-2 md:py-2.5 rounded-xl transition-all shadow-md shadow-emerald-500/10 shrink-0 text-[11px] md:text-xs tracking-tight"
+          >
+            {submitting ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : null}
+            Yakunlash
           </Button>
         </div>
-      </Card>
+      </header>
 
+      {/* 🎧 LISTENING COMPACT PLAYER */}
       {(kind === "listening" || exam.title.toLowerCase().includes("listening")) && (
-        <div className="sticky top-[60px] z-30 px-1 py-2">
+        <div className="shrink-0 w-full max-w-7xl mx-auto px-4 md:px-8 py-3 bg-transparent z-30">
           <CustomAudioPlayer 
             src={exam.audio_url || (exam as any).audioUrl} 
             isExternalPaused={isPaused}
@@ -698,23 +797,24 @@ export default function MockTake() {
         </div>
       )}
 
+      {/* ⏸️ PAUSE OVERLAY */}
       <AnimatePresence>
         {isPaused && (
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center"
+            className="fixed inset-0 z-[100] bg-slate-950/95 backdrop-blur-xl flex flex-col items-center justify-center p-6 text-center"
           >
             <div className="h-48 w-48 mb-6">
               <TigerPlayer />
             </div>
-            <h2 className="text-3xl font-display font-bold text-white mb-2">Test to'xtatildi</h2>
-            <p className="text-slate-400 max-w-md mb-8">Hozir dam olib oling. Testni davom ettirish uchun pastdagi tugmani bosing.</p>
+            <h2 className="text-3xl font-display font-black text-white mb-2 tracking-tight">Test to'xtatildi</h2>
+            <p className="text-slate-400 max-w-md mb-8 text-sm">Hozir dam olib oling. Taymer siz davom ettirmaguningizcha to'xtatib turiladi.</p>
             <Button 
               size="lg" 
               onClick={() => setIsPaused(false)}
-              className="bg-primary hover:bg-primary/90 text-white px-12 rounded-full shadow-glow"
+              className="bg-emerald-500 hover:bg-emerald-600 text-white px-10 py-6 rounded-full font-black text-base transition-all shadow-lg shadow-emerald-500/20 active:scale-95"
             >
               <Play className="h-5 w-5 mr-2 fill-current" /> Davom ettirish
             </Button>
@@ -722,171 +822,304 @@ export default function MockTake() {
         )}
       </AnimatePresence>
 
-      <div className={cn("grid gap-4", kind === "reading" && (currentSection?.passage || currentSection?.imageUrl) ? "lg:grid-cols-2" : "grid-cols-1")}>
-        {kind === "reading" && (currentSection?.passage || currentSection?.imageUrl) && (
-          <Card className="p-6 overflow-y-auto custom-scrollbar max-h-[calc(100vh-280px)]">
-            {currentSection.title && <h2 className="font-display font-bold text-xl mb-3">{currentSection.title}</h2>}
-            {currentSection.imageUrl && (
-              <div className="mb-4">
-                <img src={currentSection.imageUrl} alt="Map/Diagram" className="max-w-full h-auto mx-auto rounded-lg shadow-sm" />
-              </div>
-            )}
-            <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap leading-relaxed">{currentSection.passage}</div>
-          </Card>
-        )}
-
-        <Card className="p-6 overflow-y-auto custom-scrollbar max-h-[calc(100vh-320px)]">
-          {currentSection?.title && <div className="text-center mb-5"><h2 className="font-display font-bold text-xl">{currentSection.title}</h2></div>}
-          
-          {kind === "listening" && currentSection?.imageUrl && (
-             <div className="mb-6 rounded-xl overflow-hidden border bg-white p-2 shadow-sm">
-                <img src={currentSection.imageUrl} alt="Map/Diagram" className="max-w-full h-auto mx-auto" />
-                <p className="text-[10px] text-center text-muted-foreground mt-1 uppercase tracking-widest font-bold">Visual Reference</p>
-             </div>
-          )}
-          {sectionQs.length === 0 ? (
-            <p className="text-muted-foreground text-center py-8">Bu qismda savol yo'q</p>
-          ) : (
-            <div className="space-y-3">
-              {sectionQs.map((q) => {
-                const isInline = q.qtype === "fill" || q.qtype === "short";
-                const LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H"];
-                return (
-                  <div key={q.id} id={`q-${q.id}`}
-                    className={cn("group rounded-lg px-3 py-2 transition-all",
-                      flagged.has(q.id) && "bg-amber-50 dark:bg-amber-900/10",
-                      answers[q.id] && !flagged.has(q.id) && "bg-emerald-50/50 dark:bg-emerald-900/5")}>
-                    <div className="flex items-start gap-2">
-                      <span className="font-bold text-primary shrink-0 w-7 text-sm pt-1">{q.position}.</span>
-                      <div className="flex-1 min-w-0">
-                        {isInline ? renderInlinePrompt(q) : (
-                          <>
-                            <p className="text-sm font-medium mb-2">{q.prompt}</p>
-                            {(q.qtype === "mcq" && Array.isArray(q.options) && q.options.length > 0) ? (
-                              <div className="space-y-1.5 mt-2">
-                                {q.options.map((opt, idx) => {
-                                  const letter = LETTERS[idx] ?? String(idx + 1);
-                                  const selected = answers[q.id] === opt;
-                                  return (
-                                    <button key={opt} type="button"
-                                      onClick={() => onAnswer(q.id, opt)}
-                                      className={cn(
-                                        "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border text-sm text-left transition-all",
-                                        selected
-                                          ? "bg-primary text-primary-foreground border-primary font-medium"
-                                          : "bg-card hover:bg-muted border-border hover:border-primary/40"
-                                      )}>
-                                      <span className={cn(
-                                        "flex-none w-6 h-6 rounded-full border flex items-center justify-center text-xs font-bold",
-                                        selected ? "bg-primary-foreground text-primary border-primary-foreground" : "border-current"
-                                      )}>{letter}</span>
-                                      <span className="flex-1">{opt}</span>
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            ) : (q.qtype === "mcq") ? (
-                              <div className="mt-2">
-                                {renderInlineInput(q)}
-                              </div>
-                            ) : null}
-                            {(q.qtype === "tfng" || q.qtype === "ynng") && (
-                              <div className="grid grid-cols-3 gap-1.5">
-                                {(q.qtype === "tfng" ? ["TRUE", "FALSE", "NOT GIVEN"] : ["YES", "NO", "NOT GIVEN"]).map((v) => (
-                                  <button key={v} onClick={() => onAnswer(q.id, v)}
-                                    className={cn("py-1.5 rounded-md text-xs font-bold border transition-all",
-                                      answers[q.id] === v ? "bg-primary text-primary-foreground border-primary" : "bg-card hover:border-primary/40")}>
-                                    {v}
-                                  </button>
-                                ))}
-                              </div>
-                            )}
-                            {(q.qtype === "matching" || q.qtype === "headings") && Array.isArray(q.options) && (
-                              <select className="w-full h-9 px-2 rounded-md border bg-background text-sm"
-                                value={answers[q.id] ?? ""} onChange={(e) => onAnswer(q.id, e.target.value)}>
-                                <option value="">— tanlang —</option>
-                                {q.options.map((o) => <option key={o} value={o}>{o}</option>)}
-                              </select>
-                            )}
-                          </>
-                        )}
-                      </div>
-                      <button onClick={() => toggleFlag(q.id)}
-                        className={cn("p-1 rounded opacity-40 group-hover:opacity-100 transition", flagged.has(q.id) ? "text-amber-500 opacity-100" : "text-muted-foreground hover:text-foreground")}
-                        title="Belgilash"><Flag className="h-3.5 w-3.5" /></button>
-                    </div>
+      {/* 📝 EXAM WORKSPACE */}
+      <main className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 py-4 min-h-0 flex flex-col">
+        <div className={cn(
+          "grid gap-6 flex-1 min-h-0", 
+          kind === "reading" && (currentSection?.passage || currentSection?.imageUrl) ? "lg:grid-cols-2" : "grid-cols-1"
+        )}>
+          {/* LEFT PANEL: PASSAGE (READING ONLY) */}
+          {kind === "reading" && (currentSection?.passage || currentSection?.imageUrl) && (
+            <Card className="flex flex-col min-h-[450px] lg:max-h-[calc(100vh-220px)] border-slate-200/50 dark:border-white/5 shadow-xl shadow-slate-100/50 dark:shadow-none bg-white dark:bg-slate-900/40 backdrop-blur-md rounded-2xl overflow-hidden">
+              {currentSection.title && (
+                <div className="px-6 py-4 border-b border-slate-100 dark:border-white/5 flex items-center justify-between shrink-0 bg-slate-50/50 dark:bg-slate-950/20">
+                  <h2 className="font-display font-extrabold text-base tracking-tight text-slate-800 dark:text-white">
+                    {currentSection.title}
+                  </h2>
+                </div>
+              )}
+              <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar space-y-6">
+                {currentSection.imageUrl && (
+                  <div className="rounded-xl overflow-hidden border border-slate-200/60 dark:border-white/5 bg-slate-50 dark:bg-slate-950 p-3 shadow-inner">
+                    <img src={currentSection.imageUrl} alt="Map/Diagram" className="max-w-full h-auto mx-auto rounded-lg" />
                   </div>
-                );
-              })}
-            </div>
+                )}
+                <div className="prose prose-slate dark:prose-invert max-w-none text-slate-750 dark:text-slate-350 text-sm md:text-base leading-relaxed font-normal whitespace-pre-wrap select-text selection:bg-emerald-500/20 selection:text-emerald-500">
+                  {currentSection.passage}
+                </div>
+              </div>
+            </Card>
           )}
-          <div className="flex justify-between pt-4 mt-4 border-t">
-            <Button variant="outline" size="sm" onClick={() => setSectionIdx((i) => Math.max(0, i - 1))} disabled={sectionIdx === 0}><ChevronLeft className="h-4 w-4" /> Oldingi</Button>
-            <Button variant="outline" size="sm" onClick={() => setSectionIdx((i) => Math.min(sections.length - 1, i + 1))} disabled={sectionIdx === sections.length - 1}>Keyingi <ChevronRight className="h-4 w-4" /></Button>
-          </div>
-        </Card>
-      </div>
 
-      <div className="fixed bottom-0 left-0 right-0 z-30 border-t bg-background/95 backdrop-blur shadow-[0_-8px_30px_-10px_rgba(0,0,0,0.15)] pb-safe">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4 overflow-x-auto scroll-smooth no-scrollbar touch-pan-x">
-          <div className="flex items-center gap-2 flex-nowrap shrink-0">
+          {/* RIGHT PANEL: QUESTIONS */}
+          <Card className="flex flex-col min-h-[450px] lg:max-h-[calc(100vh-220px)] border-slate-200/50 dark:border-white/5 shadow-xl shadow-slate-100/50 dark:shadow-none bg-white dark:bg-slate-900/40 backdrop-blur-md rounded-2xl overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-100 dark:border-white/5 flex items-center justify-between shrink-0 bg-slate-50/50 dark:bg-slate-950/20">
+              <span className="text-xs font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                Savollar va Topshiriqlar
+              </span>
+              <span className="text-xs font-black text-emerald-500">
+                {sectionQs.length} ta savol
+              </span>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar space-y-6">
+              {/* Listening Visual Reference */}
+              {kind === "listening" && currentSection?.imageUrl && (
+                 <div className="mb-6 rounded-2xl overflow-hidden border border-slate-200/60 dark:border-white/5 bg-slate-50 dark:bg-slate-950 p-3 shadow-inner">
+                    <img src={currentSection.imageUrl} alt="Map/Diagram" className="max-w-full h-auto mx-auto rounded-lg" />
+                    <p className="text-[10px] text-center text-slate-400 dark:text-slate-500 mt-2 uppercase tracking-widest font-black">Visual Reference</p>
+                 </div>
+              )}
+
+              {sectionQs.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 text-center gap-3">
+                  <AlertCircle className="h-10 w-10 text-slate-300 dark:text-slate-700 animate-pulse" />
+                  <p className="text-slate-400 dark:text-slate-500 text-sm font-semibold">Bu bo'limda hech qanday savollar kiritilmagan.</p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {sectionQs.map((q) => {
+                    const isInline = q.qtype === "fill" || q.qtype === "short";
+                    const LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H"];
+                    const hasAnswer = !!answers[q.id];
+                    const isFlagged = flagged.has(q.id);
+
+                    return (
+                      <div 
+                        key={q.id} 
+                        id={`q-${q.id}`}
+                        className={cn(
+                          "group rounded-2xl p-4 md:p-5 border transition-all duration-300",
+                          isFlagged 
+                            ? "bg-amber-500/5 border-amber-500/20 shadow-sm shadow-amber-500/5" 
+                            : hasAnswer
+                              ? "bg-emerald-500/5 border-emerald-500/20 shadow-sm shadow-emerald-500/5"
+                              : "bg-slate-50/50 dark:bg-white/[0.01] border-slate-200/60 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10"
+                        )}
+                      >
+                        <div className="flex items-start gap-4">
+                          {/* Question Number Badge */}
+                          <span className={cn(
+                            "flex-none h-8 w-8 rounded-xl flex items-center justify-center text-xs font-black shadow-sm transition-all duration-300",
+                            isFlagged
+                              ? "bg-amber-500 text-white shadow-amber-500/10"
+                              : hasAnswer
+                                ? "bg-emerald-500 text-white shadow-emerald-500/10"
+                                : "bg-white dark:bg-slate-950 border border-slate-200 dark:border-white/5 text-slate-700 dark:text-slate-350"
+                          )}>
+                            {q.position}
+                          </span>
+
+                          {/* Question Content */}
+                          <div className="flex-1 min-w-0">
+                            {isInline ? (
+                              <div className="text-slate-800 dark:text-slate-200 font-medium">
+                                {renderInlinePrompt(q)}
+                              </div>
+                            ) : (
+                              <div className="space-y-4">
+                                <p className="text-slate-800 dark:text-slate-200 font-bold text-sm md:text-base leading-snug">
+                                  {q.prompt}
+                                </p>
+
+                                {/* Multiple Choice options */}
+                                {q.qtype === "mcq" && Array.isArray(q.options) && q.options.length > 0 ? (
+                                  <div className="grid gap-2.5 mt-3">
+                                    {q.options.map((opt, idx) => {
+                                      const letter = LETTERS[idx] ?? String(idx + 1);
+                                      const selected = answers[q.id] === opt;
+                                      return (
+                                        <button 
+                                          key={opt} 
+                                          type="button"
+                                          onClick={() => onAnswer(q.id, opt)}
+                                          className={cn(
+                                            "w-full flex items-center gap-3.5 px-4 py-3 rounded-xl border text-xs md:text-sm text-left transition-all duration-200",
+                                            selected
+                                              ? "bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/20 font-bold"
+                                              : "bg-white dark:bg-slate-950 hover:bg-slate-100/50 dark:hover:bg-white/[0.03] border-slate-200 dark:border-white/5 text-slate-700 dark:text-slate-300"
+                                          )}
+                                        >
+                                          <span className={cn(
+                                            "flex-none w-6 h-6 rounded-lg border flex items-center justify-center text-[10px] font-black tracking-wider transition-all",
+                                            selected 
+                                              ? "bg-white text-emerald-500 border-white shadow-inner" 
+                                              : "border-slate-300 dark:border-white/10 bg-slate-50 dark:bg-slate-900 text-slate-500"
+                                          )}>
+                                            {letter}
+                                          </span>
+                                          <span className="flex-1 leading-snug">{opt}</span>
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                ) : q.qtype === "mcq" ? (
+                                  <div className="mt-2">
+                                    {renderInlineInput(q)}
+                                  </div>
+                                ) : null}
+
+                                {/* TFNG / YNNG Buttons */}
+                                {(q.qtype === "tfng" || q.qtype === "ynng") && (
+                                  <div className="grid grid-cols-3 gap-2 mt-3">
+                                    {(q.qtype === "tfng" ? ["TRUE", "FALSE", "NOT GIVEN"] : ["YES", "NO", "NOT GIVEN"]).map((v) => {
+                                      const selected = answers[q.id] === v;
+                                      return (
+                                        <button 
+                                          key={v} 
+                                          onClick={() => onAnswer(q.id, v)}
+                                          className={cn(
+                                            "py-3 rounded-xl text-[10px] md:text-xs font-black tracking-wider border transition-all duration-200 active:scale-95",
+                                            selected 
+                                              ? "bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/10" 
+                                              : "bg-white dark:bg-slate-950 hover:bg-slate-50 dark:hover:bg-white/[0.02] border-slate-200 dark:border-white/5 text-slate-500 dark:text-slate-400"
+                                          )}
+                                        >
+                                          {v}
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+
+                                {/* Matching / Headings Dropdown */}
+                                {(q.qtype === "matching" || q.qtype === "headings") && Array.isArray(q.options) && (
+                                  <select 
+                                    className="w-full h-11 px-3.5 rounded-xl border border-slate-200 dark:border-white/5 bg-white dark:bg-slate-950 text-xs md:text-sm font-semibold text-slate-700 dark:text-slate-350 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-all outline-none"
+                                    value={answers[q.id] ?? ""} 
+                                    onChange={(e) => onAnswer(q.id, e.target.value)}
+                                  >
+                                    <option value="">— Variantni tanlang —</option>
+                                    {q.options.map((o) => <option key={o} value={o}>{o}</option>)}
+                                  </select>
+                                )}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Flag/Bookmark Button */}
+                          <button 
+                            onClick={() => toggleFlag(q.id)}
+                            className={cn(
+                              "p-2 rounded-xl border transition-all shrink-0 hover:scale-105 active:scale-95",
+                              isFlagged 
+                                ? "text-amber-500 bg-amber-500/10 border-amber-500/20 opacity-100" 
+                                : "text-slate-300 dark:text-slate-600 hover:text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5 border-transparent"
+                            )}
+                            title="Keyinchalik qaytish uchun belgilash"
+                          >
+                            <Flag className={cn("h-4 w-4", isFlagged && "fill-current")} />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* In-Panel Next/Prev Buttons */}
+              <div className="flex justify-between pt-6 border-t border-slate-100 dark:border-white/5 shrink-0">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setSectionIdx((i) => Math.max(0, i - 1))} 
+                  disabled={sectionIdx === 0}
+                  className="rounded-xl border-slate-200 dark:border-white/5 px-4 h-10 font-bold hover:bg-slate-50 dark:hover:bg-white/5"
+                >
+                  <ChevronLeft className="h-4 w-4 mr-1.5" /> Oldingi Passage
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setSectionIdx((i) => Math.min(sections.length - 1, i + 1))} 
+                  disabled={sectionIdx === sections.length - 1}
+                  className="rounded-xl border-slate-200 dark:border-white/5 px-4 h-10 font-bold hover:bg-slate-50 dark:hover:bg-white/5"
+                >
+                  Keyingi Passage <ChevronRight className="h-4 w-4 ml-1.5" />
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </div>
+      </main>
+
+      {/* 🎛️ FLOATING GLASSMORPHIC BOTTOM BAR */}
+      <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-slate-200/50 dark:border-white/5 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl shadow-[0_-12px_40px_rgba(0,0,0,0.1)] pb-safe shrink-0">
+        <div className="max-w-7xl mx-auto px-4 md:px-8 py-3.5 flex items-center gap-4 justify-between overflow-x-auto scroll-smooth no-scrollbar select-none">
+          <div className="flex items-center gap-3 shrink-0 flex-nowrap">
             {sections.map((s, i) => {
               const sQs = questions.filter((q) => q.section_index === i);
               const isActive = sectionIdx === i;
               const partLabel = kind === "reading" ? `Passage ${i + 1}` : `Part ${i + 1}`;
               return (
                 <div key={i} className="flex items-center gap-2 shrink-0">
-                  <button onClick={() => setSectionIdx(i)}
-                    className={cn("px-4 py-1.5 rounded-lg text-xs font-black whitespace-nowrap transition-all border",
+                  <button 
+                    onClick={() => setSectionIdx(i)}
+                    className={cn(
+                      "px-4 py-2 rounded-xl text-xs font-black whitespace-nowrap transition-all duration-300 border active:scale-95",
                       isActive 
-                        ? "bg-emerald-500 text-white border-emerald-500 shadow-lg shadow-emerald-500/20" 
-                        : "bg-muted/50 text-slate-500 border-transparent hover:bg-muted hover:text-slate-900 dark:hover:text-white")}>
+                        ? "bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/20" 
+                        : "bg-slate-100 dark:bg-white/5 text-slate-500 border-transparent hover:bg-slate-200/60 dark:hover:bg-white/10 hover:text-slate-800 dark:hover:text-white"
+                    )}
+                  >
                     {partLabel}
                   </button>
+
                   {isActive ? (
                     <div className="flex items-center gap-1.5 flex-nowrap">
-                      {sQs.map((q) => (
-                        <button 
-                          key={q.id} 
-                          onClick={() => { const el = document.getElementById(`q-${q.id}`); el?.scrollIntoView({ behavior: "smooth", block: "center" }); }}
-                          className={cn("h-8 w-8 rounded-lg text-[11px] font-black border transition-all shrink-0",
-                            answers[q.id] 
-                              ? "bg-emerald-500 text-white border-emerald-500 shadow-sm" :
-                              flagged.has(q.id) 
-                                ? "bg-amber-100 text-amber-700 border-amber-400" 
-                                : "bg-card border-slate-200 dark:border-white/10 hover:border-emerald-500/50 text-slate-600 dark:text-slate-400")}>
-                          {q.position}
-                        </button>
-                      ))}
+                      {sQs.map((q) => {
+                        const hasAns = !!answers[q.id];
+                        const isFlg = flagged.has(q.id);
+                        return (
+                          <button 
+                            key={q.id} 
+                            onClick={() => { 
+                              const el = document.getElementById(`q-${q.id}`); 
+                              el?.scrollIntoView({ behavior: "smooth", block: "center" }); 
+                            }}
+                            className={cn(
+                              "h-8 w-8 rounded-xl text-[10px] font-black border transition-all shrink-0 hover:scale-105 active:scale-90",
+                              hasAns 
+                                ? "bg-emerald-500 text-white border-emerald-500 shadow-sm shadow-emerald-500/10" 
+                                : isFlg 
+                                  ? "bg-amber-500 text-white border-amber-500 shadow-sm shadow-amber-500/10" 
+                                  : "bg-white dark:bg-slate-900 border-slate-200 dark:border-white/5 hover:border-emerald-500/40 text-slate-600 dark:text-slate-400"
+                            )}
+                          >
+                            {q.position}
+                          </button>
+                        );
+                      })}
                     </div>
                   ) : (
-                    <span className="text-[10px] font-black text-slate-400 whitespace-nowrap px-1">
-                      {sQs.filter((q) => answers[q.id]).length}/{sQs.length}
+                    <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 whitespace-nowrap px-1.5 bg-slate-100 dark:bg-white/5 py-1.5 rounded-lg border border-slate-200/50 dark:border-transparent">
+                      {sQs.filter((q) => answers[q.id]).length} / {sQs.length}
                     </span>
                   )}
-                  {i < sections.length - 1 && <div className="w-px h-5 bg-slate-200 dark:bg-white/5 mx-1 shrink-0" />}
+                  {i < sections.length - 1 && <div className="w-[1px] h-6 bg-slate-200 dark:bg-white/10 mx-1 shrink-0" />}
                 </div>
               );
             })}
           </div>
           
-          <div className="flex-1 min-w-[20px]" />
+          <div className="flex-none w-px h-6 bg-slate-200 dark:bg-white/10 shrink-0 mx-2 hidden sm:block" />
           
           <Button 
             size="default" 
             onClick={() => submit()} 
             disabled={submitting} 
-            className="shrink-0 bg-slate-900 dark:bg-white text-white dark:text-slate-950 font-black rounded-xl hover:scale-105 active:scale-95 transition-all shadow-xl"
+            className="shrink-0 bg-slate-900 dark:bg-white text-white dark:text-slate-950 font-black rounded-xl hover:scale-105 active:scale-95 transition-all shadow-md px-6 h-10 text-xs tracking-tight"
           >
-            {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            Testni yakunlash
+            {submitting && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />}
+            Testni tugatish
           </Button>
         </div>
         <Progress value={(answeredCount / Math.max(questions.length, 1)) * 100} className="h-1 bg-slate-100 dark:bg-white/5" />
       </div>
-      {/* Navigation Guard Alert */}
+
+      {/* ⚠️ NAVIGATION GUARD ALERT */}
       <AlertDialog open={blocker.state === "blocked"}>
-        <AlertDialogContent className="max-w-[400px] border-rose-500/20 shadow-2xl">
+        <AlertDialogContent className="max-w-[400px] border-slate-200 dark:border-white/5 dark:bg-[#090d1f] shadow-2xl rounded-2xl">
           <AlertDialogHeader>
             <div className="flex justify-center mb-4">
               <div className="p-3 bg-rose-500/10 rounded-full">
@@ -894,7 +1127,7 @@ export default function MockTake() {
               </div>
             </div>
             <AlertDialogTitle className="text-center text-xl font-bold">Diqqat! Test davom etmoqda</AlertDialogTitle>
-            <AlertDialogDescription className="text-center text-base">
+            <AlertDialogDescription className="text-center text-base text-slate-500 dark:text-slate-400 leading-relaxed mt-2">
               Agar sahifadan hozir chiqsangiz, barcha belgilangan javoblaringiz va mehnatotingiz saqlanmasligi mumkin.
               <br /><br />
               Chindan ham chiqmoqchimisiz?
@@ -903,16 +1136,15 @@ export default function MockTake() {
           <AlertDialogFooter className="flex-col sm:flex-row gap-2 mt-4">
             <AlertDialogCancel 
               onClick={() => blocker.reset?.()} 
-              className="flex-1 border-primary/20 hover:bg-primary/5 font-semibold"
+              className="flex-1 border-slate-200 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-white/5 font-bold h-11 rounded-xl"
             >
               Testda qolish
             </AlertDialogCancel>
             <AlertDialogAction 
               onClick={() => {
-                // If they insist on leaving, we could trigger a partial save here
                 blocker.proceed?.();
               }}
-              className="flex-1 bg-rose-500 hover:bg-rose-600 text-white font-semibold"
+              className="flex-1 bg-rose-500 hover:bg-rose-600 text-white font-bold h-11 rounded-xl shadow-md shadow-rose-500/10"
             >
               Testni yakunlash va chiqish
             </AlertDialogAction>

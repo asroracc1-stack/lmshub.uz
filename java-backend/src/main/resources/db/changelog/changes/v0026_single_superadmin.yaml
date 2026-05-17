@@ -1,0 +1,46 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0026_single_superadmin_v4
+      author: asror
+      validCheckSum: ANY
+      changes:
+        # 1. Agar 'asrorsuperadmin' username'i boshqa IDda bo'lsa — rename
+        - sql:
+            sql: >
+              UPDATE public.users
+              SET username = CONCAT('demoted_', SUBSTRING(id::text, 1, 8))
+              WHERE username = 'asrorsuperadmin'
+                AND id != '00000000-0000-0000-0000-000000000001';
+
+        # 2. Boshqa SUPER_ADMIN larni ADMIN roliga tushirish
+        - sql:
+            sql: >
+              UPDATE public.users
+              SET role = 'ADMIN'
+              WHERE role = 'SUPER_ADMIN'
+                AND id != '00000000-0000-0000-0000-000000000001';
+
+        # 3. Canonical superadminni upsert (BCrypt: ilhomhamdamarguba)
+        - sql:
+            sql: >
+              INSERT INTO public.users (
+                id, username, email, password, role,
+                full_name, active, is_google_user, coins, created_at
+              ) VALUES (
+                '00000000-0000-0000-0000-000000000001',
+                'asrorsuperadmin',
+                'asrorsuperadmin@lmshub.uz',
+                '$2a$12$pznT0b3C7OZoUdmQMFDOGeMqyHFV.4WT.Q7GN9vUaXRwCWcSxqjWa',
+                'SUPER_ADMIN',
+                'Asror Super Admin',
+                true,
+                false,
+                0,
+                CURRENT_TIMESTAMP
+              )
+              ON CONFLICT (id) DO UPDATE SET
+                username = EXCLUDED.username,
+                password = EXCLUDED.password,
+                role     = EXCLUDED.role,
+                active   = EXCLUDED.active;
+        # Profil DataInitializer tomonidan startup da yaratiladi (id auto-gen uchun)

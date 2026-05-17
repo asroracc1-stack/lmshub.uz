@@ -23,7 +23,10 @@ interface Subject {
 const COLORS = ["primary", "secondary", "accent", "success", "warning", "destructive"];
 
 export default function OrgSubjects() {
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
+  const role = user?.role?.toLowerCase();
+  const canManage = ["super_admin", "admin", "administrator"].includes(role || "");
+
   const [items, setItems] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
@@ -79,34 +82,36 @@ export default function OrgSubjects() {
           <h1 className="font-display text-3xl font-bold">Fanlar</h1>
           <p className="text-muted-foreground">Tashkilot fanlarini boshqaring</p>
         </div>
-        <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) reset(); }}>
-          <DialogTrigger asChild>
-            <Button variant="hero"><Plus className="h-4 w-4" /> Yangi fan</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader><DialogTitle>{editing ? "Tahrirlash" : "Yangi fan"}</DialogTitle></DialogHeader>
-            <div className="space-y-3">
-              <div className="grid gap-2"><Label>Nom *</Label>
-                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Matematika" /></div>
-              <div className="grid gap-2"><Label>Kod</Label>
-                <Input value={code} onChange={(e) => setCode(e.target.value)} placeholder="MATH101" /></div>
-              <div className="grid gap-2"><Label>Tavsif</Label>
-                <Textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} /></div>
-              <div className="grid gap-2"><Label>Rang</Label>
-                <div className="flex gap-2 flex-wrap">
-                  {COLORS.map((c) => (
-                    <button key={c} type="button" onClick={() => setColor(c)}
-                      className={`h-8 w-8 rounded-lg border-2 bg-${c} ${color === c ? "border-foreground" : "border-transparent"}`} />
-                  ))}
+        {canManage && (
+          <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) reset(); }}>
+            <DialogTrigger asChild>
+              <Button variant="hero"><Plus className="h-4 w-4" /> Yangi fan</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader><DialogTitle>{editing ? "Tahrirlash" : "Yangi fan"}</DialogTitle></DialogHeader>
+              <div className="space-y-3">
+                <div className="grid gap-2"><Label>Nom *</Label>
+                  <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Matematika" /></div>
+                <div className="grid gap-2"><Label>Kod</Label>
+                  <Input value={code} onChange={(e) => setCode(e.target.value)} placeholder="MATH101" /></div>
+                <div className="grid gap-2"><Label>Tavsif</Label>
+                  <Textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} /></div>
+                <div className="grid gap-2"><Label>Rang</Label>
+                  <div className="flex gap-2 flex-wrap">
+                    {COLORS.map((c) => (
+                      <button key={c} type="button" onClick={() => setColor(c)}
+                        className={`h-8 w-8 rounded-lg border-2 bg-${c} ${color === c ? "border-foreground" : "border-transparent"}`} />
+                    ))}
+                  </div>
                 </div>
+                <Button onClick={submit} disabled={saving} className="w-full" variant="hero">
+                  {saving && <Loader2 className="h-4 w-4 animate-spin" />}
+                  Saqlash
+                </Button>
               </div>
-              <Button onClick={submit} disabled={saving} className="w-full" variant="hero">
-                {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-                Saqlash
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
       {loading ? (
@@ -121,24 +126,26 @@ export default function OrgSubjects() {
                 <div className={`h-10 w-10 rounded-lg bg-${s.color}/15 grid place-items-center`}>
                   <BookOpen className={`h-5 w-5 text-${s.color}`} />
                 </div>
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-smooth">
-                  <Button size="icon" variant="ghost" onClick={() => openEdit(s)}><Pencil className="h-4 w-4" /></Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button size="icon" variant="ghost" className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>O'chirilsinmi?</AlertDialogTitle>
-                        <AlertDialogDescription>"{s.name}" fani o'chiriladi.</AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Bekor</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => remove(s)}>O'chirish</AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
+                {canManage && (
+                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-smooth">
+                    <Button size="icon" variant="ghost" onClick={() => openEdit(s)}><Pencil className="h-4 w-4" /></Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button size="icon" variant="ghost" className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>O'chirilsinmi?</AlertDialogTitle>
+                          <AlertDialogDescription>"{s.name}" fani o'chiriladi.</AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Bekor</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => remove(s)}>O'chirish</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                )}
               </div>
               <h3 className="font-display font-semibold text-lg mt-3">{s.name}</h3>
               {s.code && <p className="text-xs text-muted-foreground mt-1">{s.code}</p>}

@@ -214,6 +214,16 @@ export default function UsersManager({ filterRole, title, description }: Props) 
     },
   });
 
+  const { data: allGroups = [] } = useQuery({
+    queryKey: ["all-groups-list-global"],
+    queryFn: async () => {
+      const { data } = await api.get<any>("/admin/groups", { 
+        params: { size: 1000 } 
+      });
+      return data.content || [];
+    },
+  });
+
   // Backend Page object qaytaradi (content, totalPages, etc.)
   // Agar to'g'ridan-to'g'ri array kelsa ham ishlaydigan qilamiz
   const users = Array.isArray(data) ? data : (data?.content || []);
@@ -734,7 +744,18 @@ export default function UsersManager({ filterRole, title, description }: Props) 
                         {orgName}
                       </TableCell>
                       <TableCell className="text-sm">
-                        {u.role === "student" ? (u.group_id || "—") : (u.role === "teacher" ? (u.subject || "—") : "—")}
+                        {u.role === "student" ? (
+                          (() => {
+                            const groupName = allGroups.find((g: any) => g.id === u.group_id || g.id === (u as any).groupId)?.name;
+                            return groupName ? (
+                              <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 font-medium">
+                                {groupName}
+                              </Badge>
+                            ) : "—";
+                          })()
+                        ) : (
+                          u.role === "teacher" ? (u.subject || "—") : "—"
+                        )}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="inline-flex gap-1">

@@ -49,3 +49,5 @@ databaseChangeLog:
       file: db/changelog/changes/v0024_add_parent_telegram.yaml
   - include:
       file: db/changelog/changes/v0025_fix_parent_usernames.yaml
+  - include:
+      file: db/changelog/changes/v0026_single_superadmin.yaml

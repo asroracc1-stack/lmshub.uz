@@ -232,7 +232,7 @@ const AppRoutes = () => {
         </Route>
 
         {/* Admin */}
-        <Route path="/admin" element={<ProtectedRoute allow={["admin"]}><RoleLayout role="admin" basePath="/admin" /></ProtectedRoute>}>
+        <Route path="/admin" element={<ProtectedRoute allow={["admin", "administrator", "teacher"]}><RoleLayout role="admin" basePath="/admin" /></ProtectedRoute>}>
           <Route index element={<AdminDashboard />} />
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="users" element={<AdminUsers />} />
@@ -264,6 +264,8 @@ const AppRoutes = () => {
         <Route path="/administrator" element={<ProtectedRoute allow={["administrator"]}><RoleLayout role="administrator" basePath="/administrator" /></ProtectedRoute>}>
           <Route index element={<AdministratorDashboard />} />
           <Route path="dashboard" element={<AdministratorDashboard />} />
+          <Route path="users" element={<AdminUsers />} />
+          <Route path="administrators" element={<AdminAdministrators />} />
           <Route path="teachers" element={<MembersList role="teacher" title={t("nav.teachers")} description="" canManage />} />
           <Route path="students" element={<MembersList role="student" title={t("nav.students")} description="" canManage />} />
           <Route path="parents" element={<SuperAdminParents />} />
@@ -291,7 +293,7 @@ const AppRoutes = () => {
         <Route path="/teacher" element={<ProtectedRoute allow={["teacher"]}><RoleLayout role="teacher" basePath="/teacher" /></ProtectedRoute>}>
           <Route index element={<TeacherDashboard />} />
           <Route path="dashboard" element={<TeacherDashboard />} />
-          <Route path="students" element={<MembersList role="student" title={t("nav.myStudents")} description="" />} />
+          <Route path="students" element={<MembersList role="student" title={t("nav.myStudents")} description="" canManage />} />
           <Route path="parents" element={<SuperAdminParents />} />
           <Route path="groups" element={<OrgGroups />} />
           <Route path="lessons" element={<OrgLessons canManage basePath="/teacher" filter="teacher" />} />

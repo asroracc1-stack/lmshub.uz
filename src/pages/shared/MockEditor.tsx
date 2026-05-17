@@ -157,15 +157,24 @@ export default function MockEditor({ basePath = "/super-admin" }: { basePath?: s
     if (!trimmedText || trimmedText.length < 50) { toast.error("Matn juda qisqa"); return; }
     setAiBusy(true);
     try {
-      const formData = new FormData();
-      formData.append("text", trimmedText);
-      images.forEach(img => {
-        formData.append("images", img);
-      });
-
-      const res = await api.post("/admin/exams/parse-ai", formData, {
-        headers: { "Content-Type": "multipart/form-data" }
-      });
+      let res;
+      if (images.length === 0) {
+        // Rasm yuklanmagan bo'lsa, oddiy toza JSON formatida yuboramiz
+        res = await api.post("/admin/exams/parse-ai", 
+          { text: trimmedText },
+          { headers: { "Content-Type": "application/json" } }
+        );
+      } else {
+        // Rasm yuklangan bo'lsa, FormData (multipart/form-data) formatida yuboramiz
+        const formData = new FormData();
+        formData.append("text", trimmedText);
+        images.forEach(img => {
+          formData.append("images", img);
+        });
+        res = await api.post("/admin/exams/parse-ai", formData, {
+          headers: { "Content-Type": "multipart/form-data" }
+        });
+      }
       
       const data = typeof res.data === "string" ? JSON.parse(res.data) : res.data;
       if (data?.sections && Array.isArray(data.sections) && data.sections.length > 0) {

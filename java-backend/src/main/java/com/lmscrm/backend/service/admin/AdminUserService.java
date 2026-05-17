@@ -204,9 +204,14 @@ public class AdminUserService {
             user.setOrganizationId(details.getOrganizationId());
         }
         
-        if (details.getGroupId() != null) user.setGroupId(details.getGroupId());
+        user.setGroupId(details.getGroupId());
         if (details.getSubject() != null) user.setSubject(details.getSubject());
-        if (details.getRole() != null) user.setRole(details.getRole());
+        if (details.getRole() != null) {
+            if (currentUser.getRole() != AppRole.SUPER_ADMIN && details.getRole() == AppRole.SUPER_ADMIN) {
+                throw new RuntimeException("Ruxsat etilmagan harakat: Super admin rolini biriktirish mumkin emas!");
+            }
+            user.setRole(details.getRole());
+        }
         if (details.getTelegramChatId() != null) user.setTelegramChatId(details.getTelegramChatId());
         if (details.getTelegramUsername() != null) user.setTelegramUsername(details.getTelegramUsername());
         if (details.getParentTelegramUsername() != null) user.setParentTelegramUsername(details.getParentTelegramUsername());
@@ -337,6 +342,6 @@ public class AdminUserService {
         
         // If exists, add unique suffix
         return base + "_" + (int)(Math.random() * 900 + 100);
-    }
+}
 
 }

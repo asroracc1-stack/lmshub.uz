@@ -24,7 +24,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/axios";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   Calendar as CalendarIcon,
@@ -105,18 +105,27 @@ export default function OrgEvents({ canManage }: Props) {
 
   const load = async () => {
     setLoading(true);
-    const query = supabase
-      .from("events")
-      .select("*")
-      .order("starts_at", { ascending: true });
-    if (profile?.organization_id) {
-      query.or(
-        `organization_id.eq.${profile.organization_id},organization_id.is.null`,
-      );
+    try {
+      const { data } = await api.get("/calendar");
+      const mapped = (data ?? []).map((e: any) => ({
+        id: e.id,
+        title: e.title,
+        description: e.description,
+        starts_at: e.startsAt,
+        ends_at: e.endsAt,
+        location: e.location,
+        color: e.color || "primary",
+        all_day: e.isAllDay ?? false,
+        organization_id: e.organization?.id ?? null,
+        created_by: e.createdBy?.id ?? null,
+      }));
+      setEvents(mapped);
+    } catch (e: any) {
+      console.error("Tadbirlarni yuklashda xatolik:", e);
+      toast.error("Tadbirlarni yuklashda xatolik yuz berdi");
+    } finally {
+      setLoading(false);
     }
-    const { data } = await query;
-    setEvents((data as EventRow[]) ?? []);
-    setLoading(false);
   };
 
   useEffect(() => {
@@ -232,32 +241,46 @@ export default function OrgEvents({ canManage }: Props) {
       all_day: form.all_day,
       organization_id: profile?.organization_id ?? null,
     };
-    const { error } = editing
-      ? await supabase.from("events").update(payload).eq("id", editing.id)
-      : await supabase
-          .from("events")
-          .insert({ ...payload, created_by: user?.id ?? null });
-    setSubmitting(false);
-    if (error) {
-      toast.error(error.message);
-      return;
+    try {
+      const body = {
+        title: payload.title,
+        description: payload.description,
+        startsAt: payload.starts_at,
+        endsAt: payload.ends_at,
+        location: payload.location,
+        color: payload.color,
+        isAllDay: payload.all_day,
+        organization: profile?.organization_id ? { id: profile.organization_id } : null,
+        createdBy: user?.id ? { id: user.id } : null,
+      };
+
+      if (editing) {
+        await api.put(`/calendar/${editing.id}`, body);
+      } else {
+        await api.post("/calendar", body);
+      }
+
+      toast.success(editing ? "Yangilandi" : "Tadbir yaratildi");
+      setOpen(false);
+      resetForm();
+      load();
+    } catch (e: any) {
+      toast.error(e.response?.data?.message || e.message || "Tadbir saqlashda xatolik yuz berdi");
+    } finally {
+      setSubmitting(false);
     }
-    toast.success(editing ? "Yangilandi" : "Tadbir yaratildi");
-    setOpen(false);
-    resetForm();
-    load();
   };
 
   const remove = async () => {
     if (!delTarget) return;
-    const { error } = await supabase.from("events").delete().eq("id", delTarget.id);
-    if (error) {
-      toast.error(error.message);
-      return;
+    try {
+      await api.delete(`/calendar/${delTarget.id}`);
+      toast.success("O'chirildi");
+      setDelTarget(null);
+      load();
+    } catch (e: any) {
+      toast.error(e.response?.data?.message || e.message || "O'chirishda xatolik yuz berdi");
     }
-    toast.success("O'chirildi");
-    setDelTarget(null);
-    load();
   };
 
   const monthLabel = cursor.toLocaleDateString("uz", {

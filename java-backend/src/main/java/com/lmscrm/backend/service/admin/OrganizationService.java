@@ -65,10 +65,14 @@ public class OrganizationService {
         Organization org = organizationRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Organization not found"));
         org.setName(dto.getName());
-        org.setSlug(dto.getSlug());
+        if (dto.getSlug() != null && !dto.getSlug().isEmpty()) {
+            org.setSlug(dto.getSlug());
+        }
         org.setDescription(dto.getDescription());
         org.setLogoUrl(dto.getLogoUrl());
-        org.setSubscriptionPackage(dto.getPlanId() != null ? com.lmscrm.backend.domain.entity.SubscriptionPackage.builder().id(dto.getPlanId()).build() : null);
+        if (dto.getPlanId() != null) {
+            org.setSubscriptionPackage(com.lmscrm.backend.domain.entity.SubscriptionPackage.builder().id(dto.getPlanId()).build());
+        }
         if (dto.getAddress() != null) {
             org.setAddress(Address.builder()
                     .region(dto.getAddress().getRegion())
@@ -80,7 +84,9 @@ public class OrganizationService {
         }
         org.setPhone(dto.getPhone());
         org.setEmail(dto.getEmail());
-        org.setIsActive(dto.getIsActive());
+        if (dto.getIsActive() != null) {
+            org.setIsActive(dto.getIsActive());
+        }
         return toDto(organizationRepository.save(org));
     }
 

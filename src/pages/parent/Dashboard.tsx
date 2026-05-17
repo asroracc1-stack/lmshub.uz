@@ -61,9 +61,7 @@ export default function ParentDashboard() {
   const { data: grades = [], isLoading: gradesLoading } = useQuery<GradeItem[]>({
     queryKey: ["child-grades", activeChild?.id],
     queryFn: async () => {
-      const { data } = await api.get(`/admin/academic/grades`, {
-        params: { studentId: activeChild!.id, size: 10 },
-      });
+      const { data } = await api.get(`/parent/children/${activeChild!.id}/grades`);
       return Array.isArray(data) ? data : (data.content ?? []);
     },
     enabled: !!activeChild?.id,
@@ -74,9 +72,7 @@ export default function ParentDashboard() {
   const { data: attendance = [] } = useQuery<AttItem[]>({
     queryKey: ["child-attendance", activeChild?.id],
     queryFn: async () => {
-      const { data } = await api.get(`/admin/academic/attendance`, {
-        params: { studentId: activeChild!.id },
-      });
+      const { data } = await api.get(`/parent/children/${activeChild!.id}/attendance`);
       return Array.isArray(data) ? data : (data.content ?? []);
     },
     enabled: !!activeChild?.id,

@@ -259,6 +259,15 @@ export default function RoleLayout({ brand = "LMSHub", subtitle, nav: initialNav
     </>
   );
 
+  const isExamPage = location.pathname.includes('/exam') || location.pathname.includes('/take');
+  if (isExamPage) {
+    return (
+      <div className="w-full min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 overflow-x-hidden">
+        <Outlet />
+      </div>
+    );
+  }
+
   return (
     <div className={cn(
       "min-h-screen flex w-full transition-colors duration-500",

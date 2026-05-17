@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { GraduationCap, Calendar as CalendarIcon, Coins, Award } from "lucide-react";
+import { GraduationCap, Calendar as CalendarIcon, Coins, Award, Users2, CreditCard } from "lucide-react";
 import { toast } from "sonner";
 import RoleDashboard, { StatCard } from "@/components/RoleDashboard";
 import { Card } from "@/components/ui/card";
@@ -26,8 +26,17 @@ export default function StudentDashboard() {
   }, [data?.coins]);
 
   const stats: StatCard[] = [
-    { label: "Topshirilgan testlar", value: data?.examsTaken || 0, icon: GraduationCap, color: "primary" },
-    { label: "O'rtacha ball", value: data?.averageScore || "—", icon: Award, color: "success" },
+    { label: "Guruhlarim", value: data?.myGroupsCount ?? 0, icon: Users2, color: "primary" },
+    { label: "Topshirilgan mocklar", value: data?.mockExamsCount ?? 0, icon: GraduationCap, color: "primary" },
+    { label: "O'rtacha Band Score", value: data?.averageBandScore ?? "—", icon: Award, color: "success" },
+    { 
+      label: "Balans / To'lovlar", 
+      value: data?.pendingBalance !== undefined 
+        ? `${new Intl.NumberFormat('uz-UZ').format(data.pendingBalance)} so'm` 
+        : "0 so'm", 
+      icon: CreditCard, 
+      color: "warning" 
+    },
     { 
       label: "Coinlar", 
       value: (

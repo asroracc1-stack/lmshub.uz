@@ -50,6 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const r = (backendRole || '').toLowerCase();
     if (r === 'super_admin') return 'super_admin';
     if (r === 'admin') return 'admin';
+    if (r === 'administrator') return 'administrator';
     if (r === 'teacher') return 'teacher';
     if (r === 'student') return 'student';
     if (r === 'parent') return 'parent';

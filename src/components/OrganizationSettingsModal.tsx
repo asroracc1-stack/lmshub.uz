@@ -11,8 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Building2, Mail, Phone, MapPin, Globe, Camera, Volume2, Eye } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
+import { toast } from "sonner";
 
 interface OrganizationSettingsModalProps {
   isOpen: boolean;
@@ -87,7 +87,25 @@ export default function OrganizationSettingsModal({
     
     setIsSubmitting(true);
     try {
-      await onUpdate(formData);
+      const addressParts = formData.address.split(",").map(s => s.trim()).filter(Boolean);
+      const region = addressParts[0] || "Toshkent";
+      const district = addressParts[1] || region;
+      const streetAddress = addressParts.slice(2).join(", ") || formData.address || "Asosiy bino";
+
+      const payload = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        logoUrl: formData.logoUrl,
+        address: {
+          region,
+          district,
+          streetAddress,
+          fullAddress: formData.address
+        }
+      };
+
+      await onUpdate(payload);
       onClose();
     } catch (error) {
       console.error(error);

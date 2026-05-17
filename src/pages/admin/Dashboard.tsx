@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Building2, Users, GraduationCap, UserCog, Activity, 
@@ -22,12 +23,15 @@ import { StatsSkeleton, ListSkeleton } from "@/components/Skeletons";
 import { format } from "date-fns";
 import { uz } from "date-fns/locale";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { StudentCombobox } from "@/components/StudentCombobox";
+import { api } from "@/lib/axios";
 
 export default function AdminDashboard() {
+  const navigate = useNavigate();
   const { profile } = useAuth();
   const { data: stats, isLoading: statsLoading, isError: statsError } = useAdminDashboard();
   const { data: events, isLoading: eventsLoading } = useUpcomingEvents();
-  const { addTeacher, addStudent, generateReport, updateOrgSettings } = useDashboardMutations();
+  const { addTeacher, addStudent, generateReport, updateOrgSettings, addEvent } = useDashboardMutations();
 
   const [clockSettings, setClockSettings] = useState(() => {
     const saved = localStorage.getItem("smart-clock-settings");
@@ -35,6 +39,17 @@ export default function AdminDashboard() {
   });
 
   const [activeModal, setActiveModal] = useState<string | null>(null);
+
+  // Event Quick Action Form State
+  const [eventTitle, setEventTitle] = useState("");
+  const [eventDesc, setEventDesc] = useState("");
+  const [eventDate, setEventDate] = useState("");
+  const [eventSubmitting, setEventSubmitting] = useState(false);
+
+  // Invoice Quick Action Selector State
+  const [invoiceStudentId, setInvoiceStudentId] = useState<string | null>(null);
+  const [invoiceStudentName, setInvoiceStudentName] = useState<string | null>(null);
+  const [invoiceDownloading, setInvoiceDownloading] = useState(false);
 
   const statCards = useMemo(() => [
     { label: "O'qituvchilar", value: stats?.teachersCount ?? 0, growth: stats?.teacherGrowth ?? 0, icon: GraduationCap, color: "text-blue-500", bg: "bg-blue-500/10", to: "/admin/teachers", accent: "#3b82f6" },
@@ -108,6 +123,62 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleEventSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!eventTitle || !eventDate) {
+      toast.error("Iltimos, nomi va sanani kiriting!");
+      return;
+    }
+    setEventSubmitting(true);
+    try {
+      await addEvent.mutateAsync({
+        title: eventTitle,
+        description: eventDesc,
+        eventDate: new Date(eventDate).toISOString(),
+      });
+      setActiveModal(null);
+      setEventTitle("");
+      setEventDesc("");
+      setEventDate("");
+      navigate("/admin/calendar");
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setEventSubmitting(false);
+    }
+  };
+
+  const handleDownloadInvoice = async () => {
+    if (!invoiceStudentId) {
+      toast.error("Iltimos, talabani tanlang!");
+      return;
+    }
+    setInvoiceDownloading(true);
+    try {
+      const response = await api.get(`/admin/invoices/generate/${invoiceStudentId}`, { responseType: 'blob' });
+      
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `LMSHub_Invoice_${invoiceStudentName || "Talaba"}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast.success("Hisob-faktura muvaffaqiyatli yuklab olindi! 🚀");
+      setActiveModal(null);
+      setInvoiceStudentId(null);
+      setInvoiceStudentName(null);
+    } catch (err) {
+      console.error(err);
+      toast.error("Hisob-faktura generatsiya qilishda xatolik!");
+    } finally {
+      setInvoiceDownloading(false);
+    }
+  };
+
   const handleOrgUpdate = async (data: any) => {
     await updateOrgSettings.mutateAsync(data);
     setActiveModal("success-branding");
@@ -142,6 +213,102 @@ export default function AdminDashboard() {
         isOpen={activeModal === "Paket yangilash"}
         onClose={() => setActiveModal(null)}
       />
+
+      {/* Event Yaratish Modal */}
+      <Dialog open={activeModal === "Tadbir yaratish"} onOpenChange={(open) => !open && setActiveModal(null)}>
+        <DialogContent className="sm:max-w-[480px] border-none bg-white dark:bg-slate-900 shadow-2xl rounded-2xl p-8" aria-describedby="event-desc-id">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold flex items-center gap-2">
+              <CalendarIcon className="h-5 w-5 text-purple-500" /> Yangi Tadbir Yaratish
+            </DialogTitle>
+            <DialogDescription id="event-desc-id">Tashkilotingiz uchun yangi ichki yoki tashqi tadbir belgilang.</DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleEventSubmit} className="space-y-4 mt-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Tadbir Nomi</label>
+              <input 
+                type="text" 
+                placeholder="Masalan: IELTS Mock Exam kuni" 
+                value={eventTitle}
+                onChange={(e) => setEventTitle(e.target.value)}
+                className="w-full h-11 px-4 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 focus:border-purple-500 dark:focus:border-purple-500 outline-none text-sm font-semibold transition-colors duration-200"
+                required
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Tadbir Tavsifi</label>
+              <textarea 
+                placeholder="Tadbir haqida batafsil ma'lumot..." 
+                value={eventDesc}
+                onChange={(e) => setEventDesc(e.target.value)}
+                className="w-full h-24 p-4 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 focus:border-purple-500 dark:focus:border-purple-500 outline-none text-sm font-medium transition-colors duration-200 resize-none"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Sana va Vaqt</label>
+              <input 
+                type="datetime-local" 
+                value={eventDate}
+                onChange={(e) => setEventDate(e.target.value)}
+                className="w-full h-11 px-4 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 focus:border-purple-500 dark:focus:border-purple-500 outline-none text-sm font-semibold transition-colors duration-200"
+                required
+              />
+            </div>
+
+            <div className="flex gap-3 justify-end pt-4">
+              <Button type="button" variant="ghost" onClick={() => setActiveModal(null)} className="rounded-xl font-bold">Bekor qilish</Button>
+              <Button type="submit" disabled={eventSubmitting} className="rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold px-6 shadow-lg shadow-purple-500/20">
+                {eventSubmitting ? "Yaratilmoqda..." : "Tadbirni Yaratish 🚀"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Hisob-faktura Modal */}
+      <Dialog open={activeModal === "Hisob-faktura"} onOpenChange={(open) => !open && setActiveModal(null)}>
+        <DialogContent className="sm:max-w-[480px] border-none bg-white dark:bg-slate-900 shadow-2xl rounded-2xl p-8" aria-describedby="invoice-desc-id">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold flex items-center gap-2">
+              <Send className="h-5 w-5 text-amber-500" /> To'lov Hisob-Fakturasi Yaratish
+            </DialogTitle>
+            <DialogDescription id="invoice-desc-id">Tanlangan talaba uchun premium PDF billing schot-fakturasini yuklab oling.</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-5 mt-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Talabani Qidirish va Tanlash</label>
+              <StudentCombobox 
+                selectedStudentId={invoiceStudentId} 
+                onSelectStudent={(id, name) => {
+                  setInvoiceStudentId(id);
+                  setInvoiceStudentName(name);
+                }} 
+              />
+            </div>
+
+            {invoiceStudentId && (
+              <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300 text-xs font-semibold flex items-center gap-2">
+                🌟 Tanlangan talaba: <span className="font-bold">{invoiceStudentName}</span>
+              </motion.div>
+            )}
+
+            <div className="flex gap-3 justify-end pt-4">
+              <Button type="button" variant="ghost" onClick={() => setActiveModal(null)} className="rounded-xl font-bold">Bekor qilish</Button>
+              <Button 
+                onClick={handleDownloadInvoice} 
+                disabled={invoiceDownloading || !invoiceStudentId} 
+                className="rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold px-6 shadow-lg shadow-amber-500/20 flex gap-2"
+              >
+                {invoiceDownloading ? "Yuklanmoqda..." : <>Hisob-fakturani Yuklash <Plus className="h-4.5 w-4.5" /></>}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
       
       {/* Report Generation Overlay */}
       <Dialog open={generateReport.isPending}>
@@ -270,7 +437,7 @@ export default function AdminDashboard() {
             className="cursor-pointer"
             onClick={() => navigate(s.to)}
           >
-            <Card className="p-5 border border-slate-200 dark:border-white/5 shadow-sm bg-white dark:bg-slate-900/40 rounded-xl group hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 relative overflow-hidden">
+            <Card className="flex flex-col justify-between p-5 min-h-[145px] bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 group hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 relative overflow-hidden">
               {/* colored top line */}
               <div className="absolute top-0 left-0 right-0 h-0.5 rounded-t-xl opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: s.accent }} />
 
@@ -405,15 +572,7 @@ export default function AdminDashboard() {
               ].map((q) => (
                 <button 
                   key={q.label} 
-                  onClick={() => {
-                    if (q.label.includes("qo'shish")) {
-                      handleQuickAction(q.label);
-                    } else {
-                      toast.info(`${q.label} moduli tez orada qo'shiladi... 🐯`, {
-                        className: "bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold"
-                      });
-                    }
-                  }} 
+                  onClick={() => handleQuickAction(q.label)} 
                   className="flex items-center gap-3.5 p-3.5 rounded-lg bg-slate-50 dark:bg-white/5 border border-transparent hover:border-slate-200 dark:hover:border-white/10 hover:bg-white dark:hover:bg-white/10 transition-all duration-200 group text-left shadow-sm"
                 >
                   <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center text-white shadow-md transition-transform group-hover:scale-105", q.color)}>

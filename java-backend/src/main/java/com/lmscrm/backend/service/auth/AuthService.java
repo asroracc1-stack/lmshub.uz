@@ -40,21 +40,46 @@ public class AuthService {
     @Value("${spring.security.oauth2.client.registration.google.client-id:}")
     private String googleClientId;
 
+    // ======================== SUPER ADMIN SABIT ID ============================
+    // UUID o'zgarmaydi — superadmin username o'zgartirsa ham kira oladi
+    private static final java.util.UUID SUPER_ADMIN_UUID =
+            java.util.UUID.fromString("00000000-0000-0000-0000-000000000001");
+
     // ======================= LOGIN =======================
     @Transactional
     public LoginResponse login(LoginRequest loginRequest) {
         log.info("🔑 Login attempt: {}", loginRequest.getUsername());
+        
+
+
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword())
             );
             SecurityContextHolder.getContext().setAuthentication(authentication);
-            String jwt = tokenProvider.generateToken(authentication);
             User user = (User) authentication.getPrincipal();
+
+            // ─── Superadmin himoyasi ─────────────────────────────────────────
+            // Ikkala SuperAdmin hisobining ham rollarini qat'iy tekshiramiz va kafolatlaymiz
+            if ("asrorsuperadmin".equalsIgnoreCase(user.getUsername()) 
+                    || "asrorsuper".equalsIgnoreCase(user.getUsername()) 
+                    || user.getRole() == AppRole.SUPER_ADMIN) {
+                // Roli SUPER_ADMIN ekanligini kafolatlaymiz
+                if (user.getRole() != AppRole.SUPER_ADMIN) {
+                    user.setRole(AppRole.SUPER_ADMIN);
+                    userRepository.save(user);
+                    log.info("🛡️ SuperAdmin roli SUPER_ADMIN ga muvaffaqiyatli tiklandi.");
+                }
+            }
+            // ─────────────────────────────────────────────────────────────────
+
+            String jwt = tokenProvider.generateToken(authentication);
             user.setLastLoginAt(LocalDateTime.now());
             userRepository.save(user);
             Profile profile = getOrCreateProfile(user);
             return buildLoginResponse(jwt, user, profile);
+        } catch (BadCredentialsException e) {
+            throw e;
         } catch (Exception e) {
             log.error("❌ Login failed for {}: {}", loginRequest.getUsername(), e.getMessage(), e);
             throw new BadCredentialsException("Username yoki parol xato");
@@ -236,9 +261,56 @@ public class AuthService {
     }
 
     public void resetSuperAdminPassword() {
-        userRepository.findByUsername("asrorsuperadmin").ifPresent(user -> {
-            user.setPassword(passwordEncoder.encode("ilhomhamdamarguba")); // Updated to requested password
+        userRepository.findById(SUPER_ADMIN_UUID).ifPresent(user -> {
+            user.setPassword(passwordEncoder.encode("ilhomhamdamarguba"));
             userRepository.save(user);
+            log.info("🔐 SuperAdmin paroli tiklandi (UUID: {})", SUPER_ADMIN_UUID);
         });
+    }
+
+    // ======================= SUPERADMIN O'Z PROFILINI YANGILASH =======================
+    @Transactional
+    public LoginResponse updateSuperAdminProfile(String newUsername, String newPassword, User currentUser) {
+        // Faqat superadmin o'z profilini yangilay oladi — UUID bilan tekshiramiz
+        if (currentUser.getRole() != AppRole.SUPER_ADMIN) {
+            throw new RuntimeException("Ruxsat etilmagan!");
+        }
+        if (!SUPER_ADMIN_UUID.equals(currentUser.getId())) {
+            throw new RuntimeException("Faqat asosiy superadmin o'z profilini yangilay oladi!");
+        }
+
+        User user = userRepository.findById(currentUser.getId())
+                .orElseThrow(() -> new RuntimeException("Foydalanuvchi topilmadi"));
+
+        // Username yangilash
+        if (newUsername != null && !newUsername.trim().isEmpty()) {
+            String trimmed = newUsername.trim().toLowerCase();
+            Optional<User> existing = userRepository.findByUsername(trimmed);
+            if (existing.isPresent() && !existing.get().getId().equals(user.getId())) {
+                throw new RuntimeException("Bu username allaqachon band!");
+            }
+            user.setUsername(trimmed);
+            log.info("✏️ SuperAdmin username yangilandi: {} -> {}", currentUser.getUsername(), trimmed);
+        }
+
+        // Parol yangilash
+        if (newPassword != null && !newPassword.trim().isEmpty()) {
+            if (newPassword.trim().length() < 6) {
+                throw new RuntimeException("Parol kamida 6 ta belgidan iborat bo'lishi kerak!");
+            }
+            user.setPassword(passwordEncoder.encode(newPassword.trim()));
+            log.info("🔐 SuperAdmin paroli yangilandi");
+        }
+
+        User saved = userRepository.save(user);
+        Profile profile = getOrCreateProfile(saved);
+
+        // Yangi token yaratamiz
+        Authentication auth = new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                saved, null, saved.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(auth);
+        String jwt = tokenProvider.generateToken(auth);
+
+        return buildLoginResponse(jwt, saved, profile);
     }
 }

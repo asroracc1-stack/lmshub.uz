@@ -31,10 +31,14 @@ public class GeminiService {
         Set<String> keys = new LinkedHashSet<>();
         if (geminiApiKeys != null && !geminiApiKeys.trim().isEmpty()) {
             for (String k : geminiApiKeys.split(",")) {
-                if (!k.trim().isEmpty()) keys.add(k.trim());
+                String trimmed = k.trim();
+                if (!trimmed.isEmpty() && !trimmed.contains("your-gemini-keys") && !trimmed.contains("your-gemini-key")) {
+                    keys.add(trimmed);
+                }
             }
         }
-        if (geminiApiKeySingular != null && !geminiApiKeySingular.trim().isEmpty()) {
+        if (geminiApiKeySingular != null && !geminiApiKeySingular.trim().isEmpty() 
+                && !geminiApiKeySingular.equals("your-gemini-key")) {
             keys.add(geminiApiKeySingular.trim());
         }
 
@@ -42,9 +46,9 @@ public class GeminiService {
         apiKeysList.addAll(keys);
 
         if (apiKeysList.isEmpty()) {
-            log.warn("CRITICAL: Gemini API kalitlari topilmadi!");
+            log.warn("CRITICAL: Yaroqli Gemini API kalitlari topilmadi (placeholder kalitlar hisobga olinmadi)!");
         } else {
-            log.info("Gemini Service yuklandi. {} ta noyob kalit aniqlandi.", apiKeysList.size());
+            log.info("Gemini Service yuklandi. {} ta haqiqiy va yaroqli kalit aniqlandi.", apiKeysList.size());
         }
     }
 
@@ -89,6 +93,10 @@ public class GeminiService {
     }
 
     public String analyzeIeltsMockWithImages(String text, List<String> uploadedImageUrls) {
+        if (apiKeysList.isEmpty()) {
+            throw new RuntimeException("Tizim sozlamalarida xatolik: Yaroqli Gemini API kaliti (GEMINI_API_KEY) topilmadi. Iltimos, application.properties faylidagi 'gemini.api.key' qismiga haqiqiy kalitingizni kiriting!");
+        }
+
         if (text == null || text.trim().isEmpty()) {
             throw new IllegalArgumentException("Tahlil uchun matn berilmagan");
         }

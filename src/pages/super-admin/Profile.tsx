@@ -16,6 +16,8 @@ import {
   Phone,
   CheckCircle2,
   Sparkles,
+  LogOut,
+  AlertTriangle,
 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -94,10 +96,13 @@ const passwordSchema = z.object({
 });
 
 export default function Profile() {
-  const { profile, refresh, setAuth } = useAuth();
+  const { profile, refresh, setAuth, signOut, role } = useAuth();
   const [successOpen, setSuccessOpen] = useState(false);
   const [twoFAOpen, setTwoFAOpen] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
+
+  // Super Admin bo'lsa, maxsus endpoint ishlatamiz
+  const isSuperAdmin = role === "super_admin";
 
   const profileForm = useForm({
     resolver: zodResolver(profileSchema),
@@ -146,21 +151,35 @@ export default function Profile() {
 
   const onUpdateUsername = async (data: any) => {
     try {
-      const res = await api.patch("/profile/username", {
-        username: data.username,
-      });
-      setSuccessMsg(res.data.message);
-      setSuccessOpen(true);
-      if (res.data.token) {
-        // If token returned, update it and refresh
-        const savedUser = localStorage.getItem('user');
-        if (savedUser) {
-          const userData = JSON.parse(savedUser);
-          userData.username = data.username;
-          setAuth(res.data.token, userData);
+      if (isSuperAdmin) {
+        // SuperAdmin uchun maxsus endpoint — token yangilanadi va logout qilinadi
+        const res = await api.put("/super-admin/profile", {
+          username: data.username,
+          password: null, // faqat username
+        });
+        // Yangi tokenni saqlash
+        if (res.data?.access_token) {
+          localStorage.setItem('access_token', res.data.access_token);
         }
+        toast.success("Username yangilandi! Qayta kirish kerak.");
+        await new Promise(r => setTimeout(r, 1500));
+        await signOut();
+      } else {
+        const res = await api.patch("/profile/username", {
+          username: data.username,
+        });
+        setSuccessMsg(res.data.message);
+        setSuccessOpen(true);
+        if (res.data.token) {
+          const savedUser = localStorage.getItem('user');
+          if (savedUser) {
+            const userData = JSON.parse(savedUser);
+            userData.username = data.username;
+            setAuth(res.data.token, userData);
+          }
+        }
+        refresh();
       }
-      refresh();
     } catch (e: any) {
       toast.error(e.response?.data?.message || "Xatolik yuz berdi");
     }
@@ -168,19 +187,31 @@ export default function Profile() {
 
   const onChangePassword = async (data: any) => {
     try {
-      const payload = {
-        currentPassword: data.current,
-        newPassword: data.next,
-      };
-      console.log('Sending payload:', payload);
-      await api.post("/profile/change-password", payload);
-      setSuccessMsg("Parol yangilandi!");
-      setSuccessOpen(true);
-      passwordForm.reset({ current: "", next: "", confirm: "" });
+      if (isSuperAdmin) {
+        // SuperAdmin uchun maxsus endpoint — token yangilanadi va logout qilinadi
+        const res = await api.put("/super-admin/profile", {
+          username: null, // faqat parol
+          password: data.next,
+        });
+        if (res.data?.access_token) {
+          localStorage.setItem('access_token', res.data.access_token);
+        }
+        toast.success("Parol yangilandi! Qayta kirish kerak.");
+        await new Promise(r => setTimeout(r, 1500));
+        await signOut();
+      } else {
+        const payload = {
+          currentPassword: data.current,
+          newPassword: data.next,
+        };
+        await api.post("/profile/change-password", payload);
+        setSuccessMsg("Parol yangilandi!");
+        setSuccessOpen(true);
+        passwordForm.reset({ current: "", next: "", confirm: "" });
+      }
     } catch (e: any) {
-      console.error('Password change error:', e.response?.data);
       const msg = "Kechirasiz, parolni yangilashda xatolik yuz berdi. Iltimos, barcha maydonlarni to'g'ri to'ldiring.";
-      toast.error(msg);
+      toast.error(e.response?.data?.message || msg);
     }
   };
 
@@ -307,6 +338,14 @@ export default function Profile() {
           </SectionCard>
 
           <SectionCard icon={AtSign} title="Username" desc="Hisob identifikatori" index={1}>
+            {isSuperAdmin && (
+              <div className="mb-3 flex items-start gap-2 rounded-xl border border-amber-400/30 bg-amber-50 dark:bg-amber-950/30 px-3 py-2.5">
+                <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+                <p className="text-xs text-amber-700 dark:text-amber-300 font-medium">
+                  Username o'zgartirilsa, tizimdan <strong>avtomatik chiqarilasiz</strong>. Yangi username bilan qayta kiring.
+                </p>
+              </div>
+            )}
             <form onSubmit={usernameForm.handleSubmit(onUpdateUsername)} className="grid gap-3">
               <Input
                 {...usernameForm.register("username")}
@@ -319,7 +358,10 @@ export default function Profile() {
                 Username o'zgartirilsa JWT token yangilanadi.
               </p>
               <Button type="submit" variant="hero" disabled={usernameForm.formState.isSubmitting} className="w-full sm:w-auto">
-                {usernameForm.formState.isSubmitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />} Yangilash
+                {usernameForm.formState.isSubmitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                {isSuperAdmin ? (
+                  <><LogOut className="h-4 w-4 mr-1.5" /> Yangilab chiqish</>
+                ) : "Yangilash"}
               </Button>
             </form>
           </SectionCard>
@@ -330,20 +372,30 @@ export default function Profile() {
             desc="Hisob xavfsizligini yangilab turing"
             index={2}
           >
+            {isSuperAdmin && (
+              <div className="mb-3 flex items-start gap-2 rounded-xl border border-amber-400/30 bg-amber-50 dark:bg-amber-950/30 px-3 py-2.5">
+                <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+                <p className="text-xs text-amber-700 dark:text-amber-300 font-medium">
+                  Parol o'zgartirilsa, tizimdan <strong>avtomatik chiqarilasiz</strong>. Yangi parol bilan qayta kiring.
+                </p>
+              </div>
+            )}
             <form onSubmit={passwordForm.handleSubmit(onChangePassword)} className="grid gap-4">
               <div className="grid sm:grid-cols-3 gap-3">
-                <div className="grid gap-2">
-                  <Label className="text-xs font-bold text-slate-600 dark:text-slate-300">Joriy parol</Label>
-                  <Input
-                    type="password"
-                    {...passwordForm.register("current")}
-                    autoComplete="new-password"
-                    className="h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 transition-all duration-500"
-                  />
-                  {passwordForm.formState.errors.current && (
-                    <p className="text-[10px] text-destructive">{passwordForm.formState.errors.current.message}</p>
-                  )}
-                </div>
+                {!isSuperAdmin && (
+                  <div className="grid gap-2">
+                    <Label className="text-xs font-bold text-slate-600 dark:text-slate-300">Joriy parol</Label>
+                    <Input
+                      type="password"
+                      {...passwordForm.register("current")}
+                      autoComplete="new-password"
+                      className="h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 transition-all duration-500"
+                    />
+                    {passwordForm.formState.errors.current && (
+                      <p className="text-[10px] text-destructive">{passwordForm.formState.errors.current.message}</p>
+                    )}
+                  </div>
+                )}
                 <div className="grid gap-2">
                   <Label className="text-xs font-bold text-slate-600 dark:text-slate-300">Yangi parol</Label>
                   <Input
@@ -370,7 +422,10 @@ export default function Profile() {
                 </div>
               </div>
               <Button type="submit" variant="hero" disabled={passwordForm.formState.isSubmitting} className="w-full sm:w-auto">
-                {passwordForm.formState.isSubmitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />} Parolni saqlash
+                {passwordForm.formState.isSubmitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                {isSuperAdmin ? (
+                  <><LogOut className="h-4 w-4 mr-1.5" /> Yangilab chiqish</>
+                ) : "Parolni saqlash"}
               </Button>
             </form>
           </SectionCard>

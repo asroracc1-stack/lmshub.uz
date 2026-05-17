@@ -157,15 +157,24 @@ export function useDashboardMutations() {
       const response = await api.get("/admin/reports/generate", { responseType: "blob" });
       return response.data;
     },
-    onSuccess: (data) => {
-      const url = window.URL.createObjectURL(new Blob([data]));
+    onSuccess: async (data: any) => {
+      if (data instanceof Blob && data.type === "application/json") {
+        const text = await data.text();
+        console.error("Server returned JSON error instead of PDF:", text);
+        toast.error("Hisobot tayyorlashda xatolik yuz berdi!");
+        return;
+      }
+      
+      const blob = new Blob([data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
-      const linkHref = url;
-      link.href = linkHref;
+      link.href = url;
       link.setAttribute("download", "organization-report.pdf");
       document.body.appendChild(link);
       link.click();
-      toast.success("Hisobot muvaffaqiyatli tayyorlandi va yuklab olindi!");
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      toast.success("Hisobot muvaffaqiyatli tayyorlandi va yuklab olindi! 🐯📊");
     },
     onError: () => toast.error("Hisobot tayyorlashda xatolik yuz berdi!"),
   });
@@ -179,7 +188,18 @@ export function useDashboardMutations() {
     onError: () => toast.error("Sozlamalarni saqlashda xatolik!"),
   });
 
-  return { addTeacher, addStudent, generateReport, updateOrgSettings };
+  const addEvent = useMutation({
+    mutationFn: async (data: { title: string; description: string; eventDate: string }) => 
+      await api.post("/admin/events", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-dashboard-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["upcoming-events"] });
+      toast.success("Tadbir muvaffaqiyatli yaratildi! 🐯🎉");
+    },
+    onError: () => toast.error("Tadbir yaratishda xatolik!"),
+  });
+
+  return { addTeacher, addStudent, generateReport, updateOrgSettings, addEvent };
 }
 
 // 5. Student Dashboard Stats Hook

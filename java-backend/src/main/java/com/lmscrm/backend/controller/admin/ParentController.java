@@ -269,9 +269,47 @@ public class ParentController {
         return ResponseEntity.ok().build();
     }
 
+    // ─── PUT update parent ───────────────────────────────────────────────────
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'ADMINISTRATOR', 'TEACHER')")
+    @Operation(summary = "Update a parent user")
+    public ResponseEntity<User> updateParent(@PathVariable UUID id,
+                                             @RequestBody CreateParentRequest req,
+                                             @AuthenticationPrincipal User currentUser) {
+        User parent = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Ota-ona topilmadi"));
+
+        // Security check: must belong to same organization if not SUPER_ADMIN
+        if (currentUser.getRole() != AppRole.SUPER_ADMIN) {
+            if (parent.getOrganizationId() == null || !parent.getOrganizationId().equals(currentUser.getOrganizationId())) {
+                throw new RuntimeException("Ruxsat etilmagan harakat!");
+            }
+        }
+
+        // Update fields
+        if (req.getFullName() != null && !req.getFullName().isBlank()) {
+            parent.setFullName(req.getFullName());
+        }
+        String phone = req.getPhone() != null && !req.getPhone().isBlank()
+                ? req.getPhone()
+                : (req.getPhoneOrUsername() != null ? req.getPhoneOrUsername() : "");
+        if (!phone.isBlank()) {
+            parent.setPhoneNumber(phone);
+        }
+        if (req.getEmail() != null && !req.getEmail().isBlank()) {
+            parent.setEmail(req.getEmail());
+        }
+        if (req.getTelegramUsername() != null) {
+            parent.setTelegramUsername(req.getTelegramUsername().replace("@", ""));
+        }
+
+        User saved = userRepository.save(parent);
+        return ResponseEntity.ok(saved);
+    }
+
     // ─── DELETE unlink child ──────────────────────────────────────────────────
     @DeleteMapping("/{parentId}/unlink-child/{studentId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'ADMINISTRATOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'ADMINISTRATOR', 'TEACHER')")
     @Operation(summary = "Unlink a student from a parent")
     public ResponseEntity<Void> unlinkChild(@PathVariable UUID parentId,
                                              @PathVariable UUID studentId) {
@@ -283,7 +321,7 @@ public class ParentController {
 
     // ─── DELETE parent ────────────────────────────────────────────────────────
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'ADMINISTRATOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'ADMINISTRATOR', 'TEACHER')")
     @Operation(summary = "Delete a parent user")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         // Remove all links first
@@ -299,13 +337,16 @@ public class ParentController {
                 .map(l -> l.getStudent().getFullName() != null
                         ? l.getStudent().getFullName() : l.getStudent().getUsername())
                 .collect(Collectors.toList());
+        List<ChildDto> children = links.stream()
+                .map(l -> ChildDto.from(l.getStudent()))
+                .collect(Collectors.toList());
         return new ParentDto(u.getId(), u.getFullName(), u.getUsername(),
                 u.getEmail(), u.getPhoneNumber(), u.isActive(),
-                u.getCreatedAt(), childrenNames);
+                u.getCreatedAt(), childrenNames, children);
     }
 
     // ─── DTOs ─────────────────────────────────────────────────────────────────
-    @lombok.Data @lombok.AllArgsConstructor
+    @lombok.Data @lombok.AllArgsConstructor @lombok.NoArgsConstructor
     public static class ParentDto {
         private UUID id;
         private String fullName;
@@ -315,6 +356,7 @@ public class ParentController {
         private boolean active;
         private java.time.LocalDateTime createdAt;
         private List<String> childrenNames;
+        private List<ChildDto> children;
     }
 
     @lombok.Data

@@ -12,4 +12,5 @@ import java.util.UUID;
 public interface LessonRepository extends JpaRepository<Lesson, UUID> {
     List<Lesson> findByGroupIdOrderByStartsAtAsc(UUID groupId);
     List<Lesson> findByTeacherIdAndStartsAtBetweenOrderByStartsAtAsc(UUID teacherId, LocalDateTime start, LocalDateTime end);
+    long countByTeacherId(UUID teacherId);
 }

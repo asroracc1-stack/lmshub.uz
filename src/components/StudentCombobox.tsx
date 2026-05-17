@@ -48,7 +48,7 @@ export function StudentCombobox({
     const fetchStudents = async () => {
       setLoading(true);
       try {
-        const response = await api.get<Student[]>("/api/v1/students/search", {
+        const response = await api.get<Student[]>("/students/search", {
           params: { query: debouncedSearchQuery },
         });
         setStudents(response.data);

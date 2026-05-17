@@ -90,10 +90,15 @@ public class AdminUserController {
             appRole = AppRole.STUDENT; // default
         }
 
-        // organizationId: use from request if superAdmin provides it, otherwise from current user
-        UUID orgId = req.getOrganization_id() != null
-                ? req.getOrganization_id()
-                : (req.getOrganizationId() != null ? req.getOrganizationId() : currentUser.getOrganizationId());
+        // organizationId: use from request if superAdmin provides it, otherwise strictly from current user
+        UUID orgId;
+        if (currentUser.getRole() == AppRole.SUPER_ADMIN) {
+            orgId = req.getOrganization_id() != null
+                    ? req.getOrganization_id()
+                    : (req.getOrganizationId() != null ? req.getOrganizationId() : currentUser.getOrganizationId());
+        } else {
+            orgId = currentUser.getOrganizationId();
+        }
 
         // Build the User entity from the DTO
         User user = User.builder()
@@ -141,10 +146,13 @@ public class AdminUserController {
             } catch (Exception ignore) {}
         }
 
-        // organizationId: use from request if superAdmin provides it, otherwise from current user
-        UUID orgId = req.getOrganization_id() != null
-                ? req.getOrganization_id()
-                : (req.getOrganizationId() != null ? req.getOrganizationId() : null);
+        // organizationId: use from request if superAdmin provides it, otherwise keep unchanged
+        UUID orgId = null;
+        if (currentUser.getRole() == AppRole.SUPER_ADMIN) {
+            orgId = req.getOrganization_id() != null
+                    ? req.getOrganization_id()
+                    : (req.getOrganizationId() != null ? req.getOrganizationId() : null);
+        }
 
         User details = User.builder()
                 .username(req.getUsername())

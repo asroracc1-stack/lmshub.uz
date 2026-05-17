@@ -22,7 +22,12 @@ export default function ProtectedRoute({ children, allow }: Props) {
 
   if (!user) return <Navigate to="/auth" replace state={{ from: location.pathname }} />;
   if (!role) return <Navigate to="/auth" replace />;
-  if (!allow.includes(role)) return <Navigate to="/403" replace />;
+  if (!allow.includes(role)) {
+    if (role === "super_admin") {
+      return <Navigate to="/super-admin/dashboard" replace />;
+    }
+    return <Navigate to="/403" replace />;
+  }
 
   return <>{children}</>;
 }

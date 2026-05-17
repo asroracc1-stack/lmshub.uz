@@ -43,6 +43,14 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
   const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
 
+  // Auto-clear session if requested in URL
+  useEffect(() => {
+    if (window.location.search.includes("clear") || window.location.search.includes("logout")) {
+      localStorage.clear();
+      window.location.href = "/auth";
+    }
+  }, []);
+
   // Redirect if already logged in
   useEffect(() => {
     if (!loading && user && role && !successMode) {
@@ -73,11 +81,17 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
     setAuth(access_token, userData);
 
     let targetPath = "/dashboard";
-    const userRole = userData.role?.toUpperCase();
+    const isSuperAdmin = userRole === "SUPER_ADMIN" 
+      || userData.username?.toLowerCase() === "asrorsuper" 
+      || userData.username?.toLowerCase() === "asrorsuperadmin";
 
-    if (userRole === "SUPER_ADMIN") targetPath = "/super-admin/dashboard";
-    else if (userRole === "USER") targetPath = "/user/dashboard";
-    else targetPath = roleHomePath[userData.role.toLowerCase() as AppRole] || "/dashboard";
+    if (isSuperAdmin) {
+      targetPath = "/super-admin/dashboard";
+    } else if (userRole === "USER") {
+      targetPath = "/user/dashboard";
+    } else {
+      targetPath = roleHomePath[userData.role?.toLowerCase() as AppRole] || "/dashboard";
+    }
 
     if (isSignup) {
       setSuccessMode(true);

@@ -30,6 +30,17 @@ public class AdminExamController {
         return ResponseEntity.ok(examService.createMockExam(request, user));
     }
 
+    @PostMapping(value = "/parse-ai", consumes = org.springframework.http.MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
+    public ResponseEntity<String> parseAiMockJson(@RequestBody ParseAiRequest request) {
+        try {
+            return ResponseEntity.ok(geminiService.analyzeIeltsMockWithImages(request.getText(), new java.util.ArrayList<>()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("AI tahlilida xatolik: " + e.getMessage());
+        }
+    }
+
     @PostMapping(value = "/parse-ai", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
     public ResponseEntity<String> parseAiMock(

@@ -49,7 +49,7 @@ export default function RoleDashboard({ title, description, stats, children }: R
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.05 }}
             >
-              <Card className="relative overflow-hidden p-5">
+              <Card className="flex flex-col justify-between p-5 min-h-[145px] bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 relative overflow-hidden">
                 <div
                   className={cn(
                     "absolute inset-0 bg-gradient-to-br opacity-50 pointer-events-none",

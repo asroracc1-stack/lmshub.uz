@@ -25,7 +25,7 @@ public class AdminGroupController {
     private final GroupService groupService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ADMINISTRATOR','TEACHER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ADMINISTRATOR')")
     @Operation(summary = "Get all groups with pagination")
     public ResponseEntity<Page<GroupDto>> getAll(
             @RequestParam(required = false) String query,
@@ -35,7 +35,7 @@ public class AdminGroupController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ADMINISTRATOR','TEACHER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ADMINISTRATOR')")
     @Operation(summary = "Create a new group")
     public ResponseEntity<GroupDto> create(
             @RequestBody GroupDto dto,
@@ -44,7 +44,7 @@ public class AdminGroupController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ADMINISTRATOR','TEACHER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ADMINISTRATOR')")
     @Operation(summary = "Update a group")
     public ResponseEntity<GroupDto> update(
             @PathVariable UUID id,

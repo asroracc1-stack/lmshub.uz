@@ -22,7 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { supabase } from "@/integrations/supabase/client";
+// Supabase client import removed
 import { useAuth } from "@/contexts/AuthContext";
 import { Inbox, Megaphone, Plus, Send, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -66,24 +66,43 @@ export default function OrgMessages() {
   const load = async () => {
     if (!user?.id) return;
     setLoading(true);
-    const { data: msgs } = await supabase
-      .from("messages")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(100);
-    const list = (msgs as Message[]) ?? [];
-    setMessages(list);
-    const ids = Array.from(new Set(list.map((m) => m.sender_id)));
-    if (ids.length) {
-      const { data: profs } = await supabase
-        .from("profiles")
-        .select("id, username, full_name")
-        .in("id", ids);
-      const map: Record<string, Profile> = {};
-      (profs as Profile[] | null)?.forEach((p) => (map[p.id] = p));
-      setProfiles(map);
+    try {
+      const { data } = await api.get("/messages");
+      const mapped = (data ?? []).map((m: any) => ({
+        id: m.id,
+        subject: m.subject,
+        body: m.content,
+        sender_id: m.sender?.id,
+        recipient_id: m.receiver?.id || null,
+        is_broadcast: m.type === "BROADCAST",
+        created_at: m.sentAt,
+        organization_id: m.sender?.organizationId || null,
+      }));
+      setMessages(mapped);
+
+      const profMap: Record<string, Profile> = {};
+      (data ?? []).forEach((m: any) => {
+        if (m.sender) {
+          profMap[m.sender.id] = {
+            id: m.sender.id,
+            username: m.sender.username,
+            full_name: m.sender.fullName,
+          };
+        }
+        if (m.receiver) {
+          profMap[m.receiver.id] = {
+            id: m.receiver.id,
+            username: m.receiver.username,
+            full_name: m.receiver.fullName,
+          };
+        }
+      });
+      setProfiles(profMap);
+    } catch (e) {
+      console.error("Xabarlarni yuklashda xatolik:", e);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const loadOrgUsers = async () => {
@@ -99,13 +118,21 @@ export default function OrgMessages() {
       return;
     }
 
-    const { data } = await supabase
-      .from("profiles")
-      .select("id, username, full_name")
-      .eq("organization_id", profile.organization_id)
-      .neq("id", user?.id ?? "")
-      .order("full_name", { ascending: true });
-    setOrgUsers((data as Profile[]) ?? []);
+    try {
+      const { data } = await api.get("/admin/users", {
+        params: { organizationId: profile.organization_id }
+      });
+      const filtered = (data ?? [])
+        .filter((u: any) => u.id !== user?.id)
+        .map((u: any) => ({
+          id: u.id,
+          username: u.username,
+          full_name: u.fullName,
+        }));
+      setOrgUsers(filtered);
+    } catch (e) {
+      console.error("Foydalanuvchilarni yuklashda xatolik:", e);
+    }
   };
 
   useEffect(() => {
@@ -119,17 +146,7 @@ export default function OrgMessages() {
   // Realtime updates
   useEffect(() => {
     if (!user?.id) return;
-    const channel = supabase
-      .channel("messages-realtime")
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "messages" },
-        () => load(),
-      )
-      .subscribe();
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    load();
   }, [user?.id]);
 
   const senderName = (id: string) => {
@@ -157,51 +174,21 @@ export default function OrgMessages() {
     }
     setSending(true);
     try {
-      const { error } = await supabase.from("messages").insert({
-        sender_id: user.id,
+      const payload = {
+        receiverId: form.is_broadcast ? null : form.recipient_id,
         subject: form.subject.trim(),
-        body: form.body.trim(),
-        organization_id: profile?.organization_id ?? null,
-        recipient_id: form.is_broadcast ? null : form.recipient_id,
-        is_broadcast: form.is_broadcast,
-      });
-      if (error) throw error;
+        content: form.body.trim(),
+        type: form.is_broadcast ? "BROADCAST" : "DIRECT",
+      };
 
-      // Send notification to recipient(s)
-      if (form.is_broadcast && profile?.organization_id) {
-        const { data: orgMembers } = await supabase
-          .from("profiles")
-          .select("id")
-          .eq("organization_id", profile.organization_id);
-        await Promise.all(
-          (orgMembers ?? [])
-            .filter((m: any) => m.id !== user.id)
-            .map((m: any) =>
-              supabase.rpc("send_notification", {
-                _user_id: m.id,
-                _title: `📢 E'lon: ${form.subject}`,
-                _body: form.body.slice(0, 120),
-                _type: "info",
-                _link: "/messages",
-              }),
-            ),
-        );
-      } else if (form.recipient_id) {
-        await supabase.rpc("send_notification", {
-          _user_id: form.recipient_id,
-          _title: `✉️ Yangi xabar: ${form.subject}`,
-          _body: form.body.slice(0, 120),
-          _type: "info",
-          _link: "/messages",
-        });
-      }
+      await api.post("/messages", payload);
 
       toast.success(form.is_broadcast ? "E'lon yuborildi" : "Xabar yuborildi");
       setOpen(false);
       setForm({ recipient_id: "", subject: "", body: "", is_broadcast: false });
       load();
     } catch (e: any) {
-      toast.error(e.message ?? "Xatolik yuz berdi");
+      toast.error(e.response?.data?.message || e.message || "Xatolik yuz berdi");
     } finally {
       setSending(false);
     }

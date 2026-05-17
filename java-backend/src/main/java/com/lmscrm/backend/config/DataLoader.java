@@ -26,42 +26,10 @@ public class DataLoader implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
-        String username = "asrorsuperadmin";
-        String password = "ilhomhamdamarguba";
-
-        log.info("🚀 DATA LOADER: Checking SuperAdmin initialization for {}...", username);
-
-        userRepository.findByEmail(username).ifPresentOrElse(
-            user -> {
-                log.info("🛠 SuperAdmin exists, resetting password with fresh BCrypt hash...");
-                user.setPassword(passwordEncoder.encode(password));
-                userRepository.save(user);
-            },
-            () -> {
-                log.info("🆕 SuperAdmin not found, creating new one...");
-                User superAdmin = User.builder()
-                        .email(username)
-                        .password(passwordEncoder.encode(password))
-                        .role(AppRole.SUPER_ADMIN)
-                        .build();
-
-                User savedUser = userRepository.save(superAdmin);
-
-                Profile profile = Profile.builder()
-                        .user(savedUser)
-                        .firstName("Asror")
-                        .lastName("SuperAdmin")
-                        .isActive(true)
-                        .build();
-
-                profileRepository.save(profile);
-            }
-        );
-
+        log.info("🚀 DATA LOADER: Seeding pricing plans and regular users...");
         seedPricingPlans();
         seedRegularUsers();
-
-        log.info("✅ SUCCESS: SuperAdmin check complete for {} / {}", username, password);
+        log.info("✅ SUCCESS: DATA LOADER completed seeding.");
     }
 
 

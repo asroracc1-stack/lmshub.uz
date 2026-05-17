@@ -15,11 +15,12 @@ import java.util.UUID;
 public class Profile {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "user_id")
     private UUID id;
 
     @OneToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "user_id", unique = true, nullable = false)
+    @MapsId
+    @JoinColumn(name = "user_id")
     @com.fasterxml.jackson.annotation.JsonBackReference
     private User user;
 

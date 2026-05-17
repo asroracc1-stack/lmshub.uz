@@ -1,14 +1,27 @@
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
+# LMSHub.uz Robots.txt — Crawl Management Config
 User-agent: *
+
+# Public Pages: Index these
 Allow: /
+Allow: /signin
+Allow: /signup
+Allow: /auth
+
+# Dashboard Panels: STRICTLY DO NOT INDEX THESE
+Disallow: /super-admin/
+Disallow: /admin/
+Disallow: /administrator/
+Disallow: /teacher/
+Disallow: /student/
+Disallow: /parent/
+Disallow: /pack-manager/
+Disallow: /user/
+Disallow: /403
+Disallow: /404
+
+# Backend API Endpoints (Prevent direct crawling)
+Disallow: /api/
+
+# Sitemap submission for indexer acceleration
+Sitemap: https://lmshub.uz/sitemap.xml
+

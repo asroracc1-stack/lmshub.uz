@@ -20,14 +20,14 @@ public class AdminOrganizationController {
     private final OrganizationService organizationService;
 
     @GetMapping("/settings")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     @Operation(summary = "Get current organization settings")
     public ResponseEntity<OrganizationDto> getSettings(@AuthenticationPrincipal User currentUser) {
         return ResponseEntity.ok(organizationService.getOrganizationById(currentUser.getOrganizationId()));
     }
 
     @PutMapping("/settings")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     @Operation(summary = "Update organization settings")
     public ResponseEntity<OrganizationDto> updateSettings(
             @AuthenticationPrincipal User currentUser,

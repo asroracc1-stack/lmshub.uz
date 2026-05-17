@@ -40,7 +40,7 @@ public class MessageController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Send a new message")
     public ResponseEntity<MessageDto> sendMessage(
             @AuthenticationPrincipal User currentUser,
