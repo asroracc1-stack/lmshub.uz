@@ -1,0 +1,206 @@
+package com.lmscrm.backend.controller;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import org.springframework.http.MediaType;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.UUID;
+import java.awt.image.BufferedImage;
+import javax.imageio.IIOImage;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import javax.imageio.stream.ImageOutputStream;
+
+import com.lmscrm.backend.domain.entity.User;
+import com.lmscrm.backend.repository.UserRepository;
+import net.coobird.thumbnailator.Thumbnails;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.transaction.annotation.Transactional;
+import com.lmscrm.backend.repository.ProfileRepository;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@RestController
+@RequestMapping("/api/v1/files")
+@RequiredArgsConstructor
+@Tag(name = "File Controller", description = "Endpoints for file uploads")
+public class FileController {
+
+    private final String uploadDir = "uploads/";
+    private final UserRepository userRepository;
+    private final ProfileRepository profileRepository;
+
+    @PostMapping("/upload")
+    @Operation(summary = "Upload File")
+    public ResponseEntity<String> upload(@RequestParam("file") MultipartFile file) throws IOException {
+        if (file.isEmpty()) {
+            return ResponseEntity.badRequest().body("File is empty");
+        }
+
+        Path root = Paths.get(uploadDir);
+        if (!Files.exists(root)) {
+            Files.createDirectories(root);
+        }
+
+        String filename = UUID.randomUUID() + "-" + file.getOriginalFilename();
+        Files.copy(file.getInputStream(), root.resolve(filename));
+
+        // In a real app, this would be a full URL
+        String url = "/api/v1/files/view/" + filename;
+        return ResponseEntity.ok(url);
+    }
+
+    @GetMapping("/view/{filename}")
+    @Operation(summary = "View File")
+    public ResponseEntity<byte[]> view(@PathVariable String filename) throws IOException {
+        Path file = Paths.get(uploadDir).resolve(filename);
+        if (!Files.exists(file)) {
+            return ResponseEntity.notFound().build();
+        }
+        String mimeType = Files.probeContentType(file);
+        if (mimeType == null) {
+            mimeType = "application/octet-stream";
+        }
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(mimeType))
+                .body(Files.readAllBytes(file));
+    }
+
+    @PostMapping("/upload/avatar")
+    @Transactional
+    @Operation(summary = "Upload Avatar with Compression")
+    public ResponseEntity<String> uploadAvatar(
+            @RequestParam("file") MultipartFile file,
+            @AuthenticationPrincipal User user) throws IOException {
+        
+        if (file.isEmpty()) {
+            return ResponseEntity.badRequest().body("File is empty");
+        }
+
+        Path avatarPath = Paths.get(uploadDir, "avatars");
+        if (!Files.exists(avatarPath)) {
+            Files.createDirectories(avatarPath);
+        }
+
+        String filename = "avatar-" + user.getId() + "-" + System.currentTimeMillis() + ".jpg";
+        Path targetFile = avatarPath.resolve(filename);
+
+        // Compress and save as JPG
+        Thumbnails.of(file.getInputStream())
+                .size(400, 400)
+                .outputFormat("jpg")
+                .outputQuality(0.8)
+                .toFile(targetFile.toFile());
+
+        String url = "/api/v1/files/view/avatars/" + filename;
+
+        // Fetch and update User
+        User managedUser = userRepository.findById(user.getId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        managedUser.setAvatarUrl(url);
+        userRepository.save(managedUser);
+
+        // Fetch and update Profile
+        profileRepository.findById(user.getId()).ifPresent(p -> {
+            p.setAvatarUrl(url);
+            profileRepository.save(p);
+        });
+
+        return ResponseEntity.ok(url);
+    }
+
+    @PostMapping("/upload/profile")
+    @Transactional
+    @Operation(summary = "Upload Cropped Profile/Logo as WebP")
+    public ResponseEntity<String> uploadProfile(
+            @RequestParam("file") MultipartFile file,
+            @AuthenticationPrincipal User user) throws IOException {
+        
+        log.info("📁 Starting Profile Upload for user: {}", user.getId());
+        if (file.isEmpty()) {
+            return ResponseEntity.badRequest().body("File is empty");
+        }
+
+        try {
+            Path logoPath = Paths.get(uploadDir, "logos");
+            if (!Files.exists(logoPath)) {
+                Files.createDirectories(logoPath);
+                log.info("📂 Created logos directory: {}", logoPath.toAbsolutePath());
+            }
+
+            String filename = "profile-" + user.getId() + "-" + System.currentTimeMillis() + ".webp";
+            Path targetFile = logoPath.resolve(filename);
+
+            // Read image
+            BufferedImage image = ImageIO.read(file.getInputStream());
+            if (image == null) {
+                log.error("❌ Invalid image file received for user: {}", user.getId());
+                return ResponseEntity.badRequest().body("Invalid image file");
+            }
+
+            // Check for WebP writer
+            java.util.Iterator<ImageWriter> writers = ImageIO.getImageWritersByMIMEType("image/webp");
+            if (!writers.hasNext()) {
+                log.warn("⚠️ No WebP writer found. Falling back to original format.");
+                Files.copy(file.getInputStream(), targetFile); // Or save as JPG
+            } else {
+                ImageWriter writer = writers.next();
+                ImageWriteParam writeParam = writer.getDefaultWriteParam();
+                try (ImageOutputStream ios = ImageIO.createImageOutputStream(targetFile.toFile())) {
+                    writer.setOutput(ios);
+                    writer.write(null, new IIOImage(image, null, null), writeParam);
+                    log.info("✅ Successfully saved WebP image: {}", targetFile.getFileName());
+                } finally {
+                    writer.dispose();
+                }
+            }
+
+            String url = "/api/v1/files/view/logos/" + filename;
+            
+            // Update user and profile
+            User managedUser = userRepository.findById(user.getId())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            managedUser.setAvatarUrl(url);
+            userRepository.save(managedUser);
+
+            profileRepository.findById(user.getId()).ifPresent(p -> {
+                p.setAvatarUrl(url);
+                profileRepository.save(p);
+            });
+
+            return ResponseEntity.ok(url);
+
+        } catch (Exception e) {
+            log.error("💥 Critical error during profile upload: {}", e.getMessage(), e);
+            return ResponseEntity.status(500).body("Faylni saqlashda xatolik: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/view/logos/{filename}")
+    @Operation(summary = "View Logo")
+    public ResponseEntity<byte[]> viewLogo(@PathVariable String filename) {
+        try {
+            Path file = Paths.get(uploadDir, "logos").resolve(filename);
+            if (!Files.exists(file)) {
+                log.warn("🔍 Logo not found: {}", filename);
+                return ResponseEntity.notFound().build();
+            }
+            log.info("🖼️ Serving logo: {}", filename);
+            return ResponseEntity.ok()
+                    .contentType(org.springframework.http.MediaType.parseMediaType("image/webp"))
+                    .body(Files.readAllBytes(file));
+        } catch (Exception e) {
+            log.error("❌ Error serving logo {}: {}", filename, e.getMessage());
+            return ResponseEntity.status(500).build();
+        }
+    }
+}

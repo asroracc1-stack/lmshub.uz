@@ -1,0 +1,66 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0012-1
+      author: ai
+      changes:
+        - createTable:
+            tableName: pricing_plans
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: text
+              - column:
+                  name: price_monthly
+                  type: decimal(15, 2)
+              - column:
+                  name: price_yearly
+                  type: decimal(15, 2)
+              - column:
+                  name: currency
+                  type: varchar(10)
+              - column:
+                  name: price_suffix
+                  type: varchar(50)
+              - column:
+                  name: cta_label
+                  type: varchar(100)
+              - column:
+                  name: cta_link
+                  type: varchar(255)
+              - column:
+                  name: is_popular
+                  type: boolean
+                  defaultValueBoolean: false
+              - column:
+                  name: is_active
+                  type: boolean
+                  defaultValueBoolean: true
+              - column:
+                  name: sort_order
+                  type: int
+
+        - createTable:
+            tableName: pricing_plan_features
+            columns:
+              - column:
+                  name: plan_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_plan_features_plan
+                    references: pricing_plans(id)
+              - column:
+                  name: feature
+                  type: varchar(255)
+                  constraints:
+                    nullable: false

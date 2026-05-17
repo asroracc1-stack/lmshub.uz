@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0018-1
+      author: ai
+      changes:
+        - addColumn:
+            tableName: payment_receivers
+            columns:
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false

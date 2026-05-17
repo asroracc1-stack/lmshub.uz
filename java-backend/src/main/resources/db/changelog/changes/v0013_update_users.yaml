@@ -1,0 +1,23 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0013-1
+      author: ai
+      changes:
+        - addColumn:
+            tableName: users
+            columns:
+              - column:
+                  name: full_name
+                  type: varchar(255)
+              - column:
+                  name: phone_number
+                  type: varchar(50)
+              - column:
+                  name: organization_id
+                  type: uuid
+              - column:
+                  name: group_id
+                  type: uuid
+              - column:
+                  name: subject
+                  type: varchar(255)

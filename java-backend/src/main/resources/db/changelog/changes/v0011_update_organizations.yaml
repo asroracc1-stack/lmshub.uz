@@ -1,0 +1,27 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0011-1
+      author: ai
+      changes:
+        - addColumn:
+            tableName: organizations
+            columns:
+              - column:
+                  name: slug
+                  type: varchar(255)
+              - column:
+                  name: plan_id
+                  type: uuid
+              - column:
+                  name: address
+                  type: varchar(255)
+              - column:
+                  name: phone
+                  type: varchar(50)
+              - column:
+                  name: email
+                  type: varchar(255)
+        - addUniqueConstraint:
+            tableName: organizations
+            columnNames: slug
+            constraintName: uk_organization_slug

@@ -1,0 +1,369 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0002-1
+      author: ai
+      changes:
+        - createTable:
+            tableName: subjects
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: text
+              - column:
+                  name: organization_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_subjects_organization
+                    references: organizations(id)
+              - column:
+                  name: created_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp
+
+        - createTable:
+            tableName: groups
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: text
+              - column:
+                  name: color
+                  type: varchar(50)
+                  defaultValue: "#000000"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: is_active
+                  type: boolean
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: organization_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_groups_organization
+                    references: organizations(id)
+              - column:
+                  name: created_by
+                  type: uuid
+                  constraints:
+                    foreignKeyName: fk_groups_created_by
+                    references: users(id)
+              - column:
+                  name: created_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp
+
+        - createTable:
+            tableName: group_members
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: group_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_gm_group
+                    references: groups(id)
+              - column:
+                  name: student_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_gm_student
+                    references: users(id)
+              - column:
+                  name: organization_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_gm_organization
+                    references: organizations(id)
+              - column:
+                  name: joined_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+            # Add Unique Constraint
+        - addUniqueConstraint:
+            tableName: group_members
+            columnNames: group_id, student_id
+            constraintName: uk_group_student
+
+        - createTable:
+            tableName: group_teachers
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: group_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_gt_group
+                    references: groups(id)
+              - column:
+                  name: teacher_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_gt_teacher
+                    references: users(id)
+              - column:
+                  name: subject_id
+                  type: uuid
+                  constraints:
+                    foreignKeyName: fk_gt_subject
+                    references: subjects(id)
+              - column:
+                  name: organization_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_gt_organization
+                    references: organizations(id)
+              - column:
+                  name: assigned_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: group_teachers
+            columnNames: group_id, teacher_id
+            constraintName: uk_group_teacher
+
+        - createTable:
+            tableName: lessons
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: title
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: text
+              - column:
+                  name: group_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_lessons_group
+                    references: groups(id)
+              - column:
+                  name: subject_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_lessons_subject
+                    references: subjects(id)
+              - column:
+                  name: teacher_id
+                  type: uuid
+                  constraints:
+                    foreignKeyName: fk_lessons_teacher
+                    references: users(id)
+              - column:
+                  name: room
+                  type: varchar(255)
+              - column:
+                  name: starts_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: ends_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: is_canceled
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: organization_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_lessons_organization
+                    references: organizations(id)
+              - column:
+                  name: created_by
+                  type: uuid
+                  constraints:
+                    foreignKeyName: fk_lessons_created_by
+                    references: users(id)
+              - column:
+                  name: created_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp
+
+        - createTable:
+            tableName: attendance
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: lesson_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_attendance_lesson
+                    references: lessons(id)
+              - column:
+                  name: student_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_attendance_student
+                    references: users(id)
+              - column:
+                  name: status
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: note
+                  type: text
+              - column:
+                  name: marked_by
+                  type: uuid
+                  constraints:
+                    foreignKeyName: fk_attendance_marked_by
+                    references: users(id)
+              - column:
+                  name: organization_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_attendance_organization
+                    references: organizations(id)
+              - column:
+                  name: created_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp
+        - addUniqueConstraint:
+            tableName: attendance
+            columnNames: lesson_id, student_id
+            constraintName: uk_attendance_lesson_student
+
+        - createTable:
+            tableName: grades
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: student_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_grades_student
+                    references: users(id)
+              - column:
+                  name: teacher_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_grades_teacher
+                    references: users(id)
+              - column:
+                  name: subject_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_grades_subject
+                    references: subjects(id)
+              - column:
+                  name: lesson_id
+                  type: uuid
+                  constraints:
+                    foreignKeyName: fk_grades_lesson
+                    references: lessons(id)
+              - column:
+                  name: score
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: max_score
+                  type: int
+                  defaultValueNumeric: 100
+                  constraints:
+                    nullable: false
+              - column:
+                  name: comment
+                  type: text
+              - column:
+                  name: organization_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_grades_organization
+                    references: organizations(id)
+              - column:
+                  name: created_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp

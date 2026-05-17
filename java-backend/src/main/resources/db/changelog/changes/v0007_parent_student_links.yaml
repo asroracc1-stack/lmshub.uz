@@ -1,0 +1,40 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0007-1
+      author: ai
+      changes:
+        - createTable:
+            tableName: parent_student_links
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: parent_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_parent_link_parent
+                    references: users(id)
+              - column:
+                  name: student_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_parent_link_student
+                    references: users(id)
+              - column:
+                  name: relationship
+                  type: varchar(50)
+                  defaultValue: "parent"
+              - column:
+                  name: created_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            columnNames: parent_id, student_id
+            constraintName: uq_parent_student_link
+            tableName: parent_student_links

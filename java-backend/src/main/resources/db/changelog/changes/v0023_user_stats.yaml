@@ -1,0 +1,43 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0023-1
+      author: antigravity
+      changes:
+        - addColumn:
+            tableName: users
+            columns:
+              - column:
+                  name: target_band
+                  type: double precision
+              - column:
+                  name: exam_date
+                  type: date
+        - createTable:
+            tableName: practice_sessions
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  defaultValueComputed: gen_random_uuid()
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_practice_session_user
+                    referencedTableName: users
+                    referencedColumnNames: id
+              - column:
+                  name: minutes
+                  type: double precision
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false

@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0022-1
+      author: ai
+      changes:
+        - dropNotNullConstraint:
+            tableName: invoices
+            columnName: student_id
+            columnDataType: uuid

@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0020-1
+      author: ai
+      changes:
+        - dropNotNullConstraint:
+            tableName: exams
+            columnName: organization_id
+            columnDataType: uuid

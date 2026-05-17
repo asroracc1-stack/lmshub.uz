@@ -1,0 +1,184 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0010-1
+      author: ai
+      changes:
+        - createTable:
+            tableName: audit_logs
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: actor_username
+                  type: varchar(255)
+              - column:
+                  name: action
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: entity_type
+                  type: varchar(255)
+              - column:
+                  name: entity_id
+                  type: varchar(255)
+              - column:
+                  name: meta
+                  type: jsonb
+              - column:
+                  name: created_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+
+        - createTable:
+            tableName: news
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: title
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: content
+                  type: text
+              - column:
+                  name: image_url
+                  type: varchar(255)
+              - column:
+                  name: category
+                  type: varchar(255)
+              - column:
+                  name: created_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+
+        - createTable:
+            tableName: bot_settings
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: bot_token
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: bot_name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: welcome_message
+                  type: text
+              - column:
+                  name: deep_linking_prefix
+                  type: varchar(255)
+              - column:
+                  name: is_active
+                  type: boolean
+                  defaultValueBoolean: true
+
+        - createTable:
+            tableName: payment_receivers
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: type
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: account_number
+                  type: varchar(255)
+              - column:
+                  name: api_key
+                  type: varchar(255)
+              - column:
+                  name: is_active
+                  type: boolean
+                  defaultValueBoolean: true
+              - column:
+                  name: organization_id
+                  type: uuid
+                  constraints:
+                    foreignKeyName: fk_payment_receivers_organization
+                    references: organizations(id)
+
+        - createTable:
+            tableName: calendar_events
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: title
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: text
+              - column:
+                  name: location
+                  type: varchar(255)
+              - column:
+                  name: starts_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: ends_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: is_all_day
+                  type: boolean
+                  defaultValueBoolean: false
+              - column:
+                  name: type
+                  type: varchar(50)
+              - column:
+                  name: color
+                  type: varchar(50)
+              - column:
+                  name: organization_id
+                  type: uuid
+                  constraints:
+                    foreignKeyName: fk_calendar_events_organization
+                    references: organizations(id)
+              - column:
+                  name: created_by
+                  type: uuid
+                  constraints:
+                    foreignKeyName: fk_calendar_events_created_by
+                    references: users(id)
+              - column:
+                  name: created_at
+                  type: timestamp
+                  constraints:
+                    nullable: false

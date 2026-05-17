@@ -1,0 +1,73 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0019-1
+      author: ai
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: calendar_events
+      changes:
+        - createTable:
+            tableName: calendar_events
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: title
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: text
+              - column:
+                  name: location
+                  type: varchar(255)
+              - column:
+                  name: starts_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: ends_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: is_all_day
+                  type: boolean
+                  defaultValueBoolean: false
+              - column:
+                  name: type
+                  type: varchar(255)
+              - column:
+                  name: color
+                  type: varchar(255)
+              - column:
+                  name: organization_id
+                  type: uuid
+              - column:
+                  name: created_by
+                  type: uuid
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: calendar_events
+            baseColumnNames: organization_id
+            constraintName: fk_calendar_org
+            referencedTableName: organizations
+            referencedColumnNames: id
+        - addForeignKeyConstraint:
+            baseTableName: calendar_events
+            baseColumnNames: created_by
+            constraintName: fk_calendar_user
+            referencedTableName: users
+            referencedColumnNames: id

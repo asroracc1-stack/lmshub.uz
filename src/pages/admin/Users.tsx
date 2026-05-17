@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useDebounce } from "@/hooks/useDebounce";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -39,14 +40,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { 
-  Users as UsersIcon, 
-  Search, 
-  Plus, 
-  Pencil, 
-  Trash2, 
-  KeyRound, 
-  Loader2, 
+import {
+  Users as UsersIcon,
+  Search,
+  Plus,
+  Pencil,
+  Trash2,
+  KeyRound,
+  Loader2,
   UserCircle,
   Shield,
   GraduationCap,
@@ -56,7 +57,9 @@ import {
   Mail,
   Phone,
   BookOpen,
-  Users2
+  Users2,
+  Parent as ParentIcon, // Added ParentIcon
+  AtSign, // Added AtSign for telegram username
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/axios";
@@ -65,6 +68,7 @@ import { z } from "zod";
 import { motion, AnimatePresence } from "framer-motion";
 import TigerLoader from "@/components/TigerLoader";
 import { useTranslation } from "react-i18next";
+import { StudentCombobox } from "@/components/StudentCombobox"; // Import StudentCombobox
 
 interface User {
   id: string;
@@ -75,22 +79,17 @@ interface User {
   active: boolean;
   role: string;
   subject?: string | null;
-  group_id?: string | null;
+  telegramUsername?: string | null; // Added telegramUsername
+  defaultPassword?: string; // Added defaultPassword for response
 }
 
-const userSchema = z.object({
-  username: z
-    .string()
-    .trim()
-    .min(3, "Login kamida 3 ta belgi bo'lishi kerak")
-    .max(40)
-    .regex(/^[a-z0-9_.-]+$/, "Faqat kichik harflar, sonlar va _ . -"),
-  password: z.string().min(6, "Parol kamida 6 ta belgi").max(100),
-  full_name: z.string().trim().min(2, "Ism juda qisqa").max(100),
+// Updated schema for Parent creation/update
+const parentSchema = z.object({
+  studentId: z.string().uuid("Noto'g'ri talaba IDsi").optional().nullable(), // Optional for update, can be null
+  fullName: z.string().trim().min(2, "Ism juda qisqa").max(100),
+  phoneNumber: z.string().trim().max(30).or(z.literal("")),
   email: z.string().trim().email("Noto'g'ri email").or(z.literal("")),
-  phone_number: z.string().trim().max(30).or(z.literal("")),
-  role: z.enum(["ADMINISTRATOR", "TEACHER", "STUDENT", "ADMIN"]),
-  subject: z.string().optional(),
+  telegramUsername: z.string().trim().optional().nullable(),
 });
 
 export default function Users() {
@@ -98,6 +97,7 @@ export default function Users() {
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<User[]>([]);
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 300);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<User | null>(null);
   const [pwdTarget, setPwdTarget] = useState<User | null>(null);
@@ -107,26 +107,27 @@ export default function Users() {
   const [tigerAction, setTigerAction] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
+  // Updated form state for Parent
   const [form, setForm] = useState({
-    username: "",
-    password: "",
-    full_name: "",
+    studentId: null as string | null,
+    fullName: "",
+    phoneNumber: "",
     email: "",
-    phone_number: "",
-    role: "STUDENT",
-    subject: "",
+    telegramUsername: "",
+    role: "PARENT", // Default role is PARENT
   });
   const [newPwd, setNewPwd] = useState("");
 
   const load = async () => {
     setLoading(true);
     try {
-      const response = await api.get("/admin/users/all");
-      setUsers(response.data.content || response.data);
+      // Fetch only parents for this view
+      const response = await api.get("/api/v1/admin/parents");
+      setUsers(response.data);
     } catch (error: any) {
-      console.error("Failed to load users:", error);
+      console.error("Failed to load parents:", error);
       if (error.response?.status >= 500) setGlobalError(true);
-      toast.error("Foydalanuvchilarni yuklab bo'lmadi");
+      toast.error("Ota-onalarni yuklab bo'lmadi");
     } finally {
       setLoading(false);
     }
@@ -138,13 +139,12 @@ export default function Users() {
 
   const resetForm = () => {
     setForm({
-      username: "",
-      password: "",
-      full_name: "",
+      studentId: null,
+      fullName: "",
+      phoneNumber: "",
       email: "",
-      phone_number: "",
-      role: "STUDENT",
-      subject: "",
+      telegramUsername: "",
+      role: "PARENT",
     });
     setEditing(null);
   };
@@ -157,21 +157,23 @@ export default function Users() {
   const openEdit = (u: User) => {
     setEditing(u);
     setForm({
-      username: u.username,
-      password: "",
-      full_name: u.full_name || "",
+      studentId: null, // Student ID is not directly editable for existing parent
+      fullName: u.full_name || "",
+      phoneNumber: u.phone_number || "",
       email: u.email || "",
-      phone_number: u.phone_number || "",
+      telegramUsername: u.telegramUsername || "",
       role: u.role,
-      subject: u.subject || "",
     });
     setDialogOpen(true);
   };
 
   const submit = async () => {
-    const parsed = userSchema.safeParse({
-      ...form,
-      password: editing ? "dummy-pass" : form.password
+    const parsed = parentSchema.safeParse({
+      studentId: form.studentId,
+      fullName: form.fullName,
+      phoneNumber: form.phoneNumber,
+      email: form.email,
+      telegramUsername: form.telegramUsername,
     });
 
     if (!parsed.success) {
@@ -182,17 +184,20 @@ export default function Users() {
     setSubmitting(true);
     try {
       const payload = {
-        ...form,
-        username: form.username.toLowerCase(),
-        phone_number: form.phone_number.trim().replaceAll(' ', ''),
+        studentId: form.studentId,
+        fullName: form.fullName,
+        phoneNumber: form.phoneNumber.trim().replaceAll(' ', ''),
+        email: form.email,
+        telegramUsername: form.telegramUsername ? form.telegramUsername.replace(/^@/, "") : null, // Clean telegram username
       };
 
+      let response;
       if (editing) {
-        await api.put(`/admin/users/${editing.id}`, payload);
-        toast.success("Ma'lumotlar yangilandi! ✨");
+        response = await api.put(`/api/v1/admin/parents/${editing.id}`, payload);
+        toast.success("Ota-ona ma'lumotlari yangilandi! ✨");
       } else {
-        await api.post('/admin/users', payload);
-        toast.success("Foydalanuvchi muvaffaqiyatli qo'shildi! 🚀");
+        response = await api.post('/api/v1/admin/parents', payload);
+        toast.success(`Ota-ona muvaffaqiyatli qo'shildi! Parol: ${response.data.defaultPassword} 🚀`);
       }
 
       setDialogOpen(false);
@@ -200,12 +205,15 @@ export default function Users() {
       load();
     } catch (error: any) {
       console.error("Submit error:", error);
+      toast.error(error.response?.data?.message || "Xatolik yuz berdi!");
     } finally {
       setSubmitting(false);
     }
   };
 
   const toggleStatus = async (u: User) => {
+    // This function is not directly used for parents as per new requirements
+    // but keeping it for other user types if this component is reused.
     try {
       await api.put(`/admin/users/${u.id}`, {
         ...u,
@@ -224,8 +232,8 @@ export default function Users() {
   const remove = async () => {
     if (!delTarget) return;
     try {
-      await api.delete(`/admin/users/${delTarget.id}`);
-      toast.success("O'chirib tashlandi");
+      await api.delete(`/api/v1/admin/parents/${delTarget.id}`);
+      toast.success("Ota-ona o'chirib tashlandi");
       setTigerAction("Tartib o'rnatildi! 🐯🛠️");
       setTimeout(() => setTigerAction(null), 3000);
       setDelTarget(null);
@@ -233,10 +241,12 @@ export default function Users() {
       load();
     } catch (error) {
       console.error("Delete error:", error);
+      toast.error(error.response?.data?.message || "Xatolik yuz berdi!");
     }
   };
 
   const resetPassword = async () => {
+    // This function is not used for parents as password is auto-generated
     if (!pwdTarget || newPwd.length < 6) {
       toast.error("Parol kamida 6 ta belgi bo'lishi kerak");
       return;
@@ -257,10 +267,7 @@ export default function Users() {
   };
 
   const filtered = users.filter((u) => {
-    // Filter out SUPER_ADMINs for normal admins
-    if (u.role === "ADMIN") return false;
-
-    const q = search.toLowerCase();
+    const q = debouncedSearch.toLowerCase();
     return (
       (u.username || "").toLowerCase().includes(q) ||
       (u.full_name || "").toLowerCase().includes(q) ||
@@ -279,6 +286,8 @@ export default function Users() {
         return <Badge className="bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 border-blue-500/20 rounded-lg px-2.5 py-0.5"><GraduationCap className="h-3 w-3 mr-1" /> O'qituvchi</Badge>;
       case "STUDENT":
         return <Badge className="bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 border-emerald-500/20 rounded-lg px-2.5 py-0.5"><UserIcon className="h-3 w-3 mr-1" /> Talaba</Badge>;
+      case "PARENT":
+        return <Badge className="bg-purple-500/10 text-purple-600 hover:bg-purple-500/20 border-purple-500/20 rounded-lg px-2.5 py-0.5"><ParentIcon className="h-3 w-3 mr-1" /> Ota-ona</Badge>; // New Parent Badge
       default:
         return <Badge variant="outline" className="rounded-lg">{role}</Badge>;
     }
@@ -286,22 +295,22 @@ export default function Users() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-10">
-      <TigerLoader isLoading={loading} text="Foydalanuvchilarni tekshiryapman... 🐯🔎" />
+      <TigerLoader isLoading={loading} text="Ota-onalarni tekshiryapman... 🐯🔎" />
       <TigerLoader isLoading={globalError} text="Backend'da nosozlik, lekin men hozir to'g'irlayman! 🐯🛠️" />
       <TigerLoader isLoading={!!tigerAction} text={tigerAction || ""} />
 
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
           <div className="h-12 w-12 rounded-xl bg-gradient-primary grid place-items-center shadow-glow">
-            <UsersIcon className="h-6 w-6 text-primary-foreground" />
+            <ParentIcon className="h-6 w-6 text-primary-foreground" /> {/* Changed icon */}
           </div>
           <div>
-            <h1 className="font-display text-2xl md:text-3xl font-bold">Barcha foydalanuvchilar</h1>
-            <p className="text-sm text-muted-foreground">Tizimdagi barcha foydalanuvchilarni boshqarish</p>
+            <h1 className="font-display text-2xl md:text-3xl font-bold">Ota-onalar boshqaruvi</h1> {/* Changed title */}
+            <p className="text-sm text-muted-foreground">Tizimdagi ota-onalarni boshqarish</p> {/* Changed description */}
           </div>
         </div>
         <Button onClick={openCreate} variant="hero">
-          <Plus className="h-4 w-4 mr-1" /> Yangi qo'shish
+          <Plus className="h-4 w-4 mr-1" /> Yangi ota-ona qo'shish
         </Button>
       </div>
 
@@ -322,7 +331,7 @@ export default function Users() {
           <Table>
             <TableHeader className="bg-slate-50/50 dark:bg-slate-900/50">
               <TableRow className="hover:bg-transparent border-primary/5">
-                <TableHead className="w-[300px] font-bold text-slate-900 dark:text-white uppercase tracking-wider text-[10px]">Foydalanuvchi</TableHead>
+                <TableHead className="w-[300px] font-bold text-slate-900 dark:text-white uppercase tracking-wider text-[10px]">Ota-ona</TableHead> {/* Changed header */}
                 <TableHead className="font-bold text-slate-900 dark:text-white uppercase tracking-wider text-[10px]">Rol</TableHead>
                 <TableHead className="font-bold text-slate-900 dark:text-white uppercase tracking-wider text-[10px]">Aloqa</TableHead>
                 <TableHead className="font-bold text-slate-900 dark:text-white uppercase tracking-wider text-[10px]">Status</TableHead>
@@ -384,6 +393,12 @@ export default function Users() {
                               <span>{u.phone_number}</span>
                             </div>
                           )}
+                          {u.telegramUsername && (
+                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                              <AtSign size={12} className="shrink-0" />
+                              <span>@{u.telegramUsername}</span>
+                            </div>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -391,8 +406,8 @@ export default function Users() {
                           onClick={() => toggleStatus(u)}
                           className={cn(
                             "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all",
-                            u.active 
-                              ? "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20" 
+                            u.active
+                              ? "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20"
                               : "bg-red-500/10 text-red-600 hover:bg-red-500/20"
                           )}
                         >
@@ -414,15 +429,7 @@ export default function Users() {
                           >
                             <Pencil size={14} />
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 rounded-lg text-slate-400 hover:text-orange-500 hover:bg-orange-50 transition-all"
-                            onClick={() => setPwdTarget(u)}
-                            title="Parolni yangilash"
-                          >
-                            <KeyRound size={14} />
-                          </Button>
+                          {/* Password reset is removed for parents as it's auto-generated */}
                           <Button
                             variant="ghost"
                             size="icon"
@@ -448,10 +455,10 @@ export default function Users() {
         <DialogContent className="max-w-xl p-0 overflow-hidden border-none shadow-2xl rounded-xl" aria-describedby="user-dialog-description">
           <DialogHeader className="p-8 pb-4 bg-slate-50 dark:bg-slate-900/50">
             <DialogTitle className="text-xl font-bold">
-              {editing ? "Foydalanuvchini tahrirlash" : "Yangi foydalanuvchi qo'shish"}
+              {editing ? "Ota-onani tahrirlash" : "Yangi ota-ona qo'shish"}
             </DialogTitle>
             <DialogDescription id="user-dialog-description">
-              Tizimdagi istalgan turdagi foydalanuvchini boshqarish.
+              Ota-ona ma'lumotlarini boshqarish.
             </DialogDescription>
           </DialogHeader>
 
@@ -461,91 +468,38 @@ export default function Users() {
                 <Label className="text-xs font-bold uppercase tracking-wider opacity-70">Foydalanuvchi roli *</Label>
                 <Select
                   value={form.role}
-                  onValueChange={(val) => setForm({ ...form, role: val })}
-                  disabled={!!editing}
+                  onValueChange={(val) => setForm({ ...form, role: val as "PARENT" })} // Cast to "PARENT"
+                  disabled // Role is always PARENT for this view
                 >
                   <SelectTrigger className="h-11 rounded-lg border-primary/20">
                     <SelectValue placeholder="Rolni tanlang" />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl border-primary/10 shadow-xl">
-                    <SelectItem value="STUDENT" className="rounded-lg">Talaba (Student)</SelectItem>
-                    <SelectItem value="TEACHER" className="rounded-lg">O'qituvchi (Teacher)</SelectItem>
-                    <SelectItem value="ADMINISTRATOR" className="rounded-lg">Administrator (Org Admin)</SelectItem>
-                    <SelectItem value="ADMIN" className="rounded-lg text-red-600 font-bold">Super Admin (System)</SelectItem>
+                    <SelectItem value="PARENT" className="rounded-lg">Ota-ona (Parent)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
-              {!editing && (
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold uppercase tracking-wider opacity-70">Login (Username) *</Label>
-                    <Input
-                      value={form.username}
-                      onChange={(e) => setForm({ ...form, username: e.target.value.toLowerCase() })}
-                      placeholder="masalan: alisher_99"
-                      className="rounded-lg h-11 border-primary/10 focus:border-primary"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold uppercase tracking-wider opacity-70">Parol *</Label>
-                    <Input
-                      type="password"
-                      value={form.password}
-                      onChange={(e) => setForm({ ...form, password: e.target.value })}
-                      placeholder="••••••••"
-                      className="rounded-lg h-11 border-primary/10 focus:border-primary"
-                    />
-                  </div>
+              {/* Student Combobox for linking parent to student */}
+              {!editing && ( // Only show for creation
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold uppercase tracking-wider opacity-70">Farzandni tanlang *</Label>
+                  <StudentCombobox
+                    selectedStudentId={form.studentId}
+                    onSelectStudent={(id) => setForm({ ...form, studentId: id })}
+                  />
                 </div>
               )}
 
               <div className="space-y-2">
                 <Label className="text-xs font-bold uppercase tracking-wider opacity-70">To'liq ism (F.I.SH) *</Label>
                 <Input
-                  value={form.full_name}
-                  onChange={(e) => setForm({ ...form, full_name: e.target.value })}
+                  value={form.fullName}
+                  onChange={(e) => setForm({ ...form, fullName: e.target.value })}
                   placeholder="Eshmatov Toshmat"
                   className="rounded-lg h-11 border-primary/10 focus:border-primary"
                 />
               </div>
-
-              {/* Dynamic fields based on role */}
-              <AnimatePresence mode="wait">
-                {form.role === "TEACHER" && (
-                  <motion.div
-                    key="teacher-fields"
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="space-y-2 overflow-hidden"
-                  >
-                    <Label className="text-xs font-bold uppercase tracking-wider opacity-70">Mutaxassislik (Fan nomi)</Label>
-                    <div className="relative">
-                      <BookOpen className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary opacity-60" />
-                      <Input
-                        value={form.subject}
-                        onChange={(e) => setForm({ ...form, subject: e.target.value })}
-                        placeholder="masalan: Mathematics, IELTS, Python"
-                        className="rounded-lg h-11 pl-10 border-primary/20"
-                      />
-                    </div>
-                  </motion.div>
-                )}
-                {form.role === "STUDENT" && (
-                  <motion.div
-                    key="student-fields"
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="space-y-2 overflow-hidden"
-                  >
-                    <div className="p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/10 text-[10px] uppercase font-bold text-emerald-600 tracking-wider">
-                      <Users2 className="h-3 w-3 inline mr-1" /> Talaba yaratilgandan so'ng guruhga biriktirilishi mumkin.
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -561,10 +515,23 @@ export default function Users() {
                 <div className="space-y-2">
                   <Label className="text-xs font-bold uppercase tracking-wider opacity-70">Telefon raqam</Label>
                   <Input
-                    value={form.phone_number}
-                    onChange={(e) => setForm({ ...form, phone_number: e.target.value })}
+                    value={form.phoneNumber}
+                    onChange={(e) => setForm({ ...form, phoneNumber: e.target.value })}
                     placeholder="+998 90 123 45 67"
                     className="rounded-lg h-11 border-primary/10 focus:border-primary"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-wider opacity-70">Telegram username</Label>
+                <div className="relative">
+                  <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary opacity-60" />
+                  <Input
+                    value={form.telegramUsername}
+                    onChange={(e) => setForm({ ...form, telegramUsername: e.target.value })}
+                    placeholder="masalan: @username"
+                    className="rounded-lg h-11 pl-10 border-primary/10 focus:border-primary"
                   />
                 </div>
               </div>
@@ -583,46 +550,14 @@ export default function Users() {
         </DialogContent>
       </Dialog>
 
-      {/* Password Reset Dialog */}
-      <Dialog open={!!pwdTarget} onOpenChange={(v) => !v && (setPwdTarget(null), setNewPwd(""))}>
-        <DialogContent className="max-w-sm rounded-xl" aria-describedby="pwd-reset-desc">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold">Parolni yangilash</DialogTitle>
-            <DialogDescription id="pwd-reset-desc">
-              Foydalanuvchi: <span className="font-bold text-primary">@{pwdTarget?.username}</span>
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={(e) => { e.preventDefault(); resetPassword(); }}>
-            <div className="py-5 space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-wider opacity-70">Yangi parol</Label>
-              <Input
-                type="password"
-                value={newPwd}
-                onChange={(e) => setNewPwd(e.target.value)}
-                placeholder="Kamida 6 ta belgi"
-                className="rounded-lg h-11 border-primary/20"
-              />
-            </div>
-            <DialogFooter>
-              <Button variant="ghost" type="button" onClick={() => setPwdTarget(null)} className="rounded-lg">
-                Bekor qilish
-              </Button>
-              <Button type="submit" disabled={submitting} variant="hero" className="rounded-lg">
-                {submitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                Yangilash
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
+      {/* Password Reset Dialog - Removed for parents */}
       {/* Delete Confirmation */}
       <AlertDialog open={!!delTarget} onOpenChange={(v) => !v && setDelTarget(null)}>
         <AlertDialogContent className="rounded-xl border-none shadow-2xl">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl font-bold">O'chirishni tasdiqlang</AlertDialogTitle>
             <AlertDialogDescription>
-              Foydalanuvchi <span className="font-bold text-slate-900 dark:text-white">@{delTarget?.username}</span> tizimdan butunlay o'chiriladi. Ushbu amalni ortga qaytarib bo'lmaydi.
+              Ota-ona <span className="font-bold text-slate-900 dark:text-white">@{delTarget?.username}</span> tizimdan butunlay o'chiriladi. Ushbu amalni ortga qaytarib bo'lmaydi.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="mt-6">

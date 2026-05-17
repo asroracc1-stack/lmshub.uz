@@ -1,0 +1,39 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0009-1
+      author: ai
+      validCheckSum: ANY
+      changes:
+        - insert:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  value: "00000000-0000-0000-0000-000000000001"
+              - column:
+                  name: email
+                  value: "asrorsuperadmin"
+              - column:
+                  name: password
+                  value: "$2a$10$8.n/VvX7HlW.iXkH8uXFMeI9U6k4jR.J6XQvX9X9X9X9X9X9X9X9X." # User provided hash
+              - column:
+                  name: role
+                  value: "SUPER_ADMIN"
+              - column:
+                  name: created_at
+                  valueComputed: "CURRENT_TIMESTAMP"
+        - insert:
+            tableName: profiles
+            columns:
+              - column:
+                  name: user_id
+                  value: "00000000-0000-0000-0000-000000000001"
+              - column:
+                  name: first_name
+                  value: "Asror"
+              - column:
+                  name: last_name
+                  value: "SuperAdmin"
+              - column:
+                  name: is_active
+                  valueBoolean: true

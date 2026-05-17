@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0015-1
+      author: ai
+      changes:
+        - addColumn:
+            tableName: users
+            columns:
+              - column:
+                  name: username
+                  type: varchar(255)
+                  constraints:
+                    unique: true

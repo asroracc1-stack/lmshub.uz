@@ -1,0 +1,35 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0006-1
+      author: ai
+      changes:
+        - createTable:
+            tableName: user_roles
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_user_roles_users
+                    references: users(id)
+              - column:
+                  name: role
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: organization_id
+                  type: uuid
+                  constraints:
+                    foreignKeyName: fk_user_roles_organizations
+                    references: organizations(id)
+        - addUniqueConstraint:
+            columnNames: user_id, role
+            constraintName: uq_user_id_role
+            tableName: user_roles

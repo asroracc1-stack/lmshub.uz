@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0025_fix_parent_usernames
+      author: asror
+      changes:
+        - sql:
+            sql: >
+              UPDATE public.users 
+              SET username = CONCAT('parent_', substring(id::text from 1 for 8))
+              WHERE role = 'PARENT' 
+                AND username = 'asrorsuperadmin';

@@ -1,0 +1,41 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0017-1
+      author: ai
+      changes:
+        - dropColumn:
+            tableName: payment_receivers
+            columnName: name
+        - dropColumn:
+            tableName: payment_receivers
+            columnName: type
+        - dropColumn:
+            tableName: payment_receivers
+            columnName: account_number
+        - addColumn:
+            tableName: payment_receivers
+            columns:
+              - column:
+                  name: full_name
+                  type: varchar(255)
+              - column:
+                  name: card_number
+                  type: varchar(255)
+              - column:
+                  name: card_holder
+                  type: varchar(255)
+              - column:
+                  name: telegram_username
+                  type: varchar(255)
+              - column:
+                  name: telegram_chat_id
+                  type: varchar(255)
+              - column:
+                  name: payment_purpose
+                  type: varchar(255)
+              - column:
+                  name: is_default
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false

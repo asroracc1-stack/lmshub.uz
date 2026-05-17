@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useDebounce } from "@/hooks/useDebounce";
 import { motion } from "framer-motion";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -129,6 +130,7 @@ export default function UsersManager({ filterRole, title, description }: Props) 
   const { user: me } = useAuth();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 300);
   const [page, setPage] = useState(0);
   const [pageSize] = useState(10);
   const [open, setOpen] = useState(false);
@@ -136,6 +138,10 @@ export default function UsersManager({ filterRole, title, description }: Props) 
   const [pwdOpen, setPwdOpen] = useState(false);
   const [pwdTarget, setPwdTarget] = useState<UserRow | null>(null);
   const [newPassword, setNewPassword] = useState("");
+
+  useEffect(() => {
+    setPage(0);
+  }, [debouncedSearch]);
 
   // Student Speaking History States
   const [speakingStudent, setSpeakingStudent] = useState<UserRow | null>(null);
@@ -167,7 +173,7 @@ export default function UsersManager({ filterRole, title, description }: Props) 
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: ["users", filterRole, page, search],
+    queryKey: ["users", filterRole, page, debouncedSearch],
     queryFn: async () => {
       // Backend controller: AdminUserController (@RequestMapping("/api/v1/admin/users"))
       // Endpointlar: /all (hamma uchun) yoki /by-role/{role}
@@ -179,7 +185,8 @@ export default function UsersManager({ filterRole, title, description }: Props) 
         params: { 
           page, 
           size: pageSize, 
-          query: search || "" // Backend 'query' parametrini kutyapti
+          query: debouncedSearch || "", // Backend 'query' parametrini kutyapti for /all
+          search: debouncedSearch || ""  // Backend 'search' parametrini kutyapti for /by-role
         } 
       });
       return data;

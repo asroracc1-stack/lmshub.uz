@@ -34,13 +34,17 @@ import { cn } from "@/lib/utils";
 
 interface Parent {
   id: string;
-  fullName: string;
+  fullName?: string;
+  full_name?: string;
   username: string;
   email: string;
-  phoneNumber: string;
+  phoneNumber?: string;
+  phone_number?: string;
   active: boolean;
-  createdAt: any;
-  childrenNames: string[];
+  createdAt?: any;
+  created_at?: any;
+  childrenNames?: string[];
+  children_names?: string[];
 }
 
 interface ParentsPage {
@@ -174,8 +178,8 @@ export default function ParentsPage() {
   const openEdit = (p: Parent) => {
     setEditing(p);
     setForm({
-      fullName: p.fullName || "",
-      phoneOrUsername: p.phoneNumber || p.username || "",
+      fullName: p.fullName || p.full_name || "",
+      phoneOrUsername: p.phoneNumber || p.phone_number || p.username || "",
       email: p.email || "",
       password: "",
       studentId: "",
@@ -275,11 +279,11 @@ export default function ParentsPage() {
                     <div className="flex items-center gap-3">
                       <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-pink-500 to-rose-600
                                       grid place-items-center text-white font-bold text-sm shrink-0">
-                        {(p.fullName || p.username || "?")[0].toUpperCase()}
+                        {((p.fullName || p.full_name || p.username || "?")[0]).toUpperCase()}
                       </div>
                       <div>
                         <p className="font-semibold text-slate-900 dark:text-white text-sm">
-                          {p.fullName || "—"}
+                          {p.fullName || p.full_name || "—"}
                         </p>
                         <p className="text-xs text-slate-500 dark:text-slate-400">@{p.username}</p>
                       </div>
@@ -287,8 +291,8 @@ export default function ParentsPage() {
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
-                      {p.childrenNames?.length > 0
-                        ? p.childrenNames.map((name, idx) => (
+                      {((p.childrenNames || p.children_names)?.length || 0) > 0
+                        ? (p.childrenNames || p.children_names)!.map((name, idx) => (
                           <Badge key={idx} variant="secondary"
                             className="text-xs bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20">
                             {name}
@@ -299,9 +303,9 @@ export default function ParentsPage() {
                   </TableCell>
                   <TableCell>
                     <div className="space-y-0.5">
-                      {p.phoneNumber && (
+                      {(p.phoneNumber || p.phone_number) && (
                         <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
-                          <Phone className="h-3 w-3" /> {p.phoneNumber}
+                          <Phone className="h-3 w-3" /> {p.phoneNumber || p.phone_number}
                         </div>
                       )}
                       {p.email && (
@@ -325,7 +329,7 @@ export default function ParentsPage() {
                     )}
                   </TableCell>
                   <TableCell className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                    {safeDate(p.createdAt)}
+                    {safeDate(p.createdAt || p.created_at)}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1">

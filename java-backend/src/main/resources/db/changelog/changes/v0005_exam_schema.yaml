@@ -1,0 +1,220 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0005-1
+      author: ai
+      changes:
+        - createTable:
+            tableName: exams
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: title
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: text
+              - column:
+                  name: type
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: duration_minutes
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: passing_score
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: subject_id
+                  type: uuid
+                  constraints:
+                    foreignKeyName: fk_exams_subject
+                    references: subjects(id)
+              - column:
+                  name: organization_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_exams_organization
+                    references: organizations(id)
+              - column:
+                  name: created_by
+                  type: uuid
+                  constraints:
+                    foreignKeyName: fk_exams_created_by
+                    references: users(id)
+              - column:
+                  name: start_time
+                  type: timestamp
+              - column:
+                  name: end_time
+                  type: timestamp
+              - column:
+                  name: is_active
+                  type: boolean
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+
+        - createTable:
+            tableName: questions
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: exam_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_questions_exam
+                    references: exams(id)
+              - column:
+                  name: text
+                  type: text
+                  constraints:
+                    nullable: false
+              - column:
+                  name: points
+                  type: int
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false
+              - column:
+                  name: position_order
+                  type: int
+
+        - createTable:
+            tableName: question_options
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: question_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_question_options_question
+                    references: questions(id)
+              - column:
+                  name: text
+                  type: text
+                  constraints:
+                    nullable: false
+              - column:
+                  name: is_correct
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: position_order
+                  type: int
+
+        - createTable:
+            tableName: student_attempts
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: exam_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_student_attempts_exam
+                    references: exams(id)
+              - column:
+                  name: student_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_student_attempts_student
+                    references: users(id)
+              - column:
+                  name: started_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: finished_at
+                  type: timestamp
+              - column:
+                  name: total_score
+                  type: int
+              - column:
+                  name: max_score
+                  type: int
+              - column:
+                  name: is_passed
+                  type: boolean
+        - addUniqueConstraint:
+            tableName: student_attempts
+            columnNames: exam_id, student_id
+            constraintName: uk_student_exam_attempt
+
+        - createTable:
+            tableName: student_answers
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: attempt_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_student_answers_attempt
+                    references: student_attempts(id)
+              - column:
+                  name: question_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_student_answers_question
+                    references: questions(id)
+              - column:
+                  name: selected_option_id
+                  type: uuid
+                  constraints:
+                    foreignKeyName: fk_student_answers_option
+                    references: question_options(id)
+              - column:
+                  name: is_correct
+                  type: boolean
+                  constraints:
+                    nullable: false
+              - column:
+                  name: points_earned
+                  type: int
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: student_answers
+            columnNames: attempt_id, question_id
+            constraintName: uk_student_answer_question

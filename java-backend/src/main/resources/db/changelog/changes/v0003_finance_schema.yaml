@@ -1,0 +1,179 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0003-1
+      author: ai
+      changes:
+        - createTable:
+            tableName: invoices
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: invoice_number
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: student_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_invoices_student
+                    references: users(id)
+              - column:
+                  name: group_id
+                  type: uuid
+                  constraints:
+                    foreignKeyName: fk_invoices_group
+                    references: groups(id)
+              - column:
+                  name: amount
+                  type: decimal(15, 2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: currency
+                  type: varchar(10)
+                  defaultValue: "UZS"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: text
+              - column:
+                  name: due_date
+                  type: date
+              - column:
+                  name: paid_at
+                  type: timestamp
+              - column:
+                  name: organization_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_invoices_organization
+                    references: organizations(id)
+              - column:
+                  name: created_by
+                  type: uuid
+                  constraints:
+                    foreignKeyName: fk_invoices_created_by
+                    references: users(id)
+              - column:
+                  name: created_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp
+
+        - createTable:
+            tableName: payments
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: invoice_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_payments_invoice
+                    references: invoices(id)
+              - column:
+                  name: student_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_payments_student
+                    references: users(id)
+              - column:
+                  name: amount
+                  type: decimal(15, 2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: payment_method
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: transaction_ref
+                  type: varchar(255)
+              - column:
+                  name: processed_by
+                  type: uuid
+                  constraints:
+                    foreignKeyName: fk_payments_processed_by
+                    references: users(id)
+              - column:
+                  name: organization_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_payments_organization
+                    references: organizations(id)
+              - column:
+                  name: created_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+
+        - createTable:
+            tableName: coin_transactions
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: student_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_coin_transactions_student
+                    references: users(id)
+              - column:
+                  name: amount
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: reason
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: source
+                  type: varchar(100)
+              - column:
+                  name: awarded_by
+                  type: uuid
+                  constraints:
+                    foreignKeyName: fk_coin_transactions_awarded_by
+                    references: users(id)
+              - column:
+                  name: organization_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_coin_transactions_organization
+                    references: organizations(id)
+              - column:
+                  name: created_at
+                  type: timestamp
+                  constraints:
+                    nullable: false

@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0021_add_coins_to_users
+      author: ai
+      changes:
+        - addColumn:
+            tableName: users
+            columns:
+              - column:
+                  name: coins
+                  type: bigint
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false

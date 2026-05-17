@@ -1,0 +1,70 @@
+package com.lmscrm.backend.controller.teacher;
+
+import com.lmscrm.backend.domain.entity.User;
+import com.lmscrm.backend.dto.academic.AttendanceDto;
+import com.lmscrm.backend.dto.academic.BatchAttendanceRequest;
+import com.lmscrm.backend.dto.academic.GradeDto;
+import com.lmscrm.backend.dto.academic.GroupDto;
+import com.lmscrm.backend.service.academic.AttendanceService;
+import com.lmscrm.backend.service.academic.GradeService;
+import com.lmscrm.backend.service.academic.GroupService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/api/v1/teacher")
+@RequiredArgsConstructor
+@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:8081"})
+@Tag(name = "Teacher Academic Controller", description = "Endpoints for teachers to manage their groups, attendance, and grades")
+public class TeacherAcademicController {
+
+    private final GroupService groupService;
+    private final AttendanceService attendanceService;
+    private final GradeService gradeService;
+
+    @GetMapping("/groups/{groupId}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN') or (hasRole('TEACHER') and @securityUtils.isTeacherOfGroup(#groupId))")
+    @Operation(
+            summary = "Get Group Details",
+            description = "Returns the details of a specific group, including its assigned teachers and subjects. Teachers can only view groups they are assigned to. Security: Verified via @securityUtils."
+    )
+    public ResponseEntity<GroupDto> getGroupDetails(@PathVariable UUID groupId) {
+        return ResponseEntity.ok(groupService.getGroupWithTeachers(groupId));
+    }
+
+    @PostMapping("/attendance/batch")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
+    @Operation(
+            summary = "Mark Batch Attendance",
+            description = "Allows a teacher to submit attendance for multiple students for a specific lesson in one request. Triggers a warning log if a student is absent 3 or more times."
+    )
+    public ResponseEntity<List<AttendanceDto>> markBatchAttendance(
+            @Valid @RequestBody BatchAttendanceRequest request,
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(attendanceService.markBatchAttendance(request, user));
+    }
+
+    @PostMapping("/grades")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
+    @Operation(
+            summary = "Add Student Grade",
+            description = "Allows a teacher to assign a grade/score to a specific student for a specific subject/lesson."
+    )
+    public ResponseEntity<GradeDto> addGrade(
+            @Valid @RequestBody GradeDto request,
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(gradeService.addGrade(request, user));
+    }
+}
