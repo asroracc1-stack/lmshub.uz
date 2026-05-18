@@ -168,7 +168,10 @@ const PMGrantCoins = lazy(() => import("./pages/pack-manager/GrantCoins"));
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 30_000,
+      // Keep query data fresh for 5 minutes to reduce backend load
+      staleTime: 300_000,
+      // Keep cached data for quick navigations
+      cacheTime: 300_000,
       gcTime: 300_000,
       refetchOnWindowFocus: false,
       retry: 1,

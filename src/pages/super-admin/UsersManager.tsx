@@ -155,6 +155,7 @@ export default function UsersManager({ filterRole, title, description }: Props) 
   const [grantAmount, setGrantAmount] = useState(500);
   const [grantReason, setGrantReason] = useState("Loyalty Reward");
   const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
+  const SPEAKING_FEATURE_AVAILABLE = false;
 
   const [form, setForm] = useState({
     email: "",
@@ -407,14 +408,14 @@ export default function UsersManager({ filterRole, title, description }: Props) 
   // Student Speaking History Fetchers (Mocked for now as per Java migration)
   const fetchSpeakingSessions = async (studentId: string) => {
     setLoadingHistory(true);
-    // TODO: Connect to Java backend /api/v1/speaking/sessions?studentId=...
+    // Speaking history is not currently exposed through a backend admin endpoint.
     setSessions([]);
     setLoadingHistory(false);
   };
 
   const fetchSessionMessages = async (sessionId: string) => {
     setLoadingMessages(true);
-    // TODO: Connect to Java backend /api/v1/speaking/messages?sessionId=...
+    // Speaking message details are not currently exposed through a backend admin endpoint.
     setMessagesList([]);
     setLoadingMessages(false);
   };
@@ -773,7 +774,7 @@ export default function UsersManager({ filterRole, title, description }: Props) 
                               <Gift className="h-4 w-4" />
                             </Button>
                           )}
-                          {u.role === "student" && (
+                          {u.role === "student" && SPEAKING_FEATURE_AVAILABLE && (
                             <Button 
                               size="icon" 
                               variant="ghost" 

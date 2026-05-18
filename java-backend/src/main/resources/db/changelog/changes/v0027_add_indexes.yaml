@@ -1,0 +1,48 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0027-1
+      author: ai
+      changes:
+        - createIndex:
+            indexName: idx_users_email
+            tableName: users
+            columns:
+              - column:
+                  name: email
+        - createIndex:
+            indexName: idx_users_role
+            tableName: users
+            columns:
+              - column:
+                  name: role
+        - createIndex:
+            indexName: idx_exams_created_at
+            tableName: exams
+            columns:
+              - column:
+                  name: created_at
+        - createIndex:
+            indexName: idx_exams_org
+            tableName: exams
+            columns:
+              - column:
+                  name: organization_id
+        - createIndex:
+            indexName: idx_student_attempts_exam
+            tableName: student_attempts
+            columns:
+              - column:
+                  name: exam_id
+        - createIndex:
+            indexName: idx_student_attempts_student
+            tableName: student_attempts
+            columns:
+              - column:
+                  name: student_id
+        - createIndex:
+            indexName: idx_questions_exam
+            tableName: questions
+            columns:
+              - column:
+                  name: exam_id
+*** End Patch

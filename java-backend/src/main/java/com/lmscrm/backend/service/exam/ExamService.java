@@ -9,6 +9,7 @@ import com.lmscrm.backend.repository.*;
 import com.lmscrm.backend.util.IeltsGradingUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
@@ -28,6 +29,7 @@ public class ExamService {
     private final ExamMapper mapper;
 
     @Transactional(readOnly = true)
+    @Cacheable(cacheNames = "examDetails", key = "#examId")
     public ExamDto getExamDetails(UUID examId) {
         Exam exam = examRepository.findById(examId)
                 .orElseThrow(() -> new ResourceNotFoundException("Exam not found: " + examId));
@@ -73,6 +75,7 @@ public class ExamService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(cacheNames = "examsByType", key = "#type")
     public List<QuestionDto> getExamQuestions(UUID examId, boolean excludeCorrectAnswers) {
         List<Question> questions = questionRepository.findByExamIdOrderByPositionOrderAsc(examId);
 

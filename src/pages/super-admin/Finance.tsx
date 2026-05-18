@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
 import { z } from "zod";
 import { toast } from "sonner";
 import { api } from "@/lib/axios";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,7 +14,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -44,10 +43,10 @@ import {
 } from "@/components/ui/table";
 import {
   Tabs,
-  TabsContent,
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import { useDebounce } from "@/hooks/use-debounce";
 import {
   Wallet,
   Plus,
@@ -61,25 +60,11 @@ import {
   FileText,
   Search,
   CheckCircle2,
-  Sparkles,
   RefreshCw,
 } from "lucide-react";
 import SuccessModal from "@/components/SuccessModal";
-import TigerPlayer from "@/components/TigerPlayer";
-import { useDebounce } from "@/hooks/use-debounce";
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-  PieChart,
-  Pie,
-  Cell,
-  Legend,
-} from "recharts";
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, PieChart, Pie, Cell, Legend } from "recharts";
+import TableSkeleton from "@/components/shared/TableSkeleton";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
@@ -95,6 +80,11 @@ interface Invoice {
   due_date: string | null;
   paid_at: string | null;
   created_at: string;
+}
+
+interface InvoicesResponse {
+  content: Invoice[];
+  totalPages: number;
 }
 
 const STATUSES = [
@@ -117,18 +107,13 @@ const schema = z.object({
   due_date: z.string().optional(),
 });
 
-const fmtAmount = (n: number, ccy: string) =>
-  n.toLocaleString("uz-UZ").replace(/,/g, " ") + " " + ccy;
+const fmtAmount = (n: number, ccy: string) => n.toLocaleString("uz-UZ").replace(/,/g, " ") + " " + ccy;
 
 export default function Finance() {
   const { user } = useAuth();
-  const [orgs, setOrgs] = useState<Org[]>([]);
-  const [items, setItems] = useState<Invoice[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-  const [pageSize] = useState(10);
   const [filter, setFilter] = useState<"all" | Invoice["status"]>("all");
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -142,68 +127,139 @@ export default function Finance() {
     description: "",
     due_date: "",
   });
-  const [serverStats, setServerStats] = useState<any>(null);
   const [successOpen, setSuccessOpen] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
-  const [numberAvailable, setNumberAvailable] = useState<boolean | null>(null);
-  const [checkingNumber, setCheckingNumber] = useState(false);
 
+  const debouncedSearch = useDebounce(search, 300);
   const debouncedInvoiceNumber = useDebounce(form.invoice_number, 500);
 
-  useEffect(() => {
-    const checkNum = async () => {
-      if (!debouncedInvoiceNumber || editing) {
-        setNumberAvailable(null);
-        return;
-      }
-      setCheckingNumber(true);
-      try {
-        const res = await api.get("/admin/invoices/check-number", { params: { number: debouncedInvoiceNumber } });
-        setNumberAvailable(res.data.available);
-      } catch (e) {
-        setNumberAvailable(null);
-      } finally {
-        setCheckingNumber(false);
-      }
-    };
-    checkNum();
-  }, [debouncedInvoiceNumber, editing]);
+  const orgsQuery = useQuery({
+    queryKey: ["organizations"],
+    queryFn: async () => {
+      const response = await api.get<any>("/organizations", { params: { size: 1000 } });
+      return Array.isArray(response.data) ? response.data : response.data.content || [];
+    },
+    staleTime: 1000 * 60 * 10,
+    retry: 1,
+  });
 
-  const load = async (p = page, q = search, s = filter) => {
-    setLoading(true);
-    try {
-      const [invRes, orgRes, statsRes] = await Promise.all([
-        api.get<any>("/admin/invoices", { params: { page: p, size: pageSize, query: q, status: s } }),
-        api.get<any>("/organizations", { params: { size: 1000 } }),
-        api.get<any>("/admin/finance/stats"),
-      ]);
-      setItems(invRes.data.content || []);
-      setTotalPages(invRes.data.totalPages || 0);
-      setOrgs(Array.isArray(orgRes.data) ? orgRes.data : (orgRes.data.content || []));
-      setServerStats(statsRes.data);
-    } catch (error: any) {
-      toast.error("Moliya ma'lumotlarini yuklashda texnik xatolik yuz berdi. Backend loglarini tekshiring.");
-    } finally {
-      setLoading(false);
+  const financeStatsQuery = useQuery<any>({
+    queryKey: ["finance-stats"],
+    queryFn: async () => {
+      const response = await api.get<any>("/admin/finance/stats");
+      return response.data;
+    },
+    staleTime: 1000 * 60 * 3,
+    retry: 1,
+  });
+
+  // Handle stats errors separately
+  if (financeStatsQuery.isError) {
+    toast.error("Moliya statistikasi yuklashda xatolik.");
+  }
+
+  const invoicesQuery = useQuery<InvoicesResponse>({
+    queryKey: ["finance-invoices", { page, search: debouncedSearch, status: filter }],
+    queryFn: async () => {
+      const response = await api.get<InvoicesResponse>("/admin/invoices", {
+        params: {
+          page,
+          size: 10,
+          query: debouncedSearch || undefined,
+          status: filter !== "all" ? filter : undefined,
+        },
+      });
+      return response.data;
+    },
+    placeholderData: (prev) => prev,
+    staleTime: 1000 * 60 * 2,
+    retry: 1,
+  });
+
+  // Handle invoices errors separately
+  if (invoicesQuery.isError) {
+    toast.error((invoicesQuery.error as any)?.message || "Invoice ma'lumotlarini yuklashda xatolik.");
+  }
+
+  const numberCheckQuery = useQuery<boolean>({
+    queryKey: ["invoice-number-check", debouncedInvoiceNumber],
+    queryFn: async () => {
+      const response = await api.get("/admin/invoices/check-number", { params: { number: debouncedInvoiceNumber } });
+      return response.data.available;
+    },
+    enabled: !!debouncedInvoiceNumber && !editing,
+    staleTime: 1000 * 10,
+    retry: 0,
+  });
+
+  const createUpdateInvoiceMutation = useMutation({
+    mutationFn: async (payload: any) => {
+      if (editing) {
+        return api.put(`/admin/invoices/${editing.id}`, payload);
+      }
+      return api.post("/admin/invoices", payload);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["finance-invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["finance-stats"] });
+      if (editing) {
+        toast.success("Invoice yangilandi.");
+      } else {
+        toast.success("Yangi invoice yaratildi.");
+        setSuccessMsg("Yangi hisob-faktura muvaffaqiyatli yaratildi va moliya bazasiga qo'shildi!");
+        setSuccessOpen(true);
+      }
+      setOpen(false);
+      setEditing(null);
+      setPage(0);
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Invoice saqlashda xatolik yuz berdi.");
+    },
+  });
+
+  const markPaidMutation = useMutation({
+    mutationFn: async (id: string) => api.patch(`/admin/invoices/${id}/paid`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["finance-invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["finance-stats"] });
+      toast.success("Invoice to'landi deb belgilandi.");
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "To'lovni belgilashda xatolik yuz berdi.");
+    },
+  });
+
+  const deleteInvoiceMutation = useMutation({
+    mutationFn: async (id: string) => api.delete(`/admin/invoices/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["finance-invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["finance-stats"] });
+      toast.success("Invoice o'chirildi.");
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Invoice o'chirishda xatolik yuz berdi.");
+    },
+  });
+
+  useEffect(() => {
+    if (invoicesQuery.isSuccess && invoicesQuery.data && page >= (invoicesQuery.data.totalPages ?? 1)) {
+      setPage(Math.max((invoicesQuery.data.totalPages ?? 1) - 1, 0));
     }
+  }, [invoicesQuery.data, page]);
+
+  const orgs = orgsQuery.data ?? [];
+  const invoices = (invoicesQuery.data as any)?.content ?? [];
+  const totalPages = (invoicesQuery.data as any)?.totalPages ?? 0;
+
+  const stats = {
+    totalRevenue: (financeStatsQuery.data as any)?.totalRevenue ?? 0,
+    pending: (financeStatsQuery.data as any)?.pendingAmount ?? 0,
+    overdue: (financeStatsQuery.data as any)?.overdueAmount ?? 0,
+    count: (invoicesQuery.data as any)?.totalPages ? (invoicesQuery.data as any)?.content?.length : invoices.length,
   };
 
-  useEffect(() => { load(page, search, filter); }, [page, search, filter]);
-
-  const orgMap = useMemo(() => new Map(orgs.map((o) => [o.id, o.name])), [orgs]);
-
-  const stats = useMemo(() => {
-    return {
-      totalRevenue: serverStats?.totalRevenue || 0,
-      pending: serverStats?.pendingAmount || 0,
-      overdue: serverStats?.overdueAmount || 0,
-      count: items.length, // local pagination count or total depends
-    };
-  }, [serverStats, items.length]);
-
-  const monthly = useMemo(() => {
-    return serverStats?.monthlyRevenue || [];
-  }, [serverStats]);
+  const monthly = (financeStatsQuery.data as any)?.monthlyRevenue ?? [];
 
   const statusDistribution = useMemo(() => {
     const colors: Record<string, string> = {
@@ -215,20 +271,22 @@ export default function Finance() {
     };
     return STATUSES.map((s) => ({
       name: s.label,
-      value: items.filter((i) => i.status === s.value).length,
+      value: invoices.filter((i) => i.status === s.value).length,
       color: colors[s.value],
-    })).filter((s) => s.value > 0);
-  }, [items]);
+    })).filter((item) => item.value > 0);
+  }, [invoices]);
+
+  const orgMap = useMemo(() => new Map((orgs as any).map((org: any) => [org.id, org.name])), [orgs]);
 
   const resetForm = async () => {
     setEditing(null);
-    setNumberAvailable(null);
     let nextNum = `INV-${Math.floor(100000 + Math.random() * 900000)}`;
     try {
       const res = await api.get("/admin/invoices/next-number");
       if (res.data.number) nextNum = res.data.number;
-    } catch (e) {}
-
+    } catch (e) {
+      // fallback generated number remains
+    }
     setForm({
       organization_id: "",
       invoice_number: nextNum,
@@ -240,7 +298,10 @@ export default function Finance() {
     });
   };
 
-  const openCreate = () => { resetForm(); setOpen(true); };
+  const openCreate = async () => {
+    await resetForm();
+    setOpen(true);
+  };
 
   const openEdit = (inv: Invoice) => {
     setEditing(inv);
@@ -250,8 +311,8 @@ export default function Finance() {
       amount: String(inv.amount),
       currency: inv.currency,
       status: inv.status,
-      description: inv.description ?? "",
-      due_date: inv.due_date ?? "",
+      description: inv.description || "",
+      due_date: inv.due_date || "",
     });
     setOpen(true);
   };
@@ -262,59 +323,33 @@ export default function Finance() {
       toast.error(parsed.error.errors[0].message);
       return;
     }
-    if (numberAvailable === false && !editing) {
+    if (numberCheckQuery.data === false && !editing) {
       toast.error("Bu hisob raqami band. Iltimos, boshqasini kiriting.");
       return;
     }
     setSubmitting(true);
-    const payload = {
-      organization_id: parsed.data.organization_id,
-      invoice_number: parsed.data.invoice_number,
-      amount: parsed.data.amount,
-      currency: parsed.data.currency,
-      status: parsed.data.status.toUpperCase(),
-      description: parsed.data.description || null,
-      due_date: parsed.data.due_date || null,
-      paid_at: parsed.data.status === "paid" ? (editing?.paid_at ?? new Date().toISOString()) : null,
-    };
     try {
-      if (editing) {
-        await api.put(`/admin/invoices/${editing.id}`, payload);
-        toast.success("Yangilandi");
-      } else {
-        const res = await api.post("/admin/invoices", payload);
-        setSuccessMsg("Yangi hisob-faktura muvaffaqiyatli yaratildi va moliya bazasiga qo'shildi!");
-        setSuccessOpen(true);
-      }
-      setOpen(false);
-      resetForm();
-      load();
-    } catch (error: any) {
-      const msg = error.response?.data?.message || "Xatolik yuz berdi";
-      toast.error(msg);
+      await createUpdateInvoiceMutation.mutateAsync({
+        organization_id: parsed.data.organization_id,
+        invoice_number: parsed.data.invoice_number,
+        amount: parsed.data.amount,
+        currency: parsed.data.currency,
+        status: parsed.data.status,
+        description: parsed.data.description || null,
+        due_date: parsed.data.due_date || null,
+        paid_at: parsed.data.status === "paid" ? (editing?.paid_at ?? new Date().toISOString()) : null,
+      });
     } finally {
       setSubmitting(false);
     }
   };
 
-  const markPaid = async (inv: Invoice) => {
-    try {
-      await api.patch(`/admin/invoices/${inv.id}/paid`);
-      toast.success("To'langan deb belgilandi");
-      load();
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || "Xatolik yuz berdi");
-    }
+  const markPaid = async (id: string) => {
+    await markPaidMutation.mutateAsync(id);
   };
 
-  const remove = async (inv: Invoice) => {
-    try {
-      await api.delete(`/admin/invoices/${inv.id}`);
-      toast.success("O'chirildi");
-      load();
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || "O'chirishda xatolik");
-    }
+  const remove = async (id: string) => {
+    await deleteInvoiceMutation.mutateAsync(id);
   };
 
   const cards = [
@@ -326,302 +361,314 @@ export default function Finance() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="font-display text-3xl font-bold">Moliya</h1>
-          <p className="text-muted-foreground">Tashkilotlar uchun hisob-fakturalar</p>
+          <h1 className="text-3xl font-bold">Moliya boshqaruvi</h1>
+          <p className="text-sm text-muted-foreground">Hisob-fakturalar, to'lovlar va moliyaviy nazorat</p>
         </div>
-        <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
-          <DialogTrigger asChild>
-            <Button variant="hero" onClick={openCreate}>
-              <Plus className="h-4 w-4" /> Yangi hisob
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle>{editing ? "Hisobni tahrirlash" : "Yangi hisob"}</DialogTitle>
-            </DialogHeader>
-            <div className="grid gap-3">
-              <div className="grid gap-2">
-                <Label>Tashkilot *</Label>
-                <Select value={form.organization_id} onValueChange={(v) => setForm((f) => ({ ...f, organization_id: v }))}>
-                  <SelectTrigger><SelectValue placeholder="Tanlang..." /></SelectTrigger>
+        <Button variant="hero" onClick={openCreate}>
+          <Plus className="h-4 w-4 mr-2" /> Yangi Invoice
+        </Button>
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-[1.4fr_0.9fr]">
+        <div className="grid gap-4">
+          <div className="grid gap-3 md:grid-cols-3">
+            {cards.slice(0, 3).map((c) => (
+              <div key={c.label} className="rounded-3xl border border-border p-5 bg-card shadow-sm">
+                <p className="text-sm text-muted-foreground">{c.label}</p>
+                <p className="mt-3 text-3xl font-semibold">{c.value}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-[1.4fr_0.6fr]">
+            <div className="rounded-3xl border border-border p-5 bg-card shadow-sm min-h-[320px]">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="text-lg font-semibold">Oylik tushum</h2>
+                  <p className="text-sm text-muted-foreground">Oxirgi davr bo'yicha</p>
+                </div>
+                <RefreshCw className="h-5 w-5 text-muted-foreground" />
+              </div>
+              {financeStatsQuery.isLoading ? (
+                <div className="h-[240px] grid place-items-center">
+                  <Skeleton className="h-5 w-36 rounded-full" />
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height={260}>
+                  <BarChart data={monthly} margin={{ top: 8, right: 16, left: -10, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="4 8" stroke="#e5e7eb" vertical={false} />
+                    <XAxis dataKey="month" tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
+                    <Tooltip />
+                    <Bar dataKey="revenue" fill="hsl(var(--primary))">
+                      {monthly.map((entry: any, index: number) => (
+                        <Cell key={entry.month} fill={index % 2 === 0 ? "hsl(var(--primary))" : "hsl(var(--primary) / 0.75)"} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+            <div className="rounded-3xl border border-border p-5 bg-card shadow-sm min-h-[320px]">
+              <h2 className="text-lg font-semibold mb-3">Status taqsimoti</h2>
+              {financeStatsQuery.isLoading ? (
+                <div className="space-y-3">
+                  {[...Array(3)].map((_, idx) => (
+                    <Skeleton key={idx} className="h-10 rounded-full" />
+                  ))}
+                </div>
+              ) : (
+                <PieChart width={320} height={260}>
+                  <Pie data={statusDistribution} dataKey="value" nameKey="name" innerRadius={60} outerRadius={90} paddingAngle={2}>
+                    {statusDistribution.map((entry) => (
+                      <Cell key={entry.name} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Legend />
+                </PieChart>
+              )}
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-border p-5 bg-card shadow-sm">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div className="relative w-full md:max-w-sm">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Input
+                  value={search}
+                  onChange={(e) => { setSearch(e.target.value); setPage(0); }}
+                  placeholder="Invoice raqami yoki tashkilot bo'yicha qidirish..."
+                  className="pl-10"
+                />
+              </div>
+              <div className="flex items-center gap-3 flex-wrap">
+                <Select value={filter} onValueChange={(value) => { setFilter(value as any); setPage(0); }}>
+                  <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {orgs.map((o) => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}
+                    <SelectItem value="all">Barchasi</SelectItem>
+                    {STATUSES.map((status) => (
+                      <SelectItem key={status.value} value={status.value}>{status.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <span className="text-sm text-muted-foreground">Sahifa: {page + 1} / {totalPages}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-border p-4 bg-card shadow-sm">
+            {invoicesQuery.isLoading ? (
+              <TableSkeleton rows={5} cols={6} />
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Raqam</TableHead>
+                      <TableHead>Tashkilot</TableHead>
+                      <TableHead className="text-right">Summa</TableHead>
+                      <TableHead>Holat</TableHead>
+                      <TableHead>Muddat</TableHead>
+                      <TableHead className="text-right">Amallar</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {invoices.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center text-muted-foreground py-10">
+                          Invoice topilmadi
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      invoices.map((inv) => {
+                        const m = statusMeta(inv.status);
+                        const Icon = m.icon;
+                        return (
+                          <TableRow key={inv.id} className="hover:bg-muted/40">
+                            <TableCell className="font-mono text-xs">{inv.invoice_number}</TableCell>
+                            <TableCell className="font-medium">{String(orgMap.get(inv.organization_id) ?? "—")}</TableCell>
+                            <TableCell className="text-right font-semibold">{fmtAmount(inv.amount, inv.currency)}</TableCell>
+                            <TableCell>
+                              <span className={cn("inline-flex items-center gap-1.5 text-xs px-2 py-1 rounded-full", m.color)}>
+                                <Icon className="h-3 w-3" />
+                                {m.label}
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-xs text-muted-foreground">
+                              {inv.due_date ? new Date(inv.due_date).toLocaleDateString() : "—"}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex justify-end gap-1">
+                                {inv.status !== "paid" && (
+                                  <Button size="icon" variant="ghost" onClick={() => markPaid(inv.id)} title="To'landi" className="text-success">
+                                    <CheckCircle2 className="h-4 w-4" />
+                                  </Button>
+                                )}
+                                <Button size="icon" variant="ghost" onClick={() => openEdit(inv)}>
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button size="icon" variant="ghost" className="text-destructive">
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>O'chirishni tasdiqlaysizmi?</AlertDialogTitle>
+                                      <AlertDialogDescription>{inv.invoice_number} o'chiriladi.</AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Bekor</AlertDialogCancel>
+                                      <AlertDialogAction className="bg-destructive" onClick={() => remove(inv.id)}>
+                                        O'chirish
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </div>
+
+          {!invoicesQuery.isLoading && totalPages > 1 && (
+            <div className="flex items-center justify-between pt-4 border-t border-border/50">
+              <div className="text-xs text-muted-foreground">Sahifa {page + 1} / {totalPages}</div>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>
+                  Oldingi
+                </Button>
+                <Button variant="outline" size="sm" disabled={page >= totalPages - 1} onClick={() => setPage((p) => p + 1)}>
+                  Keyingi
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-4">
+          <div className="rounded-3xl border border-border p-5 bg-card shadow-sm">
+            <h2 className="text-lg font-semibold mb-4">Statistika</h2>
+            <div className="grid gap-3">
+              <div className="flex items-center gap-3 rounded-3xl border border-border p-4 bg-muted/80">
+                <Wallet className="h-5 w-5 text-primary" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Umumiy to'lovlar</p>
+                  <p className="font-semibold">{fmtAmount(stats.totalRevenue, "UZS")}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 rounded-3xl border border-border p-4 bg-muted/80">
+                <FileText className="h-5 w-5 text-slate-700" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Invoice soni</p>
+                  <p className="font-semibold">{stats.count}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 rounded-3xl border border-border p-4 bg-muted/80">
+                <TrendingUp className="h-5 w-5 text-emerald-600" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Aktiv statuslar</p>
+                  <p className="font-semibold">{invoices.filter((inv) => inv.status !== "cancelled").length}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="rounded-3xl border border-border p-5 bg-card shadow-sm">
+            <h2 className="text-lg font-semibold mb-4">Hisob-faktura yaratish</h2>
+            <p className="text-sm text-muted-foreground">Yangi invoice qo'shish yoki mavjudini tahrirlash.</p>
+            <Button className="mt-4 w-full" onClick={openCreate}>Yangi invoice</Button>
+          </div>
+        </div>
+      </div>
+
+      <Dialog open={open} onOpenChange={(newState) => { if (!newState) setEditing(null); setOpen(newState); }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{editing ? "Invoice tahrirlash" : "Yangi invoice"}</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-3 md:grid-cols-2">
+              <div>
+                <Label>Tashkilot *</Label>
+                <Select value={form.organization_id} onValueChange={(value) => setForm((s) => ({ ...s, organization_id: value }))}>
+                  <SelectTrigger><SelectValue placeholder="Tanlang" /></SelectTrigger>
+                  <SelectContent>
+                    {orgs.map((org) => (
+                      <SelectItem key={org.id} value={org.id}>{org.name}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="grid gap-2">
-                  <div className="flex items-center justify-between">
-                    <Label>Raqam *</Label>
-                    <button 
-                      type="button"
-                      onClick={async () => {
-                        const res = await api.get("/admin/invoices/next-number");
-                        setForm(f => ({ ...f, invoice_number: res.data.number }));
-                      }}
-                      className="text-[10px] text-primary flex items-center gap-1 hover:underline"
-                    >
-                      <RefreshCw className="h-2.5 w-2.5" /> Generatsiya
-                    </button>
-                  </div>
-                  <div className="relative">
-                    <Input 
-                      value={form.invoice_number} 
-                      onChange={(e) => setForm((f) => ({ ...f, invoice_number: e.target.value.toUpperCase() }))} 
-                      className={cn(
-                        numberAvailable === false && !editing && "border-destructive ring-destructive",
-                        numberAvailable === true && !editing && "border-emerald-500 ring-emerald-500"
-                      )}
-                    />
-                    {checkingNumber && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 animate-spin text-muted-foreground" />}
-                    {numberAvailable === true && !editing && <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-emerald-500" />}
-                    {numberAvailable === false && !editing && <AlertCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-destructive" />}
-                  </div>
-                  {numberAvailable === false && !editing && (
-                    <p className="text-[10px] text-destructive animate-in fade-in slide-in-from-top-1">Bu raqam band</p>
-                  )}
-                </div>
-                <div className="grid gap-2">
-                  <Label>Holat</Label>
-                  <Select value={form.status} onValueChange={(v: Invoice["status"]) => setForm((f) => ({ ...f, status: v }))}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {STATUSES.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-3">
-                <div className="grid gap-2 col-span-2">
-                  <Label>Summa *</Label>
-                  <Input type="number" min="0" value={form.amount} onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))} placeholder="0" />
-                </div>
-                <div className="grid gap-2">
-                  <Label>Valyuta</Label>
-                  <Select value={form.currency} onValueChange={(v) => setForm((f) => ({ ...f, currency: v }))}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="UZS">UZS</SelectItem>
-                      <SelectItem value="USD">USD</SelectItem>
-                      <SelectItem value="EUR">EUR</SelectItem>
-                      <SelectItem value="RUB">RUB</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="grid gap-2">
-                <Label>To'lov muddati</Label>
-                <Input type="date" value={form.due_date} onChange={(e) => setForm((f) => ({ ...f, due_date: e.target.value }))} />
-              </div>
-              <div className="grid gap-2">
-                <Label>Tavsif</Label>
-                <Textarea rows={2} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} placeholder="Hisob haqida..." />
+              <div>
+                <Label>Invoice raqami *</Label>
+                <Input value={form.invoice_number} onChange={(e) => setForm((s) => ({ ...s, invoice_number: e.target.value }))} />
+                {numberCheckQuery.isFetching ? (
+                  <p className="text-xs text-muted-foreground mt-1">Tekshirilmoqda...</p>
+                ) : numberCheckQuery.data === false && !editing ? (
+                  <p className="text-xs text-destructive mt-1">Bu raqam band.</p>
+                ) : numberCheckQuery.data === true && !editing ? (
+                  <p className="text-xs text-success mt-1">Raqam mavjud.</p>
+                ) : null}
               </div>
             </div>
-            <DialogFooter>
-              <Button variant="ghost" onClick={() => setOpen(false)}>Bekor</Button>
-              <Button variant="hero" onClick={submit} disabled={submitting}>
-                {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                {editing ? "Saqlash" : "Qo'shish"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      {/* Stat cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-        {cards.map((c, i) => (
-          <motion.div
-            key={c.label}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.05 }}
-            className="glass rounded-2xl p-4 md:p-5"
-          >
-            <div className={`h-10 w-10 rounded-xl bg-gradient-to-br ${c.accent} grid place-items-center shadow-glow`}>
-              <c.icon className="h-5 w-5 text-primary-foreground" />
-            </div>
-            <p className="mt-3 text-[10px] md:text-xs uppercase tracking-wider text-muted-foreground">{c.label}</p>
-            {loading ? (
-              <div className="flex items-center gap-2 mt-1">
-                <div className="scale-50 -ml-6 -mt-2">
-                  <TigerPlayer text="" size={60} />
-                </div>
-                <Skeleton className="h-7 w-20" />
+            <div className="grid gap-3 md:grid-cols-2">
+              <div>
+                <Label>Summa *</Label>
+                <Input type="number" value={form.amount} onChange={(e) => setForm((s) => ({ ...s, amount: e.target.value }))} />
               </div>
-            ) : (
-              <p className="font-display text-lg md:text-2xl font-bold mt-1 truncate">{c.value}</p>
-            )}
-          </motion.div>
-        ))}
-      </div>
-
-      {/* Charts */}
-      <div className="grid lg:grid-cols-3 gap-6">
-        <div className="glass rounded-2xl p-6 lg:col-span-2">
-          <h3 className="font-display text-lg font-semibold mb-4">Oylik daromad (UZS)</h3>
-          {loading ? <Skeleton className="h-[260px] w-full" /> : (
-            <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={monthly}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                <Tooltip
-                  contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 12 }}
-                  formatter={(v: number) => fmtAmount(v, "UZS")}
-                />
-                <Bar dataKey="amount" fill="hsl(var(--success))" radius={[8, 8, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </div>
-        <div className="glass rounded-2xl p-6">
-          <h3 className="font-display text-lg font-semibold mb-4">Holatlar</h3>
-          {loading ? <Skeleton className="h-[260px] w-full" /> : statusDistribution.length === 0 ? (
-            <div className="h-[260px] grid place-items-center text-sm text-muted-foreground">Ma'lumot yo'q</div>
-          ) : (
-            <ResponsiveContainer width="100%" height={260}>
-              <PieChart>
-                <Pie data={statusDistribution} innerRadius={45} outerRadius={85} paddingAngle={4} dataKey="value">
-                  {statusDistribution.map((e, i) => <Cell key={i} fill={e.color} stroke="hsl(var(--background))" strokeWidth={2} />)}
-                </Pie>
-                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 12 }} />
-                <Legend wrapperStyle={{ fontSize: 11 }} />
-              </PieChart>
-            </ResponsiveContainer>
-          )}
-        </div>
-      </div>
-
-      {/* Filters + table */}
-      <div className="glass rounded-2xl overflow-hidden">
-        <div className="p-4 border-b border-border flex flex-col sm:flex-row gap-3 sm:items-center justify-between">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Qidirish..." className="pl-9" />
-          </div>
-          <Tabs value={filter} onValueChange={(v) => setFilter(v as typeof filter)}>
-            <TabsList>
-              <TabsTrigger value="all">Hammasi</TabsTrigger>
-              <TabsTrigger value="sent">Kutilmoqda</TabsTrigger>
-              <TabsTrigger value="paid">To'langan</TabsTrigger>
-              <TabsTrigger value="overdue">Muddati o'tgan</TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
-        {loading ? (
-          <div className="p-12">
-            <TigerPlayer text="Ma'lumotlar saralanmoqda..." size={180} />
-          </div>
-        ) : items.length === 0 ? (
-          <div className="p-16 text-center space-y-4">
-            <TigerPlayer text="Ma'lumot topilmadi" size={160} />
-            <p className="text-sm text-muted-foreground">Tanlangan filtr yoki qidiruv bo'yicha hisoblar mavjud emas</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Raqam</TableHead>
-                  <TableHead>Tashkilot</TableHead>
-                  <TableHead className="text-right">Summa</TableHead>
-                  <TableHead>Holat</TableHead>
-                  <TableHead>Muddat</TableHead>
-                  <TableHead className="text-right">Amallar</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {items.map((inv) => {
-                  const m = statusMeta(inv.status);
-                  const Icon = m.icon;
-                  return (
-                    <TableRow key={inv.id} className="hover:bg-muted/40">
-                      <TableCell className="font-mono text-xs">{inv.invoice_number}</TableCell>
-                      <TableCell className="font-medium">{orgMap.get(inv.organization_id) ?? "—"}</TableCell>
-                      <TableCell className="text-right font-semibold">{fmtAmount(Number(inv.amount), inv.currency)}</TableCell>
-                      <TableCell>
-                        <span className={cn("inline-flex items-center gap-1.5 text-xs px-2 py-1 rounded-full", m.color)}>
-                          <Icon className="h-3 w-3" />
-                          {m.label}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {inv.due_date ? new Date(inv.due_date).toLocaleDateString() : "—"}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex justify-end gap-1">
-                          {inv.status !== "paid" && (
-                            <Button size="icon" variant="ghost" onClick={() => markPaid(inv)} title="To'landi" className="text-success">
-                              <CheckCircle2 className="h-4 w-4" />
-                            </Button>
-                          )}
-                          <Button size="icon" variant="ghost" onClick={() => openEdit(inv)}>
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button size="icon" variant="ghost" className="text-destructive">
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>O'chirilsinmi?</AlertDialogTitle>
-                                <AlertDialogDescription>{inv.invoice_number} hisobi o'chiriladi.</AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Bekor</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => remove(inv)} className="bg-destructive">O'chirish</AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
-        )}
-
-        {!loading && totalPages > 1 && (
-          <div className="flex items-center justify-between p-4 border-t border-border/50">
-            <p className="text-xs text-muted-foreground">
-              Sahifa {page + 1} / {totalPages}
-            </p>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={page === 0}
-                onClick={() => setPage((p) => p - 1)}
-              >
-                Oldingi
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={page >= totalPages - 1}
-                onClick={() => setPage((p) => p + 1)}
-              >
-                Keyingi
-              </Button>
+              <div>
+                <Label>Valyuta</Label>
+                <Select value={form.currency} onValueChange={(value) => setForm((s) => ({ ...s, currency: value }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="UZS">UZS</SelectItem>
+                    <SelectItem value="USD">USD</SelectItem>
+                    <SelectItem value="EUR">EUR</SelectItem>
+                    <SelectItem value="RUB">RUB</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2">
+              <div>
+                <Label>Status</Label>
+                <Select value={form.status} onValueChange={(value) => setForm((s) => ({ ...s, status: value as Invoice["status"] }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {STATUSES.map((status) => (
+                      <SelectItem key={status.value} value={status.value}>{status.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Muddati</Label>
+                <Input type="date" value={form.due_date} onChange={(e) => setForm((s) => ({ ...s, due_date: e.target.value }))} />
+              </div>
+            </div>
+            <div className="grid gap-3">
+              <Label>Izoh</Label>
+              <Textarea rows={4} value={form.description} onChange={(e) => setForm((s) => ({ ...s, description: e.target.value }))} />
             </div>
           </div>
-        )}
-      </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setOpen(false)}>Bekor qilish</Button>
+            <Button onClick={submit} disabled={submitting}>
+              {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null} Saqlash
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-      <SuccessModal 
-        open={successOpen} 
-        onOpenChange={setSuccessOpen} 
-        title="Muvaffaqiyatli!"
-        message={successMsg} 
-      />
+      <SuccessModal open={successOpen} onOpenChange={setSuccessOpen} title="Invoice yaratildi" message={successMsg} />
     </div>
   );
 }

@@ -129,7 +129,10 @@ export default function RoleLayout({ brand = "LMSHub", subtitle, nav: initialNav
 
       <nav className="flex-1 min-h-0 p-3 space-y-1 overflow-y-auto thin-scrollbar">
         {finalNav.map((item) => {
-          const hasActiveChild = item.children?.some(c => location.pathname === c.to);
+          const hasActiveChild = item.children?.some(c => {
+            if (!c.to) return false;
+            return location.pathname === c.to || location.pathname.startsWith(`${c.to}/`);
+          });
           const isExpanded = manualToggle[item.label] ?? (hasActiveChild || false);
 
           if (item.children) {

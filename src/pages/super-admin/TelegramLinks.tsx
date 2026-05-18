@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +20,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/axios";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, Send, Loader2 } from "lucide-react";
@@ -43,32 +45,60 @@ const empty: Partial<Row> = {
 };
 
 export default function TelegramLinksPage() {
-  const [rows, setRows] = useState<Row[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Partial<Row>>(empty);
-  const [saving, setSaving] = useState(false);
 
-  const load = async () => {
-    setLoading(true);
-    try {
-      const { data } = await api.get<Row[]>("/bot-settings");
-      setRows(data || []);
-    } catch (e) {
-      toast.error("Yuklashda xatolik");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const botsQuery = useQuery<Row[]>({
+    queryKey: ["telegram-bots"],
+    queryFn: async () => {
+      const response = await api.get<Row[]>("/bot-settings");
+      return response.data || [];
+    },
+    placeholderData: (prev) => prev,
+    staleTime: 1000 * 60 * 5,
+    retry: 1,
+  });
 
-  useEffect(() => {
-    load();
-  }, []);
+  if (botsQuery.isError) {
+    toast.error((botsQuery.error as any)?.message || "Telegram botlarini yuklashda xatolik yuz berdi.");
+  }
+
+  const createUpdateMutation = useMutation({
+    mutationFn: async (payload: any) => {
+      if (editing.id) {
+        return api.post("/bot-settings", { ...payload, id: editing.id });
+      }
+      return api.post("/bot-settings", payload);
+    },
+    onSuccess: () => {
+      toast.success(editing.id ? "Yangilandi" : "Saqlandi");
+      setOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["telegram-bots"] });
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Saqlashda xatolik yuz berdi");
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return api.delete(`/bot-settings/${id}`);
+    },
+    onSuccess: () => {
+      toast.success("O'chirildi");
+      queryClient.invalidateQueries({ queryKey: ["telegram-bots"] });
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "O'chirishda xatolik yuz berdi");
+    },
+  });
 
   const startNew = () => {
     setEditing(empty);
     setOpen(true);
   };
+
   const startEdit = (r: Row) => {
     setEditing(r);
     setOpen(true);
@@ -77,7 +107,7 @@ export default function TelegramLinksPage() {
   const save = async () => {
     if (!editing.username?.trim()) return toast.error("Username kerak");
     if (!editing.name?.trim()) return toast.error("Nom kerak");
-    setSaving(true);
+
     const payload = {
       kind: editing.kind,
       bot_name: editing.name,
@@ -86,32 +116,16 @@ export default function TelegramLinksPage() {
       welcome_message: editing.description,
       is_active: editing.is_active,
     };
-    try {
-      if (editing.id) {
-        await api.post("/bot-settings", { ...payload, id: editing.id });
-      } else {
-        await api.post("/bot-settings", payload);
-      }
-      toast.success("Saqlandi");
-      setOpen(false);
-      load();
-    } catch (e) {
-      toast.error("Saqlashda xatolik");
-    } finally {
-      setSaving(false);
-    }
+
+    await createUpdateMutation.mutateAsync(payload);
   };
 
   const remove = async (id: string) => {
     if (!confirm("O'chirilsinmi?")) return;
-    try {
-      await api.delete(`/bot-settings/${id}`);
-      toast.success("O'chirildi");
-      load();
-    } catch (e) {
-      toast.error("O'chirishda xatolik");
-    }
+    await deleteMutation.mutateAsync(id);
   };
+
+  const rows = botsQuery.data ?? [];
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
@@ -129,8 +143,24 @@ export default function TelegramLinksPage() {
         </Button>
       </div>
 
-      {loading ? (
-        <Loader2 className="h-7 w-7 animate-spin text-primary mx-auto my-12" />
+      {botsQuery.isLoading ? (
+        <div className="grid gap-3 py-4">
+          {[...Array(3)].map((_, idx) => (
+            <Card key={idx} className="p-4 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <Skeleton className="h-12 w-12 rounded-xl flex-shrink-0" />
+                <div className="space-y-2">
+                  <Skeleton className="h-5 w-32" />
+                  <Skeleton className="h-4 w-24" />
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-9 w-9 rounded-md" />
+                <Skeleton className="h-9 w-9 rounded-md" />
+              </div>
+            </Card>
+          ))}
+        </div>
       ) : rows.length === 0 ? (
         <Card className="p-10 text-center text-muted-foreground">
           Hali bot yoki kanal qo'shilmagan
@@ -249,8 +279,8 @@ export default function TelegramLinksPage() {
                 onCheckedChange={(v) => setEditing((s) => ({ ...s, is_active: v }))}
               />
             </div>
-            <Button onClick={save} disabled={saving} className="w-full">
-              {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />} Saqlash
+            <Button onClick={save} disabled={createUpdateMutation.isPending} className="w-full">
+              {createUpdateMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />} Saqlash
             </Button>
           </div>
         </DialogContent>
