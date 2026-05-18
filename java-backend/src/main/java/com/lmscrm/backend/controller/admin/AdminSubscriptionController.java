@@ -21,7 +21,7 @@ public class AdminSubscriptionController {
     private final SubscriptionPackService service;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PACK_MANAGER')")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get all subscription packs")
     public ResponseEntity<List<SubscriptionPack>> getAll() {
         return ResponseEntity.ok(service.getAllPacks());

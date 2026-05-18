@@ -54,8 +54,8 @@ interface Organization {
 interface Plan { id: string; name: string; price: number; }
 
 const orgSchema = z.object({
-  name: z.string().trim().min(2, "Nom kamida 2 ta belgi").max(100),
-  slug: z.string().trim().min(2).max(50).regex(/^[a-z0-9-]+$/, "Faqat kichik harflar, raqam va '-'"),
+  name: z.string({ required_error: "Tashkilot nomi majburiy" }).trim().min(2, "Nom kamida 2 ta belgi").max(100),
+  slug: z.string({ required_error: "Slug majburiy" }).trim().min(2).max(50).regex(/^[a-z0-9-]+$/, "Faqat kichik harflar, raqam va '-'"),
   description: z.string().max(500).optional(),
   address: z.object({
     region: z.string().min(1, "Viloyat tanlanishi shart"),
@@ -63,7 +63,7 @@ const orgSchema = z.object({
     streetAddress: z.string().min(1, "Mahalla/Ko'cha kiritilishi shart")
   }).nullable().optional(),
   phone: z.string().max(30).optional(),
-  email: z.string().email("Email noto'g'ri").min(1, "Email kiritish majburiy"),
+  email: z.string({ required_error: "Email majburiy" }).email("Email noto'g'ri").min(1, "Email kiritish majburiy"),
   plan_id: z.string().uuid().optional().or(z.literal("")),
 });
 
@@ -178,6 +178,7 @@ export default function Organizations() {
       setOpen(false);
       resetForm();
       queryClient.invalidateQueries({ queryKey: ["organizations"] });
+      queryClient.invalidateQueries({ queryKey: ["organizations-list"] });
       load();
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Saqlashda xatolik");
@@ -191,6 +192,7 @@ export default function Organizations() {
       await api.delete(`/organizations/${o.id}`);
       toast.success("O'chirildi");
       queryClient.invalidateQueries({ queryKey: ["organizations"] });
+      queryClient.invalidateQueries({ queryKey: ["organizations-list"] });
       load();
     } catch (error: any) {
       toast.error(error.response?.data?.message || "O'chirishda xatolik");

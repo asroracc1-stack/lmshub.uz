@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0028_add_is_google_user
+      author: asror
+      changes:
+        - addColumn:
+            tableName: users
+            columns:
+              - column:
+                  name: is_google_user
+                  type: boolean
+                  defaultValueBoolean: false

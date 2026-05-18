@@ -44,5 +44,4 @@ databaseChangeLog:
             tableName: questions
             columns:
               - column:
-                  name: exam_id
-*** End Patch
+                  name: exam_id

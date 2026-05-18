@@ -231,14 +231,12 @@ export default function UsersManager({ filterRole, title, description }: Props) 
   const { data: groups = [] } = useQuery({
     queryKey: ["groups-list", form.organization_id || profile?.organization_id],
     queryFn: async () => {
-      const { data } = await api.get<any>("/admin/groups", { 
-        params: { 
-          size: 1000, 
-          organizationId: form.organization_id || profile?.organization_id || null 
-        } 
-      });
-      return data.content || [];
+      const orgId = form.organization_id || profile?.organization_id;
+      if (!orgId || orgId === "none") return [];
+      const { data } = await api.get<any>(`/admin/organizations/${orgId}/groups`);
+      return data || [];
     },
+    enabled: !!(form.organization_id || profile?.organization_id),
   });
 
   const { data: allGroups = [] } = useQuery({
@@ -319,7 +317,7 @@ export default function UsersManager({ filterRole, title, description }: Props) 
   };
 
   const submit = async () => {
-    const targetOrgId = form.organization_id || profile?.organization_id || "";
+    const targetOrgId = form.organization_id && form.organization_id !== "none" ? form.organization_id : (profile?.organization_id || "");
     if (form.role !== "super_admin" && form.role !== "administrator" && form.role !== "user" && !targetOrgId) {
       toast.error("Iltimos, tashkilotni tanlang");
       return;
@@ -342,8 +340,8 @@ export default function UsersManager({ filterRole, title, description }: Props) 
         telegram_username: form.telegram_username || null,
         card_number: form.card_number || null,
         card_holder: form.card_holder || null,
-        groupId: form.group_id || null,
-        group_id: form.group_id || null,
+        groupId: (form.group_id && form.group_id !== "none") ? form.group_id : null,
+        group_id: (form.group_id && form.group_id !== "none") ? form.group_id : null,
         role: form.role.toUpperCase(),
       });
     } else {
@@ -365,8 +363,8 @@ export default function UsersManager({ filterRole, title, description }: Props) 
         telegram_username: parsed.data.telegram_username || null,
         card_number: parsed.data.card_number || null,
         card_holder: parsed.data.card_holder || null,
-        groupId: form.group_id || null,
-        group_id: form.group_id || null,
+        groupId: (form.group_id && form.group_id !== "none") ? form.group_id : null,
+        group_id: (form.group_id && form.group_id !== "none") ? form.group_id : null,
       };
 
       mutation.mutate(payload);

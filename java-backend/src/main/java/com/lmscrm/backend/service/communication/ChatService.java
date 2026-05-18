@@ -47,7 +47,7 @@ public class ChatService {
     }
 
     @Transactional
-    public ChatMessageDto sendMessage(UUID threadId, String body, User sender) {
+    public ChatMessageDto sendMessage(UUID threadId, ChatMessageDto request, User sender) {
         ChatThread thread = threadRepository.findById(threadId)
                 .orElseThrow(() -> new ResourceNotFoundException("Thread not found"));
 
@@ -58,7 +58,8 @@ public class ChatService {
         ChatMessage message = ChatMessage.builder()
                 .thread(thread)
                 .sender(sender)
-                .body(body)
+                .body(request.getBody())
+                .attachmentUrl(request.getAttachmentUrl())
                 .build();
 
         message = messageRepository.save(message);
@@ -77,10 +78,11 @@ public class ChatService {
             if (!participant.getUser().getId().equals(sender.getId())) {
                 // In a real app with WebSockets, we'd check if they are actively connected
                 // If not connected, send DB Notification
+                String msgBody = request.getBody() != null ? request.getBody() : "Attachment";
                 notificationService.createNotification(
                         participant.getUser(),
                         "New message in " + (thread.getTitle() != null ? thread.getTitle() : "Chat"),
-                        sender.getEmail() + ": " + (body.length() > 50 ? body.substring(0, 50) + "..." : body),
+                        sender.getEmail() + ": " + (msgBody.length() > 50 ? msgBody.substring(0, 50) + "..." : msgBody),
                         NotificationType.NEW_MESSAGE
                 );
             }

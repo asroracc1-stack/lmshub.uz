@@ -129,7 +129,7 @@ export default function Landing() {
         "fixed top-4 md:top-6 inset-x-0 z-50 transition-all duration-500",
         scrolled ? "top-3" : "top-6"
       )}>
-        <div className="max-w-7xl mx-auto px-4 md:px-8 text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-white">
           <nav className={cn(
             "flex items-center justify-between px-3 sm:px-6 py-1.5 sm:py-2.5 rounded-2xl transition-all duration-500 border",
             scrolled 
@@ -199,7 +199,7 @@ export default function Landing() {
 
     {/* Hero Section */}
     <main className="relative z-10 flex-1 flex items-center pt-32 pb-12 md:pb-20">
-      <div className="max-w-7xl mx-auto px-6 md:px-12 grid lg:grid-cols-2 gap-16 items-center w-full">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid lg:grid-cols-2 gap-12 xl:gap-16 items-center w-full">
         
         {/* Left Content */}
         <motion.div 
@@ -222,7 +222,7 @@ export default function Landing() {
                 animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                 exit={{ opacity: 0, y: -30, filter: "blur(8px)" }}
                 transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-                className="text-4xl xs:text-5xl md:text-6xl lg:text-7xl font-bold text-slate-900 leading-[1.1] md:leading-[1.05] tracking-tight"
+                className="text-4xl xs:text-5xl md:text-6xl lg:text-6xl xl:text-7xl 2xl:text-[5rem] font-bold text-slate-900 leading-[1.1] md:leading-[1.05] tracking-tight"
               >
                 {headlines[headlineIndex].split(' ').map((word, i) => (
                   <span key={i} className={cn(
@@ -244,7 +244,7 @@ export default function Landing() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.5, delay: 0.1 }}
-              className="mt-6 text-lg md:text-xl text-slate-500 leading-relaxed max-w-lg font-medium opacity-80 mx-auto lg:mx-0"
+              className="mt-6 text-lg md:text-xl xl:text-2xl 2xl:text-3xl text-slate-500 leading-relaxed max-w-lg xl:max-w-xl 2xl:max-w-2xl font-medium opacity-80 mx-auto lg:mx-0"
             >
               {t("hero.subheadline")}
             </motion.p>
@@ -261,7 +261,7 @@ export default function Landing() {
             >
               <Button 
                 onClick={handleAuthClick} 
-                className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl px-6 sm:px-10 h-14 sm:h-16 text-base sm:text-lg font-bold shadow-2xl shadow-emerald-600/20 transition-all hover:-translate-y-1 group w-full sm:w-auto"
+                className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl px-6 sm:px-10 h-14 sm:h-16 xl:h-20 text-base sm:text-lg xl:text-xl font-bold shadow-2xl shadow-emerald-600/20 transition-all hover:-translate-y-1 group w-full sm:w-auto"
               >
                 {t("hero.startBtn")}
                 <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -269,7 +269,7 @@ export default function Landing() {
               <Button 
                 onClick={handleAuthClick} 
                 variant="outline" 
-                className="bg-white/80 backdrop-blur-md border-emerald-100 hover:border-emerald-200 hover:bg-emerald-50/30 text-emerald-700 rounded-2xl px-6 sm:px-10 h-14 sm:h-16 text-base sm:text-lg font-bold transition-all hover:-translate-y-1 shadow-sm w-full sm:w-auto"
+                className="bg-white/80 backdrop-blur-md border-emerald-100 hover:border-emerald-200 hover:bg-emerald-50/30 text-emerald-700 rounded-2xl px-6 sm:px-10 h-14 sm:h-16 xl:h-20 text-base sm:text-lg xl:text-xl font-bold transition-all hover:-translate-y-1 shadow-sm w-full sm:w-auto"
               >
                 {t("hero.trialBtn")}
               </Button>
@@ -300,9 +300,9 @@ export default function Landing() {
               </div>
 
               {/* Minimal Badges - Only visible on XL desktops as requested previously */}
-              <FloatingBadge icon={CheckCircle2} title="AI Analysis" className="top-[15%] -right-4 hidden xl:flex" />
-              <FloatingBadge icon={Users} title="Global Access" className="bottom-[20%] -right-8 hidden xl:flex" />
-              <FloatingBadge icon={BarChart3} title="Real-time Stats" className="top-1/2 -left-12 hidden xl:flex" />
+              <FloatingBadge icon={CheckCircle2} title="AI Analysis" className="top-[15%] -right-2 hidden xl:flex" />
+              <FloatingBadge icon={Users} title="Global Access" className="bottom-[20%] -right-4 hidden xl:flex" />
+              <FloatingBadge icon={BarChart3} title="Real-time Stats" className="top-1/2 -left-6 hidden xl:flex" />
             </div>
           </motion.div>
         </div>

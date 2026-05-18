@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/axios";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -23,28 +24,25 @@ interface Subject {
 const COLORS = ["primary", "secondary", "accent", "success", "warning", "destructive"];
 
 export default function OrgSubjects() {
-  const { profile, user } = useAuth();
+  const { user } = useAuth();
   const role = user?.role?.toLowerCase();
   const canManage = ["super_admin", "admin", "administrator"].includes(role || "");
+  const queryClient = useQueryClient();
 
-  const [items, setItems] = useState<Subject[]>([]);
-  const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Subject | null>(null);
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [description, setDescription] = useState("");
   const [color, setColor] = useState("primary");
-  const [saving, setSaving] = useState(false);
 
-  const load = async () => {
-    setLoading(true);
-    const { data } = await supabase.from("subjects").select("*").order("name");
-    setItems((data ?? []) as Subject[]);
-    setLoading(false);
-  };
-
-  useEffect(() => { load(); }, []);
+  const { data: items = [], isLoading: loading } = useQuery({
+    queryKey: ["subjects"],
+    queryFn: async () => {
+      const { data } = await api.get("/admin/subjects");
+      return (data || []).sort((a: Subject, b: Subject) => a.name.localeCompare(b.name));
+    },
+  });
 
   const reset = () => {
     setEditing(null); setName(""); setCode(""); setDescription(""); setColor("primary");
@@ -55,24 +53,46 @@ export default function OrgSubjects() {
     setOpen(true);
   };
 
-  const submit = async () => {
+  const mutation = useMutation({
+    mutationFn: async (payload: Partial<Subject>) => {
+      if (editing) {
+        return api.put(`/admin/subjects/${editing.id}`, payload);
+      } else {
+        return api.post("/admin/subjects", payload);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["subjects"] });
+      toast.success(editing ? "Yangilandi" : "Yaratildi");
+      setOpen(false);
+      reset();
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Xatolik yuz berdi");
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return api.delete(`/admin/subjects/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["subjects"] });
+      toast.success("O'chirildi");
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "O'chirishda xatolik");
+    }
+  });
+
+  const submit = () => {
     if (!name.trim()) return toast.error("Nom kiriting");
-    if (!profile?.organization_id) return toast.error("Tashkilot aniqlanmadi");
-    setSaving(true);
-    const payload = { name: name.trim(), code: code.trim() || null, description: description.trim() || null, color, organization_id: profile.organization_id };
-    const { error } = editing
-      ? await supabase.from("subjects").update(payload).eq("id", editing.id)
-      : await supabase.from("subjects").insert(payload);
-    setSaving(false);
-    if (error) return toast.error(error.message);
-    toast.success(editing ? "Yangilandi" : "Yaratildi");
-    setOpen(false); reset(); load();
+    const payload = { name: name.trim(), code: code.trim() || null, description: description.trim() || null, color };
+    mutation.mutate(payload);
   };
 
-  const remove = async (s: Subject) => {
-    const { error } = await supabase.from("subjects").delete().eq("id", s.id);
-    if (error) return toast.error(error.message);
-    toast.success("O'chirildi"); load();
+  const remove = (s: Subject) => {
+    deleteMutation.mutate(s.id);
   };
 
   return (
@@ -104,8 +124,8 @@ export default function OrgSubjects() {
                     ))}
                   </div>
                 </div>
-                <Button onClick={submit} disabled={saving} className="w-full" variant="hero">
-                  {saving && <Loader2 className="h-4 w-4 animate-spin" />}
+                <Button onClick={submit} disabled={mutation.isPending} className="w-full" variant="hero">
+                  {mutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
                   Saqlash
                 </Button>
               </div>
@@ -120,7 +140,7 @@ export default function OrgSubjects() {
         <Card className="p-12 text-center text-muted-foreground">Fanlar yo'q. Birinchi fanni yarating.</Card>
       ) : (
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-          {items.map((s) => (
+          {items.map((s: Subject) => (
             <Card key={s.id} className="p-5 group hover:shadow-elegant transition-smooth">
               <div className="flex items-start justify-between">
                 <div className={`h-10 w-10 rounded-lg bg-${s.color}/15 grid place-items-center`}>
@@ -140,7 +160,9 @@ export default function OrgSubjects() {
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Bekor</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => remove(s)}>O'chirish</AlertDialogAction>
+                          <AlertDialogAction onClick={() => remove(s)} disabled={deleteMutation.isPending}>
+                            {deleteMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "O'chirish"}
+                          </AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>

@@ -24,7 +24,7 @@ public class AdminCoinController {
     private final CoinService coinService;
 
     @PostMapping("/grant")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ADMINISTRATOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ADMINISTRATOR','TEACHER')")
     @Operation(summary = "Grant coins to a user")
     public ResponseEntity<Map<String, Object>> grantCoins(
             @Valid @RequestBody CoinGrantRequest request,

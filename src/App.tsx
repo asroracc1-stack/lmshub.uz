@@ -127,6 +127,9 @@ const PaymentRequests = lazy(() => import("./pages/admin/PaymentRequests"));
 const AdminDashboard = lazy(() => import("./pages/admin/Dashboard"));
 const AdminAdministrators = lazy(() => import("./pages/admin/Administrators"));
 const TeacherDashboard = lazy(() => import("./pages/teacher/Dashboard"));
+const SmartDashboard = lazy(() => import("./pages/teacher/SmartDashboard"));
+const Syllabus = lazy(() => import("./pages/teacher/Syllabus"));
+const RealTimeChat = lazy(() => import("./pages/shared/RealTimeChat"));
 const StudentDashboard = lazy(() => import("./pages/student/Dashboard"));
 const AdministratorDashboard = lazy(() => import("./pages/administrator/Dashboard"));
 const ParentDashboard = lazy(() => import("./pages/parent/Dashboard"));
@@ -299,6 +302,8 @@ const AppRoutes = () => {
         <Route path="/teacher" element={<ProtectedRoute allow={["teacher"]}><RoleLayout role="teacher" basePath="/teacher" /></ProtectedRoute>}>
           <Route index element={<TeacherDashboard />} />
           <Route path="dashboard" element={<TeacherDashboard />} />
+          <Route path="smart-dashboard" element={<SmartDashboard />} />
+          <Route path="syllabus" element={<Syllabus />} />
           <Route path="students" element={<MembersList role="student" title={t("nav.myStudents")} description="" canManage />} />
           <Route path="parents" element={<SuperAdminParents />} />
           <Route path="groups" element={<OrgGroups />} />
@@ -306,6 +311,7 @@ const AppRoutes = () => {
           <Route path="attendance/:lessonId" element={<AttendancePage />} />
           <Route path="grades" element={<TeacherGrades />} />
           <Route path="calendar" element={<OrgEvents />} />
+          <Route path="chat" element={<RealTimeChat />} />
           <Route path="messages" element={<OrgMessages />} />
           <Route path="profile" element={<SharedProfile />} />
           <Route path="leaderboard" element={<Leaderboard defaultRole="student" />} />

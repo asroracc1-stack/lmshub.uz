@@ -59,10 +59,10 @@ public class CommunicationController {
     )
     public ResponseEntity<ChatMessageDto> sendMessage(
             @PathVariable UUID threadId,
-            @RequestBody @Valid String body,
+            @RequestBody @Valid ChatMessageDto request,
             @AuthenticationPrincipal User user) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(chatService.sendMessage(threadId, body, user));
+                .body(chatService.sendMessage(threadId, request, user));
     }
 
     @PostMapping("/broadcast")

@@ -53,3 +53,5 @@ databaseChangeLog:
       file: db/changelog/changes/v0026_single_superadmin.yaml
   - include:
       file: db/changelog/changes/v0027_add_indexes.yaml
+  - include:
+      file: db/changelog/changes/v0028_add_is_google_user.yaml

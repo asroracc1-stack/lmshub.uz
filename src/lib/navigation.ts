@@ -65,12 +65,15 @@ export const getSidebarRoutes = (role: string, t: TFunction, options: { ielts?: 
     case "teacher":
       return [
         { to: "/teacher/dashboard", label: t("nav.dashboard"), icon: LayoutDashboard },
+        { to: "/teacher/smart-dashboard", label: "Smart Dashboard", icon: Award },
+        { to: "/teacher/syllabus", label: "Syllabus (Mavzular)", icon: BookOpen },
         { to: "/teacher/students", label: t("nav.students"), icon: Users },
         { to: "/teacher/parents", label: "Ota-onalar", icon: Heart },
         { to: "/teacher/groups", label: t("nav.groups"), icon: Users2 },
         { to: "/teacher/lessons", label: t("nav.myLessons"), icon: CalendarClock },
         { to: "/teacher/grades", label: t("nav.grades"), icon: Award },
         { to: "/teacher/calendar", label: t("nav.schedule"), icon: Calendar },
+        { to: "/teacher/chat", label: "Real-time Chat", icon: MessagesSquare },
         { to: "/teacher/messages", label: t("nav.messages"), icon: MessagesSquare },
         { to: "/teacher/speaking", label: t("nav.speaking"), icon: Mic },
         { to: "/teacher/leaderboard", label: t("nav.leaderboard"), icon: Trophy },

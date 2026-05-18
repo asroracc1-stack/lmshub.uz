@@ -789,7 +789,7 @@ export default function MockTake() {
 
       {/* 🎧 LISTENING COMPACT PLAYER */}
       {(kind === "listening" || exam.title.toLowerCase().includes("listening")) && (
-        <div className="shrink-0 w-full max-w-7xl mx-auto px-4 md:px-8 py-3 bg-transparent z-30">
+        <div className="shrink-0 w-full max-w-[1440px] mx-auto px-4 md:px-8 py-3 bg-transparent z-30">
           <CustomAudioPlayer 
             src={exam.audio_url || (exam as any).audioUrl} 
             isExternalPaused={isPaused}
@@ -823,14 +823,14 @@ export default function MockTake() {
       </AnimatePresence>
 
       {/* 📝 EXAM WORKSPACE */}
-      <main className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 py-4 min-h-0 flex flex-col">
+      <main className="flex-1 w-full max-w-[1440px] mx-auto px-4 md:px-8 py-4 min-h-0 flex flex-col">
         <div className={cn(
-          "grid gap-6 flex-1 min-h-0", 
+          "grid gap-6 xl:gap-12 flex-1 min-h-0", 
           kind === "reading" && (currentSection?.passage || currentSection?.imageUrl) ? "lg:grid-cols-2" : "grid-cols-1"
         )}>
           {/* LEFT PANEL: PASSAGE (READING ONLY) */}
           {kind === "reading" && (currentSection?.passage || currentSection?.imageUrl) && (
-            <Card className="flex flex-col min-h-[450px] lg:max-h-[calc(100vh-220px)] border-slate-200/50 dark:border-white/5 shadow-xl shadow-slate-100/50 dark:shadow-none bg-white dark:bg-slate-900/40 backdrop-blur-md rounded-2xl overflow-hidden">
+            <Card className="flex flex-col min-h-[450px] lg:max-h-[calc(100vh-220px)] w-full max-w-3xl mx-auto border-slate-200/50 dark:border-white/5 shadow-xl shadow-slate-100/50 dark:shadow-none bg-white dark:bg-slate-900/40 backdrop-blur-md rounded-2xl overflow-hidden">
               {currentSection.title && (
                 <div className="px-6 py-4 border-b border-slate-100 dark:border-white/5 flex items-center justify-between shrink-0 bg-slate-50/50 dark:bg-slate-950/20">
                   <h2 className="font-display font-extrabold text-base tracking-tight text-slate-800 dark:text-white">
@@ -852,7 +852,7 @@ export default function MockTake() {
           )}
 
           {/* RIGHT PANEL: QUESTIONS */}
-          <Card className="flex flex-col min-h-[450px] lg:max-h-[calc(100vh-220px)] border-slate-200/50 dark:border-white/5 shadow-xl shadow-slate-100/50 dark:shadow-none bg-white dark:bg-slate-900/40 backdrop-blur-md rounded-2xl overflow-hidden">
+          <Card className="flex flex-col min-h-[450px] lg:max-h-[calc(100vh-220px)] w-full max-w-3xl mx-auto border-slate-200/50 dark:border-white/5 shadow-xl shadow-slate-100/50 dark:shadow-none bg-white dark:bg-slate-900/40 backdrop-blur-md rounded-2xl overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-100 dark:border-white/5 flex items-center justify-between shrink-0 bg-slate-50/50 dark:bg-slate-950/20">
               <span className="text-xs font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                 Savollar va Topshiriqlar
@@ -1045,7 +1045,7 @@ export default function MockTake() {
 
       {/* 🎛️ FLOATING GLASSMORPHIC BOTTOM BAR */}
       <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-slate-200/50 dark:border-white/5 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl shadow-[0_-12px_40px_rgba(0,0,0,0.1)] pb-safe shrink-0">
-        <div className="max-w-7xl mx-auto px-4 md:px-8 py-3.5 flex items-center gap-4 justify-between overflow-x-auto scroll-smooth no-scrollbar select-none">
+        <div className="max-w-[1440px] mx-auto px-4 md:px-8 py-3.5 flex items-center gap-4 justify-between overflow-x-auto scroll-smooth no-scrollbar select-none">
           <div className="flex items-center gap-3 shrink-0 flex-nowrap">
             {sections.map((s, i) => {
               const sQs = questions.filter((q) => q.section_index === i);

@@ -128,7 +128,8 @@ export default function ParentsPage() {
   const { data: groupsData } = useQuery({
     queryKey: ["groups-for-parents"],
     queryFn: async () => {
-      const { data } = await api.get("/admin/groups", { params: { size: 1000 } });
+      const endpoint = role === "teacher" ? "/teacher/groups" : "/admin/groups";
+      const { data } = await api.get(endpoint, { params: { size: 1000 } });
       return data.content || data;
     },
   });
@@ -186,7 +187,7 @@ export default function ParentsPage() {
   });
 
   const editMutation = useMutation({
-    mutationFn: (payload: any) => api.put(`/admin/users/${payload.id}`, payload),
+    mutationFn: (payload: any) => api.put(`/admin/parents/${payload.id}`, payload),
     onSuccess: () => {
       toast.success("Ma'lumotlar yangilandi!");
       qc.invalidateQueries({ queryKey: ["parents"] });
@@ -220,7 +221,7 @@ export default function ParentsPage() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => api.delete(`/admin/users/${id}`),
+    mutationFn: (id: string) => api.delete(`/admin/parents/${id}`),
     onSuccess: () => {
       toast.success("O'chirildi");
       qc.invalidateQueries({ queryKey: ["parents"] });
@@ -232,7 +233,12 @@ export default function ParentsPage() {
 
   const grantCoinsMutation = useMutation({
     mutationFn: async (payload: { studentId: string, amount: number, reason: string, comment?: string }) => {
-      return api.post("/admin/coins/grant", payload);
+      return api.post("/admin/coins/grant", {
+        studentId: payload.studentId,
+        amount: Number(payload.amount),
+        reason: payload.reason || "Ota-ona faolligi",
+        comment: payload.comment || ""
+      });
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["parents"] });

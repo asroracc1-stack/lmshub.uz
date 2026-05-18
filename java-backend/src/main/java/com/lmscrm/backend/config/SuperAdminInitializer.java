@@ -42,12 +42,7 @@ public class SuperAdminInitializer implements CommandLineRunner {
             userRepository.save(admin1);
         } else {
             log.info("🌱 'asrorsuperadmin' topilmadi. Yangidan yaratilmoqda...");
-            UUID idToUse = UUID.fromString("00000000-0000-0000-0000-000000000001");
-            if (userRepository.findById(idToUse).isPresent()) {
-                idToUse = UUID.randomUUID(); // Fallback if canonical ID is somehow taken
-            }
             admin1 = User.builder()
-                    .id(idToUse)
                     .username("asrorsuperadmin")
                     .email("asrorsuperadmin@lmshub.uz")
                     .password(passwordEncoder.encode("ilhomhamdamarguba"))
@@ -85,12 +80,7 @@ public class SuperAdminInitializer implements CommandLineRunner {
             userRepository.save(admin2);
         } else {
             log.info("🌱 'asrorsuper' topilmadi. Yangidan yaratilmoqda...");
-            UUID idToUse = UUID.fromString("00000000-0000-0000-0000-000000000002");
-            if (userRepository.findById(idToUse).isPresent()) {
-                idToUse = UUID.randomUUID(); // Fallback if canonical ID is somehow taken
-            }
             admin2 = User.builder()
-                    .id(idToUse)
                     .username("asrorsuper")
                     .email("asrorsuper@lmshub.uz")
                     .password(passwordEncoder.encode("asror2026"))

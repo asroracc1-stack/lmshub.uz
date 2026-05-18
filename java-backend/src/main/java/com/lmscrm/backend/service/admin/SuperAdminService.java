@@ -60,9 +60,9 @@ public class SuperAdminService {
 
         // 3. Top Organizations by User Count
         List<SuperAdminStatsDto.OrgPoint> topOrgs = organizationRepository.findAll().stream()
-                .limit(5)
                 .map(org -> new SuperAdminStatsDto.OrgPoint(org.getName(), userRepository.countByOrganizationId(org.getId())))
-                .sorted((a, b) -> Long.compare(b.getUsers(), a.getUsers()))
+                .sorted((a, b) -> Integer.compare(b.getUsers(), a.getUsers()))
+                .limit(5)
                 .collect(Collectors.toList());
 
         // 4. Recent Activity (Audit Logs)

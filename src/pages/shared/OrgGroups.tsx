@@ -154,6 +154,8 @@ export default function OrgGroups() {
       }
       qc.invalidateQueries({ queryKey: ["super-admin-dashboard-stats"] });
       qc.invalidateQueries({ queryKey: ["admin-dashboard-stats"] });
+      qc.invalidateQueries({ queryKey: ["groups-list"] });
+      qc.invalidateQueries({ queryKey: ["all-groups-list-global"] });
       setOpen(false);
       resetForm();
       load();
@@ -169,6 +171,8 @@ export default function OrgGroups() {
       await api.delete(`/admin/groups/${id}`);
       qc.invalidateQueries({ queryKey: ["super-admin-dashboard-stats"] });
       qc.invalidateQueries({ queryKey: ["admin-dashboard-stats"] });
+      qc.invalidateQueries({ queryKey: ["groups-list"] });
+      qc.invalidateQueries({ queryKey: ["all-groups-list-global"] });
       toast.success("Guruh o'chirildi");
       load();
     } catch (e) {
