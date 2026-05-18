@@ -16,6 +16,7 @@ public class LessonDto {
     private UUID teacherId;
     private String teacherName;
     private String room;
+    private String attachmentUrl;
     private LocalDateTime startsAt;
     private LocalDateTime endsAt;
     private Boolean isCanceled;

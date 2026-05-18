@@ -11,5 +11,6 @@ public class ChatMessageDto {
     private UUID senderId;
     private String senderName;
     private String body;
+    private String attachmentUrl;
     private LocalDateTime createdAt;
 }

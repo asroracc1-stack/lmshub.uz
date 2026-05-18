@@ -38,6 +38,9 @@ public class Lesson {
 
     private String room;
 
+    @Column(name = "attachment_url")
+    private String attachmentUrl;
+
     @Column(name = "starts_at", nullable = false)
     private LocalDateTime startsAt;
 

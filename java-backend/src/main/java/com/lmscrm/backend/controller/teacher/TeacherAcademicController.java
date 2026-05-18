@@ -55,6 +55,18 @@ public class TeacherAcademicController {
                 .body(attendanceService.markBatchAttendance(request, user));
     }
 
+    @PostMapping("/attendance")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
+    @Operation(
+            summary = "Mark Single Attendance",
+            description = "Allows a teacher to toggle or set attendance for a single student for a specific lesson."
+    )
+    public ResponseEntity<AttendanceDto> markSingleAttendance(
+            @Valid @RequestBody AttendanceDto request,
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(attendanceService.markSingleAttendance(request, user));
+    }
+
     @PostMapping("/grades")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
     @Operation(

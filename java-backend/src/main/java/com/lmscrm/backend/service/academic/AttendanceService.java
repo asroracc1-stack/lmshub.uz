@@ -74,6 +74,41 @@ public class AttendanceService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
+    public AttendanceDto markSingleAttendance(AttendanceDto request, User markedBy) {
+        Lesson lesson = lessonRepository.findById(request.getLessonId())
+                .orElseThrow(() -> new ResourceNotFoundException("Lesson not found"));
+        User student = userRepository.findById(request.getStudentId())
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found"));
+
+        Attendance attendance = attendanceRepository.findByLessonIdAndStudentId(lesson.getId(), student.getId())
+                .orElse(Attendance.builder()
+                        .lesson(lesson)
+                        .student(student)
+                        .organization(lesson.getOrganization())
+                        .build());
+
+        attendance.setStatus(request.getStatus());
+        if (request.getNote() != null) {
+            attendance.setNote(request.getNote());
+        }
+        attendance.setMarkedBy(markedBy);
+
+        Attendance saved = attendanceRepository.save(attendance);
+
+        if (saved.getStatus() == AttendanceStatus.ABSENT) {
+            checkAndAlertForExcessiveAbsences(student.getId());
+        }
+
+        try {
+            telegramNotificationService.notifyAttendance(student, saved.getStatus(), lesson.getTitle());
+        } catch (Exception e) {
+            log.error("Failed to send Telegram notification for attendance: {}", e.getMessage());
+        }
+
+        return mapper.toAttendanceDto(saved);
+    }
+
     @Transactional(readOnly = true)
     public List<AttendanceDto> getMyAttendance(UUID studentId) {
         return attendanceRepository.findByStudentId(studentId).stream()

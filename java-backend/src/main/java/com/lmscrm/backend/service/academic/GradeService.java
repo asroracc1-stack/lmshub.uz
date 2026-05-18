@@ -45,16 +45,30 @@ public class GradeService {
                     .orElseThrow(() -> new ResourceNotFoundException("Lesson not found"));
         }
 
-        Grade grade = Grade.builder()
-                .student(student)
-                .teacher(teacher)
-                .subject(subject)
-                .lesson(lesson)
-                .score(request.getScore())
-                .maxScore(request.getMaxScore() != null ? request.getMaxScore() : 100)
-                .comment(request.getComment())
-                .organization(subject.getOrganization())
-                .build();
+        Grade grade = null;
+        if (lesson != null) {
+            grade = gradeRepository.findByLessonIdAndStudentId(lesson.getId(), student.getId()).orElse(null);
+        }
+
+        if (grade == null) {
+            grade = Grade.builder()
+                    .student(student)
+                    .teacher(teacher)
+                    .subject(subject)
+                    .lesson(lesson)
+                    .score(request.getScore())
+                    .maxScore(request.getMaxScore() != null ? request.getMaxScore() : 100)
+                    .comment(request.getComment())
+                    .organization(subject.getOrganization())
+                    .build();
+        } else {
+            grade.setScore(request.getScore());
+            grade.setComment(request.getComment());
+            grade.setTeacher(teacher);
+            if (request.getMaxScore() != null) {
+                grade.setMaxScore(request.getMaxScore());
+            }
+        }
 
         Grade savedGrade = gradeRepository.save(grade);
 

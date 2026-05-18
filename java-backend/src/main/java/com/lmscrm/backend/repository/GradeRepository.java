@@ -5,11 +5,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
 public interface GradeRepository extends JpaRepository<Grade, UUID> {
     List<Grade> findByStudentId(UUID studentId);
     List<Grade> findByLessonId(UUID lessonId);
+    Optional<Grade> findByLessonIdAndStudentId(UUID lessonId, UUID studentId);
     List<Grade> findByStudentIdAndSubjectId(UUID studentId, UUID subjectId);
 }

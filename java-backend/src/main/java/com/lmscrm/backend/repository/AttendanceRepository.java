@@ -6,11 +6,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
 public interface AttendanceRepository extends JpaRepository<Attendance, UUID> {
     List<Attendance> findByLessonId(UUID lessonId);
     List<Attendance> findByStudentId(UUID studentId);
+    Optional<Attendance> findByLessonIdAndStudentId(UUID lessonId, UUID studentId);
     long countByStudentIdAndStatus(UUID studentId, AttendanceStatus status);
 }
