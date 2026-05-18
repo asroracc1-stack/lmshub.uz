@@ -15,5 +15,7 @@ public interface OrganizationRepository extends JpaRepository<Organization, UUID
     @Query("SELECT o FROM Organization o WHERE LOWER(o.name) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(o.slug) LIKE LOWER(CONCAT('%', :query, '%'))")
     Page<Organization> searchOrganizations(String query, Pageable pageable);
 
+    java.util.Optional<Organization> findBySlug(String slug);
+
     long countBySubscriptionPackageId(UUID planId);
 }

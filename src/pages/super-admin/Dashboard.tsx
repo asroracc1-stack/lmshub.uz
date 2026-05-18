@@ -12,6 +12,7 @@ import {
   RefreshCw,
   Heart,
   Users2,
+  Wallet,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -40,6 +41,7 @@ interface Stats {
   users: number;
   parents: number;
   groups: number;
+  totalRevenue: number;
 }
 
 interface MonthPoint {
@@ -74,6 +76,7 @@ export default function SuperAdminDashboard() {
     users: rawStats.users || 0,
     parents: rawStats.parents || 0,
     groups: rawStats.groups || 0,
+    totalRevenue: rawStats.totalRevenue ?? rawStats.total_revenue ?? 0,
   };
   const growth = data?.growth ?? [];
   const topOrgs = data?.topOrgs ?? [];
@@ -103,6 +106,7 @@ export default function SuperAdminDashboard() {
   });
 
   const cards = [
+    { label: "Jami tushum", value: stats.totalRevenue.toLocaleString() + " UZS", icon: Wallet, accent: "from-amber-500 to-yellow-500" },
     { label: "Tashkilotlar", value: stats.organizations, icon: Building2, accent: "from-primary to-primary-glow" },
     { label: "Jami foydalanuvchilar", value: stats.totalUsers, icon: Users, accent: "from-secondary to-secondary-glow" },
     { label: "O'qituvchilar", value: stats.teachers, icon: GraduationCap, accent: "from-accent to-accent" },

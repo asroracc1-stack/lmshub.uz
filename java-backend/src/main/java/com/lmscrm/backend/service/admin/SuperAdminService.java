@@ -18,6 +18,8 @@ import java.time.format.TextStyle;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.lmscrm.backend.repository.PaymentRepository;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -28,6 +30,7 @@ public class SuperAdminService {
     private final AuditLogRepository auditLogRepository;
     private final CoinTransactionRepository coinTransactionRepository;
     private final com.lmscrm.backend.repository.GroupRepository groupRepository;
+    private final PaymentRepository paymentRepository;
 
     @Transactional(readOnly = true)
     public SuperAdminStatsDto getDashboardStats() {
@@ -44,6 +47,7 @@ public class SuperAdminService {
                 .users(userRepository.countByRole(AppRole.USER))
                 .parents(userRepository.countByRole(AppRole.PARENT))
                 .groups(groupRepository.count())
+                .totalRevenue(paymentRepository.sumTotalRevenue())
                 .build();
 
         // 2. Real Growth Data (Last 6 months)
@@ -61,7 +65,7 @@ public class SuperAdminService {
         // 3. Top Organizations by User Count
         List<SuperAdminStatsDto.OrgPoint> topOrgs = organizationRepository.findAll().stream()
                 .map(org -> new SuperAdminStatsDto.OrgPoint(org.getName(), userRepository.countByOrganizationId(org.getId())))
-                .sorted((a, b) -> Integer.compare(b.getUsers(), a.getUsers()))
+                .sorted((a, b) -> Long.compare(b.getUsers(), a.getUsers()))
                 .limit(5)
                 .collect(Collectors.toList());
 

@@ -91,7 +91,7 @@ const schema = z.object({
 });
 
 export default function MembersList({ role, title, description, canManage }: Props) {
-  const { profile } = useAuth();
+  const { profile, role: currentUserRole } = useAuth();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -139,9 +139,10 @@ export default function MembersList({ role, title, description, canManage }: Pro
   });
 
   const { data: groupsData = [] } = useQuery({
-    queryKey: ["groups-list", profile?.organization_id],
+    queryKey: ["groups-list", profile?.organization_id, currentUserRole],
     queryFn: async () => {
-      const { data } = await api.get('/admin/groups', {
+      const endpoint = currentUserRole === "TEACHER" ? '/teacher/groups' : '/admin/groups';
+      const { data } = await api.get(endpoint, {
         params: { size: 1000, organizationId: profile?.organization_id || undefined }
       });
       const content = data?.content || data;

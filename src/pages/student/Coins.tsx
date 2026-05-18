@@ -106,8 +106,8 @@ export default function StudentCoins() {
               <p className="text-sm opacity-80 mt-1">coin</p>
             </div>
             <div className="text-right text-sm opacity-90">
-              <p>✨ Yaxshi baholar uchun: <b>+10</b></p>
-              <p>📚 Davomat uchun: <b>+5</b></p>
+              <p>✨ Yaxshi baholar uchun: <b>+5</b></p>
+              <p>📚 Davomat uchun: <b>+3</b></p>
               <p>❌ Kelmaslik: <b>-3</b></p>
             </div>
           </div>

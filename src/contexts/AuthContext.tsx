@@ -54,7 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (r === 'teacher') return 'teacher';
     if (r === 'student') return 'student';
     if (r === 'parent') return 'parent';
-    if (r === 'manager') return 'payment_manager';
+    if (r === 'manager' || r === 'payment_manager' || r === 'pack_manager') return 'payment_manager';
     return 'user';
   };
 

@@ -31,6 +31,7 @@ public class SuperAdminStatsDto {
         private long users;
         private long parents;
         private long groups;
+        private java.math.BigDecimal totalRevenue;
     }
 
     @Data

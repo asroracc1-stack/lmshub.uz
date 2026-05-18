@@ -82,11 +82,8 @@ export default function Syllabus() {
     queryKey: ["teacher-groups", user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
-      const { data: gt } = await supabase.from("group_teachers").select("group_id").eq("teacher_id", user.id);
-      const gids = (gt ?? []).map((g: any) => g.group_id);
-      if (!gids.length) return [];
-      const { data } = await supabase.from("groups").select("id, name").in("id", gids);
-      return (data as Group[]) ?? [];
+      const res = await api.get('/teacher/groups');
+      return (res.data as Group[]) ?? [];
     },
     enabled: !!user?.id,
   });
@@ -102,8 +99,8 @@ export default function Syllabus() {
     queryKey: ["teacher-subjects", profile?.organization_id],
     queryFn: async () => {
       if (!profile?.organization_id) return [];
-      const { data } = await supabase.from("subjects").select("id, name").eq("organization_id", profile.organization_id);
-      return (data as Subject[]) ?? [];
+      const res = await api.get('/admin/subjects');
+      return (res.data as Subject[]) ?? [];
     },
     enabled: !!profile?.organization_id,
   });
@@ -119,23 +116,22 @@ export default function Syllabus() {
     enabled: !!selectedGroupId,
   });
 
-  // Handle File Upload to Supabase Storage
+  // Handle File Upload to Spring Boot Backend REST API
   const handleFileUpload = async (selectedFile: File) => {
     if (!selectedFile) return;
     setUploadingFile(true);
-    const fileExt = selectedFile.name.split(".").pop();
-    const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
-    const filePath = `syllabus/${fileName}`;
+    const formData = new FormData();
+    formData.append("file", selectedFile);
 
     try {
-      const { error: uploadError } = await supabase.storage.from("uploads").upload(filePath, selectedFile);
-      if (uploadError) throw uploadError;
-
-      const { data } = supabase.storage.from("uploads").getPublicUrl(filePath);
-      setUploadedUrl(data.publicUrl);
+      const res = await api.post("/files/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      const publicUrl = res.data;
+      setUploadedUrl(publicUrl);
       toast.success("Fayl muvaffaqiyatli yuklandi! 📁");
     } catch (err: any) {
-      toast.error(err.message || "Fayl yuklashda xatolik yuz berdi");
+      toast.error(err.response?.data?.message || "Fayl yuklashda xatolik yuz berdi");
     } finally {
       setUploadingFile(false);
     }

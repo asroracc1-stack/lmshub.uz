@@ -116,6 +116,16 @@ public class AttendanceService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public List<AttendanceDto> getAttendanceForLessons(List<UUID> lessonIds) {
+        if (lessonIds == null || lessonIds.isEmpty()) {
+            return List.of();
+        }
+        return attendanceRepository.findByLessonIdIn(lessonIds).stream()
+                .map(mapper::toAttendanceDto)
+                .collect(Collectors.toList());
+    }
+
     private void checkAndAlertForExcessiveAbsences(UUID studentId) {
         long absentCount = attendanceRepository.countByStudentIdAndStatus(studentId, AttendanceStatus.ABSENT);
         if (absentCount >= 3) {

@@ -298,49 +298,51 @@ export default function RoleLayout({ brand = "LMSHub", subtitle, nav: initialNav
 
       <div className="flex-1 flex flex-col min-w-0">
         <header className={cn(
-          "h-16 border-b flex items-center justify-between px-4 md:px-8 sticky top-0 z-30 transition-all",
+          "h-16 border-b sticky top-0 z-30 transition-all w-full flex justify-center",
           theme === "dark"
             ? "bg-slate-950/50 backdrop-blur-xl border-white/5"
             : "bg-white/80 backdrop-blur-md border-slate-200 shadow-sm"
         )}>
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden rounded-lg"
-              onClick={openMobileMenu}
-              aria-label="Menyu"
-            >
-              <Menu className="h-5 w-5" />
-            </Button>
-            {collapsed && (
+          <div className="w-full max-w-[1440px] px-4 md:px-8 flex items-center justify-between h-full">
+            <div className="flex items-center gap-4">
               <Button
                 variant="ghost"
                 size="icon"
-                className="hidden md:flex rounded-lg"
-                onClick={toggleCollapsed}
-                aria-label="Menyuni ochish"
-                title="Menyuni ochish"
+                className="md:hidden rounded-lg"
+                onClick={openMobileMenu}
+                aria-label="Menyu"
               >
-                <PanelLeftOpen className="h-5 w-5" />
+                <Menu className="h-5 w-5" />
               </Button>
-            )}
-            <div className="hidden sm:block">
-              <p className="font-bold text-sm tracking-tight text-foreground">
-                {t("common.hello")}, {displayName} 👋
-              </p>
+              {collapsed && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="hidden md:flex rounded-lg"
+                  onClick={toggleCollapsed}
+                  aria-label="Menyuni ochish"
+                  title="Menyuni ochish"
+                >
+                  <PanelLeftOpen className="h-5 w-5" />
+                </Button>
+              )}
+              <div className="hidden sm:block">
+                <p className="font-bold text-sm tracking-tight text-foreground">
+                  {t("common.hello")}, {displayName} 👋
+                </p>
+              </div>
             </div>
-          </div>
 
-          <div className="flex items-center gap-2 md:gap-4 h-full py-2">
-            <SmartClock />
-            <div className="hidden lg:flex items-center gap-2 px-3 h-9 rounded-lg border border-border bg-muted/30 text-xs text-muted-foreground transition-colors hover:bg-muted/50 cursor-text">
-              <Search className="h-3.5 w-3.5" />
-              <span>{t("common.search")}</span>
-            </div>
-            <div className="flex items-center gap-1.5 md:gap-3 pl-2 md:pl-4 border-l border-border h-8">
-              <NotificationsBell />
-              <ProfileMenu role={role} basePath={basePath} />
+            <div className="flex items-center gap-2 md:gap-4 h-full py-2">
+              <SmartClock />
+              <div className="hidden lg:flex items-center gap-2 px-3 h-9 rounded-lg border border-border bg-muted/30 text-xs text-muted-foreground transition-colors hover:bg-muted/50 cursor-text">
+                <Search className="h-3.5 w-3.5" />
+                <span>{t("common.search")}</span>
+              </div>
+              <div className="flex items-center gap-1.5 md:gap-3 pl-2 md:pl-4 border-l border-border h-8">
+                <NotificationsBell />
+                <ProfileMenu role={role} basePath={basePath} />
+              </div>
             </div>
           </div>
         </header>

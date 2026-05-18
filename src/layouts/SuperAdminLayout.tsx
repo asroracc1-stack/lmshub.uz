@@ -216,28 +216,30 @@ export default function SuperAdminLayout() {
       </MobileSidebarDrawer>
 
       <div className="flex-1 flex flex-col min-w-0 relative">
-        <header className="h-20 border-b border-slate-100 dark:border-white/5 bg-white/40 dark:bg-slate-950/40 backdrop-blur-xl flex items-center justify-between px-6 sticky top-0 z-30">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setMobileOpen(true)}><Menu className="h-5 w-5" /></Button>
-            {collapsed && <Button variant="ghost" size="icon" className="hidden md:flex" onClick={toggleCollapsed}><PanelLeftOpen className="h-5 w-5" /></Button>}
-            <div>
-              <p className="text-[10px] uppercase font-black tracking-widest text-primary">Super Admin</p>
-              <h2 className="font-black text-slate-900 dark:text-white">{t("common.hello")}, {profile?.full_name?.split(' ')[0] || "Asror"}! 👋</h2>
+        <header className="h-20 border-b border-slate-100 dark:border-white/5 bg-white/40 dark:bg-slate-950/40 backdrop-blur-xl flex items-center justify-center sticky top-0 z-30 w-full">
+          <div className="w-full max-w-[1440px] px-6 flex items-center justify-between h-full">
+            <div className="flex items-center gap-4">
+              <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setMobileOpen(true)}><Menu className="h-5 w-5" /></Button>
+              {collapsed && <Button variant="ghost" size="icon" className="hidden md:flex" onClick={toggleCollapsed}><PanelLeftOpen className="h-5 w-5" /></Button>}
+              <div>
+                <p className="text-[10px] uppercase font-black tracking-widest text-primary">Super Admin</p>
+                <h2 className="font-black text-slate-900 dark:text-white">{t("common.hello")}, {profile?.full_name?.split(' ')[0] || "Asror"}! 👋</h2>
+              </div>
             </div>
-          </div>
 
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true }))}
-              className="hidden lg:flex items-center gap-3 px-4 py-2.5 rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-white/5 text-xs text-slate-500 hover:border-primary/30 transition-all"
-            >
-              <Search className="h-4 w-4" />
-              <span className="font-bold">{t("common.search")}...</span>
-              <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-white/10 border border-slate-100 dark:border-white/10 text-[10px] font-black">⌘K</kbd>
-            </button>
-            <SmartClock />
-            <NotificationsBell />
-            <ProfileMenu role="super_admin" basePath="/super-admin" />
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true }))}
+                className="hidden lg:flex items-center gap-3 px-4 py-2.5 rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-white/5 text-xs text-slate-500 hover:border-primary/30 transition-all"
+              >
+                <Search className="h-4 w-4" />
+                <span className="font-bold">{t("common.search")}...</span>
+                <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-white/10 border border-slate-100 dark:border-white/10 text-[10px] font-black">⌘K</kbd>
+              </button>
+              <SmartClock />
+              <NotificationsBell />
+              <ProfileMenu role="super_admin" basePath="/super-admin" />
+            </div>
           </div>
         </header>
 
@@ -265,7 +267,7 @@ export default function SuperAdminLayout() {
           )}
         </AnimatePresence>
 
-        <main className="flex-1 p-6 lg:p-10">
+        <main className="flex-1 p-6 lg:p-10 w-full max-w-[1440px] mx-auto">
           <Outlet />
         </main>
       </div>

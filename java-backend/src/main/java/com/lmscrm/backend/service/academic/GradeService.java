@@ -88,4 +88,14 @@ public class GradeService {
                 .map(mapper::toGradeDto)
                 .collect(Collectors.toList());
     }
+
+    @Transactional(readOnly = true)
+    public List<GradeDto> getGradesForStudentsAndSubject(List<UUID> studentIds, UUID subjectId) {
+        if (studentIds == null || studentIds.isEmpty() || subjectId == null) {
+            return List.of();
+        }
+        return gradeRepository.findByStudentIdInAndSubjectId(studentIds, subjectId).stream()
+                .map(mapper::toGradeDto)
+                .collect(Collectors.toList());
+    }
 }

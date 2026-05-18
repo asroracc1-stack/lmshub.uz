@@ -825,7 +825,7 @@ export default function MockTake() {
       {/* 📝 EXAM WORKSPACE */}
       <main className="flex-1 w-full max-w-[1440px] mx-auto px-4 md:px-8 py-4 min-h-0 flex flex-col">
         <div className={cn(
-          "grid gap-6 xl:gap-12 flex-1 min-h-0", 
+          "grid gap-8 xl:gap-12 flex-1 min-h-0", 
           kind === "reading" && (currentSection?.passage || currentSection?.imageUrl) ? "lg:grid-cols-2" : "grid-cols-1"
         )}>
           {/* LEFT PANEL: PASSAGE (READING ONLY) */}

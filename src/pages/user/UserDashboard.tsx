@@ -22,7 +22,13 @@ import {
   ArrowRight,
   Copy,
   Send,
-  ChevronRight
+  ChevronRight,
+  Crown,
+  Layers,
+  Sparkles,
+  Leaf,
+  FileText,
+  Gift
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -46,6 +52,22 @@ interface UserStats {
   weeklyData: DailyData[];
 }
 
+interface FreeExam {
+  id: string;
+  title: string;
+  description?: string;
+  type: string;
+  durationMinutes: number;
+  difficulty: string;
+  requiredPack?: string;
+}
+
+const DIFFICULTY_META: Record<string, { label: string; cls: string; icon: any }> = {
+  easy:   { label: "Oson",  cls: "bg-emerald-500/15 text-emerald-700 border-emerald-500/30", icon: Leaf },
+  medium: { label: "O'rta", cls: "bg-amber-500/15 text-amber-700 border-amber-500/30",      icon: Sparkles },
+  hard:   { label: "Qiyin", cls: "bg-rose-500/15 text-rose-700 border-rose-500/30",          icon: FileText },
+};
+
 export default function UserDashboard() {
   const { profile, user, refresh } = useAuth();
   const { theme } = useTheme();
@@ -57,6 +79,10 @@ export default function UserDashboard() {
   const [openKey, setOpenKey] = useState<string | null>(null);
   const [examDate, setExamDate] = useState<string>("");
   const [savingExam, setSavingExam] = useState(false);
+
+  // Free Tier Diagnostic exams state
+  const [freeExams, setFreeExams] = useState<FreeExam[]>([]);
+  const [loadingExams, setLoadingExams] = useState(true);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -70,6 +96,34 @@ export default function UserDashboard() {
       }
     };
     fetchStats();
+  }, []);
+
+  useEffect(() => {
+    const fetchFreeExams = async () => {
+      try {
+        const { data } = await api.get("/admin/exams");
+        const mapped = (data || []).map((e: any) => ({
+          id: e.id,
+          title: e.title,
+          description: e.description,
+          type: e.type,
+          durationMinutes: e.durationMinutes || e.duration_minutes || 60,
+          difficulty: e.difficulty || "easy",
+          requiredPack: e.requiredPack || e.required_pack || "free"
+        }));
+
+        // Filter: Mock exams having free tier access or diagnostic type
+        const filtered = mapped.filter((e: any) =>
+          e.requiredPack === "free" || !e.requiredPack || String(e.type).toLowerCase() === "diagnostic"
+        );
+        setFreeExams(filtered);
+      } catch (err) {
+        console.error("Free exams fetch failed", err);
+      } finally {
+        setLoadingExams(false);
+      }
+    };
+    fetchFreeExams();
   }, []);
 
   useEffect(() => {
@@ -95,7 +149,7 @@ export default function UserDashboard() {
     } finally {
       setSavingExam(false);
     }
-  }
+  };
 
   const greet = (() => {
     const h = new Date().getHours();
@@ -151,11 +205,6 @@ export default function UserDashboard() {
     [stats, activeDays]
   );
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success("Nusxa olindi!");
-  };
-
   const modal = (() => {
     if (!openKey) return null;
     const common = { open: true, onOpenChange: (v: boolean) => !v && setOpenKey(null) };
@@ -194,7 +243,7 @@ export default function UserDashboard() {
                 </DialogDescription>
               </DialogHeader>
               <div className="py-4">
-                 <Button onClick={() => navigate("/user/dashboard")} className="w-full bg-[#00c2ff] hover:bg-[#00a8e0] text-white font-bold h-12 rounded-xl">Mock testlarga o'tish</Button>
+                 <Button onClick={() => navigate("/user/mocks")} className="w-full bg-[#00c2ff] hover:bg-[#00a8e0] text-white font-bold h-12 rounded-xl">Mock testlarga o'tish</Button>
               </div>
             </DialogContent>
           </Dialog>
@@ -285,7 +334,7 @@ export default function UserDashboard() {
   })();
 
   return (
-    <div className="p-4 md:p-6 space-y-6 max-w-7xl mx-auto min-h-screen">
+    <div className="p-4 md:p-6 space-y-8 max-w-7xl mx-auto min-h-screen">
       {modal}
       
       {/* Greeting card */}
@@ -311,6 +360,121 @@ export default function UserDashboard() {
           </div>
         </Card>
       </motion.div>
+
+      {/* Onboarding Welcome Call-to-Action Banner */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.98 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.1 }}
+      >
+        <Card className="p-6 md:p-8 bg-gradient-to-br from-purple-600/10 via-indigo-600/5 to-pink-500/10 backdrop-blur-xl border border-purple-500/20 rounded-[2.5rem] shadow-xl overflow-hidden relative group">
+          <div className="absolute -right-24 -top-24 h-48 w-48 rounded-full bg-purple-500/20 blur-2xl pointer-events-none" />
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
+            <div className="space-y-2">
+              <Badge className="bg-purple-500 text-white uppercase text-[10px] tracking-widest font-black py-1 px-3.5 rounded-full">
+                Onboarding Portal
+              </Badge>
+              <h2 className="text-xl md:text-2xl font-black text-slate-800 dark:text-white leading-tight">
+                Xush kelibsiz! Ta'limni boshlash uchun paket tanlang yoki markazimiz filialiga murojaat qiling
+              </h2>
+              <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
+                Premium mock testlar, AI speaking mashqlari va o'quv planlari sizni kutmoqda!
+              </p>
+            </div>
+            <Button
+              onClick={() => navigate("/user/subscriptions")}
+              className="bg-gradient-primary hover:opacity-90 text-white px-8 h-14 rounded-2xl font-black uppercase text-xs tracking-widest shadow-lg shadow-primary/20 shrink-0 flex items-center gap-2 group/btn"
+            >
+              Ta'riflarni Tanlash <ChevronRight className="h-4 w-4 group-hover/btn:translate-x-1 transition-transform" />
+            </Button>
+          </div>
+        </Card>
+      </motion.div>
+
+      {/* Free Tier Diagnostic Tests Section */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-display font-black text-2xl text-slate-800 dark:text-white flex items-center gap-2">
+              Mening Bepul Testlarim <Gift className="h-6 w-6 text-emerald-500 animate-pulse" />
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+              Sotib olmasdan darhol topshirishingiz mumkin bo'lgan diagnostic testlar ro'yxati
+            </p>
+          </div>
+          <Badge className="bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 px-3.5 py-1.5 rounded-full font-black text-[10px] uppercase">
+            Free Tier Mocks
+          </Badge>
+        </div>
+
+        {loadingExams ? (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map((n) => (
+              <div key={n} className="h-40 rounded-3xl bg-slate-100 dark:bg-white/5 animate-pulse" />
+            ))}
+          </div>
+        ) : freeExams.length === 0 ? (
+          <Card className="p-8 text-center bg-white/40 dark:bg-slate-900/40 border border-slate-100 dark:border-white/5 rounded-3xl">
+            <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">Hozircha tizimda bepul diagnostic testlar mavjud emas.</p>
+          </Card>
+        ) : (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {freeExams.map((e, i) => {
+              const diff = DIFFICULTY_META[e.difficulty] || DIFFICULTY_META.easy;
+              const DIcon = diff.icon;
+
+              return (
+                <motion.div
+                  key={e.id}
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                  whileHover={{ y: -4 }}
+                  className="flex"
+                >
+                  <Card className="w-full p-6 bg-white/60 dark:bg-slate-900/60 border border-slate-100 dark:border-white/5 backdrop-blur-xl rounded-[2rem] shadow-lg flex flex-col justify-between group">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <Badge className="bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 uppercase text-[9px] font-bold tracking-wider rounded-full">
+                          Diagnostic Free
+                        </Badge>
+                        <Badge variant="outline" className={`rounded-full ${diff.cls} text-[9px] px-2 py-0.5`}>
+                          <DIcon className="h-3 w-3 mr-1" /> {diff.label}
+                        </Badge>
+                      </div>
+
+                      <div>
+                        <h4 className="font-bold text-base text-slate-800 dark:text-white line-clamp-1 group-hover:text-primary transition-colors">
+                          {e.title}
+                        </h4>
+                        {e.description && (
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed">
+                            {e.description}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-3 text-[11px] font-bold text-slate-500">
+                        <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> {e.durationMinutes} daqiqa</span>
+                        <span className="flex items-center gap-1"><Layers className="h-3.5 w-3.5" /> {e.type}</span>
+                      </div>
+                    </div>
+
+                    <div className="pt-5 mt-4 border-t border-slate-100 dark:border-white/5">
+                      <Button
+                        onClick={() => navigate(`/user/mocks/take/${e.id}`)}
+                        className="w-full h-11 bg-slate-100 dark:bg-white/5 hover:bg-primary hover:text-white text-slate-700 dark:text-slate-200 rounded-xl font-black uppercase text-[10px] tracking-wider transition-all"
+                      >
+                        Boshlash <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
+                      </Button>
+                    </div>
+                  </Card>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
+      </div>
 
       {/* Stat tiles */}
       <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -437,7 +601,7 @@ export default function UserDashboard() {
               <div className={cn("h-10 w-10 rounded-full flex items-center justify-center transition-all shadow-inner", isDark ? "bg-white/5 group-hover:bg-white group-hover:text-slate-900" : "bg-slate-50 group-hover:bg-slate-900 group-hover:text-white")}>
                 <ArrowRight size={20} />
               </div>
-            </Card>
+             </Card>
           </Link>
         ))}
       </div>

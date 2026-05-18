@@ -39,6 +39,15 @@ public class SubscriptionPack {
     @Builder.Default
     private List<String> features = new ArrayList<>();
 
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "subscription_pack_exams",
+        joinColumns = @JoinColumn(name = "pack_id"),
+        inverseJoinColumns = @JoinColumn(name = "exam_id")
+    )
+    @Builder.Default
+    private List<Exam> exams = new ArrayList<>();
+
     @Column(name = "is_popular")
     @Builder.Default
     private Boolean isPopular = false;

@@ -36,31 +36,52 @@ export interface NavItem {
 export const getSidebarRoutes = (role: string, t: TFunction, options: { ielts?: boolean; sat?: boolean; milliy?: boolean } = {}): NavItem[] => {
   switch (role) {
     case "admin":
-    case "administrator":
-      const base = role === "admin" ? "/admin" : "/administrator";
       return [
-        { to: `${base}/dashboard`, label: t("nav.dashboard"), icon: LayoutDashboard },
+        { to: "/admin/dashboard", label: t("nav.dashboard"), icon: LayoutDashboard },
         { 
           label: "Foydalanuvchilar", 
           icon: Users,
           children: [
-            { to: `${base}/users`, label: "Jami foydalanuvchilar", icon: Users2 },
-            { to: `${base}/teachers`, label: "O'qituvchilar", icon: GraduationCap },
-            { to: `${base}/students`, label: "Talabalar", icon: Users },
-            { to: `${base}/parents`, label: "Ota-onalar", icon: Heart },
-            { to: `${base}/administrators`, label: "Administratorlar", icon: ShieldCheck },
+            { to: "/admin/users", label: "Jami foydalanuvchilar", icon: Users2 },
+            { to: "/admin/teachers", label: "O'qituvchilar", icon: GraduationCap },
+            { to: "/admin/students", label: "Talabalar", icon: Users },
+            { to: "/admin/parents", label: "Ota-onalar", icon: Heart },
+            { to: "/admin/administrators", label: "Administratorlar", icon: ShieldCheck },
           ]
         },
-        { to: `${base}/subjects`, label: t("nav.subjects"), icon: BookOpen },
-        { to: `${base}/groups`, label: t("nav.groups"), icon: Users2 },
-        { to: `${base}/lessons`, label: t("nav.lessons"), icon: CalendarClock },
-        { to: `${base}/payments`, label: t("nav.payments"), icon: Wallet },
-        { to: `${base}/payment-requests`, label: t("nav.paymentRequests", "To'lov so'rovlari"), icon: Wallet },
-        { to: `${base}/calendar`, label: t("nav.calendar"), icon: Calendar },
-        { to: `${base}/messages`, label: t("nav.messages"), icon: MessagesSquare },
-        { to: `${base}/speaking`, label: t("nav.speaking"), icon: Mic },
-        { to: `${base}/leaderboard`, label: t("nav.leaderboard"), icon: Trophy },
-        { to: `${base}/packs`, label: t("nav.packs"), icon: Package },
+        { to: "/admin/subjects", label: t("nav.subjects"), icon: BookOpen },
+        { to: "/admin/groups", label: t("nav.groups"), icon: Users2 },
+        { to: "/admin/lessons", label: t("nav.lessons"), icon: CalendarClock },
+        { to: "/admin/payments", label: t("nav.payments"), icon: Wallet },
+        { to: "/admin/payment-requests", label: t("nav.paymentRequests", "To'lov so'rovlari"), icon: Wallet },
+        { to: "/admin/calendar", label: t("nav.calendar"), icon: Calendar },
+        { to: "/admin/messages", label: t("nav.messages"), icon: MessagesSquare },
+        { to: "/admin/speaking", label: t("nav.speaking"), icon: Mic },
+        { to: "/admin/leaderboard", label: t("nav.leaderboard"), icon: Trophy },
+        { to: "/admin/packs", label: t("nav.packs"), icon: Package },
+      ];
+    case "administrator":
+      return [
+        { to: "/administrator/dashboard", label: t("nav.dashboard"), icon: LayoutDashboard },
+        { 
+          label: "Foydalanuvchilar", 
+          icon: Users,
+          children: [
+            { to: "/administrator/teachers", label: "O'qituvchilar", icon: GraduationCap },
+            { to: "/administrator/students", label: "Talabalar", icon: Users },
+            { to: "/administrator/parents", label: "Ota-onalar", icon: Heart },
+          ]
+        },
+        { to: "/administrator/subjects", label: t("nav.subjects"), icon: BookOpen },
+        { to: "/administrator/groups", label: t("nav.groups"), icon: Users2 },
+        { to: "/administrator/lessons", label: t("nav.lessons"), icon: CalendarClock },
+        { to: "/administrator/payments", label: t("nav.payments"), icon: Wallet },
+        { to: "/administrator/payment-requests", label: t("nav.paymentRequests", "To'lov so'rovlari"), icon: Wallet },
+        { to: "/administrator/calendar", label: t("nav.calendar"), icon: Calendar },
+        { to: "/administrator/messages", label: t("nav.messages"), icon: MessagesSquare },
+        { to: "/administrator/speaking", label: t("nav.speaking"), icon: Mic },
+        { to: "/administrator/leaderboard", label: t("nav.leaderboard"), icon: Trophy },
+        { to: "/administrator/packs", label: t("nav.packs"), icon: Package },
       ];
     case "teacher":
       return [
@@ -132,6 +153,7 @@ export const getSidebarRoutes = (role: string, t: TFunction, options: { ielts?: 
             { to: "/super-admin/students", label: t("nav.students"), icon: Users },
             { to: "/super-admin/parents", label: t("nav.parents"), icon: Heart },
             { to: "/super-admin/regular-users", label: t("nav.regularUsers"), icon: User },
+            { to: "/super-admin/pack-managers", label: "Pack Managerlar", icon: ShieldCheck },
           ]
         },
         { to: "/super-admin/finance", label: t("nav.finance"), icon: Wallet },

@@ -202,31 +202,26 @@ export default function StudentPayment() {
     if (!effectiveStudentId) return toast.error("Talaba aniqlanmadi");
 
     try {
-      const ext = file.name.split(".").pop() || "jpg";
-      const path = `${profile.organization_id}/${effectiveStudentId}/${Date.now()}.${ext}`;
-      
-      // Upload to Supabase Storage
-      const { error: upErr } = await supabase.storage
-        .from("receipts")
-        .upload(path, file, { upsert: false, cacheControl: "3600" });
-      if (upErr) throw upErr;
+      const formData = new FormData();
+      formData.append("file", file);
+
+      // Upload using Spring Boot backend REST file upload API
+      const res = await api.post("/files/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      const publicUrl = res.data;
 
       // Call Spring Boot backend initiate endpoint
       initiateMutation.mutate({
         amount: amt,
         note: note || "",
-        paymentProofUrl: path,
+        paymentProofUrl: publicUrl,
         adminId: selectedAdmin.id,
         studentId: effectiveStudentId,
       });
 
-      // Optional fallback webhook trigger
-      supabase.functions.invoke("telegram-notify", {
-        body: { payment_path: path, amount: amt },
-      }).catch(() => {});
-
     } catch (e: any) {
-      toast.error(e.message ?? "Chekni yuklashda xatolik");
+      toast.error(e.response?.data?.message || e.message || "Chekni yuklashda xatolik");
     }
   };
 
@@ -619,7 +614,11 @@ export default function StudentPayment() {
                     <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-2 border-t border-border/40">
                       <span>{new Date(tx.createdAt).toLocaleString("uz-UZ")}</span>
                       <a
-                        href={`https://hicoderx.supabase.co/storage/v1/object/public/receipts/${tx.paymentProofUrl}`}
+                        href={
+                          tx.paymentProofUrl && (tx.paymentProofUrl.startsWith("http") || tx.paymentProofUrl.startsWith("/api/v1"))
+                            ? tx.paymentProofUrl
+                            : `https://hicoderx.supabase.co/storage/v1/object/public/receipts/${tx.paymentProofUrl}`
+                        }
                         target="_blank"
                         rel="noreferrer"
                         className="text-primary hover:underline font-medium"

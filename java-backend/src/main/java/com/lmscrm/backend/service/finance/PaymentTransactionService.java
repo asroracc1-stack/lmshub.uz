@@ -105,6 +105,12 @@ public class PaymentTransactionService {
         transaction.setStatus(PaymentTransactionStatus.APPROVED);
         PaymentTransaction saved = paymentTransactionRepository.save(transaction);
 
+        // Auto-upgrade logic: USER to STUDENT role upgrade
+        if (transaction.getStudent().getRole() == AppRole.USER) {
+            transaction.getStudent().setRole(AppRole.STUDENT);
+            userRepository.save(transaction.getStudent());
+        }
+
         try {
             telegramNotificationService.notifyPaymentStatusChange(transaction.getStudent(), transaction.getAmount(), "APPROVED");
         } catch (Exception e) {

@@ -79,11 +79,8 @@ export default function SmartDashboard() {
     queryKey: ["teacher-groups", user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
-      const { data: gt } = await supabase.from("group_teachers").select("group_id").eq("teacher_id", user.id);
-      const gids = (gt ?? []).map((g: any) => g.group_id);
-      if (!gids.length) return [];
-      const { data } = await supabase.from("groups").select("id, name").in("id", gids);
-      return (data as Group[]) ?? [];
+      const res = await api.get('/teacher/groups');
+      return (res.data as Group[]) ?? [];
     },
     enabled: !!user?.id,
   });
@@ -100,8 +97,8 @@ export default function SmartDashboard() {
     queryKey: ["teacher-subjects", profile?.organization_id],
     queryFn: async () => {
       if (!profile?.organization_id) return [];
-      const { data } = await supabase.from("subjects").select("id, name").eq("organization_id", profile.organization_id);
-      return (data as Subject[]) ?? [];
+      const res = await api.get('/admin/subjects');
+      return (res.data as Subject[]) ?? [];
     },
     enabled: !!profile?.organization_id,
   });
@@ -118,11 +115,15 @@ export default function SmartDashboard() {
     queryKey: ["group-students", selectedGroupId],
     queryFn: async () => {
       if (!selectedGroupId) return [];
-      const { data: gm } = await supabase.from("group_members").select("student_id").eq("group_id", selectedGroupId);
-      const sids = Array.from(new Set((gm ?? []).map((x: any) => x.student_id)));
-      if (!sids.length) return [];
-      const { data } = await supabase.from("profiles").select("id, full_name, username").in("id", sids);
-      return (data as Student[]) ?? [];
+      const res = await api.get('/admin/users', {
+        params: { groupId: selectedGroupId, role: 'STUDENT' }
+      });
+      const list = res.data ?? [];
+      return list.map((u: any) => ({
+        id: u.id,
+        full_name: u.fullName || u.username,
+        username: u.username
+      })) as Student[];
     },
     enabled: !!selectedGroupId,
   });
@@ -132,8 +133,13 @@ export default function SmartDashboard() {
     queryKey: ["group-lessons", selectedGroupId],
     queryFn: async () => {
       if (!selectedGroupId) return [];
-      const { data } = await supabase.from("lessons").select("id, title, starts_at").eq("group_id", selectedGroupId).order("starts_at", { ascending: true }).limit(5);
-      return (data as Lesson[]) ?? [];
+      const res = await api.get(`/teacher/lessons/group/${selectedGroupId}`);
+      const list = (res.data as any[]) ?? [];
+      return list.map((l: any) => ({
+        id: l.id,
+        title: l.title,
+        starts_at: l.startsAt
+      })).slice(0, 5) as Lesson[];
     },
     enabled: !!selectedGroupId,
   });
@@ -146,8 +152,17 @@ export default function SmartDashboard() {
     queryKey: ["lessons-attendance", lessonIds],
     queryFn: async () => {
       if (!lessonIds.length) return [];
-      const { data } = await supabase.from("attendance").select("*").in("lesson_id", lessonIds);
-      return (data as AttendanceRecord[]) ?? [];
+      const res = await api.get('/teacher/attendance', {
+        params: { lessonIds: lessonIds.join(',') }
+      });
+      const list = (res.data as any[]) ?? [];
+      return list.map((a: any) => ({
+        id: a.id,
+        lesson_id: a.lessonId,
+        student_id: a.studentId,
+        status: a.status,
+        note: a.note
+      })) as AttendanceRecord[];
     },
     enabled: lessonIds.length > 0,
   });
@@ -156,8 +171,19 @@ export default function SmartDashboard() {
     queryKey: ["students-grades", studentIds, selectedSubjectId],
     queryFn: async () => {
       if (!studentIds.length || !selectedSubjectId) return [];
-      const { data } = await supabase.from("grades").select("*").in("student_id", studentIds).eq("subject_id", selectedSubjectId);
-      return (data as GradeRecord[]) ?? [];
+      const res = await api.get('/teacher/grades', {
+        params: { studentIds: studentIds.join(','), subjectId: selectedSubjectId }
+      });
+      const list = (res.data as any[]) ?? [];
+      return list.map((g: any) => ({
+        id: g.id,
+        student_id: g.studentId,
+        subject_id: g.subjectId,
+        lesson_id: g.lessonId,
+        score: g.score,
+        max_score: g.maxScore,
+        comment: g.comment
+      })) as GradeRecord[];
     },
     enabled: studentIds.length > 0 && !!selectedSubjectId,
   });

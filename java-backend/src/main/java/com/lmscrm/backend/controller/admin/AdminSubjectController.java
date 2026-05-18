@@ -24,7 +24,7 @@ public class AdminSubjectController {
     private final SubjectService subjectService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ADMINISTRATOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ADMINISTRATOR','TEACHER')")
     @Operation(summary = "Get all subjects for organization")
     public ResponseEntity<List<SubjectDto>> getAll(@AuthenticationPrincipal User currentUser) {
         return ResponseEntity.ok(subjectService.getAllSubjectsByOrganization(currentUser.getOrganizationId()));

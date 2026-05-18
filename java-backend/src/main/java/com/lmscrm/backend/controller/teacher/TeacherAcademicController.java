@@ -79,4 +79,20 @@ public class TeacherAcademicController {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(gradeService.addGrade(request, user));
     }
+
+    @GetMapping("/attendance")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
+    @Operation(summary = "Get Attendance Records by Lesson IDs")
+    public ResponseEntity<List<AttendanceDto>> getAttendanceForLessons(@RequestParam List<UUID> lessonIds) {
+        return ResponseEntity.ok(attendanceService.getAttendanceForLessons(lessonIds));
+    }
+
+    @GetMapping("/grades")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
+    @Operation(summary = "Get Grades by Student IDs and Subject ID")
+    public ResponseEntity<List<GradeDto>> getGradesForStudentsAndSubject(
+            @RequestParam List<UUID> studentIds,
+            @RequestParam UUID subjectId) {
+        return ResponseEntity.ok(gradeService.getGradesForStudentsAndSubject(studentIds, subjectId));
+    }
 }

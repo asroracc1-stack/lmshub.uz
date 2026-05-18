@@ -26,7 +26,7 @@ public class PaymentController {
     private final PaymentTransactionService paymentTransactionService;
 
     @GetMapping("/initiate/admins")
-    @PreAuthorize("hasAnyRole('STUDENT','PARENT','SUPER_ADMIN','ADMIN','ADMINISTRATOR')")
+    @PreAuthorize("hasAnyRole('STUDENT','PARENT','SUPER_ADMIN','ADMIN','ADMINISTRATOR','USER')")
     @Operation(summary = "Get list of admins available for receiving payments")
     public ResponseEntity<List<AdminPaymentInfoDto>> getAdmins(
             @RequestParam(required = false) UUID organizationId,
@@ -36,7 +36,7 @@ public class PaymentController {
     }
 
     @PostMapping("/initiate")
-    @PreAuthorize("hasAnyRole('STUDENT','PARENT')")
+    @PreAuthorize("hasAnyRole('STUDENT','PARENT','USER')")
     @Operation(summary = "Initiate a payment request with proof URL")
     public ResponseEntity<PaymentTransactionDto> initiatePayment(
             @RequestBody PaymentInitiateRequest req,
@@ -45,7 +45,7 @@ public class PaymentController {
     }
 
     @GetMapping("/history")
-    @PreAuthorize("hasAnyRole('STUDENT','PARENT')")
+    @PreAuthorize("hasAnyRole('STUDENT','PARENT','USER')")
     @Operation(summary = "Get current user's payment history")
     public ResponseEntity<List<PaymentTransactionDto>> getHistory(
             @AuthenticationPrincipal User currentUser) {

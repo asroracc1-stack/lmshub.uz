@@ -42,6 +42,7 @@ interface Group {
   color: string;
   student_count: number;
   is_active: boolean;
+  teachers?: { teacherName: string }[] | null;
 }
 
 interface Teacher {
@@ -60,7 +61,7 @@ const COLORS = [
 ];
 
 export default function OrgGroups() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const qc = useQueryClient();
   const [groups, setGroups] = useState<Group[]>([]);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
@@ -185,9 +186,15 @@ export default function OrgGroups() {
     (g.direction || "").toLowerCase().includes(search.toLowerCase())
   );
 
-  const getTeacherName = (id: string | null) => {
-    if (!id) return "—";
-    const t = teachers.find(x => x.id === id);
+  const getTeacherName = (g: Group) => {
+    if (g.teachers && g.teachers.length > 0) {
+      return g.teachers.map(t => t.teacherName).join(", ");
+    }
+    if (isTeacher && profile?.full_name) {
+      return profile.full_name;
+    }
+    if (!g.teacher_id) return "—";
+    const t = teachers.find(x => x.id === g.teacher_id);
     return t ? t.full_name : "Yuklanmoqda...";
   };
 
@@ -388,7 +395,7 @@ export default function OrgGroups() {
                           <Target className="h-3.5 w-3.5" /> {g.direction || "Yo'nalishsiz"}
                         </span>
                         <span className="flex items-center gap-1.5">
-                          <GraduationCap className="h-3.5 w-3.5" /> {getTeacherName(g.teacher_id)}
+                          <GraduationCap className="h-3.5 w-3.5" /> {getTeacherName(g)}
                         </span>
                         <span className="flex items-center gap-1.5 font-medium text-emerald-600 dark:text-emerald-400">
                           <Users className="h-3.5 w-3.5" /> {g.student_count || 0} ta o'quvchi

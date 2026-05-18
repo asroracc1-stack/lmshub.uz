@@ -108,6 +108,7 @@ const AllUsers = lazy(() => import("./pages/super-admin/AllUsers"));
 const RegularUsers = lazy(() => import("./pages/super-admin/RegularUsers"));
 const Admins = lazy(() => import("./pages/super-admin/Admins"));
 const Administrators = lazy(() => import("./pages/super-admin/Administrators"));
+const PackManagers = lazy(() => import("./pages/super-admin/PackManagers"));
 const Teachers = lazy(() => import("./pages/super-admin/Teachers"));
 const Students = lazy(() => import("./pages/super-admin/Students"));
 const Profile = lazy(() => import("./pages/super-admin/Profile"));
@@ -208,6 +209,7 @@ const AppRoutes = () => {
           <Route path="students" element={<Students />} />
           <Route path="activity" element={<AuditLogs />} />
           <Route path="administrators" element={<Administrators />} />
+          <Route path="pack-managers" element={<PackManagers />} />
           <Route path="finance" element={<Finance />} />
           <Route path="payment-requests" element={<PaymentRequests />} />
           <Route path="calendar" element={<CalendarPage />} />
@@ -362,6 +364,9 @@ const AppRoutes = () => {
           <Route path="dashboard" element={<UserDashboard />} />
           <Route path="profile" element={<UserAccount />} />
           <Route path="subscriptions" element={<Packs />} />
+          <Route path="mocks" element={<SectionGuard section="ielts" title="IELTS Mocks"><MockTests basePath="/user" /></SectionGuard>} />
+          <Route path="mocks/c/:kind" element={<MockCategory basePath="/user" />} />
+          <Route path="mocks/take/:testId" element={<MockTake />} />
           <Route path="speaking" element={<SpeakingHub basePath="/user" />} />
           <Route path="achievements" element={<UserAchievements />} />
           <Route path="leaderboard" element={<UserLeaderboard />} />

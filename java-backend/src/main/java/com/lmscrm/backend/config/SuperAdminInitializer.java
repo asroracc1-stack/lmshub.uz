@@ -1,8 +1,10 @@
 package com.lmscrm.backend.config;
 
+import com.lmscrm.backend.domain.entity.Organization;
 import com.lmscrm.backend.domain.entity.Profile;
 import com.lmscrm.backend.domain.entity.User;
 import com.lmscrm.backend.domain.enums.AppRole;
+import com.lmscrm.backend.repository.OrganizationRepository;
 import com.lmscrm.backend.repository.ProfileRepository;
 import com.lmscrm.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +25,7 @@ public class SuperAdminInitializer implements CommandLineRunner {
 
     private final UserRepository userRepository;
     private final ProfileRepository profileRepository;
+    private final OrganizationRepository organizationRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -106,6 +109,69 @@ public class SuperAdminInitializer implements CommandLineRunner {
             log.info("📄 'asrorsuper' profili muvaffaqiyatli bog'landi.");
         }
 
+        // 3. Seed Default Organization
+        Organization org = organizationRepository.findBySlug("lmshub-head-office").orElse(null);
+        if (org == null) {
+            org = Organization.builder()
+                    .name("LMSHub Head Office")
+                    .slug("lmshub-head-office")
+                    .isActive(true)
+                    .createdAt(LocalDateTime.now())
+                    .build();
+            org = organizationRepository.save(org);
+            log.info("🏢 Default Organization 'LMSHub Head Office' yaratildi.");
+        }
+        UUID orgId = org.getId();
+
+        // 4. Seed Demo Users for each role (with password '123456')
+        seedDemoUser("admin", "admin@lmshub.uz", AppRole.ADMIN, "Branch Admin", orgId, "8600123456789012", "Asror Coder");
+        seedDemoUser("administrator", "administrator@lmshub.uz", AppRole.ADMINISTRATOR, "Branch Administrator", orgId, "8600987654321098", "Asror Reception");
+        seedDemoUser("teacher", "teacher@lmshub.uz", AppRole.TEACHER, "Branch Teacher", orgId, null, null);
+        seedDemoUser("student", "student@lmshub.uz", AppRole.STUDENT, "Branch Student", orgId, null, null);
+        seedDemoUser("parent", "parent@lmshub.uz", AppRole.PARENT, "Branch Parent", orgId, null, null);
+        seedDemoUser("manager", "manager@lmshub.uz", AppRole.PAYMENT_MANAGER, "Branch Pack Manager", orgId, null, null);
+        seedDemoUser("user", "user@lmshub.uz", AppRole.USER, "Branch Regular User", orgId, null, null);
+
         log.info("🛡️ [SuperAdminInitializer] Barcha ishlar xavfsiz yakunlandi.");
+    }
+
+    private void seedDemoUser(String username, String email, AppRole role, String fullName, UUID orgId, String cardNum, String cardHolder) {
+        Optional<User> userOpt = userRepository.findByUsername(username);
+        User user;
+        if (!userOpt.isPresent()) {
+            log.info("🌱 Demo '{}' foydalanuvchisi topilmadi. Yangidan yaratilmoqda...", username);
+            user = User.builder()
+                    .username(username)
+                    .email(email)
+                    .password(passwordEncoder.encode("123456"))
+                    .fullName(fullName)
+                    .role(role)
+                    .organizationId(orgId)
+                    .cardNumber(cardNum)
+                    .cardHolder(cardHolder)
+                    .active(true)
+                    .isGoogleUser(false)
+                    .coins(100L)
+                    .createdAt(LocalDateTime.now())
+                    .build();
+            userRepository.save(user);
+
+            Profile profile = Profile.builder()
+                    .user(user)
+                    .firstName(fullName.split(" ")[0])
+                    .lastName(fullName.split(" ").length > 1 ? fullName.split(" ")[1] : "")
+                    .isActive(true)
+                    .build();
+            profileRepository.save(profile);
+            log.info("✅ Demo '{}' va uning profili muvaffaqiyatli yaratildi.", username);
+        } else {
+            user = userOpt.get();
+            user.setPassword(passwordEncoder.encode("123456"));
+            user.setOrganizationId(orgId);
+            if (cardNum != null) user.setCardNumber(cardNum);
+            if (cardHolder != null) user.setCardHolder(cardHolder);
+            userRepository.save(user);
+            log.info("👤 Demo '{}' mavjud, ma'lumotlari yangilandi.", username);
+        }
     }
 }
