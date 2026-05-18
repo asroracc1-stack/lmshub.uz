@@ -23,12 +23,16 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import {
   Heart, Plus, Search, Trash2, Users,
   Phone, Mail, CheckCircle2, XCircle, UserPlus,
   Pencil, Ban, Unlock, Loader2, KeyRound, ChevronDown, Check,
-  Link as LinkIcon, Shield, ShieldAlert
+  Link as LinkIcon, Shield, ShieldAlert, Gift, Sparkles
 } from "lucide-react";
 import { motion } from "framer-motion";
 import TigerPlayer from "@/components/TigerPlayer";
@@ -104,6 +108,11 @@ export default function ParentsPage() {
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [groupSearchOpen, setGroupSearchOpen] = useState(false);
   const [studentSearchOpen, setStudentSearchOpen] = useState(false);
+  const [grantCoinsOpen, setGrantCoinsOpen] = useState(false);
+  const [grantCoinsTarget, setGrantCoinsTarget] = useState<Parent | null>(null);
+  const [grantAmount, setGrantAmount] = useState(500);
+  const [grantReason, setGrantReason] = useState("Ota-ona faolligi");
+  const [grantComment, setGrantComment] = useState("");
 
   const resetPasswordMutation = useMutation({
     mutationFn: ({ id, password }: any) => api.post(`/admin/users/${id}/password`, { password }),
@@ -219,6 +228,34 @@ export default function ParentsPage() {
       qc.invalidateQueries({ queryKey: ["admin-dashboard-stats"] });
     },
     onError: () => toast.error("O'chirib bo'lmadi"),
+  });
+
+  const grantCoinsMutation = useMutation({
+    mutationFn: async (payload: { studentId: string, amount: number, reason: string, comment?: string }) => {
+      return api.post("/admin/coins/grant", payload);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["parents"] });
+      qc.invalidateQueries({ queryKey: ["super-admin-dashboard-stats"] });
+      qc.invalidateQueries({ queryKey: ["admin-dashboard-stats"] });
+      
+      // Celebration UX: Confetti
+      import("canvas-confetti").then(({ default: confetti }) => {
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ['#FFD700', '#FFA500', '#FF8C00']
+        });
+      });
+
+      toast.success("Coinlar muvaffaqiyatli yuborildi! 🪙✨");
+      setGrantCoinsOpen(false);
+      setGrantComment("");
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Xatolik yuz berdi");
+    },
   });
 
   const openEdit = (p: Parent) => {
@@ -393,6 +430,17 @@ export default function ParentsPage() {
                         disabled={toggleActiveMutation.isPending}
                       >
                         {toggleActiveMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : (p.active ? <Ban className="h-4 w-4" /> : <Unlock className="h-4 w-4" />)}
+                      </Button>
+                      <Button
+                        variant="ghost" size="icon"
+                        className="h-8 w-8 bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 hover:text-amber-700"
+                        onClick={() => {
+                          setGrantCoinsTarget(p);
+                          setGrantCoinsOpen(true);
+                        }}
+                        title="Coin hadya qilish"
+                      >
+                        <Gift className="h-4 w-4" />
                       </Button>
                       <Button size="icon" variant="ghost" className="h-8 w-8 text-blue-600" onClick={() => openLink(p)} title="Farzand biriktirish">
                         <LinkIcon className="h-4 w-4" />
@@ -655,6 +703,89 @@ export default function ParentsPage() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Grant Coins Dialog */}
+      <Dialog open={grantCoinsOpen} onOpenChange={setGrantCoinsOpen}>
+        <DialogContent className="max-w-md" aria-describedby="grant-coins-parent-desc">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-amber-500" />
+              <span>Coin hadya qilish</span>
+            </DialogTitle>
+            <DialogDescription id="grant-coins-parent-desc">
+              Ota-onaga faolligi uchun coin yuborish.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="flex items-center gap-4 p-4 rounded-xl bg-amber-500/5 border border-amber-500/10">
+              <Avatar className="h-12 w-12 border-2 border-amber-500/20">
+                <AvatarFallback className="bg-amber-500 text-white font-bold">
+                  {(grantCoinsTarget?.fullName || grantCoinsTarget?.full_name || grantCoinsTarget?.username || "?").slice(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="font-bold text-amber-900">{grantCoinsTarget?.fullName || grantCoinsTarget?.full_name || grantCoinsTarget?.username}</p>
+                <p className="text-xs text-amber-700/70">@{grantCoinsTarget?.username}</p>
+              </div>
+            </div>
+
+            <div className="grid gap-2">
+              <Label>Coin miqdori</Label>
+              <Input 
+                type="number" 
+                value={grantAmount} 
+                onChange={(e) => setGrantAmount(Number(e.target.value))} 
+                className="text-lg font-bold text-amber-600"
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label>Sabab</Label>
+              <Select value={grantReason} onValueChange={setReason => setGrantReason(setReason)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="IELTS/SAT yuqori ball">IELTS/SAT yuqori ball</SelectItem>
+                  <SelectItem value="Milliy sertifikat">Milliy sertifikat</SelectItem>
+                  <SelectItem value="Olimpiada g'olibi">Olimpiada g'olibi</SelectItem>
+                  <SelectItem value="Darsdagi faollik">Darsdagi faollik</SelectItem>
+                  <SelectItem value="5+ a'lo baho">5+ a'lo baho</SelectItem>
+                  <SelectItem value="Ota-ona faolligi">Ota-ona faolligi</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-2">
+              <Label>Izoh (Comment)</Label>
+              <Input 
+                value={grantComment} 
+                onChange={(e) => setGrantComment(e.target.value)} 
+                placeholder="Qisqacha izoh yozing..." 
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setGrantCoinsOpen(false)}>Bekor</Button>
+            <Button 
+              variant="hero" 
+              className="bg-amber-500 hover:bg-amber-600 text-white"
+              onClick={() => {
+                if (grantCoinsTarget) {
+                  grantCoinsMutation.mutate({
+                    studentId: grantCoinsTarget.id,
+                    amount: grantAmount,
+                    reason: grantReason,
+                    comment: grantComment
+                  });
+                }
+              }}
+              disabled={grantCoinsMutation.isPending}
+            >
+              {grantCoinsMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+              Coinlarni yuborish 🪙
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

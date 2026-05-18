@@ -31,4 +31,11 @@ public class CreateUserRequest {
     private java.util.UUID groupId;
     @com.fasterxml.jackson.annotation.JsonProperty("group_id")
     private java.util.UUID group_id;
+    @com.fasterxml.jackson.annotation.JsonProperty("card_number")
+    private String card_number;
+    private String cardNumber;
+    @com.fasterxml.jackson.annotation.JsonProperty("card_holder")
+    private String card_holder;
+    private String cardHolder;
 }
+

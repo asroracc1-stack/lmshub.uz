@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo, useRef } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Check, Sparkles, Crown, Gift, Loader2, CreditCard, Copy, Send, X,
@@ -64,12 +65,11 @@ const NARRATIVES: Record<string, string> = {
 
 export default function Packs() {
   const { user, role } = useAuth();
+  const queryClient = useQueryClient();
   const isSuper = role === "super_admin";
-  const isManager = role === "PACK_MANAGER" || isSuper;
+  const isManager = role === "PACK_MANAGER" || role === "payment_manager" || isSuper;
 
-  const [packs, setPacks] = useState<Pack[]>([]);
   const [currentPackCode, setCurrentPackCode] = useState<string>("FREE");
-  const [loading, setLoading] = useState(true);
   const [errorStatus, setErrorStatus] = useState<number | null>(null);
   const [compareOpen, setCompareOpen] = useState(false);
 
@@ -77,62 +77,51 @@ export default function Packs() {
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<Partial<Pack> | null>(null);
   const [editFeatures, setEditFeatures] = useState<FeatureItem[]>([]);
-  const [saving, setSaving] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showError, setShowError] = useState<string | null>(null);
-  const [sendingRequest, setSendingRequest] = useState(false);
   const [requestSent, setRequestSent] = useState<Pack | null>(null);
 
-  const loadPacks = async () => {
-    setLoading(true);
-    setErrorStatus(null);
-    try {
+  const { data: packsData = [], isLoading: loadingPacks, refetch: loadPacks } = useQuery({
+    queryKey: ["packs-list"],
+    queryFn: async () => {
       const { data } = await api.get("/admin/packs");
-      const sorted = (data || []).sort((a: Pack, b: Pack) => a.price - b.price);
-      setPacks(sorted);
-    } catch (e: any) {
-      setErrorStatus(e.response?.status || 500);
-      toast.error("Ma'lumotlarni yuklashda xato!");
-    } finally {
-      setLoading(false);
-    }
-  };
+      return (data || []).sort((a: Pack, b: Pack) => a.price - b.price);
+    },
+    placeholderData: (previousData) => previousData,
+  });
 
-  useEffect(() => {
-    (async () => {
-      await loadPacks();
-    })();
-  }, [user]);
+  const packs = packsData;
+  const loading = loadingPacks;
+
+  const chooseMutation = useMutation({
+    mutationFn: async (p: Pack) => {
+      if (p.type === "FREE") {
+        const { error } = await (supabase as any).rpc("subscribe_to_pack", { _pack_id: p.id });
+        if (error) throw error;
+        return { p, type: "FREE" };
+      } else {
+        await api.post("/admin/subscription-requests/submit", { pack_id: p.id });
+        return { p, type: "PAID" };
+      }
+    },
+    onSuccess: (res) => {
+      if (res.type === "FREE") {
+        queryClient.invalidateQueries({ queryKey: ["packs-list"] });
+        toast.success("Free paket faollashtirildi");
+      } else {
+        setRequestSent(res.p);
+      }
+    },
+    onError: (e: any) => {
+      toast.error(e.message || "Xatolik yuz berdi");
+    },
+  });
 
   const onChoose = async (p: Pack) => {
     if (!user) { toast.error("Avval tizimga kiring"); return; }
     if (p.type === currentPackCode) return;
-    
-    if (p.type === "FREE") {
-      try {
-        setSendingRequest(true);
-        const { error } = await (supabase as any).rpc("subscribe_to_pack", { _pack_id: p.id });
-        if (error) throw error;
-        toast.success("Free paket faollashtirildi");
-        await loadPacks();
-      } catch (e: any) { 
-        toast.error(e.message || "Xato"); 
-      } finally {
-        setSendingRequest(false);
-      }
-      return;
-    }
-
-    setSendingRequest(true);
-    try {
-      await api.post("/admin/subscription-requests/submit", { pack_id: p.id });
-      setRequestSent(p);
-    } catch (e: any) {
-      toast.error("Xatolik yuz berdi");
-    } finally {
-      setSendingRequest(false);
-    }
+    chooseMutation.mutate(p);
   };
 
   const openNew = () => {
@@ -146,6 +135,24 @@ export default function Packs() {
     setEditFeatures((p.features || [""]).map(f => ({ id: Math.random().toString(36).substr(2, 9), text: f })));
     setEditorOpen(true);
   };
+
+  const saveMutation = useMutation({
+    mutationFn: async (payload: any) => {
+      if (payload.id) return api.put(`/admin/packs/${payload.id}`, payload);
+      return api.post("/admin/packs", payload);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["packs-list"] });
+      setEditorOpen(false);
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
+      setEditing(null);
+      setEditFeatures([]);
+    },
+    onError: (e: any) => {
+      toast.error(e.response?.data?.message || "Saqlanmadi");
+    },
+  });
 
   const savePack = async () => {
     if (!editing || !editing.type) return;
@@ -161,46 +168,39 @@ export default function Packs() {
       return;
     }
 
-    setSaving(true);
-    try {
-      const payload = {
-        ...editing,
-        features: cleanFeatures,
-        price: editing.type === "FREE" ? 0 : Number(editing.price),
-        duration: Number(editing.duration),
-        totalPurchases: Number(editing.totalPurchases || 0),
-        code: editing.type,
-      };
-      
-      let response;
-      if (editing.id) response = await api.put(`/admin/packs/${editing.id}`, payload);
-      else response = await api.post("/admin/packs", payload);
-      
-      setEditorOpen(false);
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 3000);
-      setEditing(null);
-      setEditFeatures([]);
-      await loadPacks();
-    } catch (e: any) {
-      toast.error(e.response?.data?.message || "Saqlanmadi");
-    } finally {
-      setSaving(false);
-    }
+    const payload = {
+      ...editing,
+      features: cleanFeatures,
+      price: editing.type === "FREE" ? 0 : Number(editing.price),
+      duration: Number(editing.duration),
+      totalPurchases: Number(editing.totalPurchases || 0),
+      code: editing.type,
+    };
+
+    saveMutation.mutate(payload);
   };
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return api.delete(`/admin/packs/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["packs-list"] });
+      toast.success("O'chirildi");
+      setDeleteId(null);
+    },
+    onError: () => {
+      toast.error("O'chirishda xatolik");
+    },
+  });
 
   const deletePack = async () => {
     if (!deleteId) return;
-    try {
-      await api.delete(`/admin/packs/${deleteId}`);
-      toast.success("O'chirildi");
-      await loadPacks();
-    } catch (e: any) {
-      toast.error("O'chirishda xatolik");
-    } finally {
-      setDeleteId(null);
-    }
+    deleteMutation.mutate(deleteId);
   };
+
+  const saving = saveMutation.isPending;
+  const sendingRequest = chooseMutation.isPending;
 
   const addFeature = () => {
     if (editFeatures.length >= 10) {

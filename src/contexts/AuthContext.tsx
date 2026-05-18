@@ -74,6 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       full_name: `${firstName} ${lastName}`.trim(),
       email: userData.email,
       avatar_url: userData.avatarUrl || userData.avatar_url,
+      organization_id: userData.organizationId || userData.organization_id || null,
     } as any);
   };
 
@@ -99,6 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
            ...res.data,
            full_name: res.data.fullName || res.data.full_name,
            avatar_url: res.data.avatarUrl || res.data.avatar_url,
+           organization_id: res.data.organizationId || res.data.organization_id || null,
          };
          setProfile(mappedProfile);
          
@@ -107,6 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
          if (savedUser) {
            const userData = JSON.parse(savedUser);
            userData.avatarUrl = mappedProfile.avatar_url;
+           userData.organizationId = mappedProfile.organization_id;
            localStorage.setItem('user', JSON.stringify(userData));
          }
        } catch (e) {
@@ -136,6 +139,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             full_name: `${firstName} ${lastName}`.trim(),
             email: userData.email,
             avatar_url: userData.avatarUrl || userData.avatar_url,
+            organization_id: userData.organizationId || userData.organization_id || null,
           } as any);
           
           // Trigger a background refresh to get the latest from DB

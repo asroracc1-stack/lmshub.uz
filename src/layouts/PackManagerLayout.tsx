@@ -47,14 +47,10 @@ export default function PackManagerLayout() {
 
   const nav = [
     { to: "/pack-manager/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { to: "/pack-manager/payments", label: "To'lovlar", icon: Wallet },
-    { to: "/pack-manager/pending", label: "Kutilayotgan", icon: Clock },
+    { to: "/pack-manager/payments", label: "To'lovlar (Sales)", icon: Wallet },
     { to: "/pack-manager/subscriptions", label: "Obunalar", icon: Crown },
-    { to: "/pack-manager/packs", label: "Packlar", icon: Package },
-    { to: "/pack-manager/mocks", label: "Mock testlar", icon: FileText },
-    { to: "/pack-manager/chat", label: "Xabarlar", icon: MessagesSquare },
-    { to: "/pack-manager/grant-coins", label: "Coin sovg'a", icon: Gift },
-    { to: "/pack-manager/history", label: "Tarix", icon: History },
+    { to: "/pack-manager/packs", label: "Tariflar (Packs)", icon: Package },
+    { to: "/pack-manager/mocks", label: "Imtihon paketlari", icon: FileText },
   ];
 
   const handleSignOut = async () => {

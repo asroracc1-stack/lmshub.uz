@@ -100,6 +100,13 @@ public class AdminUserController {
             orgId = currentUser.getOrganizationId();
         }
 
+        String cardNumber = (req.getCard_number() != null && !req.getCard_number().isBlank())
+                ? req.getCard_number()
+                : req.getCardNumber();
+        String cardHolder = (req.getCard_holder() != null && !req.getCard_holder().isBlank())
+                ? req.getCard_holder()
+                : req.getCardHolder();
+
         // Build the User entity from the DTO
         User user = User.builder()
                 .username(req.getUsername() != null ? req.getUsername().toLowerCase().trim() : null)
@@ -114,6 +121,8 @@ public class AdminUserController {
                 .organizationId(orgId)
                 .groupId(req.getGroup_id() != null ? req.getGroup_id() : req.getGroupId())
                 .parentTelegramUsername(req.getParent_telegram_username())
+                .cardNumber(cardNumber)
+                .cardHolder(cardHolder)
                 .active(true)
                 .build();
 
@@ -154,6 +163,13 @@ public class AdminUserController {
                     : (req.getOrganizationId() != null ? req.getOrganizationId() : null);
         }
 
+        String cardNumber = (req.getCard_number() != null && !req.getCard_number().isBlank())
+                ? req.getCard_number()
+                : req.getCardNumber();
+        String cardHolder = (req.getCard_holder() != null && !req.getCard_holder().isBlank())
+                ? req.getCard_holder()
+                : req.getCardHolder();
+
         User details = User.builder()
                 .username(req.getUsername())
                 .fullName(fullName)
@@ -164,6 +180,8 @@ public class AdminUserController {
                 .groupId(req.getGroup_id() != null ? req.getGroup_id() : req.getGroupId())
                 .role(appRole)
                 .organizationId(orgId)
+                .cardNumber(cardNumber)
+                .cardHolder(cardHolder)
                 .active(true)
                 .build();
 

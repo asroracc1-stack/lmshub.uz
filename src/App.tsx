@@ -122,6 +122,7 @@ const TelegramLinks = lazy(() => import("./pages/super-admin/TelegramLinks"));
 const LMSNews = lazy(() => import("./pages/super-admin/LMSNews"));
 const SuperAdminParents = lazy(() => import("./pages/super-admin/Parents"));
 const AdminUsers = lazy(() => import("./pages/admin/Users"));
+const PaymentRequests = lazy(() => import("./pages/admin/PaymentRequests"));
 
 const AdminDashboard = lazy(() => import("./pages/admin/Dashboard"));
 const AdminAdministrators = lazy(() => import("./pages/admin/Administrators"));
@@ -205,6 +206,7 @@ const AppRoutes = () => {
           <Route path="activity" element={<AuditLogs />} />
           <Route path="administrators" element={<Administrators />} />
           <Route path="finance" element={<Finance />} />
+          <Route path="payment-requests" element={<PaymentRequests />} />
           <Route path="calendar" element={<CalendarPage />} />
           <Route path="messages" element={<Messages />} />
           <Route path="leaderboard" element={<Leaderboard defaultRole="student" />} />
@@ -250,6 +252,7 @@ const AppRoutes = () => {
           <Route path="calendar" element={<OrgEvents canManage />} />
           <Route path="messages" element={<OrgMessages />} />
           <Route path="payments" element={<OrgPayments />} />
+          <Route path="payment-requests" element={<PaymentRequests />} />
           <Route path="profile" element={<SharedProfile />} />
           <Route path="rewards" element={<OrgRewards />} />
           <Route path="leaderboard" element={<Leaderboard defaultRole="student" />} />

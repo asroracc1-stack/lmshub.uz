@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -8,19 +8,21 @@ import { format } from "date-fns";
 import { Loader2, Crown } from "lucide-react";
 
 export default function PMSubscriptions() {
-  const [items, setItems] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    (async () => {
+  const { data: items = [], isLoading: loading } = useQuery({
+    queryKey: ["pm-subscriptions-list"],
+    queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from("user_subscriptions")
         .select("*, subscription_packs(name,code,price_uzs), profiles!user_subscriptions_user_id_profiles_fkey(full_name,username,phone)")
         .order("created_at", { ascending: false }).limit(500);
-      if (error) toast.error(error.message); else setItems(data || []);
-      setLoading(false);
-    })();
-  }, []);
+      if (error) {
+        toast.error(error.message);
+        throw error;
+      }
+      return data || [];
+    },
+    placeholderData: (previousData) => previousData,
+  });
 
   const now = Date.now();
 
@@ -30,7 +32,7 @@ export default function PMSubscriptions() {
         <Crown className="h-6 w-6 text-emerald-500" /> Obunalar
       </h1>
       <Card className="overflow-hidden">
-        {loading ? <div className="p-12 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto" /></div> :
+        {loading ? <div className="p-12 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" /></div> :
          items.length === 0 ? <p className="p-12 text-center text-muted-foreground text-sm">Obunalar yo'q</p> : (
           <div className="overflow-x-auto">
             <Table>

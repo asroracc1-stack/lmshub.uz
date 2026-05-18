@@ -118,6 +118,23 @@ const createSchema = z.object({
   telegram_username: z.string().optional().or(z.literal("")),
   card_number: z.string().optional().or(z.literal("")),
   card_holder: z.string().optional().or(z.literal("")),
+}).superRefine((val, ctx) => {
+  if (val.role === "admin" || val.role === "administrator") {
+    if (!val.card_number || val.card_number.trim() === "") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Admin/Administrator uchun Karta raqami majburiy!",
+        path: ["card_number"],
+      });
+    }
+    if (!val.card_holder || val.card_holder.trim() === "") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Admin/Administrator uchun Karta egasi ismi majburiy!",
+        path: ["card_holder"],
+      });
+    }
+  }
 });
 
 interface Props {
@@ -127,7 +144,7 @@ interface Props {
 }
 
 export default function UsersManager({ filterRole, title, description }: Props) {
-  const { user: me } = useAuth();
+  const { user: me, profile, role: myRole } = useAuth();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 300);
@@ -153,7 +170,8 @@ export default function UsersManager({ filterRole, title, description }: Props) 
   const [grantCoinsOpen, setGrantCoinsOpen] = useState(false);
   const [grantCoinsTarget, setGrantCoinsTarget] = useState<UserRow | null>(null);
   const [grantAmount, setGrantAmount] = useState(500);
-  const [grantReason, setGrantReason] = useState("Loyalty Reward");
+  const [grantReason, setGrantReason] = useState("Darsdagi faollik");
+  const [grantComment, setGrantComment] = useState("");
   const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
   const SPEAKING_FEATURE_AVAILABLE = false;
 
@@ -164,7 +182,7 @@ export default function UsersManager({ filterRole, title, description }: Props) 
     full_name: "",
     role: (filterRole ?? "student") as AppRole,
     phone_number: "",
-    organization_id: "",
+    organization_id: profile?.organization_id || "",
     group_id: "",
     subject: "",
     telegram_chat_id: "",
@@ -173,8 +191,15 @@ export default function UsersManager({ filterRole, title, description }: Props) 
     card_holder: "",
   });
 
+  // Ensure form gets organization_id when profile loads
+  useEffect(() => {
+    if (profile?.organization_id && !form.organization_id) {
+      setForm((f) => ({ ...f, organization_id: profile.organization_id || "" }));
+    }
+  }, [profile]);
+
   const { data, isLoading } = useQuery({
-    queryKey: ["users", filterRole, page, debouncedSearch],
+    queryKey: ["users", filterRole, page, debouncedSearch, profile?.organization_id],
     queryFn: async () => {
       // Backend controller: AdminUserController (@RequestMapping("/api/v1/admin/users"))
       // Endpointlar: /all (hamma uchun) yoki /by-role/{role}
@@ -187,7 +212,8 @@ export default function UsersManager({ filterRole, title, description }: Props) 
           page, 
           size: pageSize, 
           query: debouncedSearch || "", // Backend 'query' parametrini kutyapti for /all
-          search: debouncedSearch || ""  // Backend 'search' parametrini kutyapti for /by-role
+          search: debouncedSearch || "",  // Backend 'search' parametrini kutyapti for /by-role
+          organizationId: profile?.organization_id || undefined,
         } 
       });
       return data;
@@ -203,12 +229,12 @@ export default function UsersManager({ filterRole, title, description }: Props) 
   });
 
   const { data: groups = [] } = useQuery({
-    queryKey: ["groups-list", form.organization_id],
+    queryKey: ["groups-list", form.organization_id || profile?.organization_id],
     queryFn: async () => {
       const { data } = await api.get<any>("/admin/groups", { 
         params: { 
           size: 1000, 
-          organizationId: form.organization_id || null 
+          organizationId: form.organization_id || profile?.organization_id || null 
         } 
       });
       return data.content || [];
@@ -216,10 +242,10 @@ export default function UsersManager({ filterRole, title, description }: Props) 
   });
 
   const { data: allGroups = [] } = useQuery({
-    queryKey: ["all-groups-list-global"],
+    queryKey: ["all-groups-list-global", profile?.organization_id],
     queryFn: async () => {
       const { data } = await api.get<any>("/admin/groups", { 
-        params: { size: 1000 } 
+        params: { size: 1000, organizationId: profile?.organization_id || undefined } 
       });
       return data.content || [];
     },
@@ -261,7 +287,7 @@ export default function UsersManager({ filterRole, title, description }: Props) 
       full_name: "",
       role: (filterRole ?? "student") as AppRole,
       phone_number: "",
-      organization_id: "",
+      organization_id: profile?.organization_id || "",
       group_id: "",
       subject: "",
       telegram_chat_id: "",
@@ -281,7 +307,7 @@ export default function UsersManager({ filterRole, title, description }: Props) 
       full_name: u.full_name ?? "",
       role: (u.role as string).toLowerCase() as AppRole,
       phone_number: u.phone_number ?? "",
-      organization_id: u.organization_id ?? "",
+      organization_id: u.organization_id || profile?.organization_id || "",
       group_id: u.group_id ?? "",
       subject: u.subject ?? "",
       telegram_chat_id: u.telegram_chat_id ?? "",
@@ -293,19 +319,24 @@ export default function UsersManager({ filterRole, title, description }: Props) 
   };
 
   const submit = async () => {
-    if (form.role !== "super_admin" && form.role !== "administrator" && form.role !== "user" && !form.organization_id) {
+    const targetOrgId = form.organization_id || profile?.organization_id || "";
+    if (form.role !== "super_admin" && form.role !== "administrator" && form.role !== "user" && !targetOrgId) {
       toast.error("Iltimos, tashkilotni tanlang");
       return;
     }
 
     if (editing) {
+      if ((form.role === "admin" || form.role === "administrator") && (!form.card_number || !form.card_holder)) {
+        toast.error("Admin/Administrator uchun Karta raqami va Karta egasi ismi majburiy!");
+        return;
+      }
       mutation.mutate({
         email: form.email,
         username: form.username,
         full_name: form.full_name,
         phone_number: form.phone_number || null,
-        organizationId: form.organization_id && form.organization_id !== "" ? form.organization_id : null,
-        organization_id: form.organization_id && form.organization_id !== "" ? form.organization_id : null,
+        organizationId: targetOrgId !== "" ? targetOrgId : null,
+        organization_id: targetOrgId !== "" ? targetOrgId : null,
         subject: form.subject || null,
         telegram_chat_id: form.telegram_chat_id || null,
         telegram_username: form.telegram_username || null,
@@ -327,8 +358,8 @@ export default function UsersManager({ filterRole, title, description }: Props) 
         username: parsed.data.username,
         role: parsed.data.role.toUpperCase(),
         phone_number: parsed.data.phone_number || null,
-        organizationId: parsed.data.organization_id && parsed.data.organization_id !== "" ? parsed.data.organization_id : null,
-        organization_id: parsed.data.organization_id && parsed.data.organization_id !== "" ? parsed.data.organization_id : null,
+        organizationId: targetOrgId !== "" ? targetOrgId : null,
+        organization_id: targetOrgId !== "" ? targetOrgId : null,
         subject: parsed.data.subject || null,
         telegram_chat_id: parsed.data.telegram_chat_id || null,
         telegram_username: parsed.data.telegram_username || null,
@@ -341,6 +372,7 @@ export default function UsersManager({ filterRole, title, description }: Props) 
       mutation.mutate(payload);
     }
   };
+
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -375,15 +407,27 @@ export default function UsersManager({ filterRole, title, description }: Props) 
   };
 
   const grantCoinsMutation = useMutation({
-    mutationFn: async (payload: { userId: string, amount: number, reason: string }) => {
-      return api.post("/super-admin/grant-coins", payload);
+    mutationFn: async (payload: { studentId: string, amount: number, reason: string, comment?: string }) => {
+      return api.post("/admin/coins/grant", payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["global-leaderboard"] });
       queryClient.invalidateQueries({ queryKey: ["user-stats"] });
+      
+      // Celebration UX: Confetti
+      import("canvas-confetti").then(({ default: confetti }) => {
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ['#FFD700', '#FFA500', '#FF8C00']
+        });
+      });
+
       toast.success("Coinlar muvaffaqiyatli yuborildi! 🪙✨");
       setGrantCoinsOpen(false);
+      setGrantComment("");
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || "Xatolik yuz berdi");
@@ -521,6 +565,7 @@ export default function UsersManager({ filterRole, title, description }: Props) 
                   <Select
                     value={form.organization_id || "none"}
                     onValueChange={(v) => setForm((f) => ({ ...f, organization_id: v === "none" ? "" : v }))}
+                    disabled={myRole !== "super_admin"}
                   >
                     <SelectTrigger><SelectValue placeholder="Tanlang" /></SelectTrigger>
                     <SelectContent>
@@ -903,15 +948,26 @@ export default function UsersManager({ filterRole, title, description }: Props) 
 
             <div className="grid gap-2">
               <Label>Sabab</Label>
-              <Select value={grantReason} onValueChange={setGrantReason}>
+              <Select value={grantReason} onValueChange={setReason => setGrantReason(setReason)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Loyalty Reward">Sodiq foydalanuvchi (Loyalty)</SelectItem>
-                  <SelectItem value="Top Result">Eng yaxshi natija (Top Result)</SelectItem>
-                  <SelectItem value="Activity Bonus">Faollik uchun bonus</SelectItem>
-                  <SelectItem value="Beta Tester">Beta testdagi yordam uchun</SelectItem>
+                  <SelectItem value="IELTS/SAT yuqori ball">IELTS/SAT yuqori ball</SelectItem>
+                  <SelectItem value="Milliy sertifikat">Milliy sertifikat</SelectItem>
+                  <SelectItem value="Olimpiada g'olibi">Olimpiada g'olibi</SelectItem>
+                  <SelectItem value="Darsdagi faollik">Darsdagi faollik</SelectItem>
+                  <SelectItem value="5+ a'lo baho">5+ a'lo baho</SelectItem>
+                  <SelectItem value="Ota-ona faolligi">Ota-ona faolligi</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="grid gap-2">
+              <Label>Izoh (Comment)</Label>
+              <Input 
+                value={grantComment} 
+                onChange={(e) => setGrantComment(e.target.value)} 
+                placeholder="Qisqacha izoh yozing..." 
+              />
             </div>
           </div>
           <DialogFooter>
@@ -922,9 +978,10 @@ export default function UsersManager({ filterRole, title, description }: Props) 
               onClick={() => {
                 if (grantCoinsTarget) {
                   grantCoinsMutation.mutate({
-                    userId: grantCoinsTarget.id,
+                    studentId: grantCoinsTarget.id,
                     amount: grantAmount,
-                    reason: grantReason
+                    reason: grantReason,
+                    comment: grantComment
                   });
                 }
               }}

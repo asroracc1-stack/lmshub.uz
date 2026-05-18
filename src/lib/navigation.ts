@@ -55,6 +55,7 @@ export const getSidebarRoutes = (role: string, t: TFunction, options: { ielts?: 
         { to: `${base}/groups`, label: t("nav.groups"), icon: Users2 },
         { to: `${base}/lessons`, label: t("nav.lessons"), icon: CalendarClock },
         { to: `${base}/payments`, label: t("nav.payments"), icon: Wallet },
+        { to: `${base}/payment-requests`, label: t("nav.paymentRequests", "To'lov so'rovlari"), icon: Wallet },
         { to: `${base}/calendar`, label: t("nav.calendar"), icon: Calendar },
         { to: `${base}/messages`, label: t("nav.messages"), icon: MessagesSquare },
         { to: `${base}/speaking`, label: t("nav.speaking"), icon: Mic },
@@ -131,6 +132,7 @@ export const getSidebarRoutes = (role: string, t: TFunction, options: { ielts?: 
           ]
         },
         { to: "/super-admin/finance", label: t("nav.finance"), icon: Wallet },
+        { to: "/super-admin/payment-requests", label: t("nav.paymentRequests", "To'lov so'rovlari"), icon: Wallet },
         { to: "/super-admin/calendar", label: t("nav.calendar"), icon: Calendar },
         { to: "/super-admin/messages", label: t("nav.messages"), icon: MessagesSquare },
         { to: "/super-admin/leaderboard", label: t("nav.leaderboard"), icon: Trophy },
@@ -159,11 +161,10 @@ export const getSidebarRoutes = (role: string, t: TFunction, options: { ielts?: 
     case "payment_manager":
       return [
         { to: "/pack-manager/dashboard", label: "Dashboard", icon: LayoutDashboard },
-        { to: "/pack-manager/payments", label: "To'lovlar", icon: Wallet },
+        { to: "/pack-manager/payments", label: "To'lovlar (Sales)", icon: Wallet },
         { to: "/pack-manager/subscriptions", label: "Obunalar", icon: Crown },
-        { to: "/pack-manager/packs", label: "Packlar", icon: Package },
-        { to: "/pack-manager/mocks", label: "Mock testlar", icon: FileText },
-        { to: "/pack-manager/chat", label: "Xabarlar", icon: MessagesSquare },
+        { to: "/pack-manager/packs", label: "Tariflar (Packs)", icon: Package },
+        { to: "/pack-manager/mocks", label: "Imtihon paketlari", icon: FileText },
       ];
     default:
       return [];

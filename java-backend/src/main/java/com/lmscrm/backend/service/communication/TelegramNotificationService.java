@@ -81,4 +81,36 @@ public class TelegramNotificationService {
             }
         }
     }
+
+    public void notifyPaymentRequest(User admin, User student, Double amount, String proofUrl) {
+        String message = String.format(
+            "💳 <b>Yangi to'lov so'rovi</b>\n\n" +
+            "Talaba: <b>%s</b>\n" +
+            "Miqdor: <b>%,.2f so'm</b>\n" +
+            "Cheq: %s\n\n" +
+            "Saytga kiring va to'lovni tasdiqlang!",
+            student.getFullName(), amount, proofUrl
+        );
+        if (admin.getTelegramChatId() != null && !admin.getTelegramChatId().isBlank()) {
+            telegramBotService.sendMessageTo(admin.getTelegramChatId(), message);
+        } else {
+            telegramBotService.sendMessage(message);
+        }
+    }
+
+    public void notifyPaymentStatusChange(User student, Double amount, String status) {
+        String statusText = status.equalsIgnoreCase("APPROVED") ? "✅ Tasdiqlandi" : "❌ Rad etildi";
+        String message = String.format(
+            "💳 <b>To'lov holati o'zgardi</b>\n\n" +
+            "Talaba: <b>%s</b>\n" +
+            "Miqdor: <b>%,.2f so'm</b>\n" +
+            "Holat: <b>%s</b>",
+            student.getFullName(), amount, statusText
+        );
+        sendToParents(student, message);
+        if (student.getTelegramChatId() != null && !student.getTelegramChatId().isBlank()) {
+            telegramBotService.sendMessageTo(student.getTelegramChatId(), message);
+        }
+    }
 }
+

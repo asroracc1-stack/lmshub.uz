@@ -62,4 +62,20 @@ public class CoinService {
         Integer balance = coinTransactionRepository.getStudentCoinBalance(studentId);
         return balance != null ? balance : 0;
     }
+
+    @Transactional
+    public void grantCoins(UUID studentId, Integer amount, String reason, String comment, User awardedBy) {
+        User student = userRepository.findById(studentId)
+                .orElseThrow(() -> new RuntimeException("Foydalanuvchi topilmadi"));
+
+        // Security check: Data Isolation
+        if (awardedBy.getRole() != com.lmscrm.backend.domain.enums.AppRole.SUPER_ADMIN) {
+            if (awardedBy.getOrganizationId() == null || !awardedBy.getOrganizationId().equals(student.getOrganizationId())) {
+                throw new RuntimeException("Ruxsat etilmagan: Foydalanuvchi boshqa filialga tegishli");
+            }
+        }
+
+        String fullReason = comment != null && !comment.trim().isEmpty() ? reason + " (" + comment.trim() + ")" : reason;
+        addCoins(student, amount, fullReason, "ADMIN_GRANT", awardedBy);
+    }
 }

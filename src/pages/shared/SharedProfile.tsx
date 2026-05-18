@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import AvatarUpload from "@/components/AvatarUpload";
@@ -18,37 +20,63 @@ const profileSchema = z.object({
   phone: z.string().trim().max(30).or(z.literal("")),
 });
 
+type ProfileFormValues = z.infer<typeof profileSchema>;
+
+const passwordSchema = z.object({
+  current: z.string().min(1, "Joriy parol kiritilishi shart"),
+  next: z.string().min(6, "Yangi parol kamida 6 ta belgi bo'lishi kerak"),
+  confirm: z.string().min(6, "Parolni tasdiqlash kamida 6 ta belgi bo'lishi kerak"),
+}).refine((data) => data.next === data.confirm, {
+  message: "Parollar mos emas",
+  path: ["confirm"],
+});
+
+type PasswordFormValues = z.infer<typeof passwordSchema>;
+
 export default function SharedProfile() {
   const { profile, refresh, role, user } = useAuth();
   const [saving, setSaving] = useState(false);
   const [savingPwd, setSavingPwd] = useState(false);
-  const [form, setForm] = useState({ full_name: "", email: "", phone: "" });
-  const [pwd, setPwd] = useState({ current: "", next: "", confirm: "" });
+
+  const {
+    register: registerProfile,
+    handleSubmit: handleProfileSubmit,
+    reset: resetProfile,
+    formState: { errors: profileErrors },
+  } = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: { full_name: "", email: "", phone: "" },
+  });
+
+  const {
+    register: registerPassword,
+    handleSubmit: handlePasswordSubmit,
+    reset: resetPassword,
+    formState: { errors: passwordErrors },
+  } = useForm<PasswordFormValues>({
+    resolver: zodResolver(passwordSchema),
+    defaultValues: { current: "", next: "", confirm: "" },
+  });
 
   useEffect(() => {
     if (profile) {
-      setForm({
+      resetProfile({
         full_name: profile.full_name || "",
         email: profile.email || "",
         phone: profile.phone || "",
       });
     }
-  }, [profile]);
+  }, [profile, resetProfile]);
 
-  const saveProfile = async () => {
-    const parsed = profileSchema.safeParse(form);
-    if (!parsed.success) {
-      toast.error(parsed.error.errors[0].message);
-      return;
-    }
+  const onSaveProfile = async (data: ProfileFormValues) => {
     if (!profile) return;
     setSaving(true);
     const { error } = await supabase
       .from("profiles")
       .update({
-        full_name: form.full_name,
-        email: form.email || null,
-        phone: form.phone || null,
+        full_name: data.full_name,
+        email: data.email || null,
+        phone: data.phone || null,
       })
       .eq("id", profile.id);
     setSaving(false);
@@ -56,38 +84,30 @@ export default function SharedProfile() {
       toast.error(error.message);
       return;
     }
-    toast.success("Profil yangilandi");
+    toast.success("Profil muvaffaqiyatli yangilandi ✨");
     refresh();
   };
 
-  const savePassword = async () => {
-    if (pwd.next.length < 6) {
-      toast.error("Yangi parol kamida 6 ta belgi");
-      return;
-    }
-    if (pwd.next !== pwd.confirm) {
-      toast.error("Parollar mos emas");
-      return;
-    }
+  const onSavePassword = async (data: PasswordFormValues) => {
     if (!user?.email) return;
     setSavingPwd(true);
     const { error: signErr } = await supabase.auth.signInWithPassword({
       email: user.email,
-      password: pwd.current,
+      password: data.current,
     });
     if (signErr) {
       setSavingPwd(false);
-      toast.error("Joriy parol noto'g'ri");
+      toast.error("Joriy parol noto'g'ri kiritildi");
       return;
     }
-    const { error } = await supabase.auth.updateUser({ password: pwd.next });
+    const { error } = await supabase.auth.updateUser({ password: data.next });
     setSavingPwd(false);
     if (error) {
       toast.error(error.message);
       return;
     }
-    toast.success("Parol o'zgartirildi");
-    setPwd({ current: "", next: "", confirm: "" });
+    toast.success("Parol muvaffaqiyatli o'zgartirildi 🔐");
+    resetPassword({ current: "", next: "", confirm: "" });
   };
 
   if (!profile) {
@@ -124,73 +144,73 @@ export default function SharedProfile() {
             </div>
           </div>
 
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div className="sm:col-span-2">
-              <Label>To'liq ism</Label>
-              <Input
-                value={form.full_name}
-                onChange={(e) => setForm({ ...form, full_name: e.target.value })}
-              />
+          <form onSubmit={handleProfileSubmit(onSaveProfile)} className="space-y-4">
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="sm:col-span-2 space-y-1">
+                <Label>To'liq ism</Label>
+                <Input {...registerProfile("full_name")} />
+                {profileErrors.full_name && (
+                  <p className="text-xs text-destructive">{profileErrors.full_name.message}</p>
+                )}
+              </div>
+              <div className="space-y-1">
+                <Label>Email</Label>
+                <Input type="email" {...registerProfile("email")} />
+                {profileErrors.email && (
+                  <p className="text-xs text-destructive">{profileErrors.email.message}</p>
+                )}
+              </div>
+              <div className="space-y-1">
+                <Label>Telefon</Label>
+                <Input {...registerProfile("phone")} />
+                {profileErrors.phone && (
+                  <p className="text-xs text-destructive">{profileErrors.phone.message}</p>
+                )}
+              </div>
             </div>
-            <div>
-              <Label>Email</Label>
-              <Input
-                type="email"
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label>Telefon</Label>
-              <Input
-                value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              />
-            </div>
-          </div>
 
-          <Button onClick={saveProfile} disabled={saving}>
-            {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-            Saqlash
-          </Button>
+            <Button type="submit" disabled={saving}>
+              {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              Saqlash
+            </Button>
+          </form>
         </Card>
       </motion.div>
 
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
         <Card className="p-6 space-y-4">
           <h3 className="font-display font-semibold text-lg">Parolni o'zgartirish</h3>
-          <div className="space-y-3">
-            <div>
-              <Label>Joriy parol</Label>
-              <Input
-                type="password"
-                value={pwd.current}
-                onChange={(e) => setPwd({ ...pwd, current: e.target.value })}
-              />
-            </div>
-            <div className="grid sm:grid-cols-2 gap-3">
-              <div>
-                <Label>Yangi parol</Label>
-                <Input
-                  type="password"
-                  value={pwd.next}
-                  onChange={(e) => setPwd({ ...pwd, next: e.target.value })}
-                />
+          <form onSubmit={handlePasswordSubmit(onSavePassword)} className="space-y-4">
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <Label>Joriy parol</Label>
+                <Input type="password" {...registerPassword("current")} />
+                {passwordErrors.current && (
+                  <p className="text-xs text-destructive">{passwordErrors.current.message}</p>
+                )}
               </div>
-              <div>
-                <Label>Tasdiqlash</Label>
-                <Input
-                  type="password"
-                  value={pwd.confirm}
-                  onChange={(e) => setPwd({ ...pwd, confirm: e.target.value })}
-                />
+              <div className="grid sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label>Yangi parol</Label>
+                  <Input type="password" {...registerPassword("next")} />
+                  {passwordErrors.next && (
+                    <p className="text-xs text-destructive">{passwordErrors.next.message}</p>
+                  )}
+                </div>
+                <div className="space-y-1">
+                  <Label>Tasdiqlash</Label>
+                  <Input type="password" {...registerPassword("confirm")} />
+                  {passwordErrors.confirm && (
+                    <p className="text-xs text-destructive">{passwordErrors.confirm.message}</p>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-          <Button onClick={savePassword} disabled={savingPwd} variant="secondary">
-            {savingPwd && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-            O'zgartirish
-          </Button>
+            <Button type="submit" disabled={savingPwd} variant="secondary">
+              {savingPwd && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              O'zgartirish
+            </Button>
+          </form>
         </Card>
       </motion.div>
     </div>

@@ -2,13 +2,15 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/axios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   CreditCard,
   Copy,
@@ -21,40 +23,56 @@ import {
   Receipt,
   ShieldCheck,
   Crown,
+  Users,
+  Sparkles,
+  Wifi,
 } from "lucide-react";
 
 const formatCard = (raw: string) => raw.replace(/\D/g, "").replace(/(.{4})/g, "$1 ").trim();
 
-type RecipientRole = "admin" | "administrator";
-
-interface Recipient {
+interface AdminPaymentInfo {
   id: string;
-  full_name: string;
-  card: string;
-  owner: string;
-  role: RecipientRole;
-  telegram?: string | null;
-  source?: "receiver" | "profile";
+  fullName: string;
+  cardNumber: string;
+  cardHolder: string;
+  role: string;
+  telegramUsername?: string;
 }
 
-interface Payment {
+interface PaymentTransactionDto {
   id: string;
+  studentId: string;
+  studentName: string;
+  payerId: string;
+  payerName: string;
+  adminId: string;
+  adminName: string;
   amount: number;
-  currency: string;
-  status: string;
-  note: string | null;
-  receipt_url: string | null;
-  created_at: string;
-  recipient_role: string | null;
+  paymentProofUrl: string;
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  organizationId: string;
+  note?: string;
+  createdAt: string;
+}
+
+interface Child {
+  id: string;
+  fullName: string | null;
+  username: string;
+  avatarUrl: string | null;
+  coins: number;
 }
 
 const statusMeta = (s: string) => {
   switch (s) {
+    case "PENDING":
     case "pending":
-      return { label: "Kutilmoqda", icon: Clock, className: "bg-warning/15 text-warning border-warning/30" };
+      return { label: "Kutilmoqda", icon: Clock, className: "bg-warning/15 text-warning border-warning/30 animate-pulse" };
+    case "APPROVED":
     case "completed":
     case "paid":
       return { label: "Tasdiqlandi", icon: CheckCircle2, className: "bg-success/15 text-success border-success/30" };
+    case "REJECTED":
     case "rejected":
     case "failed":
       return { label: "Rad etildi", icon: XCircle, className: "bg-destructive/15 text-destructive border-destructive/30" };
@@ -65,204 +83,242 @@ const statusMeta = (s: string) => {
 
 export default function StudentPayment() {
   const { user, profile } = useAuth();
-  const [recipients, setRecipients] = useState<Recipient[]>([]);
-  const [selected, setSelected] = useState<Recipient | null>(null);
+  const queryClient = useQueryClient();
+
+  const [selectedAdmin, setSelectedAdmin] = useState<AdminPaymentInfo | null>(null);
+  const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [payments, setPayments] = useState<Payment[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [dragActive, setDragActive] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const loadRecipients = async () => {
-    if (!profile?.organization_id) return;
+  const isParent = user?.role === "parent";
 
-    // 1) Prefer Super Admin–managed payment_receivers (org-scoped + global)
-    const { data: receivers } = await (supabase as any)
-      .from("payment_receivers")
-      .select("id, organization_id, role_type, full_name, card_number, card_holder, telegram_username, payment_purpose, is_active, is_default")
-      .eq("is_active", true)
-      .or(`organization_id.eq.${profile.organization_id},organization_id.is.null`)
-      .order("is_default", { ascending: false });
-
-    let list: Recipient[] = (receivers ?? []).map((r: any) => ({
-      id: r.id,
-      full_name: r.full_name,
-      card: r.card_number,
-      owner: r.card_holder,
-      telegram: r.telegram_username,
-      role: (r.role_type === "administrator" ? "administrator" : "admin") as RecipientRole,
-      source: "receiver" as const,
-    }));
-
-    // 2) Fallback: pull from admin/administrator profiles
-    if (list.length === 0) {
-      const { data: roles } = await supabase
-        .from("user_roles")
-        .select("user_id, role")
-        .eq("organization_id", profile.organization_id)
-        .in("role", ["admin", "administrator"]);
-      const ids = (roles ?? []).map((r) => r.user_id);
-      if (ids.length) {
-        const { data: profs } = await supabase
-          .from("profiles")
-          .select("id, full_name, payment_card_number, payment_card_owner, telegram_username")
-          .in("id", ids);
-        list = (profs ?? [])
-          .map((p: any) => {
-            const role = (roles ?? []).find((r) => r.user_id === p.id)?.role as RecipientRole;
-            return {
-              id: p.id,
-              full_name: p.full_name ?? "—",
-              card: p.payment_card_number ?? "",
-              owner: p.payment_card_owner ?? p.full_name ?? "",
-              telegram: p.telegram_username,
-              role,
-              source: "profile" as const,
-            };
-          })
-          .filter((r) => r.card);
-      }
-    }
-
-    setRecipients(list);
-    if (!selected && list.length) setSelected(list[0]);
-  };
-
-  const load = async () => {
-    if (!user?.id) return;
-    setLoading(true);
-    const { data } = await supabase
-      .from("payments")
-      .select("id, amount, currency, status, note, receipt_url, created_at, recipient_role")
-      .eq("student_id", user.id)
-      .order("created_at", { ascending: false });
-    setPayments((data ?? []) as Payment[]);
-    setLoading(false);
-  };
+  // 1. Fetch Children for Parents
+  const { data: children = [], isLoading: childrenLoading } = useQuery<Child[]>({
+    queryKey: ["parent-children", user?.id],
+    queryFn: async () => {
+      const { data } = await api.get("/admin/parents/my-children");
+      return data;
+    },
+    enabled: isParent && !!user?.id,
+  });
 
   useEffect(() => {
-    load();
-    loadRecipients();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, profile?.organization_id]);
+    if (isParent && children.length > 0 && !selectedChildId) {
+      setSelectedChildId(children[0].id);
+    }
+  }, [children, isParent, selectedChildId]);
 
-  const copyCard = async () => {
-    if (!selected) return;
-    await navigator.clipboard.writeText(selected.card.replace(/\s/g, ""));
-    toast.success("Karta raqami nusxalandi");
+  // 2. Fetch Admins available for payment
+  const { data: admins = [], isLoading: adminsLoading } = useQuery<AdminPaymentInfo[]>({
+    queryKey: ["payment-admins", profile?.organization_id],
+    queryFn: async () => {
+      const { data } = await api.get("/payments/initiate/admins", {
+        params: { organizationId: profile?.organization_id || undefined },
+      });
+      return data || [];
+    },
+    enabled: !!profile?.organization_id,
+  });
+
+  useEffect(() => {
+    if (admins.length > 0 && !selectedAdmin) {
+      setSelectedAdmin(admins[0]);
+    }
+  }, [admins, selectedAdmin]);
+
+  // 3. Fetch Payment History
+  const { data: history = [], isLoading: historyLoading } = useQuery<PaymentTransactionDto[]>({
+    queryKey: ["payment-history", user?.id],
+    queryFn: async () => {
+      const { data } = await api.get("/payments/history");
+      return data || [];
+    },
+    enabled: !!user?.id,
+  });
+
+  const copyCard = async (cardNumber: string) => {
+    if (!cardNumber) return;
+    await navigator.clipboard.writeText(cardNumber.replace(/\s/g, ""));
+    toast.success("Karta raqami nusxalandi! 💳");
+  };
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      onPickFile(e.dataTransfer.files[0]);
+    }
   };
 
   const onPickFile = (f: File | null) => {
     if (!f) return;
-    if (!f.type.startsWith("image/")) return toast.error("Faqat rasm yuklang");
-    if (f.size > 5 * 1024 * 1024) return toast.error("Rasm 5MB dan kichik");
+    if (!f.type.startsWith("image/")) return toast.error("Iltimos, faqat rasm fayl yuklang (JPG, PNG)");
+    if (f.size > 5 * 1024 * 1024) return toast.error("Rasm hajmi 5MB dan kichik bo'lishi kerak");
     setFile(f);
     setPreview(URL.createObjectURL(f));
   };
 
-  const submit = async () => {
-    if (!user?.id || !profile?.organization_id) return toast.error("Tashkilot aniqlanmadi");
-    if (!selected) return toast.error("Karta tanlang");
-    const amt = Number(amount);
-    if (!amt || amt < 1000) return toast.error("Summa kamida 1 000");
-    if (!file) return toast.error("Chek rasmini yuklang");
-
-    setSubmitting(true);
-    try {
-      const ext = file.name.split(".").pop() || "jpg";
-      const path = `${profile.organization_id}/${user.id}/${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage
-        .from("receipts")
-        .upload(path, file, { upsert: false, cacheControl: "3600" });
-      if (upErr) throw upErr;
-
-      const isReceiver = selected.source === "receiver";
-      const billingPeriod = new Date().toISOString().slice(0, 7); // YYYY-MM
-      const { data: inserted, error: insErr } = await (supabase as any)
-        .from("payments")
-        .insert({
-          student_id: user.id,
-          organization_id: profile.organization_id,
-          amount: amt,
-          currency: "UZS",
-          status: "pending",
-          provider: "card_manual",
-          payment_type: "monthly_course",
-          billing_period: billingPeriod,
-          note: note || null,
-          receipt_url: path,
-          recipient_id: isReceiver ? null : selected.id,
-          receiver_id: isReceiver ? selected.id : null,
-          recipient_role: selected.role,
-        })
-        .select("id")
-        .maybeSingle();
-      if (insErr) throw insErr;
-
-      const { error: nErr } = await supabase.functions.invoke("telegram-notify", {
-        body: { payment_id: inserted!.id },
-      });
-      if (nErr) {
-        toast.warning("To'lov saqlandi, Telegramga yuborilmadi");
-      } else {
-        toast.success(`Chek ${selected.role === "admin" ? "Adminga" : "Administratorga"} yuborildi!`);
-      }
-
+  const initiateMutation = useMutation({
+    mutationFn: async (payload: { amount: number; note: string; paymentProofUrl: string; adminId: string; studentId: string }) => {
+      return api.post("/payments/initiate", payload);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["payment-history"] });
+      toast.success("To'lov so'rovi muvaffaqiyatli yuborildi! 🎉");
       setAmount("");
       setNote("");
       setFile(null);
       setPreview(null);
       if (fileRef.current) fileRef.current.value = "";
-      load();
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "To'lovni yuborishda xatolik yuz berdi");
+    },
+  });
+
+  const submit = async () => {
+    if (!user?.id || !profile?.organization_id) return toast.error("Tashkilot aniqlanmadi");
+    if (!selectedAdmin) return toast.error("Iltimos, to'lov qabul qiluvchi adminni tanlang");
+    const amt = Number(amount);
+    if (!amt || amt < 1000) return toast.error("Summa kamida 1 000 so'm bo'lishi kerak");
+    if (!file) return toast.error("Iltimos, to'lov cheki rasmini yuklang");
+
+    const effectiveStudentId = isParent ? selectedChildId : user.id;
+    if (!effectiveStudentId) return toast.error("Talaba aniqlanmadi");
+
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `${profile.organization_id}/${effectiveStudentId}/${Date.now()}.${ext}`;
+      
+      // Upload to Supabase Storage
+      const { error: upErr } = await supabase.storage
+        .from("receipts")
+        .upload(path, file, { upsert: false, cacheControl: "3600" });
+      if (upErr) throw upErr;
+
+      // Call Spring Boot backend initiate endpoint
+      initiateMutation.mutate({
+        amount: amt,
+        note: note || "",
+        paymentProofUrl: path,
+        adminId: selectedAdmin.id,
+        studentId: effectiveStudentId,
+      });
+
+      // Optional fallback webhook trigger
+      supabase.functions.invoke("telegram-notify", {
+        body: { payment_path: path, amount: amt },
+      }).catch(() => {});
+
     } catch (e: any) {
-      toast.error(e.message ?? "Xatolik");
-    } finally {
-      setSubmitting(false);
+      toast.error(e.message ?? "Chekni yuklashda xatolik");
     }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <h1 className="font-display text-3xl font-bold">To'lov</h1>
-        <p className="text-muted-foreground">Karta tanlang, to'lang va chekni yuklang</p>
+        <h1 className="font-display text-3xl font-bold flex items-center gap-2.5">
+          <CreditCard className="h-8 w-8 text-primary" /> To'lov va Cheklar
+        </h1>
+        <p className="text-muted-foreground mt-1">
+          Tashkilot admini kartasiga to'lov qiling va chek skrinshotini yuklang
+        </p>
       </div>
 
-      {/* Recipient selector */}
-      {recipients.length > 1 && (
-        <div>
-          <Label className="mb-2 block">Kimga to'laysiz?</Label>
-          <div className="grid sm:grid-cols-2 gap-3">
-            {recipients.map((r) => {
-              const active = selected?.id === r.id;
-              const Icon = r.role === "admin" ? Crown : ShieldCheck;
+      {/* Parent Child Selector */}
+      {isParent && children.length > 0 && (
+        <Card className="p-5 bg-gradient-to-r from-primary/10 via-card to-card border-primary/20">
+          <Label className="text-sm font-semibold mb-3 flex items-center gap-2 text-primary">
+            <Users className="h-4 w-4" /> Qaysi farzandingiz uchun to'lov qilyapsiz?
+          </Label>
+          <div className="flex flex-wrap gap-3">
+            {children.map((c) => {
+              const active = selectedChildId === c.id;
               return (
                 <button
-                  key={r.id}
+                  key={c.id}
                   type="button"
-                  onClick={() => setSelected(r)}
-                  className={`text-left p-4 rounded-xl border-2 transition-smooth ${
+                  onClick={() => setSelectedChildId(c.id)}
+                  className={`flex items-center gap-3 px-4 py-2.5 rounded-xl border transition-all ${
                     active
-                      ? "border-primary bg-primary/10 shadow-glow"
-                      : "border-border hover:border-primary/40 bg-card"
+                      ? "border-primary bg-primary text-primary-foreground shadow-lg shadow-primary/30"
+                      : "border-border hover:border-primary/40 bg-card text-card-foreground"
                   }`}
                 >
-                  <div className="flex items-center gap-3">
-                    <div className={`h-10 w-10 rounded-lg grid place-items-center ${
-                      r.role === "admin" ? "bg-warning/20 text-warning" : "bg-primary/20 text-primary"
-                    }`}>
-                      <Icon className="h-5 w-5" />
+                  <div className={`h-8 w-8 rounded-lg grid place-items-center text-sm font-bold ${
+                    active ? "bg-white/20 text-white" : "bg-primary/10 text-primary"
+                  }`}>
+                    {(c.fullName || c.username || "?")[0].toUpperCase()}
+                  </div>
+                  <div className="text-left min-w-0">
+                    <p className="font-medium text-sm truncate">{c.fullName || c.username}</p>
+                    <p className={`text-[10px] ${active ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
+                      Talaba
+                    </p>
+                  </div>
+                  {active && <CheckCircle2 className="h-4 w-4 shrink-0 ml-1" />}
+                </button>
+              );
+            })}
+          </div>
+        </Card>
+      )}
+
+      {/* Admin/Receiver Selector */}
+      {admins.length > 1 && (
+        <div>
+          <Label className="mb-3 block text-sm font-semibold">Qabul qiluvchi Admin / Kassa</Label>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {admins.map((admin) => {
+              const active = selectedAdmin?.id === admin.id;
+              const Icon = admin.role.toLowerCase() === "admin" ? Crown : ShieldCheck;
+              return (
+                <button
+                  key={admin.id}
+                  type="button"
+                  onClick={() => setSelectedAdmin(admin)}
+                  className={`text-left p-4 rounded-2xl border-2 transition-all relative overflow-hidden ${
+                    active
+                      ? "border-primary bg-primary/5 shadow-xl shadow-primary/10"
+                      : "border-border hover:border-primary/40 bg-card shadow-sm"
+                  }`}
+                >
+                  {active && (
+                    <div className="absolute top-0 right-0 bg-primary text-primary-foreground px-3 py-1 rounded-bl-xl text-[10px] font-bold tracking-wider uppercase flex items-center gap-1">
+                      <Sparkles className="h-3 w-3" /> Tanlangan
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-display font-semibold truncate">{r.full_name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {r.role === "admin" ? "Tashkilot admini" : "Administrator"}
+                  )}
+                  <div className="flex items-start gap-3.5">
+                    <div className={`h-12 w-12 rounded-xl grid place-items-center shrink-0 ${
+                      admin.role.toLowerCase() === "admin" ? "bg-warning/20 text-warning" : "bg-primary/20 text-primary"
+                    }`}>
+                      <Icon className="h-6 w-6" />
+                    </div>
+                    <div className="flex-1 min-w-0 pt-1">
+                      <p className="font-display font-bold text-base truncate">{admin.fullName}</p>
+                      <p className="text-xs text-muted-foreground font-medium mt-0.5">
+                        {admin.role.toLowerCase() === "admin" ? "Tashkilot Rahbari" : "Administrator"}
+                      </p>
+                      <p className="text-xs font-mono text-primary font-semibold mt-1">
+                        {formatCard(admin.cardNumber)}
                       </p>
                     </div>
-                    {active && <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />}
                   </div>
                 </button>
               );
@@ -271,173 +327,326 @@ export default function StudentPayment() {
         </div>
       )}
 
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* Card display */}
-        {selected ? (
-          <motion.div
-            key={selected.id}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <Card className="p-6 bg-gradient-primary text-primary-foreground relative overflow-hidden">
-              <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/10" />
-              <div className="absolute -bottom-16 -left-10 w-48 h-48 rounded-full bg-white/5" />
-              <div className="relative space-y-6">
-                <div className="flex items-center justify-between">
-                  <CreditCard className="h-8 w-8" />
-                  <Badge className="bg-white/20 border-0 text-primary-foreground">
-                    {selected.role === "admin" ? "ADMIN" : "ADMINISTRATOR"}
-                  </Badge>
-                </div>
-                <div>
-                  <p className="text-xs uppercase tracking-wider opacity-80 mb-1">Karta raqami</p>
-                  <p className="font-mono text-2xl tracking-wider">{formatCard(selected.card)}</p>
-                </div>
-                <div className="flex items-end justify-between">
-                  <div>
-                    <p className="text-xs uppercase tracking-wider opacity-80 mb-1">Egasi</p>
-                    <p className="font-display font-semibold uppercase">{selected.owner}</p>
+      <div className="grid lg:grid-cols-12 gap-8 items-start">
+        {/* Physical Card Mock-up */}
+        <div className="lg:col-span-5 space-y-4">
+          <Label className="text-sm font-semibold block">To'lov rekvizitlari (Haqiqiy Karta)</Label>
+          {selectedAdmin ? (
+            <motion.div
+              key={selectedAdmin.id}
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3 }}
+              className="relative group"
+            >
+              {/* Ambient Glow */}
+              <div className="absolute -inset-1 bg-gradient-to-r from-primary via-secondary to-accent rounded-[28px] blur-xl opacity-30 group-hover:opacity-50 transition duration-500" />
+              
+              <Card className="relative p-7 rounded-[24px] bg-gradient-to-tr from-slate-900 via-slate-800 to-indigo-950 text-white shadow-2xl border border-white/15 overflow-hidden backdrop-blur-xl">
+                {/* Holographic / Glassmorphism Overlays */}
+                <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-secondary/20 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute inset-0 bg-noise opacity-10 pointer-events-none" />
+
+                <div className="relative z-10 space-y-8">
+                  {/* Card Header: Chip & Contactless */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      {/* EMV Microchip */}
+                      <div className="w-12 h-10 rounded-lg bg-gradient-to-br from-amber-200 via-amber-400 to-amber-500 p-1 shadow-inner flex flex-col justify-between border border-amber-600/40 opacity-90">
+                        <div className="w-full h-[1px] bg-amber-700/30" />
+                        <div className="w-full h-[1px] bg-amber-700/30" />
+                        <div className="w-full h-[1px] bg-amber-700/30" />
+                      </div>
+                      {/* Contactless Wave */}
+                      <Wifi className="h-6 w-6 text-white/70 rotate-90" />
+                    </div>
+
+                    <Badge className="bg-white/10 hover:bg-white/20 text-white border border-white/20 px-3 py-1 text-xs tracking-widest backdrop-blur-md">
+                      UZCARD / HUMO
+                    </Badge>
                   </div>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={copyCard}
-                    className="bg-white/15 hover:bg-white/25 border-0 text-primary-foreground"
-                  >
-                    <Copy className="h-3.5 w-3.5" /> Nusxalash
-                  </Button>
+
+                  {/* Card Number */}
+                  <div className="space-y-1.5">
+                    <p className="text-[11px] uppercase tracking-widest text-white/60 font-medium">Karta Raqami</p>
+                    <div className="flex items-center justify-between gap-4 bg-white/5 p-3 rounded-xl border border-white/10 backdrop-blur-sm">
+                      <p className="font-mono text-2xl tracking-widest font-bold drop-shadow-md text-white">
+                        {formatCard(selectedAdmin.cardNumber)}
+                      </p>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => copyCard(selectedAdmin.cardNumber)}
+                        className="h-8 w-8 text-white hover:bg-white/20 hover:text-white transition-smooth shrink-0"
+                        title="Karta raqamini nusxalash"
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Card Holder & Role */}
+                  <div className="flex items-end justify-between pt-2 border-t border-white/10">
+                    <div>
+                      <p className="text-[11px] uppercase tracking-widest text-white/60 font-medium mb-1">Karta Egasi</p>
+                      <p className="font-display font-bold text-lg tracking-wide uppercase text-white drop-shadow">
+                        {selectedAdmin.cardHolder || selectedAdmin.fullName}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[11px] uppercase tracking-widest text-white/60 font-medium mb-1">Qabul Qiluvchi</p>
+                      <p className="font-medium text-sm text-white/90">
+                        {selectedAdmin.role.toLowerCase() === "admin" ? "Tashkilot Admini" : "Administrator"}
+                      </p>
+                    </div>
+                  </div>
                 </div>
+              </Card>
+            </motion.div>
+          ) : (
+            <Card className="p-8 grid place-items-center text-center text-muted-foreground min-h-[260px] rounded-[24px]">
+              <div>
+                <CreditCard className="h-12 w-12 mx-auto mb-3 opacity-30 animate-pulse" />
+                <p className="font-medium">Karta rekvizitlari mavjud emas.</p>
+                <p className="text-xs mt-1">Admin o'z profilida karta raqamini sozlashi kerak.</p>
               </div>
             </Card>
-          </motion.div>
-        ) : (
-          <Card className="p-6 grid place-items-center text-center text-muted-foreground min-h-[220px]">
-            <div>
-              <CreditCard className="h-10 w-10 mx-auto mb-2 opacity-40" />
-              <p>Karta mavjud emas. Admin kartasini sozlashi kerak.</p>
-            </div>
-          </Card>
-        )}
+          )}
 
-        {/* Submission form */}
-        <Card className="p-6 space-y-4">
-          <div className="flex items-center gap-2">
-            <Receipt className="h-5 w-5 text-primary" />
-            <h2 className="font-display font-semibold text-lg">Chekni yuborish</h2>
-          </div>
+          <AlertCard />
+        </div>
 
-          <div className="grid gap-2">
-            <Label>Summa (UZS) *</Label>
-            <Input
-              type="number"
-              min="1000"
-              step="1000"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="masalan: 500000"
-            />
-          </div>
-
-          <div className="grid gap-2">
-            <Label>Izoh (ixtiyoriy)</Label>
-            <Textarea
-              rows={2}
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              placeholder="Qaysi oy uchun, qaysi guruh va h.k."
-            />
-          </div>
-
-          <div className="grid gap-2">
-            <Label>Chek rasmi *</Label>
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => onPickFile(e.target.files?.[0] ?? null)}
-            />
-            {preview ? (
-              <div className="relative rounded-lg overflow-hidden border border-border">
-                <img src={preview} alt="Chek" className="w-full max-h-64 object-contain bg-muted/30" />
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  className="absolute top-2 right-2"
-                  onClick={() => fileRef.current?.click()}
-                >
-                  Almashtirish
-                </Button>
+        {/* Dropzone & Form */}
+        <div className="lg:col-span-7">
+          <Card className="p-7 space-y-6 shadow-xl border-border/80 rounded-[24px] bg-card/60 backdrop-blur-xl">
+            <div className="flex items-center gap-3 border-b border-border pb-4">
+              <div className="h-10 w-10 rounded-xl bg-primary/10 grid place-items-center text-primary">
+                <Receipt className="h-5 w-5" />
               </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => fileRef.current?.click()}
-                className="w-full border-2 border-dashed border-border rounded-lg p-8 hover:border-primary hover:bg-muted/30 transition-smooth flex flex-col items-center gap-2 text-muted-foreground"
-              >
-                <Upload className="h-6 w-6" />
-                <span className="text-sm">Chek rasmini tanlang</span>
-                <span className="text-xs">(JPG/PNG, 5MB gacha)</span>
-              </button>
-            )}
-          </div>
+              <div>
+                <h2 className="font-display font-bold text-xl">To'lov chekini yuborish</h2>
+                <p className="text-xs text-muted-foreground">To'lov skrinshotini yuklang va tasdiqlashga yuboring</p>
+              </div>
+            </div>
 
-          <Button
-            variant="hero"
-            className="w-full"
-            onClick={submit}
-            disabled={submitting || !selected}
-          >
-            {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-            Telegramga yuborish
-          </Button>
-          <p className="text-xs text-muted-foreground text-center">
-            Chek tanlangan {selected?.role === "admin" ? "Adminning" : "Administratorning"} Telegramiga avtomatik yuboriladi
-          </p>
-        </Card>
+            <div className="grid sm:grid-cols-2 gap-5">
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold">Summa (UZS) *</Label>
+                <div className="relative">
+                  <Input
+                    type="number"
+                    min="1000"
+                    step="1000"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    placeholder="Masalan: 500 000"
+                    className="pl-4 pr-12 font-mono font-semibold text-lg h-12 rounded-xl"
+                  />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground uppercase">
+                    UZS
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold">Izoh (Ixtiyoriy)</Label>
+                <Input
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  placeholder="Qaysi oy yoki guruh uchun..."
+                  className="h-12 rounded-xl"
+                />
+              </div>
+            </div>
+
+            {/* Drag and Drop Dropzone */}
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Chek yoki Skrinshot rasmi *</Label>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => onPickFile(e.target.files?.[0] ?? null)}
+              />
+
+              {preview ? (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="relative rounded-2xl overflow-hidden border-2 border-primary/30 bg-muted/20 p-2 shadow-inner group"
+                >
+                  <img
+                    src={preview}
+                    alt="Chek"
+                    className="w-full h-64 object-contain rounded-xl bg-black/5"
+                  />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3 backdrop-blur-sm">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      className="shadow-lg rounded-xl font-medium"
+                      onClick={() => fileRef.current?.click()}
+                    >
+                      Boshqa rasm tanlash
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      className="shadow-lg rounded-xl font-medium"
+                      onClick={() => {
+                        setFile(null);
+                        setPreview(null);
+                        if (fileRef.current) fileRef.current.value = "";
+                      }}
+                    >
+                      O'chirish
+                    </Button>
+                  </div>
+                </motion.div>
+              ) : (
+                <div
+                  onDragEnter={handleDrag}
+                  onDragLeave={handleDrag}
+                  onDragOver={handleDrag}
+                  onDrop={handleDrop}
+                  onClick={() => fileRef.current?.click()}
+                  className={`border-2 border-dashed rounded-2xl p-10 cursor-pointer transition-all flex flex-col items-center justify-center gap-3 text-center min-h-[220px] ${
+                    dragActive
+                      ? "border-primary bg-primary/10 scale-[1.01]"
+                      : "border-border hover:border-primary/50 hover:bg-card/80 bg-card/40"
+                  }`}
+                >
+                  <div className={`h-16 w-16 rounded-2xl grid place-items-center transition-transform duration-300 ${
+                    dragActive ? "bg-primary text-primary-foreground scale-110 shadow-lg shadow-primary/30" : "bg-primary/10 text-primary"
+                  }`}>
+                    <Upload className="h-8 w-8" />
+                  </div>
+                  <div>
+                    <p className="font-display font-bold text-base text-card-foreground">
+                      {dragActive ? "Chekni bu yerga tashlang!" : "Chek rasmini yuklash uchun bosing yoki tashlang"}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">JPG, PNG fayllar (maksimal 5MB)</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <Button
+              variant="hero"
+              size="lg"
+              className="w-full h-14 rounded-xl font-display font-bold text-lg shadow-xl shadow-primary/20"
+              onClick={submit}
+              disabled={initiateMutation.isPending || !selectedAdmin}
+            >
+              {initiateMutation.isPending ? (
+                <Loader2 className="h-6 w-6 animate-spin mr-2" />
+              ) : (
+                <Send className="h-5 w-5 mr-2" />
+              )}
+              {initiateMutation.isPending ? "Yuborilmoqda..." : "Tasdiqlashga yuborish"}
+            </Button>
+
+            <p className="text-xs text-muted-foreground text-center flex items-center justify-center gap-1.5">
+              <ShieldCheck className="h-4 w-4 text-success" />
+              To'lov cheki tashkilot ma'muriyatiga va Telegram bot orqali adminga zudlik bilan yetkaziladi.
+            </p>
+          </Card>
+        </div>
       </div>
 
-      {/* Payment history */}
-      <div>
-        <h2 className="font-display font-semibold text-xl mb-3">Mening to'lovlarim</h2>
-        {loading ? (
-          <div className="flex justify-center py-12">
-            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      {/* Payment History Section */}
+      <div className="space-y-4 pt-4">
+        <div className="flex items-center justify-between border-b border-border pb-3">
+          <h2 className="font-display font-bold text-2xl flex items-center gap-2">
+            <Receipt className="h-6 w-6 text-primary" /> Mening to'lovlarim tarixi
+          </h2>
+          <Badge variant="outline" className="text-xs font-mono py-1 px-3 rounded-full">
+            Jami: {history.length} ta so'rov
+          </Badge>
+        </div>
+
+        {historyLoading ? (
+          <div className="flex justify-center py-16">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
-        ) : payments.length === 0 ? (
-          <Card className="p-8 text-center text-muted-foreground">Hali to'lovlar yo'q</Card>
+        ) : history.length === 0 ? (
+          <Card className="p-12 text-center text-muted-foreground rounded-2xl border-dashed">
+            <Receipt className="h-12 w-12 mx-auto mb-3 opacity-30" />
+            <p className="font-medium text-lg">Hali to'lov so'rovlari yuborilmagan</p>
+            <p className="text-xs mt-1">Yuqoridagi shakl orqali birinchi to'lov chekini yuklang.</p>
+          </Card>
         ) : (
-          <div className="grid gap-3">
-            {payments.map((p) => {
-              const m = statusMeta(p.status);
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {history.map((tx) => {
+              const m = statusMeta(tx.status);
               const Icon = m.icon;
               return (
-                <Card key={p.id} className="p-4 flex items-center justify-between gap-4 flex-wrap">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-primary/15 grid place-items-center">
-                      <CreditCard className="h-5 w-5 text-primary" />
+                <motion.div
+                  key={tx.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                  <Card className="p-5 rounded-2xl space-y-4 hover:shadow-md transition-shadow border border-border/60 bg-card/40 backdrop-blur-sm">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-xl bg-primary/10 grid place-items-center text-primary shrink-0">
+                          <CreditCard className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <p className="font-mono font-bold text-lg text-card-foreground">
+                            {tx.amount.toLocaleString("uz-UZ")} UZS
+                          </p>
+                          <p className="text-[11px] text-muted-foreground font-medium">
+                            {tx.adminName} ({tx.adminName ? "Admin" : "Qabul qiluvchi"})
+                          </p>
+                        </div>
+                      </div>
+
+                      <Badge className={m.className}>
+                        <Icon className="h-3 w-3 mr-1" />
+                        {m.label}
+                      </Badge>
                     </div>
-                    <div>
-                      <p className="font-display font-semibold">
-                        {Number(p.amount).toLocaleString("uz-UZ")} {p.currency}
+
+                    {tx.note && (
+                      <p className="text-xs bg-muted/40 p-2.5 rounded-xl border border-border text-muted-foreground">
+                        {tx.note}
                       </p>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(p.created_at).toLocaleString("uz-UZ")}
-                        {p.recipient_role && ` · ${p.recipient_role === "admin" ? "Admin" : "Administrator"}ga`}
-                      </p>
-                      {p.note && <p className="text-xs text-muted-foreground mt-1">{p.note}</p>}
+                    )}
+
+                    <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-2 border-t border-border/40">
+                      <span>{new Date(tx.createdAt).toLocaleString("uz-UZ")}</span>
+                      <a
+                        href={`https://hicoderx.supabase.co/storage/v1/object/public/receipts/${tx.paymentProofUrl}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-primary hover:underline font-medium"
+                      >
+                        Chekni ko'rish ↗
+                      </a>
                     </div>
-                  </div>
-                  <Badge className={m.className}>
-                    <Icon className="h-3 w-3 mr-1" />
-                    {m.label}
-                  </Badge>
-                </Card>
+                  </Card>
+                </motion.div>
               );
             })}
           </div>
         )}
       </div>
     </div>
+  );
+}
+
+function AlertCard() {
+  return (
+    <Card className="p-5 rounded-[24px] bg-warning/10 border border-warning/20 text-warning-foreground space-y-2 shadow-sm">
+      <div className="flex items-center gap-2 font-display font-bold text-sm text-warning">
+        <Sparkles className="h-4 w-4" /> Diqqat, To'lov Qoidalari:
+      </div>
+      <p className="text-xs leading-relaxed opacity-90">
+        To'lovni amalga oshirayotganda karta egasining ismini va karta raqamini diqqat bilan tekshiring. To'lov o'tgach, chekni (skrinshotni) saqlab qoling va ushbu sahifadan yuklang.
+      </p>
+    </Card>
   );
 }

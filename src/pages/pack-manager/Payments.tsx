@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,8 +16,7 @@ import { Loader2, Search, CheckCircle2, XCircle, Eye, Send, Wallet } from "lucid
 type Filter = "pending" | "paid" | "rejected" | "all";
 
 export default function PackManagerPayments({ initialFilter = "pending" as Filter }) {
-  const [items, setItems] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [filter, setFilter] = useState<Filter>(initialFilter);
   const [q, setQ] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -24,19 +24,22 @@ export default function PackManagerPayments({ initialFilter = "pending" as Filte
   const [rejecting, setRejecting] = useState<any | null>(null);
   const [rejectReason, setRejectReason] = useState("");
 
-  const load = async () => {
-    setLoading(true);
-    const { data, error } = await (supabase as any)
-      .from("payments")
-      .select("*, profiles!payments_student_id_profiles_fkey(full_name,username,telegram_username,phone), subscription_packs:pack_id(name,code,price_uzs)")
-      .order("created_at", { ascending: false })
-      .limit(500);
-    if (error) toast.error(error.message);
-    else setItems(data || []);
-    setLoading(false);
-  };
+  const { data: itemsData = [], isLoading: loadingPayments, refetch: load } = useQuery({
+    queryKey: ["payments-list"],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("payments")
+        .select("*, profiles!payments_student_id_profiles_fkey(full_name,username,telegram_username,phone), subscription_packs:pack_id(name,code,price_uzs)")
+        .order("created_at", { ascending: false })
+        .limit(500);
+      if (error) throw error;
+      return data || [];
+    },
+    placeholderData: (previousData) => previousData,
+  });
 
-  useEffect(() => { load(); }, []);
+  const items = itemsData;
+  const loading = loadingPayments;
 
   // realtime
   useEffect(() => {
@@ -58,28 +61,51 @@ export default function PackManagerPayments({ initialFilter = "pending" as Filte
     return true;
   }), [items, filter, q]);
 
+  const approveMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await (supabase as any).rpc("approve_payment", { _payment_id: id, _comment: null });
+      if (error) throw error;
+      return id;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["payments-list"] });
+      toast.success("✅ To'lov tasdiqlandi va pack faollashtirildi");
+      setBusyId(null);
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Xatolik yuz berdi");
+      setBusyId(null);
+    },
+  });
+
   const approve = async (id: string) => {
     setBusyId(id);
-    const { error } = await (supabase as any).rpc("approve_payment", { _payment_id: id, _comment: null });
-    setBusyId(null);
-    if (error) toast.error(error.message);
-    else {
-      toast.success("✅ To'lov tasdiqlandi va pack faollashtirildi");
-      load();
-    }
+    approveMutation.mutate(id);
   };
+
+  const rejectMutation = useMutation({
+    mutationFn: async ({ id, reason }: { id: string, reason: string }) => {
+      const { error } = await (supabase as any).rpc("reject_payment", { _payment_id: id, _reason: reason });
+      if (error) throw error;
+      return id;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["payments-list"] });
+      toast.success("To'lov rad etildi");
+      setBusyId(null);
+      setRejecting(null);
+      setRejectReason("");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Xatolik yuz berdi");
+      setBusyId(null);
+    },
+  });
 
   const submitReject = async () => {
     if (!rejecting) return;
     setBusyId(rejecting.id);
-    const { error } = await (supabase as any).rpc("reject_payment", { _payment_id: rejecting.id, _reason: rejectReason || "Tasdiqlanmadi" });
-    setBusyId(null);
-    if (error) toast.error(error.message);
-    else {
-      toast.success("To'lov rad etildi");
-      setRejecting(null); setRejectReason("");
-      load();
-    }
+    rejectMutation.mutate({ id: rejecting.id, reason: rejectReason || "Tasdiqlanmadi" });
   };
 
   const StatusBadge = ({ s }: { s: string }) => {

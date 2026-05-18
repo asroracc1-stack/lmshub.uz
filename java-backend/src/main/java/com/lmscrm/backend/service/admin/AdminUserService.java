@@ -136,6 +136,12 @@ public class AdminUserService {
                 || user.getRole() == AppRole.ADMINISTRATOR || user.getRole() == AppRole.PARENT)) {
             throw new RuntimeException(user.getRole() + " tashkilotga biriktirilishi shart");
         }
+        if (user.getRole() == AppRole.ADMIN || user.getRole() == AppRole.ADMINISTRATOR) {
+            if (user.getCardNumber() == null || user.getCardNumber().trim().isEmpty() ||
+                user.getCardHolder() == null || user.getCardHolder().trim().isEmpty()) {
+                throw new com.lmscrm.backend.exception.BusinessException("Admin va Administratorlar uchun karta raqami (card_number) va karta egasining ismi (card_holder) kiritilishi majburiy!");
+            }
+        }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
     }
@@ -218,6 +224,13 @@ public class AdminUserService {
         if (details.getCardNumber() != null) user.setCardNumber(details.getCardNumber());
         if (details.getCardHolder() != null) user.setCardHolder(details.getCardHolder());
         
+        if (user.getRole() == AppRole.ADMIN || user.getRole() == AppRole.ADMINISTRATOR) {
+            if (user.getCardNumber() == null || user.getCardNumber().trim().isEmpty() ||
+                user.getCardHolder() == null || user.getCardHolder().trim().isEmpty()) {
+                throw new com.lmscrm.backend.exception.BusinessException("Admin va Administratorlar uchun karta raqami (card_number) va karta egasining ismi (card_holder) kiritilishi majburiy!");
+            }
+        }
+
         // Only update active status if it's explicitly provided (though builder default is true)
         // Here we assume if it's in details, we take it.
         user.setActive(details.isActive());

@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -44,7 +46,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { api } from "@/lib/axios";
-import { Search, Plus, Pencil, Trash2, KeyRound, Loader2, UserCircle, Phone, Mail, BookOpen, Send, Copy, Hash, Check, ChevronsUpDown, ChevronDown, Ban, Unlock } from "lucide-react";
+import { Search, Plus, Pencil, Trash2, KeyRound, Loader2, UserCircle, Phone, Mail, BookOpen, Send, Copy, Hash, Check, ChevronsUpDown, ChevronDown, Ban, Unlock, Gift, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { z } from "zod";
@@ -89,8 +91,8 @@ const schema = z.object({
 });
 
 export default function MembersList({ role, title, description, canManage }: Props) {
-  const [loading, setLoading] = useState(true);
-  const [members, setMembers] = useState<Member[]>([]);
+  const { profile } = useAuth();
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Member | null>(null);
@@ -106,51 +108,64 @@ export default function MembersList({ role, title, description, canManage }: Pro
     subject: "",
     parent_telegram_username: "",
     student_id: "",
-    organization_id: "",
+    organization_id: profile?.organization_id || "",
     group_id: "",
   });
   const [newPwd, setNewPwd] = useState("");
-  const [studentsList, setStudentsList] = useState<{id: string, fullName: string, username: string}[]>([]);
-  const [groups, setGroups] = useState<{id: string, name: string}[]>([]);
   const [groupSearchOpen, setGroupSearchOpen] = useState(false);
-  const [loadingStudents, setLoadingStudents] = useState(false);
   const [studentSearchOpen, setStudentSearchOpen] = useState(false);
-
-  const load = async () => {
-    setLoading(true);
-    try {
-      const [{ data }, { data: groupsData }] = await Promise.all([
-        api.get('/admin/users/by-role/' + role.toUpperCase()),
-        api.get('/admin/groups', { params: { size: 1000 } })
-      ]);
-      const membersData = data.content || data;
-      setMembers(Array.isArray(membersData) ? membersData : []);
-      setGroups(groupsData.content || groupsData || []);
-    } catch (error: any) {
-      console.error("Failed to load members:", error);
-      toast.error("Ma'lumotlarni yuklab bo'lmadi");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadStudents = async () => {
-    setLoadingStudents(true);
-    try {
-      const response = await api.get('/admin/users/by-role/STUDENT', { params: { size: 1000 } });
-      const data = response.data.content || response.data;
-      setStudentsList(Array.isArray(data) ? data.map((s: any) => ({ id: s.id, fullName: s.full_name || s.username, username: s.username })) : []);
-    } catch (e) {
-      console.error("Failed to load students:", e);
-    } finally {
-      setLoadingStudents(false);
-    }
-  };
+  const [grantCoinsOpen, setGrantCoinsOpen] = useState(false);
+  const [grantCoinsTarget, setGrantCoinsTarget] = useState<Member | null>(null);
+  const [grantAmount, setGrantAmount] = useState(500);
+  const [grantReason, setGrantReason] = useState("Darsdagi faollik");
+  const [grantComment, setGrantComment] = useState("");
 
   useEffect(() => {
-    load();
-    if (role === "parent") loadStudents();
-  }, [role]);
+    if (profile?.organization_id && !form.organization_id) {
+      setForm((f) => ({ ...f, organization_id: profile.organization_id || "" }));
+    }
+  }, [profile]);
+
+  const { data: membersData = [], isLoading: loadingMembers } = useQuery({
+    queryKey: ["members-list", role, profile?.organization_id],
+    queryFn: async () => {
+      const { data } = await api.get('/admin/users/by-role/' + role.toUpperCase(), {
+        params: { size: 1000, organizationId: profile?.organization_id || undefined }
+      });
+      const content = data?.content || data;
+      return Array.isArray(content) ? content : [];
+    },
+    placeholderData: (previousData) => previousData,
+  });
+
+  const { data: groupsData = [] } = useQuery({
+    queryKey: ["groups-list", profile?.organization_id],
+    queryFn: async () => {
+      const { data } = await api.get('/admin/groups', {
+        params: { size: 1000, organizationId: profile?.organization_id || undefined }
+      });
+      const content = data?.content || data;
+      return Array.isArray(content) ? content : [];
+    },
+    placeholderData: (previousData) => previousData,
+  });
+
+  const { data: studentsList = [] } = useQuery({
+    queryKey: ["students-list", profile?.organization_id],
+    queryFn: async () => {
+      if (role !== "parent") return [];
+      const { data } = await api.get('/admin/users/by-role/STUDENT', {
+        params: { size: 1000, organizationId: profile?.organization_id || undefined }
+      });
+      const content = data?.content || data;
+      return Array.isArray(content) ? content.map((s: any) => ({ id: s.id, fullName: s.full_name || s.username, username: s.username })) : [];
+    },
+    placeholderData: (previousData) => previousData,
+  });
+
+  const members = membersData;
+  const groups = groupsData;
+  const loading = loadingMembers;
 
   const resetForm = () => {
     setForm({ 
@@ -162,6 +177,8 @@ export default function MembersList({ role, title, description, canManage }: Pro
       subject: "",
       parent_telegram_username: "",
       student_id: "",
+      organization_id: profile?.organization_id || "",
+      group_id: "",
     });
     setEditing(null);
   };
@@ -182,11 +199,37 @@ export default function MembersList({ role, title, description, canManage }: Pro
       subject: m.subject || "",
       parent_telegram_username: m.parent_telegram_username || "",
       student_id: m.student_id || "",
-      organization_id: m.organization_id || "",
-      group_id: m.group_id || "",
+      organization_id: m.organization_id || profile?.organization_id || "",
+      group_id: (m as any).group_id || "",
     });
     setDialogOpen(true);
   };
+
+  const submitMutation = useMutation({
+    mutationFn: async (payload: any) => {
+      if (editing) {
+        return api.put(`/admin/users/${editing.id}`, payload);
+      } else if (role === "parent") {
+        return api.post('/admin/users/parents/auto-create', {
+          studentId: form.student_id,
+          phoneNumber: form.phone_number,
+          telegramUsername: form.parent_telegram_username
+        });
+      } else {
+        return api.post('/admin/users', payload);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["members-list"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-dashboard-stats"] });
+      toast.success(editing ? "Ma'lumotlar yangilandi! ✨" : "Yangi a'zo qo'shildi! 🚀");
+      setDialogOpen(false);
+      resetForm();
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Xatolik yuz berdi");
+    },
+  });
 
   const submit = async () => {
     const isParent = role === "parent";
@@ -206,87 +249,105 @@ export default function MembersList({ role, title, description, canManage }: Pro
       return;
     }
 
-    setSubmitting(true);
-    try {
-      const payload = {
-        ...form,
-        username: form.username.toLowerCase(),
-        role: role.toUpperCase(),
-        phone_number: form.phone_number.trim().replaceAll(' ', ''),
-        organizationId: form.organization_id || null,
-        organization_id: form.organization_id || null,
-        groupId: form.group_id || null,
-        group_id: form.group_id || null,
-      };
+    const payload = {
+      ...form,
+      username: form.username.toLowerCase(),
+      role: role.toUpperCase(),
+      phone_number: form.phone_number.trim().replaceAll(' ', ''),
+      organizationId: form.organization_id || profile?.organization_id || null,
+      organization_id: form.organization_id || profile?.organization_id || null,
+      groupId: form.group_id || null,
+      group_id: form.group_id || null,
+    };
 
-      if (editing) {
-        await api.put(`/admin/users/${editing.id}`, payload);
-        toast.success("Ma'lumotlar yangilandi! ✨");
-      } else if (role === "parent") {
-        await api.post('/admin/users/parents/auto-create', {
-          studentId: form.student_id,
-          phoneNumber: form.phone_number,
-          telegramUsername: form.parent_telegram_username
-        });
-        toast.success("Ota-ona muvaffaqiyatli bog'landi! 👨‍👩‍👧‍👦✨");
-      } else {
-        await api.post('/admin/users', payload);
-        toast.success("Yangi a'zo qo'shildi! 🚀");
-      }
-      
-      setDialogOpen(false);
-      resetForm();
-      load();
-    } catch (error: any) {
-      console.error("Submit error:", error);
-    } finally {
-      setSubmitting(false);
-    }
+    submitMutation.mutate(payload);
   };
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return api.delete(`/admin/users/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["members-list"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-dashboard-stats"] });
+      toast.success("O'chirib tashlandi");
+      setDelTarget(null);
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Xatolik yuz berdi");
+    },
+  });
 
   const remove = async () => {
     if (!delTarget) return;
-    try {
-      await api.delete(`/admin/users/${delTarget.id}`);
-      toast.success("O'chirib tashlandi");
-      setDelTarget(null);
-      load();
-    } catch (error) {
-      console.error("Delete error:", error);
-    }
+    deleteMutation.mutate(delTarget.id);
   };
+
+  const resetPwdMutation = useMutation({
+    mutationFn: async ({ id, pass }: { id: string, pass: string }) => {
+      return api.post(`/admin/users/${id}/password`, { password: pass });
+    },
+    onSuccess: () => {
+      toast.success("Parol yangilandi! 🔐");
+      setPwdTarget(null);
+      setNewPwd("");
+    },
+    onError: () => {
+      toast.error("Parolni yangilashda xatolik");
+    },
+  });
 
   const resetPassword = async () => {
     if (!pwdTarget || newPwd.length < 6) {
       toast.error("Parol kamida 6 ta belgi bo'lishi kerak");
       return;
     }
-    setSubmitting(true);
-    try {
-      await api.post(`/admin/users/${pwdTarget.id}/password`, {
-        password: newPwd
-      });
-      toast.success("Parol yangilandi! 🔐");
-      setPwdTarget(null);
-      setNewPwd("");
-    } catch (error) {
-      console.error("Reset pass error:", error);
-      toast.error("Parolni yangilashda xatolik");
-    } finally {
-      setSubmitting(false);
-    }
+    resetPwdMutation.mutate({ id: pwdTarget.id, pass: newPwd });
   };
 
-  const toggleActive = async (m: Member) => {
-    try {
-      await api.patch(`/admin/users/${m.id}/active`, { active: !m.is_active });
-      toast.success(!m.is_active ? "Faollashtirildi" : "Bloklandi");
-      load();
-    } catch (error) {
-      console.error("Toggle active error:", error);
+  const toggleActiveMutation = useMutation({
+    mutationFn: async ({ id, active }: { id: string, active: boolean }) => {
+      return api.patch(`/admin/users/${id}/active`, { active });
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["members-list"] });
+      toast.success(variables.active ? "Faollashtirildi" : "Bloklandi");
+    },
+    onError: () => {
       toast.error("Xatolik yuz berdi");
-    }
+    },
+  });
+
+  const toggleActive = async (m: Member) => {
+    toggleActiveMutation.mutate({ id: m.id, active: !m.is_active });
   };
+
+  const grantCoinsMutation = useMutation({
+    mutationFn: async (payload: { studentId: string, amount: number, reason: string, comment?: string }) => {
+      return api.post("/admin/coins/grant", payload);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["members-list"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-dashboard-stats"] });
+      
+      // Celebration UX: Confetti
+      import("canvas-confetti").then(({ default: confetti }) => {
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ['#FFD700', '#FFA500', '#FF8C00']
+        });
+      });
+
+      toast.success("Coinlar muvaffaqiyatli yuborildi! 🪙✨");
+      setGrantCoinsOpen(false);
+      setGrantComment("");
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Xatolik yuz berdi");
+    },
+  });
 
   const filtered = members.filter((m) => {
     const q = search.toLowerCase();
@@ -431,6 +492,18 @@ export default function MembersList({ role, title, description, canManage }: Pro
 
                     {canManage && (
                       <div className="flex gap-2 pt-2 border-t border-slate-100 dark:border-white/5 mt-auto">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-9 w-9 rounded-lg bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 hover:text-amber-700"
+                          onClick={() => {
+                            setGrantCoinsTarget(m);
+                            setGrantCoinsOpen(true);
+                          }}
+                          title="Coin hadya qilish"
+                        >
+                          <Gift className="h-3.5 w-3.5" />
+                        </Button>
                         <Button
                           variant="secondary"
                           size="sm"
@@ -750,6 +823,89 @@ export default function MembersList({ role, title, description, canManage }: Pro
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Grant Coins Dialog */}
+      <Dialog open={grantCoinsOpen} onOpenChange={setGrantCoinsOpen}>
+        <DialogContent className="max-w-md" aria-describedby="grant-coins-desc">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-amber-500" />
+              <span>Coin hadya qilish</span>
+            </DialogTitle>
+            <DialogDescription id="grant-coins-desc">
+              Foydalanuvchiga rag'batlantirish uchun coin yuborish.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="flex items-center gap-4 p-4 rounded-xl bg-amber-500/5 border border-amber-500/10">
+              <Avatar className="h-12 w-12 border-2 border-amber-500/20">
+                <AvatarFallback className="bg-amber-500 text-white font-bold">
+                  {(grantCoinsTarget?.full_name || grantCoinsTarget?.username || "?").slice(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="font-bold text-amber-900">{grantCoinsTarget?.full_name || grantCoinsTarget?.username}</p>
+                <p className="text-xs text-amber-700/70">@{grantCoinsTarget?.username}</p>
+              </div>
+            </div>
+
+            <div className="grid gap-2">
+              <Label>Coin miqdori</Label>
+              <Input 
+                type="number" 
+                value={grantAmount} 
+                onChange={(e) => setGrantAmount(Number(e.target.value))} 
+                className="text-lg font-bold text-amber-600"
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label>Sabab</Label>
+              <Select value={grantReason} onValueChange={setReason => setGrantReason(setReason)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="IELTS/SAT yuqori ball">IELTS/SAT yuqori ball</SelectItem>
+                  <SelectItem value="Milliy sertifikat">Milliy sertifikat</SelectItem>
+                  <SelectItem value="Olimpiada g'olibi">Olimpiada g'olibi</SelectItem>
+                  <SelectItem value="Darsdagi faollik">Darsdagi faollik</SelectItem>
+                  <SelectItem value="5+ a'lo baho">5+ a'lo baho</SelectItem>
+                  <SelectItem value="Ota-ona faolligi">Ota-ona faolligi</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-2">
+              <Label>Izoh (Comment)</Label>
+              <Input 
+                value={grantComment} 
+                onChange={(e) => setGrantComment(e.target.value)} 
+                placeholder="Qisqacha izoh yozing..." 
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setGrantCoinsOpen(false)}>Bekor</Button>
+            <Button 
+              variant="hero" 
+              className="bg-amber-500 hover:bg-amber-600 text-white"
+              onClick={() => {
+                if (grantCoinsTarget) {
+                  grantCoinsMutation.mutate({
+                    studentId: grantCoinsTarget.id,
+                    amount: grantAmount,
+                    reason: grantReason,
+                    comment: grantComment
+                  });
+                }
+              }}
+              disabled={grantCoinsMutation.isPending}
+            >
+              {grantCoinsMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+              Coinlarni yuborish 🪙
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
