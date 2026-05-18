@@ -27,7 +27,7 @@
         <org.mapstruct.version>1.5.5.Final</org.mapstruct.version>
         <springdoc-openapi-version>2.0.2</springdoc-openapi-version>
         <jjwt.version>0.12.3</jjwt.version>
-        <lombok.version>1.18.36</lombok.version>
+        <lombok.version>1.18.34</lombok.version>
     </properties>
 
     <dependencies>
