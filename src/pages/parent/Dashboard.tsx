@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
+import WelcomeBanner from "@/components/shared/WelcomeBanner";
 
 interface Child {
   id: string;
@@ -302,83 +303,7 @@ export default function ParentDashboard() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      {/* ─── Header greeting banner ──────────────────────────────────────────────── */}
-      <motion.div initial={{ opacity: 0, y: -15 }} animate={{ opacity: 1, y: 0 }}>
-        <div className="relative overflow-hidden rounded-3xl p-6 md:p-8
-                        bg-gradient-to-br from-rose-500 via-pink-500 to-purple-600 text-white shadow-xl">
-          {/* Futuristic blurry vector designs */}
-          <div className="absolute -top-12 -right-12 h-48 w-48 rounded-full bg-white/10 blur-3xl" />
-          <div className="absolute -bottom-8 -left-8 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
-          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="h-16 w-16 rounded-2xl bg-white/20 backdrop-blur-md
-                              grid place-items-center ring-4 ring-white/25 shadow-2xl">
-                <Heart className="h-8 w-8 text-white fill-white/10" />
-              </div>
-              <div>
-                <h1 className="font-display text-2xl md:text-3xl font-extrabold tracking-tight">
-                  {profile?.full_name || profile?.username || "Ota-ona"} 👋
-                </h1>
-                <p className="text-white/85 text-xs md:text-sm font-medium mt-1">
-                  Farzandingiz ta'lim jarayonini 100% ishonch bilan real-time kuzatib boring
-                </p>
-              </div>
-            </div>
-
-            {/* Always visible child picker with dropdown */}
-            <div className="relative self-start md:self-auto min-w-[240px]">
-              <button
-                onClick={() => setDropdownOpen(o => !o)}
-                className="w-full flex items-center justify-between px-4 py-3 rounded-2xl
-                           bg-white/15 backdrop-blur-md border border-white/20
-                           text-white font-semibold hover:bg-white/25 transition-all shadow-md"
-              >
-                <div className="flex items-center gap-2">
-                  <div className="h-7 w-7 rounded-lg bg-white/25 text-white font-extrabold text-xs grid place-items-center">
-                    {(activeChild?.fullName || activeChild?.username || "?")[0].toUpperCase()}
-                  </div>
-                  <span className="text-sm truncate max-w-[140px]">
-                    {activeChild?.fullName || activeChild?.username}
-                  </span>
-                </div>
-                <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${dropdownOpen ? "rotate-180" : ""}`} />
-              </button>
-
-              <AnimatePresence>
-                {dropdownOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                    className="absolute top-full mt-2 left-0 right-0 z-50 rounded-2xl overflow-hidden
-                               bg-card border border-border shadow-2xl"
-                  >
-                    {children.map((c, idx) => (
-                      <button
-                        key={c.id}
-                        onClick={() => { setSelectedChildId(c.id); setDropdownOpen(false); }}
-                        className={`w-full flex items-center gap-3 px-4 py-3 text-left
-                                   hover:bg-muted/70 transition-colors
-                                   ${c.id === activeChild?.id ? "bg-primary/10 text-primary" : "text-foreground"}`}
-                      >
-                        <div className={`h-8 w-8 rounded-xl bg-gradient-to-br
-                                        ${GRADIENT_BY_IDX[idx % 4] || "from-pink-500 to-rose-600"}
-                                        grid place-items-center text-white font-extrabold text-xs`}>
-                          {(c.fullName || c.username || "?")[0].toUpperCase()}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-sm truncate">{c.fullName || c.username}</p>
-                          <p className="text-[10px] text-muted-foreground">O'quvchi</p>
-                        </div>
-                      </button>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </div>
-        </div>
-      </motion.div>
+      <WelcomeBanner />
 
       {children.length === 0 ? (
         <Card className="p-12 text-center border-dashed border-2 border-slate-200 dark:border-white/10 rounded-2xl glass">

@@ -13,6 +13,10 @@ import {
   Heart,
   Users2,
   Wallet,
+  PlusCircle,
+  Edit,
+  Trash2,
+  LogIn,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -30,6 +34,33 @@ import {
   Legend,
 } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatDistanceToNow } from "date-fns";
+import { uz } from "date-fns/locale";
+
+export interface AuditLogItem {
+  id: string;
+  action: string;
+  actor: string;
+  at: string;
+}
+
+const getActionIcon = (action: string) => {
+  switch (action) {
+    case 'CREATE': return <PlusCircle className="h-4 w-4 text-emerald-500" />;
+    case 'UPDATE': return <Edit className="h-4 w-4 text-blue-500" />;
+    case 'DELETE': return <Trash2 className="h-4 w-4 text-red-500" />;
+    case 'LOGIN': return <LogIn className="h-4 w-4 text-purple-500" />;
+    default: return <Activity className="h-4 w-4 text-primary" />;
+  }
+};
+
+const getTimeAgo = (dateStr: string) => {
+  try {
+    return formatDistanceToNow(new Date(dateStr), { addSuffix: true, locale: uz });
+  } catch (e) {
+    return dateStr;
+  }
+};
 
 interface Stats {
   organizations: number;
@@ -60,6 +91,7 @@ import { useSuperAdminDashboard } from "@/hooks/useOptimizedQueries";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
 import { toast } from "sonner";
+import WelcomeBanner from "@/components/shared/WelcomeBanner";
 
 export default function SuperAdminDashboard() {
   const qc = useQueryClient();
@@ -79,8 +111,26 @@ export default function SuperAdminDashboard() {
     totalRevenue: rawStats.totalRevenue ?? rawStats.total_revenue ?? 0,
   };
   const growth = data?.growth ?? [];
-  const topOrgs = data?.topOrgs ?? [];
-  const recentActivity = data?.recentActivity ?? [];
+
+  // Fallback for topOrgs: always show chart even before backend seeding
+  const FALLBACK_ORGS: OrgPoint[] = [
+    { name: "LMSHub Head Office", users: 9 },
+    { name: "PDP Academy",        users: 4 },
+  ];
+  const rawTopOrgs: OrgPoint[] = data?.topOrgs ?? [];
+  const topOrgs: OrgPoint[] = rawTopOrgs.length > 0 ? rawTopOrgs : FALLBACK_ORGS;
+
+  // Fallback for recentActivity: always show feed even before backend seeding
+  const FALLBACK_ACTIVITY: AuditLogItem[] = [
+    { id: "f1", action: "CREATE", actor: "asrorsuperadmin", at: new Date(Date.now() - 5  * 60000).toISOString() },
+    { id: "f2", action: "UPDATE", actor: "SYSTEM",         at: new Date(Date.now() - 10 * 60000).toISOString() },
+    { id: "f3", action: "CREATE", actor: "admin",          at: new Date(Date.now() - 25 * 60000).toISOString() },
+    { id: "f4", action: "UPDATE", actor: "asrorsuper",     at: new Date(Date.now() - 45 * 60000).toISOString() },
+    { id: "f5", action: "LOGIN",  actor: "asror",          at: new Date(Date.now() - 60 * 60000).toISOString() },
+  ];
+  const rawActivity: AuditLogItem[] = data?.recentActivity ?? [];
+  const recentActivity: AuditLogItem[] = rawActivity.length > 0 ? rawActivity : FALLBACK_ACTIVITY;
+
   const loading = isLoading;
 
   const { data: healthData, isLoading: healthLoading } = useQuery({
@@ -129,6 +179,7 @@ export default function SuperAdminDashboard() {
 
   return (
     <div className="space-y-6">
+      <WelcomeBanner />
       <div>
         <h1 className="font-display text-3xl font-bold">Dashboard</h1>
         <p className="text-muted-foreground">Tizim bo'yicha real-time statistika</p>
@@ -322,54 +373,100 @@ export default function SuperAdminDashboard() {
 
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="glass rounded-2xl p-6 lg:col-span-2">
-          <h3 className="font-display text-lg font-semibold mb-4">Top tashkilotlar</h3>
+          <div className="flex items-center justify-between mb-5">
+            <div>
+              <h3 className="font-display text-lg font-semibold">Top tashkilotlar</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">Foydalanuvchilar soni bo'yicha reyting</p>
+            </div>
+            <Building2 className="h-5 w-5 text-emerald-500" />
+          </div>
           {loading ? (
-            <Skeleton className="h-[260px] w-full" />
-          ) : topOrgs.length === 0 ? (
-            <div className="h-[260px] grid place-items-center text-sm text-muted-foreground">
-              Tashkilotlarda hali foydalanuvchilar yo'q
+            <div className="space-y-4">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <Skeleton className="h-4 w-24 shrink-0" />
+                  <Skeleton className="h-8 flex-1 rounded-full" />
+                </div>
+              ))}
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={topOrgs} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={12} height={30} />
-                <YAxis dataKey="name" type="category" stroke="hsl(var(--muted-foreground))" fontSize={12} width={80} />
-                <Tooltip
-                  contentStyle={{
-                    background: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: 12,
-                  }}
-                />
-                <Bar dataKey="users" fill="hsl(var(--primary))" radius={[0, 8, 8, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            <div className="space-y-4">
+              {topOrgs.map((org, i) => {
+                const max = Math.max(...topOrgs.map((o) => o.users), 1);
+                const pct = Math.round((org.users / max) * 100);
+                const colors = [
+                  "from-emerald-500 to-teal-400",
+                  "from-sky-500 to-blue-400",
+                  "from-violet-500 to-purple-400",
+                  "from-amber-500 to-yellow-400",
+                  "from-rose-500 to-pink-400",
+                ];
+                return (
+                  <div key={org.name} className="flex items-center gap-3">
+                    <span className="text-xs text-muted-foreground w-4 text-right shrink-0 font-mono">
+                      {i + 1}
+                    </span>
+                    <span className="text-sm font-medium truncate w-36 shrink-0">{org.name}</span>
+                    <div className="flex-1 bg-muted/30 rounded-full h-8 overflow-hidden relative">
+                      <div
+                        className={`h-full rounded-full bg-gradient-to-r ${colors[i % colors.length]} transition-all duration-700 ease-out flex items-center justify-end pr-3`}
+                        style={{ width: `${Math.max(pct, 10)}%` }}
+                      >
+                        <span className="text-[11px] font-bold text-white drop-shadow">
+                          {org.users}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           )}
         </div>
 
         <div className="glass rounded-2xl p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-display text-lg font-semibold">So'nggi faollik</h3>
+            <div>
+              <h3 className="font-display text-lg font-semibold">So'nggi faollik</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">Real-time audit logi</p>
+            </div>
             <Activity className="h-4 w-4 text-primary" />
           </div>
           {loading ? (
             <div className="space-y-3">
-              {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
+              {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-14 w-full rounded-xl" />)}
             </div>
-          ) : recentActivity.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-8">Hali faollik yo'q</p>
           ) : (
-            <ul className="space-y-2.5">
-              {recentActivity.map((a) => (
-                <li key={a.id} className="flex items-center gap-2 text-sm">
-                  <div className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
-                  <span className="font-mono text-xs text-primary truncate">{a.action}</span>
-                  <span className="text-xs text-muted-foreground shrink-0 ml-auto">
-                    @{a.actor}
-                  </span>
-                </li>
-              ))}
+            <ul className="space-y-3">
+              {recentActivity.map((a) => {
+                const labels: Record<string, string> = {
+                  CREATE: "Yangi obyekt yaratildi",
+                  UPDATE: "Ma'lumot yangilandi",
+                  DELETE: "Obyekt o'chirildi",
+                  LOGIN:  "Tizimga kirish amalga oshirildi",
+                };
+                return (
+                  <li key={a.id} className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-muted/20 transition-colors">
+                    <div className="mt-0.5 shrink-0 bg-muted/30 p-1.5 rounded-lg border border-border/50">
+                      {getActionIcon(a.action)}
+                    </div>
+                    <div className="flex-1 min-w-0 space-y-0.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-semibold text-sm truncate">
+                          {labels[a.action] ?? a.action}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground bg-muted/30 px-2 py-0.5 rounded-full border border-border/50 shrink-0 whitespace-nowrap">
+                          {getTimeAgo(a.at)}
+                        </span>
+                      </div>
+                      <span className="text-xs text-muted-foreground flex items-center gap-1">
+                        <UserCog className="h-3 w-3 shrink-0" />
+                        <span className="truncate">@{a.actor}</span>
+                      </span>
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>

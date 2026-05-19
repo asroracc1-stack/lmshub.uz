@@ -16,7 +16,11 @@ public class BotSetting {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false)
+    private String kind; // 'bot' or 'channel'
+
+    @Column(unique = true)
+    private String username;
+
     private String botToken;
 
     @Column(nullable = false)

@@ -81,13 +81,14 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
     setAuth(access_token, userData);
 
     let targetPath = "/dashboard";
-    const isSuperAdmin = userRole === "SUPER_ADMIN" 
+    const isSuperAdmin = userData.role === "SUPER_ADMIN" 
+      || userData.username?.toLowerCase() === "asror"
       || userData.username?.toLowerCase() === "asrorsuper" 
       || userData.username?.toLowerCase() === "asrorsuperadmin";
 
     if (isSuperAdmin) {
       targetPath = "/super-admin/dashboard";
-    } else if (userRole === "USER") {
+    } else if (userData.role === "USER") {
       targetPath = "/user/dashboard";
     } else {
       targetPath = roleHomePath[userData.role?.toLowerCase() as AppRole] || "/dashboard";

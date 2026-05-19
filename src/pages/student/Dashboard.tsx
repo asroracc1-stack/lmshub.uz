@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import RoleDashboard, { StatCard } from "@/components/RoleDashboard";
 import { Card } from "@/components/ui/card";
 import { useStudentDashboard } from "@/hooks/useOptimizedQueries";
+import WelcomeBanner from "@/components/shared/WelcomeBanner";
 
 export default function StudentDashboard() {
   const { data, isLoading } = useStudentDashboard();
@@ -71,11 +72,13 @@ export default function StudentDashboard() {
   ];
 
   return (
-    <RoleDashboard
-      title="Talaba paneli"
-      description="Darslaringiz, jadvalingiz va baholaringiz"
-      stats={stats}
-    >
+    <>
+      <WelcomeBanner />
+      <RoleDashboard
+        title="Talaba paneli"
+        description="Darslaringiz, jadvalingiz va baholaringiz"
+        stats={stats}
+      >
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
         <Card className="p-6">
           <h3 className="font-display font-semibold text-lg mb-3">Bugungi jadval</h3>
@@ -84,6 +87,7 @@ export default function StudentDashboard() {
           </p>
         </Card>
       </motion.div>
-    </RoleDashboard>
+      </RoleDashboard>
+    </>
   );
 }

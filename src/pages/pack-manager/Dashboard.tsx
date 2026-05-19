@@ -5,6 +5,7 @@ import { Wallet, Clock, CheckCircle2, AlertTriangle, Crown, TrendingUp, Loader2 
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
+import WelcomeBanner from "@/components/shared/WelcomeBanner";
 
 export default function PackManagerDashboard() {
   const [loading, setLoading] = useState(true);
@@ -75,12 +76,7 @@ export default function PackManagerDashboard() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-      <div>
-        <h1 className="text-2xl md:text-3xl font-display font-bold bg-gradient-to-r from-emerald-500 to-blue-500 bg-clip-text text-transparent">
-          Pack Manager Dashboard
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">To'lovlar, obunalar va aktivatsiyalar boshqaruvi</p>
-      </div>
+      <WelcomeBanner />
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
         <Stat icon={Wallet} label="Jami to'lovlar" value={stats.total} color="from-blue-500/10 to-blue-500/5" />

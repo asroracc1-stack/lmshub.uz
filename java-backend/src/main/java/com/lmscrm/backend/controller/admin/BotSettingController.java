@@ -30,7 +30,14 @@ public class BotSettingController {
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     @Operation(summary = "Save or Update Bot Settings")
     public ResponseEntity<BotSetting> save(@RequestBody BotSetting setting) {
-        // Simple logic: keep only one active setting or just save
         return ResponseEntity.ok(botSettingRepository.save(setting));
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @Operation(summary = "Delete Bot Setting")
+    public ResponseEntity<Void> delete(@PathVariable java.util.UUID id) {
+        botSettingRepository.deleteById(id);
+        return ResponseEntity.noContent().build();
     }
 }

@@ -39,7 +39,7 @@ public class SuperAdminStatsDto {
     @NoArgsConstructor
     public static class MonthPoint {
         private String month;
-        private int count;
+        private int users;
     }
 
     @Data

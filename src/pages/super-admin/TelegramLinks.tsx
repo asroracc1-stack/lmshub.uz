@@ -110,11 +110,11 @@ export default function TelegramLinksPage() {
 
     const payload = {
       kind: editing.kind,
-      bot_name: editing.name,
+      botName: editing.name,
       username: editing.username.replace(/^@/, ""),
-      bot_token: editing.kind === "bot" ? editing.bot_token : null,
-      welcome_message: editing.description,
-      is_active: editing.is_active,
+      botToken: editing.kind === "bot" ? editing.bot_token : null,
+      welcomeMessage: editing.description,
+      isActive: editing.is_active,
     };
 
     await createUpdateMutation.mutateAsync(payload);

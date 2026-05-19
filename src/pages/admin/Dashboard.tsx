@@ -25,6 +25,7 @@ import { uz } from "date-fns/locale";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { StudentCombobox } from "@/components/StudentCombobox";
 import { api } from "@/lib/axios";
+import WelcomeBanner from "@/components/shared/WelcomeBanner";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -377,54 +378,7 @@ export default function AdminDashboard() {
       
       <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/5 dark:bg-primary/20 rounded-full blur-[120px] -z-10 pointer-events-none" />
       
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 mb-2">
-            <Badge className="bg-primary/10 text-primary border-none text-[10px] font-bold uppercase tracking-widest px-3 py-0.5 rounded-full">Tashkilot Admini</Badge>
-            <Badge variant="outline" className="text-muted-foreground border-slate-200 dark:border-white/10 text-[10px] font-bold uppercase tracking-widest px-3 py-0.5 rounded-full">
-              {stats?.organization?.name || "PDP"}
-            </Badge>
-          </div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Tizim Boshqaruvi</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">Xush kelibsiz, {profile?.full_name?.split(' ')[0]}! Bugungi ko'rsatkichlar bilan tanishing.</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Button 
-            variant="outline" 
-            onClick={() => setActiveModal("settings")}
-            className="h-11 rounded-xl bg-white dark:bg-white/5 backdrop-blur-md 
-                       border-slate-200 dark:border-white/10 gap-2 font-semibold 
-                       text-slate-700 dark:text-slate-200
-                       hover:bg-slate-50 dark:hover:bg-white/10 
-                       hover:border-primary/30 hover:text-primary
-                       transition-all shadow-sm px-5"
-          >
-            <Settings className="h-4 w-4" /> Sozlamalar
-          </Button>
-          <Button 
-            onClick={() => generateReport.mutate()}
-            disabled={generateReport.isPending}
-            className="h-11 rounded-xl px-6 gap-2 font-bold text-sm
-                       bg-gradient-to-r from-emerald-500 to-green-600
-                       hover:from-emerald-600 hover:to-green-700
-                       text-white border-0
-                       shadow-lg shadow-emerald-500/25
-                       hover:shadow-emerald-500/40
-                       transition-all duration-200
-                       disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {generateReport.isPending ? (
-              <>
-                <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                Tayyorlanmoqda...
-              </>
-            ) : (
-              <>Hisobot Yaratish</>
-            )}
-          </Button>
-        </div>
-
-      </header>
+      <WelcomeBanner />
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">

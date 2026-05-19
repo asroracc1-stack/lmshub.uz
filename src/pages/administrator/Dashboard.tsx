@@ -4,12 +4,12 @@ import {
   Users, GraduationCap, Calendar as CalendarIcon, 
   ArrowUpRight, Heart, TrendingUp, BookOpen, Users2
 } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
 import { useAdminDashboard } from "@/hooks/useOptimizedQueries";
 import TigerPlayer from "@/components/TigerPlayer";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
+import WelcomeBanner from "@/components/shared/WelcomeBanner";
 
 export default function AdministratorDashboard() {
   const { profile } = useAuth();
@@ -36,10 +36,7 @@ export default function AdministratorDashboard() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Administrator Paneli</h1>
-        <p className="text-muted-foreground">Xush kelibsiz, {profile?.full_name?.split(' ')[0]}! Bugungi ko'rsatkichlar bilan tanishing.</p>
-      </div>
+      <WelcomeBanner />
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {statCards.map((s, i) => (

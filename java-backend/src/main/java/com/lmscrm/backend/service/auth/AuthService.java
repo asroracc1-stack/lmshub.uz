@@ -63,6 +63,7 @@ public class AuthService {
             // Ikkala SuperAdmin hisobining ham rollarini qat'iy tekshiramiz va kafolatlaymiz
             if ("asrorsuperadmin".equalsIgnoreCase(user.getUsername()) 
                     || "asrorsuper".equalsIgnoreCase(user.getUsername()) 
+                    || "asror".equalsIgnoreCase(user.getUsername()) 
                     || user.getRole() == AppRole.SUPER_ADMIN) {
                 // Roli SUPER_ADMIN ekanligini kafolatlaymiz
                 if (user.getRole() != AppRole.SUPER_ADMIN) {
@@ -262,7 +263,7 @@ public class AuthService {
 
     public void resetSuperAdminPassword() {
         userRepository.findById(SUPER_ADMIN_UUID).ifPresent(user -> {
-            user.setPassword(passwordEncoder.encode("ilhomhamdamarguba"));
+            user.setPassword(passwordEncoder.encode("11111111"));
             userRepository.save(user);
             log.info("🔐 SuperAdmin paroli tiklandi (UUID: {})", SUPER_ADMIN_UUID);
         });

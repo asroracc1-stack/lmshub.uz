@@ -3,6 +3,7 @@ import RoleDashboard, { StatCard } from "@/components/RoleDashboard";
 import { Card } from "@/components/ui/card";
 import { useTeacherDashboard } from "@/hooks/useOptimizedQueries";
 import { motion } from "framer-motion";
+import WelcomeBanner from "@/components/shared/WelcomeBanner";
 
 export default function TeacherDashboard() {
   const { data, isLoading } = useTeacherDashboard();
@@ -14,19 +15,22 @@ export default function TeacherDashboard() {
   ];
 
   return (
-    <RoleDashboard
-      title="O'qituvchi paneli"
-      description="Sizning darslaringiz va talabalaringiz"
-      stats={stats}
-    >
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-        <Card className="p-6">
-          <h3 className="font-display font-semibold text-lg mb-3">Bugungi vazifalar</h3>
-          <p className="text-sm text-muted-foreground">
-            Darslar va vazifalar moduli tez orada ishga tushiriladi.
-          </p>
-        </Card>
-      </motion.div>
-    </RoleDashboard>
+    <>
+      <WelcomeBanner />
+      <RoleDashboard
+        title="O'qituvchi paneli"
+        description="Sizning darslaringiz va talabalaringiz"
+        stats={stats}
+      >
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+          <Card className="p-6">
+            <h3 className="font-display font-semibold text-lg mb-3">Bugungi vazifalar</h3>
+            <p className="text-sm text-muted-foreground">
+              Darslar va vazifalar moduli tez orada ishga tushiriladi.
+            </p>
+          </Card>
+        </motion.div>
+      </RoleDashboard>
+    </>
   );
 }

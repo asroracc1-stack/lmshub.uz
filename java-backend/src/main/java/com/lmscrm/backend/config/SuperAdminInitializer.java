@@ -27,6 +27,7 @@ public class SuperAdminInitializer implements CommandLineRunner {
     private final ProfileRepository profileRepository;
     private final OrganizationRepository organizationRepository;
     private final PasswordEncoder passwordEncoder;
+    private final com.lmscrm.backend.repository.AuditLogRepository auditLogRepository;
 
     @Override
     @Transactional
@@ -109,6 +110,44 @@ public class SuperAdminInitializer implements CommandLineRunner {
             log.info("📄 'asrorsuper' profili muvaffaqiyatli bog'landi.");
         }
 
+        // 2.5. Safe check for 3-SuperAdmin ('asror')
+        Optional<User> adminOpt3 = userRepository.findByUsername("asror");
+        User admin3;
+        if (adminOpt3.isPresent()) {
+            admin3 = adminOpt3.get();
+            log.info("👤 Tizimda mavjud 'asror' topildi (ID: {}). Ma'lumotlarni yangilaymiz...", admin3.getId());
+            admin3.setPassword(passwordEncoder.encode("123456"));
+            admin3.setRole(AppRole.SUPER_ADMIN);
+            admin3.setActive(true);
+            userRepository.save(admin3);
+        } else {
+            log.info("🌱 'asror' topilmadi. Yangidan yaratilmoqda...");
+            admin3 = User.builder()
+                    .username("asror")
+                    .email("asror@lmshub.uz")
+                    .password(passwordEncoder.encode("123456"))
+                    .fullName("Asror Super Admin Main")
+                    .role(AppRole.SUPER_ADMIN)
+                    .active(true)
+                    .isGoogleUser(false)
+                    .coins(0L)
+                    .createdAt(LocalDateTime.now())
+                    .build();
+            userRepository.save(admin3);
+        }
+
+        // Safe Profile check for admin3
+        if (!profileRepository.findByUser(admin3).isPresent()) {
+            Profile profile3 = Profile.builder()
+                    .user(admin3)
+                    .firstName("Asror")
+                    .lastName("Developer")
+                    .isActive(true)
+                    .build();
+            profileRepository.save(profile3);
+            log.info("📄 'asror' profili muvaffaqiyatli bog'landi.");
+        }
+
         // 3. Seed Default Organization
         Organization org = organizationRepository.findBySlug("lmshub-head-office").orElse(null);
         if (org == null) {
@@ -132,11 +171,43 @@ public class SuperAdminInitializer implements CommandLineRunner {
         seedDemoUser("manager", "manager@lmshub.uz", AppRole.PAYMENT_MANAGER, "Branch Pack Manager", orgId, null, null);
         seedDemoUser("user", "user@lmshub.uz", AppRole.USER, "Branch Regular User", orgId, null, null);
 
+        // 5. Seed Demo Audit Logs
+        if (auditLogRepository.count() == 0) {
+            log.info("🌱 Seeding Demo Audit Logs for SuperAdmin dashboard...");
+            seedAuditLog("CREATE", "Organization", "PDP Academy yaratildi", "asrorsuperadmin", 5);
+            seedAuditLog("UPDATE", "User", "Super Admin paroli tiklandi", "SYSTEM", 10);
+            seedAuditLog("CREATE", "User", "Yangi o'qituvchi qo'shildi: Branch Teacher", "admin", 25);
+            seedAuditLog("UPDATE", "System", "Tizim keshi muvaffaqiyatli tozalandi", "asrorsuper", 45);
+            seedAuditLog("LOGIN", "User", "Super admin tizimga muvaffaqiyatli kirdi", "asror", 60);
+        }
+
         log.info("🛡️ [SuperAdminInitializer] Barcha ishlar xavfsiz yakunlandi.");
+    }
+
+    private void seedAuditLog(String action, String objectType, String details, String username, int minusMinutes) {
+        com.lmscrm.backend.domain.entity.AuditLog log = com.lmscrm.backend.domain.entity.AuditLog.builder()
+                .action(action)
+                .objectType(objectType)
+                .objectId("N/A")
+                .username(username)
+                .details(details)
+                .createdAt(LocalDateTime.now().minusMinutes(minusMinutes))
+                .build();
+        auditLogRepository.save(log);
     }
 
     private void seedDemoUser(String username, String email, AppRole role, String fullName, UUID orgId, String cardNum, String cardHolder) {
         Optional<User> userOpt = userRepository.findByUsername(username);
+        
+        // Calculate historical createdAt based on role for realistic growth chart
+        LocalDateTime historicalCreatedAt;
+        if (role == AppRole.USER) historicalCreatedAt = LocalDateTime.now().minusMonths(5);
+        else if (role == AppRole.ADMIN) historicalCreatedAt = LocalDateTime.now().minusMonths(4);
+        else if (role == AppRole.ADMINISTRATOR) historicalCreatedAt = LocalDateTime.now().minusMonths(3);
+        else if (role == AppRole.TEACHER) historicalCreatedAt = LocalDateTime.now().minusMonths(2);
+        else if (role == AppRole.STUDENT) historicalCreatedAt = LocalDateTime.now().minusMonths(1);
+        else historicalCreatedAt = LocalDateTime.now();
+
         User user;
         if (!userOpt.isPresent()) {
             log.info("🌱 Demo '{}' foydalanuvchisi topilmadi. Yangidan yaratilmoqda...", username);
@@ -152,7 +223,7 @@ public class SuperAdminInitializer implements CommandLineRunner {
                     .active(true)
                     .isGoogleUser(false)
                     .coins(100L)
-                    .createdAt(LocalDateTime.now())
+                    .createdAt(historicalCreatedAt)
                     .build();
             userRepository.save(user);
 
@@ -168,6 +239,7 @@ public class SuperAdminInitializer implements CommandLineRunner {
             user = userOpt.get();
             user.setPassword(passwordEncoder.encode("123456"));
             user.setOrganizationId(orgId);
+            user.setCreatedAt(historicalCreatedAt); // Update existing records to reflect historical data
             if (cardNum != null) user.setCardNumber(cardNum);
             if (cardHolder != null) user.setCardHolder(cardHolder);
             userRepository.save(user);

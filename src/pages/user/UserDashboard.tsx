@@ -37,6 +37,7 @@ import DonationCard from "@/components/DonationCard";
 import DailyTasks from "@/components/DailyTasks";
 import { useTheme } from "@/contexts/ThemeContext";
 import TigerPlayer from "@/components/TigerPlayer";
+import WelcomeBanner from "@/components/shared/WelcomeBanner";
 
 interface DailyData {
   day: string;
@@ -336,30 +337,9 @@ export default function UserDashboard() {
   return (
     <div className="p-4 md:p-6 space-y-8 max-w-7xl mx-auto min-h-screen">
       {modal}
-      
-      {/* Greeting card */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
-        <Card className="relative overflow-hidden p-8 md:p-10 bg-gradient-to-r from-[#10b981] to-[#0d9488] text-white border-0 shadow-2xl shadow-emerald-500/20 rounded-[2rem]">
-          <div className="absolute -right-10 -top-10 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
-          <div className="absolute right-12 top-1/2 -translate-y-1/2 hidden md:flex opacity-100 pointer-events-none">
-            <TigerPlayer text={`Salom, ${profile?.firstName || profile?.username || 'Do\'st'}!`} size={220} />
-          </div>
-          <div className="relative">
-             <div className="bg-white/10 w-fit px-4 py-1.5 rounded-full backdrop-blur-md text-xs font-bold mb-6 flex items-center gap-2">
-               <span className="opacity-80 font-medium">{greet}</span> <span>👋</span>
-             </div>
-            <h1 className="font-display text-3xl md:text-5xl font-black tracking-tight mt-1">
-              Xush kelibsiz,<br/> {String(profile?.firstName || user?.username || 'Do\'st')}!
-            </h1>
-            <p className="opacity-90 mt-6 text-lg font-medium max-w-md leading-relaxed text-emerald-50">
-              Har bir qadam sizni <span className="font-bold underline decoration-white/30 decoration-2 underline-offset-4">Band 9</span> ga yaqinlashtiradi.
-            </p>
-          </div>
-        </Card>
-      </motion.div>
+
+      {/* Premium Welcome Banner */}
+      <WelcomeBanner />
 
       {/* Onboarding Welcome Call-to-Action Banner */}
       <motion.div
