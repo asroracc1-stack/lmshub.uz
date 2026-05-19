@@ -24,6 +24,7 @@ public class GeminiService {
 
     private final List<String> apiKeysList = new ArrayList<>();
     private final Map<String, Long> keyCooldowns = new ConcurrentHashMap<>();
+    private final Set<String> bannedKeys = new java.util.concurrent.CopyOnWriteArraySet<>();
     private int currentKeyIndex = 0;
 
     @PostConstruct
@@ -138,9 +139,20 @@ public class GeminiService {
             try {
                 return callGeminiWithKey(prompt, key);
             } catch (org.springframework.web.client.HttpStatusCodeException e) {
-                if (e.getStatusCode().value() == 429) {
-                    markKeyAsLimited(key, 60); // Default 60s cooldown for 429
-                    continue; // Seamlessly try next key in the next iteration
+                int statusCode = e.getStatusCode().value();
+                if (statusCode == 429) {
+                    markKeyAsLimited(key, 60);
+                    continue;
+                } else if (statusCode == 403) {
+                    // Key is banned/leaked — permanently disable it for this session
+                    bannedKeys.add(key);
+                    keyCooldowns.put(key, Long.MAX_VALUE);
+                    log.error("🔑 Gemini API key ...{} banned/leaked (403). Marking as permanently disabled.",
+                        key.substring(Math.max(0, key.length() - 4)));
+                    if (bannedKeys.size() >= apiKeysList.size()) {
+                        throw new RuntimeException("AI xizmati mavjud emas: API kaliti muddati o'tgan yoki bloklangan. Yangi Gemini API kaliti kerak.");
+                    }
+                    continue;
                 }
                 throw new RuntimeException("AI tahlilida xatolik: " + e.getResponseBodyAsString());
             } catch (Exception e) {

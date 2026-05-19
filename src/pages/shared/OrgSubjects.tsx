@@ -66,6 +66,60 @@ interface TeacherProfileDto {
 const COLORS = ["primary", "secondary", "accent", "success", "warning", "destructive"];
 const SUGGESTED_SUBJECTS = ["Matematika", "Ingliz tili", "Rus tili", "Fizika", "Tarix", "IT"];
 
+// Unique card design palettes — each index gets a totally different look
+const CARD_DESIGNS = [
+  { // 0 — Indigo gradient
+    card: "bg-gradient-to-br from-indigo-50 via-white to-indigo-100/60 dark:from-indigo-950/60 dark:via-slate-900 dark:to-indigo-900/30 border-indigo-200/70 dark:border-indigo-800/40 hover:shadow-indigo-200/60 dark:hover:shadow-indigo-900/40",
+    icon: "bg-indigo-100 dark:bg-indigo-900/50 border-indigo-200 dark:border-indigo-700 text-indigo-600 dark:text-indigo-400",
+    badge: "bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300",
+    accent: "from-indigo-400 to-violet-500",
+    deco: "bg-indigo-400/10",
+    radius: "rounded-2xl",
+  },
+  { // 1 — Emerald gradient
+    card: "bg-gradient-to-br from-emerald-50 via-white to-teal-100/60 dark:from-emerald-950/60 dark:via-slate-900 dark:to-teal-900/30 border-emerald-200/70 dark:border-emerald-800/40 hover:shadow-emerald-200/60 dark:hover:shadow-emerald-900/40",
+    icon: "bg-emerald-100 dark:bg-emerald-900/50 border-emerald-200 dark:border-emerald-700 text-emerald-600 dark:text-emerald-400",
+    badge: "bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300",
+    accent: "from-emerald-400 to-teal-500",
+    deco: "bg-emerald-400/10",
+    radius: "rounded-3xl",
+  },
+  { // 2 — Rose gradient
+    card: "bg-gradient-to-br from-rose-50 via-white to-pink-100/60 dark:from-rose-950/60 dark:via-slate-900 dark:to-pink-900/30 border-rose-200/70 dark:border-rose-800/40 hover:shadow-rose-200/60 dark:hover:shadow-rose-900/40",
+    icon: "bg-rose-100 dark:bg-rose-900/50 border-rose-200 dark:border-rose-700 text-rose-600 dark:text-rose-400",
+    badge: "bg-rose-100 dark:bg-rose-900/60 text-rose-700 dark:text-rose-300",
+    accent: "from-rose-400 to-pink-500",
+    deco: "bg-rose-400/10",
+    radius: "rounded-[1.5rem]",
+  },
+  { // 3 — Amber gradient
+    card: "bg-gradient-to-br from-amber-50 via-white to-orange-100/60 dark:from-amber-950/60 dark:via-slate-900 dark:to-orange-900/30 border-amber-200/70 dark:border-amber-800/40 hover:shadow-amber-200/60 dark:hover:shadow-amber-900/40",
+    icon: "bg-amber-100 dark:bg-amber-900/50 border-amber-200 dark:border-amber-700 text-amber-600 dark:text-amber-400",
+    badge: "bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300",
+    accent: "from-amber-400 to-orange-500",
+    deco: "bg-amber-400/10",
+    radius: "rounded-2xl",
+  },
+  { // 4 — Cyan gradient
+    card: "bg-gradient-to-br from-cyan-50 via-white to-sky-100/60 dark:from-cyan-950/60 dark:via-slate-900 dark:to-sky-900/30 border-cyan-200/70 dark:border-cyan-800/40 hover:shadow-cyan-200/60 dark:hover:shadow-cyan-900/40",
+    icon: "bg-cyan-100 dark:bg-cyan-900/50 border-cyan-200 dark:border-cyan-700 text-cyan-600 dark:text-cyan-400",
+    badge: "bg-cyan-100 dark:bg-cyan-900/60 text-cyan-700 dark:text-cyan-300",
+    accent: "from-cyan-400 to-sky-500",
+    deco: "bg-cyan-400/10",
+    radius: "rounded-3xl",
+  },
+  { // 5 — Purple gradient
+    card: "bg-gradient-to-br from-purple-50 via-white to-violet-100/60 dark:from-purple-950/60 dark:via-slate-900 dark:to-violet-900/30 border-purple-200/70 dark:border-purple-800/40 hover:shadow-purple-200/60 dark:hover:shadow-purple-900/40",
+    icon: "bg-purple-100 dark:bg-purple-900/50 border-purple-200 dark:border-purple-700 text-purple-600 dark:text-purple-400",
+    badge: "bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300",
+    accent: "from-purple-400 to-violet-500",
+    deco: "bg-purple-400/10",
+    radius: "rounded-[1.75rem]",
+  },
+];
+
+const getCardDesign = (idx: number) => CARD_DESIGNS[idx % CARD_DESIGNS.length];
+
 const getSubjectIcon = (name: string) => {
   const n = name.toLowerCase();
   if (n.includes("matem") || n.includes("math") || n.includes("algebra") || n.includes("geometry") || n.includes("hisob")) {
@@ -214,7 +268,7 @@ export default function OrgSubjects() {
     }
     setAiLoading(true);
     try {
-      const { data } = await api.post<any>(`/ai/generate-subject`, null, {
+      const { data } = await api.post<string | Record<string, string>>(`/ai/generate-subject`, null, {
         params: { name: name.trim() }
       });
       const parsed = typeof data === "string" ? JSON.parse(data) : data;
@@ -224,8 +278,18 @@ export default function OrgSubjects() {
         setColor(parsed.color.toLowerCase());
       }
       toast.success("AI ma'lumotlarni muvaffaqiyatli to'ldirdi! ✨");
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Gemini AI bilan bog'lanishda xatolik");
+    } catch (err: unknown) {
+      const apiErr = err as { response?: { status?: number; data?: { message?: string } }; message?: string };
+      const status = apiErr.response?.status;
+      const serverMsg = apiErr.response?.data?.message || "";
+
+      if (status === 500 && serverMsg.includes("kaliti")) {
+        toast.error("⚠️ AI xizmati vaqtincha ishlamaydi: API kaliti bloklangan. Admin bilan bog'laning.");
+      } else if (status === 500) {
+        toast.error("AI server xatosi yuz berdi. Iltimos, keyinroq urinib ko'ring.");
+      } else {
+        toast.error(serverMsg || "Gemini AI bilan bog'lanishda xatolik");
+      }
     } finally {
       setAiLoading(false);
     }
@@ -261,21 +325,22 @@ export default function OrgSubjects() {
           <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) reset(); }}>
             <DialogTrigger asChild>
               <Button 
-                variant="hero" 
-                className="relative overflow-hidden group bg-gradient-primary text-white border-none shadow-lg shadow-primary/25 px-5 py-6 rounded-xl font-bold text-sm shrink-0"
+                className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600 text-white font-semibold px-5 h-11 rounded-xl shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 shrink-0 border-none"
               >
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus className="h-4 w-4" />
                 <span>Yangi fan qo'shish</span>
-                <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shimmer" />
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl p-6 rounded-2xl border-none shadow-2xl bg-white dark:bg-slate-900">
-              <DialogHeader>
+            <DialogContent className="max-w-2xl p-0 rounded-2xl border-none shadow-2xl bg-white dark:bg-slate-900 flex flex-col max-h-[90vh]">
+              <DialogHeader className="px-6 pt-6 pb-0">
                 <DialogTitle className="text-xl font-bold flex items-center gap-2 text-slate-950 dark:text-white">
                   <Sparkles className="h-5 w-5 text-amber-500 animate-pulse" />
                   {editing ? "Fanni tahrirlash" : "AI-Powered Yangi fan yaratish"}
                 </DialogTitle>
               </DialogHeader>
+
+              {/* Scrollable content area */}
+              <div className="overflow-y-auto flex-1 px-6 pb-2">
 
               {/* Two-Column Form and Live Preview Layout */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-5">
@@ -388,8 +453,8 @@ export default function OrgSubjects() {
                   </div>
                 </div>
 
-                {/* Live Card Preview (Right) */}
-                <div className="flex flex-col justify-between border-l border-border/30 pl-0 md:pl-6 pt-4 md:pt-0">
+                {/* Right column — Live Preview only, no button */}
+                <div className="flex flex-col border-l border-border/30 pl-0 md:pl-6 pt-4 md:pt-0">
                   <div className="space-y-3">
                     <Label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Jonli Ko'rinish (Live Preview)</Label>
                     
@@ -435,18 +500,28 @@ export default function OrgSubjects() {
                       </div>
                     </Card>
                   </div>
-
-                  {/* Save Button */}
-                  <Button 
-                    onClick={submit} 
-                    disabled={mutation.isPending || aiLoading} 
-                    className="w-full h-11 rounded-xl bg-gradient-primary text-white border-none shadow-glow font-bold mt-6 md:mt-0"
-                  >
-                    {mutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                    Saqlash
-                  </Button>
                 </div>
 
+              </div>{/* end two-column grid */}
+              </div>{/* end scrollable area */}
+
+              {/* Sticky footer with Save button */}
+              <div className="px-6 py-4 border-t border-slate-100 dark:border-white/5 bg-slate-50/80 dark:bg-slate-900/80 backdrop-blur-sm rounded-b-2xl flex justify-end gap-3">
+                <Button
+                  variant="ghost"
+                  onClick={() => { setOpen(false); reset(); }}
+                  className="rounded-xl h-11 px-6"
+                >
+                  Bekor
+                </Button>
+                <Button
+                  onClick={submit}
+                  disabled={mutation.isPending || aiLoading}
+                  className="h-11 px-8 rounded-xl bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600 text-white border-none shadow-md font-semibold"
+                >
+                  {mutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                  Saqlash
+                </Button>
               </div>
             </DialogContent>
           </Dialog>
@@ -484,7 +559,7 @@ export default function OrgSubjects() {
           <AnimatePresence mode="popLayout">
             {items.map((s, idx) => {
               const IconComp = getSubjectIcon(s.name);
-              const colorCls = getColorClasses(s.color);
+              const design = getCardDesign(idx);
 
               // Calculate custom counts
               const uniqueTeachersInGroups = new Set(
@@ -514,12 +589,19 @@ export default function OrgSubjects() {
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ delay: idx * 0.02, duration: 0.25 }}
                 >
-                  <Card className={`p-6 border group hover:scale-[1.03] hover:shadow-xl transition-all duration-300 rounded-2xl glass relative overflow-hidden flex flex-col justify-between min-h-[220px] ${colorCls}`}>
+                  <Card className={`p-6 border group hover:scale-[1.03] hover:shadow-xl transition-all duration-300 relative overflow-hidden flex flex-col justify-between min-h-[230px] ${design.card} ${design.radius}`}>
+                    
+                    {/* Decorative background blob */}
+                    <div className={`absolute -top-6 -right-6 w-24 h-24 rounded-full blur-2xl opacity-60 ${design.deco}`} />
+                    <div className={`absolute -bottom-4 -left-4 w-16 h-16 rounded-full blur-xl opacity-40 ${design.deco}`} />
+
+                    {/* Gradient accent line on top */}
+                    <div className={`absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r ${design.accent} opacity-60 rounded-t-full`} />
                     
                     {/* Top Section */}
                     <div>
                       <div className="flex items-center justify-between">
-                        <div className="h-10 w-10 rounded-xl bg-background/80 dark:bg-slate-900/80 shadow-sm border border-border/30 grid place-items-center group-hover:scale-110 transition-transform">
+                        <div className={`h-11 w-11 rounded-xl border shadow-sm grid place-items-center group-hover:scale-110 transition-transform ${design.icon}`}>
                           <IconComp className="h-5 w-5" />
                         </div>
                         {canManage && (

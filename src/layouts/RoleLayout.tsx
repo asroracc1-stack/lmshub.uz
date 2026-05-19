@@ -135,77 +135,73 @@ export default function RoleLayout({ brand = "LMSHub", subtitle, nav: initialNav
           });
           const isExpanded = manualToggle[item.label] ?? (hasActiveChild || false);
 
-          if (item.children) {
-            return (
-              <div key={item.label} className="space-y-1">
-                <button
-                  onClick={() => setManualToggle(prev => ({ ...prev, [item.label]: !isExpanded }))}
-                  aria-expanded={isExpanded}
-                  className={cn(
-                    "w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all duration-200",
-                    mini && "justify-center px-2",
-                    isExpanded || hasActiveChild 
-                      ? "bg-primary/10 text-primary font-bold" 
-                      : "text-slate-500 hover:bg-slate-100/30 dark:hover:bg-sidebar-accent/20"
-                  )}
-                >
-                  <item.icon size={20} className={cn("shrink-0", (isExpanded || hasActiveChild) ? "text-primary" : "text-slate-400")} />
-                  {!mini && (
-                    <>
-                      <span className="flex-1 text-left truncate">{item.label}</span>
-                      <ChevronDown size={14} className={cn("transition-transform duration-300", isExpanded && "rotate-180")} />
-                    </>
-                  )}
-                </button>
-                <AnimatePresence>
-                  {isExpanded && !mini && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      role="region"
-                      aria-label={`${item.label} submenu`}
-                      className="overflow-hidden pl-8 space-y-1 relative"
-                    >
-                      {/* Hierarchical line */}
-                      <div className="absolute left-4 top-0 bottom-0 w-px bg-slate-200 dark:bg-slate-800" />
-                      
-                      {item.children.map((child) => (
-                        <NavLink
-                          key={child.to}
-                          to={child.to!}
-                          onClick={closeMobileMenu}
-                          className={({ isActive }) =>
-                            cn(
-                              "relative flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200",
-                              isActive
-                                ? "bg-primary/10 text-primary font-bold shadow-sm"
-                                : "text-slate-500 hover:text-slate-900 dark:hover:text-foreground hover:bg-slate-50 dark:hover:bg-sidebar-accent/20",
-                            )
-                          }
-                        >
-                          {({ isActive }) => (
-                            <>
-                              {isActive && (
-                                <motion.div 
-                                  layoutId="active-dot"
-                                  className="absolute -left-[17px] w-2 h-2 rounded-full bg-primary" 
-                                />
-                              )}
-                              <child.icon size={16} className={cn(isActive ? "text-primary" : "text-slate-400")} />
-                              <span>{child.label}</span>
-                            </>
-                          )}
-                        </NavLink>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            );
-          }
-
-          return (
+          return item.children ? (
+            <div key={item.label} className="space-y-1">
+              <button
+                onClick={() => setManualToggle(prev => ({ ...prev, [item.label]: !isExpanded }))}
+                aria-expanded={isExpanded}
+                className={cn(
+                  "w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all duration-200",
+                  mini && "justify-center px-2",
+                  isExpanded || hasActiveChild 
+                    ? "bg-primary/10 text-primary font-bold" 
+                    : "text-slate-500 hover:bg-slate-100/30 dark:hover:bg-sidebar-accent/20"
+                )}
+              >
+                <item.icon size={20} className={cn("shrink-0", (isExpanded || hasActiveChild) ? "text-primary" : "text-slate-400")} />
+                {!mini && (
+                  <>
+                    <span className="flex-1 text-left truncate">{item.label}</span>
+                    <ChevronDown size={14} className={cn("transition-transform duration-300", isExpanded && "rotate-180")} />
+                  </>
+                )}
+              </button>
+              <AnimatePresence>
+                {isExpanded && !mini && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    role="region"
+                    aria-label={`${item.label} submenu`}
+                    className="overflow-hidden pl-8 space-y-1 relative"
+                  >
+                    {/* Hierarchical line */}
+                    <div className="absolute left-4 top-0 bottom-0 w-px bg-slate-200 dark:bg-slate-800" />
+                    
+                    {item.children.map((child) => (
+                      <NavLink
+                        key={child.to}
+                        to={child.to!}
+                        onClick={closeMobileMenu}
+                        className={({ isActive }) =>
+                          cn(
+                            "relative flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200",
+                            isActive
+                              ? "bg-primary/10 text-primary font-bold shadow-sm"
+                              : "text-slate-500 hover:text-slate-900 dark:hover:text-foreground hover:bg-slate-50 dark:hover:bg-sidebar-accent/20",
+                          )
+                        }
+                      >
+                        {({ isActive }) => (
+                          <>
+                            {isActive && (
+                              <motion.div 
+                                layoutId="active-dot"
+                                className="absolute -left-[17px] w-2 h-2 rounded-full bg-primary" 
+                              />
+                            )}
+                            <child.icon size={16} className={cn(isActive ? "text-primary" : "text-slate-400")} />
+                            <span>{child.label}</span>
+                          </>
+                        )}
+                      </NavLink>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          ) : (
             <NavLink
               key={item.to}
               to={item.to!}

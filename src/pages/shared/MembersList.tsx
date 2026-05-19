@@ -521,7 +521,7 @@ export default function MembersList({ role, title, description, canManage }: Pro
                             <TableCell>
                               {(() => {
                                 // Match student group name from global list
-                                const groupName = allGroups.find((g: any) => g.id === m.group_id || g.id === (m as any).groupId)?.name;
+                                const groupName = groups.find((g: any) => g.id === m.group_id || g.id === (m as any).groupId)?.name;
                                 return groupName ? (
                                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20">
                                     {groupName}
