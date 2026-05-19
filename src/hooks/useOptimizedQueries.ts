@@ -108,6 +108,40 @@ export function useAdminDashboardStats() {
   });
 }
 
+export interface AdminDashboardOverviewDto {
+  organization: {
+    name: string;
+    address: string;
+    email: string;
+    phone: string;
+    logoUrl?: string;
+  };
+  upcomingEvents: Array<{
+    id: string;
+    title: string;
+    startsAt: string;
+    endsAt?: string;
+    location: string;
+  }>;
+  subscription: {
+    planName: string;
+    status: "ACTIVE" | "EXPIRING" | "EXPIRED";
+    expiresAt: string;
+  };
+}
+
+export function useAdminDashboardOverview() {
+  return useQuery({
+    queryKey: ["admin-dashboard-overview"],
+    queryFn: async () => {
+      const response = await api.get<AdminDashboardOverviewDto>("/admin/dashboard/overview");
+      return response.data;
+    },
+    staleTime: 5 * 60 * 1000,
+    retry: 0,
+  });
+}
+
 // 2.1 General Organization Hook
 export function useOrganization(orgId?: string | null) {
   return useQuery({
@@ -252,8 +286,7 @@ export function usePrefetchHelper() {
 
     if (to === "/super-admin/dashboard") await prefetch(["super-admin-dashboard-stats"], "/super-admin/stats");
     if (to === "/admin/dashboard") {
-      await prefetch(["admin-dashboard-stats"], "/admin/dashboard/summary");
-      await prefetch(["upcoming-events"], "/admin/dashboard/events/upcoming");
+      await prefetch(["admin-dashboard-overview"], "/admin/dashboard/overview");
     }
     // O'qituvchi navigatsiyasi uchun prefetch qo'shildi
     if (to === "/teacher/dashboard") {

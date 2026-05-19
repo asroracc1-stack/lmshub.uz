@@ -11,6 +11,7 @@ import java.util.UUID;
 @Repository
 public interface CalendarEventRepository extends JpaRepository<CalendarEvent, UUID> {
     List<CalendarEvent> findByOrganizationIdAndStartsAtAfterOrderByStartsAtAsc(UUID organizationId, LocalDateTime now);
+    List<CalendarEvent> findTop5ByOrganizationIdAndStartsAtAfterOrderByStartsAtAsc(UUID organizationId, LocalDateTime now);
     long countByOrganizationId(UUID organizationId);
     long countByOrganizationIdAndCreatedAtBefore(UUID organizationId, LocalDateTime date);
 

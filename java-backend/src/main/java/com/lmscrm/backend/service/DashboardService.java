@@ -141,4 +141,77 @@ public class DashboardService {
         if (orgId == null) return List.of();
         return eventRepository.findByOrganizationIdAndStartsAtAfterOrderByStartsAtAsc(orgId, LocalDateTime.now());
     }
+
+    public com.lmscrm.backend.dto.response.AdminDashboardOverviewResponse getAdminDashboardOverview(User currentUser) {
+        UUID orgId = currentUser.getOrganizationId();
+        if (orgId == null) {
+            throw new RuntimeException("Tashkilot ID topilmadi! Sizda tashkilot mavjud emas.");
+        }
+
+        Organization org = organizationRepository.findById(orgId)
+                .orElseThrow(() -> new RuntimeException("Tashkilot topilmadi!"));
+
+        List<CalendarEvent> rawEvents = eventRepository.findTop5ByOrganizationIdAndStartsAtAfterOrderByStartsAtAsc(orgId, LocalDateTime.now());
+        
+        List<com.lmscrm.backend.dto.response.AdminDashboardOverviewResponse.EventOverview> upcomingEvents = rawEvents.stream()
+                .map(ev -> com.lmscrm.backend.dto.response.AdminDashboardOverviewResponse.EventOverview.builder()
+                        .id(ev.getId().toString())
+                        .title(ev.getTitle())
+                        .startsAt(ev.getStartsAt().toString())
+                        .endsAt(ev.getEndsAt() != null ? ev.getEndsAt().toString() : null)
+                        .location(ev.getLocation())
+                        .build())
+                .collect(java.util.stream.Collectors.toList());
+
+        String planName = "FREE";
+        if (org.getSubscriptionPackage() != null) {
+            planName = org.getSubscriptionPackage().getName();
+        }
+        
+        LocalDateTime expiryDate = org.getCreatedAt() != null ? org.getCreatedAt().plusYears(1) : LocalDateTime.now().plusMonths(12);
+        String expiresAtStr = expiryDate.toString();
+        
+        String subStatus = "ACTIVE";
+        if (LocalDateTime.now().isAfter(expiryDate)) {
+            subStatus = "EXPIRED";
+        } else if (LocalDateTime.now().plusDays(7).isAfter(expiryDate)) {
+            subStatus = "EXPIRING";
+        }
+
+        com.lmscrm.backend.dto.response.AdminDashboardOverviewResponse.SubscriptionOverview subscription = com.lmscrm.backend.dto.response.AdminDashboardOverviewResponse.SubscriptionOverview.builder()
+                .planName(planName)
+                .status(subStatus)
+                .expiresAt(expiresAtStr)
+                .build();
+
+        String addressStr = "";
+        if (org.getAddress() != null) {
+            addressStr = org.getAddress().getFullAddress();
+            if (addressStr == null || addressStr.trim().isEmpty()) {
+                addressStr = List.of(
+                        org.getAddress().getRegion() != null ? org.getAddress().getRegion() : "",
+                        org.getAddress().getDistrict() != null ? org.getAddress().getDistrict() : "",
+                        org.getAddress().getStreetAddress() != null ? org.getAddress().getStreetAddress() : ""
+                ).stream().filter(s -> !s.trim().isEmpty()).collect(java.util.stream.Collectors.joining(", "));
+            }
+        }
+
+        if (addressStr.trim().isEmpty()) {
+            addressStr = "Toshkent shahri, O'zbekiston";
+        }
+
+        com.lmscrm.backend.dto.response.AdminDashboardOverviewResponse.OrganizationOverview organization = com.lmscrm.backend.dto.response.AdminDashboardOverviewResponse.OrganizationOverview.builder()
+                .name(org.getName())
+                .address(addressStr)
+                .email(org.getEmail())
+                .phone(org.getPhone())
+                .logoUrl(org.getLogoUrl())
+                .build();
+
+        return com.lmscrm.backend.dto.response.AdminDashboardOverviewResponse.builder()
+                .organization(organization)
+                .upcomingEvents(upcomingEvents)
+                .subscription(subscription)
+                .build();
+    }
 }

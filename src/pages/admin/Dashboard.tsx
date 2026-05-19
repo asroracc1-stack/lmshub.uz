@@ -12,7 +12,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useAdminDashboard, useUpcomingEvents, useDashboardMutations, useAdminDashboardStats } from "@/hooks/useOptimizedQueries";
+import { useAdminDashboard, useUpcomingEvents, useDashboardMutations, useAdminDashboardStats, useAdminDashboardOverview } from "@/hooks/useOptimizedQueries";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import TigerPlayer from "@/components/TigerPlayer";
 import AddMemberModal from "@/components/AddMemberModal";
@@ -33,6 +34,7 @@ export default function AdminDashboard() {
   const { data: stats, isLoading: statsLoading, isError: statsError } = useAdminDashboard();
   const { data: realStats, isLoading: realStatsLoading } = useAdminDashboardStats();
   const { data: events, isLoading: eventsLoading } = useUpcomingEvents();
+  const { data: overview, isLoading: overviewLoading, isError: overviewError } = useAdminDashboardOverview();
   const { addTeacher, addStudent, generateReport, updateOrgSettings, addEvent } = useDashboardMutations();
 
   const isStatsLoading = statsLoading || realStatsLoading;
@@ -64,7 +66,7 @@ export default function AdminDashboard() {
     { label: "Tadbirlar",    value: stats?.eventsCount    ?? 0, growth: stats?.eventGrowth     ?? 0, icon: CalendarIcon,  color: "text-amber-500",  bg: "bg-amber-500/10",  to: "/admin/calendar",  accent: "#f59e0b" },
   ], [stats, realStats]);
 
-  const isExpiring = stats?.subscriptionStatus === "EXPIRING";
+  const isExpiring = stats?.subscriptionStatus === "EXPIRING" || overview?.subscription?.status === "EXPIRING";
 
   const handleClockUpdate = (settings: { visible: boolean; sound: boolean }) => {
     setClockSettings(settings);
@@ -187,7 +189,7 @@ export default function AdminDashboard() {
       <OrganizationSettingsModal 
         isOpen={activeModal === "settings"}
         onClose={() => setActiveModal(null)}
-        orgData={stats?.organization}
+        orgData={overview?.organization || stats?.organization}
         onUpdate={handleOrgUpdate}
         clockSettings={clockSettings}
         onClockUpdate={handleClockUpdate}
@@ -411,45 +413,48 @@ export default function AdminDashboard() {
             <div className="absolute top-0 right-0 p-8 opacity-5">
               <Building2 className="h-24 w-24 -rotate-12" />
             </div>
-            <div className="flex flex-col md:flex-row gap-8 items-start md:items-center relative z-10">
-              <div className="w-24 h-24 rounded-xl bg-slate-100 dark:bg-white/5 p-1 shrink-0 border border-slate-200 dark:border-white/10 shadow-inner">
-                <div className="w-full h-full rounded-lg bg-white dark:bg-slate-950 flex items-center justify-center overflow-hidden">
-                  {stats?.organization?.logoUrl ? (
-                    <img src={stats.organization.logoUrl} alt="Logo" className="w-full h-full object-cover" />
-                  ) : (
-                    <Building2 className="h-10 w-10 text-primary/40" />
-                  )}
-                </div>
-              </div>
-              <div className="space-y-3">
-                <h3 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
-                  {isStatsLoading ? <span className="inline-block w-48 h-8 bg-slate-100 dark:bg-white/10 rounded animate-pulse" /> : (stats?.organization?.name || "Tashkilot nomi")}
-                </h3>
-                <p className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-primary" />
-                  {isStatsLoading ? (
-                    <span className="inline-block w-64 h-4 bg-slate-100 dark:bg-white/10 rounded animate-pulse" />
-                  ) : typeof stats?.organization?.address === "object" && stats.organization.address !== null ? (
-                    [
-                      (stats.organization.address as any).full_address,
-                      (stats.organization.address as any).street_address,
-                      (stats.organization.address as any).district,
-                      (stats.organization.address as any).region,
-                    ].filter(Boolean).join(", ") || "Toshkent shahri, O'zbekiston"
-                  ) : (
-                    stats?.organization?.address || "Toshkent shahri, O'zbekiston"
-                  )}
-                </p>
-                <div className="flex flex-wrap gap-2 pt-1">
-                  <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-white/5 px-3 py-2 rounded-lg border border-slate-100 dark:border-white/5">
-                    <Mail className="h-3.5 w-3.5 text-primary/60" /> {isStatsLoading ? <span className="inline-block w-32 h-3.5 bg-slate-100 dark:bg-white/10 rounded animate-pulse" /> : (stats?.organization?.email || "info@example.com")}
-                  </div>
-                  <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-white/5 px-3 py-2 rounded-lg border border-slate-100 dark:border-white/5">
-                    <Phone className="h-3.5 w-3.5 text-primary/60" /> {isStatsLoading ? <span className="inline-block w-32 h-3.5 bg-slate-100 dark:bg-white/10 rounded animate-pulse" /> : (stats?.organization?.phone || "+998 90 123 45 67")}
+            {overviewLoading ? (
+              <div className="flex flex-col md:flex-row gap-8 items-start md:items-center relative z-10 w-full animate-pulse">
+                <Skeleton className="w-24 h-24 rounded-xl shrink-0" />
+                <div className="flex-1 space-y-3">
+                  <Skeleton className="h-8 w-48" />
+                  <Skeleton className="h-4 w-64" />
+                  <div className="flex gap-2">
+                    <Skeleton className="h-8 w-32" />
+                    <Skeleton className="h-8 w-32" />
                   </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="flex flex-col md:flex-row gap-8 items-start md:items-center relative z-10">
+                <div className="w-24 h-24 rounded-xl bg-slate-100 dark:bg-white/5 p-1 shrink-0 border border-slate-200 dark:border-white/10 shadow-inner">
+                  <div className="w-full h-full rounded-lg bg-white dark:bg-slate-950 flex items-center justify-center overflow-hidden">
+                    {overview?.organization?.logoUrl ? (
+                      <img src={overview.organization.logoUrl} alt="Logo" className="w-full h-full object-cover" />
+                    ) : (
+                      <Building2 className="h-10 w-10 text-primary/40" />
+                    )}
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <h3 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+                    {overview?.organization?.name || "Tashkilot nomi"}
+                  </h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-primary" />
+                    {overview?.organization?.address || "Toshkent shahri, O'zbekiston"}
+                  </p>
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-white/5 px-3 py-2 rounded-lg border border-slate-100 dark:border-white/5">
+                      <Mail className="h-3.5 w-3.5 text-primary/60" /> {overview?.organization?.email || "info@example.com"}
+                    </div>
+                    <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-white/5 px-3 py-2 rounded-lg border border-slate-100 dark:border-white/5">
+                      <Phone className="h-3.5 w-3.5 text-primary/60" /> {overview?.organization?.phone || "+998 90 123 45 67"}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </Card>
 
           {/* Upcoming Events Card */}
@@ -464,14 +469,14 @@ export default function AdminDashboard() {
             </div>
             
             <div className="space-y-3">
-              {eventsLoading ? (
+              {overviewLoading ? (
                 <div className="space-y-3">
                   {Array.from({ length: 3 }).map((_, i) => (
                     <div key={i} className="h-16 rounded-lg bg-slate-100 dark:bg-white/5 animate-pulse" />
                   ))}
                 </div>
-              ) : events && events.length > 0 ? (
-                events.map((ev, i) => (
+              ) : overview?.upcomingEvents && overview.upcomingEvents.length > 0 ? (
+                overview.upcomingEvents.map((ev, i) => (
                   <motion.div key={ev.id} initial={{ opacity: 0, x: -5 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }} className="flex items-center justify-between p-4 rounded-lg bg-slate-50 dark:bg-white/5 hover:bg-white dark:hover:bg-white/10 transition-all border border-slate-100 dark:border-white/5 group">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-lg bg-white dark:bg-white/10 flex flex-col items-center justify-center border border-slate-100 dark:border-white/5 shadow-sm group-hover:border-primary/30 transition-colors">
@@ -540,22 +545,35 @@ export default function AdminDashboard() {
             <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
               <Crown className="h-24 w-24" />
             </div>
-            <div className="relative z-10 space-y-6">
-              <div className="w-10 h-10 rounded-lg bg-white/20 backdrop-blur-md flex items-center justify-center">
-                {isExpiring ? <AlertCircle className="h-5 w-5 text-white" /> : <Crown className="h-5 w-5 text-white" />}
+            {overviewLoading ? (
+              <div className="relative z-10 space-y-6">
+                <Skeleton className="w-10 h-10 rounded-lg bg-white/20" />
+                <div className="space-y-2">
+                  <Skeleton className="h-6 w-32 bg-white/20" />
+                  <Skeleton className="h-4 w-full bg-white/20" />
+                </div>
+                <Skeleton className="h-12 w-full rounded-lg bg-white/20" />
               </div>
-              <div className="space-y-1.5">
-                <h4 className="text-xl font-bold tracking-tight">{isExpiring ? "Obuna tugamoqda!" : "Premium Obuna"}</h4>
-                <p className="text-white/80 text-[11px] font-medium leading-relaxed">
-                  {isExpiring 
-                    ? "Sizning paketingiz muddati tugashiga oz qoldi. Imkoniyatlar o'chib qolmasligi uchun hoziroq yangilang."
-                    : "Platformaning barcha imkoniyatlaridan cheksiz foydalaning va natijangizni 2 barobar oshiring."}
-                </p>
+            ) : (
+              <div className="relative z-10 space-y-6">
+                <div className="w-10 h-10 rounded-lg bg-white/20 backdrop-blur-md flex items-center justify-center">
+                  {isExpiring ? <AlertCircle className="h-5 w-5 text-white" /> : <Crown className="h-5 w-5 text-white" />}
+                </div>
+                <div className="space-y-1.5">
+                  <h4 className="text-xl font-bold tracking-tight">
+                    {isExpiring ? "Obuna tugamoqda!" : `Plan: ${overview?.subscription?.planName || "Premium"}`}
+                  </h4>
+                  <p className="text-white/80 text-[11px] font-medium leading-relaxed">
+                    {isExpiring 
+                      ? "Sizning paketingiz muddati tugashiga oz qoldi. Imkoniyatlar o'chib qolmasligi uchun hoziroq yangilang."
+                      : `Sizning joriy obuna rejangiz faol. Platformaning barcha imkoniyatlaridan cheksiz foydalaning.`}
+                  </p>
+                </div>
+                <Button onClick={() => handleQuickAction("Paket yangilash")} className="w-full bg-white text-slate-900 hover:bg-slate-50 h-12 rounded-lg font-bold uppercase text-[10px] tracking-widest shadow-md flex gap-2 transition-transform">
+                  <ShoppingCart className="h-4 w-4" /> PAKETNI YANGILASH
+                </Button>
               </div>
-              <Button onClick={() => handleQuickAction("Paket yangilash")} className="w-full bg-white text-slate-900 hover:bg-slate-50 h-12 rounded-lg font-bold uppercase text-[10px] tracking-widest shadow-md flex gap-2 transition-transform">
-                <ShoppingCart className="h-4 w-4" /> PAKETNI YANGILASH
-              </Button>
-            </div>
+            )}
           </Card>
         </motion.div>
       </div>

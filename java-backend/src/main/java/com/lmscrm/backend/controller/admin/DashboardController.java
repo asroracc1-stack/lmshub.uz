@@ -44,4 +44,11 @@ public class DashboardController {
     public ResponseEntity<List<CalendarEvent>> getUpcomingEvents(@AuthenticationPrincipal User currentUser) {
         return ResponseEntity.ok(dashboardService.getUpcomingEvents(currentUser));
     }
+
+    @GetMapping("/overview")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'ADMINISTRATOR')")
+    @Operation(summary = "Get consolidated admin dashboard overview info")
+    public ResponseEntity<com.lmscrm.backend.dto.response.AdminDashboardOverviewResponse> getOverview(@AuthenticationPrincipal User currentUser) {
+        return ResponseEntity.ok(dashboardService.getAdminDashboardOverview(currentUser));
+    }
 }
