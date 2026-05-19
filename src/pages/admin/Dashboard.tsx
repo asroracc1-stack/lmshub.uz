@@ -12,7 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useAdminDashboard, useUpcomingEvents, useDashboardMutations } from "@/hooks/useOptimizedQueries";
+import { useAdminDashboard, useUpcomingEvents, useDashboardMutations, useAdminDashboardStats } from "@/hooks/useOptimizedQueries";
 import { toast } from "sonner";
 import TigerPlayer from "@/components/TigerPlayer";
 import AddMemberModal from "@/components/AddMemberModal";
@@ -31,8 +31,11 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
   const { profile } = useAuth();
   const { data: stats, isLoading: statsLoading, isError: statsError } = useAdminDashboard();
+  const { data: realStats, isLoading: realStatsLoading } = useAdminDashboardStats();
   const { data: events, isLoading: eventsLoading } = useUpcomingEvents();
   const { addTeacher, addStudent, generateReport, updateOrgSettings, addEvent } = useDashboardMutations();
+
+  const isStatsLoading = statsLoading || realStatsLoading;
 
   const [clockSettings, setClockSettings] = useState(() => {
     const saved = localStorage.getItem("smart-clock-settings");
@@ -53,13 +56,13 @@ export default function AdminDashboard() {
   const [invoiceDownloading, setInvoiceDownloading] = useState(false);
 
   const statCards = useMemo(() => [
-    { label: "O'qituvchilar", value: stats?.teachersCount ?? 0, growth: stats?.teacherGrowth ?? 0, icon: GraduationCap, color: "text-blue-500", bg: "bg-blue-500/10", to: "/admin/teachers", accent: "#3b82f6" },
-    { label: "Talabalar",     value: stats?.studentsCount  ?? 0, growth: stats?.studentGrowth  ?? 0, icon: Users,         color: "text-emerald-500", bg: "bg-emerald-500/10", to: "/admin/students",  accent: "#10b981" },
-    { label: "Ota-onalar",   value: stats?.parentsCount   ?? 0, growth: 0,                          icon: Heart,         color: "text-pink-500",    bg: "bg-pink-500/10",    to: "/admin/parents",   accent: "#ec4899" },
-    { label: "Administratorlar", value: stats?.orgAdminsCount ?? 0, growth: stats?.orgAdminGrowth ?? 0, icon: UserCog,   color: "text-indigo-500", bg: "bg-indigo-500/10", to: "/admin/administrators", accent: "#6366f1" },
-    { label: "Guruhlar",     value: stats?.groupsCount     ?? 0, growth: 0,                          icon: Users2,        color: "text-cyan-500",   bg: "bg-cyan-500/10",    to: "/admin/groups",         accent: "#06b6d4" },
+    { label: "O'qituvchilar", value: realStats?.totalTeachers ?? 0, growth: stats?.teacherGrowth ?? 0, icon: GraduationCap, color: "text-blue-500", bg: "bg-blue-500/10", to: "/admin/teachers", accent: "#3b82f6" },
+    { label: "Talabalar",     value: realStats?.totalStudents ?? 0, growth: stats?.studentGrowth  ?? 0, icon: Users,         color: "text-emerald-500", bg: "bg-emerald-500/10", to: "/admin/students",  accent: "#10b981" },
+    { label: "Ota-onalar",   value: realStats?.totalParents ?? 0, growth: 0,                          icon: Heart,         color: "text-pink-500",    bg: "bg-pink-500/10",    to: "/admin/parents",   accent: "#ec4899" },
+    { label: "Administratorlar", value: realStats?.totalAdministrators ?? 0, growth: stats?.orgAdminGrowth ?? 0, icon: UserCog,   color: "text-indigo-500", bg: "bg-indigo-500/10", to: "/admin/administrators", accent: "#6366f1" },
+    { label: "Guruhlar",     value: realStats?.totalGroups ?? 0, growth: 0,                          icon: Users2,        color: "text-cyan-500",   bg: "bg-cyan-500/10",    to: "/admin/groups",         accent: "#06b6d4" },
     { label: "Tadbirlar",    value: stats?.eventsCount    ?? 0, growth: stats?.eventGrowth     ?? 0, icon: CalendarIcon,  color: "text-amber-500",  bg: "bg-amber-500/10",  to: "/admin/calendar",  accent: "#f59e0b" },
-  ], [stats]);
+  ], [stats, realStats]);
 
   const isExpiring = stats?.subscriptionStatus === "EXPIRING";
 
@@ -94,27 +97,7 @@ export default function AdminDashboard() {
     );
   }
 
-  if (statsLoading || eventsLoading) {
-    return (
-      <div className="p-6 lg:p-10 space-y-10 bg-slate-50 dark:bg-slate-950 min-h-screen flex flex-col items-center justify-center">
-      <motion.div 
-        animate={{ y: [0, -10, 0] }}
-        transition={{ duration: 1, repeat: Infinity, ease: "easeInOut" }}
-        className="relative"
-      >
-        <TigerPlayer text="Hamma narsa hisoblandi, raqamlar joyida! 🐯📊" size={300} />
-        <div className="absolute inset-0 border-4 border-primary/20 rounded-full animate-ping -z-10" />
-      </motion.div>
-      <div className="w-full max-w-5xl space-y-8 mt-10">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="h-32 rounded-xl bg-white/50 dark:bg-white/5 animate-pulse" />
-          ))}
-        </div>
-      </div>
-      </div>
-    );
-  }
+
 
   const handleMemberSubmit = async (data: any) => {
     if (activeModal === "O'qituvchi qo'shish") {
@@ -404,7 +387,7 @@ export default function AdminDashboard() {
 
               <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">{s.label}</p>
               <p className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight mb-3">
-                {statsLoading ? <span className="inline-block w-10 h-7 bg-slate-100 dark:bg-white/10 rounded animate-pulse" /> : s.value.toLocaleString()}
+                {isStatsLoading ? <span className="inline-block w-10 h-7 bg-slate-100 dark:bg-white/10 rounded animate-pulse" /> : s.value.toLocaleString()}
               </p>
 
               <div className={cn(
@@ -439,24 +422,30 @@ export default function AdminDashboard() {
                 </div>
               </div>
               <div className="space-y-3">
-                <h3 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">{stats?.organization?.name || "Tashkilot nomi"}</h3>
+                <h3 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+                  {isStatsLoading ? <span className="inline-block w-48 h-8 bg-slate-100 dark:bg-white/10 rounded animate-pulse" /> : (stats?.organization?.name || "Tashkilot nomi")}
+                </h3>
                 <p className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-primary" />
-                  {typeof stats?.organization?.address === "object" && stats.organization.address !== null
-                    ? [
-                        (stats.organization.address as any).full_address,
-                        (stats.organization.address as any).street_address,
-                        (stats.organization.address as any).district,
-                        (stats.organization.address as any).region,
-                      ].filter(Boolean).join(", ") || "Toshkent shahri, O'zbekiston"
-                    : stats?.organization?.address || "Toshkent shahri, O'zbekiston"}
+                  {isStatsLoading ? (
+                    <span className="inline-block w-64 h-4 bg-slate-100 dark:bg-white/10 rounded animate-pulse" />
+                  ) : typeof stats?.organization?.address === "object" && stats.organization.address !== null ? (
+                    [
+                      (stats.organization.address as any).full_address,
+                      (stats.organization.address as any).street_address,
+                      (stats.organization.address as any).district,
+                      (stats.organization.address as any).region,
+                    ].filter(Boolean).join(", ") || "Toshkent shahri, O'zbekiston"
+                  ) : (
+                    stats?.organization?.address || "Toshkent shahri, O'zbekiston"
+                  )}
                 </p>
                 <div className="flex flex-wrap gap-2 pt-1">
                   <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-white/5 px-3 py-2 rounded-lg border border-slate-100 dark:border-white/5">
-                    <Mail className="h-3.5 w-3.5 text-primary/60" /> {stats?.organization?.email || "info@example.com"}
+                    <Mail className="h-3.5 w-3.5 text-primary/60" /> {isStatsLoading ? <span className="inline-block w-32 h-3.5 bg-slate-100 dark:bg-white/10 rounded animate-pulse" /> : (stats?.organization?.email || "info@example.com")}
                   </div>
                   <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-white/5 px-3 py-2 rounded-lg border border-slate-100 dark:border-white/5">
-                    <Phone className="h-3.5 w-3.5 text-primary/60" /> {stats?.organization?.phone || "+998 90 123 45 67"}
+                    <Phone className="h-3.5 w-3.5 text-primary/60" /> {isStatsLoading ? <span className="inline-block w-32 h-3.5 bg-slate-100 dark:bg-white/10 rounded animate-pulse" /> : (stats?.organization?.phone || "+998 90 123 45 67")}
                   </div>
                 </div>
               </div>
@@ -475,7 +464,13 @@ export default function AdminDashboard() {
             </div>
             
             <div className="space-y-3">
-              {events && events.length > 0 ? (
+              {eventsLoading ? (
+                <div className="space-y-3">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="h-16 rounded-lg bg-slate-100 dark:bg-white/5 animate-pulse" />
+                  ))}
+                </div>
+              ) : events && events.length > 0 ? (
                 events.map((ev, i) => (
                   <motion.div key={ev.id} initial={{ opacity: 0, x: -5 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }} className="flex items-center justify-between p-4 rounded-lg bg-slate-50 dark:bg-white/5 hover:bg-white dark:hover:bg-white/10 transition-all border border-slate-100 dark:border-white/5 group">
                     <div className="flex items-center gap-4">

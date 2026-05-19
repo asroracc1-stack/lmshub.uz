@@ -43,7 +43,7 @@ public class GlobalExceptionHandler {
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.UNAUTHORIZED.value())
                 .error("Unauthorized")
-                .message(ex.getMessage() != null && !ex.getMessage().equals("Bad credentials") ? ex.getMessage() : "Invalid email or password")
+                .message("Login (Email) yoki parol noto'g'ri")
                 .build();
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
     }

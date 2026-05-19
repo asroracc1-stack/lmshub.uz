@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -22,6 +24,7 @@ public class CalendarEvent {
     private UUID id;
 
     @Column(nullable = false)
+    @NotBlank(message = "Sarlavha bo'sh bo'lmasligi kerak")
     private String title;
 
     private String description;
@@ -29,9 +32,11 @@ public class CalendarEvent {
     private String location;
 
     @Column(name = "starts_at", nullable = false)
+    @NotNull(message = "Boshlanish vaqti bo'sh bo'lmasligi kerak")
     private LocalDateTime startsAt;
 
     @Column(name = "ends_at", nullable = false)
+    @NotNull(message = "Tugash vaqti bo'sh bo'lmasligi kerak")
     private LocalDateTime endsAt;
 
     @Column(name = "is_all_day")

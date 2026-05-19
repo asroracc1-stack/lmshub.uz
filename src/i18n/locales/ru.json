@@ -22,7 +22,7 @@
     "backToLanding": "Вернуться на главную",
     "fullName": "Полное имя",
     "email": "Email адрес",
-    "username": "Имя пользователя",
+    "username": "Имя пользователя или Email",
     "password": "Пароль",
     "signIn": "Войти",
     "signUp": "Регистрация",

@@ -48,13 +48,13 @@ public class AuthService {
     // ======================= LOGIN =======================
     @Transactional
     public LoginResponse login(LoginRequest loginRequest) {
-        log.info("🔑 Login attempt: {}", loginRequest.getUsername());
+        log.info("🔑 Login attempt: {}", loginRequest.getUsernameOrEmail());
         
 
 
         try {
             Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword())
+                    new UsernamePasswordAuthenticationToken(loginRequest.getUsernameOrEmail(), loginRequest.getPassword())
             );
             SecurityContextHolder.getContext().setAuthentication(authentication);
             User user = (User) authentication.getPrincipal();
@@ -82,7 +82,7 @@ public class AuthService {
         } catch (BadCredentialsException e) {
             throw e;
         } catch (Exception e) {
-            log.error("❌ Login failed for {}: {}", loginRequest.getUsername(), e.getMessage(), e);
+            log.error("❌ Login failed for {}: {}", loginRequest.getUsernameOrEmail(), e.getMessage(), e);
             throw new BadCredentialsException("Username yoki parol xato");
         }
     }
@@ -251,12 +251,15 @@ public class AuthService {
         return LoginResponse.builder()
                 .accessToken(jwt)
                 .tokenType("Bearer")
+                .role(user.getRole().name())
+                .organizationId(user.getOrganizationId())
                 .user(LoginResponse.UserInfo.builder()
                         .id(user.getId())
                         .email(user.getEmail())
                         .role(user.getRole().name())
                         .firstName(profile != null ? profile.getFirstName() : user.getUsername())
                         .lastName(profile != null ? profile.getLastName() : "")
+                        .organizationId(user.getOrganizationId())
                         .build())
                 .build();
     }

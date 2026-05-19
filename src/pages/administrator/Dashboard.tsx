@@ -5,25 +5,29 @@ import {
   ArrowUpRight, Heart, TrendingUp, BookOpen, Users2
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { useAdminDashboard } from "@/hooks/useOptimizedQueries";
+import { useAdminDashboard, useAdminDashboardStats } from "@/hooks/useOptimizedQueries";
 import TigerPlayer from "@/components/TigerPlayer";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import WelcomeBanner from "@/components/shared/WelcomeBanner";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function AdministratorDashboard() {
   const { profile } = useAuth();
   const navigate = useNavigate();
-  const { data: stats, isLoading, isError } = useAdminDashboard();
+  const { data: stats, isLoading: summaryLoading, isError } = useAdminDashboard();
+  const { data: realStats, isLoading: statsLoading } = useAdminDashboardStats();
+
+  const isLoading = summaryLoading || statsLoading;
 
   const statCards = useMemo(() => [
-    { label: "O'qituvchilar", value: stats?.teachersCount ?? 0, growth: stats?.teacherGrowth ?? 0, icon: GraduationCap, color: "text-blue-500", bg: "bg-blue-500/10", to: "/administrator/teachers", accent: "#3b82f6" },
-    { label: "Talabalar",     value: stats?.studentsCount  ?? 0, growth: stats?.studentGrowth  ?? 0, icon: Users,         color: "text-emerald-500", bg: "bg-emerald-500/10", to: "/administrator/students",  accent: "#10b981" },
-    { label: "Ota-onalar",   value: stats?.parentsCount   ?? 0, growth: 0,                          icon: Heart,         color: "text-pink-500",    bg: "bg-pink-500/10",    to: "/administrator/parents",   accent: "#ec4899" },
-    { label: "Guruhlar",     value: stats?.groupsCount    ?? 0, growth: 0,                          icon: Users2,        color: "text-cyan-500",    bg: "bg-cyan-500/10",    to: "/administrator/groups",    accent: "#06b6d4" },
+    { label: "O'qituvchilar", value: realStats?.totalTeachers ?? 0, growth: stats?.teacherGrowth ?? 0, icon: GraduationCap, color: "text-blue-500", bg: "bg-blue-500/10", to: "/administrator/teachers", accent: "#3b82f6" },
+    { label: "Talabalar",     value: realStats?.totalStudents ?? 0, growth: stats?.studentGrowth  ?? 0, icon: Users,         color: "text-emerald-500", bg: "bg-emerald-500/10", to: "/administrator/students",  accent: "#10b981" },
+    { label: "Ota-onalar",   value: realStats?.totalParents ?? 0, growth: 0,                          icon: Heart,         color: "text-pink-500",    bg: "bg-pink-500/10",    to: "/administrator/parents",   accent: "#ec4899" },
+    { label: "Guruhlar",     value: realStats?.totalGroups ?? 0, growth: 0,                          icon: Users2,        color: "text-cyan-500",    bg: "bg-cyan-500/10",    to: "/administrator/groups",    accent: "#06b6d4" },
     { label: "Tadbirlar",    value: stats?.eventsCount    ?? 0, growth: stats?.eventGrowth     ?? 0, icon: CalendarIcon,  color: "text-amber-500",  bg: "bg-amber-500/10",  to: "/administrator/calendar",  accent: "#f59e0b" },
     { label: "Kurslar",      value: 0,                          growth: 0,                          icon: BookOpen,      color: "text-indigo-500", bg: "bg-indigo-500/10", to: "/administrator/subjects",  accent: "#6366f1" },
-  ], [stats]);
+  ], [stats, realStats]);
 
   if (isError) {
     return (

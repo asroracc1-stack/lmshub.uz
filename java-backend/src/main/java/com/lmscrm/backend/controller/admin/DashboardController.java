@@ -27,8 +27,8 @@ public class DashboardController {
     @GetMapping("/stats")
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'ADMINISTRATOR')")
     @Operation(summary = "Get real-time dashboard statistics")
-    public ResponseEntity<DashboardStatsResponse> getStats(@AuthenticationPrincipal User currentUser) {
-        return ResponseEntity.ok(dashboardService.getStats(currentUser));
+    public ResponseEntity<com.lmscrm.backend.dto.response.AdminDashboardStatsDto> getStats(@AuthenticationPrincipal User currentUser) {
+        return ResponseEntity.ok(dashboardService.getAdminDashboardStats(currentUser));
     }
 
     @GetMapping("/summary")

@@ -18,6 +18,7 @@ import java.util.UUID;
 public interface UserRepository extends JpaRepository<User, UUID> {
     Optional<User> findByEmail(String email);
     Optional<User> findByUsername(String username);
+    Optional<User> findByEmailOrUsername(String email, String username);
     Optional<User> findByPhoneNumber(String phoneNumber);
     boolean existsByEmail(String email);
     boolean existsByUsername(String username);
@@ -31,6 +32,8 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     @Query("SELECT COUNT(u) FROM User u WHERE u.role = :role AND u.organizationId = :orgId")
     long countByRoleAndOrganizationId(@Param("role") AppRole role, @Param("orgId") UUID orgId);
+    
+    long countByOrganizationIdAndRole(UUID organizationId, AppRole role);
     
     @Query("SELECT COUNT(u) FROM User u WHERE u.role = :role AND u.createdAt < :date")
     long countByRoleAndCreatedAtBefore(@Param("role") AppRole role, @Param("date") LocalDateTime date);

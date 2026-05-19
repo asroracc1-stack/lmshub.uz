@@ -16,7 +16,8 @@ export type AppRole =
   | "student"
   | "user"
   | "parent"
-  | "payment_manager";
+  | "payment_manager"
+  | "pack_manager";
 
 export const roleHomePath: Record<AppRole, string> = {
   super_admin: "/super-admin/dashboard",
@@ -27,6 +28,7 @@ export const roleHomePath: Record<AppRole, string> = {
   user: "/user/dashboard",
   parent: "/parent/dashboard",
   payment_manager: "/pack-manager/dashboard",
+  pack_manager: "/pack-manager/dashboard",
 };
 
 export const roleLabel: Record<AppRole, string> = {
@@ -38,4 +40,5 @@ export const roleLabel: Record<AppRole, string> = {
   user: "User",
   parent: "Ota-ona",
   payment_manager: "Pack Manager",
+  pack_manager: "Pack Manager",
 };

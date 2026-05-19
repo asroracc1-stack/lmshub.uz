@@ -26,16 +26,16 @@ public class AdminUserService {
     private final PasswordEncoder passwordEncoder;
     private final ParentStudentLinkRepository parentStudentLinkRepository;
 
-    public Page<User> getUsers(String query, Pageable pageable, User currentUser) {
+    public Page<User> getUsers(String query, UUID organizationId, Pageable pageable, User currentUser) {
         boolean isSuper = currentUser.getRole() == AppRole.SUPER_ADMIN;
-        UUID orgId = currentUser.getOrganizationId();
+        UUID orgId = isSuper && organizationId != null ? organizationId : (isSuper ? null : currentUser.getOrganizationId());
 
         if (query != null && !query.isEmpty()) {
-            if (isSuper) return userRepository.searchUsers(query, pageable);
+            if (orgId == null) return userRepository.searchUsers(query, pageable);
             return userRepository.searchUsersInOrganization(query, orgId, pageable);
         }
         
-        if (isSuper) return userRepository.findAll(pageable);
+        if (orgId == null) return userRepository.findAll(pageable);
         return userRepository.findByOrganizationId(orgId, pageable);
     }
 
@@ -79,9 +79,9 @@ public class AdminUserService {
                 .build()).collect(Collectors.toList());
     }
 
-    public Page<User> getUsersByRole(String roleName, String search, Pageable pageable, User currentUser) {
+    public Page<User> getUsersByRole(String roleName, String search, UUID organizationId, Pageable pageable, User currentUser) {
         boolean isSuper = currentUser.getRole() == AppRole.SUPER_ADMIN;
-        UUID orgId = currentUser.getOrganizationId();
+        UUID orgId = isSuper && organizationId != null ? organizationId : (isSuper ? null : currentUser.getOrganizationId());
 
         AppRole role = null;
         if (roleName != null && !roleName.equalsIgnoreCase("all")) {
@@ -94,19 +94,19 @@ public class AdminUserService {
 
         if (role == null) {
             if (hasSearch) {
-                if (isSuper) return userRepository.searchUsers(search.trim(), pageable);
+                if (orgId == null) return userRepository.searchUsers(search.trim(), pageable);
                 return userRepository.searchUsersInOrganization(search.trim(), orgId, pageable);
             }
-            if (isSuper) return userRepository.findAll(pageable);
+            if (orgId == null) return userRepository.findAll(pageable);
             return userRepository.findByOrganizationId(orgId, pageable);
         }
         
         try {
             if (hasSearch) {
-                if (isSuper) return userRepository.searchByRoleAndQuery(role, search.trim(), pageable);
+                if (orgId == null) return userRepository.searchByRoleAndQuery(role, search.trim(), pageable);
                 return userRepository.searchByRoleAndOrganizationAndQuery(role, orgId, search.trim(), pageable);
             }
-            if (isSuper) return userRepository.findByRole(role, pageable);
+            if (orgId == null) return userRepository.findByRole(role, pageable);
             return userRepository.findByRoleAndOrganizationId(role, orgId, pageable);
         } catch (IllegalArgumentException e) {
             return Page.empty(pageable);

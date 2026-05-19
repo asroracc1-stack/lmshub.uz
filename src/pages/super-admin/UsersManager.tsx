@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useDebounce } from "@/hooks/useDebounce";
 import { motion } from "framer-motion";
 import { z } from "zod";
@@ -13,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog,
   DialogContent,
@@ -145,6 +147,8 @@ interface Props {
 
 export default function UsersManager({ filterRole, title, description }: Props) {
   const { user: me, profile, role: myRole } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const orgIdParam = searchParams.get("orgId") || "";
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 300);
@@ -199,7 +203,7 @@ export default function UsersManager({ filterRole, title, description }: Props) 
   }, [profile]);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["users", filterRole, page, debouncedSearch, profile?.organization_id],
+    queryKey: ["users", filterRole, page, debouncedSearch, profile?.organization_id, orgIdParam],
     queryFn: async () => {
       // Backend controller: AdminUserController (@RequestMapping("/api/v1/admin/users"))
       // Endpointlar: /all (hamma uchun) yoki /by-role/{role}
@@ -213,7 +217,7 @@ export default function UsersManager({ filterRole, title, description }: Props) 
           size: pageSize, 
           query: debouncedSearch || "", // Backend 'query' parametrini kutyapti for /all
           search: debouncedSearch || "",  // Backend 'search' parametrini kutyapti for /by-role
-          organizationId: profile?.organization_id || undefined,
+          organizationId: orgIdParam || profile?.organization_id || undefined,
         } 
       });
       return data;
@@ -674,6 +678,24 @@ export default function UsersManager({ filterRole, title, description }: Props) 
       </div>
 
       <div className="glass rounded-2xl p-4">
+        {orgIdParam && (
+          <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-xl px-4 py-2 text-sm text-primary w-fit mb-4 animate-fade-in shadow-sm">
+            <span>
+              <strong>{orgs.find((o: any) => o.id === orgIdParam)?.name || "Tashkilot"}</strong> xodimlari ko'rsatilmoqda.
+            </span>
+            <button
+              onClick={() => {
+                const newParams = new URLSearchParams(searchParams);
+                newParams.delete("orgId");
+                setSearchParams(newParams);
+              }}
+              className="ml-2 font-bold text-primary hover:text-primary-foreground hover:bg-primary/20 px-2 py-0.5 rounded transition-colors duration-200 text-xs focus:outline-none"
+              title="Filtrni tozalash"
+            >
+              Filtrni tozalash (✖)
+            </button>
+          </div>
+        )}
         <div className="relative mb-4">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -685,33 +707,52 @@ export default function UsersManager({ filterRole, title, description }: Props) 
         </div>
 
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-24 gap-6">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="relative"
-            >
-              <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full animate-pulse" />
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-                className="relative h-40 w-40 rounded-full border-2 border-dashed border-primary/40 flex items-center justify-center"
-              >
-                <div className="h-32 w-32 rounded-full border-4 border-primary border-t-transparent animate-spin" />
-              </motion.div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <motion.div
-                  animate={{ y: [0, -10, 0], scale: [1, 1.2, 1] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                >
-                  <Sparkles className="h-16 w-16 text-primary drop-shadow-glow" />
-                </motion.div>
-              </div>
-            </motion.div>
-            <div className="text-center space-y-2">
-              <h3 className="text-2xl font-display font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">Foydalanuvchilar yuklanmoqda...</h3>
-              <p className="text-muted-foreground text-sm max-w-xs mx-auto">SuperAdmin paneli uchun ma'lumotlar tayyorlanmoqda, iltimos kutib turing.</p>
-            </div>
+          <div className="border border-border/40 rounded-2xl overflow-hidden glass shadow-xl animate-pulse">
+            <Table>
+              <TableHeader className="bg-slate-50/50 dark:bg-slate-900/50">
+                <TableRow>
+                  <TableHead className="font-semibold"><Skeleton className="h-4 w-28" /></TableHead>
+                  <TableHead className="font-semibold"><Skeleton className="h-4 w-16" /></TableHead>
+                  <TableHead className="font-semibold"><Skeleton className="h-4 w-16" /></TableHead>
+                  <TableHead className="font-semibold"><Skeleton className="h-4 w-32" /></TableHead>
+                  <TableHead className="font-semibold"><Skeleton className="h-4 w-24" /></TableHead>
+                  <TableHead className="font-semibold"><Skeleton className="h-4 w-20" /></TableHead>
+                  <TableHead className="text-right font-semibold"><Skeleton className="h-4 w-24 ml-auto" /></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <TableRow key={i} className="border-b border-border/30">
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="h-9 w-9 rounded-xl" />
+                        <div className="space-y-1.5">
+                          <Skeleton className="h-4 w-32" />
+                          <Skeleton className="h-3 w-20" />
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell><Skeleton className="h-5 w-16 rounded-full" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-14 rounded-full" /></TableCell>
+                    <TableCell>
+                      <div className="space-y-1">
+                        <Skeleton className="h-3.5 w-36" />
+                        <Skeleton className="h-3 w-24" />
+                      </div>
+                    </TableCell>
+                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <Skeleton className="h-8 w-8 rounded-lg" />
+                        <Skeleton className="h-8 w-8 rounded-lg" />
+                        <Skeleton className="h-8 w-8 rounded-lg" />
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
         ) : (
           <div className="overflow-x-auto">

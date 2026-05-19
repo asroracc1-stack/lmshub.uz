@@ -4,6 +4,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -394,156 +402,260 @@ export default function MembersList({ role, title, description, canManage }: Pro
       </Card>
 
       {loading ? (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Card key={i} className="p-5 border-primary/5">
-              <div className="flex items-center gap-4 mb-4">
-                <Skeleton className="h-14 w-14 rounded-xl" />
-                <div className="flex-1 space-y-2">
-                  <Skeleton className="h-4 w-3/4" />
-                  <Skeleton className="h-3 w-1/2" />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Skeleton className="h-3 w-full" />
-                <Skeleton className="h-3 w-5/6" />
-              </div>
-            </Card>
-          ))}
+        <div className="border border-border/50 rounded-2xl overflow-hidden glass shadow-xl animate-pulse">
+          <Table>
+            <TableHeader className="bg-slate-50/50 dark:bg-slate-900/50">
+              <TableRow>
+                <TableHead><Skeleton className="h-4 w-28" /></TableHead>
+                {role === "student" ? (
+                  <>
+                    <TableHead><Skeleton className="h-4 w-20" /></TableHead>
+                    <TableHead><Skeleton className="h-4 w-16" /></TableHead>
+                  </>
+                ) : (
+                  <TableHead><Skeleton className="h-4 w-24" /></TableHead>
+                )}
+                <TableHead><Skeleton className="h-4 w-32" /></TableHead>
+                <TableHead><Skeleton className="h-4 w-16" /></TableHead>
+                <TableHead className="text-right"><Skeleton className="h-4 w-20 ml-auto" /></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {Array.from({ length: 6 }).map((_, i) => (
+                <TableRow key={i} className="border-b border-border/40">
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <Skeleton className="h-10 w-10 rounded-xl" />
+                      <div className="space-y-1.5">
+                        <Skeleton className="h-4 w-32" />
+                        <Skeleton className="h-3 w-20" />
+                      </div>
+                    </div>
+                  </TableCell>
+                  {role === "student" ? (
+                    <>
+                      <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                      <TableCell><Skeleton className="h-5 w-12 rounded-full" /></TableCell>
+                    </>
+                  ) : (
+                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                  )}
+                  <TableCell>
+                    <div className="space-y-1">
+                      <Skeleton className="h-3.5 w-36" />
+                      <Skeleton className="h-3 w-24" />
+                    </div>
+                  </TableCell>
+                  <TableCell><Skeleton className="h-5 w-16 rounded-full" /></TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-1.5">
+                      <Skeleton className="h-8 w-8 rounded-lg" />
+                      <Skeleton className="h-8 w-8 rounded-lg" />
+                      <Skeleton className="h-8 w-8 rounded-lg" />
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
       ) : filtered.length === 0 ? (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-          <Card className="p-12 text-center text-muted-foreground bg-slate-50/50 dark:bg-slate-900/50 border-dashed">
+          <Card className="p-12 text-center text-muted-foreground bg-slate-50/50 dark:bg-slate-900/50 border-dashed rounded-2xl">
             {members.length === 0 ? "Hech kim topilmadi" : "Qidiruv natijasi yo'q"}
           </Card>
         </motion.div>
       ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <AnimatePresence mode="popLayout">
-            {filtered.map((m) => {
-              const initials = (m.full_name || m.username)
-                .split(" ")
-                .map((p) => p[0])
-                .slice(0, 2)
-                .join("")
-                .toUpperCase();
-              return (
-                <motion.div
-                  key={m.id}
-                  layout
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                >
-                  <Card className="p-5 flex flex-col gap-4 hover:shadow-glow transition-smooth border-primary/20 group">
-                    <div className="flex items-start gap-4">
-                      <Avatar className="h-14 w-14 rounded-xl border-2 border-primary/10 group-hover:border-primary/30 transition-colors">
-                        <AvatarFallback className="bg-gradient-primary text-primary-foreground font-bold rounded-xl">
-                          {initials}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="min-w-0 flex-1">
-                        <h3 className="font-bold truncate text-slate-900 dark:text-white group-hover:text-primary transition-colors">
-                          {m.full_name || m.username}
-                          {!m.is_active && <span className="ml-2 text-[10px] bg-destructive/10 text-destructive px-1.5 py-0.5 rounded uppercase font-bold tracking-tight">Bloklangan</span>}
-                        </h3>
-                        <p className="text-xs text-muted-foreground truncate">@{m.username}</p>
-                        {m.subject && (
-                          <div className="flex items-center gap-1 mt-1 text-primary">
-                            <BookOpen className="h-3 w-3" />
-                            <span className="text-[10px] font-bold uppercase tracking-wider">{m.subject}</span>
+        <div className="border border-border/50 rounded-2xl overflow-hidden glass shadow-xl">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader className="bg-slate-50/50 dark:bg-slate-900/50">
+                <TableRow>
+                  <TableHead className="font-semibold text-slate-800 dark:text-slate-200">Foydalanuvchi</TableHead>
+                  {role === "student" ? (
+                    <>
+                      <TableHead className="font-semibold text-slate-800 dark:text-slate-200">Guruh</TableHead>
+                      <TableHead className="font-semibold text-slate-800 dark:text-slate-200">Coinlar</TableHead>
+                    </>
+                  ) : (
+                    <TableHead className="font-semibold text-slate-800 dark:text-slate-200">Fanlar (Subject)</TableHead>
+                  )}
+                  <TableHead className="font-semibold text-slate-800 dark:text-slate-200">Aloqa Ma'lumotlari</TableHead>
+                  <TableHead className="font-semibold text-slate-800 dark:text-slate-200">Holati</TableHead>
+                  <TableHead className="text-right font-semibold text-slate-800 dark:text-slate-200">Amallar</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <AnimatePresence mode="popLayout">
+                  {filtered.map((m) => {
+                    const initials = (m.full_name || m.username)
+                      .split(" ")
+                      .map((p) => p[0])
+                      .slice(0, 2)
+                      .join("")
+                      .toUpperCase();
+
+                    return (
+                      <TableRow 
+                        key={m.id} 
+                        className="hover:bg-slate-50/30 dark:hover:bg-slate-900/30 transition-colors border-b border-border/40 group/row"
+                      >
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-10 w-10 rounded-xl border border-primary/10 shadow-sm group-hover/row:border-primary/30 transition-colors">
+                              <AvatarFallback className="bg-gradient-primary text-primary-foreground font-bold rounded-xl text-xs">
+                                {initials}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="font-semibold text-slate-900 dark:text-white group-hover/row:text-primary transition-colors text-sm">
+                                {m.full_name || m.username}
+                              </p>
+                              <p className="text-xs text-muted-foreground font-mono">@{m.username}</p>
+                            </div>
                           </div>
+                        </TableCell>
+
+                        {role === "student" ? (
+                          <>
+                            <TableCell>
+                              {(() => {
+                                // Match student group name from global list
+                                const groupName = allGroups.find((g: any) => g.id === m.group_id || g.id === (m as any).groupId)?.name;
+                                return groupName ? (
+                                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20">
+                                    {groupName}
+                                  </span>
+                                ) : (
+                                  <span className="text-muted-foreground text-xs">— Guruhsiz —</span>
+                                );
+                              })()}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-1.5">
+                                <span className="relative flex h-5 w-5 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-950/40 text-amber-600 border border-amber-200 dark:border-amber-900/30 animate-pulse-slow">
+                                  🪙
+                                </span>
+                                <span className="font-bold text-sm text-amber-600 dark:text-amber-400">
+                                  {((m as any).coins || (m as any).coinsBalance || 0).toLocaleString()}
+                                </span>
+                              </div>
+                            </TableCell>
+                          </>
+                        ) : (
+                          <TableCell>
+                            {m.subject ? (
+                              <div className="flex flex-wrap gap-1 max-w-[200px]">
+                                {m.subject.split(",").map((sub, idx) => (
+                                  <span 
+                                    key={idx} 
+                                    className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-pink-500/10 text-pink-600 border border-pink-500/20"
+                                  >
+                                    {sub.trim()}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground text-xs">— Fan biriktirilmagan —</span>
+                            )}
+                          </TableCell>
                         )}
-                      </div>
-                    </div>
 
-                    <div className="space-y-2 py-2 border-t border-slate-100 dark:border-white/5">
-                      {m.email && (
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <Mail className="h-3 w-3 shrink-0" />
-                          <span className="truncate">{m.email}</span>
-                        </div>
-                      )}
-                      {m.phone_number && (
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <Phone className="h-3 w-3 shrink-0" />
-                          <span>{m.phone_number}</span>
-                        </div>
-                      )}
-                      {role === "student" && m.parent_telegram_username && (
-                        <div className="flex items-center gap-2 text-xs text-primary font-medium">
-                          <Send className="h-3 w-3 shrink-0" />
-                          <span>Ota-ona: {m.parent_telegram_username.startsWith('@') ? m.parent_telegram_username : `@${m.parent_telegram_username}`}</span>
-                        </div>
-                      )}
-                      <div className="flex items-center gap-2 pt-1">
-                        <div 
-                          onClick={() => {
-                            navigator.clipboard.writeText(m.id);
-                            toast.success("ID nusxalandi");
-                          }}
-                          className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-slate-100 dark:bg-white/5 text-[10px] text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors cursor-pointer border border-transparent hover:border-primary/20"
-                        >
-                          <Hash className="h-2.5 w-2.5" />
-                          <span className="font-mono">{m.id.substring(0, 8)}...</span>
-                          <Copy className="h-2.5 w-2.5 ml-1" />
-                        </div>
-                      </div>
-                    </div>
+                        <TableCell>
+                          <div className="space-y-0.5 text-xs text-muted-foreground">
+                            {m.email && (
+                              <p className="flex items-center gap-1">
+                                <Mail className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                                <span className="truncate max-w-[160px]">{m.email}</span>
+                              </p>
+                            )}
+                            {m.phone_number && (
+                              <p className="flex items-center gap-1">
+                                <Phone className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                                <span>{m.phone_number}</span>
+                              </p>
+                            )}
+                          </div>
+                        </TableCell>
 
-                    {canManage && (
-                      <div className="flex gap-2 pt-2 border-t border-slate-100 dark:border-white/5 mt-auto">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-9 w-9 rounded-lg bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 hover:text-amber-700"
-                          onClick={() => {
-                            setGrantCoinsTarget(m);
-                            setGrantCoinsOpen(true);
-                          }}
-                          title="Coin hadya qilish"
-                        >
-                          <Gift className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          className="flex-1 h-9 rounded-lg"
-                          onClick={() => openEdit(m)}
-                        >
-                          <Pencil className="h-3.5 w-3.5 mr-1.5" /> Tahrir
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-9 w-9 rounded-lg"
-                          onClick={() => setPwdTarget(m)}
-                        >
-                          <KeyRound className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className={m.is_active ? "h-9 w-9 rounded-lg text-amber-600" : "h-9 w-9 rounded-lg text-emerald-600"}
-                          onClick={() => toggleActive(m)}
-                        >
-                          {m.is_active ? <Ban className="h-3.5 w-3.5" /> : <Unlock className="h-3.5 w-3.5" />}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setDelTarget(m)}
-                          className="h-9 w-9 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    )}
-                  </Card>
-                </motion.div>
-              );
-            })}
-          </AnimatePresence>
+                        <TableCell>
+                          {m.is_active !== false ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+                              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping-slow mr-1" />
+                              Faol
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-destructive/10 text-destructive border border-destructive/20">
+                              Bloklangan
+                            </span>
+                          )}
+                        </TableCell>
+
+                        <TableCell className="text-right">
+                          <div className="inline-flex items-center justify-end gap-1">
+                            {canManage && role === "student" && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 rounded-lg text-amber-600 hover:text-amber-700 hover:bg-amber-500/15"
+                                onClick={() => {
+                                  setGrantCoinsTarget(m);
+                                  setGrantCoinsOpen(true);
+                                }}
+                                title="Coin hadya qilish"
+                              >
+                                <Gift className="h-4 w-4" />
+                              </Button>
+                            )}
+                            {canManage && (
+                              <>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 rounded-lg text-indigo-600 hover:text-indigo-700 hover:bg-indigo-500/15"
+                                  onClick={() => openEdit(m)}
+                                  title="Tahrirlash"
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 rounded-lg text-slate-600 hover:text-slate-700 hover:bg-slate-500/15"
+                                  onClick={() => setPwdTarget(m)}
+                                  title="Parolni o'zgartirish"
+                                >
+                                  <KeyRound className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className={m.is_active !== false ? "h-8 w-8 rounded-lg text-amber-600 hover:text-amber-700 hover:bg-amber-500/15" : "h-8 w-8 rounded-lg text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/15"}
+                                  onClick={() => toggleActive(m)}
+                                  title={m.is_active !== false ? "Bloklash" : "Faollashtirish"}
+                                >
+                                  {m.is_active !== false ? <Ban className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => setDelTarget(m)}
+                                  className="h-8 w-8 rounded-lg text-destructive hover:text-destructive-foreground hover:bg-destructive/90"
+                                  title="O'chirish"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </AnimatePresence>
+              </TableBody>
+            </Table>
+          </div>
         </div>
       )}
 

@@ -88,6 +88,26 @@ export function useAdminDashboard() {
   });
 }
 
+export interface AdminDashboardStatsDto {
+  totalTeachers: number;
+  totalStudents: number;
+  totalParents: number;
+  totalAdministrators: number;
+  totalGroups: number;
+}
+
+export function useAdminDashboardStats() {
+  return useQuery({
+    queryKey: ["admin-dashboard-realtime-stats"],
+    queryFn: async () => {
+      const response = await api.get<AdminDashboardStatsDto>("/admin/dashboard/stats");
+      return response.data;
+    },
+    staleTime: 5 * 60 * 1000,
+    retry: 0,
+  });
+}
+
 // 2.1 General Organization Hook
 export function useOrganization(orgId?: string | null) {
   return useQuery({

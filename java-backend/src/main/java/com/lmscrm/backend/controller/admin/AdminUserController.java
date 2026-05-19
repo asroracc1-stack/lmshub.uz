@@ -47,9 +47,10 @@ public class AdminUserController {
     @Operation(summary = "Get All Users with Pagination and Search")
     public ResponseEntity<Page<User>> getAll(
             @RequestParam(required = false) String query,
+            @RequestParam(required = false) UUID organizationId,
             @PageableDefault(size = 20) Pageable pageable,
             @AuthenticationPrincipal User currentUser) {
-        return ResponseEntity.ok(adminUserService.getUsers(query, pageable, currentUser));
+        return ResponseEntity.ok(adminUserService.getUsers(query, organizationId, pageable, currentUser));
     }
 
     // ─── GET by role ──────────────────────────────────────────────────────────
@@ -59,9 +60,10 @@ public class AdminUserController {
     public ResponseEntity<Page<User>> getByRole(
             @PathVariable String role,
             @RequestParam(required = false) String search,
+            @RequestParam(required = false) UUID organizationId,
             @PageableDefault(size = 20) Pageable pageable,
             @AuthenticationPrincipal User currentUser) {
-        return ResponseEntity.ok(adminUserService.getUsersByRole(role, search, pageable, currentUser));
+        return ResponseEntity.ok(adminUserService.getUsersByRole(role, search, organizationId, pageable, currentUser));
     }
 
     // ─── POST create ──────────────────────────────────────────────────────────

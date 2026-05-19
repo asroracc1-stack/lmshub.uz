@@ -16,7 +16,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CalendarClock, Plus, Pencil, Trash2, Loader2, MapPin, BookOpen, Users2, ClipboardCheck } from "lucide-react";
+import { CalendarClock, Plus, Pencil, Trash2, Loader2, MapPin, BookOpen, Users2, ClipboardCheck, Calendar } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface Lesson {
@@ -171,10 +171,30 @@ export default function OrgLessons({ canManage = false, basePath, filter = "all"
                 <div className="grid gap-2"><Label>Sarlavha *</Label>
                   <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Algoritmlar #5" /></div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="grid gap-2"><Label>Boshlanish *</Label>
-                    <Input type="datetime-local" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} /></div>
-                  <div className="grid gap-2"><Label>Tugash *</Label>
-                    <Input type="datetime-local" value={endsAt} onChange={(e) => setEndsAt(e.target.value)} /></div>
+                  <div className="grid gap-2">
+                    <Label>Boshlanish *</Label>
+                    <div className="relative">
+                      <Input 
+                        type="datetime-local" 
+                        value={startsAt} 
+                        onChange={(e) => setStartsAt(e.target.value)} 
+                        className="pr-10 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:z-10"
+                      />
+                      <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none z-0" />
+                    </div>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Tugash *</Label>
+                    <div className="relative">
+                      <Input 
+                        type="datetime-local" 
+                        value={endsAt} 
+                        onChange={(e) => setEndsAt(e.target.value)} 
+                        className="pr-10 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:z-10"
+                      />
+                      <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none z-0" />
+                    </div>
+                  </div>
                 </div>
                 <div className="grid gap-2"><Label>Guruh *</Label>
                   <Select value={groupId} onValueChange={setGroupId}>

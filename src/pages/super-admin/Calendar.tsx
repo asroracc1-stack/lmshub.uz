@@ -121,8 +121,21 @@ export default function CalendarPage() {
   const { data: allEvents = [], isLoading: eventsLoading, refetch } = useQuery({
     queryKey: ["calendar-events"],
     queryFn: async () => {
-      const { data } = await api.get<EventItem[]>("/calendar");
-      return Array.isArray(data) ? data : [];
+      const { data } = await api.get<any[]>("/calendar");
+      const list = Array.isArray(data) ? data : [];
+      return list.map((e) => ({
+        id: e.id,
+        title: e.title,
+        description: e.description,
+        location: e.location,
+        starts_at: e.startsAt,
+        ends_at: e.endsAt,
+        is_all_day: e.isAllDay ?? false,
+        color: e.color || "primary",
+        organization: e.organization,
+        organization_id: e.organization?.id ?? null,
+        created_at: e.createdAt,
+      }));
     },
     staleTime: 300_000, // 5 minutes cache
   });
@@ -247,11 +260,11 @@ export default function CalendarPage() {
       title: parsed.data.title,
       description: parsed.data.description || null,
       location: parsed.data.location || null,
-      starts_at: new Date(parsed.data.starts_at).toISOString(),
-      ends_at: new Date(parsed.data.ends_at).toISOString(),
+      startsAt: parsed.data.starts_at.length === 16 ? `${parsed.data.starts_at}:00` : parsed.data.starts_at,
+      endsAt: parsed.data.ends_at.length === 16 ? `${parsed.data.ends_at}:00` : parsed.data.ends_at,
       organization: parsed.data.organization_id === "all" ? null : { id: parsed.data.organization_id },
       color: parsed.data.color,
-      is_all_day: parsed.data.is_all_day,
+      isAllDay: parsed.data.is_all_day,
     };
     try {
       if (editing) {
@@ -477,11 +490,27 @@ export default function CalendarPage() {
             <div className="grid grid-cols-2 gap-3">
               <div className="grid gap-2">
                 <Label>Boshlanish *</Label>
-                <Input type="datetime-local" value={form.starts_at} onChange={(e) => setForm((f) => ({ ...f, starts_at: e.target.value }))} />
+                <div className="relative">
+                  <Input 
+                    type="datetime-local" 
+                    value={form.starts_at} 
+                    onChange={(e) => setForm((f) => ({ ...f, starts_at: e.target.value }))} 
+                    className="pr-10 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:z-10"
+                  />
+                  <CalendarIcon className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none z-0" />
+                </div>
               </div>
               <div className="grid gap-2">
                 <Label>Tugash *</Label>
-                <Input type="datetime-local" value={form.ends_at} onChange={(e) => setForm((f) => ({ ...f, ends_at: e.target.value }))} />
+                <div className="relative">
+                  <Input 
+                    type="datetime-local" 
+                    value={form.ends_at} 
+                    onChange={(e) => setForm((f) => ({ ...f, ends_at: e.target.value }))} 
+                    className="pr-10 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:z-10"
+                  />
+                  <CalendarIcon className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none z-0" />
+                </div>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">

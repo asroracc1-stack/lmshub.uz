@@ -23,23 +23,37 @@ interface User {
   id: string;
   email: string;
   role: string;
+  username?: string;
+  firstName?: string;
+  first_name?: string;
+  lastName?: string;
+  last_name?: string;
+  avatarUrl?: string;
+  avatar_url?: string;
+  organizationId?: string | null;
+  organization_id?: string | null;
+  phone?: string | null;
+}
+
+interface Session {
+  access_token: string;
 }
 
 interface AuthContextValue {
-  session: any | null;
+  session: Session | null;
   user: User | null;
   profile: Profile | null;
   role: AppRole | null;
   loading: boolean;
   signOut: () => Promise<void>;
   refresh: () => Promise<void>;
-  setAuth: (token: string, user: any) => void;
+  setAuth: (token: string, user: User) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<any | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
@@ -54,11 +68,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (r === 'teacher') return 'teacher';
     if (r === 'student') return 'student';
     if (r === 'parent') return 'parent';
-    if (r === 'manager' || r === 'payment_manager' || r === 'pack_manager') return 'payment_manager';
+    if (r === 'pack_manager') return 'pack_manager';
+    if (r === 'manager' || r === 'payment_manager') return 'payment_manager';
     return 'user';
   };
 
-  const setAuth = (token: string, userData: any) => {
+  const setAuth = (token: string, userData: User) => {
     localStorage.setItem('access_token', token);
     localStorage.setItem('user', JSON.stringify(userData));
     setUser(userData);
@@ -70,12 +85,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     setProfile({
       id: userData.id,
-      username: userData.username || userData.email.split('@')[0],
+      username: userData.username || userData.email?.split('@')[0] || '',
       full_name: `${firstName} ${lastName}`.trim(),
       email: userData.email,
-      avatar_url: userData.avatarUrl || userData.avatar_url,
+      phone: userData.phone || null,
+      avatar_url: userData.avatarUrl || userData.avatar_url || null,
       organization_id: userData.organizationId || userData.organization_id || null,
-    } as any);
+    });
   };
 
   const signOut = async () => {
@@ -96,10 +112,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (token) {
        try {
          const res = await api.get('/user/profile');
-         const mappedProfile = {
-           ...res.data,
-           full_name: res.data.fullName || res.data.full_name,
-           avatar_url: res.data.avatarUrl || res.data.avatar_url,
+         const mappedProfile: Profile = {
+           id: res.data.id || '',
+           username: res.data.username || '',
+           full_name: res.data.fullName || res.data.full_name || null,
+           email: res.data.email || null,
+           phone: res.data.phone || res.data.phoneNumber || res.data.phone_number || null,
+           avatar_url: res.data.avatarUrl || res.data.avatar_url || null,
            organization_id: res.data.organizationId || res.data.organization_id || null,
          };
          setProfile(mappedProfile);
@@ -107,8 +126,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
          // Also update localStorage user object if it exists
          const savedUser = localStorage.getItem('user');
          if (savedUser) {
-           const userData = JSON.parse(savedUser);
-           userData.avatarUrl = mappedProfile.avatar_url;
+           const userData = JSON.parse(savedUser) as User;
+           userData.avatarUrl = mappedProfile.avatar_url || undefined;
            userData.organizationId = mappedProfile.organization_id;
            localStorage.setItem('user', JSON.stringify(userData));
          }
@@ -125,7 +144,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (token && savedUser) {
         try {
-          const userData = JSON.parse(savedUser);
+          const userData = JSON.parse(savedUser) as User;
           setUser(userData);
           setRole(mapBackendRole(userData.role));
           setSession({ access_token: token });
@@ -135,12 +154,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
           setProfile({
             id: userData.id,
-            username: userData.username || userData.email.split('@')[0],
+            username: userData.username || userData.email?.split('@')[0] || '',
             full_name: `${firstName} ${lastName}`.trim(),
             email: userData.email,
-            avatar_url: userData.avatarUrl || userData.avatar_url,
+            phone: userData.phone || null,
+            avatar_url: userData.avatarUrl || userData.avatar_url || null,
             organization_id: userData.organizationId || userData.organization_id || null,
-          } as any);
+          });
           
           // Trigger a background refresh to get the latest from DB
           refresh();

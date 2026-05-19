@@ -9,6 +9,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
+import com.lmscrm.backend.exception.BusinessException;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -29,15 +32,37 @@ public class CalendarController {
 
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
-    public ResponseEntity<CalendarEvent> create(@RequestBody CalendarEvent event) {
+    public ResponseEntity<CalendarEvent> create(@Valid @RequestBody CalendarEvent event) {
+        if (event.getStartsAt() == null || event.getEndsAt() == null) {
+            throw new IllegalArgumentException("Boshlanish va tugash vaqti majburiy");
+        }
+        UUID orgId = event.getOrganization() != null ? event.getOrganization().getId() : null;
+        List<CalendarEvent> overlaps = calendarEventRepository.findOverlappingEvents(
+                orgId, event.getStartsAt(), event.getEndsAt(), null
+        );
+        if (!overlaps.isEmpty()) {
+            throw new BusinessException("Ushbu vaqtda boshqa tadbir mavjud");
+        }
         return ResponseEntity.ok(calendarEventRepository.save(event));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
-    public ResponseEntity<CalendarEvent> update(@PathVariable UUID id, @RequestBody CalendarEvent details) {
+    public ResponseEntity<CalendarEvent> update(@PathVariable UUID id, @Valid @RequestBody CalendarEvent details) {
         CalendarEvent event = calendarEventRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Event not found"));
+
+        if (details.getStartsAt() == null || details.getEndsAt() == null) {
+            throw new IllegalArgumentException("Boshlanish va tugash vaqti majburiy");
+        }
+        UUID orgId = details.getOrganization() != null ? details.getOrganization().getId() : null;
+        List<CalendarEvent> overlaps = calendarEventRepository.findOverlappingEvents(
+                orgId, details.getStartsAt(), details.getEndsAt(), id
+        );
+        if (!overlaps.isEmpty()) {
+            throw new BusinessException("Ushbu vaqtda boshqa tadbir mavjud");
+        }
+
         event.setTitle(details.getTitle());
         event.setDescription(details.getDescription());
         event.setLocation(details.getLocation());

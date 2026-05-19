@@ -104,6 +104,38 @@ public class DashboardService {
         return ((double) (current - previous) / previous) * 100.0;
     }
 
+    public com.lmscrm.backend.dto.response.AdminDashboardStatsDto getAdminDashboardStats(User currentUser) {
+        try {
+            UUID orgId = currentUser.getOrganizationId();
+            
+            long teachers, students, parents, administrators, groups;
+            if (orgId == null) {
+                teachers = userRepository.countByRole(AppRole.TEACHER);
+                students = userRepository.countByRole(AppRole.STUDENT);
+                parents = userRepository.countByRole(AppRole.PARENT);
+                administrators = userRepository.countByRole(AppRole.ADMINISTRATOR);
+                groups = groupRepository.count();
+            } else {
+                teachers = userRepository.countByOrganizationIdAndRole(orgId, AppRole.TEACHER);
+                students = userRepository.countByOrganizationIdAndRole(orgId, AppRole.STUDENT);
+                parents = userRepository.countByOrganizationIdAndRole(orgId, AppRole.PARENT);
+                administrators = userRepository.countByOrganizationIdAndRole(orgId, AppRole.ADMINISTRATOR);
+                groups = groupRepository.countByOrganizationId(orgId);
+            }
+
+            return com.lmscrm.backend.dto.response.AdminDashboardStatsDto.builder()
+                    .totalTeachers(teachers)
+                    .totalStudents(students)
+                    .totalParents(parents)
+                    .totalAdministrators(administrators)
+                    .totalGroups(groups)
+                    .build();
+        } catch (Exception e) {
+            log.error("Error generating admin dashboard stats", e);
+            return com.lmscrm.backend.dto.response.AdminDashboardStatsDto.builder().build();
+        }
+    }
+
     public List<CalendarEvent> getUpcomingEvents(User currentUser) {
         UUID orgId = currentUser.getOrganizationId();
         if (orgId == null) return List.of();

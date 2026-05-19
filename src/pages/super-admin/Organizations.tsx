@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -78,6 +79,7 @@ const REGIONS = [
 ];
 
 export default function Organizations() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [orgs, setOrgs] = useState<Organization[]>([]);
   const [plans, setPlans] = useState<Plan[]>([]);
@@ -387,7 +389,7 @@ export default function Organizations() {
       ) : (
         <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
           {orgs.map((o) => (
-            <div key={o.id} className="glass rounded-2xl p-5 hover:border-primary/40 transition-smooth group">
+            <div key={o.id} onClick={() => navigate(`/super-admin/users?orgId=${o.id}`)} className="glass rounded-2xl p-5 hover:border-primary/40 transition-smooth group cursor-pointer hover:scale-[1.02] hover:shadow-glow transition-all duration-300">
               <div className="flex items-start justify-between mb-3">
                 {o.logo_url ? (
                   <div className="h-12 w-12 rounded-xl overflow-hidden border border-primary/30 shadow-glow">
@@ -399,12 +401,12 @@ export default function Organizations() {
                   </div>
                 )}
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-smooth">
-                  <Button size="icon" variant="ghost" onClick={() => openEdit(o)}>
+                  <Button size="icon" variant="ghost" onClick={(e) => { e.stopPropagation(); openEdit(o); }}>
                     <Pencil className="h-4 w-4" />
                   </Button>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button size="icon" variant="ghost" className="text-destructive">
+                      <Button size="icon" variant="ghost" className="text-destructive" onClick={(e) => e.stopPropagation()}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </AlertDialogTrigger>

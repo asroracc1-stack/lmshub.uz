@@ -120,7 +120,7 @@ public class GeminiService {
         return executeWithRotation(promptBuilder.toString(), 3);
     }
 
-    private String executeWithRotation(String prompt, int maxOverallRetries) {
+    public String executeWithRotation(String prompt, int maxOverallRetries) {
         for (int attempt = 0; attempt < maxOverallRetries; attempt++) {
             String key = getValidKey();
             

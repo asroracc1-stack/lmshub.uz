@@ -229,7 +229,7 @@ export default function SuperAdminLayout() {
 
             <div className="flex items-center gap-4">
               <button
-                onClick={() => window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true }))}
+                onClick={() => window.dispatchEvent(new Event("open-global-search"))}
                 className="hidden lg:flex items-center gap-3 px-4 py-2.5 rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-white/5 text-xs text-slate-500 hover:border-primary/30 transition-all"
               >
                 <Search className="h-4 w-4" />

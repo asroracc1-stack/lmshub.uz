@@ -77,7 +77,8 @@ function toLocalDT(iso: string) {
   return local.toISOString().slice(0, 16);
 }
 function fromLocalDT(v: string) {
-  return new Date(v).toISOString();
+  if (!v) return "";
+  return v.length === 16 ? `${v}:00` : v;
 }
 
 export default function OrgEvents({ canManage }: Props) {
@@ -498,19 +499,27 @@ export default function OrgEvents({ canManage }: Props) {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label>Boshlanishi</Label>
-                <Input
-                  type="datetime-local"
-                  value={form.starts_at}
-                  onChange={(e) => setForm({ ...form, starts_at: e.target.value })}
-                />
+                <div className="relative mt-1">
+                  <Input
+                    type="datetime-local"
+                    value={form.starts_at}
+                    onChange={(e) => setForm({ ...form, starts_at: e.target.value })}
+                    className="pr-10 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:z-10"
+                  />
+                  <CalendarIcon className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none z-0" />
+                </div>
               </div>
               <div>
                 <Label>Tugashi</Label>
-                <Input
-                  type="datetime-local"
-                  value={form.ends_at}
-                  onChange={(e) => setForm({ ...form, ends_at: e.target.value })}
-                />
+                <div className="relative mt-1">
+                  <Input
+                    type="datetime-local"
+                    value={form.ends_at}
+                    onChange={(e) => setForm({ ...form, ends_at: e.target.value })}
+                    className="pr-10 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:z-10"
+                  />
+                  <CalendarIcon className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none z-0" />
+                </div>
               </div>
             </div>
             <div>

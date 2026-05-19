@@ -14,6 +14,8 @@ import java.util.UUID;
 public class LoginResponse {
     private String accessToken;
     private String tokenType = "Bearer";
+    private String role;
+    private UUID organizationId;
     private UserInfo user;
 
     @Data
@@ -26,5 +28,6 @@ public class LoginResponse {
         private String role;
         private String firstName;
         private String lastName;
+        private UUID organizationId;
     }
 }

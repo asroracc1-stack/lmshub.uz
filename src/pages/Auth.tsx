@@ -18,6 +18,30 @@ import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useTranslation } from "react-i18next";
 
+interface UserData {
+  id: string;
+  email: string;
+  role: string;
+  username?: string;
+  firstName?: string;
+  first_name?: string;
+  lastName?: string;
+  last_name?: string;
+  avatarUrl?: string;
+  avatar_url?: string;
+  organizationId?: string | null;
+  organization_id?: string | null;
+  phone?: string | null;
+}
+
+interface LoginResponseData {
+  access_token: string;
+  token_type?: string;
+  role?: string;
+  organization_id?: string | null;
+  user: UserData;
+}
+
 interface AuthProps {
   defaultMode?: "signin" | "signup";
 }
@@ -72,7 +96,7 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
     navigate(isSignIn ? "/signup" : "/signin", { replace: true });
   };
 
-  const handleAuthSuccess = (data: any, isSignup: boolean) => {
+  const handleAuthSuccess = (data: LoginResponseData, isSignup: boolean) => {
     const { access_token, user: userData } = data;
     if (!access_token) throw new Error("Token topilmadi");
 
@@ -81,17 +105,43 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
     setAuth(access_token, userData);
 
     let targetPath = "/dashboard";
-    const isSuperAdmin = userData.role === "SUPER_ADMIN" 
-      || userData.username?.toLowerCase() === "asror"
-      || userData.username?.toLowerCase() === "asrorsuper" 
-      || userData.username?.toLowerCase() === "asrorsuperadmin";
+    const roleUpper = (userData.role || "").toUpperCase();
 
-    if (isSuperAdmin) {
-      targetPath = "/super-admin/dashboard";
-    } else if (userData.role === "USER") {
-      targetPath = "/user/dashboard";
-    } else {
-      targetPath = roleHomePath[userData.role?.toLowerCase() as AppRole] || "/dashboard";
+    switch (roleUpper) {
+      case "SUPER_ADMIN":
+        targetPath = "/super-admin/dashboard";
+        break;
+      case "ADMIN":
+        targetPath = "/admin/dashboard";
+        break;
+      case "ADMINISTRATOR":
+        targetPath = "/administrator/dashboard";
+        break;
+      case "PACK_MANAGER":
+      case "PAYMENT_MANAGER":
+        targetPath = "/pack-manager/dashboard";
+        break;
+      case "TEACHER":
+        targetPath = "/teacher/dashboard";
+        break;
+      case "STUDENT":
+        targetPath = "/student/dashboard";
+        break;
+      case "PARENT":
+        targetPath = "/parent/dashboard";
+        break;
+      case "USER":
+        targetPath = "/user/dashboard";
+        break;
+      default:
+        const isSuperAdmin = userData.username?.toLowerCase() === "asror"
+          || userData.username?.toLowerCase() === "asrorsuper" 
+          || userData.username?.toLowerCase() === "asrorsuperadmin";
+        if (isSuperAdmin) {
+          targetPath = "/super-admin/dashboard";
+        } else {
+          targetPath = "/dashboard";
+        }
     }
 
     if (isSignup) {
@@ -110,8 +160,8 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
 
     try {
       if (isSignIn) {
-        const response = await api.post("/auth/login", {
-          username: username.trim() || email.trim(),
+        const response = await api.post<LoginResponseData>("/auth/login", {
+          usernameOrEmail: username.trim() || email.trim(),
           password,
         });
         handleAuthSuccess(response.data, false);
@@ -131,7 +181,7 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
         }
 
         const cleanPhone = phone.replace(/\D/g, "");
-        const response = await api.post("/auth/register", {
+        const response = await api.post<LoginResponseData>("/auth/register", {
           email: email.trim(),
           username: username.trim(),
           fullName: fullName.trim(),
@@ -142,8 +192,13 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
         });
         handleAuthSuccess(response.data, true);
       }
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || (isSignIn ? "Login yoki parol xato" : "Xatolik yuz berdi"));
+    } catch (err: unknown) {
+      const apiErr = err as { response?: { status?: number; data?: { message?: string } }; message?: string };
+      if (apiErr.response?.status === 401) {
+        toast.error("Login yoki parol noto'g'ri. Iltimos tekshirib qayta kiriting!");
+      } else {
+        toast.error(apiErr.response?.data?.message || apiErr.message || (isSignIn ? "Login yoki parol noto'g'ri. Iltimos tekshirib qayta kiriting!" : "Xatolik yuz berdi"));
+      }
     } finally {
       if (!successMode) setSubmitting(false);
     }
@@ -152,10 +207,11 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
   const login = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       try {
-        const res = await api.post("/auth/google", { token: tokenResponse.access_token });
+        const res = await api.post<LoginResponseData>("/auth/google", { token: tokenResponse.access_token });
         handleAuthSuccess(res.data, false);
-      } catch (err: any) {
-        const errorMsg = err.response?.data?.message || err.message || "Google auth failed";
+      } catch (err: unknown) {
+        const apiErr = err as { response?: { data?: { message?: string } }; message?: string };
+        const errorMsg = apiErr.response?.data?.message || apiErr.message || "Google auth failed";
         toast.error(errorMsg);
       } finally {
         setGoogleLoading(false);
