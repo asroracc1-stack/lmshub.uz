@@ -122,6 +122,7 @@ const SuperAdminPackages = lazy(() => import("./pages/super-admin/Packages"));
 const TelegramLinks = lazy(() => import("./pages/super-admin/TelegramLinks"));
 const LMSNews = lazy(() => import("./pages/super-admin/LMSNews"));
 const SuperAdminParents = lazy(() => import("./pages/super-admin/Parents"));
+const StartupPitch = lazy(() => import("./pages/super-admin/StartupPitch"));
 const AdminUsers = lazy(() => import("./pages/admin/Users"));
 const PaymentRequests = lazy(() => import("./pages/admin/PaymentRequests"));
 
@@ -196,6 +197,7 @@ const AppRoutes = () => {
         <Route path="/auth" element={<Auth />} />
         <Route path="/signin" element={<Auth defaultMode="signin" />} />
         <Route path="/signup" element={<Auth defaultMode="signup" />} />
+        <Route path="/pitch-debug" element={<StartupPitch />} />
 
         {/* Super Admin */}
         <Route path="/super-admin" element={<ProtectedRoute allow={["super_admin"]}><RoleLayout role="super_admin" basePath="/super-admin" /></ProtectedRoute>}>
@@ -234,6 +236,7 @@ const AppRoutes = () => {
           <Route path="settings" element={<SettingsPage />} />
           <Route path="profile" element={<Profile />} />
           <Route path="telegram" element={<TelegramLinks />} />
+          <Route path="pitch" element={<StartupPitch />} />
           <Route path="news" element={<LMSNews />} />
           <Route path="parents" element={<SuperAdminParents />} />
           <Route path="groups" element={<OrgGroups />} />

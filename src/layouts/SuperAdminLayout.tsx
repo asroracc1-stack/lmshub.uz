@@ -9,7 +9,7 @@ import {
   User as UserIcon, LogOut, ChevronRight, ChevronDown, Activity,
   Menu, Search, Send, ShieldCheck, Trophy, FileText, Crown,
   Mic, Package, CreditCard, Target, Landmark, PanelLeftClose,
-  PanelLeftOpen, Newspaper, Map, UserSquare, Shield
+  PanelLeftOpen, Newspaper, Map, UserSquare, Shield, Presentation
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -84,6 +84,7 @@ export default function SuperAdminLayout() {
     { to: "/super-admin/speaking", label: t("nav.speaking"), icon: Mic },
     { to: "/super-admin/packs", label: t("nav.packs"), icon: Package },
     { to: "/super-admin/pricing-plans", label: t("nav.pricingPlans"), icon: CreditCard },
+    { to: "/super-admin/pitch", label: "Loyiha Taqdimoti", icon: Presentation },
     { to: "/super-admin/news", label: "Yangiliklar", icon: Newspaper },
   ];
 

@@ -22,7 +22,8 @@ import {
   UserCog,
   Crown,
   Activity,
-  Send
+  Send,
+  Presentation
 } from "lucide-react";
 import { TFunction } from "i18next";
 
@@ -181,6 +182,7 @@ export const getSidebarRoutes = (role: string, t: TFunction, options: { ielts?: 
         { to: "/super-admin/packs", label: t("nav.packs"), icon: Package },
         { to: "/super-admin/packages", label: t("nav.pricingPlans"), icon: Package },
         { to: "/super-admin/telegram", label: t("common.telegramBot"), icon: Send },
+        { to: "/super-admin/pitch", label: "Loyiha Taqdimoti", icon: Presentation },
         { to: "/super-admin/activity", label: t("nav.activityLogs"), icon: Activity },
       ];
     case "payment_manager":
