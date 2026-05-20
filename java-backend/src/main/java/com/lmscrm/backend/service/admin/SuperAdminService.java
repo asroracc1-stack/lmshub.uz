@@ -31,6 +31,7 @@ public class SuperAdminService {
     private final CoinTransactionRepository coinTransactionRepository;
     private final com.lmscrm.backend.repository.GroupRepository groupRepository;
     private final PaymentRepository paymentRepository;
+    private final com.lmscrm.backend.repository.SubjectRepository subjectRepository;
 
     @Transactional(readOnly = true)
     public SuperAdminStatsDto getDashboardStats() {
@@ -47,6 +48,7 @@ public class SuperAdminService {
                 .users(userRepository.countByRole(AppRole.USER))
                 .parents(userRepository.countByRole(AppRole.PARENT))
                 .groups(groupRepository.count())
+                .totalSubjects(subjectRepository.count())
                 .totalRevenue(paymentRepository.sumTotalRevenue())
                 .build();
 

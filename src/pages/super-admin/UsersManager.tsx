@@ -322,7 +322,7 @@ export default function UsersManager({ filterRole, title, description }: Props) 
 
   const submit = async () => {
     const targetOrgId = form.organization_id && form.organization_id !== "none" ? form.organization_id : (profile?.organization_id || "");
-    if (form.role !== "super_admin" && form.role !== "administrator" && form.role !== "user" && !targetOrgId) {
+    if (form.role !== "super_admin" && form.role !== "administrator" && form.role !== "user" && form.role !== "payment_manager" && !targetOrgId) {
       toast.error("Iltimos, tashkilotni tanlang");
       return;
     }
@@ -442,7 +442,7 @@ export default function UsersManager({ filterRole, title, description }: Props) 
       return; 
     }
     try {
-      await api.patch(`/admin/users/${pwdTarget.id}/password`, newPassword);
+      await api.patch(`/admin/users/${pwdTarget.id}/password`, { password: newPassword });
       toast.success("Parol yangilandi");
       setPwdOpen(false);
       setNewPassword("");
@@ -563,7 +563,7 @@ export default function UsersManager({ filterRole, title, description }: Props) 
                   </Select>
                 </div>
                 <div className="grid gap-2">
-                  <Label>Tashkilot {(form.role === "user" || form.role === "super_admin" || form.role === "administrator") && <span className="text-muted-foreground font-normal">(Ixtiyoriy)</span>}</Label>
+                  <Label>Tashkilot {(form.role === "user" || form.role === "super_admin" || form.role === "administrator" || form.role === "payment_manager") && <span className="text-muted-foreground font-normal">(Ixtiyoriy)</span>}</Label>
                   <Select
                     value={form.organization_id || "none"}
                     onValueChange={(v) => setForm((f) => ({ ...f, organization_id: v === "none" ? "" : v }))}
@@ -773,7 +773,9 @@ export default function UsersManager({ filterRole, title, description }: Props) 
                   <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">Foydalanuvchi topilmadi</TableCell></TableRow>
                 ) : users.map((u: UserRow) => {
                   const initials = (u.full_name || u.email).split(" ").map(s => s[0]).slice(0,2).join("").toUpperCase();
-                  const orgName = orgs.find((o: any) => o.id === u.organization_id)?.name || "—";
+                  const orgName = u.organization_id 
+                    ? (orgs.find((o: any) => o.id === u.organization_id)?.name || "—")
+                    : (u.role === "SUPER_ADMIN" || u.role === "PAYMENT_MANAGER" ? "Hamma" : "—");
                   const mappedRole = (u.role as string).toLowerCase() as AppRole;
                   
                   const getRoleBadgeClasses = (role: string) => {

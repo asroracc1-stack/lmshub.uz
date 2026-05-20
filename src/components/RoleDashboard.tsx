@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 export interface StatCard {
   label: string;
-  value: string | number;
+  value: React.ReactNode;
   icon: ComponentType<{ className?: string }>;
   trend?: string;
   color?: "primary" | "secondary" | "accent" | "success" | "warning";
@@ -58,12 +58,12 @@ export default function RoleDashboard({ title, description, stats, children }: R
                 />
                 <div className="relative flex items-start justify-between">
                   <div>
-                    <p className="text-xs uppercase tracking-wider text-muted-foreground">
+                    <div className="text-xs uppercase tracking-wider text-muted-foreground">
                       {s.label}
-                    </p>
-                    <p className="mt-2 font-display text-3xl font-bold">{s.value}</p>
+                    </div>
+                    <div className="mt-2 font-display text-3xl font-bold">{s.value}</div>
                     {s.trend && (
-                      <p className="mt-1 text-xs text-muted-foreground">{s.trend}</p>
+                      <div className="mt-1 text-xs text-muted-foreground">{s.trend}</div>
                     )}
                   </div>
                   <div className={cn("h-10 w-10 rounded-lg grid place-items-center bg-background/60", cls)}>

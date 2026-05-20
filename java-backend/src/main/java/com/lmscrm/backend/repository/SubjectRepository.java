@@ -10,4 +10,5 @@ import java.util.UUID;
 @Repository
 public interface SubjectRepository extends JpaRepository<Subject, UUID> {
     List<Subject> findByOrganizationId(UUID organizationId);
+    long countByOrganizationId(UUID organizationId);
 }

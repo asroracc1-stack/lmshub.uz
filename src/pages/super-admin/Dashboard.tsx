@@ -17,6 +17,7 @@ import {
   Edit,
   Trash2,
   LogIn,
+  BookOpen,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -72,6 +73,7 @@ interface Stats {
   users: number;
   parents: number;
   groups: number;
+  totalSubjects: number;
   totalRevenue: number;
 }
 
@@ -108,6 +110,7 @@ export default function SuperAdminDashboard() {
     users: rawStats.users || 0,
     parents: rawStats.parents || 0,
     groups: rawStats.groups || 0,
+    totalSubjects: rawStats.totalSubjects ?? rawStats.total_subjects ?? 0,
     totalRevenue: rawStats.totalRevenue ?? rawStats.total_revenue ?? 0,
   };
   const growth = data?.growth ?? [];
@@ -165,6 +168,7 @@ export default function SuperAdminDashboard() {
     { label: "Administratorlar", value: stats.administrators, icon: UserCog, accent: "from-primary to-accent" },
     { label: "Ota-onalar", value: stats.parents, icon: Heart, accent: "from-pink-500 to-rose-500" },
     { label: "Guruhlar", value: stats.groups, icon: Users2, accent: "from-emerald-400 to-teal-500" },
+    { label: "Fanlar", value: stats.totalSubjects, icon: BookOpen, accent: "from-teal-400 to-emerald-500" },
     { label: "Oddiy Userlar", value: stats.users, icon: Users, accent: "from-blue-500 to-cyan-500" },
   ];
 
@@ -186,35 +190,41 @@ export default function SuperAdminDashboard() {
       </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
-        {cards.map((c, i) => (
-          <motion.div
-            key={c.label}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.05 }}
-            className="glass rounded-2xl p-4 md:p-5 hover:border-primary/40 transition-smooth flex flex-col justify-between"
-          >
-            <div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+        {loading ? (
+          Array.from({ length: 11 }).map((_, i) => (
+            <div key={i} className="glass rounded-2xl p-4 md:p-5 flex flex-col justify-between animate-pulse min-h-[120px]">
               <div className="flex items-start justify-between">
-                <div className={`h-9 w-9 md:h-10 md:w-10 rounded-xl bg-gradient-to-br ${c.accent} grid place-items-center shadow-glow`}>
-                  <c.icon className="h-4 w-4 md:h-5 md:w-5 text-primary-foreground" />
-                </div>
-                <span className="text-[10px] md:text-xs text-success flex items-center gap-0.5">
-                  <ArrowUpRight className="h-3 w-3" />
-                </span>
+                <Skeleton className="h-9 w-9 md:h-10 md:w-10 rounded-xl bg-slate-200 dark:bg-slate-700" />
               </div>
-              <p className="mt-3 md:mt-4 text-[10px] md:text-xs uppercase tracking-wider text-slate-600 dark:text-muted-foreground line-clamp-1">{c.label}</p>
+              <Skeleton className="h-3 w-1/2 bg-slate-200 dark:bg-slate-700 mt-3" />
+              <Skeleton className="h-7 w-2/3 bg-slate-200 dark:bg-slate-700 mt-1" />
             </div>
-            {loading ? (
-              <div className="mt-1 space-y-1">
-                <Skeleton className="h-8 w-2/3" />
+          ))
+        ) : (
+          cards.map((c, i) => (
+            <motion.div
+              key={c.label}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05 }}
+              className="glass rounded-2xl p-4 md:p-5 hover:border-primary/40 transition-smooth flex flex-col justify-between"
+            >
+              <div>
+                <div className="flex items-start justify-between">
+                  <div className={`h-9 w-9 md:h-10 md:w-10 rounded-xl bg-gradient-to-br ${c.accent} grid place-items-center shadow-glow`}>
+                    <c.icon className="h-4 w-4 md:h-5 md:w-5 text-primary-foreground" />
+                  </div>
+                  <span className="text-[10px] md:text-xs text-success flex items-center gap-0.5">
+                    <ArrowUpRight className="h-3 w-3" />
+                  </span>
+                </div>
+                <p className="mt-3 md:mt-4 text-[10px] md:text-xs uppercase tracking-wider text-slate-600 dark:text-muted-foreground line-clamp-1">{c.label}</p>
               </div>
-            ) : (
               <p className="font-display text-2xl md:text-3xl font-bold mt-1">{c.value}</p>
-            )}
-          </motion.div>
-        ))}
+            </motion.div>
+          ))
+        )}
 
         {/* Server Health Card */}
         <motion.div

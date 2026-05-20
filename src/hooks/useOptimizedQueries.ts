@@ -11,6 +11,7 @@ export interface SuperAdminStats {
   admins: number;
   administrators: number;
   parents: number;
+  totalSubjects?: number;
 }
 
 export interface MonthPoint {
@@ -94,6 +95,7 @@ export interface AdminDashboardStatsDto {
   totalParents: number;
   totalAdministrators: number;
   totalGroups: number;
+  totalSubjects: number;
 }
 
 export function useAdminDashboardStats() {

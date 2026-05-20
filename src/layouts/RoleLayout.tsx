@@ -45,7 +45,9 @@ interface RoleLayoutProps {
 export default function RoleLayout({ brand = "LMSHub", subtitle, nav: initialNav, role = "user", basePath = "/user" }: RoleLayoutProps) {
   const { profile, signOut, user, loading: authLoading } = useAuth();
   const { theme } = useTheme();
-  const { data: orgData } = useOrganization(profile?.organization_id);
+  const { data: orgData } = useOrganization(
+    (role === "admin" || role === "super_admin") ? profile?.organization_id : null
+  );
   const { prefetchRouteData } = usePrefetchHelper();
   const navigate = useNavigate();
   const location = useLocation();

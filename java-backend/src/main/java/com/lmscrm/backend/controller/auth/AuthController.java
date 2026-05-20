@@ -31,6 +31,7 @@ public class AuthController {
     @PostMapping("/login")
     @Operation(summary = "User Login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
+        System.out.println("Kelgan login: " + loginRequest.getUsernameOrEmail());
         return ResponseEntity.ok(authService.login(loginRequest));
     }
 

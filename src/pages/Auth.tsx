@@ -161,7 +161,7 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
     try {
       if (isSignIn) {
         const response = await api.post<LoginResponseData>("/auth/login", {
-          usernameOrEmail: username.trim() || email.trim(),
+          username_or_email: username.trim() || email.trim(),
           password,
         });
         handleAuthSuccess(response.data, false);

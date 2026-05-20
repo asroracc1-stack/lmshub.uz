@@ -26,4 +26,7 @@ public class AdminDashboardStatsDto {
 
     @JsonProperty("totalGroups")
     private long totalGroups;
+
+    @JsonProperty("totalSubjects")
+    private long totalSubjects;
 }

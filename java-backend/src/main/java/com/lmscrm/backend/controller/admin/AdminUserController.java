@@ -110,12 +110,15 @@ public class AdminUserController {
                 : req.getCardHolder();
 
         // Build the User entity from the DTO
+        String cleanUsername = req.getUsername() != null ? req.getUsername().replace('ı', 'i').replace('İ', 'i').trim().toLowerCase(java.util.Locale.ENGLISH) : null;
+        String cleanEmail = req.getEmail() != null && !req.getEmail().isBlank()
+                ? req.getEmail().replace('ı', 'i').replace('İ', 'i').trim().toLowerCase(java.util.Locale.ENGLISH)
+                : (cleanUsername != null ? cleanUsername + "@lms.local" : null);
+
         User user = User.builder()
-                .username(req.getUsername() != null ? req.getUsername().toLowerCase().trim() : null)
-                .email(req.getEmail() != null && !req.getEmail().isBlank()
-                        ? req.getEmail()
-                        : req.getUsername().toLowerCase().trim() + "@lms.local")
-                .password(req.getPassword())
+                .username(cleanUsername)
+                .email(cleanEmail)
+                .password(req.getPassword() != null ? req.getPassword().replace('ı', 'i').replace('İ', 'i') : null)
                 .fullName(fullName)
                 .phoneNumber(phone)
                 .subject(req.getSubject())
@@ -172,10 +175,13 @@ public class AdminUserController {
                 ? req.getCard_holder()
                 : req.getCardHolder();
 
+        String cleanUsername = req.getUsername() != null ? req.getUsername().replace('ı', 'i').replace('İ', 'i').trim().toLowerCase(java.util.Locale.ENGLISH) : null;
+        String cleanEmail = req.getEmail() != null ? req.getEmail().replace('ı', 'i').replace('İ', 'i').trim().toLowerCase(java.util.Locale.ENGLISH) : null;
+
         User details = User.builder()
-                .username(req.getUsername())
+                .username(cleanUsername)
                 .fullName(fullName)
-                .email(req.getEmail())
+                .email(cleanEmail)
                 .phoneNumber(phone)
                 .subject(req.getSubject())
                 .parentTelegramUsername(req.getParent_telegram_username())

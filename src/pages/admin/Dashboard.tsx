@@ -6,8 +6,24 @@ import {
   Calendar as CalendarIcon, Plus, Send, Settings, ShieldCheck, 
   Mail, Phone, MapPin, Globe, ArrowUpRight, TrendingUp,
   LayoutDashboard, UserPlus, FilePlus, BellRing, Sparkles, Crown,
-  ArrowRight, Info, AlertCircle, ShoppingCart, Heart, Users2,
+  ArrowRight, Info, AlertCircle, ShoppingCart, Heart, Users2, BookOpen
 } from "lucide-react";
+
+interface MemberSubmitData {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  password?: string;
+  [key: string]: unknown;
+}
+
+interface OrgUpdateData {
+  name?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  [key: string]: unknown;
+}
 import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -64,6 +80,7 @@ export default function AdminDashboard() {
     { label: "Administratorlar", value: realStats?.totalAdministrators ?? 0, growth: stats?.orgAdminGrowth ?? 0, icon: UserCog,   color: "text-indigo-500", bg: "bg-indigo-500/10", to: "/admin/administrators", accent: "#6366f1" },
     { label: "Guruhlar",     value: realStats?.totalGroups ?? 0, growth: 0,                          icon: Users2,        color: "text-cyan-500",   bg: "bg-cyan-500/10",    to: "/admin/groups",         accent: "#06b6d4" },
     { label: "Tadbirlar",    value: stats?.eventsCount    ?? 0, growth: stats?.eventGrowth     ?? 0, icon: CalendarIcon,  color: "text-amber-500",  bg: "bg-amber-500/10",  to: "/admin/calendar",  accent: "#f59e0b" },
+    { label: "Fanlar",       value: realStats?.totalSubjects ?? 0, growth: 0,                          icon: BookOpen,      color: "text-teal-500",    bg: "bg-teal-500/10",    to: "/admin/subjects",  accent: "#14b8a6" },
   ], [stats, realStats]);
 
   const isExpiring = stats?.subscriptionStatus === "EXPIRING" || overview?.subscription?.status === "EXPIRING";
@@ -101,7 +118,7 @@ export default function AdminDashboard() {
 
 
 
-  const handleMemberSubmit = async (data: any) => {
+  const handleMemberSubmit = async (data: MemberSubmitData) => {
     if (activeModal === "O'qituvchi qo'shish") {
       await addTeacher.mutateAsync(data);
     } else if (activeModal === "Talaba qo'shish") {
@@ -165,7 +182,7 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleOrgUpdate = async (data: any) => {
+  const handleOrgUpdate = async (data: OrgUpdateData) => {
     await updateOrgSettings.mutateAsync(data);
     setActiveModal("success-branding");
   };
@@ -366,45 +383,64 @@ export default function AdminDashboard() {
       <WelcomeBanner />
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        {statCards.map((s, i) => (
-          <motion.div
-            key={s.label}
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.08 }}
-            className="cursor-pointer"
-            onClick={() => navigate(s.to)}
-          >
-            <Card className="flex flex-col justify-between p-5 min-h-[145px] bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 group hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 relative overflow-hidden">
-              {/* colored top line */}
-              <div className="absolute top-0 left-0 right-0 h-0.5 rounded-t-xl opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: s.accent }} />
-
+      {isStatsLoading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {Array.from({ length: 7 }).map((_, i) => (
+            <Card key={i} className="flex flex-col justify-between p-5 min-h-[145px] bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 animate-pulse relative overflow-hidden">
               <div className="flex items-start justify-between mb-3">
-                <div className={cn("p-2.5 rounded-lg transition-all group-hover:scale-110", s.bg)}>
-                  <s.icon className={cn("h-5 w-5", s.color)} />
-                </div>
-                <ArrowUpRight className="h-4 w-4 text-slate-300 dark:text-slate-600 opacity-0 group-hover:opacity-100 group-hover:text-slate-500 transition-all duration-200" />
+                <Skeleton className="h-10 w-10 rounded-lg bg-slate-200 dark:bg-slate-700" />
               </div>
-
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">{s.label}</p>
-              <p className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight mb-3">
-                {isStatsLoading ? <span className="inline-block w-10 h-7 bg-slate-100 dark:bg-white/10 rounded animate-pulse" /> : s.value.toLocaleString()}
-              </p>
-
-              <div className={cn(
-                "flex items-center gap-1.5 text-[10px] font-bold px-2 py-1 rounded-md w-fit",
-                s.growth >= 0
-                  ? "text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10"
-                  : "text-red-600 bg-red-50 dark:bg-red-500/10"
-              )}>
-                <TrendingUp className={cn("h-3 w-3", s.growth < 0 && "rotate-180")} />
-                {s.growth > 0 ? `+${s.growth.toFixed(1)}%` : `${s.growth.toFixed(1)}%`} bu oyda
+              <div>
+                <Skeleton className="h-3 w-1/2 bg-slate-200 dark:bg-slate-700 mb-2" />
+                <Skeleton className="h-7 w-1/3 bg-slate-200 dark:bg-slate-700 mb-3" />
+                <Skeleton className="h-4 w-2/3 bg-slate-200 dark:bg-slate-700 rounded" />
               </div>
             </Card>
-          </motion.div>
-        ))}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {statCards.map((s, i) => (
+            <motion.div
+              key={s.label}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.08 }}
+              className="cursor-pointer"
+              onClick={() => navigate(s.to)}
+            >
+              <Card className="flex flex-col justify-between p-5 min-h-[145px] bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 group hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 relative overflow-hidden h-full">
+                {/* colored top line */}
+                <div className="absolute top-0 left-0 right-0 h-0.5 rounded-t-xl opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: s.accent }} />
+
+                <div className="flex items-start justify-between mb-3">
+                  <div className={cn("p-2.5 rounded-lg transition-all group-hover:scale-110", s.bg)}>
+                    <s.icon className={cn("h-5 w-5", s.color)} />
+                  </div>
+                  <ArrowUpRight className="h-4 w-4 text-slate-300 dark:text-slate-600 opacity-0 group-hover:opacity-100 group-hover:text-slate-500 transition-all duration-200" />
+                </div>
+
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">{s.label}</p>
+                  <p className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight mb-3">
+                    {s.value.toLocaleString()}
+                  </p>
+
+                  <div className={cn(
+                    "flex items-center gap-1.5 text-[10px] font-bold px-2 py-1 rounded-md w-fit",
+                    s.growth >= 0
+                      ? "text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10"
+                      : "text-red-600 bg-red-50 dark:bg-red-500/10"
+                  )}>
+                    <TrendingUp className={cn("h-3 w-3", s.growth < 0 && "rotate-180")} />
+                    {s.growth > 0 ? `+${s.growth.toFixed(1)}%` : `${s.growth.toFixed(1)}%`} bu oyda
+                  </div>
+                </div>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+      )}
 
       <div className="grid lg:grid-cols-3 gap-8">
         <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="lg:col-span-2 space-y-8">

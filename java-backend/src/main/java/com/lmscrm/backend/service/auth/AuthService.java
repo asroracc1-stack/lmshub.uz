@@ -44,14 +44,18 @@ public class AuthService {
     // UUID o'zgarmaydi — superadmin username o'zgartirsa ham kira oladi
     private static final java.util.UUID SUPER_ADMIN_UUID =
             java.util.UUID.fromString("00000000-0000-0000-0000-000000000001");
-
     // ======================= LOGIN =======================
     @Transactional
     public LoginResponse login(LoginRequest loginRequest) {
+        if (loginRequest.getUsernameOrEmail() != null) {
+            loginRequest.setUsernameOrEmail(loginRequest.getUsernameOrEmail().replace('ı', 'i').replace('İ', 'i').trim());
+        }
+        if (loginRequest.getPassword() != null) {
+            loginRequest.setPassword(loginRequest.getPassword().replace('ı', 'i').replace('İ', 'i'));
+        }
+
         log.info("🔑 Login attempt: {}", loginRequest.getUsernameOrEmail());
         
-
-
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(loginRequest.getUsernameOrEmail(), loginRequest.getPassword())
@@ -193,18 +197,31 @@ public class AuthService {
     // ======================= REGISTER =======================
     @Transactional
     public LoginResponse register(RegisterRequest request) {
+        if (request.getEmail() != null) {
+            request.setEmail(request.getEmail().replace('ı', 'i').replace('İ', 'i').trim());
+        }
+        if (request.getUsername() != null) {
+            request.setUsername(request.getUsername().replace('ı', 'i').replace('İ', 'i').trim());
+        }
+        if (request.getPassword() != null) {
+            request.setPassword(request.getPassword().replace('ı', 'i').replace('İ', 'i'));
+        }
+        if (request.getConfirmPassword() != null) {
+            request.setConfirmPassword(request.getConfirmPassword().replace('ı', 'i').replace('İ', 'i'));
+        }
+
         if (!request.getPassword().equals(request.getConfirmPassword())) {
             throw new IllegalArgumentException("Parollar mos kelmadi");
         }
 
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseGet(() -> userRepository.findByUsername(request.getUsername())
+                .orElseGet(() -> userRepository.findByUsername(request.getUsername().toLowerCase(java.util.Locale.ENGLISH))
                 .orElse(null));
 
         if (user == null) {
             user = User.builder()
                     .email(request.getEmail())
-                    .username(request.getUsername() != null ? request.getUsername().toLowerCase().trim() : null)
+                    .username(request.getUsername() != null ? request.getUsername().toLowerCase(java.util.Locale.ENGLISH).trim() : null)
                     .password(passwordEncoder.encode(request.getPassword()))
                     .fullName(request.getFullName())
                     .phoneNumber(request.getPhone())
@@ -288,7 +305,7 @@ public class AuthService {
 
         // Username yangilash
         if (newUsername != null && !newUsername.trim().isEmpty()) {
-            String trimmed = newUsername.trim().toLowerCase();
+            String trimmed = newUsername.replace('ı', 'i').replace('İ', 'i').trim().toLowerCase(java.util.Locale.ENGLISH);
             Optional<User> existing = userRepository.findByUsername(trimmed);
             if (existing.isPresent() && !existing.get().getId().equals(user.getId())) {
                 throw new RuntimeException("Bu username allaqachon band!");

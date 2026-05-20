@@ -25,6 +25,7 @@ public class DashboardService {
     private final OrganizationRepository organizationRepository;
     private final CalendarEventRepository eventRepository;
     private final com.lmscrm.backend.repository.GroupRepository groupRepository;
+    private final com.lmscrm.backend.repository.SubjectRepository subjectRepository;
 
     public DashboardStatsResponse getStats(User currentUser) {
         try {
@@ -108,19 +109,21 @@ public class DashboardService {
         try {
             UUID orgId = currentUser.getOrganizationId();
             
-            long teachers, students, parents, administrators, groups;
+            long teachers, students, parents, administrators, groups, subjects;
             if (orgId == null) {
                 teachers = userRepository.countByRole(AppRole.TEACHER);
                 students = userRepository.countByRole(AppRole.STUDENT);
                 parents = userRepository.countByRole(AppRole.PARENT);
                 administrators = userRepository.countByRole(AppRole.ADMINISTRATOR);
                 groups = groupRepository.count();
+                subjects = subjectRepository.count();
             } else {
                 teachers = userRepository.countByOrganizationIdAndRole(orgId, AppRole.TEACHER);
                 students = userRepository.countByOrganizationIdAndRole(orgId, AppRole.STUDENT);
                 parents = userRepository.countByOrganizationIdAndRole(orgId, AppRole.PARENT);
                 administrators = userRepository.countByOrganizationIdAndRole(orgId, AppRole.ADMINISTRATOR);
                 groups = groupRepository.countByOrganizationId(orgId);
+                subjects = subjectRepository.countByOrganizationId(orgId);
             }
 
             return com.lmscrm.backend.dto.response.AdminDashboardStatsDto.builder()
@@ -129,6 +132,7 @@ public class DashboardService {
                     .totalParents(parents)
                     .totalAdministrators(administrators)
                     .totalGroups(groups)
+                    .totalSubjects(subjects)
                     .build();
         } catch (Exception e) {
             log.error("Error generating admin dashboard stats", e);
