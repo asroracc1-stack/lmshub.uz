@@ -63,12 +63,36 @@ export interface CalendarEvent {
   color?: string;
 }
 
+export interface SuperAdminDashboardResponse {
+  stats: {
+    organizations: number;
+    totalUsers: number;
+    teachers: number;
+    students: number;
+    admins: number;
+    administrators: number;
+    users: number;
+    parents: number;
+    groups: number;
+    totalSubjects: number;
+    totalRevenue: number;
+  };
+  growth: MonthPoint[];
+  topOrgs: OrgPoint[];
+  recentActivity: {
+    id: string;
+    action: string;
+    actor: string;
+    at: string;
+  }[];
+}
+
 // 1. Super Admin Dashboard Stats Hook
 export function useSuperAdminDashboard() {
-  return useQuery({
+  return useQuery<SuperAdminDashboardResponse>({
     queryKey: ["super-admin-dashboard-stats"],
     queryFn: async () => {
-      const response = await api.get("/super-admin/stats");
+      const response = await api.get<SuperAdminDashboardResponse>("/super-admin/stats");
       return response.data;
     },
     staleTime: 5 * 60 * 1000,

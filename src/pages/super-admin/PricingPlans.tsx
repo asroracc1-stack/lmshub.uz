@@ -55,21 +55,10 @@ export default function PricingPlansAdmin() {
     setLoading(true);
     try {
       const { data } = await api.get<any[]>("/admin/pricing-plans");
-      setPlans(
-        (data || []).map((p) => ({
-          ...p,
-          price_monthly: p.priceMonthly,
-          price_yearly: p.priceYearly,
-          price_suffix: p.priceSuffix,
-          cta_label: p.ctaLabel,
-          cta_link: p.ctaLink,
-          is_popular: p.isPopular,
-          is_active: p.isActive,
-          sort_order: p.sortOrder,
-          features: Array.isArray(p.features) ? p.features : [],
-        })),
-      );
+      // Backend uses spring.jackson.property-naming-strategy=SNAKE_CASE, so responses are in snake_case
+      setPlans(data || []);
     } catch (error: any) {
+      console.error("Load error:", error);
       toast.error(error.response?.data?.message || "Yuklashda xatolik");
     } finally {
       setLoading(false);
@@ -96,33 +85,40 @@ export default function PricingPlansAdmin() {
 
 const save = async () => {
     const features = featuresText.split("\n").map((s) => s.trim()).filter(Boolean);
+    
+    if (!form.name.trim()) { 
+      toast.error("Nom kiriting"); 
+      return; 
+    }
+    
+    // Send in snake_case to match backend DTO
     const payload = {
       name: form.name,
       description: form.description || null,
-      priceMonthly: form.price_monthly,
-      priceYearly: form.price_yearly,
+      price_monthly: form.price_monthly,
+      price_yearly: form.price_yearly,
       currency: form.currency,
-      priceSuffix: form.price_suffix || null,
+      price_suffix: form.price_suffix || null,
       features,
-      ctaLabel: form.cta_label,
-      ctaLink: form.cta_link,
-      isPopular: form.is_popular,
-      isActive: form.is_active,
-      sortOrder: form.sort_order,
+      cta_label: form.cta_label,
+      cta_link: form.cta_link,
+      is_popular: form.is_popular,
+      is_active: form.is_active,
+      sort_order: form.sort_order,
     };
 
-    if (!payload.name.trim()) { toast.error("Nom kiriting"); return; }
     try {
       if (editing) {
         await api.put(`/admin/pricing-plans/${editing.id}`, payload);
-        toast.success("Yangilandi");
+        toast.success("Plan muvaffaqiyatli yangilandi!");
       } else {
         await api.post("/admin/pricing-plans", payload);
-        toast.success("Qo'shildi");
+        toast.success("Yangi reja qo'shildi!");
       }
       setOpen(false);
       load();
     } catch (error: any) {
+      console.error("Save error:", error.response?.data);
       toast.error(error.response?.data?.message || "Xatolik yuz berdi");
     }
   };

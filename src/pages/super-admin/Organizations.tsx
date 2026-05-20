@@ -62,7 +62,10 @@ const orgSchema = z.object({
     region: z.string().min(1, "Viloyat tanlanishi shart"),
     district: z.string().min(1, "Tuman/Shahar kiritilishi shart"),
     streetAddress: z.string().min(1, "Mahalla/Ko'cha kiritilishi shart")
-  }).nullable().optional(),
+  }).refine(
+    (addr) => addr.region && addr.district && addr.streetAddress,
+    { message: "Manzilning barcha qismlarini to'ldiring" }
+  ).nullable().optional(),
   phone: z.string().max(30).optional(),
   email: z.string({ required_error: "Email majburiy" }).email("Email noto'g'ri").min(1, "Email kiritish majburiy"),
   plan_id: z.string().uuid().optional().or(z.literal("")),
@@ -153,7 +156,20 @@ export default function Organizations() {
   const submit = async () => {
     const parsed = orgSchema.safeParse(form);
     if (!parsed.success) {
-      toast.error(parsed.error.errors[0].message);
+      // Barcha xatolarni ko'rsatish
+      const errorMessages = parsed.error.errors
+        .map((err) => {
+          const path = err.path.join(" → ");
+          return `${path}: ${err.message}`;
+        })
+        .join("\n");
+      
+      console.error("Validation errors:", parsed.error.errors);
+      toast.error(
+        errorMessages.length > 100
+          ? `${parsed.error.errors.length} ta xato topildi:\n${parsed.error.errors[0].message}`
+          : errorMessages || "Forma noto'g'ri to'ldirilgan"
+      );
       return;
     }
     setSubmitting(true);
@@ -164,26 +180,28 @@ export default function Organizations() {
       address: parsed.data.address?.region ? parsed.data.address : null,
       phone: parsed.data.phone || null,
       email: parsed.data.email || null,
-      logo_url: form.logo_url || null,
-      plan_id: form.plan_id || null,
-      is_active: form.is_active,
+      logoUrl: form.logo_url || null,
+      planId: form.plan_id || null,
+      isActive: form.is_active,
     };
 
     try {
       if (editing) {
         await api.put(`/organizations/${editing.id}`, payload);
-        toast.success("Yangilandi");
+        toast.success("Tashkilot muvaffaqiyatli yangilandi");
       } else {
         await api.post("/organizations", payload);
-        toast.success("Qo'shildi");
+        toast.success("Tashkilot muvaffaqiyatli qo'shildi");
       }
       setOpen(false);
       resetForm();
       queryClient.invalidateQueries({ queryKey: ["organizations"] });
       queryClient.invalidateQueries({ queryKey: ["organizations-list"] });
+      queryClient.invalidateQueries({ queryKey: ["super-admin-dashboard-stats"] });
       load();
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Saqlashda xatolik");
+      console.error("API Error:", error.response?.data);
+      toast.error(error.response?.data?.message || "Saqlashda xatolik yuz berdi");
     } finally {
       setSubmitting(false);
     }
@@ -195,6 +213,7 @@ export default function Organizations() {
       toast.success("O'chirildi");
       queryClient.invalidateQueries({ queryKey: ["organizations"] });
       queryClient.invalidateQueries({ queryKey: ["organizations-list"] });
+      queryClient.invalidateQueries({ queryKey: ["super-admin-dashboard-stats"] });
       load();
     } catch (error: any) {
       toast.error(error.response?.data?.message || "O'chirishda xatolik");

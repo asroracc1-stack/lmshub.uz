@@ -123,7 +123,8 @@ export default function PaymentReceivers() {
       setOpen(false);
       load();
     } catch (e) {
-      toast.error("Saqlashda xatolik");
+      console.error("Save error:", e);
+      toast.error((e as any).response?.data?.message || "Saqlashda xatolik");
     } finally {
       setSaving(false);
     }
@@ -134,7 +135,8 @@ export default function PaymentReceivers() {
       await api.put(`/payment-receivers/${r.id}`, { ...r, active: !r.active });
       load();
     } catch (e) {
-      toast.error("Xatolik");
+      console.error("Toggle error:", e);
+      toast.error((e as any).response?.data?.message || "Xatolik");
     }
   };
 
@@ -146,7 +148,8 @@ export default function PaymentReceivers() {
       setConfirmDelete(null);
       load();
     } catch (e) {
-      toast.error("O'chirishda xatolik");
+      console.error("Delete error:", e);
+      toast.error((e as any).response?.data?.message || "O'chirishda xatolik");
     }
   };
 
@@ -325,7 +328,7 @@ export default function PaymentReceivers() {
                   <Label className="cursor-pointer">Aktiv</Label>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Switch checked={!!form.default} onCheckedChange={(v) => setForm({ ...form, default: v })} />
+                  <Switch checked={!!form.is_default} onCheckedChange={(v) => setForm({ ...form, is_default: v })} />
                   <Label className="cursor-pointer">Asosiy (Default)</Label>
                 </div>
               </div>
@@ -345,7 +348,7 @@ export default function PaymentReceivers() {
           <DialogHeader>
             <DialogTitle>O'chirishni tasdiqlang</DialogTitle>
             <DialogDescription>
-              "{confirmDelete?.fullName}" qabul qiluvchisi o'chiriladi.
+              "{confirmDelete?.full_name}" qabul qiluvchisi o'chiriladi.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

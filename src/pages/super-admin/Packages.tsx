@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { z } from "zod";
 import { toast } from "sonner";
 import { api } from "@/lib/axios";
 import { Button } from "@/components/ui/button";
@@ -45,6 +46,15 @@ interface SubscriptionPackage {
   maxTeachers: number | null;
 }
 
+const packageSchema = z.object({
+  name: z.string().min(2, "Tarif nomi kamida 2 ta belgi").max(100, "Nomi 100 tadan ko'p bo'lmasligi kerak"),
+  description: z.string().max(500, "Tavsif 500 tadan ko'p bo'lmasligi kerak").optional(),
+  price: z.number().min(0, "Narxi 0 dan kam bo'lishi mumkin emas").or(z.string().min(1, "Narxi kiritish shart")),
+  maxOrganizations: z.number().min(0).nullable().optional().or(z.string().optional()),
+  maxStudents: z.number().min(0).nullable().optional().or(z.string().optional()),
+  maxTeachers: z.number().min(0).nullable().optional().or(z.string().optional()),
+});
+
 export default function Packages() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -81,6 +91,7 @@ export default function Packages() {
       resetForm();
     },
     onError: (error: any) => {
+      console.error("Package mutation error:", error.response?.data);
       toast.error(error.response?.data?.message || "Xatolik yuz berdi");
     }
   });
@@ -127,17 +138,41 @@ export default function Packages() {
   };
 
   const submit = () => {
-    if (!form.name || !form.price) {
-      toast.error("Nomi va narxi kiritilishi shart!");
-      return;
-    }
-    mutation.mutate({
+    // Prepare form data for validation
+    const formData = {
       name: form.name,
-      description: form.description || null,
-      price: parseFloat(form.price),
+      description: form.description,
+      price: form.price ? parseFloat(form.price) : 0,
       maxOrganizations: form.maxOrganizations ? parseInt(form.maxOrganizations) : null,
       maxStudents: form.maxStudents ? parseInt(form.maxStudents) : null,
-      maxTeachers: form.maxTeachers ? parseInt(form.maxTeachers) : null
+      maxTeachers: form.maxTeachers ? parseInt(form.maxTeachers) : null,
+    };
+
+    const parsed = packageSchema.safeParse(formData);
+    if (!parsed.success) {
+      const errorMessages = parsed.error.errors
+        .map((err) => {
+          const fieldName = err.path.join(" → ");
+          return `${fieldName}: ${err.message}`;
+        })
+        .join("\n");
+      
+      console.error("Package validation errors:", parsed.error.errors);
+      toast.error(
+        errorMessages.length > 100
+          ? `${parsed.error.errors.length} ta xato:\n${parsed.error.errors[0].message}`
+          : errorMessages || "Forma noto'g'ri to'ldirilgan"
+      );
+      return;
+    }
+
+    mutation.mutate({
+      name: parsed.data.name,
+      description: parsed.data.description || null,
+      price: parsed.data.price,
+      maxOrganizations: parsed.data.maxOrganizations,
+      maxStudents: parsed.data.maxStudents,
+      maxTeachers: parsed.data.maxTeachers
     });
   };
 

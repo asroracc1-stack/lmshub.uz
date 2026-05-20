@@ -64,16 +64,9 @@ public class SuperAdminService {
             growth.add(new SuperAdminStatsDto.MonthPoint(monthName, (int) count));
         }
 
-        // 3. Top Organizations by Student Count or Total Users
-        List<SuperAdminStatsDto.OrgPoint> topOrgs = organizationRepository.findAll().stream()
-                .map(org -> {
-                    long studentCount = userRepository.countByRoleAndOrganizationId(AppRole.STUDENT, org.getId());
-                    long totalCount = userRepository.countByOrganizationId(org.getId());
-                    long count = studentCount > 0 ? studentCount : totalCount;
-                    return new SuperAdminStatsDto.OrgPoint(org.getName(), count);
-                })
-                .sorted((a, b) -> Long.compare(b.getUsers(), a.getUsers()))
-                .limit(5)
+        // 3. Top Organizations by Total Users (LEFT JOIN to support 0 counts)
+        List<SuperAdminStatsDto.OrgPoint> topOrgs = organizationRepository.findTopOrganizationsRaw(PageRequest.of(0, 5)).stream()
+                .map(row -> new SuperAdminStatsDto.OrgPoint((String) row[0], ((Number) row[1]).longValue()))
                 .collect(Collectors.toList());
 
         // 4. Recent Activity (Audit Logs)

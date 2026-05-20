@@ -417,15 +417,26 @@ export default function SuperAdminDashboard() {
                       {i + 1}
                     </span>
                     <span className="text-sm font-medium truncate w-36 shrink-0">{org.name}</span>
-                    <div className="flex-1 bg-muted/30 rounded-full h-8 overflow-hidden relative">
-                      <div
-                        className={`h-full rounded-full bg-gradient-to-r ${colors[i % colors.length]} transition-all duration-700 ease-out flex items-center justify-end pr-3`}
-                        style={{ width: `${Math.max(pct, 10)}%` }}
-                      >
-                        <span className="text-[11px] font-bold text-white drop-shadow">
-                          {org.users}
-                        </span>
+                    <div className="flex-1 flex items-center gap-2">
+                      <div className="flex-1 bg-muted/30 rounded-full h-8 overflow-hidden relative">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${Math.max(pct, 6)}%` }}
+                          transition={{ duration: 0.8, ease: "easeOut" }}
+                          className={`h-full rounded-full bg-gradient-to-r ${colors[i % colors.length]} flex items-center justify-end pr-3`}
+                        >
+                          {org.users > 0 && (
+                            <span className="text-[11px] font-bold text-white drop-shadow">
+                              {org.users}
+                            </span>
+                          )}
+                        </motion.div>
                       </div>
+                      {org.users === 0 && (
+                        <span className="text-[11px] font-bold text-muted-foreground shrink-0 w-4">
+                          0
+                        </span>
+                      )}
                     </div>
                   </div>
                 );

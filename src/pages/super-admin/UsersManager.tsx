@@ -147,6 +147,47 @@ const createSchema = z.object({
   }
 });
 
+// Update schema - password is optional for editing
+const updateSchema = z.object({
+  email: z.string().email("Email noto'g'ri"),
+  username: z.string().min(3, "Username kamida 3 ta belgi").max(50),
+  password: z.string().min(6, "Parol kamida 6 ta belgi").max(100).optional().or(z.literal("")),
+  full_name: z.string().min(2, "F.I.O kiriting").max(100),
+  role: z.enum(["super_admin", "admin", "administrator", "teacher", "student", "user", "parent", "payment_manager"]),
+  phone_number: z.string().min(5, "Telefon kiriting").max(30),
+  organization_id: z.string().uuid("Tashkilot ID noto'g'ri").optional().or(z.literal("")),
+  group_id: z.string().optional().or(z.literal("")),
+  subject: z.string().optional().or(z.literal("")),
+  telegram_chat_id: z.string().optional().or(z.literal("")),
+  telegram_username: z.string().optional().or(z.literal("")),
+  card_number: z.string().optional().or(z.literal("")),
+  card_holder: z.string().optional().or(z.literal("")),
+}).superRefine((val, ctx) => {
+  if (val.role === "admin" || val.role === "administrator") {
+    if (!val.card_number || val.card_number.trim() === "") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Admin/Administrator uchun Karta raqami majburiy!",
+        path: ["card_number"],
+      });
+    }
+    if (!val.card_holder || val.card_holder.trim() === "") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Admin/Administrator uchun Karta egasi ismi majburiy!",
+        path: ["card_holder"],
+      });
+    }
+    if (val.card_number && val.card_number.replace(/\D/g, "").length !== 16) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Karta raqami 16 ta raqam bo'lishi kerak (masalan: 8600123456789012)",
+        path: ["card_number"],
+      });
+    }
+  }
+});
+
 interface Props {
   filterRole?: AppRole;
   title: string;
@@ -335,52 +376,52 @@ export default function UsersManager({ filterRole, title, description }: Props) 
       return;
     }
 
-    if (editing) {
-      if ((form.role === "admin" || form.role === "administrator") && (!form.card_number || !form.card_holder)) {
-        toast.error("Admin/Administrator uchun Karta raqami va Karta egasi ismi majburiy!");
-        return;
-      }
-      mutation.mutate({
-        email: form.email,
-        username: form.username,
-        full_name: form.full_name,
-        phone_number: form.phone_number || null,
-        organizationId: targetOrgId !== "" ? targetOrgId : null,
-        organization_id: targetOrgId !== "" ? targetOrgId : null,
-        subject: form.subject || null,
-        telegram_chat_id: form.telegram_chat_id || null,
-        telegram_username: form.telegram_username || null,
-        card_number: form.card_number || null,
-        card_holder: form.card_holder || null,
-        groupId: (form.group_id && form.group_id !== "none") ? form.group_id : null,
-        group_id: (form.group_id && form.group_id !== "none") ? form.group_id : null,
-        role: form.role.toUpperCase(),
-      });
-    } else {
-      const parsed = createSchema.safeParse(form);
-      if (!parsed.success) { 
-        toast.error(parsed.error.errors[0].message); 
-        return; 
-      }
+    // Use appropriate schema for create or edit
+    const schema = editing ? updateSchema : createSchema;
+    const parsed = schema.safeParse(form);
+    
+    if (!parsed.success) {
+      // Show ALL validation errors with field names
+      const errorMessages = parsed.error.errors
+        .map((err) => {
+          const fieldName = err.path.join(" → ");
+          return `${fieldName}: ${err.message}`;
+        })
+        .join("\n");
       
-      const payload = {
-        ...parsed.data,
-        username: parsed.data.username,
-        role: parsed.data.role.toUpperCase(),
-        phone_number: parsed.data.phone_number || null,
-        organizationId: targetOrgId !== "" ? targetOrgId : null,
-        organization_id: targetOrgId !== "" ? targetOrgId : null,
-        subject: parsed.data.subject || null,
-        telegram_chat_id: parsed.data.telegram_chat_id || null,
-        telegram_username: parsed.data.telegram_username || null,
-        card_number: parsed.data.card_number || null,
-        card_holder: parsed.data.card_holder || null,
-        groupId: (form.group_id && form.group_id !== "none") ? form.group_id : null,
-        group_id: (form.group_id && form.group_id !== "none") ? form.group_id : null,
-      };
-
-      mutation.mutate(payload);
+      console.error("Validation errors:", parsed.error.errors);
+      toast.error(
+        errorMessages.length > 100
+          ? `${parsed.error.errors.length} ta xato:\n${parsed.error.errors[0].message}`
+          : errorMessages || "Forma noto'g'ri to'ldirilgan"
+      );
+      return;
     }
+
+    // Prepare payload with only necessary fields (no DTO duplication)
+    const basePayload = {
+      email: parsed.data.email,
+      username: parsed.data.username,
+      full_name: parsed.data.full_name,
+      phone_number: parsed.data.phone_number || null,
+      role: parsed.data.role.toUpperCase(),
+      organization_id: targetOrgId !== "" ? targetOrgId : null,
+      group_id: (form.group_id && form.group_id !== "none") ? form.group_id : null,
+      subject: parsed.data.subject || null,
+      telegram_chat_id: parsed.data.telegram_chat_id || null,
+      telegram_username: parsed.data.telegram_username || null,
+      card_number: parsed.data.card_number || null,
+      card_holder: parsed.data.card_holder || null,
+    };
+
+    const payload = editing
+      ? basePayload // Edit: no password sent if not changed
+      : { 
+          ...basePayload,
+          password: parsed.data.password 
+        };
+
+    mutation.mutate(payload);
   };
 
 

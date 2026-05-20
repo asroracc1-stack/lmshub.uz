@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.UUID;
 
 @Repository
@@ -18,4 +19,11 @@ public interface OrganizationRepository extends JpaRepository<Organization, UUID
     java.util.Optional<Organization> findBySlug(String slug);
 
     long countBySubscriptionPackageId(UUID planId);
+
+    @Query("SELECT o.name, COUNT(u.id) " +
+           "FROM Organization o " +
+           "LEFT JOIN User u ON o.id = u.organizationId " +
+           "GROUP BY o.id, o.name " +
+           "ORDER BY COUNT(u.id) DESC, o.name ASC")
+    List<Object[]> findTopOrganizationsRaw(Pageable pageable);
 }
