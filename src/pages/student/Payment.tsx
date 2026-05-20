@@ -276,7 +276,13 @@ export default function StudentPayment() {
       )}
 
       {/* Admin/Receiver Selector */}
-      {admins.length > 1 && (
+      {adminsLoading ? (
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1,2,3].map((i)=> (
+            <div key={i} className="p-4 rounded-2xl border-border bg-card animate-pulse h-28" />
+          ))}
+        </div>
+      ) : admins.length > 1 && (
         <div>
           <Label className="mb-3 block text-sm font-semibold">Qabul qiluvchi Admin / Kassa</Label>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">

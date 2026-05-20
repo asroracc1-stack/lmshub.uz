@@ -11,6 +11,7 @@ import com.lmscrm.backend.exception.ResourceNotFoundException;
 import com.lmscrm.backend.repository.PaymentTransactionRepository;
 import com.lmscrm.backend.repository.UserRepository;
 import com.lmscrm.backend.service.communication.TelegramNotificationService;
+import org.springframework.context.ApplicationEventPublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -30,6 +31,7 @@ public class PaymentTransactionService {
     private final PaymentTransactionRepository paymentTransactionRepository;
     private final UserRepository userRepository;
     private final TelegramNotificationService telegramNotificationService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional(readOnly = true)
     public List<AdminPaymentInfoDto> getAdminsForPayment(UUID organizationId) {
@@ -69,11 +71,11 @@ public class PaymentTransactionService {
 
         PaymentTransaction saved = paymentTransactionRepository.save(transaction);
 
-        // Telegram xabarnomasi yuborish
+        // Publish event for async notifications (in-app + telegram routing)
         try {
-            telegramNotificationService.notifyPaymentRequest(admin, student, req.getAmount(), req.getPaymentProofUrl());
+            eventPublisher.publishEvent(new com.lmscrm.backend.event.PaymentUploadedEvent(this, saved.getId()));
         } catch (Exception e) {
-            log.error("Telegram xabarnomasi yuborishda xatolik: {}", e.getMessage());
+            log.error("Event publish failed: {}", e.getMessage());
         }
 
         return mapToDto(saved);

@@ -1,3 +1,57 @@
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import { ArrowLeft, Home } from "lucide-react";
+
+export default function NotFound(): JSX.Element {
+  const navigate = useNavigate();
+
+  const goHome = () => navigate("/", { replace: true });
+
+  return (
+    <div className="min-h-screen w-full flex flex-col items-center justify-center px-6 py-12 bg-slate-50 dark:bg-slate-900">
+      <div className="max-w-3xl w-full text-center space-y-6">
+        <div className="mx-auto">
+          {/* Prefer DotLottieReact; keep iframe fallback below for safety */}
+          <div className="mx-auto" aria-hidden>
+            <DotLottieReact
+              src="https://lottie.host/9f391db8-29ed-4dd9-a719-de803b065547/3hc778SPKu.lottie"
+              loop
+              autoplay
+              style={{ width: 400, height: 400 }}
+            />
+          </div>
+        </div>
+
+        <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 dark:text-white">Ops! Sahifa topilmadi</h1>
+        <p className="text-sm md:text-base text-slate-600 dark:text-slate-300 max-w-xl mx-auto">
+          Kechirasiz, siz qidirayotgan sahifa o'chirilgan yoki ko'chirilgan bo'lishi mumkin. Balki link noto'g'ri yozilgandir — biz uni topib keltiramiz.
+        </p>
+
+        <div className="flex items-center justify-center gap-3">
+          <button
+            onClick={goHome}
+            className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-lg font-semibold shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          >
+            <Home className="h-5 w-5" /> Bosh sahifaga qaytish
+          </button>
+
+          <button
+            onClick={() => window.history.back()}
+            className="inline-flex items-center gap-2 bg-white dark:bg-slate-800 border border-border text-slate-900 dark:text-slate-200 px-4 py-3 rounded-lg font-medium shadow-sm hover:shadow-md"
+          >
+            <ArrowLeft className="h-4 w-4" /> Orqaga
+          </button>
+        </div>
+
+        {/* Fallback iframe in case DotLottieReact cannot run in an environment */}
+        <div className="mt-6 text-xs text-muted-foreground">
+          Agar animatsiya ko'rinmasa, sahifani yangilang yoki brauzerni tekshiring.
+        </div>
+      </div>
+    </div>
+  );
+}
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";

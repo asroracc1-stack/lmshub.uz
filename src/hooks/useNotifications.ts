@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 // import { supabase } from "@/integrations/supabase/client"; // DEPRECATED
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { api } from "@/lib/axios";
 
 export interface Notification {
   id: string;
@@ -25,33 +26,14 @@ export function useNotifications() {
 
   const load = useCallback(async () => {
     if (!user) return;
-    
-    // MOCK DATA
-    const mockNotifications: Notification[] = [
-      {
-        id: "1",
-        user_id: user.id,
-        title: "Tizimga xush kelibsiz!",
-        body: "Java Backend tizimiga muvaffaqiyatli o'tildi.",
-        type: "success",
-        link: null,
-        is_read: false,
-        created_at: new Date().toISOString(),
-      },
-      {
-        id: "2",
-        user_id: user.id,
-        title: "Yangi yangilanish",
-        body: "Dashboard UI qismi optimallashtirildi.",
-        type: "info",
-        link: null,
-        is_read: true,
-        created_at: new Date(Date.now() - 3600000).toISOString(),
-      }
-    ];
-
-    setItems(mockNotifications);
-    setLoading(false);
+    try {
+      const { data } = await api.get<Notification[]>('/communication/notifications');
+      setItems(Array.isArray(data) ? data : []);
+    } catch (e: any) {
+      toast.error('Bildirishnomalarni yuklashda xatolik');
+    } finally {
+      setLoading(false);
+    }
   }, [user]);
 
   useEffect(() => {

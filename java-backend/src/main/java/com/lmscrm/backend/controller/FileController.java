@@ -203,4 +203,24 @@ public class FileController {
             return ResponseEntity.status(500).build();
         }
     }
+
+    @GetMapping("/view/receipts/{filename}")
+    @Operation(summary = "View Receipt")
+    public ResponseEntity<byte[]> viewReceipt(@PathVariable String filename) {
+        try {
+            Path file = Paths.get(uploadDir, "receipts").resolve(filename);
+            if (!Files.exists(file)) {
+                log.warn("Receipt not found: {}", filename);
+                return ResponseEntity.notFound().build();
+            }
+            String mimeType = Files.probeContentType(file);
+            if (mimeType == null) mimeType = "image/png";
+            return ResponseEntity.ok()
+                    .contentType(org.springframework.http.MediaType.parseMediaType(mimeType))
+                    .body(Files.readAllBytes(file));
+        } catch (Exception e) {
+            log.error("❌ Error serving receipt {}: {}", filename, e.getMessage());
+            return ResponseEntity.status(500).build();
+        }
+    }
 }

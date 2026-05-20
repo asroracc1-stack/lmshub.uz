@@ -136,6 +136,14 @@ const createSchema = z.object({
         path: ["card_holder"],
       });
     }
+    // Card number must be exactly 16 digits
+    if (val.card_number && val.card_number.replace(/\D/g, "").length !== 16) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Karta raqami 16 ta raqam bo'lishi kerak (masalan: 8600123456789012)",
+        path: ["card_number"],
+      });
+    }
   }
 });
 
