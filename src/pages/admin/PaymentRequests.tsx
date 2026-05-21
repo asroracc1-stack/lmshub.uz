@@ -75,7 +75,7 @@ export default function PaymentRequests() {
   const { data, isLoading } = useQuery({
     queryKey: ["payment-requests", profile?.organization_id, statusFilter],
     queryFn: async () => {
-      const { data } = await api.get<any>("/admin/payments/manage", {
+      const { data } = await api.get<{ content?: PaymentTxRow[] }>("/admin/payments/manage", {
         params: {
           organizationId: profile?.organization_id || undefined,
           status: statusFilter,
@@ -104,8 +104,11 @@ export default function PaymentRequests() {
       setModalOpen(false);
       setSelectedTx(null);
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Xatolik yuz berdi");
+    onError: (error: unknown) => {
+      const errMsg = error && typeof error === "object" && "response" in error
+        ? (error as { response: { data?: { message?: string } } }).response.data?.message
+        : "Xatolik yuz berdi";
+      toast.error(errMsg || "Xatolik yuz berdi");
     },
   });
 
@@ -119,8 +122,11 @@ export default function PaymentRequests() {
       setModalOpen(false);
       setSelectedTx(null);
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Xatolik yuz berdi");
+    onError: (error: unknown) => {
+      const errMsg = error && typeof error === "object" && "response" in error
+        ? (error as { response: { data?: { message?: string } } }).response.data?.message
+        : "Xatolik yuz berdi";
+      toast.error(errMsg || "Xatolik yuz berdi");
     },
   });
 
@@ -194,21 +200,62 @@ export default function PaymentRequests() {
     columnHelper.display({
       id: "actions",
       header: () => <div className="text-right">Chek / Amallar</div>,
-      cell: (info) => (
-        <div className="text-right">
-          <Button
-            size="sm"
-            variant="outline"
-            className="hover:border-primary hover:bg-primary/10 transition-smooth"
-            onClick={() => {
-              setSelectedTx(info.row.original);
-              setModalOpen(true);
-            }}
-          >
-            <Eye className="h-4 w-4 mr-1.5 text-primary" /> Chekni ko'rish
-          </Button>
-        </div>
-      ),
+      cell: (info) => {
+        const tx = info.row.original;
+        const isApprovePending = approveMutation.isPending && approveMutation.variables === tx.id;
+        const isRejectPending = rejectMutation.isPending && rejectMutation.variables === tx.id;
+        const isAnyPending = approveMutation.isPending || rejectMutation.isPending;
+
+        return (
+          <div className="flex items-center justify-end gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              className="hover:border-primary hover:bg-primary/10 transition-smooth shrink-0"
+              onClick={() => {
+                setSelectedTx(tx);
+                setModalOpen(true);
+              }}
+              disabled={isAnyPending}
+            >
+              <Eye className="h-4 w-4 mr-1.5 text-primary" /> Chekni ko'rish
+            </Button>
+
+            {tx.status === "PENDING" && (
+              <>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-success/50 text-success hover:bg-success/10 hover:border-success transition-smooth shrink-0"
+                  onClick={() => approveMutation.mutate(tx.id)}
+                  disabled={isAnyPending}
+                >
+                  {isApprovePending ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
+                  ) : (
+                    <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
+                  )}
+                  Tasdiqlash
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-destructive/50 text-destructive hover:bg-destructive/10 hover:border-destructive transition-smooth shrink-0"
+                  onClick={() => rejectMutation.mutate(tx.id)}
+                  disabled={isAnyPending}
+                >
+                  {isRejectPending ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
+                  ) : (
+                    <XCircle className="h-3.5 w-3.5 mr-1" />
+                  )}
+                  Rad etish
+                </Button>
+              </>
+            )}
+          </div>
+        );
+      },
     }),
   ];
 

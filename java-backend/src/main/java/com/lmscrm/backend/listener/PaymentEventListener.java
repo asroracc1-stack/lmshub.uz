@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,8 +30,14 @@ public class PaymentEventListener {
     private final TelegramBotService telegramBotService;
     private final NotificationService notificationService;
 
+    private String escapeHtml(String text) {
+        if (text == null) return "";
+        return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+    }
+
     @Async
     @EventListener
+    @Transactional(readOnly = true)
     public void handlePaymentUploaded(PaymentUploadedEvent event) {
         UUID txId = event.getTransactionId();
         log.info("Handling PaymentUploadedEvent for tx: {}", txId);
@@ -44,8 +51,36 @@ public class PaymentEventListener {
         User admin = tx.getAdmin();
         User student = tx.getStudent();
 
-        String message = String.format("🔔 Yangi to'lov! Talaba: %s. Summa: %,.2f. Saytga kirib tasdiqlang!\nChek: %s",
-                student.getFullName(), tx.getAmount(), tx.getPaymentProofUrl());
+        String amountFormatted = String.format("%,.0f", tx.getAmount()).replace(',', ' ');
+        String noteText = (tx.getNote() != null && !tx.getNote().trim().isEmpty()) ? escapeHtml(tx.getNote()) : "Izohsiz";
+        
+        String studentName = escapeHtml(student.getFullName() != null ? student.getFullName() : student.getUsername());
+        String proofUrl = escapeHtml(tx.getPaymentProofUrl());
+
+        String message;
+        if (tx.getPayer() != null && !tx.getPayer().getId().equals(student.getId())) {
+            String payerName = escapeHtml(tx.getPayer().getFullName() != null ? tx.getPayer().getFullName() : tx.getPayer().getUsername());
+            message = String.format(
+                    "🔔 Yangi to'lov cheki!\n" +
+                    "👨‍👩‍👧 To'lovchi: %s\n" +
+                    "🎓 Farzandi: %s\n" +
+                    "💰 Summa: %s UZS\n" +
+                    "📝 Izoh: %s\n" +
+                    "Saytga kirib tasdiqlang yoki rad eting!\n\n" +
+                    "Chek: %s",
+                    payerName, studentName, amountFormatted, noteText, proofUrl
+            );
+        } else {
+            message = String.format(
+                    "🔔 Yangi to'lov cheki!\n" +
+                    "👤 Talaba: %s\n" +
+                    "💰 Summa: %s UZS\n" +
+                    "📝 Izoh: %s\n" +
+                    "Saytga kirib tasdiqlang yoki rad eting!\n\n" +
+                    "Chek: %s",
+                    studentName, amountFormatted, noteText, proofUrl
+            );
+        }
 
         List<User> recipients = new ArrayList<>();
         // Primary admin

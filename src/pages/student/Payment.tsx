@@ -28,7 +28,12 @@ import {
   Wifi,
 } from "lucide-react";
 
-const formatCard = (raw: string) => raw.replace(/\D/g, "").replace(/(.{4})/g, "$1 ").trim();
+const formatCard = (raw?: string) => {
+  if (!raw) return "—";
+  const cleaned = raw.replace(/\D/g, "");
+  const matches = cleaned.match(/.{1,4}/g);
+  return matches ? matches.join(" ") : cleaned;
+};
 
 interface AdminPaymentInfo {
   id: string;
@@ -61,6 +66,7 @@ interface Child {
   username: string;
   avatarUrl: string | null;
   coins: number;
+  organizationId?: string;
 }
 
 const statusMeta = (s: string) => {
@@ -92,6 +98,7 @@ export default function StudentPayment() {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const isParent = user?.role === "parent";
@@ -112,16 +119,20 @@ export default function StudentPayment() {
     }
   }, [children, isParent, selectedChildId]);
 
+  const selectedChild = children.find((c) => c.id === selectedChildId);
+  const selectedChildOrgId = selectedChild?.organizationId;
+  const effectiveOrgId = isParent ? selectedChildOrgId : profile?.organization_id;
+
   // 2. Fetch Admins available for payment
   const { data: admins = [], isLoading: adminsLoading } = useQuery<AdminPaymentInfo[]>({
-    queryKey: ["payment-admins", profile?.organization_id],
+    queryKey: ["payment-admins", effectiveOrgId],
     queryFn: async () => {
-      const { data } = await api.get("/payments/initiate/admins", {
-        params: { organizationId: profile?.organization_id || undefined },
+      const { data } = await api.get("/payments/organization-cards", {
+        params: { organizationId: effectiveOrgId || undefined },
       });
       return data || [];
     },
-    enabled: !!profile?.organization_id,
+    enabled: !!effectiveOrgId,
   });
 
   useEffect(() => {
@@ -186,13 +197,16 @@ export default function StudentPayment() {
       setPreview(null);
       if (fileRef.current) fileRef.current.value = "";
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || "To'lovni yuborishda xatolik yuz berdi");
+    onError: (error: unknown) => {
+      const errMsg = error && typeof error === "object" && "response" in error
+        ? (error as { response: { data?: { message?: string } } }).response.data?.message
+        : "To'lovni yuborishda xatolik yuz berdi";
+      toast.error(errMsg || "To'lovni yuborishda xatolik yuz berdi");
     },
   });
 
   const submit = async () => {
-    if (!user?.id || !profile?.organization_id) return toast.error("Tashkilot aniqlanmadi");
+    if (!user?.id || !effectiveOrgId) return toast.error("Tashkilot aniqlanmadi");
     if (!selectedAdmin) return toast.error("Iltimos, to'lov qabul qiluvchi adminni tanlang");
     const amt = Number(amount);
     if (!amt || amt < 1000) return toast.error("Summa kamida 1 000 so'm bo'lishi kerak");
@@ -200,6 +214,9 @@ export default function StudentPayment() {
 
     const effectiveStudentId = isParent ? selectedChildId : user.id;
     if (!effectiveStudentId) return toast.error("Talaba aniqlanmadi");
+
+    if (isUploading || initiateMutation.isPending) return;
+    setIsUploading(true);
 
     try {
       const formData = new FormData();
@@ -212,7 +229,7 @@ export default function StudentPayment() {
       const publicUrl = res.data;
 
       // Call Spring Boot backend initiate endpoint
-      initiateMutation.mutate({
+      await initiateMutation.mutateAsync({
         amount: amt,
         note: note || "",
         paymentProofUrl: publicUrl,
@@ -220,8 +237,13 @@ export default function StudentPayment() {
         studentId: effectiveStudentId,
       });
 
-    } catch (e: any) {
-      toast.error(e.response?.data?.message || e.message || "Chekni yuklashda xatolik");
+    } catch (e: unknown) {
+      const errMsg = e && typeof e === "object" && "response" in e
+        ? (e as { response: { data?: { message?: string } } }).response.data?.message
+        : (e as Error).message || "Chekni yuklashda xatolik";
+      toast.error(errMsg);
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -539,14 +561,14 @@ export default function StudentPayment() {
               size="lg"
               className="w-full h-14 rounded-xl font-display font-bold text-lg shadow-xl shadow-primary/20"
               onClick={submit}
-              disabled={initiateMutation.isPending || !selectedAdmin}
+              disabled={isUploading || initiateMutation.isPending || !selectedAdmin}
             >
-              {initiateMutation.isPending ? (
+              {isUploading || initiateMutation.isPending ? (
                 <Loader2 className="h-6 w-6 animate-spin mr-2" />
               ) : (
                 <Send className="h-5 w-5 mr-2" />
               )}
-              {initiateMutation.isPending ? "Yuborilmoqda..." : "Tasdiqlashga yuborish"}
+              {isUploading || initiateMutation.isPending ? "Yuborilmoqda..." : "Tasdiqlashga yuborish"}
             </Button>
 
             <p className="text-xs text-muted-foreground text-center flex items-center justify-center gap-1.5">

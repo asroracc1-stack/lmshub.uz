@@ -17,6 +17,7 @@ import { useGoogleLogin } from "@react-oauth/google";
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useTranslation } from "react-i18next";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface UserData {
   id: string;
@@ -51,6 +52,7 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
   const location = useLocation();
   const { user, role, loading, setAuth } = useAuth();
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
 
   const [isSignIn, setIsSignIn] = useState(defaultMode === "signin");
   const [submitting, setSubmitting] = useState(false);
@@ -159,6 +161,15 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
     setSubmitting(true);
 
     try {
+      // Clear React Query cache, localStorage, and sessionStorage before API requests
+      queryClient.clear();
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("user");
+      localStorage.removeItem("profile");
+      localStorage.removeItem("organizationId");
+      localStorage.removeItem("organization_id");
+      sessionStorage.clear();
+
       if (isSignIn) {
         const response = await api.post<LoginResponseData>("/auth/login", {
           username_or_email: username.trim() || email.trim(),
@@ -207,6 +218,15 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
   const login = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       try {
+        // Clear React Query cache, localStorage, and sessionStorage before API requests
+        queryClient.clear();
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("user");
+        localStorage.removeItem("profile");
+        localStorage.removeItem("organizationId");
+        localStorage.removeItem("organization_id");
+        sessionStorage.clear();
+
         const res = await api.post<LoginResponseData>("/auth/google", { token: tokenResponse.access_token });
         handleAuthSuccess(res.data, false);
       } catch (err: unknown) {

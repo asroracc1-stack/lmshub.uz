@@ -383,6 +383,7 @@ const AppRoutes = () => {
           <Route index element={<ParentDashboard />} />
           <Route path="dashboard" element={<ParentDashboard />} />
           <Route path="children" element={<ParentDashboard />} />
+          <Route path="payment" element={<StudentPayment />} />
           <Route path="messages" element={<OrgMessages />} />
           <Route path="leaderboard" element={<Leaderboard defaultRole="student" />} />
           <Route path="profile" element={<SharedProfile />} />
