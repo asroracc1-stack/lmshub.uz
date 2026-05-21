@@ -27,9 +27,10 @@ public class TelegramBotService {
             return;
         }
 
-        String url = String.format("https://api.telegram.org/bot%s/sendMessage?chat_id=%s&text=%s&parse_mode=HTML", 
-                                    botToken, targetChatId, text);
         try {
+            String encodedText = java.net.URLEncoder.encode(text, java.nio.charset.StandardCharsets.UTF_8.toString());
+            String url = String.format("https://api.telegram.org/bot%s/sendMessage?chat_id=%s&text=%s&parse_mode=HTML", 
+                                        botToken, targetChatId, encodedText);
             restTemplate.getForObject(url, String.class);
             log.info("Telegram message sent successfully to {}", targetChatId);
         } catch (Exception e) {

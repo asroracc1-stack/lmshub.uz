@@ -366,6 +366,7 @@ public class ParentController {
         private String username;
         private String avatarUrl;
         private Long coins;
+        private UUID organizationId;
 
         public static ChildDto from(User u) {
             ChildDto d = new ChildDto();
@@ -374,6 +375,7 @@ public class ParentController {
             d.username = u.getUsername();
             d.avatarUrl = u.getAvatarUrl();
             d.coins = u.getCoins();
+            d.organizationId = u.getOrganizationId();
             return d;
         }
     }

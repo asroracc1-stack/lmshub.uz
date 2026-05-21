@@ -48,6 +48,7 @@ public class UserProfileController {
         response.put("targetBand", user.getTargetBand());
         response.put("examDate", user.getExamDate());
         response.put("lastLoginAt", user.getLastLoginAt());
+        response.put("organizationId", user.getOrganizationId());
         
         if (profile != null) {
             response.put("firstName", profile.getFirstName());

@@ -35,9 +35,12 @@ public class PaymentTransactionService {
 
     @Transactional(readOnly = true)
     public List<AdminPaymentInfoDto> getAdminsForPayment(UUID organizationId) {
+        if (organizationId == null) {
+            return List.of();
+        }
         List<User> users = userRepository.findByOrganizationId(organizationId);
         return users.stream()
-                .filter(u -> u.isActive() && (u.getRole() == AppRole.ADMIN || u.getRole() == AppRole.ADMINISTRATOR || u.getRole() == AppRole.SUPER_ADMIN))
+                .filter(u -> u.isActive() && (u.getRole() == AppRole.ADMIN || u.getRole() == AppRole.ADMINISTRATOR))
                 .filter(u -> u.getCardNumber() != null && !u.getCardNumber().trim().isEmpty())
                 .map(u -> AdminPaymentInfoDto.builder()
                         .id(u.getId())
