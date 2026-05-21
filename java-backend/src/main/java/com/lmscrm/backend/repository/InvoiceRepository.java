@@ -14,9 +14,11 @@ public interface InvoiceRepository extends JpaRepository<Invoice, UUID> {
     
     @Query("SELECT i FROM Invoice i WHERE " +
            "(:query IS NULL OR :query = '' OR LOWER(i.invoiceNumber) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(i.organization.name) LIKE LOWER(CONCAT('%', :query, '%'))) AND " +
-           "(:status IS NULL OR :status = 'all' OR " +
+           "(:status IS NULL OR LOWER(:status) = 'all' OR " +
            "(:status = 'PAID' AND i.status = com.lmscrm.backend.domain.enums.InvoiceStatus.PAID) OR " +
            "(:status = 'SENT' AND (i.status = com.lmscrm.backend.domain.enums.InvoiceStatus.SENT OR i.status = com.lmscrm.backend.domain.enums.InvoiceStatus.PENDING)) OR " +
+           "(:status = 'DRAFT' AND i.status = com.lmscrm.backend.domain.enums.InvoiceStatus.DRAFT) OR " +
+           "(:status = 'CANCELLED' AND i.status = com.lmscrm.backend.domain.enums.InvoiceStatus.CANCELLED) OR " +
            "(:status = 'OVERDUE' AND (i.status = com.lmscrm.backend.domain.enums.InvoiceStatus.OVERDUE OR ((i.status = com.lmscrm.backend.domain.enums.InvoiceStatus.SENT OR i.status = com.lmscrm.backend.domain.enums.InvoiceStatus.PENDING) AND i.dueDate < CURRENT_DATE))))")
     Page<Invoice> filterInvoices(String query, String status, Pageable pageable);
 
@@ -36,6 +38,15 @@ public interface InvoiceRepository extends JpaRepository<Invoice, UUID> {
 
     @Query("SELECT COALESCE(SUM(i.amount), 0) FROM Invoice i WHERE i.status = com.lmscrm.backend.domain.enums.InvoiceStatus.OVERDUE OR ((i.status = com.lmscrm.backend.domain.enums.InvoiceStatus.PENDING OR i.status = com.lmscrm.backend.domain.enums.InvoiceStatus.SENT) AND i.dueDate < CURRENT_DATE)")
     java.math.BigDecimal sumTotalOverdue();
+
+    @Query("SELECT COUNT(i) FROM Invoice i WHERE i.status = com.lmscrm.backend.domain.enums.InvoiceStatus.PAID")
+    long countTotalRevenueInvoices();
+
+    @Query("SELECT COUNT(i) FROM Invoice i WHERE (i.status = com.lmscrm.backend.domain.enums.InvoiceStatus.PENDING OR i.status = com.lmscrm.backend.domain.enums.InvoiceStatus.SENT) AND i.dueDate >= CURRENT_DATE")
+    long countTotalPendingInvoices();
+
+    @Query("SELECT COUNT(i) FROM Invoice i WHERE i.status = com.lmscrm.backend.domain.enums.InvoiceStatus.OVERDUE OR ((i.status = com.lmscrm.backend.domain.enums.InvoiceStatus.PENDING OR i.status = com.lmscrm.backend.domain.enums.InvoiceStatus.SENT) AND i.dueDate < CURRENT_DATE)")
+    long countTotalOverdueInvoices();
 
     @Query("SELECT i FROM Invoice i WHERE i.status = com.lmscrm.backend.domain.enums.InvoiceStatus.PAID AND i.paidAt >= :since")
     java.util.List<Invoice> findPaidInvoicesSince(java.time.LocalDateTime since);

@@ -41,11 +41,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
 import { useDebounce } from "@/hooks/use-debounce";
 import {
   Wallet,
@@ -63,19 +58,29 @@ import {
   RefreshCw,
 } from "lucide-react";
 import SuccessModal from "@/components/SuccessModal";
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, PieChart, Pie, Cell, Legend } from "recharts";
+import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, PieChart, Pie, Cell, Legend } from "recharts";
 import TableSkeleton from "@/components/shared/TableSkeleton";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import {
+  useReactTable,
+  getCoreRowModel,
+  flexRender,
+  ColumnDef,
+} from "@tanstack/react-table";
 
-interface Org { id: string; name: string }
+interface Org {
+  id: string;
+  name: string;
+}
+
 interface Invoice {
   id: string;
   organization_id: string;
   invoice_number: string;
   amount: number;
   currency: string;
-  status: "draft" | "sent" | "paid" | "overdue" | "cancelled";
+  status: "draft" | "sent" | "paid" | "overdue" | "cancelled" | "pending";
   description: string | null;
   due_date: string | null;
   paid_at: string | null;
@@ -85,6 +90,41 @@ interface Invoice {
 interface InvoicesResponse {
   content: Invoice[];
   totalPages: number;
+  totalElements: number;
+}
+
+interface DashboardSummary {
+  totalRevenue: number;
+  pendingAmount: number;
+  overdueAmount: number;
+}
+
+interface MonthlyRevenue {
+  month: string;
+  amount: number;
+}
+
+interface StatusDistributionItem {
+  status: string;
+  count: number;
+  amount: number;
+}
+
+interface FinanceDashboardData {
+  summary: DashboardSummary;
+  monthlyRevenue: MonthlyRevenue[];
+  statusDistribution: StatusDistributionItem[];
+}
+
+interface InvoicePayload {
+  organization_id: string;
+  invoice_number: string;
+  amount: number;
+  currency: string;
+  status: string;
+  description: string | null;
+  due_date: string | null;
+  paid_at: string | null;
 }
 
 const STATUSES = [
@@ -133,58 +173,69 @@ export default function Finance() {
   const debouncedSearch = useDebounce(search, 300);
   const debouncedInvoiceNumber = useDebounce(form.invoice_number, 500);
 
-  const orgsQuery = useQuery({
+  const orgsQuery = useQuery<Org[]>({
     queryKey: ["organizations"],
     queryFn: async () => {
-      const response = await api.get<any>("/organizations", { params: { size: 1000 } });
-      return Array.isArray(response.data) ? response.data : response.data.content || [];
+      const response = await api.get<Org[] | { content: Org[] }>("/organizations", { params: { size: 1000 } });
+      const data = response.data;
+      return Array.isArray(data) ? data : (data as { content: Org[] }).content || [];
     },
     staleTime: 1000 * 60 * 10,
     retry: 1,
   });
 
-  const financeStatsQuery = useQuery<any>({
-    queryKey: ["finance-stats"],
+  const dashboardQuery = useQuery<FinanceDashboardData>({
+    queryKey: ["financeDashboard"],
     queryFn: async () => {
-      const response = await api.get<any>("/admin/finance/stats");
+      const response = await api.get<FinanceDashboardData>("/finance/dashboard");
       return response.data;
     },
     staleTime: 1000 * 60 * 3,
     retry: 1,
   });
 
-  // Handle stats errors separately
-  if (financeStatsQuery.isError) {
-    toast.error("Moliya statistikasi yuklashda xatolik.");
-  }
+  useEffect(() => {
+    if (dashboardQuery.isError) {
+      toast.error("Moliya statistikasi yuklashda xatolik.");
+    }
+  }, [dashboardQuery.isError]);
 
   const invoicesQuery = useQuery<InvoicesResponse>({
     queryKey: ["finance-invoices", { page, search: debouncedSearch, status: filter }],
     queryFn: async () => {
-      const response = await api.get<InvoicesResponse>("/admin/invoices", {
+      const response = await api.get<InvoicesResponse>("/finance/invoices", {
         params: {
           page,
           size: 10,
           query: debouncedSearch || undefined,
-          status: filter !== "all" ? filter : undefined,
+          status: filter !== "all" ? filter.toUpperCase() : undefined,
         },
       });
-      return response.data;
+      const resData = response.data;
+      if (resData && Array.isArray(resData.content)) {
+        resData.content = resData.content.map((inv) => ({
+          ...inv,
+          status: (inv.status || "draft").toLowerCase() as Invoice["status"],
+        }));
+      }
+      return resData;
     },
     placeholderData: (prev) => prev,
     staleTime: 1000 * 60 * 2,
     retry: 1,
   });
 
-  // Handle invoices errors separately
-  if (invoicesQuery.isError) {
-    toast.error((invoicesQuery.error as any)?.message || "Invoice ma'lumotlarini yuklashda xatolik.");
-  }
+  useEffect(() => {
+    if (invoicesQuery.isError) {
+      const errorMsg = (invoicesQuery.error as { response?: { data?: { message?: string } } })?.response?.data?.message || "Invoice ma'lumotlarini yuklashda xatolik.";
+      toast.error(errorMsg);
+    }
+  }, [invoicesQuery.isError, invoicesQuery.error]);
 
   const numberCheckQuery = useQuery<boolean>({
     queryKey: ["invoice-number-check", debouncedInvoiceNumber],
     queryFn: async () => {
-      const response = await api.get("/admin/invoices/check-number", { params: { number: debouncedInvoiceNumber } });
+      const response = await api.get<{ available: boolean }>("/finance/invoices/check-number", { params: { number: debouncedInvoiceNumber } });
       return response.data.available;
     },
     enabled: !!debouncedInvoiceNumber && !editing,
@@ -193,15 +244,15 @@ export default function Finance() {
   });
 
   const createUpdateInvoiceMutation = useMutation({
-    mutationFn: async (payload: any) => {
+    mutationFn: async (payload: InvoicePayload) => {
       if (editing) {
-        return api.put(`/admin/invoices/${editing.id}`, payload);
+        return api.put<Invoice>(`/finance/invoices/${editing.id}`, payload);
       }
-      return api.post("/admin/invoices", payload);
+      return api.post<Invoice>("/finance/invoices", payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["finance-invoices"] });
-      queryClient.invalidateQueries({ queryKey: ["finance-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["financeDashboard"] });
       if (editing) {
         toast.success("Invoice yangilandi.");
       } else {
@@ -219,10 +270,10 @@ export default function Finance() {
   });
 
   const markPaidMutation = useMutation({
-    mutationFn: async (id: string) => api.patch(`/admin/invoices/${id}/paid`),
+    mutationFn: async (id: string) => api.patch<void>(`/finance/invoices/${id}/paid`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["finance-invoices"] });
-      queryClient.invalidateQueries({ queryKey: ["finance-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["financeDashboard"] });
       toast.success("Invoice to'landi deb belgilandi.");
     },
     onError: (error: any) => {
@@ -231,10 +282,10 @@ export default function Finance() {
   });
 
   const deleteInvoiceMutation = useMutation({
-    mutationFn: async (id: string) => api.delete(`/admin/invoices/${id}`),
+    mutationFn: async (id: string) => api.delete<void>(`/finance/invoices/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["finance-invoices"] });
-      queryClient.invalidateQueries({ queryKey: ["finance-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["financeDashboard"] });
       toast.success("Invoice o'chirildi.");
     },
     onError: (error: any) => {
@@ -246,46 +297,58 @@ export default function Finance() {
     if (invoicesQuery.isSuccess && invoicesQuery.data && page >= (invoicesQuery.data.totalPages ?? 1)) {
       setPage(Math.max((invoicesQuery.data.totalPages ?? 1) - 1, 0));
     }
-  }, [invoicesQuery.data, page]);
+  }, [invoicesQuery.data, invoicesQuery.isSuccess, page]);
 
   const orgs = orgsQuery.data ?? [];
-  const invoices = (invoicesQuery.data as any)?.content ?? [];
-  const totalPages = (invoicesQuery.data as any)?.totalPages ?? 0;
+  const invoices = invoicesQuery.data?.content ?? [];
+  const totalPages = invoicesQuery.data?.totalPages ?? 0;
 
-  const stats = {
-    totalRevenue: (financeStatsQuery.data as any)?.totalRevenue ?? 0,
-    pending: (financeStatsQuery.data as any)?.pendingAmount ?? 0,
-    overdue: (financeStatsQuery.data as any)?.overdueAmount ?? 0,
-    count: (invoicesQuery.data as any)?.totalPages ? (invoicesQuery.data as any)?.content?.length : invoices.length,
-  };
-
-  const monthly = (financeStatsQuery.data as any)?.monthlyRevenue ?? [];
-
-  const statusDistribution = useMemo(() => {
-    const colors: Record<string, string> = {
-      paid: "hsl(var(--success))",
-      sent: "hsl(var(--primary))",
-      overdue: "hsl(var(--destructive))",
-      draft: "hsl(var(--muted-foreground))",
-      cancelled: "hsl(var(--muted-foreground))",
+  const stats = useMemo(() => {
+    return {
+      totalRevenue: dashboardQuery.data?.summary.totalRevenue ?? 0,
+      pending: dashboardQuery.data?.summary.pendingAmount ?? 0,
+      overdue: dashboardQuery.data?.summary.overdueAmount ?? 0,
+      count: invoicesQuery.data?.totalElements ?? invoices.length,
     };
-    return STATUSES.map((s) => ({
-      name: s.label,
-      value: invoices.filter((i) => i.status === s.value).length,
-      color: colors[s.value],
-    })).filter((item) => item.value > 0);
-  }, [invoices]);
+  }, [dashboardQuery.data, invoicesQuery.data, invoices]);
 
-  const orgMap = useMemo(() => new Map((orgs as any).map((org: any) => [org.id, org.name])), [orgs]);
+  const monthly = useMemo(() => {
+    return dashboardQuery.data?.monthlyRevenue ?? [];
+  }, [dashboardQuery.data]);
+
+  const distributionData = useMemo(() => {
+    if (!dashboardQuery.data?.statusDistribution) return [];
+    
+    const colors: Record<string, string> = {
+      PAID: "hsl(142.1 76.2% 36.3%)",
+      PENDING: "hsl(37.9 92.1% 50.2%)",
+      OVERDUE: "hsl(346.8 77.2% 49.8%)",
+    };
+
+    const labels: Record<string, string> = {
+      PAID: "To'langan",
+      PENDING: "Kutilmoqda",
+      OVERDUE: "Muddati o'tgan",
+    };
+
+    return dashboardQuery.data.statusDistribution.map((item) => ({
+      name: labels[item.status] || item.status,
+      value: item.count,
+      amount: item.amount,
+      color: colors[item.status] || "hsl(var(--muted-foreground))",
+    })).filter((item) => item.value > 0);
+  }, [dashboardQuery.data]);
+
+  const orgMap = useMemo(() => new Map(orgs.map((org) => [org.id, org.name])), [orgs]);
 
   const resetForm = async () => {
     setEditing(null);
     let nextNum = `INV-${Math.floor(100000 + Math.random() * 900000)}`;
     try {
-      const res = await api.get("/admin/invoices/next-number");
+      const res = await api.get<{ number: string }>("/finance/invoices/next-number");
       if (res.data.number) nextNum = res.data.number;
     } catch (e) {
-      // fallback generated number remains
+      // fallback
     }
     setForm({
       organization_id: "",
@@ -334,7 +397,7 @@ export default function Finance() {
         invoice_number: parsed.data.invoice_number,
         amount: parsed.data.amount,
         currency: parsed.data.currency,
-        status: parsed.data.status,
+        status: parsed.data.status.toUpperCase(),
         description: parsed.data.description || null,
         due_date: parsed.data.due_date || null,
         paid_at: parsed.data.status === "paid" ? (editing?.paid_at ?? new Date().toISOString()) : null,
@@ -352,11 +415,101 @@ export default function Finance() {
     await deleteInvoiceMutation.mutateAsync(id);
   };
 
+  const columns = useMemo<ColumnDef<Invoice>[]>(
+    () => [
+      {
+        accessorKey: "invoice_number",
+        header: "Raqam",
+        cell: (info) => <span className="font-mono text-xs">{info.getValue() as string}</span>,
+      },
+      {
+        accessorKey: "organization_id",
+        header: "Tashkilot",
+        cell: (info) => <span className="font-medium">{String(orgMap.get(info.getValue() as string) ?? "—")}</span>,
+      },
+      {
+        accessorKey: "amount",
+        header: "Summa",
+        cell: (info) => {
+          const row = info.row.original;
+          return <span className="font-semibold">{fmtAmount(row.amount, row.currency)}</span>;
+        },
+      },
+      {
+        accessorKey: "status",
+        header: "Holat",
+        cell: (info) => {
+          const val = info.getValue() as string;
+          const m = statusMeta(val);
+          const Icon = m.icon;
+          return (
+            <span className={cn("inline-flex items-center gap-1.5 text-xs px-2 py-1 rounded-full", m.color)}>
+              <Icon className="h-3 w-3" />
+              {m.label}
+            </span>
+          );
+        },
+      },
+      {
+        accessorKey: "due_date",
+        header: "Muddat",
+        cell: (info) => {
+          const val = info.getValue() as string;
+          return <span className="text-xs text-muted-foreground">{val ? new Date(val).toLocaleDateString("uz-UZ") : "—"}</span>;
+        },
+      },
+      {
+        id: "actions",
+        header: "Amallar",
+        cell: (info) => {
+          const inv = info.row.original;
+          return (
+            <div className="flex gap-1 justify-end">
+              {inv.status !== "paid" && (
+                <Button size="icon" variant="ghost" onClick={() => markPaid(inv.id)} title="To'landi" className="text-success">
+                  <CheckCircle2 className="h-4 w-4" />
+                </Button>
+              )}
+              <Button size="icon" variant="ghost" onClick={() => openEdit(inv)}>
+                <Pencil className="h-4 w-4" />
+              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button size="icon" variant="ghost" className="text-destructive">
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>O'chirishni tasdiqlaysizmi?</AlertDialogTitle>
+                    <AlertDialogDescription>{inv.invoice_number} o'chiriladi.</AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Bekor</AlertDialogCancel>
+                    <AlertDialogAction className="bg-destructive" onClick={() => remove(inv.id)}>
+                      O'chirish
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          );
+        },
+      },
+    ],
+    [orgMap]
+  );
+
+  const table = useReactTable({
+    data: invoices,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  });
+
   const cards = [
-    { label: "Jami daromad", value: fmtAmount(stats.totalRevenue, "UZS"), icon: TrendingUp, accent: "from-success to-success" },
-    { label: "Kutilmoqda", value: fmtAmount(stats.pending, "UZS"), icon: Clock, accent: "from-primary to-primary-glow" },
-    { label: "Muddati o'tgan", value: fmtAmount(stats.overdue, "UZS"), icon: AlertCircle, accent: "from-destructive to-destructive" },
-    { label: "Hisoblar soni", value: stats.count.toString(), icon: FileText, accent: "from-secondary to-secondary-glow" },
+    { label: "Jami daromad", value: fmtAmount(stats.totalRevenue, "UZS"), icon: TrendingUp },
+    { label: "Kutilmoqda", value: fmtAmount(stats.pending, "UZS"), icon: Clock },
+    { label: "Muddati o'tgan", value: fmtAmount(stats.overdue, "UZS"), icon: AlertCircle },
   ];
 
   return (
@@ -374,12 +527,23 @@ export default function Finance() {
       <div className="grid gap-4 xl:grid-cols-[1.4fr_0.9fr]">
         <div className="grid gap-4">
           <div className="grid gap-3 md:grid-cols-3">
-            {cards.slice(0, 3).map((c) => (
-              <div key={c.label} className="rounded-3xl border border-border p-5 bg-card shadow-sm">
-                <p className="text-sm text-muted-foreground">{c.label}</p>
-                <p className="mt-3 text-3xl font-semibold">{c.value}</p>
-              </div>
-            ))}
+            {dashboardQuery.isLoading ? (
+              <>
+                {[...Array(3)].map((_, idx) => (
+                  <div key={idx} className="rounded-3xl border border-border p-5 bg-card shadow-sm space-y-3">
+                    <Skeleton className="h-4 w-20 rounded" />
+                    <Skeleton className="h-8 w-32 rounded animate-pulse" />
+                  </div>
+                ))}
+              </>
+            ) : (
+              cards.map((c) => (
+                <div key={c.label} className="rounded-3xl border border-border p-5 bg-card shadow-sm">
+                  <p className="text-sm text-muted-foreground">{c.label}</p>
+                  <p className="mt-3 text-3xl font-semibold">{c.value}</p>
+                </div>
+              ))
+            )}
           </div>
 
           <div className="grid gap-4 md:grid-cols-[1.4fr_0.6fr]">
@@ -391,47 +555,61 @@ export default function Finance() {
                 </div>
                 <RefreshCw className="h-5 w-5 text-muted-foreground" />
               </div>
-              {financeStatsQuery.isLoading ? (
-                <div className="h-[240px] grid place-items-center">
-                  <Skeleton className="h-5 w-36 rounded-full" />
+              {dashboardQuery.isLoading ? (
+                <div className="h-[260px] flex flex-col justify-between p-2">
+                  <Skeleton className="h-4 w-1/3 rounded animate-pulse" />
+                  <Skeleton className="h-40 w-full rounded animate-pulse" />
+                  <div className="flex justify-between">
+                    <Skeleton className="h-4 w-12 rounded" />
+                    <Skeleton className="h-4 w-12 rounded" />
+                    <Skeleton className="h-4 w-12 rounded" />
+                    <Skeleton className="h-4 w-12 rounded" />
+                  </div>
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height={260}>
-                  <BarChart data={monthly} margin={{ top: 8, right: 16, left: -10, bottom: 0 }}>
+                  <AreaChart data={monthly} margin={{ top: 8, right: 16, left: -10, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(var(--success))" stopOpacity={0.4} />
+                        <stop offset="95%" stopColor="hsl(var(--success))" stopOpacity={0.0} />
+                      </linearGradient>
+                    </defs>
                     <CartesianGrid strokeDasharray="4 8" stroke="#e5e7eb" vertical={false} />
                     <XAxis dataKey="month" tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
-                    <Tooltip />
-                    <Bar dataKey="revenue" fill="hsl(var(--primary))">
-                      {monthly.map((entry: any, index: number) => (
-                        <Cell key={entry.month} fill={index % 2 === 0 ? "hsl(var(--primary))" : "hsl(var(--primary) / 0.75)"} />
-                      ))}
-                    </Bar>
-                  </BarChart>
+                    <YAxis tick={{ fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={(val) => `${val / 1000000}M`} />
+                    <Tooltip formatter={(value: any) => fmtAmount(Number(value), "UZS")} />
+                    <Area type="monotone" dataKey="amount" stroke="hsl(var(--success))" strokeWidth={2} fillOpacity={1} fill="url(#colorRevenue)" />
+                  </AreaChart>
                 </ResponsiveContainer>
               )}
             </div>
             <div className="rounded-3xl border border-border p-5 bg-card shadow-sm min-h-[320px]">
               <h2 className="text-lg font-semibold mb-3">Status taqsimoti</h2>
-              {financeStatsQuery.isLoading ? (
-                <div className="space-y-3">
-                  {[...Array(3)].map((_, idx) => (
-                    <Skeleton key={idx} className="h-10 rounded-full" />
-                  ))}
+              {dashboardQuery.isLoading ? (
+                <div className="h-[260px] flex items-center justify-center">
+                  <div className="relative flex items-center justify-center">
+                    <Skeleton className="h-36 w-36 rounded-full border-[15px] border-muted animate-pulse" />
+                    <div className="absolute h-20 w-20 rounded-full bg-card" />
+                  </div>
                 </div>
               ) : (
-                <PieChart width={320} height={260}>
-                  <Pie data={statusDistribution} dataKey="value" nameKey="name" innerRadius={60} outerRadius={90} paddingAngle={2}>
-                    {statusDistribution.map((entry) => (
-                      <Cell key={entry.name} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Legend />
-                </PieChart>
+                <ResponsiveContainer width="100%" height={260}>
+                  <PieChart>
+                    <Pie data={distributionData} dataKey="value" nameKey="name" innerRadius={60} outerRadius={90} paddingAngle={4}>
+                      {distributionData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} stroke="none" />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value: any, name: any, props: any) => [`${value} ta (${fmtAmount(props.payload.amount, "UZS")})`, name]} />
+                    <Legend verticalAlign="bottom" height={36} />
+                  </PieChart>
+                </ResponsiveContainer>
               )}
             </div>
           </div>
 
-          <div className="rounded-3xl border border-border p-5 bg-card shadow-sm">
+          <div className="rounded-3xl border border-border p-5 bg-card shadow-sm space-y-4">
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div className="relative w-full md:max-w-sm">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -452,106 +630,73 @@ export default function Finance() {
                     ))}
                   </SelectContent>
                 </Select>
-                <span className="text-sm text-muted-foreground">Sahifa: {page + 1} / {totalPages}</span>
+                {invoicesQuery.data && (
+                  <span className="text-sm text-muted-foreground">Sahifa: {page + 1} / {totalPages}</span>
+                )}
               </div>
             </div>
-          </div>
 
-          <div className="rounded-3xl border border-border p-4 bg-card shadow-sm">
             {invoicesQuery.isLoading ? (
               <TableSkeleton rows={5} cols={6} />
             ) : (
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
-                    <TableRow>
-                      <TableHead>Raqam</TableHead>
-                      <TableHead>Tashkilot</TableHead>
-                      <TableHead className="text-right">Summa</TableHead>
-                      <TableHead>Holat</TableHead>
-                      <TableHead>Muddat</TableHead>
-                      <TableHead className="text-right">Amallar</TableHead>
-                    </TableRow>
+                    {table.getHeaderGroups().map((headerGroup) => (
+                      <TableRow key={headerGroup.id}>
+                        {headerGroup.headers.map((header) => (
+                          <TableHead key={header.id} className={header.column.columnDef.id === "actions" || header.column.columnDef.id === "amount" ? "text-right" : ""}>
+                            {header.isPlaceholder
+                              ? null
+                              : flexRender(
+                                  header.column.columnDef.header,
+                                  header.getContext()
+                                )}
+                          </TableHead>
+                        ))}
+                      </TableRow>
+                    ))}
                   </TableHeader>
                   <TableBody>
-                    {invoices.length === 0 ? (
+                    {table.getRowModel().rows.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center text-muted-foreground py-10">
+                        <TableCell colSpan={columns.length} className="text-center text-muted-foreground py-10">
                           Invoice topilmadi
                         </TableCell>
                       </TableRow>
                     ) : (
-                      invoices.map((inv) => {
-                        const m = statusMeta(inv.status);
-                        const Icon = m.icon;
-                        return (
-                          <TableRow key={inv.id} className="hover:bg-muted/40">
-                            <TableCell className="font-mono text-xs">{inv.invoice_number}</TableCell>
-                            <TableCell className="font-medium">{String(orgMap.get(inv.organization_id) ?? "—")}</TableCell>
-                            <TableCell className="text-right font-semibold">{fmtAmount(inv.amount, inv.currency)}</TableCell>
-                            <TableCell>
-                              <span className={cn("inline-flex items-center gap-1.5 text-xs px-2 py-1 rounded-full", m.color)}>
-                                <Icon className="h-3 w-3" />
-                                {m.label}
-                              </span>
+                      table.getRowModel().rows.map((row) => (
+                        <TableRow key={row.id} className="hover:bg-muted/40">
+                          {row.getVisibleCells().map((cell) => (
+                            <TableCell key={cell.id} className={cell.column.columnDef.id === "actions" || cell.column.columnDef.id === "amount" ? "text-right" : ""}>
+                              {flexRender(
+                                cell.column.columnDef.cell,
+                                cell.getContext()
+                              )}
                             </TableCell>
-                            <TableCell className="text-xs text-muted-foreground">
-                              {inv.due_date ? new Date(inv.due_date).toLocaleDateString() : "—"}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex justify-end gap-1">
-                                {inv.status !== "paid" && (
-                                  <Button size="icon" variant="ghost" onClick={() => markPaid(inv.id)} title="To'landi" className="text-success">
-                                    <CheckCircle2 className="h-4 w-4" />
-                                  </Button>
-                                )}
-                                <Button size="icon" variant="ghost" onClick={() => openEdit(inv)}>
-                                  <Pencil className="h-4 w-4" />
-                                </Button>
-                                <AlertDialog>
-                                  <AlertDialogTrigger asChild>
-                                    <Button size="icon" variant="ghost" className="text-destructive">
-                                      <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                  </AlertDialogTrigger>
-                                  <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                      <AlertDialogTitle>O'chirishni tasdiqlaysizmi?</AlertDialogTitle>
-                                      <AlertDialogDescription>{inv.invoice_number} o'chiriladi.</AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                      <AlertDialogCancel>Bekor</AlertDialogCancel>
-                                      <AlertDialogAction className="bg-destructive" onClick={() => remove(inv.id)}>
-                                        O'chirish
-                                      </AlertDialogAction>
-                                    </AlertDialogFooter>
-                                  </AlertDialogContent>
-                                </AlertDialog>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })
+                          ))}
+                        </TableRow>
+                      ))
                     )}
                   </TableBody>
                 </Table>
               </div>
             )}
-          </div>
 
-          {!invoicesQuery.isLoading && totalPages > 1 && (
-            <div className="flex items-center justify-between pt-4 border-t border-border/50">
-              <div className="text-xs text-muted-foreground">Sahifa {page + 1} / {totalPages}</div>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>
-                  Oldingi
-                </Button>
-                <Button variant="outline" size="sm" disabled={page >= totalPages - 1} onClick={() => setPage((p) => p + 1)}>
-                  Keyingi
-                </Button>
+            {!invoicesQuery.isLoading && totalPages > 1 && (
+              <div className="flex items-center justify-between pt-4 border-t border-border/50">
+                <div className="text-xs text-muted-foreground">Sahifa {page + 1} / {totalPages}</div>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>
+                    Oldingi
+                  </Button>
+                  <Button variant="outline" size="sm" disabled={page >= totalPages - 1} onClick={() => setPage((p) => p + 1)}>
+                    Keyingi
+                  </Button>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         <div className="space-y-4">
@@ -560,23 +705,39 @@ export default function Finance() {
             <div className="grid gap-3">
               <div className="flex items-center gap-3 rounded-3xl border border-border p-4 bg-muted/80">
                 <Wallet className="h-5 w-5 text-primary" />
-                <div>
+                <div className="w-full">
                   <p className="text-sm text-muted-foreground">Umumiy to'lovlar</p>
-                  <p className="font-semibold">{fmtAmount(stats.totalRevenue, "UZS")}</p>
+                  {dashboardQuery.isLoading ? (
+                    <Skeleton className="h-5 w-24 mt-1" />
+                  ) : (
+                    <p className="font-semibold">{fmtAmount(stats.totalRevenue, "UZS")}</p>
+                  )}
                 </div>
               </div>
               <div className="flex items-center gap-3 rounded-3xl border border-border p-4 bg-muted/80">
                 <FileText className="h-5 w-5 text-slate-700" />
-                <div>
+                <div className="w-full">
                   <p className="text-sm text-muted-foreground">Invoice soni</p>
-                  <p className="font-semibold">{stats.count}</p>
+                  {dashboardQuery.isLoading ? (
+                    <Skeleton className="h-5 w-12 mt-1" />
+                  ) : (
+                    <p className="font-semibold">{stats.count}</p>
+                  )}
                 </div>
               </div>
               <div className="flex items-center gap-3 rounded-3xl border border-border p-4 bg-muted/80">
                 <TrendingUp className="h-5 w-5 text-emerald-600" />
-                <div>
+                <div className="w-full">
                   <p className="text-sm text-muted-foreground">Aktiv statuslar</p>
-                  <p className="font-semibold">{invoices.filter((inv) => inv.status !== "cancelled").length}</p>
+                  {dashboardQuery.isLoading ? (
+                    <Skeleton className="h-5 w-12 mt-1" />
+                  ) : (
+                    <p className="font-semibold">{
+                      dashboardQuery.data?.statusDistribution
+                        ? dashboardQuery.data.statusDistribution.filter(x => x.status === "PAID" || x.status === "PENDING" || x.status === "OVERDUE").reduce((acc, curr) => acc + curr.count, 0)
+                        : 0
+                    }</p>
+                  )}
                 </div>
               </div>
             </div>

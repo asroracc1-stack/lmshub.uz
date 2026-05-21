@@ -432,11 +432,13 @@ export default function SuperAdminDashboard() {
                           )}
                         </motion.div>
                       </div>
-                      {org.users === 0 && (
-                        <span className="text-[11px] font-bold text-muted-foreground shrink-0 w-4">
-                          0
-                        </span>
-                      )}
+                      <div className="w-5 shrink-0 flex items-center justify-start pl-1">
+                        {org.users === 0 && (
+                          <span className="text-[11px] font-bold text-muted-foreground">
+                            0
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 );

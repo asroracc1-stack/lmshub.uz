@@ -20,10 +20,6 @@ public interface OrganizationRepository extends JpaRepository<Organization, UUID
 
     long countBySubscriptionPackageId(UUID planId);
 
-    @Query("SELECT o.name, COUNT(u.id) " +
-           "FROM Organization o " +
-           "LEFT JOIN User u ON o.id = u.organizationId " +
-           "GROUP BY o.id, o.name " +
-           "ORDER BY COUNT(u.id) DESC, o.name ASC")
+    @Query("SELECT o.name, COUNT(u.id) FROM Organization o LEFT JOIN User u ON o.id = u.organizationId GROUP BY o.id, o.name ORDER BY COUNT(u.id) DESC")
     List<Object[]> findTopOrganizationsRaw(Pageable pageable);
 }
