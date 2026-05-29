@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import WelcomeBanner from "@/components/shared/WelcomeBanner";
 import { useAuth } from "@/contexts/AuthContext";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function AdministratorDashboard() {
   const { profile } = useAuth();

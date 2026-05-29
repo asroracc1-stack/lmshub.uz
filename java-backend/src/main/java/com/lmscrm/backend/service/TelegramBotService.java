@@ -59,23 +59,16 @@ public class TelegramBotService {
      * @param caption       Caption shown under the photo
      * @param localFilePath Full path to the image file on disk (e.g. "uploads/abc.jpg")
      */
-    public void sendPhotoWithButton(String targetChatId, String caption, String localFilePath) {
+    public void sendPhotoWithButton(String targetChatId, String caption, String photoPathOrUrl) {
         if (botToken == null || botToken.equals("your_bot_token") || targetChatId == null || targetChatId.isBlank()) {
             log.warn("Telegram bot not configured. Photo not sent.");
             return;
         }
 
-        File imageFile = new File(localFilePath);
-        if (!imageFile.exists()) {
-            log.warn("Receipt file not found at: {}. Falling back to text message.", localFilePath);
-            sendMessageTo(targetChatId, caption);
-            return;
-        }
-
         try {
-            // Build inline keyboard JSON with "Saytga kirish" button
+            // Build inline keyboard
             String inlineKeyboard = String.format(
-                    "{\"inline_keyboard\":[[{\"text\":\"🌐 Saytga kirish\",\"url\":\"%s\"}]]}",
+                    "{\"inline_keyboard\":[[{\"text\":\"🌐 Saytga o'tish\",\"url\":\"%s\"}]]}",
                     siteUrl
             );
 
@@ -89,7 +82,20 @@ public class TelegramBotService {
             body.add("caption", caption);
             body.add("parse_mode", "HTML");
             body.add("reply_markup", inlineKeyboard);
-            body.add("photo", new FileSystemResource(imageFile));
+
+            if (photoPathOrUrl.startsWith("http")) {
+                // If it's a URL, pass as a String
+                body.add("photo", photoPathOrUrl);
+            } else {
+                // Local file
+                File imageFile = new File(photoPathOrUrl);
+                if (!imageFile.exists()) {
+                    log.warn("Receipt file not found at: {}. Falling back to text message.", photoPathOrUrl);
+                    sendMessageWithButton(targetChatId, caption);
+                    return;
+                }
+                body.add("photo", new org.springframework.core.io.FileSystemResource(imageFile));
+            }
 
             HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
             ResponseEntity<String> response = restTemplate.postForEntity(apiUrl, requestEntity, String.class);
@@ -101,7 +107,7 @@ public class TelegramBotService {
             }
         } catch (Exception e) {
             log.error("Failed to send photo to {}: {}. Falling back to text.", targetChatId, e.getMessage());
-            sendMessageTo(targetChatId, caption);
+            sendMessageWithButton(targetChatId, caption);
         }
     }
 
@@ -114,25 +120,30 @@ public class TelegramBotService {
             return;
         }
         try {
-            String inlineKeyboard = String.format(
-                    "{\"inline_keyboard\":[[{\"text\":\"🌐 Saytga kirish\",\"url\":\"%s\"}]]}",
-                    siteUrl
-            );
-
             String apiUrl = String.format("https://api.telegram.org/bot%s/sendMessage", botToken);
+
+            java.util.Map<String, Object> body = new java.util.HashMap<>();
+            body.put("chat_id", targetChatId);
+            body.put("text", text);
+            body.put("parse_mode", "HTML");
+
+            java.util.Map<String, Object> button = new java.util.HashMap<>();
+            button.put("text", "🌐 Saytga o'tish");
+            button.put("url", siteUrl);
+
+            java.util.List<java.util.Map<String, Object>> row = new java.util.ArrayList<>();
+            row.add(button);
+            java.util.List<java.util.List<java.util.Map<String, Object>>> keyboard = new java.util.ArrayList<>();
+            keyboard.add(row);
+
+            java.util.Map<String, Object> replyMarkup = new java.util.HashMap<>();
+            replyMarkup.put("inline_keyboard", keyboard);
+            body.put("reply_markup", replyMarkup);
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
-            String jsonBody = String.format(
-                    "{\"chat_id\":\"%s\",\"text\":%s,\"parse_mode\":\"HTML\",\"reply_markup\":%s}",
-                    targetChatId,
-                    com.fasterxml.jackson.databind.ObjectMapper.class.getDeclaredConstructor().newInstance()
-                            .writeValueAsString(text),
-                    inlineKeyboard
-            );
-
-            HttpEntity<String> entity = new HttpEntity<>(jsonBody, headers);
+            HttpEntity<java.util.Map<String, Object>> entity = new HttpEntity<>(body, headers);
             restTemplate.postForEntity(apiUrl, entity, String.class);
             log.info("Message with button sent to {}", targetChatId);
         } catch (Exception e) {

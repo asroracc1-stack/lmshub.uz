@@ -11,6 +11,8 @@ import com.lmscrm.backend.exception.ResourceNotFoundException;
 import com.lmscrm.backend.repository.PaymentTransactionRepository;
 import com.lmscrm.backend.repository.UserRepository;
 import com.lmscrm.backend.service.communication.TelegramNotificationService;
+import com.lmscrm.backend.service.communication.NotificationService;
+import com.lmscrm.backend.domain.enums.NotificationType;
 import org.springframework.context.ApplicationEventPublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +34,7 @@ public class PaymentTransactionService {
     private final UserRepository userRepository;
     private final TelegramNotificationService telegramNotificationService;
     private final ApplicationEventPublisher eventPublisher;
+    private final NotificationService notificationService;
 
     @Transactional(readOnly = true)
     public List<AdminPaymentInfoDto> getAdminsForPayment(UUID organizationId) {
@@ -113,6 +116,13 @@ public class PaymentTransactionService {
 
         PaymentTransaction saved = paymentTransactionRepository.save(tx);
         log.info("Payment {} updated by user {}", id, currentUser.getId());
+
+        try {
+            eventPublisher.publishEvent(new com.lmscrm.backend.event.PaymentUpdatedEvent(this, saved.getId()));
+        } catch (Exception e) {
+            log.error("Event publish failed: {}", e.getMessage());
+        }
+
         return mapToDto(saved);
     }
 
@@ -142,6 +152,18 @@ public class PaymentTransactionService {
             userRepository.save(transaction.getStudent());
         }
 
+        // In-app Notifications
+        String amountFormatted = String.format("%,.0f", transaction.getAmount()).replace(',', ' ');
+        String approveMsg = String.format("Sizning %s UZS miqdoridagi to'lovingiz admin tomonidan tasdiqlandi.", amountFormatted);
+        try {
+            notificationService.createNotification(transaction.getStudent(), "💳 To'lovingiz tasdiqlandi", approveMsg, NotificationType.FINANCE);
+            if (transaction.getPayer() != null && !transaction.getPayer().getId().equals(transaction.getStudent().getId())) {
+                notificationService.createNotification(transaction.getPayer(), "💳 Farzandingiz to'lovi tasdiqlandi", approveMsg, NotificationType.FINANCE);
+            }
+        } catch (Exception e) {
+            log.error("Failed to create in-app notification for approve: {}", e.getMessage());
+        }
+
         try {
             telegramNotificationService.notifyPaymentStatusChange(transaction.getStudent(), transaction.getAmount(), "APPROVED");
         } catch (Exception e) {
@@ -158,6 +180,18 @@ public class PaymentTransactionService {
 
         transaction.setStatus(PaymentTransactionStatus.REJECTED);
         PaymentTransaction saved = paymentTransactionRepository.save(transaction);
+
+        // In-app Notifications
+        String amountFormatted = String.format("%,.0f", transaction.getAmount()).replace(',', ' ');
+        String rejectMsg = String.format("Sizning %s UZS miqdoridagi to'lovingiz admin tomonidan rad etildi. Iltimos chek va ma'lumotlarni qayta tekshirib yuklang.", amountFormatted);
+        try {
+            notificationService.createNotification(transaction.getStudent(), "❌ To'lovingiz rad etildi", rejectMsg, NotificationType.FINANCE);
+            if (transaction.getPayer() != null && !transaction.getPayer().getId().equals(transaction.getStudent().getId())) {
+                notificationService.createNotification(transaction.getPayer(), "❌ Farzandingiz to'lovi rad etildi", rejectMsg, NotificationType.FINANCE);
+            }
+        } catch (Exception e) {
+            log.error("Failed to create in-app notification for reject: {}", e.getMessage());
+        }
 
         try {
             telegramNotificationService.notifyPaymentStatusChange(transaction.getStudent(), transaction.getAmount(), "REJECTED");

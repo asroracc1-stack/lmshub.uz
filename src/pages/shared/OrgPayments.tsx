@@ -54,6 +54,23 @@ const getImageUrl = (url?: string | null) => {
   return `http://localhost:8081${url}`;
 };
 
+const formatTransactionDate = (dateVal: any): string => {
+  if (!dateVal) return "Noma'lum sana";
+  try {
+    if (Array.isArray(dateVal)) {
+      const [year, month, day, hour = 0, minute = 0, second = 0] = dateVal;
+      return new Date(year, month - 1, day, hour, minute, second).toLocaleString("uz-UZ");
+    }
+    const parsed = new Date(dateVal);
+    if (!isNaN(parsed.getTime())) {
+      return parsed.toLocaleString("uz-UZ");
+    }
+    return "Noma'lum sana";
+  } catch (e) {
+    return "Noma'lum sana";
+  }
+};
+
 export default function OrgPayments() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -66,7 +83,22 @@ export default function OrgPayments() {
     queryFn: async () => {
       const { data } = await api.get<any>("/admin/payments/manage", { params: { size: 1000, status: "ALL" } });
       const content = data?.content || data || [];
-      return Array.isArray(content) ? content : [];
+      const list = Array.isArray(content) ? content : [];
+      return list.map((item: any) => ({
+        id: item.id,
+        studentId: item.student_id || item.studentId,
+        studentName: item.student_name || item.studentName,
+        payerId: item.payer_id || item.payerId,
+        payerName: item.payer_name || item.payerName,
+        adminId: item.admin_id || item.adminId,
+        adminName: item.admin_name || item.adminName,
+        amount: item.amount,
+        paymentProofUrl: item.payment_proof_url || item.paymentProofUrl,
+        status: item.status,
+        organizationId: item.organization_id || item.organizationId,
+        note: item.note,
+        createdAt: item.created_at || item.createdAt,
+      }));
     },
   });
 
@@ -267,7 +299,7 @@ export default function OrgPayments() {
                           <strong className="text-slate-800 dark:text-slate-200 font-extrabold text-sm mr-1">
                             {Number(p.amount).toLocaleString("uz-UZ")} UZS
                           </strong> 
-                          · {new Date(p.createdAt).toLocaleString("uz-UZ")}
+                          · {formatTransactionDate(p.createdAt)}
                         </p>
                         {p.note && (
                           <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1.5 italic bg-slate-500/5 px-2.5 py-1 rounded-lg border border-slate-500/10 inline-block">
@@ -284,7 +316,7 @@ export default function OrgPayments() {
                       <Button 
                         size="sm" 
                         variant="outline" 
-                        onClick={() => openDetails(p)}
+                        onClick={() => setSelected(p)}
                         className="rounded-xl px-4 font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 border-border/40 gap-1.5 text-xs h-9"
                       >
                         <Eye className="h-4 w-4" /> Ko'rish
@@ -328,7 +360,7 @@ export default function OrgPayments() {
                 )}
                 <div className="space-y-1">
                   <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1"><Clock className="h-3 w-3" /> Yuborilgan Sana</span>
-                  <p className="font-medium text-slate-700 dark:text-slate-300">{new Date(selected.createdAt).toLocaleString("uz-UZ")}</p>
+                  <p className="font-medium text-slate-700 dark:text-slate-300">{formatTransactionDate(selected.createdAt)}</p>
                 </div>
               </div>
 
@@ -368,16 +400,15 @@ export default function OrgPayments() {
                     variant="outline"
                     onClick={() => rejectMutation.mutate(selected.id)}
                     disabled={isMutationPending}
-                    className="rounded-xl px-5 h-11 text-rose-500 hover:text-rose-700 border-rose-500/20 hover:bg-rose-500/10 font-bold text-xs"
+                    className="rounded-xl px-5 h-11 text-rose-500 hover:text-rose-700 border border-rose-500/20 hover:bg-rose-500/10 font-bold text-xs flex items-center justify-center transition-colors"
                   >
                     {rejectMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4 mr-2" />}
                     Rad etish
                   </Button>
                   <Button 
-                    variant="hero" 
                     onClick={() => approveMutation.mutate(selected.id)} 
                     disabled={isMutationPending}
-                    className="rounded-xl px-5 h-11 text-white font-bold text-xs shadow-glow bg-gradient-primary border-none"
+                    className="rounded-xl px-5 h-11 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs flex items-center justify-center shadow-lg shadow-emerald-600/25 border-none transition-all duration-200"
                   >
                     {approveMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
                     To'lovni tasdiqlash

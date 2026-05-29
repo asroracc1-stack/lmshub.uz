@@ -94,10 +94,11 @@ public class PaymentController {
     @Operation(summary = "Update a PENDING payment (amount, note or receipt)")
     public ResponseEntity<PaymentTransactionDto> updatePayment(
             @PathVariable UUID id,
-            @RequestParam(value = "amount", required = false) Double amount,
-            @RequestParam(value = "note", required = false) String note,
-            @RequestParam(value = "paymentProofUrl", required = false) String paymentProofUrl,
+            @RequestBody java.util.Map<String, Object> body,
             @AuthenticationPrincipal User currentUser) {
+        Double amount = body.get("amount") != null ? ((Number) body.get("amount")).doubleValue() : null;
+        String note = body.get("note") != null ? body.get("note").toString() : null;
+        String paymentProofUrl = body.get("payment_proof_url") != null ? body.get("payment_proof_url").toString() : null;
         return ResponseEntity.ok(paymentTransactionService.updatePayment(id, amount, note, paymentProofUrl, currentUser));
     }
 

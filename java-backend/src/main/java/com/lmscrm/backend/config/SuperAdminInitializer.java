@@ -42,8 +42,7 @@ public class SuperAdminInitializer implements CommandLineRunner {
         User admin1;
         if (adminOpt1.isPresent()) {
             admin1 = adminOpt1.get();
-            log.info("👤 Tizimda mavjud 'asrorsuperadmin' topildi (ID: {}). Ma'lumotlarni yangilaymiz...", admin1.getId());
-            admin1.setPassword(passwordEncoder.encode("ilhomhamdamarguba"));
+            log.info("👤 Tizimda mavjud 'asrorsuperadmin' topildi (ID: {}). Faqat rol kafolatlanmoqda...", admin1.getId());
             admin1.setRole(AppRole.SUPER_ADMIN);
             admin1.setActive(true);
             userRepository.save(admin1);
@@ -80,8 +79,7 @@ public class SuperAdminInitializer implements CommandLineRunner {
         User admin2;
         if (adminOpt2.isPresent()) {
             admin2 = adminOpt2.get();
-            log.info("👤 Tizimda mavjud 'asrorsuper' topildi (ID: {}). Ma'lumotlarni yangilaymiz...", admin2.getId());
-            admin2.setPassword(passwordEncoder.encode("asror2026"));
+            log.info("👤 Tizimda mavjud 'asrorsuper' topildi (ID: {}). Faqat rol kafolatlanmoqda...", admin2.getId());
             admin2.setRole(AppRole.SUPER_ADMIN);
             admin2.setActive(true);
             userRepository.save(admin2);
@@ -118,8 +116,7 @@ public class SuperAdminInitializer implements CommandLineRunner {
         User admin3;
         if (adminOpt3.isPresent()) {
             admin3 = adminOpt3.get();
-            log.info("👤 Tizimda mavjud 'asror' topildi (ID: {}). Ma'lumotlarni yangilaymiz...", admin3.getId());
-            admin3.setPassword(passwordEncoder.encode("123456"));
+            log.info("👤 Tizimda mavjud 'asror' topildi (ID: {}). Faqat rol kafolatlanmoqda...", admin3.getId());
             admin3.setRole(AppRole.SUPER_ADMIN);
             admin3.setActive(true);
             userRepository.save(admin3);
@@ -249,14 +246,11 @@ public class SuperAdminInitializer implements CommandLineRunner {
             log.info("✅ Demo '{}' va uning profili muvaffaqiyatli yaratildi.", username);
         } else {
             user = userOpt.get();
-            user.setPassword(passwordEncoder.encode("123456"));
-            user.setOrganizationId(orgId);
-            user.setCreatedAt(historicalCreatedAt); // Update existing records to reflect historical data
-            if (cardNum != null) user.setCardNumber(cardNum);
-            if (cardHolder != null) user.setCardHolder(cardHolder);
-            user.setTelegramChatId(defaultChatId); // Force set chat ID for testing
+            // We NO LONGER overwrite password, organizationId, card details, or telegramChatId here
+            // so that if an admin changes them from the UI, they persist across restarts.
+            user.setCreatedAt(historicalCreatedAt); // Only update historical created_at for chart testing
             userRepository.save(user);
-            log.info("👤 Demo '{}' mavjud, ma'lumotlari yangilandi.", username);
+            log.info("👤 Demo '{}' mavjud, faqat sanasi yangilandi (eski ma'lumotlari saqlab qolindi).", username);
         }
     }
 }

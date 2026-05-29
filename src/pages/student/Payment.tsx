@@ -293,12 +293,10 @@ export default function StudentPayment() {
         newProofUrl = uploadRes.data;
       }
 
-      await api.put(`/payments/${editingTx.id}`, null, {
-        params: {
-          amount: amt,
-          note: editNote,
-          ...(newProofUrl ? { paymentProofUrl: newProofUrl } : {}),
-        },
+      await api.put(`/payments/${editingTx.id}`, {
+        amount: amt,
+        note: editNote,
+        ...(newProofUrl ? { payment_proof_url: newProofUrl } : {}),
       });
       toast.success("To'lov muvaffaqiyatli tahrirlandi! ✏️");
       queryClient.invalidateQueries({ queryKey: ["payment-history"] });
@@ -677,7 +675,13 @@ export default function StudentPayment() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                 >
-                  <Card className="p-5 rounded-2xl space-y-4 hover:shadow-md transition-shadow border border-border/60 bg-card/40 backdrop-blur-sm">
+                  <Card className={`p-5 rounded-2xl space-y-4 hover:shadow-md transition-all border duration-300 ${
+                    tx.status === "APPROVED" || tx.status === "completed" || tx.status === "paid"
+                      ? "border-amber-500/25 dark:border-amber-500/35 bg-amber-500/[0.04] dark:bg-amber-500/[0.08] hover:border-amber-500/50 hover:shadow-lg hover:shadow-amber-500/5" 
+                      : tx.status === "REJECTED" || tx.status === "rejected" || tx.status === "failed"
+                      ? "border-destructive/20 bg-destructive/[0.02] dark:bg-destructive/[0.05]"
+                      : "border-border/60 bg-card/40 backdrop-blur-sm"
+                  }`}>
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-3">
                         <div className="h-10 w-10 rounded-xl bg-primary/10 grid place-items-center text-primary shrink-0">
