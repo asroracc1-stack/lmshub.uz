@@ -211,6 +211,14 @@ public class SuperAdminInitializer implements CommandLineRunner {
         User user;
         if (!userOpt.isPresent()) {
             log.info("🌱 Demo '{}' foydalanuvchisi topilmadi. Yangidan yaratilmoqda...", username);
+            
+            // Check if email already exists for another user to avoid unique constraint violation
+            Optional<User> existingEmailUser = userRepository.findByEmail(email);
+            if (existingEmailUser.isPresent()) {
+                email = username + "_" + System.currentTimeMillis() + "@lmshub.uz";
+                log.info("⚠️ '{}' emaili allaqachon mavjud, shuning uchun '{}' ga o'zgartirildi.", username, email);
+            }
+
             user = User.builder()
                     .username(username)
                     .email(email)

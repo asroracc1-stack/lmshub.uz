@@ -31,7 +31,7 @@ public class AdminUserController {
 
     // ─── GET list (dropdown) ──────────────────────────────────────────────────
     @GetMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ADMINISTRATOR','TEACHER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ADMINISTRATOR','TEACHER','STUDENT','PARENT')")
     @Operation(summary = "Get user list for dropdowns")
     public ResponseEntity<List<UserSummaryDto>> getUserList(
             @RequestParam(required = false) UUID organizationId,

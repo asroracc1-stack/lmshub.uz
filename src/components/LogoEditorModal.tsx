@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { 
   RotateCw, RefreshCcw, ZoomIn, ZoomOut, Maximize2, 
-  Minimize2, Palette, Sun, Moon, Wand2, Check, X
+  Minimize2, Palette, Sun, Moon, Wand2, Check, X, Loader2
 } from "lucide-react";
 import getCroppedImg from "@/lib/cropUtils";
 import TigerPlayer from "./TigerPlayer";
@@ -51,9 +51,7 @@ export default function LogoEditorModal({ open, onOpenChange, imageSrc, onSave }
       const formData = new FormData();
       formData.append("file", croppedImageBlob, "profile.webp");
 
-      const res = await api.post("/files/upload/profile", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const res = await api.post("/files/upload/profile", formData);
 
       onSave(res.data);
       toast.success("Rasm yangilandi! Zo'r! 🐯", {

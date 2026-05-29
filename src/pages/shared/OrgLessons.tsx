@@ -18,6 +18,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CalendarClock, Plus, Pencil, Trash2, Loader2, MapPin, BookOpen, Users2, ClipboardCheck, Calendar } from "lucide-react";
 import { Link } from "react-router-dom";
+import { api } from "@/lib/axios";
 
 interface Lesson {
   id: string; title: string; description: string | null; room: string | null;
@@ -64,36 +65,55 @@ export default function OrgLessons({ canManage = false, basePath, filter = "all"
   const load = async () => {
     if (!profile?.organization_id) return;
     setLoading(true);
-    const [l, g, s, p] = await Promise.all([
-      supabase.from("lessons").select("*").eq("organization_id", profile.organization_id)
-        .order("starts_at", { ascending: false }),
-      supabase.from("groups").select("id, name, color").eq("organization_id", profile.organization_id),
-      supabase.from("subjects").select("id, name, color").eq("organization_id", profile.organization_id),
-      supabase.from("profiles").select("id, full_name, username").eq("organization_id", profile.organization_id),
-    ]);
-    let list = (l.data ?? []) as Lesson[];
+    try {
+      const [lRes, gRes, sRes, tRes] = await Promise.all([
+        api.get("/admin/lessons"),
+        isTeacherView ? api.get("/teacher/groups") : api.get("/admin/groups?size=1000"),
+        api.get("/admin/subjects"),
+        api.get("/admin/users?role=TEACHER")
+      ]);
 
-    if (filter === "teacher" && user?.id) {
-      list = list.filter((x) => x.teacher_id === user.id);
-    } else if (filter === "student" && user?.id) {
-      // Find groups student belongs to
-      const { data: gm } = await supabase.from("group_members").select("group_id").eq("student_id", user.id);
-      const myGroups = new Set((gm ?? []).map((r: any) => r.group_id));
-      list = list.filter((x) => myGroups.has(x.group_id));
+      const rawLessons = lRes.data || [];
+      let list = rawLessons.map((x: any) => ({
+        id: x.id,
+        title: x.title,
+        description: x.description,
+        room: x.room,
+        starts_at: x.startsAt || x.starts_at,
+        ends_at: x.endsAt || x.ends_at,
+        group_id: x.groupId || x.group_id,
+        subject_id: x.subjectId || x.subject_id,
+        teacher_id: x.teacherId || x.teacher_id,
+      }));
+
+      if (filter === "teacher" && user?.id) {
+        list = list.filter((x: any) => x.teacher_id === user.id);
+      } else if (filter === "student" && user?.id) {
+        // Find groups student belongs to
+        const { data: gm } = await supabase.from("group_members").select("group_id").eq("student_id", user.id);
+        const myGroups = new Set((gm ?? []).map((r: any) => r.group_id));
+        list = list.filter((x: any) => myGroups.has(x.group_id));
+      }
+
+      setLessons(list);
+      
+      const rawGroups = isTeacherView ? gRes.data : gRes.data?.content || gRes.data || [];
+      setGroups(rawGroups);
+      
+      setSubjects(sRes.data || []);
+      
+      const rawTeachers = tRes.data || [];
+      setTeachers(rawTeachers.map((t: any) => ({
+        id: t.id,
+        full_name: t.fullName || t.full_name,
+        username: t.username
+      })));
+    } catch (e) {
+      console.error(e);
+      toast.error("Ma'lumotlarni yuklashda xatolik yuz berdi");
+    } finally {
+      setLoading(false);
     }
-
-    setLessons(list);
-    setGroups((g.data ?? []) as Group[]);
-    setSubjects((s.data ?? []) as Subject[]);
-
-    // teachers only
-    const ids = (p.data ?? []).map((x: any) => x.id);
-    if (ids.length) {
-      const { data: roles } = await supabase.from("user_roles").select("user_id, role").in("user_id", ids);
-      const teacherIds = new Set((roles ?? []).filter((r: any) => r.role === "teacher").map((r: any) => r.user_id));
-      setTeachers((p.data ?? []).filter((x: any) => teacherIds.has(x.id)) as Profile[]);
-    }
-    setLoading(false);
   };
 
   useEffect(() => { load(); }, [profile?.organization_id, user?.id]);
@@ -117,24 +137,38 @@ export default function OrgLessons({ canManage = false, basePath, filter = "all"
     if (!profile?.organization_id) return;
     setSaving(true);
     const payload = {
-      title: title.trim(), description: description.trim() || null, room: room.trim() || null,
-      starts_at: new Date(startsAt).toISOString(), ends_at: new Date(endsAt).toISOString(),
-      group_id: groupId, subject_id: subjectId, teacher_id: isTeacherView ? user?.id : teacherId || null,
-      organization_id: profile.organization_id,
+      title: title.trim(), 
+      description: description.trim() || null, 
+      room: room.trim() || null,
+      startsAt: new Date(startsAt).toISOString(), 
+      endsAt: new Date(endsAt).toISOString(),
+      groupId, 
+      subjectId, 
+      teacherId: isTeacherView ? user?.id : teacherId || null,
+      organizationId: profile.organization_id,
     };
-    const { error } = editing
-      ? await supabase.from("lessons").update(payload).eq("id", editing.id)
-      : await supabase.from("lessons").insert(payload);
-    setSaving(false);
-    if (error) return toast.error(error.message);
-    toast.success(editing ? "Yangilandi" : "Yaratildi");
-    setOpen(false); reset(); load();
+    try {
+      if (editing) {
+        await api.put(`/admin/lessons/${editing.id}`, payload);
+      } else {
+        await api.post(`/admin/lessons`, payload);
+      }
+      toast.success(editing ? "Yangilandi" : "Yaratildi");
+      setOpen(false); reset(); load();
+    } catch (e) {
+      // toast error is handled by axios interceptor
+    } finally {
+      setSaving(false);
+    }
   };
 
   const remove = async (l: Lesson) => {
-    const { error } = await supabase.from("lessons").delete().eq("id", l.id);
-    if (error) return toast.error(error.message);
-    toast.success("O'chirildi"); load();
+    try {
+      await api.delete(`/admin/lessons/${l.id}`);
+      toast.success("O'chirildi"); load();
+    } catch (e) {
+      // toast error handled
+    }
   };
 
   const grouped = useMemo(() => {

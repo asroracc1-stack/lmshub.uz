@@ -14,10 +14,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@RestController
+@RestController("commonPaymentController")
 @RequestMapping("/api/v1/payments")
 @RequiredArgsConstructor
-@Tag(name = "Payment Controller", description = "Endpoints for managing and viewing payments")
+@Tag(name = "Common Payment Controller", description = "Endpoints for managing and viewing payments")
 public class PaymentController {
 
     private final PaymentService paymentService;

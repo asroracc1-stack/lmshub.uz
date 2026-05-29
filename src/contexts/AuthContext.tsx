@@ -130,8 +130,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
            userData.organizationId = mappedProfile.organization_id;
            localStorage.setItem('user', JSON.stringify(userData));
          }
-       } catch (e) {
-         console.error("Profile refresh failed", e);
+       } catch (e: any) {
+         const status = e?.response?.status;
+         // Token is invalid or expired — force re-login
+         if (status === 401 || status === 403) {
+           console.warn("Session expired or unauthorized. Signing out.");
+           signOut();
+         } else {
+           console.error("Profile refresh failed", e);
+         }
        }
     }
   };
@@ -161,11 +168,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             organization_id: userData.organizationId || userData.organization_id || null,
           });
           
-          // Trigger a background refresh to get the latest from DB
-          refresh();
+          // Verify token is still valid on server side
+          try {
+            const res = await api.get('/user/profile');
+            const refreshedProfile: Profile = {
+              id: res.data.id || '',
+              username: res.data.username || '',
+              full_name: res.data.fullName || res.data.full_name || null,
+              email: res.data.email || null,
+              phone: res.data.phone || res.data.phoneNumber || res.data.phone_number || null,
+              avatar_url: res.data.avatarUrl || res.data.avatar_url || null,
+              organization_id: res.data.organizationId || res.data.organization_id || null,
+            };
+            setProfile(refreshedProfile);
+          } catch (refreshErr: any) {
+            const status = refreshErr?.response?.status;
+            if (status === 401 || status === 403) {
+              console.warn("Token rejected by server, signing out.");
+              signOut();
+              return;
+            }
+          }
         } catch (e) {
           console.error("Init auth failed", e);
           signOut();
+          return;
         }
       }
       setLoading(false);

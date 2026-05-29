@@ -24,7 +24,7 @@ public class LessonController {
     private final LessonService lessonService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ADMINISTRATOR','TEACHER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ADMINISTRATOR','TEACHER','STUDENT','PARENT')")
     @Operation(summary = "Get all lessons for the admin's organization")
     public ResponseEntity<List<LessonDto>> getAll(@AuthenticationPrincipal User currentUser) {
         if (currentUser.getOrganizationId() == null) {
@@ -43,21 +43,21 @@ public class LessonController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ADMINISTRATOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ADMINISTRATOR','TEACHER')")
     @Operation(summary = "Create a new lesson")
     public ResponseEntity<LessonDto> create(@RequestBody LessonDto dto, @AuthenticationPrincipal User currentUser) {
         return ResponseEntity.ok(lessonService.createLesson(dto, currentUser));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ADMINISTRATOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ADMINISTRATOR','TEACHER')")
     @Operation(summary = "Update an existing lesson")
     public ResponseEntity<LessonDto> update(@PathVariable UUID id, @RequestBody LessonDto dto, @AuthenticationPrincipal User currentUser) {
         return ResponseEntity.ok(lessonService.updateLesson(id, dto, currentUser));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ADMINISTRATOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ADMINISTRATOR','TEACHER')")
     @Operation(summary = "Delete a lesson")
     public ResponseEntity<Void> delete(@PathVariable UUID id, @AuthenticationPrincipal User currentUser) {
         lessonService.deleteLesson(id, currentUser);

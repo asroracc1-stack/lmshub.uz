@@ -46,7 +46,19 @@ api.interceptors.response.use(
         window.location.href = '/auth';
       }
     } else if (status === 403) {
-      toast.error('Kirish rad etildi: Sizda yetarli huquqlar yo\'q');
+      // If 403 on core user endpoints, it likely means the token is invalid/expired
+      // (backend may return 403 instead of 401 in some cases)
+      const url = error.config?.url || '';
+      const coreAuthPaths = ['/user/profile', '/communication/notifications'];
+      const isCoreAuthPath = coreAuthPaths.some(p => url.includes(p));
+      if (isCoreAuthPath) {
+        localStorage.clear();
+        if (!window.location.pathname.includes('/auth')) {
+          window.location.href = '/auth';
+        }
+      } else {
+        toast.error('Kirish rad etildi: Sizda yetarli huquqlar yo\'q');
+      }
     } else if (status === 503) {
       toast.error('AI serverlari band, iltimos 1 daqiqadan so\'ng qayta urinib ko\'ring');
     } else if (status >= 500) {

@@ -9,7 +9,7 @@ export interface Notification {
   user_id: string;
   title: string;
   body: string | null;
-  type: "info" | "success" | "warning" | "error";
+  type: "info" | "success" | "warning" | "error" | "INFO" | "ALERT" | "NEW_MESSAGE" | "ACADEMIC" | "FINANCE" | string;
   link: string | null;
   is_read: boolean;
   created_at: string;

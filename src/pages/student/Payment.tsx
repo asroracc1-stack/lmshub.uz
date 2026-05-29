@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -37,27 +36,27 @@ const formatCard = (raw?: string) => {
 
 interface AdminPaymentInfo {
   id: string;
-  fullName: string;
-  cardNumber: string;
-  cardHolder: string;
+  full_name: string;
+  card_number: string;
+  card_holder: string;
   role: string;
-  telegramUsername?: string;
+  telegram_username?: string;
 }
 
 interface PaymentTransactionDto {
   id: string;
-  studentId: string;
-  studentName: string;
-  payerId: string;
-  payerName: string;
-  adminId: string;
-  adminName: string;
+  student_id: string;
+  student_name: string;
+  payer_id: string;
+  payer_name: string;
+  admin_id: string;
+  admin_name: string;
   amount: number;
-  paymentProofUrl: string;
+  payment_proof_url: string;
   status: "PENDING" | "APPROVED" | "REJECTED";
-  organizationId: string;
+  organization_id: string;
   note?: string;
-  createdAt: string;
+  created_at: string;
 }
 
 interface Child {
@@ -223,9 +222,7 @@ export default function StudentPayment() {
       formData.append("file", file);
 
       // Upload using Spring Boot backend REST file upload API
-      const res = await api.post("/files/upload", formData, {
-        headers: { "Content-Type": "multipart/form-data" }
-      });
+      const res = await api.post("/files/upload", formData);
       const publicUrl = res.data;
 
       // Call Spring Boot backend initiate endpoint
@@ -334,12 +331,12 @@ export default function StudentPayment() {
                       <Icon className="h-6 w-6" />
                     </div>
                     <div className="flex-1 min-w-0 pt-1">
-                      <p className="font-display font-bold text-base truncate">{admin.fullName}</p>
+                      <p className="font-display font-bold text-base truncate">{admin.full_name}</p>
                       <p className="text-xs text-muted-foreground font-medium mt-0.5">
                         {admin.role.toLowerCase() === "admin" ? "Tashkilot Rahbari" : "Administrator"}
                       </p>
                       <p className="text-xs font-mono text-primary font-semibold mt-1">
-                        {formatCard(admin.cardNumber)}
+                        {formatCard(admin.card_number)}
                       </p>
                     </div>
                   </div>
@@ -395,12 +392,12 @@ export default function StudentPayment() {
                     <p className="text-[11px] uppercase tracking-widest text-white/60 font-medium">Karta Raqami</p>
                     <div className="flex items-center justify-between gap-4 bg-white/5 p-3 rounded-xl border border-white/10 backdrop-blur-sm">
                       <p className="font-mono text-2xl tracking-widest font-bold drop-shadow-md text-white">
-                        {formatCard(selectedAdmin.cardNumber)}
+                        {formatCard(selectedAdmin.card_number)}
                       </p>
                       <Button
                         size="icon"
                         variant="ghost"
-                        onClick={() => copyCard(selectedAdmin.cardNumber)}
+                        onClick={() => copyCard(selectedAdmin.card_number)}
                         className="h-8 w-8 text-white hover:bg-white/20 hover:text-white transition-smooth shrink-0"
                         title="Karta raqamini nusxalash"
                       >
@@ -414,7 +411,7 @@ export default function StudentPayment() {
                     <div>
                       <p className="text-[11px] uppercase tracking-widest text-white/60 font-medium mb-1">Karta Egasi</p>
                       <p className="font-display font-bold text-lg tracking-wide uppercase text-white drop-shadow">
-                        {selectedAdmin.cardHolder || selectedAdmin.fullName}
+                        {selectedAdmin.card_holder || selectedAdmin.full_name}
                       </p>
                     </div>
                     <div className="text-right">
@@ -622,7 +619,7 @@ export default function StudentPayment() {
                             {tx.amount.toLocaleString("uz-UZ")} UZS
                           </p>
                           <p className="text-[11px] text-muted-foreground font-medium">
-                            {tx.adminName} ({tx.adminName ? "Admin" : "Qabul qiluvchi"})
+                            {tx.admin_name} ({tx.admin_name ? "Admin" : "Qabul qiluvchi"})
                           </p>
                         </div>
                       </div>
@@ -640,12 +637,12 @@ export default function StudentPayment() {
                     )}
 
                     <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-2 border-t border-border/40">
-                      <span>{new Date(tx.createdAt).toLocaleString("uz-UZ")}</span>
+                      <span>{new Date(tx.created_at).toLocaleString("uz-UZ")}</span>
                       <a
                         href={
-                          tx.paymentProofUrl && (tx.paymentProofUrl.startsWith("http") || tx.paymentProofUrl.startsWith("/api/v1"))
-                            ? tx.paymentProofUrl
-                            : `https://hicoderx.supabase.co/storage/v1/object/public/receipts/${tx.paymentProofUrl}`
+                          tx.payment_proof_url && (tx.payment_proof_url.startsWith("http") || tx.payment_proof_url.startsWith("/api/v1"))
+                            ? tx.payment_proof_url
+                            : `https://hicoderx.supabase.co/storage/v1/object/public/receipts/${tx.payment_proof_url}`
                         }
                         target="_blank"
                         rel="noreferrer"

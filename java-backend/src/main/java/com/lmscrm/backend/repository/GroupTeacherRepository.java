@@ -12,4 +12,5 @@ public interface GroupTeacherRepository extends JpaRepository<GroupTeacher, UUID
     boolean existsByGroupIdAndTeacherId(UUID groupId, UUID teacherId);
     List<GroupTeacher> findByGroupId(UUID groupId);
     List<GroupTeacher> findByTeacherId(UUID teacherId);
+    long countByTeacherId(UUID teacherId);
 }

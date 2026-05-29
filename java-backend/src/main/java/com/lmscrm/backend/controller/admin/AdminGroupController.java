@@ -25,7 +25,7 @@ public class AdminGroupController {
     private final GroupService groupService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ADMINISTRATOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ADMINISTRATOR','TEACHER','STUDENT','PARENT')")
     @Operation(summary = "Get all groups with pagination")
     public ResponseEntity<Page<GroupDto>> getAll(
             @RequestParam(required = false) String query,

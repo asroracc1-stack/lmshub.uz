@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, Check, CheckCheck, Trash2, X, Info, AlertTriangle, CircleCheck, CircleX } from "lucide-react";
+import { Bell, Check, CheckCheck, Trash2, X, Info, AlertTriangle, CircleCheck, CircleX, MessageSquare, BookOpen, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -12,18 +12,28 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useNotifications, Notification } from "@/hooks/useNotifications";
 import { cn } from "@/lib/utils";
 
-const typeIcon: Record<Notification["type"], React.ComponentType<{ className?: string }>> = {
+const typeIcon: Record<string, React.ComponentType<{ className?: string }>> = {
   info: Info,
   success: CircleCheck,
   warning: AlertTriangle,
   error: CircleX,
+  INFO: Info,
+  ALERT: AlertTriangle,
+  NEW_MESSAGE: MessageSquare,
+  ACADEMIC: BookOpen,
+  FINANCE: DollarSign
 };
 
-const typeColor: Record<Notification["type"], string> = {
+const typeColor: Record<string, string> = {
   info: "text-primary",
   success: "text-success",
   warning: "text-warning",
   error: "text-destructive",
+  INFO: "text-primary",
+  ALERT: "text-warning",
+  NEW_MESSAGE: "text-emerald-500",
+  ACADEMIC: "text-blue-500",
+  FINANCE: "text-green-500"
 };
 
 function timeAgo(iso: string) {
@@ -90,13 +100,13 @@ export default function NotificationsBell() {
           ) : (
             <ul className="divide-y divide-border">
               {items.map((n) => {
-                const Icon = typeIcon[n.type];
+                const Icon = typeIcon[n.type] || Info;
                 const content = (
                   <div className={cn(
                     "flex gap-3 p-4 transition-smooth hover:bg-muted/40",
                     !n.is_read && "bg-primary/5"
                   )}>
-                    <div className={cn("mt-0.5", typeColor[n.type])}>
+                    <div className={cn("mt-0.5", typeColor[n.type] || "text-primary")}>
                       <Icon className="h-4 w-4" />
                     </div>
                     <div className="flex-1 min-w-0">
