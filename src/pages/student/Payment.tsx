@@ -25,6 +25,9 @@ import {
   Users,
   Sparkles,
   Wifi,
+  Pencil,
+  X,
+  Save,
 } from "lucide-react";
 
 const formatCard = (raw?: string) => {
@@ -99,6 +102,15 @@ export default function StudentPayment() {
   const [dragActive, setDragActive] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // Edit mode state
+  const [editingTx, setEditingTx] = useState<PaymentTransactionDto | null>(null);
+  const [editAmount, setEditAmount] = useState("");
+  const [editNote, setEditNote] = useState("");
+  const [editFile, setEditFile] = useState<File | null>(null);
+  const [editPreview, setEditPreview] = useState<string | null>(null);
+  const [editSaving, setEditSaving] = useState(false);
+  const editFileRef = useRef<HTMLInputElement>(null);
 
   const isParent = user?.role === "parent";
 
@@ -184,7 +196,7 @@ export default function StudentPayment() {
   };
 
   const initiateMutation = useMutation({
-    mutationFn: async (payload: { amount: number; note: string; paymentProofUrl: string; adminId: string; studentId: string }) => {
+    mutationFn: async (payload: { amount: number; note: string; payment_proof_url: string; admin_id: string; student_id: string }) => {
       return api.post("/payments/initiate", payload);
     },
     onSuccess: () => {
@@ -222,16 +234,20 @@ export default function StudentPayment() {
       formData.append("file", file);
 
       // Upload using Spring Boot backend REST file upload API
-      const res = await api.post("/files/upload", formData);
+      const res = await api.post("/files/upload", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data"
+        }
+      });
       const publicUrl = res.data;
 
       // Call Spring Boot backend initiate endpoint
       await initiateMutation.mutateAsync({
         amount: amt,
         note: note || "",
-        paymentProofUrl: publicUrl,
-        adminId: selectedAdmin.id,
-        studentId: effectiveStudentId,
+        payment_proof_url: publicUrl,
+        admin_id: selectedAdmin.id,
+        student_id: effectiveStudentId,
       });
 
     } catch (e: unknown) {
@@ -241,6 +257,59 @@ export default function StudentPayment() {
       toast.error(errMsg);
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  const openEditModal = (tx: PaymentTransactionDto) => {
+    setEditingTx(tx);
+    setEditAmount(String(tx.amount));
+    setEditNote(tx.note || "");
+    setEditFile(null);
+    setEditPreview(null);
+  };
+
+  const onPickEditFile = (f: File | null) => {
+    if (!f) return;
+    if (!f.type.startsWith("image/")) return toast.error("Faqat rasm fayl yuklang (JPG, PNG)");
+    if (f.size > 5 * 1024 * 1024) return toast.error("Rasm hajmi 5MB dan kichik bo'lishi kerak");
+    setEditFile(f);
+    setEditPreview(URL.createObjectURL(f));
+  };
+
+  const saveEdit = async () => {
+    if (!editingTx) return;
+    const amt = Number(editAmount);
+    if (!amt || amt < 1000) return toast.error("Summa kamida 1 000 so'm bo'lishi kerak");
+    setEditSaving(true);
+    try {
+      let newProofUrl: string | undefined;
+      // Upload new receipt if changed
+      if (editFile) {
+        const formData = new FormData();
+        formData.append("file", editFile);
+        const uploadRes = await api.post("/files/upload", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        newProofUrl = uploadRes.data;
+      }
+
+      await api.put(`/payments/${editingTx.id}`, null, {
+        params: {
+          amount: amt,
+          note: editNote,
+          ...(newProofUrl ? { paymentProofUrl: newProofUrl } : {}),
+        },
+      });
+      toast.success("To'lov muvaffaqiyatli tahrirlandi! ✏️");
+      queryClient.invalidateQueries({ queryKey: ["payment-history"] });
+      setEditingTx(null);
+      setEditFile(null);
+      setEditPreview(null);
+    } catch (e: any) {
+      const msg = e?.response?.data?.message || "Tahrirlashda xatolik";
+      toast.error(msg);
+    } finally {
+      setEditSaving(false);
     }
   };
 
@@ -638,18 +707,28 @@ export default function StudentPayment() {
 
                     <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-2 border-t border-border/40">
                       <span>{new Date(tx.created_at).toLocaleString("uz-UZ")}</span>
-                      <a
-                        href={
-                          tx.payment_proof_url && (tx.payment_proof_url.startsWith("http") || tx.payment_proof_url.startsWith("/api/v1"))
-                            ? tx.payment_proof_url
-                            : `https://hicoderx.supabase.co/storage/v1/object/public/receipts/${tx.payment_proof_url}`
-                        }
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-primary hover:underline font-medium"
-                      >
-                        Chekni ko'rish ↗
-                      </a>
+                      <div className="flex items-center gap-3">
+                        {tx.status === "PENDING" && (
+                          <button
+                            onClick={() => openEditModal(tx)}
+                            className="text-primary hover:text-primary/80 font-medium flex items-center gap-1 hover:underline"
+                          >
+                            <Pencil className="h-3 w-3" /> Tahrirlash
+                          </button>
+                        )}
+                        <a
+                          href={
+                            tx.payment_proof_url && (tx.payment_proof_url.startsWith("http") || tx.payment_proof_url.startsWith("/api/v1"))
+                              ? tx.payment_proof_url
+                              : `https://hicoderx.supabase.co/storage/v1/object/public/receipts/${tx.payment_proof_url}`
+                          }
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-primary hover:underline font-medium"
+                        >
+                          Chekni ko'rish ↗
+                        </a>
+                      </div>
                     </div>
                   </Card>
                 </motion.div>
@@ -658,6 +737,137 @@ export default function StudentPayment() {
           </div>
         )}
       </div>
+
+      {/* Edit Payment Modal */}
+      <AnimatePresence>
+        {editingTx && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+            onClick={() => setEditingTx(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-md"
+            >
+              <Card className="p-6 rounded-2xl space-y-5 shadow-2xl border-primary/20 bg-card">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-xl bg-primary/10 grid place-items-center text-primary">
+                      <Pencil className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-display font-bold text-lg">To'lovni tahrirlash</h3>
+                      <p className="text-xs text-muted-foreground">Faqat kutilmoqda holatdagi to'lovlar</p>
+                    </div>
+                  </div>
+                  <Button variant="ghost" size="icon" onClick={() => setEditingTx(null)}>
+                    <X className="h-5 w-5" />
+                  </Button>
+                </div>
+
+                {/* Receipt Image Preview - Clickable to Replace */}
+                <input
+                  ref={editFileRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => onPickEditFile(e.target.files?.[0] ?? null)}
+                />
+                <div
+                  className="rounded-xl overflow-hidden border-2 border-dashed border-border/60 bg-muted/20 cursor-pointer group relative hover:border-primary/50 transition-all"
+                  onClick={() => editFileRef.current?.click()}
+                >
+                  {(editPreview || editingTx.payment_proof_url) ? (
+                    <>
+                      <img
+                        src={
+                          editPreview
+                            ? editPreview
+                            : editingTx.payment_proof_url.startsWith("http") || editingTx.payment_proof_url.startsWith("/api/v1")
+                              ? editingTx.payment_proof_url
+                              : `https://hicoderx.supabase.co/storage/v1/object/public/receipts/${editingTx.payment_proof_url}`
+                        }
+                        alt="To'lov cheki"
+                        className="w-full max-h-48 object-contain bg-black/5"
+                      />
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center gap-2 backdrop-blur-sm">
+                        <Upload className="h-8 w-8 text-white" />
+                        <p className="text-white text-sm font-medium">Yangi chek yuklash</p>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="py-8 flex flex-col items-center gap-2 text-muted-foreground">
+                      <Upload className="h-8 w-8" />
+                      <p className="text-sm font-medium">Chek rasmini yuklang</p>
+                    </div>
+                  )}
+                  <div className="px-3 py-2 text-[11px] text-muted-foreground flex items-center gap-1.5 border-t border-border/40">
+                    <Receipt className="h-3 w-3" />
+                    {editFile ? `✅ Yangi chek: ${editFile.name}` : "Bosing va yangi chek yuklang"}
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-semibold">Summa (UZS)</Label>
+                    <div className="relative">
+                      <Input
+                        type="number"
+                        min="1000"
+                        step="1000"
+                        value={editAmount}
+                        onChange={(e) => setEditAmount(e.target.value)}
+                        className="pl-4 pr-12 font-mono font-semibold text-lg h-12 rounded-xl"
+                      />
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground uppercase">UZS</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-sm font-semibold">Izoh</Label>
+                    <Input
+                      value={editNote}
+                      onChange={(e) => setEditNote(e.target.value)}
+                      placeholder="Qaysi oy yoki guruh uchun..."
+                      className="h-12 rounded-xl"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <Button
+                    variant="outline"
+                    className="flex-1 h-12 rounded-xl"
+                    onClick={() => setEditingTx(null)}
+                    disabled={editSaving}
+                  >
+                    Bekor qilish
+                  </Button>
+                  <Button
+                    variant="hero"
+                    className="flex-1 h-12 rounded-xl font-bold shadow-lg shadow-primary/20"
+                    onClick={saveEdit}
+                    disabled={editSaving}
+                  >
+                    {editSaving ? (
+                      <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                    ) : (
+                      <Save className="h-5 w-5 mr-2" />
+                    )}
+                    {editSaving ? "Saqlanmoqda..." : "Saqlash"}
+                  </Button>
+                </div>
+              </Card>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

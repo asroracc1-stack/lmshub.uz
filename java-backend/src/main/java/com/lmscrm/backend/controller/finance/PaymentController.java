@@ -89,6 +89,18 @@ public class PaymentController {
         return ResponseEntity.ok(dto);
     }
 
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('STUDENT','PARENT','USER')")
+    @Operation(summary = "Update a PENDING payment (amount, note or receipt)")
+    public ResponseEntity<PaymentTransactionDto> updatePayment(
+            @PathVariable UUID id,
+            @RequestParam(value = "amount", required = false) Double amount,
+            @RequestParam(value = "note", required = false) String note,
+            @RequestParam(value = "paymentProofUrl", required = false) String paymentProofUrl,
+            @AuthenticationPrincipal User currentUser) {
+        return ResponseEntity.ok(paymentTransactionService.updatePayment(id, amount, note, paymentProofUrl, currentUser));
+    }
+
     @GetMapping("/history")
     @PreAuthorize("hasAnyRole('STUDENT','PARENT','USER')")
     @Operation(summary = "Get current user's payment history")

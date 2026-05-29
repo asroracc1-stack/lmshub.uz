@@ -116,7 +116,7 @@ export default function NotificationsBell() {
                           <span className="h-2 w-2 rounded-full bg-primary shrink-0 mt-1.5" />
                         )}
                       </div>
-                      {n.body && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{n.body}</p>}
+                      {(n.message || n.body) && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{n.message || n.body}</p>}
                       <p className="text-[10px] uppercase tracking-wider text-muted-foreground mt-1.5">
                         {timeAgo(n.created_at)}
                       </p>

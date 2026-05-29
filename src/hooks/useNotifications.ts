@@ -8,7 +8,8 @@ export interface Notification {
   id: string;
   user_id: string;
   title: string;
-  body: string | null;
+  message: string | null;  // backend 'message' field
+  body: string | null;     // alias for compatibility
   type: "info" | "success" | "warning" | "error" | "INFO" | "ALERT" | "NEW_MESSAGE" | "ACADEMIC" | "FINANCE" | string;
   link: string | null;
   is_read: boolean;

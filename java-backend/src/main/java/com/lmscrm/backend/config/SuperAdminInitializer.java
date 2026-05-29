@@ -29,6 +29,9 @@ public class SuperAdminInitializer implements CommandLineRunner {
     private final PasswordEncoder passwordEncoder;
     private final com.lmscrm.backend.repository.AuditLogRepository auditLogRepository;
 
+    @org.springframework.beans.factory.annotation.Value("${telegram.bot.chat-id:7499973776}")
+    private String defaultChatId;
+
     @Override
     @Transactional
     public void run(String... args) {
@@ -228,13 +231,14 @@ public class SuperAdminInitializer implements CommandLineRunner {
                     .organizationId(orgId)
                     .cardNumber(cardNum)
                     .cardHolder(cardHolder)
+                    .telegramChatId(defaultChatId)
                     .active(true)
                     .isGoogleUser(false)
                     .coins(100L)
                     .createdAt(historicalCreatedAt)
                     .build();
             userRepository.save(user);
-
+ 
             Profile profile = Profile.builder()
                     .user(user)
                     .firstName(fullName.split(" ")[0])
@@ -250,6 +254,7 @@ public class SuperAdminInitializer implements CommandLineRunner {
             user.setCreatedAt(historicalCreatedAt); // Update existing records to reflect historical data
             if (cardNum != null) user.setCardNumber(cardNum);
             if (cardHolder != null) user.setCardHolder(cardHolder);
+            user.setTelegramChatId(defaultChatId); // Force set chat ID for testing
             userRepository.save(user);
             log.info("👤 Demo '{}' mavjud, ma'lumotlari yangilandi.", username);
         }

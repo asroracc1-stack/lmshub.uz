@@ -90,6 +90,32 @@ public class PaymentTransactionService {
         return list.stream().map(this::mapToDto).collect(Collectors.toList());
     }
 
+    @Transactional
+    public PaymentTransactionDto updatePayment(UUID id, Double amount, String note, String paymentProofUrl, User currentUser) {
+        PaymentTransaction tx = paymentTransactionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("To'lov so'rovi topilmadi"));
+
+        // Only PENDING transactions can be edited
+        if (tx.getStatus() != PaymentTransactionStatus.PENDING) {
+            throw new IllegalStateException("Faqat 'Kutilmoqda' holatdagi to'lovlarni tahrirlash mumkin");
+        }
+
+        // Only the payer (student or parent) can edit their own payment
+        boolean isPayer = tx.getPayer() != null && tx.getPayer().getId().equals(currentUser.getId());
+        boolean isStudent = tx.getStudent() != null && tx.getStudent().getId().equals(currentUser.getId());
+        if (!isPayer && !isStudent) {
+            throw new IllegalStateException("Siz faqat o'z to'lovlaringizni tahrirlashingiz mumkin");
+        }
+
+        if (amount != null && amount > 0) tx.setAmount(amount);
+        if (note != null) tx.setNote(note);
+        if (paymentProofUrl != null && !paymentProofUrl.isBlank()) tx.setPaymentProofUrl(paymentProofUrl);
+
+        PaymentTransaction saved = paymentTransactionRepository.save(tx);
+        log.info("Payment {} updated by user {}", id, currentUser.getId());
+        return mapToDto(saved);
+    }
+
     @Transactional(readOnly = true)
     public Page<PaymentTransactionDto> getTransactionsForAdmin(UUID organizationId, String statusStr, Pageable pageable) {
         PaymentTransactionStatus status = null;
