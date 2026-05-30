@@ -12,7 +12,10 @@ import com.lmscrm.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -48,30 +51,42 @@ public class LessonService {
         return mapper.toLessonDto(lesson);
     }
 
-    private void validateOverlapping(UUID orgId, UUID teacherId, String room, java.time.LocalDateTime startsAt, java.time.LocalDateTime endsAt, UUID excludeId) {
+    private void validateOverlapping(UUID orgId, UUID teacherId, String room, LocalDateTime startsAt, LocalDateTime endsAt, UUID excludeId) {
         if (startsAt == null || endsAt == null) return;
         if (startsAt.isAfter(endsAt) || startsAt.isEqual(endsAt)) {
-            throw new org.springframework.web.server.ResponseStatusException(
-                org.springframework.http.HttpStatus.BAD_REQUEST, "Boshlanish vaqti tugash vaqtidan oldin bo'lishi shart!"
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST, "Boshlanish vaqti tugash vaqtidan oldin bo'lishi shart!"
             );
         }
 
         // Room overlap check
         if (room != null && !room.trim().isEmpty()) {
-            List<Lesson> roomOverlap = lessonRepository.findOverlappingLessonsByRoom(orgId, room.trim(), startsAt, endsAt, excludeId);
+            List<Lesson> roomOverlap;
+            if (excludeId == null) {
+                roomOverlap = lessonRepository.findOverlappingLessonsByRoomWithoutExcludeId(orgId, room.trim(), startsAt, endsAt);
+            } else {
+                roomOverlap = lessonRepository.findOverlappingLessonsByRoom(orgId, room.trim(), startsAt, endsAt, excludeId);
+            }
+
             if (!roomOverlap.isEmpty()) {
-                throw new org.springframework.web.server.ResponseStatusException(
-                    org.springframework.http.HttpStatus.CONFLICT, "Bu vaqtda xona band! Dars: " + roomOverlap.get(0).getTitle()
+                throw new ResponseStatusException(
+                    HttpStatus.CONFLICT, "Bu vaqtda xona band! Dars: " + roomOverlap.get(0).getTitle()
                 );
             }
         }
 
         // Teacher overlap check
         if (teacherId != null) {
-            List<Lesson> teacherOverlap = lessonRepository.findOverlappingLessonsByTeacher(orgId, teacherId, startsAt, endsAt, excludeId);
+            List<Lesson> teacherOverlap;
+            if (excludeId == null) {
+                teacherOverlap = lessonRepository.findOverlappingLessonsByTeacherWithoutExcludeId(orgId, teacherId, startsAt, endsAt);
+            } else {
+                teacherOverlap = lessonRepository.findOverlappingLessonsByTeacher(orgId, teacherId, startsAt, endsAt, excludeId);
+            }
+
             if (!teacherOverlap.isEmpty()) {
-                throw new org.springframework.web.server.ResponseStatusException(
-                    org.springframework.http.HttpStatus.CONFLICT, "O'qituvchining boshqa darsi bor! Dars: " + teacherOverlap.get(0).getTitle()
+                throw new ResponseStatusException(
+                    HttpStatus.CONFLICT, "O'qituvchining boshqa darsi bor! Dars: " + teacherOverlap.get(0).getTitle()
                 );
             }
         }
@@ -83,16 +98,16 @@ public class LessonService {
                 .orElseThrow(() -> new ResourceNotFoundException("Group not found"));
 
         if (currentUser.getRole() != AppRole.SUPER_ADMIN && !group.getOrganization().getId().equals(currentUser.getOrganizationId())) {
-            throw new org.springframework.web.server.ResponseStatusException(
-                org.springframework.http.HttpStatus.FORBIDDEN, "Sizda ushbu guruhga dars yaratish huquqi yo'q!"
+            throw new ResponseStatusException(
+                HttpStatus.FORBIDDEN, "Sizda ushbu guruhga dars yaratish huquqi yo'q!"
             );
         }
 
         Subject subject = subjectRepository.findById(dto.getSubjectId())
                 .orElseThrow(() -> new ResourceNotFoundException("Subject not found"));
         if (currentUser.getRole() != AppRole.SUPER_ADMIN && !subject.getOrganization().getId().equals(currentUser.getOrganizationId())) {
-            throw new org.springframework.web.server.ResponseStatusException(
-                org.springframework.http.HttpStatus.FORBIDDEN, "Fan boshqa tashkilotga tegishli!"
+            throw new ResponseStatusException(
+                HttpStatus.FORBIDDEN, "Fan boshqa tashkilotga tegishli!"
             );
         }
 
@@ -101,16 +116,16 @@ public class LessonService {
             teacher = userRepository.findById(dto.getTeacherId())
                     .orElseThrow(() -> new ResourceNotFoundException("Teacher not found"));
             if (currentUser.getRole() != AppRole.SUPER_ADMIN && !teacher.getOrganizationId().equals(currentUser.getOrganizationId())) {
-                throw new org.springframework.web.server.ResponseStatusException(
-                    org.springframework.http.HttpStatus.FORBIDDEN, "O'qituvchi boshqa tashkilotga tegishli!"
+                throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "O'qituvchi boshqa tashkilotga tegishli!"
                 );
             }
         } else if (group.getTeacherId() != null) {
             teacher = userRepository.findById(group.getTeacherId()).orElse(null);
         }
 
-        java.time.LocalDateTime startsAt = dto.getStartsAt() != null ? dto.getStartsAt() : java.time.LocalDateTime.now();
-        java.time.LocalDateTime endsAt = dto.getEndsAt() != null ? dto.getEndsAt() : startsAt.plusHours(1);
+        LocalDateTime startsAt = dto.getStartsAt() != null ? dto.getStartsAt() : LocalDateTime.now();
+        LocalDateTime endsAt = dto.getEndsAt() != null ? dto.getEndsAt() : startsAt.plusHours(1);
 
         validateOverlapping(group.getOrganization().getId(), teacher != null ? teacher.getId() : null, dto.getRoom(), startsAt, endsAt, null);
 
@@ -139,8 +154,8 @@ public class LessonService {
 
         UUID orgId = lesson.getOrganization().getId();
         if (currentUser.getRole() != AppRole.SUPER_ADMIN && !orgId.equals(currentUser.getOrganizationId())) {
-            throw new org.springframework.web.server.ResponseStatusException(
-                org.springframework.http.HttpStatus.FORBIDDEN, "Sizda ushbu darsni tahrirlash huquqi yo'q!"
+            throw new ResponseStatusException(
+                HttpStatus.FORBIDDEN, "Sizda ushbu darsni tahrirlash huquqi yo'q!"
             );
         }
 
@@ -148,8 +163,8 @@ public class LessonService {
             Group group = groupRepository.findById(dto.getGroupId())
                     .orElseThrow(() -> new ResourceNotFoundException("Group not found"));
             if (currentUser.getRole() != AppRole.SUPER_ADMIN && !group.getOrganization().getId().equals(currentUser.getOrganizationId())) {
-                throw new org.springframework.web.server.ResponseStatusException(
-                    org.springframework.http.HttpStatus.FORBIDDEN, "Sizda ushbu guruhga dars biriktirish huquqi yo'q!"
+                throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "Sizda ushbu guruhga dars biriktirish huquqi yo'q!"
                 );
             }
             lesson.setGroup(group);
@@ -159,15 +174,15 @@ public class LessonService {
             Subject subject = subjectRepository.findById(dto.getSubjectId())
                     .orElseThrow(() -> new ResourceNotFoundException("Subject not found"));
             if (currentUser.getRole() != AppRole.SUPER_ADMIN && !subject.getOrganization().getId().equals(currentUser.getOrganizationId())) {
-                throw new org.springframework.web.server.ResponseStatusException(
-                    org.springframework.http.HttpStatus.FORBIDDEN, "Fan boshqa tashkilotga tegishli!"
+                throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "Fan boshqa tashkilotga tegishli!"
                 );
             }
             lesson.setSubject(subject);
         }
 
-        java.time.LocalDateTime startsAt = dto.getStartsAt() != null ? dto.getStartsAt() : lesson.getStartsAt();
-        java.time.LocalDateTime endsAt = dto.getEndsAt() != null ? dto.getEndsAt() : lesson.getEndsAt();
+        LocalDateTime startsAt = dto.getStartsAt() != null ? dto.getStartsAt() : lesson.getStartsAt();
+        LocalDateTime endsAt = dto.getEndsAt() != null ? dto.getEndsAt() : lesson.getEndsAt();
         String room = dto.getRoom() != null ? dto.getRoom() : lesson.getRoom();
         UUID teacherId = lesson.getTeacher() != null ? lesson.getTeacher().getId() : null;
 
@@ -175,8 +190,8 @@ public class LessonService {
             User teacher = userRepository.findById(dto.getTeacherId())
                     .orElseThrow(() -> new ResourceNotFoundException("Teacher not found"));
             if (currentUser.getRole() != AppRole.SUPER_ADMIN && !teacher.getOrganizationId().equals(currentUser.getOrganizationId())) {
-                throw new org.springframework.web.server.ResponseStatusException(
-                    org.springframework.http.HttpStatus.FORBIDDEN, "O'qituvchi boshqa tashkilotga tegishli!"
+                throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "O'qituvchi boshqa tashkilotga tegishli!"
                 );
             }
             lesson.setTeacher(teacher);
@@ -208,8 +223,8 @@ public class LessonService {
                 .orElseThrow(() -> new ResourceNotFoundException("Lesson not found"));
 
         if (currentUser.getRole() != AppRole.SUPER_ADMIN && !lesson.getOrganization().getId().equals(currentUser.getOrganizationId())) {
-            throw new org.springframework.web.server.ResponseStatusException(
-                org.springframework.http.HttpStatus.FORBIDDEN, "Sizda ushbu darsni o'chirish huquqi yo'q!"
+            throw new ResponseStatusException(
+                HttpStatus.FORBIDDEN, "Sizda ushbu darsni o'chirish huquqi yo'q!"
             );
         }
 

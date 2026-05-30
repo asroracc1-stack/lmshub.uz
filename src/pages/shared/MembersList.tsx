@@ -301,8 +301,10 @@ export default function MembersList({ role, title, description, canManage }: Pro
       setPwdTarget(null);
       setNewPwd("");
     },
-    onError: () => {
-      toast.error("Parolni yangilashda xatolik");
+    onError: (error: any) => {
+      const msg = error.response?.data?.message || "Parolni yangilashda xatolik";
+      toast.error(msg);
+      console.error("RESET PWD ERROR:", error.response?.data || error);
     },
   });
 

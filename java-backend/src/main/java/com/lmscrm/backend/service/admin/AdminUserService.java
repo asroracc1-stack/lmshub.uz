@@ -152,7 +152,7 @@ public class AdminUserService {
 
         // Security check
         if (currentUser.getRole() != AppRole.SUPER_ADMIN) {
-            if (!user.getOrganizationId().equals(currentUser.getOrganizationId())) {
+            if (!java.util.Objects.equals(user.getOrganizationId(), currentUser.getOrganizationId())) {
                 throw new RuntimeException("Ruxsat etilmagan harakat!");
             }
         }
@@ -241,10 +241,10 @@ public class AdminUserService {
     @Transactional
     public void deleteUser(UUID id, User currentUser) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new com.lmscrm.backend.exception.BusinessException("User not found"));
         
         if (currentUser.getRole() != AppRole.SUPER_ADMIN) {
-            if (!user.getOrganizationId().equals(currentUser.getOrganizationId())) {
+            if (!java.util.Objects.equals(user.getOrganizationId(), currentUser.getOrganizationId())) {
                 throw new RuntimeException("Ruxsat etilmagan harakat!");
             }
         }
@@ -263,10 +263,10 @@ public class AdminUserService {
 
     public void resetPassword(UUID id, String newPassword, User currentUser) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new com.lmscrm.backend.exception.BusinessException("User not found"));
         
         if (currentUser.getRole() != AppRole.SUPER_ADMIN) {
-            if (!user.getOrganizationId().equals(currentUser.getOrganizationId())) {
+            if (!java.util.Objects.equals(user.getOrganizationId(), currentUser.getOrganizationId())) {
                 throw new RuntimeException("Ruxsat etilmagan harakat!");
             }
         }
@@ -276,10 +276,10 @@ public class AdminUserService {
 
     public void toggleActive(UUID id, boolean active, User currentUser) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Foydalanuvchi topilmadi"));
+                .orElseThrow(() -> new com.lmscrm.backend.exception.BusinessException("Foydalanuvchi topilmadi"));
         
         if (currentUser.getRole() != AppRole.SUPER_ADMIN) {
-            if (!user.getOrganizationId().equals(currentUser.getOrganizationId())) {
+            if (!java.util.Objects.equals(user.getOrganizationId(), currentUser.getOrganizationId())) {
                 throw new RuntimeException("Ruxsat etilmagan harakat!");
             }
         }
@@ -294,7 +294,7 @@ public class AdminUserService {
 
         // Security check
         if (currentUser.getRole() != AppRole.SUPER_ADMIN) {
-            if (!student.getOrganizationId().equals(currentUser.getOrganizationId())) {
+            if (!java.util.Objects.equals(student.getOrganizationId(), currentUser.getOrganizationId())) {
                 throw new RuntimeException("Ushbu talabaga ota-ona biriktirish uchun ruxsat yo'q!");
             }
         }

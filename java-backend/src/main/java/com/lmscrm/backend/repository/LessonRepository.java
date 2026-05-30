@@ -15,12 +15,13 @@ public interface LessonRepository extends JpaRepository<Lesson, UUID> {
     long countByTeacherId(UUID teacherId);
     List<Lesson> findByOrganizationIdOrderByStartsAtDesc(UUID organizationId);
 
+    // Existing query for room overlap, used when updating an existing lesson
     @org.springframework.data.jpa.repository.Query("SELECT l FROM Lesson l WHERE " +
             "l.organization.id = :orgId AND " +
             "l.room = :room AND " +
             "l.room IS NOT NULL AND l.room <> '' AND " +
             "l.startsAt < :endsAt AND l.endsAt > :startsAt AND " +
-            "(:excludeId IS NULL OR l.id <> :excludeId)")
+            "l.id <> :excludeId") // Removed IS NULL check, assume excludeId is never null here
     List<Lesson> findOverlappingLessonsByRoom(
             @org.springframework.data.repository.query.Param("orgId") UUID orgId,
             @org.springframework.data.repository.query.Param("room") String room,
@@ -29,16 +30,42 @@ public interface LessonRepository extends JpaRepository<Lesson, UUID> {
             @org.springframework.data.repository.query.Param("excludeId") UUID excludeId
     );
 
+    // New query for room overlap, used when creating a new lesson (no excludeId)
+    @org.springframework.data.jpa.repository.Query("SELECT l FROM Lesson l WHERE " +
+            "l.organization.id = :orgId AND " +
+            "l.room = :room AND " +
+            "l.room IS NOT NULL AND l.room <> '' AND " +
+            "l.startsAt < :endsAt AND l.endsAt > :startsAt")
+    List<Lesson> findOverlappingLessonsByRoomWithoutExcludeId(
+            @org.springframework.data.repository.query.Param("orgId") UUID orgId,
+            @org.springframework.data.repository.query.Param("room") String room,
+            @org.springframework.data.repository.query.Param("startsAt") LocalDateTime startsAt,
+            @org.springframework.data.repository.query.Param("endsAt") LocalDateTime endsAt
+    );
+
+    // Existing query for teacher overlap, used when updating an existing lesson
     @org.springframework.data.jpa.repository.Query("SELECT l FROM Lesson l WHERE " +
             "l.organization.id = :orgId AND " +
             "l.teacher.id = :teacherId AND " +
             "l.startsAt < :endsAt AND l.endsAt > :startsAt AND " +
-            "(:excludeId IS NULL OR l.id <> :excludeId)")
+            "l.id <> :excludeId") // Removed IS NULL check, assume excludeId is never null here
     List<Lesson> findOverlappingLessonsByTeacher(
             @org.springframework.data.repository.query.Param("orgId") UUID orgId,
             @org.springframework.data.repository.query.Param("teacherId") UUID teacherId,
             @org.springframework.data.repository.query.Param("startsAt") LocalDateTime startsAt,
             @org.springframework.data.repository.query.Param("endsAt") LocalDateTime endsAt,
             @org.springframework.data.repository.query.Param("excludeId") UUID excludeId
+    );
+
+    // New query for teacher overlap, used when creating a new lesson (no excludeId)
+    @org.springframework.data.jpa.repository.Query("SELECT l FROM Lesson l WHERE " +
+            "l.organization.id = :orgId AND " +
+            "l.teacher.id = :teacherId AND " +
+            "l.startsAt < :endsAt AND l.endsAt > :startsAt")
+    List<Lesson> findOverlappingLessonsByTeacherWithoutExcludeId(
+            @org.springframework.data.repository.query.Param("orgId") UUID orgId,
+            @org.springframework.data.repository.query.Param("teacherId") UUID teacherId,
+            @org.springframework.data.repository.query.Param("startsAt") LocalDateTime startsAt,
+            @org.springframework.data.repository.query.Param("endsAt") LocalDateTime endsAt
     );
 }

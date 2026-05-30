@@ -208,17 +208,24 @@ public class AdminUserController {
     }
 
     // ─── PATCH / POST password reset (accept both HTTP methods for compatibility)
-    @PatchMapping("/{id}/password")
-    @PostMapping("/{id}/password")
+    @RequestMapping(value = "/{id}/password", method = {RequestMethod.PATCH, RequestMethod.POST})
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ADMINISTRATOR','TEACHER')")
     @Operation(summary = "Reset Password")
-    public ResponseEntity<Void> resetPassword(
+    public ResponseEntity<?> resetPassword(
             @PathVariable UUID id,
             @RequestBody Map<String, String> body,
             @AuthenticationPrincipal User currentUser) {
-        String newPassword = body.getOrDefault("password", body.get("newPassword"));
-        adminUserService.resetPassword(id, newPassword, currentUser);
-        return ResponseEntity.noContent().build();
+        try {
+            String newPassword = body.getOrDefault("password", body.get("newPassword"));
+            if (newPassword == null || newPassword.isBlank()) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Parol bo'sh bo'lishi mumkin emas"));
+            }
+            adminUserService.resetPassword(id, newPassword, currentUser);
+            return ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(Map.of("message", "XATOLIK: " + e.getMessage()));
+        }
     }
 
     // ─── PATCH toggle active ──────────────────────────────────────────────────

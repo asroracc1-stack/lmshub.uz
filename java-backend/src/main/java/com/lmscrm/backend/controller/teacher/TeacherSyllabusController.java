@@ -7,7 +7,6 @@ import com.lmscrm.backend.service.academic.LessonService;
 import com.lmscrm.backend.service.academic.SubjectService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +15,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -45,30 +45,51 @@ public class TeacherSyllabusController {
     @PostMapping("/lessons")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
     @Operation(summary = "Create a new lesson/syllabus topic")
-    public ResponseEntity<LessonDto> createLesson(
-            @Valid @RequestBody LessonDto request,
+    public ResponseEntity<?> createLesson(
+            @RequestBody LessonDto request,
             @AuthenticationPrincipal User currentUser) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(lessonService.createLesson(request, currentUser));
+        try {
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(lessonService.createLesson(request, currentUser));
+        } catch (org.springframework.web.server.ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(Map.of("message", "Dars yaratishda xatolik: " + e.getMessage()));
+        }
     }
 
     @PutMapping("/lessons/{id}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
     @Operation(summary = "Update an existing lesson/syllabus topic")
-    public ResponseEntity<LessonDto> updateLesson(
+    public ResponseEntity<?> updateLesson(
             @PathVariable UUID id,
-            @Valid @RequestBody LessonDto request,
+            @RequestBody LessonDto request,
             @AuthenticationPrincipal User currentUser) {
-        return ResponseEntity.ok(lessonService.updateLesson(id, request, currentUser));
+        try {
+            return ResponseEntity.ok(lessonService.updateLesson(id, request, currentUser));
+        } catch (org.springframework.web.server.ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(Map.of("message", "Darsni yangilashda xatolik: " + e.getMessage()));
+        }
     }
 
     @DeleteMapping("/lessons/{id}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
     @Operation(summary = "Delete a lesson/syllabus topic")
-    public ResponseEntity<Void> deleteLesson(
+    public ResponseEntity<?> deleteLesson(
             @PathVariable UUID id,
             @AuthenticationPrincipal User currentUser) {
-        lessonService.deleteLesson(id, currentUser);
-        return ResponseEntity.noContent().build();
+        try {
+            lessonService.deleteLesson(id, currentUser);
+            return ResponseEntity.noContent().build();
+        } catch (org.springframework.web.server.ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(Map.of("message", "Darsni o'chirishda xatolik: " + e.getMessage()));
+        }
     }
 }
