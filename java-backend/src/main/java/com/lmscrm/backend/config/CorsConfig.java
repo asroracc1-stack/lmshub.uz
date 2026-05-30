@@ -13,20 +13,19 @@ public class CorsConfig {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/**")-
+                registry.addMapping("/**")
                         .allowedOrigins(
-                                "http://localhost:5173", // Frontend  server
+                                "http://localhost:5173", 
                                 "http://localhost:3000",
-                                "https://lmshubuz.vercel.app", // Another common frontend development server
-                                "https://lmshub.uz",     // Production domain
-                                "https://*.lmshub.uz",   // Subdomains for production
-                                "https://lmshub-uz.up.railway.app" // Railway dynamic domain example
+                                "https://lmshubuz.vercel.app", 
+                                "https://lmshub.uz",     
+                                "https://*.lmshub.uz",   
+                                "https://lmshub-uz.up.railway.app" 
                         )
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true)
                         .maxAge(3600);
-
             }
         };
     }
