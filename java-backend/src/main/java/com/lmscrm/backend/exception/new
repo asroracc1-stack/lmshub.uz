@@ -1,0 +1,74 @@
+import re
+import os
+
+frontend_src_root = "C:/Users/user/LMSHub.uz/src"
+files_to_process = []
+
+# Recursive function to find .ts and .tsx files
+def find_ts_tsx_files(directory):
+    for entry in list_files(absolutePath=directory):
+        path = os.path.join(directory, entry['name'])
+        if entry['isDirectory']:
+            find_ts_tsx_files(path)
+        elif entry['name'].endswith(('.ts', '.tsx')):
+            files_to_process.append(path)
+
+find_ts_tsx_files(frontend_src_root)
+
+# Base URLs to remove from API calls
+base_urls_to_remove = [
+    "http://localhost:8080/api/v1",
+    "http://localhost:8081/api/v1",
+    "http://127.0.0.1:8080/api/v1",
+    "http://127.0.0.1:8081/api/v1",
+    "https://lmshub-uz.up.railway.app/api/v1"
+]
+
+# Regex pattern to find and replace axios calls and clean URLs
+# This regex looks for api.method('FULL_URL') and extracts the relative path
+# It assumes the base URL is always followed by a '/' if it's not the end of the string.
+# The pattern needs to be adjusted to handle cases where the base URL might be at the very beginning of the string
+# or followed by a query parameter.
+# For simplicity and robustness, I'll first replace axios.method to api.method,
+# then clean the URLs.
+
+# This pattern will capture the method call and the URL part
+url_cleanup_pattern = re.compile(
+    r"(api\.(?:get|post|put|delete|patch)\(\s*['\"])(?:" +
+    "|".join(re.escape(url) for url in base_urls_to_remove) +
+    r")(\/?(?:[^'\"?#]*)(?:[?#][^'\"]*)?['\"])", # Handles optional trailing slash and query/hash params
+    re.IGNORECASE
+)
+
+for file_path in files_to_process:
+    print(f"Processing file: {file_path}")
+    try:
+        content = read_file(absolutePath=file_path)
+
+        # Check if axios is imported before attempting to refactor
+        if "import axios from 'axios';" in content:
+            # 1. Replace import statement
+            content = content.replace("import axios from 'axios';", "import api from '@/lib/axios';")
+
+            # 2. Replace axios.method calls with api.method calls
+            content = content.replace("axios.get(", "api.get(")
+            content = content.replace("axios.post(", "api.post(")
+            content = content.replace("axios.put(", "api.put(")
+            content = content.replace("axios.delete(", "api.delete(")
+            content = content.replace("axios.patch(", "api.patch(")
+
+            # 3. Clean up base URLs within api.method calls
+            # This regex needs to be applied after axios.method is changed to api.method
+            # The regex will capture the 'api.method("' part and the remaining URL part after the base URL.
+            # It will then reconstruct the string without the base URL.
+            content = url_cleanup_pattern.sub(r"\1\2", content)
+
+            write_file(absolutePath=file_path, text=content)
+            print(f"Successfully refactored: {file_path}")
+        else:
+            print(f"Skipping {file_path}: No 'import axios from \"axios\";' found.")
+
+    except Exception as e:
+        print(f"Error processing {file_path}: {e}")
+
+print("Frontend refactoring process completed.")
