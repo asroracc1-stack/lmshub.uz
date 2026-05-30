@@ -63,7 +63,13 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:5173", "http://localhost:3000", "http://localhost:8080", "http://localhost:8081", "http://127.0.0.1:5173"));
+        configuration.setAllowedOrigins(List.of(
+                "http://localhost:5173", // Frontend development server
+                "http://localhost:3000", // Another common frontend development server
+                "https://lmshub.uz",     // Production domain
+                "https://*.lmshub.uz",   // Subdomains for production
+                "https://lmshub-uz.up.railway.app" // Railway dynamic domain example
+        ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept", "Range"));
         configuration.setExposedHeaders(List.of("Accept-Ranges", "Content-Range", "Content-Length", "Content-Type"));

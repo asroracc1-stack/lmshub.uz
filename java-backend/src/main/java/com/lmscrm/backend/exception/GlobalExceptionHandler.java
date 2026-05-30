@@ -1,129 +1,119 @@
 package com.lmscrm.backend.exception;
 
+import com.lmscrm.backend.dto.error.ErrorResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
+    // Umumiy kutilmagan xatolar
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleGenericException(Exception ex, HttpServletRequest request) {
+        log.error("An unexpected error occurred: {}", ex.getMessage(), ex);
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                .error("Internal Server Error")
+                .message("An unexpected error occurred. Please try again later.")
+                .path(request.getRequestURI())
+                .build();
+        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    // NullPointerException
+    @ExceptionHandler(NullPointerException.class)
+    public ResponseEntity<ErrorResponse> handleNullPointerException(NullPointerException ex, HttpServletRequest request) {
+        log.error("NullPointerException occurred: {}", ex.getMessage(), ex);
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                .error("Null Pointer Error")
+                .message("A required value was not provided or was null.")
+                .path(request.getRequestURI())
+                .build();
+        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    // Validation xatolari (MethodArgumentNotValidException)
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
+    public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex, HttpServletRequest request) {
         Map<String, String> errors = new HashMap<>();
         ex.getBindingResult().getAllErrors().forEach((error) -> {
             String fieldName = ((FieldError) error).getField();
             String errorMessage = error.getDefaultMessage();
             errors.put(fieldName, errorMessage);
         });
-
+        log.warn("Validation error occurred: {}", errors);
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
-                .status(HttpStatus.BAD_REQUEST.value())
+                .status(HttpStatus.BAD_REQUEST)
+                .statusCode(HttpStatus.BAD_REQUEST.value())
                 .error("Validation Error")
-                .message("Invalid request content")
-                .details(errors)
+                .message("One or more validation errors occurred.")
+                .path(request.getRequestURI())
+                .errors(errors)
                 .build();
-
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<ErrorResponse> handleBadCredentials(BadCredentialsException ex) {
+    // Ma'lumotlar bazasi bilan bog'liq xatolar (SQL, JPA)
+    @ExceptionHandler(DataAccessException.class)
+    public ResponseEntity<ErrorResponse> handleDataAccessException(DataAccessException ex, HttpServletRequest request) {
+        log.error("Database access error occurred: {}", ex.getMessage(), ex);
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
-                .status(HttpStatus.UNAUTHORIZED.value())
-                .error("Unauthorized")
-                .message("Login (Email) yoki parol noto'g'ri")
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                .error("Database Error")
+                .message("A database operation failed. Please check your request or try again later.")
+                .path(request.getRequestURI())
                 .build();
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException ex) {
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
-                .status(HttpStatus.FORBIDDEN.value())
-                .error("Forbidden")
-                .message("You don't have permission to access this resource")
-                .build();
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
-    }
-
+    // Resurs topilmaganda (ResourceNotFoundException)
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleResourceNotFound(ResourceNotFoundException ex) {
+    public ResponseEntity<ErrorResponse> handleResourceNotFoundException(ResourceNotFoundException ex, HttpServletRequest request) {
+        log.warn("Resource not found: {}", ex.getMessage());
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
-                .status(HttpStatus.NOT_FOUND.value())
+                .status(HttpStatus.NOT_FOUND)
+                .statusCode(HttpStatus.NOT_FOUND.value())
                 .error("Not Found")
                 .message(ex.getMessage())
+                .path(request.getRequestURI())
                 .build();
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 
-    @ExceptionHandler(BusinessException.class)
-    public ResponseEntity<ErrorResponse> handleBusinessException(BusinessException ex) {
+    // Custom ResponseStatusException (masalan, 409 Conflict, 403 Forbidden)
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ErrorResponse> handleResponseStatusException(ResponseStatusException ex, HttpServletRequest request) {
+        log.warn("Response status exception: {} - {}", ex.getStatusCode(), ex.getReason());
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
-                .status(HttpStatus.CONFLICT.value())
-                .error("Business Rule Violation")
-                .message(ex.getMessage())
+                .status((HttpStatus) ex.getStatusCode())
+                .statusCode(ex.getStatusCode().value())
+                .error(ex.getReason())
+                .message(ex.getReason())
+                .path(request.getRequestURI())
                 .build();
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
-    }
-
-    @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<ErrorResponse> handleDataIntegrityViolationException(DataIntegrityViolationException ex) {
-        String msg = "Ma'lumotlar bazasi xatosi yuz berdi.";
-        String cause = ex.getMostSpecificCause() != null ? ex.getMostSpecificCause().getMessage().toLowerCase() : "";
-        if (cause.contains("invoice_number")) {
-            msg = "Kechirasiz, bu invoys raqami avval ishlatilgan. Iltimos, boshqasini kiriting.";
-        } else if (cause.contains("null value in column") || cause.contains("violates not-null constraint")) {
-            msg = "Kechirasiz, ba'zi majburiy maydonlar to'ldirilmagan. Iltimos, barcha yulduzcha (*) bilan belgilangan joylarni to'ldiring.";
-        } else if (cause.contains("email") || cause.contains("username") || cause.contains("phone")) {
-            msg = "Bu ma'lumotlar (email, username yoki telefon) allaqachon tizimda mavjud!";
-        } else if (cause.contains("foreign key constraint") || cause.contains("fk_")) {
-            msg = "Bu ma'lumotni o'chirish mumkin emas, chunki unga bog'langan boshqa ma'lumotlar mavjud!";
-        }
-
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
-                .status(HttpStatus.CONFLICT.value()) // Return 409 Conflict instead of 500 for constraint violations
-                .error("Data Integrity Violation")
-                .message(msg)
-                .build();
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
-    }
-
-    @ExceptionHandler(AiServiceLimitException.class)
-    public ResponseEntity<ErrorResponse> handleAiServiceLimitException(AiServiceLimitException ex) {
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
-                .status(HttpStatus.TOO_MANY_REQUESTS.value())
-                .error("Too Many Requests")
-                .message(ex.getMessage())
-                .details(Map.of("retryAfterSeconds", ex.getRetryAfterSeconds()))
-                .build();
-        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(errorResponse);
-    }
-
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGlobalException(Exception ex) {
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
-                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                .error("Internal Server Error")
-                .message(ex.getMessage() != null ? ex.getMessage() : "Kutilmagan xatolik yuz berdi")
-                .build();
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        return new ResponseEntity<>(errorResponse, ex.getStatusCode());
     }
 }

@@ -452,7 +452,10 @@ const App = () => (
         <OfflineBanner />
         <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || "145237994758-tdo9e1hbpk55qhuho7kn09miov4jf161.apps.googleusercontent.com"}>
           <AuthProvider>
-            <AppRoutes />
+            {/* AppRoutes komponentini ErrorBoundary bilan o'rash */}
+            <ErrorBoundary>
+              <AppRoutes />
+            </ErrorBoundary>
           </AuthProvider>
         </GoogleOAuthProvider>
       </TooltipProvider>
