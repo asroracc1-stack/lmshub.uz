@@ -24,4 +24,15 @@ public interface PaymentTransactionRepository extends JpaRepository<PaymentTrans
 
     @Query("SELECT p FROM PaymentTransaction p WHERE (p.student.id = :userId OR p.payer.id = :userId) ORDER BY p.createdAt DESC")
     List<PaymentTransaction> findByStudentOrPayerId(@Param("userId") UUID userId);
+
+    /**
+     * Talabaning hali PENDING (kutilmoqda) holatdagi to'lovlari yig'indisi.
+     * Bu student dashboard uchun "Balans / To'lovlar" kartasini to'g'ri ko'rsatadi.
+     * COALESCE(SUM, 0) — hech qanday to'lov bo'lmasa 0.0 qaytaradi.
+     */
+    @Query("SELECT COALESCE(SUM(p.amount), 0) FROM PaymentTransaction p " +
+           "WHERE p.student.id = :studentId " +
+           "AND p.status = com.lmscrm.backend.domain.enums.PaymentTransactionStatus.PENDING")
+    Double sumPendingAmountByStudentId(@Param("studentId") UUID studentId);
 }
+

@@ -5,13 +5,18 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
 public interface InvoiceRepository extends JpaRepository<Invoice, UUID> {
-    
+
     @Query("SELECT i FROM Invoice i WHERE " +
            "(:query IS NULL OR :query = '' OR LOWER(i.invoiceNumber) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(i.organization.name) LIKE LOWER(CONCAT('%', :query, '%'))) AND " +
            "(:status IS NULL OR LOWER(:status) = 'all' OR " +
@@ -26,18 +31,18 @@ public interface InvoiceRepository extends JpaRepository<Invoice, UUID> {
     Page<Invoice> searchInvoices(String query, Pageable pageable);
 
     @Query("SELECT COALESCE(SUM(i.amount), 0) FROM Invoice i WHERE i.organization.id = :orgId AND i.status = com.lmscrm.backend.domain.enums.InvoiceStatus.SENT")
-    java.math.BigDecimal sumPendingPaymentsByOrganizationId(UUID orgId);
+    BigDecimal sumPendingPaymentsByOrganizationId(UUID orgId);
 
-    java.util.List<Invoice> findByStudentId(UUID studentId);
+    List<Invoice> findByStudentId(UUID studentId);
 
     @Query("SELECT COALESCE(SUM(i.amount), 0) FROM Invoice i WHERE i.status = com.lmscrm.backend.domain.enums.InvoiceStatus.PAID")
-    java.math.BigDecimal sumTotalRevenue();
+    BigDecimal sumTotalRevenue();
 
     @Query("SELECT COALESCE(SUM(i.amount), 0) FROM Invoice i WHERE (i.status = com.lmscrm.backend.domain.enums.InvoiceStatus.PENDING OR i.status = com.lmscrm.backend.domain.enums.InvoiceStatus.SENT) AND i.dueDate >= CURRENT_DATE")
-    java.math.BigDecimal sumTotalPending();
+    BigDecimal sumTotalPending();
 
     @Query("SELECT COALESCE(SUM(i.amount), 0) FROM Invoice i WHERE i.status = com.lmscrm.backend.domain.enums.InvoiceStatus.OVERDUE OR ((i.status = com.lmscrm.backend.domain.enums.InvoiceStatus.PENDING OR i.status = com.lmscrm.backend.domain.enums.InvoiceStatus.SENT) AND i.dueDate < CURRENT_DATE)")
-    java.math.BigDecimal sumTotalOverdue();
+    BigDecimal sumTotalOverdue();
 
     @Query("SELECT COUNT(i) FROM Invoice i WHERE i.status = com.lmscrm.backend.domain.enums.InvoiceStatus.PAID")
     long countTotalRevenueInvoices();
@@ -49,9 +54,23 @@ public interface InvoiceRepository extends JpaRepository<Invoice, UUID> {
     long countTotalOverdueInvoices();
 
     @Query("SELECT i FROM Invoice i WHERE i.status = com.lmscrm.backend.domain.enums.InvoiceStatus.PAID AND i.paidAt >= :since")
-    java.util.List<Invoice> findPaidInvoicesSince(java.time.LocalDateTime since);
+    List<Invoice> findPaidInvoicesSince(LocalDateTime since);
 
     boolean existsByInvoiceNumber(String invoiceNumber);
 
-    java.util.Optional<Invoice> findTopByOrderByCreatedAtDesc();
+    Optional<Invoice> findTopByOrderByCreatedAtDesc();
+
+    /**
+     * Talabaning to'lanmagan (PENDING, SENT, OVERDUE) invoicelar yig'indisi.
+     * Bu talabaning umumiy qarzdorligidir.
+     * COALESCE(SUM, 0) — hech qanday invoice bo'lmasa 0 qaytaradi.
+     */
+    @Query("SELECT COALESCE(SUM(i.amount), 0) FROM Invoice i " +
+           "WHERE i.student.id = :studentId " +
+           "AND i.status IN (" +
+           "  com.lmscrm.backend.domain.enums.InvoiceStatus.PENDING, " +
+           "  com.lmscrm.backend.domain.enums.InvoiceStatus.SENT, " +
+           "  com.lmscrm.backend.domain.enums.InvoiceStatus.OVERDUE" +
+           ")")
+    BigDecimal sumPendingBalanceByStudentId(@Param("studentId") UUID studentId);
 }

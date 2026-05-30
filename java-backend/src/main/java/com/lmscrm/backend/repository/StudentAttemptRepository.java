@@ -2,6 +2,8 @@ package com.lmscrm.backend.repository;
 
 import com.lmscrm.backend.domain.entity.StudentAttempt;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -11,12 +13,34 @@ import java.util.UUID;
 
 @Repository
 public interface StudentAttemptRepository extends JpaRepository<StudentAttempt, UUID> {
+
     List<StudentAttempt> findByStudentIdOrderByStartedAtDesc(UUID studentId);
+
     List<StudentAttempt> findByExamId(UUID examId);
+
     Optional<StudentAttempt> findByExamIdAndStudentId(UUID examId, UUID studentId);
+
     List<StudentAttempt> findTop5ByStudentIdAndFinishedAtIsNotNullOrderByFinishedAtAsc(UUID studentId);
-    
+
     // Added for stats and daily tasks
     List<StudentAttempt> findAllByStudentId(UUID studentId);
+
     List<StudentAttempt> findAllByStudentIdAndStartedAtAfter(UUID studentId, LocalDateTime since);
+
+    /**
+     * Talabaning topshirgan barcha imtihonlari sonini DB darajasida hisoblaydi.
+     * In-memory .size() o'rniga COUNT() ishlatiladi — samaraliroq.
+     */
+    @Query("SELECT COUNT(sa) FROM StudentAttempt sa WHERE sa.student.id = :studentId")
+    long countByStudentId(@Param("studentId") UUID studentId);
+
+    /**
+     * Talabaning topshirgan imtihonlaridan o'rtacha overall_band ballini hisoblaydi.
+     * overall_band null bo'lgan yozuvlar o'rtachaga kirmaydi (AVG avtomatik ignore qiladi).
+     * Agar hech qanday ball bo'lmasa, NULL qaytadi (frontend "—" ko'rsatadi).
+     */
+    @Query("SELECT AVG(sa.overallBand) FROM StudentAttempt sa " +
+           "WHERE sa.student.id = :studentId AND sa.overallBand IS NOT NULL")
+    Double findAverageOverallBandByStudentId(@Param("studentId") UUID studentId);
 }
+
