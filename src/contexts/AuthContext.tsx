@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useRef } from "react";
 import { AppRole } from "@/lib/auth";
 import { toast } from "sonner";
-import { api } from "@/lib/axios";
+import { api } from "@/lib/axios"; // Endi axios.ts dagi 'export const api' ga to'la mos keladi
 
 interface Profile {
   id: string;

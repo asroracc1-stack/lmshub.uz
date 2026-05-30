@@ -5,7 +5,7 @@ import axios from 'axios';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 // Axios instansiyasini yaratish
-const api = axios.create({
+export const api = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true, // Cookie'lar va autentifikatsiya tokenlarini yuborish uchun
   headers: {
@@ -43,4 +43,5 @@ api.interceptors.response.use(
   }
 );
 
+// Ham nomli, ham default eksport sifatida qoldirish mumkin (compatibility uchun)
 export default api;
