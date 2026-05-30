@@ -16,7 +16,8 @@ public class CorsConfig {
                 registry.addMapping("/**")
                         .allowedOrigins(
                                 "http://localhost:5173", // Frontend development server
-                                "http://localhost:3000", // Another common frontend development server
+                                "http://localhost:3000",
+                                "https://lmshubuz.vercel.app" // Another common frontend development server
                                 "https://lmshub.uz",     // Production domain
                                 "https://*.lmshub.uz",   // Subdomains for production
                                 "https://lmshub-uz.up.railway.app" // Railway dynamic domain example
