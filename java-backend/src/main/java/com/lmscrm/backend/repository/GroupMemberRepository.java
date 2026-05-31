@@ -14,6 +14,9 @@ public interface GroupMemberRepository extends JpaRepository<GroupMember, UUID> 
 
     List<GroupMember> findByGroupId(UUID groupId);
 
+    // Controllerda ishlatilayotgan metod nomini qo'shish
+    List<GroupMember> findAllByGroupId(UUID groupId);
+
     List<GroupMember> findByStudentId(UUID studentId);
 
     boolean existsByGroupIdAndStudentId(UUID groupId, UUID studentId);

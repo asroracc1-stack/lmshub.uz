@@ -131,6 +131,7 @@ const AdminAdministrators = lazy(() => import("./pages/admin/Administrators"));
 const TeacherDashboard = lazy(() => import("./pages/teacher/Dashboard"));
 const SmartDashboard = lazy(() => import("./pages/teacher/SmartDashboard"));
 const Syllabus = lazy(() => import("./pages/teacher/Syllabus"));
+const MyLessons = lazy(() => import("./pages/MyLessons"));
 const RealTimeChat = lazy(() => import("./pages/shared/RealTimeChat"));
 const StudentDashboard = lazy(() => import("./pages/student/Dashboard"));
 const AdministratorDashboard = lazy(() => import("./pages/administrator/Dashboard"));

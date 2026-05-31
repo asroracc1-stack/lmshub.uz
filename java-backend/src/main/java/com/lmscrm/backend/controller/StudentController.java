@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/students")
@@ -21,6 +22,12 @@ public class StudentController {
     @GetMapping("/search")
     public ResponseEntity<List<StudentSearchResponse>> searchStudents(@RequestParam(required = false) String query) {
         List<StudentSearchResponse> students = studentService.searchStudents(query);
+        return ResponseEntity.ok(students);
+    }
+
+    @GetMapping("/by-group")
+    public ResponseEntity<List<StudentSearchResponse>> getStudentsByGroupId(@RequestParam UUID groupId) {
+        List<StudentSearchResponse> students = studentService.getStudentsByGroupId(groupId);
         return ResponseEntity.ok(students);
     }
 }
