@@ -28,6 +28,3 @@ EXPOSE ${PORT:-8080}
 
 # Run Spring Boot with production profile
 ENTRYPOINT ["java","-Dspring.profiles.active=production","-jar","/app/app.jar"]
-
-# Run Spring Boot with production profile
-ENTRYPOINT ["java","-Dspring.profiles.active=production","-jar","/app/app.jar"]
