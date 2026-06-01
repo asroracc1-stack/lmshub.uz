@@ -135,9 +135,12 @@ public class User implements UserDetails {
     }
 
 @Override
-    public String getPassword() {
-        return this.password;
-    }
-        return active;
-    }
+public String getPassword() {
+    return this.password;
+}
+
+@Override
+public boolean isEnabled() {
+    return active;
+}
 }
