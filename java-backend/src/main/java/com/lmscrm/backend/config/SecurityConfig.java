@@ -70,7 +70,7 @@ public class SecurityConfig {
                 "https://lmshub.uz",     // Production domain
                 "https://*.lmshub.uz",   // Subdomains for production
                 "https://lmshub-uz.up.railway.app",
-                 "https://lmshub-uz-asror-dev.apps.railway.app" // Railway dynamic domain example
+                "https://lmshub-uz-asror-dev.apps.railway.app" // Railway dynamic domain example
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept", "Range"));
