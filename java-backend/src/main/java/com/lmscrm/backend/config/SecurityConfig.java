@@ -44,6 +44,7 @@ public class SecurityConfig {
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/").permitAll()
                 .requestMatchers("/api/v1/auth/**").permitAll()
                 .requestMatchers("/api/v1/files/view/**").permitAll()
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
@@ -63,14 +64,15 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(
+        configuration.setAllowedOriginPatterns(List.of(
                 "http://localhost:5173", // Frontend development server
                 "http://localhost:3000",
-                "https://lmshub-uz.vercel.app", // Another common frontend development server
-                "https://lmshub.uz",     // Production domain
-                "https://*.lmshub.uz",   // Subdomains for production
+                "https://lmshub-uz.vercel.app", // Main Vercel deployment
+                "https://*.vercel.app",        // Any Vercel deployment/preview URLs
+                "https://lmshub.uz",           // Production domain
+                "https://*.lmshub.uz",         // Subdomains for production
                 "https://lmshub-uz.up.railway.app",
-                "https://lmshub-uz-asror-dev.apps.railway.app" // Railway dynamic domain example
+                "https://*.up.railway.app"     // Railway dynamic URLs
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept", "Range"));

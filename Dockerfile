@@ -1,16 +1,15 @@
 # -------------------------------------------------
-# 1️⃣ Build stage – Maven (JDK 21)
+# 1️⃣ Build stage – Maven Wrapper (JDK 21)
 # -------------------------------------------------
 FROM maven:3.9.9-eclipse-temurin-21 AS build
 
 WORKDIR /app
 
-# Copy only the backend module (pom and src)
+# Copy pom.xml and source
 COPY java-backend/pom.xml .
 COPY java-backend/src ./src
 
-# Resolve dependencies (cached) and build the jar
-RUN mvn -B dependency:go-offline
+# Build the application using Maven pre-installed in the base image
 RUN mvn -B clean package -DskipTests
 
 # -------------------------------------------------
@@ -20,11 +19,11 @@ FROM eclipse-temurin:21-jre-alpine
 
 WORKDIR /app
 
-# Copy the JAR produced in the build stage
+# Copy the built JAR from the build stage
 COPY --from=build /app/target/*.jar app.jar
 
 # Railway provides $PORT; fallback to 8080 for local runs
 EXPOSE ${PORT:-8080}
 
-# Run Spring Boot with production profile
-ENTRYPOINT ["java","-Dspring.profiles.active=production","-jar","/app/app.jar"]
+# Run Spring Boot with production profile and JVM memory limit of 75% of container RAM
+ENTRYPOINT ["java","-XX:MaxRAMPercentage=75.0","-Dspring.profiles.active=production","-jar","/app/app.jar"]
