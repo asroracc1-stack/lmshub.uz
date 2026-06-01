@@ -2,20 +2,18 @@
 FROM eclipse-temurin:21-jdk-alpine AS build
 WORKDIR /app
 
-# Hamma narsani nusxalab olamiz
+# GitHub repozitoriyadagi barcha fayllarni Docker konteyneriga ko'chiramiz
 COPY . .
 
-# Fayllar strukturani logda tekshirish (bu xatoni topishga yordam beradi)
-RUN ls -R /app
-
-# mvnw fayli qayerda bo'lsa, o'sha joydan ishga tushiramiz
-# Agar u "java-backend" ichida bo'lsa, shuni ishlat:
-RUN cd java-backend && chmod +x mvnw && ./mvnw clean package -DskipTests
+# `java-backend` ichidagi mvnw faylini to'g'ridan-to'g'ri manzil bo'yicha ishga tushiramiz
+RUN chmod +x /app/java-backend/mvnw
+RUN /app/java-backend/mvnw clean package -f /app/java-backend/pom.xml -DskipTests
 
 # 2. Runtime bosqichi
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
-# Build bo'lgan jar faylni qidirib topib, app.jar deb ko'chirib olamiz
+
+# Build qilingan JAR faylni to'g'ridan-to'g'ri manzilidan olamiz
 COPY --from=build /app/java-backend/target/*.jar app.jar
 
 EXPOSE 8080
