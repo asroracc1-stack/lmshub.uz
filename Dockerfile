@@ -25,5 +25,5 @@ COPY --from=build /app/target/*.jar app.jar
 # Railway provides $PORT; fallback to 8080 for local runs
 EXPOSE ${PORT:-8080}
 
-# Run Spring Boot with production profile and JVM memory limit of 75% of container RAM
-ENTRYPOINT ["java","-XX:MaxRAMPercentage=75.0","-Dspring.profiles.active=production","-jar","/app/app.jar"]
+# Run Spring Boot with production profile and optimized JVM settings for 512MB RAM limit
+ENTRYPOINT ["java","-Xmx256m","-Xss512k","-XX:CICompilerCount=2","-XX:+UseSerialGC","-Dspring.profiles.active=production","-jar","/app/app.jar"]
