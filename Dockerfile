@@ -1,23 +1,23 @@
-# Build stage
+# 1. Build stage: Maven ishlatamiz
 FROM maven:3.9.9-eclipse-temurin-21 AS build
 
 WORKDIR /app
 
-COPY java-backend/pom.xml .
+# Loyihani to'liq nusxalaymiz (java-backend papkasi bilan birga)
+COPY . .
 
-RUN mvn dependency:go-offline -B
+# Maven build'ni aniq java-backend papkasi ichida bajaramiz
+# -f bayrog'i pom.xml qayerdaligini ko'rsatadi
+RUN mvn -f java-backend/pom.xml clean package -DskipTests
 
-COPY java-backend/src ./src
-
-RUN mvn clean package -DskipTests
-
-# Runtime stage
+# 2. Runtime stage: Engilroq JRE
 FROM eclipse-temurin:21-jre-alpine
 
 WORKDIR /app
 
-COPY --from=build /app/target/*.jar app.jar
+# Build qilingan jar faylni target papkasidan olamiz
+COPY --from=build /app/java-backend/target/*.jar app.jar
 
 EXPOSE 8080
 
-ENTRYPOINT ["java","-Dspring.profiles.active=production","-jar","app.jar"]
+ENTRYPOINT ["java", "-Dspring.profiles.active=production", "-jar", "app.jar"]
