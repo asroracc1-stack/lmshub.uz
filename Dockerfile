@@ -2,12 +2,12 @@
 FROM eclipse-temurin:21-jdk-alpine AS build
 WORKDIR /app
 
-# GitHub repozitoriyadagi barcha fayllarni Docker konteyneriga ko'chiramiz
+# Barcha fayllarni konteynerga nusxalaymiz
 COPY . .
 
-# `java-backend` ichidagi mvnw faylini to'g'ridan-to'g'ri manzil bo'yicha ishga tushiramiz
-RUN chmod +x /app/java-backend/mvnw
-RUN /app/java-backend/mvnw clean package -f /app/java-backend/pom.xml -DskipTests
+# Maven wrapper'ni topib, to'g'ridan-to'g'ri ishga tushiramiz
+RUN chmod +x java-backend/mvnw
+RUN ./java-backend/mvnw clean package -f java-backend/pom.xml -DskipTests
 
 # 2. Runtime bosqichi
 FROM eclipse-temurin:21-jre-alpine
