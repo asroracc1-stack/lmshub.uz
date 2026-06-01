@@ -48,7 +48,21 @@ public class Organization {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @PrePersist
+    // ----- Custom getters for service compatibility -----
+    /**
+     * Returns the organization identifier as a string.
+     */
+    public String getOrganizationId() {
+        return id != null ? id.toString() : null;
+    }
+
+    /**
+     * Returns the full name of the organization (currently mapped to {@code name}).
+     */
+    public String getFullName() {
+        return name;
+    }
+
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         if (isActive == null) {
