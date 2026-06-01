@@ -1,5 +1,7 @@
 package com.lmscrm.backend.config;
 
+
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
@@ -13,15 +15,17 @@ public class CorsConfig {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
+                // Read allowed origins from environment variable (comma‑separated list)
+                String originsEnv = System.getenv("ALLOWED_ORIGINS");
+                String[] allowedOrigins;
+                if (originsEnv != null && !originsEnv.isBlank()) {
+                    allowedOrigins = originsEnv.split(",");
+                } else {
+                    // Fallback to a safe default (localhost for local dev)
+                    allowedOrigins = new String[]{"http://localhost:5173", "http://localhost:3000"};
+                }
                 registry.addMapping("/**")
-                        .allowedOrigins(
-                                "http://localhost:5173", 
-                                "http://localhost:3000",
-                                "https://lmshubuz.vercel.app", 
-                                "https://lmshub.uz",     
-                                "https://*.lmshub.uz",   
-                                "https://lmshub-uz.up.railway.app" 
-                        )
+                        .allowedOrigins(allowedOrigins)
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true)

@@ -43,7 +43,7 @@ public class AdminAttendanceController {
         log.info("Yo'qlama uchun talabalar so'ralmoqda. LessonId: {}", lessonId);
 
         Lesson lesson = lessonRepository.findById(lessonId)
-                .orElseThrow(() -> new RuntimeException("Lesson not found"));
+                .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND, "Lesson not found"));
 
         UUID groupId = lesson.getGroup().getId();
         List<GroupMember> members = groupMemberRepository.findAllByGroupId(groupId);
