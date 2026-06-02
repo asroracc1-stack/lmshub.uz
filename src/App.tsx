@@ -149,6 +149,7 @@ const OrgLessons = lazy(() => import("./pages/shared/OrgLessons"));
 const AttendancePage = lazy(() => import("./pages/shared/AttendancePage"));
 const TeacherGrades = lazy(() => import("./pages/teacher/Grades"));
 const StudentGrades = lazy(() => import("./pages/student/Grades"));
+const StudentMyCourses = lazy(() => import("./pages/student/MyCourses"));
 const SettingsPage = lazy(() => import("./pages/shared/SettingsPage"));
 const StudentCoins = lazy(() => import("./pages/student/Coins"));
 const OrgRewards = lazy(() => import("./pages/shared/OrgRewards"));
@@ -336,7 +337,7 @@ const AppRoutes = () => {
           <Route index element={<StudentDashboard />} />
           <Route path="dashboard" element={<StudentDashboard />} />
           <Route path="teachers" element={<MembersList role="teacher" title={t("nav.myTeachers")} description="" />} />
-          <Route path="lessons" element={<OrgLessons basePath="/student" filter="student" />} />
+          <Route path="lessons" element={<StudentMyCourses />} />
           <Route path="grades" element={<StudentGrades />} />
           <Route path="calendar" element={<OrgEvents />} />
           <Route path="messages" element={<OrgMessages />} />

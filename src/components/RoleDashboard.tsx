@@ -12,8 +12,8 @@ export interface StatCard {
 }
 
 interface RoleDashboardProps {
-  title: string;
-  description: string;
+  title?: string;
+  description?: string;
   stats: StatCard[];
   children?: React.ReactNode;
 }
@@ -28,15 +28,17 @@ const colorMap: Record<NonNullable<StatCard["color"]>, string> = {
 
 export default function RoleDashboard({ title, description, stats, children }: RoleDashboardProps) {
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="space-y-1"
-      >
-        <h1 className="font-display text-2xl md:text-3xl font-bold">{title}</h1>
-        <p className="text-sm text-muted-foreground">{description}</p>
-      </motion.div>
+    <div className="space-y-6 max-w-7xl mx-auto mt-6">
+      {title && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="space-y-1"
+        >
+          <h1 className="font-display text-2xl md:text-3xl font-bold">{title}</h1>
+          {description && <p className="text-sm text-muted-foreground">{description}</p>}
+        </motion.div>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((s, idx) => {

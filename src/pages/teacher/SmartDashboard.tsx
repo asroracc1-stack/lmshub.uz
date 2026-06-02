@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { CheckCircle2, XCircle, MinusCircle, Award, Calendar, Search, Download, Sparkles, Loader2, Plus, Star } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 interface Student {
   id: string;
@@ -138,7 +139,7 @@ export default function SmartDashboard() {
       return list.map((l: any) => ({
         id: l.id,
         title: l.title,
-        starts_at: l.startsAt
+        starts_at: l.starts_at || l.startsAt
       })).slice(0, 5) as Lesson[];
     },
     enabled: !!selectedGroupId,
@@ -205,78 +206,55 @@ export default function SmartDashboard() {
     setLocalGrades(grMap);
   }, [gradesData]);
 
+  // Local coins buffer
+  const [localCoins, setLocalCoins] = useState<Record<string, number>>({});
+
   // Mutations
-  const toggleAttendanceMutation = useMutation({
-    mutationFn: async ({ lessonId, studentId, status }: { lessonId: string; studentId: string; status: "PRESENT" | "ABSENT" | "LATE" }) => {
-      const res = await api.post("/teacher/attendance", {
-        lessonId,
-        studentId,
-        status,
-      });
-      return res.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["lessons-attendance"] });
-    },
-    onError: () => {
-      toast.error("Yo'qlamani saqlashda xatolik yuz berdi");
-    },
-  });
-
-  const saveGradeMutation = useMutation({
-    mutationFn: async ({ studentId, score, comment }: { studentId: string; score: number; comment: string }) => {
-      const res = await api.post("/teacher/grades", {
-        studentId,
-        subjectId: selectedSubjectId,
-        score,
-        maxScore: 100,
-        comment,
-      });
-      return res.data;
-    },
-    onSuccess: () => {
-      toast.success("Baho muvaffaqiyatli saqlandi!");
-      queryClient.invalidateQueries({ queryKey: ["students-grades"] });
-    },
-    onError: () => {
-      toast.error("Bahoni saqlashda xatolik yuz berdi");
-    },
-  });
-
-  const grantCoinMutation = useMutation({
+  const saveAllDashboardDataMutation = useMutation({
     mutationFn: async () => {
-      const res = await api.post("/admin/coins/grant", {
-        studentId: coinStudentId,
-        amount: Number(coinAmount),
-        reason: coinReason,
-        comment: coinComment,
-      });
+      const activeLesson = lessons[0];
+      if (!activeLesson) {
+        throw new Error("Guruhda darslar mavjud emas!");
+      }
+
+      const payload = {
+        lessonId: activeLesson.id,
+        lesson_id: activeLesson.id,
+        subjectId: selectedSubjectId,
+        subject_id: selectedSubjectId,
+        records: students.map((s) => {
+          const attStatus = localAttendances[`${activeLesson.id}-${s.id}`] || "PRESENT";
+          const gr = localGrades[s.id] || { score: null, comment: "" };
+          const coins = localCoins[s.id] || 0;
+          return {
+            studentId: s.id,
+            student_id: s.id,
+            status: attStatus,
+            score: gr.score,
+            comment: gr.comment || null,
+            coins: coins > 0 ? coins : null,
+          };
+        }),
+      };
+
+      const res = await api.post("/teacher/attendance/save-all", payload);
       return res.data;
     },
     onSuccess: () => {
-      toast.success("Tanga (coin) muvaffaqiyatli taqdim etildi! ✨🎁");
-      setCoinModalOpen(false);
-      setCoinAmount("5");
-      setCoinComment("");
+      toast.success("Barcha ma'lumotlar va Telegram xabarnomalari muvaffaqiyatli saqlandi! 🚀✨");
+      queryClient.invalidateQueries({ queryKey: ["lessons-attendance"] });
+      queryClient.invalidateQueries({ queryKey: ["students-grades"] });
+      setLocalCoins({});
     },
     onError: (err: any) => {
-      toast.error(err.response?.data?.message || "Coin berishda xatolik");
+      toast.error(err.response?.data?.message || "Saqlashda xatolik yuz berdi");
     },
   });
 
   // Handlers
-  const handleToggleAttendance = (lessonId: string, studentId: string) => {
+  const handleSetAttendance = (lessonId: string, studentId: string, status: "PRESENT" | "ABSENT" | "LATE") => {
     const key = `${lessonId}-${studentId}`;
-    const current = localAttendances[key];
-    let next: "PRESENT" | "ABSENT" | "LATE" = "PRESENT";
-
-    if (current === "PRESENT") next = "LATE";
-    else if (current === "LATE") next = "ABSENT";
-    else next = "PRESENT";
-
-    // Optimistic UI update
-    setLocalAttendances((prev) => ({ ...prev, [key]: next }));
-    toggleAttendanceMutation.mutate({ lessonId, studentId, status: next });
+    setLocalAttendances((prev) => ({ ...prev, [key]: status }));
   };
 
   const handleGradeChange = (studentId: string, val: string) => {
@@ -295,15 +273,97 @@ export default function SmartDashboard() {
   };
 
   const handleGradeBlur = (studentId: string) => {
-    const current = localGrades[studentId];
-    if (current && current.score > 0) {
-      saveGradeMutation.mutate({ studentId, score: current.score, comment: current.comment });
-    }
+    // No-op: we do not save immediately on blur anymore
   };
 
   const openCoinModal = (studentId: string) => {
     setCoinStudentId(studentId);
     setCoinModalOpen(true);
+    setCoinAmount("5");
+    setCoinComment("");
+  };
+
+  const handleSaveCoinsLocally = () => {
+    const amount = Number(coinAmount);
+    if (!coinStudentId) return;
+    setLocalCoins((prev) => ({
+      ...prev,
+      [coinStudentId]: (prev[coinStudentId] || 0) + amount,
+    }));
+    setCoinModalOpen(false);
+    toast.success("Coin miqdori belgilandi. Saqlash tugmasini bosganda saqlanadi. ✨🎁");
+  };
+
+  // PDF report handler
+  const handleDownloadPDF = async () => {
+    if (!students.length) {
+      toast.error("Hisobot uchun talabalar mavjud emas");
+      return;
+    }
+
+    // Load jsPDF and autoTable as functions
+    const { jsPDF } = await import("jspdf");
+    const { default: autoTable } = await import("jspdf-autotable");
+
+    const doc = new jsPDF();
+    const activeGroup = groups.find((g) => g.id === selectedGroupId);
+    const activeSubject = subjects.find((s) => s.id === selectedSubjectId);
+    const activeLesson = lessons[0];
+
+    // Title & Header info
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.text("LMSHub - Smart Dashboard Hisoboti", 14, 20);
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.text(`Guruh: ${activeGroup?.name || "Noma'lum"}`, 14, 28);
+    doc.text(`Fan: ${activeSubject?.name || "Noma'lum"}`, 14, 34);
+    if (activeLesson) {
+      doc.text(`Oxirgi dars: ${activeLesson.title}`, 14, 40);
+    }
+    doc.text(`Sana: ${new Date().toLocaleDateString("uz")}`, 14, 46);
+
+    // Prepare table headers and body
+    const headers = [["#", "Talaba Ismi", "Davomat (Oxirgi dars)", "Baho", "Rag'bat (Coin)", "Izoh / Fikr"]];
+    const body = students.map((s, idx) => {
+      const activeLessonId = activeLesson?.id;
+      const attStatus = activeLessonId ? (localAttendances[`${activeLessonId}-${s.id}`] || "PRESENT") : "—";
+      const statusText = attStatus === "PRESENT" ? "Bor" : (attStatus === "LATE" ? "Kechikdi" : (attStatus === "ABSENT" ? "Yo'q" : attStatus));
+
+      const gr = localGrades[s.id] || { score: 0, comment: "" };
+      const coins = localCoins[s.id] || 0;
+
+      return [
+        idx + 1,
+        s.full_name || s.username,
+        statusText,
+        gr.score ? `${gr.score} / 100` : "—",
+        coins > 0 ? `+${coins} coin` : "—",
+        gr.comment || "—"
+      ];
+    });
+
+    // Use autoTable function
+    autoTable(doc, {
+      startY: 52,
+      head: headers,
+      body: body,
+      theme: "striped",
+      headStyles: { fillColor: [79, 70, 229] }, // Indigo color
+      styles: { fontSize: 9, cellPadding: 3 },
+      columnStyles: {
+        0: { cellWidth: 10 },
+        1: { cellWidth: 45 },
+        2: { cellWidth: 25 },
+        3: { cellWidth: 20 },
+        4: { cellWidth: 25 },
+        5: { cellWidth: 65 }
+      }
+    });
+
+    doc.save(`smart_dashboard_${activeGroup?.name || "guruh"}_${new Date().toISOString().slice(0, 10)}.pdf`);
+    toast.success("PDF hisoboti muvaffaqiyatli yuklab olindi! 📄✅");
   };
 
   // Filtered Students
@@ -421,7 +481,7 @@ export default function SmartDashboard() {
                 <th className="py-4 px-6 font-display">#</th>
                 <th className="py-4 px-6 font-display">Talaba Ismi</th>
                 {lessons.map((l) => (
-                  <th key={l.id} className="py-4 px-4 text-center font-display min-w-[100px]">
+                  <th key={l.id} className="py-4 px-4 text-center font-display min-w-[145px]">
                     <div className="flex flex-col items-center gap-1">
                       <Calendar className="h-3.5 w-3.5 text-primary" />
                       <span>{new Date(l.starts_at).toLocaleDateString("uz", { month: "short", day: "numeric", weekday: "short" })}</span>
@@ -488,19 +548,55 @@ export default function SmartDashboard() {
 
                       {/* Attendance Toggles */}
                       {lessons.map((l) => {
-                        const status = localAttendances[`${l.id}-${s.id}`];
+                        const status = localAttendances[`${l.id}-${s.id}`] || "PRESENT";
                         return (
                           <td key={l.id} className="py-4 px-4 text-center">
-                            <motion.button
-                              whileTap={{ scale: 0.9 }}
-                              onClick={() => handleToggleAttendance(l.id, s.id)}
-                              className="p-2 rounded-xl transition-all hover:bg-background/80 shadow-sm flex items-center justify-center mx-auto border border-border/40"
-                            >
-                              {status === "PRESENT" && <CheckCircle2 className="h-5 w-5 text-success" />}
-                              {status === "LATE" && <MinusCircle className="h-5 w-5 text-warning" />}
-                              {status === "ABSENT" && <XCircle className="h-5 w-5 text-destructive" />}
-                              {!status && <CheckCircle2 className="h-5 w-5 text-muted-foreground/40" />}
-                            </motion.button>
+                            <div className="flex items-center justify-center gap-1 bg-muted/40 p-1 rounded-xl w-fit mx-auto border border-border/40">
+                              {/* Present */}
+                              <button
+                                type="button"
+                                onClick={() => handleSetAttendance(l.id, s.id, "PRESENT")}
+                                className={cn(
+                                  "p-1.5 rounded-lg transition-all",
+                                  status === "PRESENT"
+                                    ? "bg-emerald-500 text-white shadow-sm scale-105"
+                                    : "text-muted-foreground/50 hover:text-emerald-500 hover:bg-emerald-500/10"
+                                )}
+                                title="Bor (Present)"
+                              >
+                                <CheckCircle2 className="h-4 w-4" />
+                              </button>
+
+                              {/* Late */}
+                              <button
+                                type="button"
+                                onClick={() => handleSetAttendance(l.id, s.id, "LATE")}
+                                className={cn(
+                                  "p-1.5 rounded-lg transition-all",
+                                  status === "LATE"
+                                    ? "bg-amber-500 text-white shadow-sm scale-105"
+                                    : "text-muted-foreground/50 hover:text-amber-500 hover:bg-amber-500/10"
+                                )}
+                                title="Kechikdi (Late)"
+                              >
+                                <MinusCircle className="h-4 w-4" />
+                              </button>
+
+                              {/* Absent */}
+                              <button
+                                type="button"
+                                onClick={() => handleSetAttendance(l.id, s.id, "ABSENT")}
+                                className={cn(
+                                  "p-1.5 rounded-lg transition-all",
+                                  status === "ABSENT"
+                                    ? "bg-rose-500 text-white shadow-sm scale-105"
+                                    : "text-muted-foreground/50 hover:text-rose-500 hover:bg-rose-500/10"
+                                )}
+                                title="Yo'q (Absent)"
+                              >
+                                <XCircle className="h-4 w-4" />
+                              </button>
+                            </div>
                           </td>
                         );
                       })}
@@ -509,7 +605,7 @@ export default function SmartDashboard() {
                       <td className="py-4 px-6">
                         <Input
                           placeholder="Fikr qoldiring..."
-                          value={gr.comment}
+                          value={gr.comment || ""}
                           onChange={(e) => handleCommentChange(s.id, e.target.value)}
                           onBlur={() => handleGradeBlur(s.id)}
                           className="bg-background/50 border-border/60 text-xs h-9"
@@ -522,10 +618,10 @@ export default function SmartDashboard() {
                           variant="outline"
                           size="sm"
                           onClick={() => openCoinModal(s.id)}
-                          className="gap-1.5 border-primary/20 hover:border-primary/40 text-primary hover:bg-primary/10"
+                          className="gap-1.5 border-primary/20 hover:border-primary/40 text-primary hover:bg-primary/10 transition-all duration-300"
                         >
-                          <Star className="h-4 w-4 fill-primary text-primary" />
-                          <span>+ Coin</span>
+                          <Star className={`h-4 w-4 text-primary ${localCoins[s.id] ? "fill-primary scale-125 animate-pulse" : ""}`} />
+                          <span>+ Coin {localCoins[s.id] ? `(${localCoins[s.id]})` : ""}</span>
                         </Button>
                       </td>
 
@@ -558,9 +654,27 @@ export default function SmartDashboard() {
         {/* Footer Actions */}
         <div className="p-6 bg-muted/20 border-t border-border/40 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
           <p>Jami talabalar: <span className="font-semibold text-foreground">{filteredStudents.length}</span> nafar</p>
-          <Button variant="outline" size="sm" className="gap-1.5 border-border/60">
-            <Download className="h-4 w-4" /> Hisobotni Yuklab Olish (PDF)
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button variant="outline" size="sm" onClick={handleDownloadPDF} className="gap-1.5 border-border/60 hover:bg-background/80 transition-all duration-300">
+              <Download className="h-4 w-4" /> Hisobotni Yuklab Olish (PDF)
+            </Button>
+            {lessons.length > 0 && (
+              <Button
+                variant="hero"
+                size="sm"
+                onClick={() => saveAllDashboardDataMutation.mutate()}
+                disabled={saveAllDashboardDataMutation.isPending}
+                className="gap-1.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-md hover:shadow-lg transition-all duration-300 transform active:scale-95"
+              >
+                {saveAllDashboardDataMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <CheckCircle2 className="h-4 w-4" />
+                )}
+                O'zgarishlarni Saqlash
+              </Button>
+            )}
+          </div>
         </div>
       </Card>
 
@@ -614,9 +728,9 @@ export default function SmartDashboard() {
             <Button variant="outline" onClick={() => setCoinModalOpen(false)}>
               Bekor
             </Button>
-            <Button variant="hero" onClick={() => grantCoinMutation.mutate()} disabled={grantCoinMutation.isPending}>
-              {grantCoinMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Award className="h-4 w-4 mr-1" />}
-              Taqdim Etish
+            <Button variant="hero" onClick={handleSaveCoinsLocally}>
+              <Award className="h-4 w-4 mr-1" />
+              Belgilash
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -63,6 +63,40 @@ public class TelegramNotificationService {
         sendToParents(student, message);
     }
 
+    public void notifyCombinedReport(User student, AttendanceStatus status, String lessonName, String subjectName, Integer score, String comment, Integer coins) {
+        String statusEmoji = status == AttendanceStatus.PRESENT ? "✅" : (status == AttendanceStatus.LATE ? "⏳" : "❌");
+        String statusText = status == AttendanceStatus.PRESENT ? "Bor" : (status == AttendanceStatus.LATE ? "Kechikdi" : "Yo'q");
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("📊 <b>Kunlik Dars Hisoboti</b>\n\n");
+        sb.append(String.format("👤 O'quvchi: <b>%s</b>\n", student.getFullName()));
+        sb.append(String.format("📚 Fan: <b>%s</b>\n", subjectName));
+        sb.append(String.format("📖 Dars: %s\n", lessonName));
+        sb.append(String.format("⏱ Davomat: %s %s\n", statusEmoji, statusText));
+
+        if (score != null && score > 0) {
+            sb.append(String.format("📝 Baho: <b>%d / 100</b>\n", score));
+        }
+
+        if (coins != null && coins > 0) {
+            sb.append(String.format("🪙 Rag'bat: <b>+%d coin</b>\n", coins));
+        }
+
+        if (comment != null && !comment.isBlank()) {
+            sb.append(String.format("\n💬 Izoh: <i>%s</i>\n", comment));
+        }
+
+        String message = sb.toString();
+
+        // Send to parents
+        sendToParents(student, message);
+
+        // Also send directly to the student if they have a chat ID registered
+        if (student.getTelegramChatId() != null && !student.getTelegramChatId().isBlank()) {
+            telegramBotService.sendMessageTo(student.getTelegramChatId(), message);
+        }
+    }
+
     private void sendToParents(User student, String message) {
         List<ParentStudentLink> links = parentStudentLinkRepository.findAllByStudentId(student.getId());
         if (links.isEmpty()) {

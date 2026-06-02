@@ -197,8 +197,6 @@ export default function StudentDashboard() {
     <>
       <WelcomeBanner />
       <RoleDashboard
-        title="Talaba paneli"
-        description="Darslaringiz, jadvalingiz va baholaringiz"
         stats={stats}
       >
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>

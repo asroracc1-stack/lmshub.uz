@@ -84,7 +84,7 @@ export default function ProfileMenu({ role, basePath }: ProfileMenuProps) {
     admin: { label: "⭐ Admin", className: "bg-blue-500/15 text-blue-600 dark:text-blue-400" },
     administrator: { label: "🛡 Administrator", className: "bg-violet-500/15 text-violet-600 dark:text-violet-400" },
     teacher: { label: "🎓 Teacher", className: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" },
-    student: { label: "🔥 User", className: "bg-rose-500/15 text-rose-600 dark:text-rose-400" },
+    student: { label: "🎒 Student", className: "bg-sky-500/15 text-sky-600 dark:text-sky-400" },
     user: { label: "🔥 User", className: "bg-rose-500/15 text-rose-600 dark:text-rose-400" },
     parent: { label: "👨‍👩‍👧 Parent", className: "bg-cyan-500/15 text-cyan-600 dark:text-cyan-400" },
     payment_manager: { label: "💼 Manager", className: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" },

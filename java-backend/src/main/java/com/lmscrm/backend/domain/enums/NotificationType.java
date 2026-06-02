@@ -5,5 +5,6 @@ public enum NotificationType {
     ALERT,
     NEW_MESSAGE,
     ACADEMIC,
+    ATTENDANCE,
     FINANCE
 }

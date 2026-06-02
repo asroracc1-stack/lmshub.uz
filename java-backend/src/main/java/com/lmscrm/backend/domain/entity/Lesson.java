@@ -1,5 +1,6 @@
 package com.lmscrm.backend.domain.entity;
 
+import com.lmscrm.backend.domain.enums.AttendanceStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -47,9 +48,26 @@ public class Lesson {
     @Column(name = "ends_at", nullable = false)
     private LocalDateTime endsAt;
 
+    @Column(name = "student_id")
+    private java.util.UUID studentId;
+
     @Column(name = "is_canceled", nullable = false)
     @Builder.Default
     private Boolean isCanceled = false;
+
+    // Getter and setter for isCanceled to satisfy builder and service usage
+    public Boolean getIsCanceled() {
+        return this.isCanceled;
+    }
+
+    public void setIsCanceled(Boolean isCanceled) {
+        this.isCanceled = isCanceled;
+    }
+
+
+
+    @Enumerated(EnumType.STRING)
+    private AttendanceStatus attendanceStatus;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "organization_id", nullable = false)

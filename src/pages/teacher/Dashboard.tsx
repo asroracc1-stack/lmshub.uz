@@ -18,8 +18,6 @@ export default function TeacherDashboard() {
     <>
       <WelcomeBanner />
       <RoleDashboard
-        title="O'qituvchi paneli"
-        description="Sizning darslaringiz va talabalaringiz"
         stats={stats}
       >
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>

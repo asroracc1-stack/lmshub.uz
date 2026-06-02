@@ -5,9 +5,11 @@ import com.lmscrm.backend.dto.academic.AttendanceDto;
 import com.lmscrm.backend.dto.academic.BatchAttendanceRequest;
 import com.lmscrm.backend.dto.academic.GradeDto;
 import com.lmscrm.backend.dto.academic.GroupDto;
+import com.lmscrm.backend.dto.academic.DashboardBatchRequest;
 import com.lmscrm.backend.service.academic.AttendanceService;
 import com.lmscrm.backend.service.academic.GradeService;
 import com.lmscrm.backend.service.academic.GroupService;
+import com.lmscrm.backend.service.academic.DashboardBatchService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -31,6 +33,7 @@ public class TeacherAcademicController {
     private final GroupService groupService;
     private final AttendanceService attendanceService;
     private final GradeService gradeService;
+    private final DashboardBatchService dashboardBatchService;
 
     @GetMapping("/groups/{groupId}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN') or (hasRole('TEACHER') and @securityUtils.isTeacherOfGroup(#groupId))")
@@ -78,6 +81,19 @@ public class TeacherAcademicController {
             @AuthenticationPrincipal User user) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(gradeService.addGrade(request, user));
+    }
+
+    @PostMapping("/attendance/save-all")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
+    @Operation(
+            summary = "Save All Smart Dashboard Data",
+            description = "Allows a teacher to submit attendance, grades, comments, and coins for multiple students at once. Sends asynchronous Telegram notifications."
+    )
+    public ResponseEntity<Void> saveAllDashboardData(
+            @Valid @RequestBody DashboardBatchRequest request,
+            @AuthenticationPrincipal User user) {
+        dashboardBatchService.saveAllDashboardData(request, user);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/attendance")

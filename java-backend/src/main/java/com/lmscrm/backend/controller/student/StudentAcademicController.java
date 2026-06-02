@@ -9,6 +9,10 @@ import com.lmscrm.backend.repository.InvoiceRepository;
 import com.lmscrm.backend.repository.StudentAttemptRepository;
 import com.lmscrm.backend.service.academic.AttendanceService;
 import com.lmscrm.backend.service.academic.GradeService;
+import com.lmscrm.backend.service.academic.StudentLessonService;
+import com.lmscrm.backend.service.academic.StudentAnalyticsService;
+import com.lmscrm.backend.dto.academic.StudentLessonResponse;
+import com.lmscrm.backend.dto.academic.StudentAnalyticsDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +40,8 @@ public class StudentAcademicController {
 
     private final AttendanceService attendanceService;
     private final GradeService gradeService;
+    private final StudentLessonService studentLessonService;
+    private final StudentAnalyticsService studentAnalyticsService;
 
     private final GroupMemberRepository groupMemberRepository;
     private final StudentAttemptRepository studentAttemptRepository;
@@ -53,6 +59,20 @@ public class StudentAcademicController {
     @Operation(summary = "Get My Grades")
     public ResponseEntity<List<GradeDto>> getMyGrades(@AuthenticationPrincipal User user) {
         return ResponseEntity.ok(gradeService.getStudentGrades(user.getId()));
+    }
+
+    @GetMapping("/my-courses")
+    @PreAuthorize("hasRole('STUDENT')")
+    @Operation(summary = "Get My Courses/Lessons")
+    public ResponseEntity<StudentLessonResponse> getMyCourses(@AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(studentLessonService.getLessonsForStudent(user.getId()));
+    }
+
+    @GetMapping("/analytics")
+    @PreAuthorize("hasRole('STUDENT')")
+    @Operation(summary = "Get My Analytics")
+    public ResponseEntity<StudentAnalyticsDto> getMyAnalytics(@AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(studentAnalyticsService.getAnalytics(user.getId()));
     }
 
     /**

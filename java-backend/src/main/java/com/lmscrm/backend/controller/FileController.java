@@ -140,29 +140,10 @@ public class FileController {
             String filename = "profile-" + user.getId() + "-" + System.currentTimeMillis() + ".webp";
             Path targetFile = logoPath.resolve(filename);
 
-            // Read image
-            BufferedImage image = ImageIO.read(file.getInputStream());
-            if (image == null) {
-                log.error("❌ Invalid image file received for user: {}", user.getId());
-                return ResponseEntity.badRequest().body("Invalid image file");
-            }
-
-            // Check for WebP writer
-            java.util.Iterator<ImageWriter> writers = ImageIO.getImageWritersByMIMEType("image/webp");
-            if (!writers.hasNext()) {
-                log.warn("⚠️ No WebP writer found. Falling back to original format.");
-                Files.copy(file.getInputStream(), targetFile); // Or save as JPG
-            } else {
-                ImageWriter writer = writers.next();
-                ImageWriteParam writeParam = writer.getDefaultWriteParam();
-                try (ImageOutputStream ios = ImageIO.createImageOutputStream(targetFile.toFile())) {
-                    writer.setOutput(ios);
-                    writer.write(null, new IIOImage(image, null, null), writeParam);
-                    log.info("✅ Successfully saved WebP image: {}", targetFile.getFileName());
-                } finally {
-                    writer.dispose();
-                }
-            }
+            // Save the already optimized and cropped WebP image from the frontend directly
+            Path absoluteTarget = targetFile.toAbsolutePath();
+            Files.copy(file.getInputStream(), absoluteTarget, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            log.info("✅ Successfully saved optimized WebP image: {} at {}", targetFile.getFileName(), absoluteTarget);
 
             String url = "/api/v1/files/view/logos/" + filename;
             

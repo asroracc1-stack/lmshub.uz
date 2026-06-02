@@ -14,6 +14,12 @@ public interface LessonRepository extends JpaRepository<Lesson, UUID> {
     List<Lesson> findByTeacherIdAndStartsAtBetweenOrderByStartsAtAsc(UUID teacherId, LocalDateTime start, LocalDateTime end);
     long countByTeacherId(UUID teacherId);
     List<Lesson> findByOrganizationIdOrderByStartsAtDesc(UUID organizationId);
+    // Talabaning guruh orqali darslarini olish
+    @org.springframework.data.jpa.repository.Query(
+        "SELECT DISTINCT l FROM Lesson l JOIN GroupMember gm ON l.group.id = gm.group.id " +
+        "WHERE gm.student.id = :studentId ORDER BY l.startsAt ASC"
+    )
+    List<Lesson> findAllByStudentId(@org.springframework.data.repository.query.Param("studentId") UUID studentId);
 
     // Existing query for room overlap, used when updating an existing lesson
     @org.springframework.data.jpa.repository.Query("SELECT l FROM Lesson l WHERE " +
