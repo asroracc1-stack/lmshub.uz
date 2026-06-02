@@ -1,0 +1,13 @@
+# Railway Configuration
+# Only build the Java backend, ignore frontend files
+
+[build]
+# Use the Dockerfile at project root (it already copies from java-backend/)
+dockerfilePath = "Dockerfile"
+
+[deploy]
+# Railway provides $PORT automatically
+healthcheckPath = "/api/v1/auth/health"
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3

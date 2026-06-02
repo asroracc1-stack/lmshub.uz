@@ -1,0 +1,26 @@
+# Frontend files — not needed for Java backend Docker build
+node_modules/
+src/
+public/
+dist/
+*.md
+*.lock
+bun.lock
+package.json
+package-lock.json
+tsconfig*.json
+tailwind.config.ts
+postcss.config.js
+eslint.config.js
+vite.config.ts
+vitest.config.ts
+components.json
+index.html
+vercel.json
+.env
+.env.*
+.git
+.gitignore
+spring-petclinic/
+uploads/
+supabase/

@@ -53,4 +53,13 @@ public class AuthController {
         authService.resetSuperAdminPassword();
         return ResponseEntity.ok("Password reset to 11111111");
     }
+
+    @GetMapping("/health")
+    @Operation(summary = "Health Check for Railway")
+    public ResponseEntity<java.util.Map<String, String>> healthCheck() {
+        return ResponseEntity.ok(java.util.Map.of(
+            "status", "UP",
+            "service", "lmscrm-backend"
+        ));
+    }
 }
