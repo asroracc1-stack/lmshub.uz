@@ -16,8 +16,10 @@ public interface LessonRepository extends JpaRepository<Lesson, UUID> {
     List<Lesson> findByOrganizationIdOrderByStartsAtDesc(UUID organizationId);
     // Talabaning guruh orqali darslarini olish
     @org.springframework.data.jpa.repository.Query(
-        "SELECT DISTINCT l FROM Lesson l JOIN GroupMember gm ON l.group.id = gm.group.id " +
-        "WHERE gm.student.id = :studentId ORDER BY l.startsAt ASC"
+        "SELECT DISTINCT l FROM Lesson l " +
+        "LEFT JOIN GroupMember gm ON l.group.id = gm.group.id AND gm.student.id = :studentId " +
+        "WHERE (gm.student.id = :studentId OR l.group.id = (SELECT u.groupId FROM User u WHERE u.id = :studentId)) " +
+        "ORDER BY l.startsAt ASC"
     )
     List<Lesson> findAllByStudentId(@org.springframework.data.repository.query.Param("studentId") UUID studentId);
 
