@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, Suspense } from "react";
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
@@ -168,7 +168,15 @@ export default function PackManagerLayout() {
           initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}
           className="flex-1 p-4 md:p-6 overflow-y-auto"
         >
-          <Outlet />
+          <Suspense
+            fallback={
+              <div className="flex items-center justify-center min-h-[200px]">
+                <div className="h-8 w-8 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
+              </div>
+            }
+          >
+            <Outlet />
+          </Suspense>
         </motion.main>
       </div>
     </div>

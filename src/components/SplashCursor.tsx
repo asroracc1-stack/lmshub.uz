@@ -82,7 +82,10 @@ function SplashCursor({
 
     let pointers = [new (PointerPrototype as any)()];
 
-    const { gl, ext } = getWebGLContext(canvas);
+    const webglResult = getWebGLContext(canvas);
+    // WebGL qo'llab-quvvatlanmasa, jimgina chiqib ketamiz
+    if (!webglResult || !webglResult.gl) return;
+    const { gl, ext } = webglResult;
     if (!ext.supportLinearFiltering) {
       config.DYE_RESOLUTION = 256;
       config.SHADING = false;
@@ -99,6 +102,9 @@ function SplashCursor({
       let gl = canvas.getContext('webgl2', params) as any;
       const isWebGL2 = !!gl;
       if (!isWebGL2) gl = canvas.getContext('webgl', params) || canvas.getContext('experimental-webgl', params);
+
+      // WebGL umuman qo'llab-quvvatlanmasa
+      if (!gl) return null;
 
       let halfFloat: any;
       let supportLinearFiltering: any;

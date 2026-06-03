@@ -30,6 +30,13 @@ public class AiController {
                 "{\"code\": \"...\", \"description\": \"...\", \"color\": \"...\"}";
 
         String response = geminiService.executeWithRotation(prompt, 3);
-        return ResponseEntity.ok(response);
+        
+        // AI ba'zan baribir markdown formatida qaytaradi (```json ... ```)
+        // Shuni tozalash uchun regex ishlatamiz
+        String cleanedResponse = response != null 
+            ? response.replaceAll("```json|```", "").trim() 
+            : "{}";
+            
+        return ResponseEntity.ok(cleanedResponse);
     }
 }

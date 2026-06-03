@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, Suspense } from "react";
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
@@ -269,7 +269,15 @@ export default function SuperAdminLayout() {
         </AnimatePresence>
 
         <main className="flex-1 p-6 lg:p-10 w-full max-w-[1440px] mx-auto">
-          <Outlet />
+          <Suspense
+            fallback={
+              <div className="flex items-center justify-center min-h-[200px]">
+                <div className="h-8 w-8 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
+              </div>
+            }
+          >
+            <Outlet />
+          </Suspense>
         </main>
       </div>
     </div>

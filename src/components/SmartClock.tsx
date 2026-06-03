@@ -11,7 +11,7 @@ export default function SmartClock() {
   const [time, setTime] = useState(new Date());
   const [isVisible, setIsVisible] = useState(() => {
     const saved = localStorage.getItem("smart-clock-settings");
-    if (!saved) return true;
+    if (!saved) return false;
     return JSON.parse(saved).visible;
   });
   const [isMuted, setIsMuted] = useState(() => {
@@ -79,16 +79,17 @@ export default function SmartClock() {
     const newVisible = !isVisible;
     if (isVisible) {
       setShowTigerHide(true);
+      setIsVisible(false);
+      const settings = { visible: false, sound: !isMuted };
+      localStorage.setItem("smart-clock-settings", JSON.stringify(settings));
+      window.dispatchEvent(new Event("storage"));
+      
       toast.info("Soat berkitildi", {
         className: "mt-20 bg-purple-500/20 backdrop-blur-md border-purple-500/30 text-purple-700 dark:text-purple-300 font-bold",
         duration: 2000,
       });
       setTimeout(() => {
-        setIsVisible(false);
         setShowTigerHide(false);
-        const settings = { visible: false, sound: !isMuted };
-        localStorage.setItem("smart-clock-settings", JSON.stringify(settings));
-        window.dispatchEvent(new Event("storage"));
       }, 1500);
     } else {
       setIsVisible(true);

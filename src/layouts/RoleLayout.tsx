@@ -1,4 +1,4 @@
-import { useCallback, useState, ComponentType, useMemo, useEffect } from "react";
+import { useCallback, useState, useMemo, useEffect, Suspense } from "react";
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,11 +16,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import TigerPlayer from "@/components/TigerPlayer";
 import NotificationsBell from "@/components/NotificationsBell";
-import BrandLogo from "@/components/BrandLogo";
 import Logo from "@/components/Logo";
-
 import ProfileMenu from "@/components/ProfileMenu";
 import MobileSidebarDrawer from "@/components/MobileSidebarDrawer";
 import SmartClock from "@/components/SmartClock";
@@ -42,11 +39,17 @@ interface RoleLayoutProps {
   basePath?: string;
 }
 
-export default function RoleLayout({ brand = "LMSHub", subtitle, nav: initialNav, role = "user", basePath = "/user" }: RoleLayoutProps) {
+export default function RoleLayout({
+  brand = "LMSHub",
+  subtitle,
+  nav: initialNav,
+  role = "user",
+  basePath = "/user",
+}: RoleLayoutProps) {
   const { profile, signOut, user, loading: authLoading } = useAuth();
   const { theme } = useTheme();
   const { data: orgData } = useOrganization(
-    (role === "admin" || role === "super_admin") ? profile?.organization_id : null
+    role === "admin" || role === "super_admin" ? profile?.organization_id : null
   );
   const { prefetchRouteData } = usePrefetchHelper();
   const navigate = useNavigate();
@@ -54,18 +57,18 @@ export default function RoleLayout({ brand = "LMSHub", subtitle, nav: initialNav
   usePageTitle();
   const { t } = useTranslation();
   const packAccess = usePackAccess();
-  
+
+  /* ── Mobile drawer ──────────────────────────────────── */
   const [mobileOpen, setMobileOpen] = useState(false);
   const openMobileMenu = useCallback(() => setMobileOpen(true), []);
   const closeMobileMenu = useCallback(() => setMobileOpen(false), []);
-  
+  const handleMobileNavClick = useCallback(() => setMobileOpen(false), []);
+
+  /* ── Desktop sidebar collapse ───────────────────────── */
   const STORAGE_KEY = `rl_sidebar_collapsed_${role}`;
   const [collapsed, setCollapsed] = useState<boolean>(
-    () => typeof window !== "undefined" && localStorage.getItem(STORAGE_KEY) === "1",
+    () => typeof window !== "undefined" && localStorage.getItem(STORAGE_KEY) === "1"
   );
-
-  const [manualToggle, setManualToggle] = useState<Record<string, boolean>>({});
-
   const toggleCollapsed = () =>
     setCollapsed((v) => {
       const n = !v;
@@ -73,23 +76,25 @@ export default function RoleLayout({ brand = "LMSHub", subtitle, nav: initialNav
       return n;
     });
 
+  /* ── Submenu open/close ─────────────────────────────── */
+  const [manualToggle, setManualToggle] = useState<Record<string, boolean>>({});
   const finalNav = useMemo(() => {
     if (initialNav) return initialNav;
     return getSidebarRoutes(role, t, packAccess);
   }, [initialNav, role, t, packAccess]);
 
-  // Auto-collapse logic when navigating to non-child routes
   useEffect(() => {
     const updatedToggles: Record<string, boolean> = {};
-    finalNav.forEach(item => {
+    finalNav.forEach((item) => {
       if (item.children) {
-        const isActive = item.children.some(c => location.pathname === c.to);
+        const isActive = item.children.some((c) => location.pathname === c.to);
         updatedToggles[item.label] = isActive;
       }
     });
     setManualToggle(updatedToggles);
   }, [location.pathname, finalNav]);
 
+  /* ── Display name ───────────────────────────────────── */
   const displayName = (() => {
     if (profile?.full_name) return profile.full_name;
     const meta = user?.user_metadata;
@@ -107,125 +112,199 @@ export default function RoleLayout({ brand = "LMSHub", subtitle, nav: initialNav
     navigate("/", { replace: true });
   };
 
-  const SidebarContent = ({ mini = false }: { mini?: boolean }) => (
-    <>
-      <div className="p-6 border-b border-sidebar-border shrink-0 flex items-center justify-between gap-3">
-        <div className={cn("flex items-center gap-3 min-w-0", mini ? "justify-center" : "")}>
-          <Logo 
-            size={mini ? 36 : 52} 
-            showText={!mini} 
-            variant={theme === "dark" ? "light" : "dark"} 
-            className="transition-all duration-300"
-          />
-        </div>
-        {!mini && (
-          <button
-            onClick={toggleCollapsed}
-            className="hidden md:flex p-2 rounded-lg hover:bg-slate-100/80 dark:hover:bg-sidebar-accent text-slate-400 hover:text-slate-600 dark:hover:text-foreground transition-all"
-            aria-label="Menyuni yashirish"
+  /* ════════════════════════════════════════════════════
+     SIDEBAR RENDER FUNCTION
+     mini=true  → icon only (desktop collapsed)
+     mini=false → full (desktop expanded + mobile)
+  ════════════════════════════════════════════════════ */
+  const renderSidebarContent = (mini = false, isMobile = false) => (
+    <div className="flex flex-col h-full">
+
+      {/* ── Header: Logo & Toggle (desktop only) ─────────────────────── */}
+      <div 
+        className={cn(
+          "shrink-0 h-16 flex items-center border-b border-sidebar-border transition-all duration-300 select-none",
+          mini ? "justify-center px-2" : "justify-between px-3"
+        )}
+      >
+        {/* Expanded State: Logo + Close button */}
+        {!mini ? (
+          <>
+            <div className="flex items-center gap-2 overflow-hidden flex-1 opacity-100">
+              <Logo
+                size={44}
+                showText={true}
+                variant={theme === "dark" ? "light" : "dark"}
+              />
+            </div>
+            {!isMobile && (
+              <button
+                onClick={() => setCollapsed(true)}
+                className="flex items-center justify-center h-8 w-8 shrink-0 rounded-lg border border-border/60
+                  bg-background/40 hover:bg-primary/10 hover:border-primary/40
+                  text-muted-foreground hover:text-primary transition-all duration-200 cursor-pointer"
+                title="Menyuni yashirish"
+                aria-label="Menyuni yashirish"
+              >
+                <PanelLeftClose className="h-4 w-4" />
+              </button>
+            )}
+          </>
+        ) : (
+          /* Collapsed (Mini) State: Click to open */
+          <div 
+            onClick={!isMobile ? () => setCollapsed(false) : undefined}
+            className={cn(
+              "flex items-center justify-center transition-all duration-300",
+              !isMobile && "cursor-pointer hover:scale-105"
+            )}
+            title="Menyuni ochish"
           >
-            <PanelLeftClose size={20} />
-          </button>
+            <Logo
+              size={36}
+              showText={false}
+              variant={theme === "dark" ? "light" : "dark"}
+            />
+          </div>
         )}
       </div>
 
-      <nav className="flex-1 min-h-0 p-3 space-y-1 overflow-y-auto thin-scrollbar">
+      {/* ── Nav items ─────────────────────────────────── */}
+      <nav className="flex-1 min-h-0 py-3 px-2 space-y-0.5 overflow-y-auto thin-scrollbar">
         {finalNav.map((item) => {
-          const hasActiveChild = item.children?.some(c => {
+          const hasActiveChild = item.children?.some((c) => {
             if (!c.to) return false;
             return location.pathname === c.to || location.pathname.startsWith(`${c.to}/`);
           });
           const isExpanded = manualToggle[item.label] ?? (hasActiveChild || false);
 
-          return item.children ? (
-            <div key={item.label} className="space-y-1">
-              <button
-                onClick={() => setManualToggle(prev => ({ ...prev, [item.label]: !isExpanded }))}
-                aria-expanded={isExpanded}
-                className={cn(
-                  "w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all duration-200",
-                  mini && "justify-center px-2",
-                  isExpanded || hasActiveChild 
-                    ? "bg-primary/10 text-primary font-bold" 
-                    : "text-slate-500 hover:bg-slate-100/30 dark:hover:bg-sidebar-accent/20"
-                )}
-              >
-                <item.icon size={20} className={cn("shrink-0", (isExpanded || hasActiveChild) ? "text-primary" : "text-slate-400")} />
-                {!mini && (
-                  <>
-                    <span className="flex-1 text-left truncate">{item.label}</span>
-                    <ChevronDown size={14} className={cn("transition-transform duration-300", isExpanded && "rotate-180")} />
-                  </>
-                )}
-              </button>
-              <AnimatePresence>
-                {isExpanded && !mini && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    role="region"
-                    aria-label={`${item.label} submenu`}
-                    className="overflow-hidden pl-8 space-y-1 relative"
-                  >
-                    {/* Hierarchical line */}
-                    <div className="absolute left-4 top-0 bottom-0 w-px bg-slate-200 dark:bg-slate-800" />
-                    
-                    {item.children.map((child) => (
-                      <NavLink
-                        key={child.to}
-                        to={child.to!}
-                        onClick={closeMobileMenu}
-                        className={({ isActive }) =>
-                          cn(
-                            "relative flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200",
-                            isActive
-                              ? "bg-primary/10 text-primary font-bold shadow-sm"
-                              : "text-slate-500 hover:text-slate-900 dark:hover:text-foreground hover:bg-slate-50 dark:hover:bg-sidebar-accent/20",
-                          )
-                        }
-                      >
-                        {({ isActive }) => (
-                          <>
-                            {isActive && (
-                              <motion.div 
-                                layoutId="active-dot"
-                                className="absolute -left-[17px] w-2 h-2 rounded-full bg-primary" 
-                              />
+          if (item.children) {
+            return (
+              <div key={item.label} className="space-y-0.5">
+                {/* Parent button */}
+                <button
+                  onClick={() =>
+                    !mini && setManualToggle((prev) => ({ ...prev, [item.label]: !isExpanded }))
+                  }
+                  aria-expanded={isExpanded}
+                  title={mini ? item.label : undefined}
+                  className={cn(
+                    "w-full flex items-center gap-3 rounded-xl text-sm font-medium transition-all duration-200 group",
+                    mini ? "justify-center h-11 w-11 mx-auto px-0" : "px-3 py-2.5",
+                    isExpanded || hasActiveChild
+                      ? "bg-primary/10 text-primary"
+                      : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white"
+                  )}
+                >
+                  <item.icon
+                    size={20}
+                    className={cn(
+                      "shrink-0 transition-colors",
+                      isExpanded || hasActiveChild
+                        ? "text-primary"
+                        : "text-slate-400 group-hover:text-emerald-500"
+                    )}
+                  />
+                  {!mini && (
+                    <>
+                      <span className="flex-1 text-left truncate font-semibold">{item.label}</span>
+                      <ChevronDown
+                        size={14}
+                        className={cn("shrink-0 transition-transform duration-300 text-slate-400", isExpanded && "rotate-180")}
+                      />
+                    </>
+                  )}
+                </button>
+
+                {/* Children */}
+                <AnimatePresence initial={false}>
+                  {isExpanded && !mini && (
+                    <motion.div
+                      key="sub"
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.22, ease: "easeInOut" }}
+                      className="overflow-hidden"
+                    >
+                      <div className="pl-4 pt-0.5 pb-1 space-y-0.5 relative">
+                        {/* Vertical guide line */}
+                        <div className="absolute left-[22px] top-0 bottom-2 w-px bg-slate-200 dark:bg-slate-700/60 rounded-full" />
+                        {item.children.map((child) => (
+                          <NavLink
+                            key={child.to}
+                            to={child.to!}
+                            onClick={handleMobileNavClick}
+                            className={({ isActive }) =>
+                              cn(
+                                "relative flex items-center gap-2.5 pl-5 pr-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200",
+                                isActive
+                                  ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold"
+                                  : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/5"
+                              )
+                            }
+                          >
+                            {({ isActive }) => (
+                              <>
+                                {isActive && (
+                                  <motion.div
+                                    layoutId={`active-child-dot-${item.label}`}
+                                    className="absolute left-[10px] w-1.5 h-1.5 rounded-full bg-emerald-500"
+                                  />
+                                )}
+                                <child.icon
+                                  size={15}
+                                  className={cn(isActive ? "text-emerald-500" : "text-slate-400")}
+                                />
+                                <span className="truncate">{child.label}</span>
+                              </>
                             )}
-                            <child.icon size={16} className={cn(isActive ? "text-primary" : "text-slate-400")} />
-                            <span>{child.label}</span>
-                          </>
-                        )}
-                      </NavLink>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          ) : (
+                          </NavLink>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            );
+          }
+
+          /* ── Leaf nav item ─── */
+          return (
             <NavLink
               key={item.to}
               to={item.to!}
               end
-              onClick={closeMobileMenu}
+              onClick={handleMobileNavClick}
               onMouseEnter={() => item.to && prefetchRouteData(item.to)}
               title={mini ? item.label : undefined}
               className={({ isActive }) =>
                 cn(
-                  "group flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold transition-all duration-300",
-                  mini && "justify-center px-2",
+                  "group flex items-center gap-3 rounded-xl text-sm font-semibold transition-all duration-200",
+                  mini ? "justify-center h-11 w-11 mx-auto px-0" : "px-3 py-2.5",
                   isActive
-                    ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20"
-                    : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white",
+                    ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/25"
+                    : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white"
                 )
               }
             >
               {({ isActive }) => (
                 <>
-                  <item.icon size={20} className={cn("shrink-0 transition-colors", !isActive ? "text-slate-400 group-hover:text-emerald-500 dark:group-hover:text-emerald-400" : "text-white")} />
-                  {!mini && <span className="flex-1 truncate">{item.label}</span>}
-                  {!mini && isActive && <ChevronRight size={14} className="opacity-60" />}
+                  <item.icon
+                    size={20}
+                    className={cn(
+                      "shrink-0 transition-colors",
+                      isActive
+                        ? "text-white"
+                        : "text-slate-400 group-hover:text-emerald-500 dark:group-hover:text-emerald-400"
+                    )}
+                  />
+                  {!mini && (
+                    <>
+                      <span className="flex-1 truncate">{item.label}</span>
+                      {isActive && <ChevronRight size={13} className="opacity-50 shrink-0" />}
+                    </>
+                  )}
                 </>
               )}
             </NavLink>
@@ -233,34 +312,49 @@ export default function RoleLayout({ brand = "LMSHub", subtitle, nav: initialNav
         })}
       </nav>
 
-      <div className="p-3 border-t border-slate-200 dark:border-white/5 space-y-1 shrink-0">
+      {/* ── Footer: Telegram + Logout ─────────────────── */}
+      <div
+        className={cn(
+          "shrink-0 border-t border-slate-200 dark:border-white/5 py-2 px-2 space-y-0.5"
+        )}
+      >
         <a
           href="https://t.me/CRMSystme_bot"
           target="_blank"
           rel="noopener noreferrer"
-          title={mini ? (role === 'user' ? "Telegram bot" : t("common.telegramBot")) : undefined}
+          title={mini ? (role === "user" ? "Telegram bot" : t("common.telegramBot")) : undefined}
           className={cn(
-            "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white transition-all",
-            mini && "justify-center px-2",
+            "flex items-center gap-3 rounded-xl text-sm font-semibold text-slate-500 dark:text-slate-400",
+            "hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white transition-all duration-200",
+            mini ? "justify-center h-11 w-11 mx-auto px-0" : "px-3 py-2.5"
           )}
         >
-          <Send size={18} className="shrink-0 text-slate-400" /> {!mini && (role === 'user' ? "Telegram bot" : t("common.telegramBot"))}
+          <Send size={18} className="shrink-0 text-slate-400" />
+          {!mini && (
+            <span className="truncate">{role === "user" ? "Telegram bot" : t("common.telegramBot")}</span>
+          )}
         </a>
         <button
           onClick={handleSignOut}
-          title={mini ? (role === 'user' ? "Chiqish" : t("common.logout")) : undefined}
+          title={mini ? (role === "user" ? "Chiqish" : t("common.logout")) : undefined}
           className={cn(
-            "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all",
-            mini && "justify-center px-2",
+            "w-full flex items-center gap-3 rounded-xl text-sm font-semibold text-red-500",
+            "hover:bg-red-50 dark:hover:bg-red-500/10 transition-all duration-200",
+            mini ? "justify-center h-11 w-11 mx-auto px-0" : "px-3 py-2.5"
           )}
         >
-          <LogOut size={18} className="shrink-0" /> {!mini && (role === 'user' ? "Chiqish" : t("common.logout"))}
+          <LogOut size={18} className="shrink-0" />
+          {!mini && (
+            <span className="truncate">{role === "user" ? "Chiqish" : t("common.logout")}</span>
+          )}
         </button>
       </div>
-    </>
+    </div>
   );
 
-  const isExamPage = location.pathname.includes('/exam') || location.pathname.includes('/take');
+  /* ── Exam page — no layout ──────────────────────────── */
+  const isExamPage =
+    location.pathname.includes("/exam") || location.pathname.includes("/take");
   if (isExamPage) {
     return (
       <div className="w-full min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 overflow-x-hidden">
@@ -269,61 +363,67 @@ export default function RoleLayout({ brand = "LMSHub", subtitle, nav: initialNav
     );
   }
 
+  /* ════════════════════════════════════════════════════
+     MAIN LAYOUT
+  ════════════════════════════════════════════════════ */
   return (
-    <div className={cn(
-      "min-h-screen flex w-full transition-colors duration-500",
-      theme === "dark" ? "bg-[#020617] text-slate-100" : "bg-slate-50 text-slate-900"
-    )}>
+    <div
+      className={cn(
+        "min-h-screen flex w-full transition-colors duration-500",
+        theme === "dark" ? "bg-[#020617] text-slate-100" : "bg-slate-50 text-slate-900"
+      )}
+    >
       <TigerLoader isLoading={authLoading} />
       <CommandPalette />
-      
-      <aside
+
+      {/* ── Desktop sidebar ─────────────────────────── */}
+      <motion.aside
+        animate={{ width: collapsed ? 72 : 256 }}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
         className={cn(
-          "hidden md:flex shrink-0 border-r flex-col h-screen sticky top-0 transition-all duration-300 z-40",
-          collapsed ? "w-20" : "w-64",
-          "border-r transition-all duration-500 z-50",
-          theme === "dark" 
-            ? "bg-slate-950 border-white/5 shadow-2xl" 
+          "hidden md:flex shrink-0 border-r flex-col h-screen sticky top-0 z-50 overflow-hidden",
+          theme === "dark"
+            ? "bg-slate-950 border-white/5 shadow-2xl"
             : "bg-white border-slate-200 shadow-xl shadow-slate-200/40"
         )}
       >
-        <SidebarContent mini={collapsed} />
-      </aside>
+        {renderSidebarContent(collapsed, false)}
+      </motion.aside>
 
-      <MobileSidebarDrawer open={mobileOpen} onClose={closeMobileMenu} routeKey={location.pathname}>
-        <SidebarContent />
+      {/* ── Mobile drawer ───────────────────────────── */}
+      <MobileSidebarDrawer
+        open={mobileOpen}
+        onClose={closeMobileMenu}
+        routeKey={location.pathname}
+      >
+        {renderSidebarContent(false, true)}
       </MobileSidebarDrawer>
 
+      {/* ── Main content ────────────────────────────── */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className={cn(
-          "h-16 border-b sticky top-0 z-30 transition-all w-full flex justify-center",
-          theme === "dark"
-            ? "bg-slate-950/50 backdrop-blur-xl border-white/5"
-            : "bg-white/80 backdrop-blur-md border-slate-200 shadow-sm"
-        )}>
-          <div className="w-full max-w-[1440px] px-4 md:px-8 flex items-center justify-between h-full">
-            <div className="flex items-center gap-4">
+        {/* Topbar */}
+        <header
+          className={cn(
+            "h-16 border-b sticky top-0 z-30 transition-all w-full flex justify-center",
+            theme === "dark"
+              ? "bg-slate-950/60 backdrop-blur-xl border-white/5"
+              : "bg-white/80 backdrop-blur-md border-slate-200 shadow-sm"
+          )}
+        >
+          <div className="w-full max-w-[1440px] px-4 md:px-6 flex items-center justify-between h-full">
+            <div className="flex items-center gap-3">
+              {/* Mobile hamburger */}
               <Button
                 variant="ghost"
                 size="icon"
-                className="md:hidden rounded-lg"
+                className="md:hidden rounded-xl h-9 w-9"
                 onClick={openMobileMenu}
                 aria-label="Menyu"
               >
                 <Menu className="h-5 w-5" />
               </Button>
-              {collapsed && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="hidden md:flex rounded-lg"
-                  onClick={toggleCollapsed}
-                  aria-label="Menyuni ochish"
-                  title="Menyuni ochish"
-                >
-                  <PanelLeftOpen className="h-5 w-5" />
-                </Button>
-              )}
+
+              {/* Greeting */}
               <div className="hidden sm:block">
                 <p className="font-bold text-sm tracking-tight text-foreground">
                   {t("common.hello")}, {displayName} 👋
@@ -351,14 +451,23 @@ export default function RoleLayout({ brand = "LMSHub", subtitle, nav: initialNav
           </div>
         </header>
 
+        {/* Page */}
         <motion.main
           key={location.pathname}
-          initial={{ opacity: 0, y: 4 }}
+          initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.25 }}
           className="flex-1 p-4 md:p-8 w-full max-w-[1440px] mx-auto"
         >
-          <Outlet />
+          <Suspense
+            fallback={
+              <div className="flex items-center justify-center min-h-[200px]">
+                <div className="h-8 w-8 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
+              </div>
+            }
+          >
+            <Outlet />
+          </Suspense>
         </motion.main>
       </div>
     </div>
