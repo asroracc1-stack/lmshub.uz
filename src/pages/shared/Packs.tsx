@@ -359,7 +359,7 @@ export default function Packs() {
   };
 
   return (
-    <div className="p-4 md:p-8 space-y-8 max-w-7xl mx-auto min-h-screen">
+    <div className="p-2 space-y-6 w-full min-h-screen">
       {/* Premium Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pb-6 border-b border-slate-100 dark:border-white/5">
         <div>
@@ -914,3 +914,4 @@ export default function Packs() {
     </div>
   );
 }
+

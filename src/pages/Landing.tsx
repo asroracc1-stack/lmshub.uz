@@ -131,7 +131,7 @@ export default function Landing() {
         "fixed top-4 md:top-6 inset-x-0 z-50 transition-all duration-500",
         scrolled ? "top-3" : "top-6"
       )}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-white">
+        <div className="w-full px-4 sm:px-6 lg:px-8 text-white">
           <nav className={cn(
             "flex items-center justify-between px-3 sm:px-6 py-1.5 sm:py-2.5 rounded-2xl transition-all duration-500 border",
             scrolled
@@ -215,7 +215,7 @@ export default function Landing() {
             className="w-full h-full"
           />
         </div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid lg:grid-cols-2 gap-12 xl:gap-16 items-center w-full relative z-10">
+        <div className="w-full px-4 sm:px-6 lg:px-8 grid lg:grid-cols-2 gap-12 xl:gap-16 items-center w-full relative z-10">
 
           {/* Left Content */}
           <motion.div
@@ -394,3 +394,4 @@ function FloatingBadge({ icon: Icon, title, className }: { icon: any, title: str
     </motion.div>
   );
 }
+

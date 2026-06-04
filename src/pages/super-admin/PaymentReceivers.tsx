@@ -154,7 +154,7 @@ export default function PaymentReceivers() {
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="space-y-6 w-full">
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
           <h1 className="text-2xl md:text-3xl font-display font-bold flex items-center gap-2">
@@ -360,3 +360,4 @@ export default function PaymentReceivers() {
     </div>
   );
 }
+

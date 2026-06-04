@@ -25,6 +25,9 @@ export default {
       "2xl": "1536px",
     },
     extend: {
+      maxWidth: {
+        "7xl": "1600px", // Expand the default 7xl layout for a wider dashboard site-wide
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

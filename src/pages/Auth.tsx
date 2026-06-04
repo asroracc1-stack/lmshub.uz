@@ -445,3 +445,4 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
     </div>
   );
 }
+

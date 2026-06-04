@@ -410,7 +410,7 @@ export default function RoleLayout({
               : "bg-white/80 backdrop-blur-md border-slate-200 shadow-sm"
           )}
         >
-          <div className="w-full max-w-[1440px] px-4 md:px-6 flex items-center justify-between h-full">
+          <div className="w-full px-4 flex items-center justify-between h-full">
             <div className="flex items-center gap-3">
               {/* Mobile hamburger */}
               <Button
@@ -457,7 +457,7 @@ export default function RoleLayout({
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.25 }}
-          className="flex-1 p-4 md:p-8 w-full max-w-[1440px] mx-auto"
+          className="flex-1 p-5 w-full"
         >
           <Suspense
             fallback={

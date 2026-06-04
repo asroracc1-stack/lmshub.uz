@@ -370,7 +370,7 @@ export default function SpeakingTopicDetail({ basePath = "/user" }: { basePath?:
   }, [audioUrl]);
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto px-4 py-2">
+    <div className="space-y-6 w-full px-4 py-2">
       {/* Topic Card Banner */}
       <Card className={cn("p-6 border-l-8 rounded-2xl shadow-elegant relative overflow-hidden bg-gradient-to-r from-card to-background", topic.color)}>
         <div className="flex items-start gap-5 flex-wrap md:flex-nowrap">
@@ -912,3 +912,4 @@ export default function SpeakingTopicDetail({ basePath = "/user" }: { basePath?:
     </div>
   );
 }
+

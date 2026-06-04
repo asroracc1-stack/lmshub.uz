@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   Home, 
   LayoutDashboard, 
@@ -7,8 +7,6 @@ import {
   BookOpen, 
   CreditCard, 
   Settings, 
-  ChevronLeft, 
-  ChevronRight, 
   GraduationCap 
 } from 'lucide-react';
 
@@ -20,7 +18,7 @@ interface SidebarProps {
 
 const Sidebar = ({ isCollapsed, isMenuOpen, setIsMenuOpen }: SidebarProps) => {
   const navigate = useNavigate();
-  const [activeItem, setActiveItem] = useState('Bosh sahifa');
+  const location = useLocation();
 
   const menuItems = [
     { name: 'Bosh sahifa', icon: Home, path: '/' },
@@ -31,99 +29,81 @@ const Sidebar = ({ isCollapsed, isMenuOpen, setIsMenuOpen }: SidebarProps) => {
     { name: 'Sozlamalar', icon: Settings, path: '/settings' },
   ];
 
-  // 2. Navigatsiya va mobil menyuni avtomatik yopish birlashtirildi
-  const handleItemClick = (name: string, path: string) => {
-    setActiveItem(name);
+  const handleItemClick = (path: string) => {
     navigate(path);
-    
-    // Agar mobil versiyada bo'lsak, menyuni yopamiz
     if (setIsMenuOpen) {
       setIsMenuOpen(false);
     }
   };
 
   return (
-    /* 3. Animatsiya va UX: transform va transition orqali silliq chiqib kelish */
     <aside 
       className={`
-        fixed inset-y-0 left-0 z-[100] md:relative h-screen bg-white border-r border-slate-200 flex flex-col shadow-2xl md:shadow-sm
-        transition-all duration-300 ease-in-out transform will-change-[width,transform] 
-        ${isCollapsed ? 'md:w-20' : 'md:w-64'}
-        /* Mobil holatda ochilishi/yopilishi */
-        ${isMenuOpen ? 'translate-x-0 w-64' : '-translate-x-full md:translate-x-0'}
+        fixed inset-y-0 left-0 z-[100] md:relative h-screen bg-white dark:bg-[#161d27] border-r border-slate-100 dark:border-slate-800 flex flex-col shadow-2xl md:shadow-none
+        transition-all duration-300 ease-in-out shrink-0
+        ${isCollapsed ? 'md:w-20' : 'md:w-72'}
+        ${isMenuOpen ? 'translate-x-0 w-72' : '-translate-x-full md:translate-x-0'}
       `}
     >
-      {/* Header & Toggle */}
-      <div className="p-4 flex items-center justify-between h-20 shrink-0">
-        {/* Logo: Mobil ochiq holatda yoki Desktop yig'ilmagan holatda ko'rinadi */}
-        {(isMenuOpen || !isCollapsed) && (
-          <div className="flex items-center gap-3 overflow-hidden animate-in fade-in slide-in-from-left-4 duration-500">
-            <div className="bg-emerald-600 p-2.5 rounded-xl shrink-0 shadow-lg shadow-emerald-500/20">
-              <GraduationCap className="text-white" size={24} />
-            </div>
-            <span className="font-bold text-xl text-slate-800 tracking-tight whitespace-nowrap">
-              LMS Hub
-            </span>
+      {/* Header */}
+      <div className={`p-6 flex items-center h-[90px] shrink-0 transition-all duration-300 ${isCollapsed ? 'md:justify-center px-4' : 'justify-start'}`}>
+        <div className="flex items-center gap-4 overflow-hidden">
+          <div className="bg-[#4ab658] p-2.5 rounded-xl shrink-0 shadow-lg shadow-[#4ab658]/20 flex items-center justify-center">
+            <GraduationCap className="text-white" size={26} />
           </div>
-        )}
+          <span className={`font-black text-[22px] text-slate-800 dark:text-white tracking-tight whitespace-nowrap transition-all duration-300 ${isCollapsed ? 'md:opacity-0 md:hidden' : 'opacity-100 block'}`}>
+            LMS Hub<span className="text-[#4ab658]">.</span>
+          </span>
+        </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 space-y-2 mt-4 overflow-y-auto thin-scrollbar">
+      <nav className="flex-1 px-4 space-y-2 mt-4 overflow-y-auto thin-scrollbar">
         {menuItems.map((item) => {
-          const isActive = activeItem === item.name;
+          const isActive = location.pathname === item.path || (item.path !== '/' && location.pathname.startsWith(item.path));
           const Icon = item.icon;
 
           return (
             <button
               key={item.name}
-              onClick={() => handleItemClick(item.name, item.path)}
+              onClick={() => handleItemClick(item.path)}
+              title={isCollapsed ? item.name : undefined}
               className={`
-                w-full flex items-center p-3 rounded-xl transition-all duration-200 group relative
+                w-full flex items-center rounded-2xl transition-all duration-200 group
+                ${isCollapsed ? 'md:justify-center md:p-3.5' : 'justify-start px-4 py-3.5'}
                 ${isActive 
-                  ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-md shadow-emerald-200' 
-                  : 'text-slate-600 hover:bg-slate-50 hover:text-emerald-600'
+                  ? 'bg-[#4ab658] text-white shadow-md shadow-[#4ab658]/20' 
+                  : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
                 }
-                ${isCollapsed ? 'md:justify-center' : 'justify-start'}
               `}
             >
               <Icon 
                 size={22} 
-                className={`shrink-0 ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-emerald-500'}`} 
+                strokeWidth={isActive ? 2.5 : 2}
+                className={`shrink-0 transition-colors ${isActive ? 'text-white' : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-300'}`} 
               />
               
               <span 
                 className={`
-                  ml-3 font-medium whitespace-nowrap transition-all duration-300 origin-left
-                  ${isCollapsed ? 'md:w-0 md:opacity-0 md:invisible md:ml-0' : 'w-auto opacity-100 visible'}
+                  font-semibold whitespace-nowrap transition-all duration-300 origin-left text-[15px]
+                  ${isCollapsed ? 'md:w-0 md:opacity-0 md:hidden md:ml-0' : 'w-auto opacity-100 block ml-4'}
                 `}
               >
                 {item.name}
               </span>
-
-              {/* Tooltip: Faqat Desktopda, panel yig'ilgan holatda ko'rinadi */}
-              {isCollapsed && !isMenuOpen && (
-                <div className="absolute left-full ml-4 px-3 py-2 bg-slate-900 text-white text-[11px] font-bold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 whitespace-nowrap shadow-xl">
-                  {item.name}
-                </div>
-              )}
             </button>
           );
         })}
       </nav>
 
-      {/* Footer Profile - Mobil menyuda ham ko'rinadi */}
-      <div className="p-4 border-t border-slate-100 bg-slate-50/50 shrink-0">
-        <div className={`flex items-center ${isCollapsed && !isMenuOpen ? 'justify-center' : 'gap-3'}`}>
-          <div className="w-10 h-10 rounded-full bg-emerald-100 border-2 border-white shadow-md flex items-center justify-center text-emerald-700 font-bold shrink-0 transition-transform hover:scale-105 cursor-pointer">
-            A
-          </div>
-          {(!isCollapsed || isMenuOpen) && (
-            <div className="overflow-hidden animate-in fade-in duration-300">
-              <p className="text-sm font-semibold text-slate-800 truncate">Admin User</p>
-              <p className="text-xs text-slate-500 truncate">admin@lmshub.uz</p>
-            </div>
-          )}
+      {/* Footer Profile */}
+      <div className={`p-4 mx-4 mb-4 mt-2 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 shrink-0 transition-all duration-300 flex items-center ${isCollapsed ? 'md:justify-center md:mx-2 md:p-2' : 'justify-start gap-3'}`}>
+        <div className="w-11 h-11 rounded-full bg-[#4ab658]/10 dark:bg-[#4ab658]/20 flex items-center justify-center text-[#4ab658] font-bold shrink-0 transition-transform hover:scale-105 cursor-pointer">
+          A
+        </div>
+        <div className={`overflow-hidden transition-all duration-300 ${isCollapsed ? 'md:opacity-0 md:hidden md:w-0' : 'opacity-100 block w-auto'}`}>
+          <p className="text-[14px] font-bold text-slate-800 dark:text-white truncate">Admin User</p>
+          <p className="text-[12px] font-medium text-slate-500 dark:text-slate-400 truncate">admin@lmshub.uz</p>
         </div>
       </div>
     </aside>

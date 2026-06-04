@@ -28,7 +28,8 @@ export function useNotifications() {
   const load = useCallback(async () => {
     if (!user) return;
     try {
-      const { data } = await api.get<Notification[]>('/communication/notifications');
+      // Fetch only unread notifications so that confirmed ones do not show up anymore
+      const { data } = await api.get<Notification[]>('/communication/notifications?unreadOnly=true');
       setItems(Array.isArray(data) ? data : []);
     } catch (e: any) {
       toast.error('Bildirishnomalarni yuklashda xatolik');
@@ -57,21 +58,41 @@ export function useNotifications() {
   const unread = items.filter((n) => !n.is_read).length;
 
   const markAsRead = async (id: string) => {
-    setItems((prev) => prev.map((n) => (n.id === id ? { ...n, is_read: true } : n)));
+    try {
+      await api.put(`/communication/notifications/${id}/read`);
+      setItems((prev) => prev.filter((n) => n.id !== id)); // Remove from list completely
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const markAllAsRead = async () => {
     if (!user) return;
-    setItems((prev) => prev.map((n) => ({ ...n, is_read: true })));
+    try {
+      await api.put('/communication/notifications/read-all');
+      setItems([]); // Clear all since we only show unread
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const remove = async (id: string) => {
-    setItems((prev) => prev.filter((n) => n.id !== id));
+    try {
+      await api.delete(`/communication/notifications/${id}`);
+      setItems((prev) => prev.filter((n) => n.id !== id));
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const clearAll = async () => {
     if (!user) return;
-    setItems([]);
+    try {
+      await api.delete('/communication/notifications');
+      setItems([]);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   return { items, unread, loading, markAsRead, markAllAsRead, remove, clearAll, reload: load };

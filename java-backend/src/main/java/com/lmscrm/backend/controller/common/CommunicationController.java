@@ -102,4 +102,30 @@ public class CommunicationController {
         notificationService.markAsRead(notificationId, user.getId());
         return ResponseEntity.ok().build();
     }
+
+    @PutMapping("/notifications/read-all")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Mark All Notifications as Read")
+    public ResponseEntity<Void> markAllAsRead(@AuthenticationPrincipal User user) {
+        notificationService.markAllAsRead(user.getId());
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/notifications/{notificationId}")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Delete a specific notification")
+    public ResponseEntity<Void> deleteNotification(
+            @PathVariable UUID notificationId,
+            @AuthenticationPrincipal User user) {
+        notificationService.deleteNotification(notificationId, user.getId());
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/notifications")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Delete all notifications for the user")
+    public ResponseEntity<Void> deleteAllNotifications(@AuthenticationPrincipal User user) {
+        notificationService.deleteAllNotifications(user.getId());
+        return ResponseEntity.ok().build();
+    }
 }

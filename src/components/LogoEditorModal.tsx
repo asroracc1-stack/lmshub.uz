@@ -51,7 +51,13 @@ export default function LogoEditorModal({ open, onOpenChange, imageSrc, onSave }
       const formData = new FormData();
       formData.append("file", croppedImageBlob, "profile.webp");
 
-      const res = await api.post("/files/upload/profile", formData);
+      const res = await api.post("/files/upload/profile", formData, {
+        headers: {
+          // Let the browser auto-set Content-Type with the correct boundary.
+          // Without this, axios global 'application/json' header overrides multipart.
+          "Content-Type": undefined,
+        },
+      });
 
       onSave(res.data);
       toast.success("Rasm yangilandi! Zo'r! 🐯", {

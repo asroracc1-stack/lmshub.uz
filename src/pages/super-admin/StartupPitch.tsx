@@ -698,7 +698,7 @@ export default function StartupPitch(): React.ReactElement {
               animate="center"
               exit="exit"
               style={{ transformPerspective: 1200 }}
-              className="w-full max-w-6xl h-full flex flex-col justify-center items-center text-center relative"
+              className="w-full w-full h-full flex flex-col justify-center items-center text-center relative"
             >
               {/* SLIDE 1: INTRO */}
               {currentSlide === 0 && (
@@ -1500,3 +1500,4 @@ export default function StartupPitch(): React.ReactElement {
     </div>
   );
 }
+

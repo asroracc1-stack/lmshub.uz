@@ -34,3 +34,4 @@ export default function ComingSoon({ title }: { title: string }) {
     </div>
   );
 }
+

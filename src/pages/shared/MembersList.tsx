@@ -334,7 +334,7 @@ export default function MembersList({ role, title, description, canManage }: Pro
   };
 
   const grantCoinsMutation = useMutation({
-    mutationFn: async (payload: { studentId: string, amount: number, reason: string, comment?: string }) => {
+    mutationFn: async (payload: { student_id: string, amount: number, reason: string, comment?: string }) => {
       return api.post("/admin/coins/grant", payload);
     },
     onSuccess: () => {
@@ -356,7 +356,13 @@ export default function MembersList({ role, title, description, canManage }: Pro
       setGrantComment("");
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Xatolik yuz berdi");
+      const data = error.response?.data;
+      if (data?.errors && typeof data.errors === 'object') {
+        const errorMessages = Object.values(data.errors).join(", ");
+        toast.error(errorMessages);
+      } else {
+        toast.error(data?.message || "Xatolik yuz berdi");
+      }
     },
   });
 
@@ -371,7 +377,7 @@ export default function MembersList({ role, title, description, canManage }: Pro
   });
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto">
+    <div className="space-y-6 w-full">
       <TigerLoader isLoading={loading} text={`${title} ro'yxatini tekshiryapman... 🐯🔎`} />
       
       <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -1008,7 +1014,7 @@ export default function MembersList({ role, title, description, canManage }: Pro
               onClick={() => {
                 if (grantCoinsTarget) {
                   grantCoinsMutation.mutate({
-                    studentId: grantCoinsTarget.id,
+                    student_id: grantCoinsTarget.id,
                     amount: grantAmount,
                     reason: grantReason,
                     comment: grantComment
@@ -1048,3 +1054,4 @@ export default function MembersList({ role, title, description, canManage }: Pro
     </div>
   );
 }
+

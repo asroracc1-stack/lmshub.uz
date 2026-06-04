@@ -49,7 +49,28 @@ public class NotificationService {
                 .filter(n -> n.getUser().getId().equals(userId))
                 .ifPresent(n -> {
                     n.setIsRead(true);
+                    n.setIsRead(true);
                     notificationRepository.save(n);
                 });
+    }
+
+    @Transactional
+    public void markAllAsRead(UUID userId) {
+        List<Notification> unread = notificationRepository.findByUserIdAndIsReadFalseOrderByCreatedAtDesc(userId);
+        unread.forEach(n -> n.setIsRead(true));
+        notificationRepository.saveAll(unread);
+    }
+
+    @Transactional
+    public void deleteNotification(UUID notificationId, UUID userId) {
+        notificationRepository.findById(notificationId)
+                .filter(n -> n.getUser().getId().equals(userId))
+                .ifPresent(notificationRepository::delete);
+    }
+
+    @Transactional
+    public void deleteAllNotifications(UUID userId) {
+        List<Notification> all = notificationRepository.findByUserIdOrderByCreatedAtDesc(userId);
+        notificationRepository.deleteAll(all);
     }
 }

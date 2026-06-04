@@ -27,7 +27,7 @@ export default function PMSubscriptions() {
   const now = Date.now();
 
   return (
-    <div className="space-y-5 max-w-7xl mx-auto">
+    <div className="space-y-5 w-full">
       <h1 className="text-2xl md:text-3xl font-display font-bold flex items-center gap-2">
         <Crown className="h-6 w-6 text-emerald-500" /> Obunalar
       </h1>
@@ -61,3 +61,4 @@ export default function PMSubscriptions() {
     </div>
   );
 }
+

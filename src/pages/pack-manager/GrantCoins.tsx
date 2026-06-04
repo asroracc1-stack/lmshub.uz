@@ -73,7 +73,7 @@ export default function GrantCoinsPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
+    <div className="space-y-6 w-full">
       <div>
         <h1 className="font-display text-2xl md:text-3xl font-bold flex items-center gap-2">
           <Gift className="h-7 w-7 text-emerald-500" /> Faol foydalanuvchilarga sovg'a
@@ -186,3 +186,4 @@ export default function GrantCoinsPage() {
     </div>
   );
 }
+

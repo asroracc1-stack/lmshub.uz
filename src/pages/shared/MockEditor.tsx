@@ -294,7 +294,7 @@ export default function MockEditor({ basePath = "/super-admin" }: { basePath?: s
   }
 
   return (
-    <div className="max-w-5xl mx-auto space-y-5">
+    <div className="w-full space-y-5">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="sm" onClick={() => nav(-1)}><ChevronLeft className="h-4 w-4" /></Button>
@@ -490,3 +490,4 @@ export default function MockEditor({ basePath = "/super-admin" }: { basePath?: s
     </div>
   );
 }
+

@@ -201,7 +201,7 @@ export default function OrgGroups() {
   if (loading && groups.length === 0) return <TigerLoader />;
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto p-4 md:p-6">
+    <div className="space-y-6 w-full p-4 md:p-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-400 bg-clip-text text-transparent">
@@ -464,3 +464,4 @@ export default function OrgGroups() {
     </div>
   );
 }
+

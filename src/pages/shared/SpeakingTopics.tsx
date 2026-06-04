@@ -52,3 +52,4 @@ export default function SpeakingTopics({ basePath = "/user" }: { basePath?: stri
     </div>
   );
 }
+

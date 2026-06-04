@@ -538,7 +538,7 @@ export default function MockTake() {
     const band = result.bandScore ?? result.band;
 
     return (
-      <div className="max-w-5xl mx-auto space-y-6 pb-20">
+      <div className="w-full space-y-6 pb-20">
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
           <Card className="p-8 text-center bg-gradient-to-br from-primary/10 via-violet-500/5 to-emerald-500/10 border-primary/30 relative overflow-hidden">
             <div className="absolute -top-12 -right-12 w-48 h-48 bg-primary/10 rounded-full blur-3xl" />
@@ -1154,3 +1154,4 @@ export default function MockTake() {
     </div>
   );
 }
+

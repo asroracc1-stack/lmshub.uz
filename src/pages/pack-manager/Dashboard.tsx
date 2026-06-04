@@ -75,7 +75,7 @@ export default function PackManagerDashboard() {
   if (loading) return <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-emerald-500" /></div>;
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="space-y-6 w-full">
       <WelcomeBanner />
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -116,3 +116,4 @@ export default function PackManagerDashboard() {
     </div>
   );
 }
+

@@ -295,7 +295,7 @@ export default function OrgEvents({ canManage }: Props) {
     a.getFullYear() === b.getFullYear();
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="space-y-6 w-full">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="font-display text-2xl md:text-3xl font-bold">Kalendar</h1>
@@ -590,3 +590,4 @@ export default function OrgEvents({ canManage }: Props) {
     </div>
   );
 }
+

@@ -128,7 +128,7 @@ export default function TelegramLinksPage() {
   const rows = botsQuery.data ?? [];
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
+    <div className="space-y-6 w-full">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="font-display text-2xl md:text-3xl font-bold flex items-center gap-2">
@@ -288,3 +288,4 @@ export default function TelegramLinksPage() {
     </div>
   );
 }
+

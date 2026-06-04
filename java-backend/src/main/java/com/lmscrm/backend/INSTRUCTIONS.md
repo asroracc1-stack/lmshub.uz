@@ -37,3 +37,4 @@ Sizning so'nggi talablaringiz asosida Java Backend loyihasi mukammal holatga kel
     *   Brauzerda quyidagi manzilga kiring:
         👉 **http://localhost:8080/swagger-ui.html**
     *   Ushbu sahifada jamoangiz frontend va backend integratsiyasini qulay tarzda amalga oshirishi mumkin.
+    

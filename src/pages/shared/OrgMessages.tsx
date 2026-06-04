@@ -195,7 +195,7 @@ export default function OrgMessages() {
   };
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto">
+    <div className="space-y-6 w-full">
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
           <h1 className="font-display text-2xl md:text-3xl font-bold">Xabarlar</h1>
@@ -367,3 +367,4 @@ export default function OrgMessages() {
     </div>
   );
 }
+

@@ -185,7 +185,7 @@ const MyLessons = () => {
   };
 
   return (
-    <div className="p-4 md:p-6 space-y-6 bg-slate-50/50 min-h-screen font-sans">
+    <div className="p-2 space-y-6 bg-slate-50/50 min-h-screen font-sans">
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border">
         <div>
           <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Mening Darslarim</h1>
@@ -420,3 +420,4 @@ const MyLessons = () => {
 };
 
 export default MyLessons;
+

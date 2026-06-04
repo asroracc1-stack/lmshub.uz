@@ -307,3 +307,4 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
     </SectionGuard>
   );
 }
+

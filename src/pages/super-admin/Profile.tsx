@@ -229,7 +229,7 @@ export default function Profile() {
   return (
     <div className="relative">
 
-      <div className="relative mx-auto w-full max-w-5xl px-2 sm:px-4 py-6 md:py-10 space-y-8">
+      <div className="relative mx-auto w-full w-full px-2 sm:px-4 py-6 md:py-10 space-y-8">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
@@ -497,3 +497,4 @@ export default function Profile() {
     </div>
   );
 }
+

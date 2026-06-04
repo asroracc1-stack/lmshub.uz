@@ -11,23 +11,24 @@ export default function Layout({ children }: LayoutProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50/30">
-      {/* Sidebar - State passed via props */}
-      <Sidebar 
-        isCollapsed={isCollapsed} 
-        isMenuOpen={isMenuOpen} 
-        setIsMenuOpen={setIsMenuOpen} 
+    <div className="flex h-screen w-full overflow-hidden bg-slate-50/50">
+      {/* Sidebar – takes its natural width (w-72 or w-20), transitions automatically */}
+      <Sidebar
+        isCollapsed={isCollapsed}
+        isMenuOpen={isMenuOpen}
+        setIsMenuOpen={setIsMenuOpen}
       />
 
-      <div className="flex flex-col flex-1 min-w-0 overflow-hidden relative">
-        <Navbar 
-          isCollapsed={isCollapsed} 
-          setIsCollapsed={setIsCollapsed} 
-          setIsMenuOpen={setIsMenuOpen} 
+      {/* Main content – flex-1 + min-w-0: fills ALL remaining space after sidebar */}
+      <div className="flex flex-col flex-1 min-w-0 h-screen overflow-hidden transition-all duration-300">
+        <Navbar
+          isCollapsed={isCollapsed}
+          setIsCollapsed={setIsCollapsed}
+          setIsMenuOpen={setIsMenuOpen}
         />
 
-        <main className="flex-1 overflow-y-auto p-4 md:p-8 transition-all duration-300">
-          <div className="max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-2 duration-500">
+        <main className="flex-1 overflow-y-auto p-5">
+          <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
             {children}
           </div>
         </main>
@@ -35,9 +36,10 @@ export default function Layout({ children }: LayoutProps) {
 
       {/* Mobile Backdrop Overlay */}
       {isMenuOpen && (
-        <div 
-          className="fixed inset-0 bg-slate-900/10 backdrop-blur-[2px] z-[90] md:hidden transition-all duration-300"
+        <div
+          className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-[90] md:hidden"
           onClick={() => setIsMenuOpen(false)}
+          aria-hidden="true"
         />
       )}
     </div>

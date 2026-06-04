@@ -14,7 +14,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/leaderboard")
 @RequiredArgsConstructor
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:8081"})
 @Tag(name = "Leaderboard Controller", description = "Endpoints for Leaderboard rankings")
 public class LeaderboardController {
 
@@ -24,10 +23,11 @@ public class LeaderboardController {
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get Leaderboard rankings by period and role")
     public ResponseEntity<List<LeaderboardDto>> getLeaderboard(
+            @org.springframework.security.core.annotation.AuthenticationPrincipal com.lmscrm.backend.domain.entity.User user,
             @RequestParam(defaultValue = "all_time") String period,
             @RequestParam(defaultValue = "STUDENT") String role,
             @RequestParam(defaultValue = "false") boolean isGlobal) {
-        return ResponseEntity.ok(leaderboardService.getLeaderboard(period, role, isGlobal));
+        return ResponseEntity.ok(leaderboardService.getLeaderboard(user, period, role, isGlobal));
     }
 
     @GetMapping("/regular-users")

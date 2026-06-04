@@ -335,7 +335,7 @@ export default function UserDashboard() {
   })();
 
   return (
-    <div className="p-4 md:p-6 space-y-8 max-w-7xl mx-auto min-h-screen">
+    <div className="w-full min-h-screen space-y-6">
       {modal}
 
       {/* Premium Welcome Banner */}
@@ -588,3 +588,4 @@ export default function UserDashboard() {
     </div>
   );
 }
+

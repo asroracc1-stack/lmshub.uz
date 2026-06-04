@@ -123,46 +123,54 @@ public class FileController {
     @Operation(summary = "Upload Cropped Profile/Logo as WebP")
     public ResponseEntity<String> uploadProfile(
             @RequestParam("file") MultipartFile file,
-            @AuthenticationPrincipal User user) throws IOException {
-        
-        log.info("📁 Starting Profile Upload for user: {}", user.getId());
-        if (file.isEmpty()) {
-            return ResponseEntity.badRequest().body("File is empty");
-        }
+            @AuthenticationPrincipal User user) {
 
         try {
+            // ── Guard checks ──────────────────────────────────
+            if (user == null) {
+                log.warn("⚠️ uploadProfile called without authenticated user");
+                return ResponseEntity.status(401).body("Foydalanuvchi aniqlanmadi");
+            }
+            if (file == null || file.isEmpty()) {
+                return ResponseEntity.badRequest().body("Fayl bo'sh yoki yuborilmagan");
+            }
+
+            log.info("📁 Starting Profile Upload for user: {}", user.getId());
+
+            // ── Ensure upload directory exists ────────────────
             Path logoPath = Paths.get(uploadDir, "logos");
             if (!Files.exists(logoPath)) {
                 Files.createDirectories(logoPath);
                 log.info("📂 Created logos directory: {}", logoPath.toAbsolutePath());
             }
 
+            // ── Save file ─────────────────────────────────────
             String filename = "profile-" + user.getId() + "-" + System.currentTimeMillis() + ".webp";
-            Path targetFile = logoPath.resolve(filename);
-
-            // Save the already optimized and cropped WebP image from the frontend directly
-            Path absoluteTarget = targetFile.toAbsolutePath();
-            Files.copy(file.getInputStream(), absoluteTarget, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-            log.info("✅ Successfully saved optimized WebP image: {} at {}", targetFile.getFileName(), absoluteTarget);
+            Path targetFile = logoPath.resolve(filename).toAbsolutePath();
+            Files.copy(file.getInputStream(), targetFile, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            log.info("✅ Saved profile image: {}", targetFile);
 
             String url = "/api/v1/files/view/logos/" + filename;
-            
-            // Update user and profile
+
+            // ── Update User.avatarUrl ─────────────────────────
             User managedUser = userRepository.findById(user.getId())
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+                    .orElseThrow(() -> new RuntimeException("Foydalanuvchi topilmadi: " + user.getId()));
             managedUser.setAvatarUrl(url);
             userRepository.save(managedUser);
+            log.info("✅ Updated user avatarUrl");
 
-            profileRepository.findById(user.getId()).ifPresent(p -> {
+            // ── Update Profile.avatarUrl (safe: may not exist) ─
+            profileRepository.findByUser(managedUser).ifPresent(p -> {
                 p.setAvatarUrl(url);
                 profileRepository.save(p);
+                log.info("✅ Updated profile avatarUrl");
             });
 
             return ResponseEntity.ok(url);
 
         } catch (Exception e) {
-            log.error("💥 Critical error during profile upload: {}", e.getMessage(), e);
-            return ResponseEntity.status(500).body("Faylni saqlashda xatolik: " + e.getMessage());
+            log.error("💥 uploadProfile error: {}", e.getMessage(), e);
+            return ResponseEntity.status(500).body("Rasmni saqlashda xatolik: " + e.getMessage());
         }
     }
 

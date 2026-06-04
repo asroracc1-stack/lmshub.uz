@@ -98,7 +98,7 @@ export default function UserAccount() {
   };
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
+    <div className="space-y-6 w-full">
       <h1 className="font-display text-2xl md:text-3xl font-bold">Hisob</h1>
 
       <Tabs defaultValue="profile">
@@ -245,3 +245,4 @@ export default function UserAccount() {
     </div>
   );
 }
+

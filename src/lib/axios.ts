@@ -11,10 +11,10 @@ if (!import.meta.env.VITE_API_BASE_URL && import.meta.env.DEV) {
 // Axios instansiyasini yaratish
 export const api = axios.create({
   baseURL: API_BASE_URL,
-  withCredentials: true, // Cookie'lar va autentifikatsiya tokenlarini yuborish uchun
-  headers: {
-    'Content-Type': 'application/json', // Barcha so'rovlar uchun Content-Type
-  },
+  withCredentials: true,
+  // NOTE: Do NOT set 'Content-Type' here globally.
+  // For JSON requests, Axios sets it automatically.
+  // For FormData (file uploads), the browser must set it with the correct boundary.
 });
 
 // So'rov yuborishdan oldin token qo'shish (agar mavjud bo'lsa)

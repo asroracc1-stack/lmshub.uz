@@ -115,7 +115,7 @@ export default function PackManagerPayments({ initialFilter = "pending" as Filte
   };
 
   return (
-    <div className="space-y-5 max-w-7xl mx-auto">
+    <div className="space-y-5 w-full">
       <div>
         <h1 className="text-2xl md:text-3xl font-display font-bold flex items-center gap-2">
           <Wallet className="h-6 w-6 text-emerald-500" /> Payment Requests
@@ -236,3 +236,4 @@ export default function PackManagerPayments({ initialFilter = "pending" as Filte
     </div>
   );
 }
+

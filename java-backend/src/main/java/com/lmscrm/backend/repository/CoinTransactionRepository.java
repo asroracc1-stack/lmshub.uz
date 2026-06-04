@@ -33,6 +33,26 @@ public interface CoinTransactionRepository extends JpaRepository<CoinTransaction
 
     @Query("SELECT c.student, SUM(c.amount) as total FROM CoinTransaction c " +
            "WHERE c.student.role = :role " +
+           "AND c.student.organizationId = :organizationId " +
+           "GROUP BY c.student " +
+           "ORDER BY total DESC")
+    List<Object[]> getLeaderboardByRoleAndOrganization(
+            @org.springframework.data.repository.query.Param("role") com.lmscrm.backend.domain.enums.AppRole role,
+            @org.springframework.data.repository.query.Param("organizationId") UUID organizationId);
+
+    @Query("SELECT c.student, SUM(c.amount) as total FROM CoinTransaction c " +
+           "WHERE c.student.role = :role " +
+           "AND c.student.organizationId = :organizationId " +
+           "AND c.createdAt >= :startDate " +
+           "GROUP BY c.student " +
+           "ORDER BY total DESC")
+    List<Object[]> getLeaderboardByRoleAndOrganizationAndDateAfter(
+            @org.springframework.data.repository.query.Param("role") com.lmscrm.backend.domain.enums.AppRole role,
+            @org.springframework.data.repository.query.Param("organizationId") UUID organizationId,
+            @org.springframework.data.repository.query.Param("startDate") java.time.LocalDateTime startDate);
+
+    @Query("SELECT c.student, SUM(c.amount) as total FROM CoinTransaction c " +
+           "WHERE c.student.role = :role " +
            "AND c.student.organizationId IS NULL " +
            "GROUP BY c.student " +
            "ORDER BY total DESC")
