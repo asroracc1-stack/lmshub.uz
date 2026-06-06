@@ -225,10 +225,10 @@ export default function Syllabus() {
         description: values.description,
         room: values.room,
         attachmentUrl: values.attachmentUrl || null,
-        startsAt: new Date(values.startsAt).toISOString(),
+        startsAt: values.startsAt.length > 19 ? values.startsAt.substring(0, 19) : values.startsAt,
         endsAt: values.endsAt 
-          ? new Date(values.endsAt).toISOString() 
-          : new Date(new Date(values.startsAt).getTime() + 60 * 60 * 1000).toISOString(),
+          ? (values.endsAt.length > 19 ? values.endsAt.substring(0, 19) : values.endsAt)
+          : new Date(new Date(values.startsAt).getTime() + 60 * 60 * 1000).toISOString().substring(0, 19),
       };
 
       if (editingLesson) {

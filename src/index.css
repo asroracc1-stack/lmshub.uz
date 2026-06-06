@@ -130,6 +130,10 @@
   .bg-gradient-premium {
     @apply bg-gradient-to-br from-emerald-500 to-teal-600;
   }
+
+  .bg-gradient-primary {
+    @apply bg-gradient-to-br from-emerald-500 to-teal-600;
+  }
 }
 
 /* Slim Scrollbar Customization */

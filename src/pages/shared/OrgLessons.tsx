@@ -140,8 +140,8 @@ export default function OrgLessons({ canManage = false, basePath, filter = "all"
       title: title.trim(), 
       description: description.trim() || null, 
       room: room.trim() || null,
-      startsAt: new Date(startsAt).toISOString(), 
-      endsAt: new Date(endsAt).toISOString(),
+      startsAt: startsAt.includes(":") && startsAt.length === 16 ? startsAt + ":00" : startsAt, 
+      endsAt: endsAt.includes(":") && endsAt.length === 16 ? endsAt + ":00" : endsAt,
       groupId, 
       subjectId, 
       teacherId: isTeacherView ? user?.id : teacherId || null,
@@ -304,7 +304,9 @@ export default function OrgLessons({ canManage = false, basePath, filter = "all"
                       <div className="flex gap-2">
                         {(isTeacherView && l.teacher_id === user?.id) || canManage ? (
                           <Button asChild size="sm" variant="outline">
-                            <Link to={`${basePath}/attendance/${l.id}`}><ClipboardCheck className="h-4 w-4" /> Yo'qlama</Link>
+                            <Link to={basePath === "/teacher" ? "/teacher/smart-dashboard" : `${basePath}/attendance/${l.id}`}>
+                              <ClipboardCheck className="h-4 w-4" /> Yo'qlama
+                            </Link>
                           </Button>
                         ) : null}
                         {((isTeacherView && l.teacher_id === user?.id) || canManage) && (

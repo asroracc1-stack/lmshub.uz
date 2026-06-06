@@ -33,14 +33,17 @@ public class CalendarEvent {
 
     @Column(name = "starts_at", nullable = false)
     @NotNull(message = "Boshlanish vaqti bo'sh bo'lmasligi kerak")
+    @com.fasterxml.jackson.annotation.JsonAlias({"startsAt", "starts_at"})
     private LocalDateTime startsAt;
 
     @Column(name = "ends_at", nullable = false)
     @NotNull(message = "Tugash vaqti bo'sh bo'lmasligi kerak")
+    @com.fasterxml.jackson.annotation.JsonAlias({"endsAt", "ends_at"})
     private LocalDateTime endsAt;
 
     @Column(name = "is_all_day")
     @Builder.Default
+    @com.fasterxml.jackson.annotation.JsonAlias({"isAllDay", "is_all_day"})
     private Boolean isAllDay = false;
 
     private String type; // e.g., 'meeting', 'exam', 'holiday'

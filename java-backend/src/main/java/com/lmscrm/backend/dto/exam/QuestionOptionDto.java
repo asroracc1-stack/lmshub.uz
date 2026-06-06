@@ -12,4 +12,6 @@ public class QuestionOptionDto {
     private Integer positionOrder;
     // We only expose isCorrect for Admins/Teachers, it shouldn't be sent to Students during the test!
     private Boolean isCorrect;
+    private String imageUrl;
+    private String imagePosition;
 }

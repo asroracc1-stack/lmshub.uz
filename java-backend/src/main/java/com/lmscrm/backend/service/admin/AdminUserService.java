@@ -152,6 +152,13 @@ public class AdminUserService {
 
         // Security check
         if (currentUser.getRole() != AppRole.SUPER_ADMIN) {
+            // Non-super_admins cannot update users who are already privileged roles
+            if (user.getRole() == AppRole.SUPER_ADMIN || 
+                user.getRole() == AppRole.PAYMENT_MANAGER || 
+                user.getRole() == AppRole.PACK_MANAGER || 
+                user.getRole() == AppRole.MANAGER) {
+                throw new RuntimeException("Ruxsat etilmagan harakat: Ushbu foydalanuvchini faqat Super Admin tahrirlashi mumkin!");
+            }
             if (!java.util.Objects.equals(user.getOrganizationId(), currentUser.getOrganizationId())) {
                 throw new RuntimeException("Ruxsat etilmagan harakat!");
             }
@@ -213,8 +220,13 @@ public class AdminUserService {
         user.setGroupId(details.getGroupId());
         if (details.getSubject() != null) user.setSubject(details.getSubject());
         if (details.getRole() != null) {
-            if (currentUser.getRole() != AppRole.SUPER_ADMIN && details.getRole() == AppRole.SUPER_ADMIN) {
-                throw new RuntimeException("Ruxsat etilmagan harakat: Super admin rolini biriktirish mumkin emas!");
+            if (currentUser.getRole() != AppRole.SUPER_ADMIN) {
+                if (details.getRole() == AppRole.SUPER_ADMIN || 
+                    details.getRole() == AppRole.PAYMENT_MANAGER || 
+                    details.getRole() == AppRole.PACK_MANAGER || 
+                    details.getRole() == AppRole.MANAGER) {
+                    throw new RuntimeException("Ruxsat etilmagan harakat: Faqat Super Admin ushbu rolni biriktirishi mumkin!");
+                }
             }
             user.setRole(details.getRole());
         }
@@ -244,6 +256,12 @@ public class AdminUserService {
                 .orElseThrow(() -> new com.lmscrm.backend.exception.BusinessException("User not found"));
         
         if (currentUser.getRole() != AppRole.SUPER_ADMIN) {
+            if (user.getRole() == AppRole.SUPER_ADMIN || 
+                user.getRole() == AppRole.PAYMENT_MANAGER || 
+                user.getRole() == AppRole.PACK_MANAGER || 
+                user.getRole() == AppRole.MANAGER) {
+                throw new RuntimeException("Ruxsat etilmagan harakat: Ushbu foydalanuvchini faqat Super Admin o'chira oladi!");
+            }
             if (!java.util.Objects.equals(user.getOrganizationId(), currentUser.getOrganizationId())) {
                 throw new RuntimeException("Ruxsat etilmagan harakat!");
             }
@@ -266,6 +284,12 @@ public class AdminUserService {
                 .orElseThrow(() -> new com.lmscrm.backend.exception.BusinessException("User not found"));
         
         if (currentUser.getRole() != AppRole.SUPER_ADMIN) {
+            if (user.getRole() == AppRole.SUPER_ADMIN || 
+                user.getRole() == AppRole.PAYMENT_MANAGER || 
+                user.getRole() == AppRole.PACK_MANAGER || 
+                user.getRole() == AppRole.MANAGER) {
+                throw new RuntimeException("Ruxsat etilmagan harakat: Parolni faqat Super Admin o'zgartira oladi!");
+            }
             if (!java.util.Objects.equals(user.getOrganizationId(), currentUser.getOrganizationId())) {
                 throw new RuntimeException("Ruxsat etilmagan harakat!");
             }
@@ -279,6 +303,12 @@ public class AdminUserService {
                 .orElseThrow(() -> new com.lmscrm.backend.exception.BusinessException("Foydalanuvchi topilmadi"));
         
         if (currentUser.getRole() != AppRole.SUPER_ADMIN) {
+            if (user.getRole() == AppRole.SUPER_ADMIN || 
+                user.getRole() == AppRole.PAYMENT_MANAGER || 
+                user.getRole() == AppRole.PACK_MANAGER || 
+                user.getRole() == AppRole.MANAGER) {
+                throw new RuntimeException("Ruxsat etilmagan harakat: Ushbu foydalanuvchi holatini faqat Super Admin o'zgartira oladi!");
+            }
             if (!java.util.Objects.equals(user.getOrganizationId(), currentUser.getOrganizationId())) {
                 throw new RuntimeException("Ruxsat etilmagan harakat!");
             }

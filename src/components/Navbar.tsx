@@ -1,8 +1,9 @@
 import React from "react";
-import { PanelLeftClose, PanelLeftOpen, Menu } from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen, Menu, Gift } from "lucide-react";
 import ProfileMenu from "./ProfileMenu";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 interface NavbarProps {
   isCollapsed: boolean;
@@ -12,6 +13,9 @@ interface NavbarProps {
 
 export default function Navbar({ isCollapsed, setIsCollapsed, setIsMenuOpen }: NavbarProps) {
   const { role } = useAuth();
+  const navigate = useNavigate();
+  const basePath = `/${role}`;
+  const go = (path: string) => navigate(path);
 
   return (
     <header className="h-20 border-b border-slate-200 bg-white/80 backdrop-blur-md sticky top-0 z-40 px-4 md:px-6 flex items-center justify-between transition-all duration-300">
@@ -31,7 +35,7 @@ export default function Navbar({ isCollapsed, setIsCollapsed, setIsMenuOpen }: N
           {isCollapsed ? <PanelLeftOpen size={20} className="md:block hidden" /> : <PanelLeftClose size={20} className="md:block hidden" />}
           <Menu size={20} className="md:hidden block" />
         </button>
-        
+
         <div className="h-4 w-px bg-slate-200 mx-2 hidden md:block" />
         <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] hidden sm:block">
           Ta'lim tizimi boshqaruvi
@@ -39,10 +43,20 @@ export default function Navbar({ isCollapsed, setIsCollapsed, setIsMenuOpen }: N
       </div>
 
       <div className="flex items-center gap-2">
+        {/* Referral Button */}
+        <button
+          onClick={() => go(`${basePath}/referral`)}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition-colors"
+          title="Taklif qilish"
+        >
+          <Gift className="h-4 w-4" />
+          <span className="hidden sm:inline">Taklif qilish</span>
+        </button>
+
         <LanguageSwitcher />
         <div className="h-8 w-px bg-slate-100 mx-1 hidden xs:block" />
         <ProfileMenu role={role as any} basePath={`/${role}`} />
       </div>
     </header>
   );
-}
+}

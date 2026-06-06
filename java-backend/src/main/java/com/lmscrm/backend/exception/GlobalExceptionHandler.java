@@ -116,4 +116,19 @@ public class GlobalExceptionHandler {
                 .build();
         return new ResponseEntity<>(errorResponse, ex.getStatusCode());
     }
+
+    // BusinessException xatolari (mantiqiy xatolar)
+    @ExceptionHandler(com.lmscrm.backend.exception.BusinessException.class)
+    public ResponseEntity<ErrorResponse> handleBusinessException(com.lmscrm.backend.exception.BusinessException ex, HttpServletRequest request) {
+        log.warn("Business exception: {}", ex.getMessage());
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.BAD_REQUEST)
+                .statusCode(HttpStatus.BAD_REQUEST.value())
+                .error("Business Error")
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .build();
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
 }

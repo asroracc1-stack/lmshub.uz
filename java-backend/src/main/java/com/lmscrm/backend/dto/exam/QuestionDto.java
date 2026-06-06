@@ -14,5 +14,7 @@ public class QuestionDto {
     private String correctAnswer; // Admin/Teacher uchun (student view da null bo'ladi)
     private Integer points;
     private Integer positionOrder;
+    private String imageUrl;
+    private String imagePosition;
     private List<QuestionOptionDto> options;
 }

@@ -1,0 +1,18 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0029-1
+      author: ai
+      preConditions:
+        - onFail: MARK_RAN
+        - columnExists:
+            tableName: messages
+            columnName: is_edited
+      changes:
+        - addDefaultValue:
+            tableName: messages
+            columnName: is_edited
+            defaultValueBoolean: false
+        - addDefaultValue:
+            tableName: messages
+            columnName: is_pinned
+            defaultValueBoolean: false

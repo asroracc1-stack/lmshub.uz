@@ -1,0 +1,23 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0029_add_image_to_question_and_options
+      author: ai
+      changes:
+        - addColumn:
+            tableName: questions
+            columns:
+              - column:
+                  name: image_url
+                  type: varchar(255)
+              - column:
+                  name: image_position
+                  type: varchar(20)
+        - addColumn:
+            tableName: question_options
+            columns:
+              - column:
+                  name: image_url
+                  type: varchar(255)
+              - column:
+                  name: image_position
+                  type: varchar(20)

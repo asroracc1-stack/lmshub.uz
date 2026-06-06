@@ -184,6 +184,8 @@ public class ExamService {
                                 .text(qDto.getPrompt())
                                 .questionType(qDto.getQtype())
                                 .points(qDto.getPoints() != null ? qDto.getPoints() : 1)
+                                .imageUrl(qDto.getImageUrl())
+                                .imagePosition(qDto.getImagePosition() != null ? qDto.getImagePosition() : "top")
                                 .positionOrder(qOrder++)
                                 .options(new java.util.ArrayList<>())
                                 .build();
@@ -195,29 +197,19 @@ public class ExamService {
 
                         if (qDto.getOptions() != null && !qDto.getOptions().isEmpty()) {
                             int optOrder = 1;
-                            for (String optText : qDto.getOptions()) {
-                                boolean isCorrect = qDto.getCorrect_answer() != null &&
-                                        qDto.getCorrect_answer().trim().equalsIgnoreCase(optText.trim());
+                            for (CreateExamRequest.OptionDto optDto : qDto.getOptions()) {
                                 QuestionOption opt = QuestionOption.builder()
                                         .question(q)
-                                        .text(optText)
-                                        .isCorrect(isCorrect)
+                                        .text(optDto.getText())
+                                        .isCorrect(optDto.getIsCorrect() != null && optDto.getIsCorrect())
+                                        .imageUrl(optDto.getImageUrl())
+                                        .imagePosition(optDto.getImagePosition() != null ? optDto.getImagePosition() : "left")
                                         .positionOrder(optOrder++)
                                         .build();
                                 
                                 if (q.getOptions() != null) q.getOptions().add(opt);
                                 optionRepository.save(opt);
                             }
-                        } else if (qDto.getCorrect_answer() != null) {
-                            QuestionOption opt = QuestionOption.builder()
-                                    .question(q)
-                                    .text(qDto.getCorrect_answer())
-                                    .isCorrect(true)
-                                    .positionOrder(1)
-                                    .build();
-                            
-                            if (q.getOptions() != null) q.getOptions().add(opt);
-                            optionRepository.save(opt);
                         }
                     }
                 }

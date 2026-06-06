@@ -51,7 +51,14 @@ const statusMeta = (s: string) => {
 const getImageUrl = (url?: string | null) => {
   if (!url) return null;
   if (url.startsWith("http")) return url;
-  return `http://localhost:8081${url}`;
+  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8080";
+  const baseUrl = apiUrl.replace(/\/api\/v1\/?$/, ""); // extract just the host
+  
+  if (url.startsWith("/api/")) return `${baseUrl}${url}`;
+  if (url.startsWith("view/")) return `${baseUrl}/api/v1/files/${url}`;
+  if (url.startsWith("receipts/")) return `${baseUrl}/api/v1/files/view/${url}`;
+  
+  return `${baseUrl}/api/v1/files/view/receipts/${url}`; // default to receipts if it's just a filename
 };
 
 const formatTransactionDate = (dateVal: any): string => {
@@ -313,6 +320,31 @@ export default function OrgPayments() {
                         <StatusIcon className="h-3.5 w-3.5" />
                         {m.label}
                       </Badge>
+                      
+                      {p.status === "PENDING" && (
+                        <div className="flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => rejectMutation.mutate(p.id)}
+                            disabled={isMutationPending}
+                            className="rounded-xl px-3 border-rose-500/30 text-rose-600 hover:bg-rose-500/10 hover:border-rose-500 h-9 transition-colors"
+                            title="Rad etish"
+                          >
+                            {rejectMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={() => approveMutation.mutate(p.id)}
+                            disabled={isMutationPending}
+                            className="rounded-xl px-3 bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20 border-none h-9 transition-all"
+                            title="Tasdiqlash"
+                          >
+                            {approveMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                          </Button>
+                        </div>
+                      )}
+
                       <Button 
                         size="sm" 
                         variant="outline" 

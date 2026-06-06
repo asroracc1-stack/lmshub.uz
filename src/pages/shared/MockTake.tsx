@@ -16,27 +16,28 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { 
-  Loader2, Sparkles, CheckCircle2, Clock, AlertCircle, Headphones, 
-  BookOpen, ChevronLeft, ChevronRight, Flag, Play, Pause, 
-  Volume2, VolumeX, Maximize2, Minimize2, Mic 
+import {
+  Loader2, Sparkles, CheckCircle2, Clock, AlertCircle, Headphones,
+  BookOpen, ChevronLeft, ChevronRight, Flag, Play, Pause,
+  Volume2, VolumeX, Maximize2, Minimize2, Mic, Calculator, X, PenLine
 } from "lucide-react";
 import { toast } from "sonner";
 import { rawToBand, checkAnswer } from "@/lib/ielts";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import Scratchpad from "@/components/Scratchpad";
 import TigerPlayer from "@/components/TigerPlayer";
 import { useTheme } from "@/contexts/ThemeContext";
 // Icons are already imported above
 
 // Java API dan keluvchi tuzilma
-interface QuestionOption { id: string; text: string; isCorrect?: boolean; positionOrder: number; }
-interface Q { id: string; text: string; questionType: string; correctAnswer: string | null; points: number; positionOrder: number; passageId: string; options: QuestionOption[] | null; }
+interface QuestionOption { id: string; text: string; isCorrect?: boolean; positionOrder: number; imageUrl?: string; imagePosition?: string; }
+interface Q { id: string; text: string; questionType: string; correctAnswer: string | null; points: number; positionOrder: number; passageId: string; options: QuestionOption[] | null; imageUrl?: string; imagePosition?: string; }
 interface Passage { id: string; title: string; content: string; imageUrl?: string; positionOrder: number; questions: Q[]; }
 interface ExamData { id: string; title: string; description?: string; type: string; difficulty?: string; audio_url?: string; duration_minutes: number; passages: Passage[]; }
 
 // MockTake ichki state uchun normallashtirish
-interface NormalQ { id: string; position: number; section_index: number; prompt: string; qtype: string; options: string[] | null; correct_answer: string | null; points: number; }
+interface NormalQ { id: string; position: number; section_index: number; prompt: string; qtype: string; options: QuestionOption[] | null; correct_answer: string | null; points: number; imageUrl?: string; imagePosition?: string; }
 
 /** Java'dan kelgan questionType → frontend qtype ga mapping */
 function mapQtype(raw: string | null | undefined): string {
@@ -58,16 +59,18 @@ function normalize(exam: ExamData): { sections: { title: string; passage: string
     (p.questions ?? []).forEach((q) => {
       const qtype = mapQtype(q.questionType);
       // Options: faqat mcq/matching/headings uchun kerak
-      const rawOpts = q.options?.map((o) => o.text).filter(Boolean) ?? [];
+      const rawOpts = q.options && q.options.length > 0 ? [...q.options].sort((a, b) => a.positionOrder - b.positionOrder) : null;
       questions.push({
         id: q.id,
         position: questions.length + 1, // Global question number
         section_index: sIdx,
         prompt: q.text ?? "",
         qtype,
-        options: rawOpts.length > 0 ? rawOpts : null,
+        options: rawOpts,
         correct_answer: q.correctAnswer ?? null,
         points: q.points ?? 1,
+        imageUrl: q.imageUrl,
+        imagePosition: q.imagePosition,
       });
     });
   });
@@ -77,7 +80,7 @@ function normalize(exam: ExamData): { sections: { title: string; passage: string
 const getFullAudioUrl = (url?: string) => {
   if (!url) return "";
   if (url.startsWith("http")) return url;
-  
+
   // Tozalamoq (Trim leading slashes)
   const cleanPath = url.startsWith("/") ? url.slice(1) : url;
 
@@ -86,11 +89,11 @@ const getFullAudioUrl = (url?: string) => {
 
   // Agar bu /uploads bilan boshlanadigan eski format bo'lsa
   if (cleanPath.startsWith("uploads/")) {
-     // Uni /api/v1/files/view formatiga o'tkazishga harakat qilamiz 
-     // yoki to'g'ridan-to'g'ri /uploads orqali so'raymiz (proxy orqali)
-     return `/${cleanPath}`;
+    // Uni /api/v1/files/view formatiga o'tkazishga harakat qilamiz 
+    // yoki to'g'ridan-to'g'ri /uploads orqali so'raymiz (proxy orqali)
+    return `/${cleanPath}`;
   }
-  
+
   // Standart holatda API orqali faylni ko'rish
   return `/api/v1/files/view/${cleanPath}`;
 };
@@ -121,7 +124,7 @@ function CustomAudioPlayer({ src, isExternalPaused }: { src: string, isExternalP
       setLoadError(true);
       return;
     }
-    
+
     const audio = audioRef.current;
     if (!audio) return;
 
@@ -213,7 +216,7 @@ function CustomAudioPlayer({ src, isExternalPaused }: { src: string, isExternalP
   return (
     <div className="w-full bg-slate-900/40 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] p-3 pl-4 pr-8 shadow-[0_20px_50px_-20px_rgba(139,92,246,0.3)] relative overflow-hidden group flex items-center gap-6">
       <audio ref={audioRef} src={fullSrc} preload="auto" />
-      
+
       {(!isLoaded || isBuffering) && !loadError && (
         <div className="absolute inset-0 z-20 bg-slate-950/40 backdrop-blur-sm flex flex-col items-center justify-center rounded-[2.5rem]">
           <div className="h-16 w-16 animate-pulse">
@@ -233,7 +236,7 @@ function CustomAudioPlayer({ src, isExternalPaused }: { src: string, isExternalP
 
       {/* Main Controls Section */}
       <div className="flex items-center gap-4 relative z-10">
-        <button 
+        <button
           onClick={togglePlay}
           className="h-14 w-14 rounded-full bg-gradient-to-br from-violet-600 to-indigo-700 flex items-center justify-center text-white shadow-[0_0_20px_rgba(139,92,246,0.4)] hover:scale-105 active:scale-95 transition-all"
         >
@@ -251,13 +254,13 @@ function CustomAudioPlayer({ src, isExternalPaused }: { src: string, isExternalP
           {/* Animated Waveform Background */}
           <div className="absolute inset-0 flex items-center justify-center gap-1.5 pointer-events-none">
             {[...Array(40)].map((_, i) => (
-              <div 
-                key={i} 
+              <div
+                key={i}
                 className={cn(
                   "w-1 rounded-full bg-gradient-to-t from-violet-500/40 to-indigo-400/40 transition-all duration-300",
                   playing ? "animate-pulse" : "h-1 opacity-20"
                 )}
-                style={{ 
+                style={{
                   height: playing ? `${20 + Math.sin(i * 0.4) * 60}%` : '4px',
                   animationDelay: `${i * 0.05}s`
                 }}
@@ -266,10 +269,10 @@ function CustomAudioPlayer({ src, isExternalPaused }: { src: string, isExternalP
           </div>
 
           {/* Transparent Range Input Overlay */}
-          <input 
-            type="range" 
-            min="0" max="100" 
-            value={progress} 
+          <input
+            type="range"
+            min="0" max="100"
+            value={progress}
             onChange={(e) => {
               if (!audioRef.current) return;
               const time = (+e.target.value / 100) * duration;
@@ -278,16 +281,16 @@ function CustomAudioPlayer({ src, isExternalPaused }: { src: string, isExternalP
             }}
             className="absolute inset-0 w-full opacity-0 cursor-pointer z-10"
           />
-          
+
           {/* Visual Progress Bar Overlay */}
           <div className="absolute inset-0 flex items-center pointer-events-none">
             <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
-              <div 
+              <div
                 className="h-full bg-gradient-to-r from-violet-500 to-fuchsia-500 shadow-[0_0_15px_rgba(139,92,246,0.5)]"
                 style={{ width: `${progress}%` }}
               />
             </div>
-            <div 
+            <div
               className="absolute h-3 w-3 bg-white rounded-full shadow-[0_0_10px_#fff] border-2 border-violet-600"
               style={{ left: `calc(${progress}% - 6px)` }}
             />
@@ -304,7 +307,7 @@ function CustomAudioPlayer({ src, isExternalPaused }: { src: string, isExternalP
 
       {/* Volume Section */}
       <div className="flex items-center gap-4 relative z-10 group/vol">
-        <button 
+        <button
           onClick={() => {
             if (!audioRef.current) return;
             const newMute = !isMuted;
@@ -316,10 +319,10 @@ function CustomAudioPlayer({ src, isExternalPaused }: { src: string, isExternalP
           {isMuted || volume === 0 ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
         </button>
         <div className="w-24 relative flex items-center">
-          <input 
-            type="range" 
-            min="0" max="100" 
-            value={isMuted ? 0 : volume * 100} 
+          <input
+            type="range"
+            min="0" max="100"
+            value={isMuted ? 0 : volume * 100}
             onChange={(e) => {
               const v = +e.target.value / 100;
               setVolume(v);
@@ -353,7 +356,7 @@ export default function MockTake() {
     } else {
       document.exitFullscreen().then(() => {
         setIsFullscreen(false);
-      }).catch(() => {});
+      }).catch(() => { });
     }
   };
 
@@ -378,6 +381,8 @@ export default function MockTake() {
   const [timeLeft, setTimeLeft] = useState(0);
   const [started, setStarted] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [showCalculator, setShowCalculator] = useState(false);
+  const [showScratchpad, setShowScratchpad] = useState(false);
   const [grading, setGrading] = useState(false);
   const startedAt = useRef<number>(0);
   const questionStartRef = useRef<Record<string, number>>({});
@@ -470,12 +475,12 @@ export default function MockTake() {
   const submit = async (auto = false) => {
     if (submitting || !exam) return;
     if (!auto && !window.confirm("Testni topshirmoqchimisiz?")) return;
-    
+
     setSubmitting(true);
     try {
       Object.keys(questionStartRef.current).forEach(trackQuestionTime);
       const kind = (exam.type ?? "").toLowerCase();
-      
+
       const payload = {
         exam_id: exam.id,
         answers: answers,
@@ -498,7 +503,7 @@ export default function MockTake() {
     <div className="min-h-[60vh] flex flex-col items-center justify-center gap-6">
       <div className="relative">
         <Loader2 className="h-20 w-20 animate-spin text-primary opacity-20" />
-        <motion.div 
+        <motion.div
           animate={{ scale: [1, 1.2, 1], rotate: [0, 180, 360] }}
           transition={{ duration: 3, repeat: Infinity }}
           className="absolute inset-0 flex items-center justify-center"
@@ -551,22 +556,22 @@ export default function MockTake() {
 
             <CheckCircle2 className="h-12 w-12 text-emerald-500 mx-auto mb-4" />
             <h2 className="text-2xl font-display font-bold">Test yakunlandi!</h2>
-            
+
             <div className="mt-8 flex flex-col items-center">
               <div className="relative h-40 w-40 flex items-center justify-center">
                 <svg className="h-full w-full -rotate-90">
-                  <circle 
-                    cx="80" cy="80" r="70" 
-                    fill="transparent" 
-                    stroke="currentColor" 
-                    strokeWidth="8" 
+                  <circle
+                    cx="80" cy="80" r="70"
+                    fill="transparent"
+                    stroke="currentColor"
+                    strokeWidth="8"
                     className="text-muted/20"
                   />
-                  <circle 
-                    cx="80" cy="80" r="70" 
-                    fill="transparent" 
-                    stroke="currentColor" 
-                    strokeWidth="8" 
+                  <circle
+                    cx="80" cy="80" r="70"
+                    fill="transparent"
+                    stroke="currentColor"
+                    strokeWidth="8"
                     strokeDasharray={440}
                     strokeDashoffset={440 - (440 * (Number(band) || 0)) / 9}
                     strokeLinecap="round"
@@ -628,7 +633,7 @@ export default function MockTake() {
               </div>
             </div>
             {exam.description && <p className="text-muted-foreground">{exam.description}</p>}
-            
+
             {(kind === "listening" || exam.title.toLowerCase().includes("listening")) && (
               <div className="py-2">
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2 ml-1">Sound Check</p>
@@ -700,8 +705,8 @@ export default function MockTake() {
       {/* 🚀 PREMIUM HUD HEADER */}
       <header className={cn(
         "h-16 shrink-0 border-b flex items-center justify-between px-4 md:px-8 sticky top-0 z-40 backdrop-blur-xl transition-all duration-300",
-        theme === "dark" 
-          ? "bg-slate-950/80 border-white/5 shadow-lg shadow-black/20" 
+        theme === "dark"
+          ? "bg-slate-950/80 border-white/5 shadow-lg shadow-black/20"
           : "bg-white/80 border-slate-200/80 shadow-sm"
       )}>
         {/* Left Side: Brand & Title (Hidden on Mobile) */}
@@ -729,8 +734,8 @@ export default function MockTake() {
         <div className="md:absolute md:left-1/2 md:-translate-x-1/2 flex items-center gap-3">
           <div className={cn(
             "flex items-center gap-2.5 px-4 md:px-5 py-2 md:py-2.5 rounded-2xl font-mono font-black text-xs md:text-sm transition-all duration-500 shadow-sm",
-            lowTime 
-              ? "bg-rose-500 text-white animate-pulse shadow-rose-500/20 border border-rose-400/20" 
+            lowTime
+              ? "bg-rose-500 text-white animate-pulse shadow-rose-500/20 border border-rose-400/20"
               : "bg-slate-100 dark:bg-white/5 text-slate-800 dark:text-emerald-400 border border-slate-200/50 dark:border-white/5"
           )}>
             <Clock className={cn("h-4 w-4", lowTime ? "animate-spin" : "text-emerald-500")} />
@@ -752,10 +757,38 @@ export default function MockTake() {
 
           <div className="h-5 w-px bg-slate-200 dark:bg-white/10 shrink-0 hidden lg:block" />
 
+          {/* Calculator Button */}
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={() => setShowCalculator(!showCalculator)}
+            className={cn(
+              "h-10 w-10 rounded-xl transition-all shrink-0 hidden sm:inline-flex",
+              showCalculator ? "bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20" : "bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300"
+            )}
+            title="Desmos kalkulyator"
+          >
+            <Calculator className="h-4.5 w-4.5" />
+          </Button>
+
+          {/* Scratchpad Button */}
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={() => setShowScratchpad(!showScratchpad)}
+            className={cn(
+              "h-10 w-10 rounded-xl transition-all shrink-0 hidden sm:inline-flex",
+              showScratchpad ? "bg-violet-500/10 text-violet-500 hover:bg-violet-500/20" : "bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300"
+            )}
+            title="Qoralama daftari"
+          >
+            <PenLine className="h-4.5 w-4.5" />
+          </Button>
+
           {/* Pause Button */}
-          <Button 
-            size="icon" 
-            variant="ghost" 
+          <Button
+            size="icon"
+            variant="ghost"
             onClick={() => setIsPaused(!isPaused)}
             className="h-10 w-10 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300 transition-all shrink-0"
             title={isPaused ? "Davom ettirish" : "Vaqtincha to'xtatish"}
@@ -764,9 +797,9 @@ export default function MockTake() {
           </Button>
 
           {/* Fullscreen Button (Hidden on Mobile) */}
-          <Button 
-            size="icon" 
-            variant="ghost" 
+          <Button
+            size="icon"
+            variant="ghost"
             onClick={toggleFullscreen}
             className="h-10 w-10 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300 transition-all shrink-0 hidden sm:inline-flex"
             title="To'liq ekran rejimi"
@@ -775,10 +808,10 @@ export default function MockTake() {
           </Button>
 
           {/* Direct Submit Button */}
-          <Button 
+          <Button
             size="sm"
-            onClick={() => submit()} 
-            disabled={submitting} 
+            onClick={() => submit()}
+            disabled={submitting}
             className="bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-extrabold px-4 md:px-5 py-2 md:py-2.5 rounded-xl transition-all shadow-md shadow-emerald-500/10 shrink-0 text-[11px] md:text-xs tracking-tight"
           >
             {submitting ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : null}
@@ -790,8 +823,8 @@ export default function MockTake() {
       {/* 🎧 LISTENING COMPACT PLAYER */}
       {(kind === "listening" || exam.title.toLowerCase().includes("listening")) && (
         <div className="shrink-0 w-full max-w-[1440px] mx-auto px-4 md:px-8 py-3 bg-transparent z-30">
-          <CustomAudioPlayer 
-            src={exam.audio_url || (exam as any).audioUrl} 
+          <CustomAudioPlayer
+            src={exam.audio_url || (exam as any).audioUrl}
             isExternalPaused={isPaused}
           />
         </div>
@@ -800,7 +833,7 @@ export default function MockTake() {
       {/* ⏸️ PAUSE OVERLAY */}
       <AnimatePresence>
         {isPaused && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -811,8 +844,8 @@ export default function MockTake() {
             </div>
             <h2 className="text-3xl font-display font-black text-white mb-2 tracking-tight">Test to'xtatildi</h2>
             <p className="text-slate-400 max-w-md mb-8 text-sm">Hozir dam olib oling. Taymer siz davom ettirmaguningizcha to'xtatib turiladi.</p>
-            <Button 
-              size="lg" 
+            <Button
+              size="lg"
               onClick={() => setIsPaused(false)}
               className="bg-emerald-500 hover:bg-emerald-600 text-white px-10 py-6 rounded-full font-black text-base transition-all shadow-lg shadow-emerald-500/20 active:scale-95"
             >
@@ -825,12 +858,12 @@ export default function MockTake() {
       {/* 📝 EXAM WORKSPACE */}
       <main className="flex-1 w-full max-w-[1440px] mx-auto px-4 md:px-8 py-4 min-h-0 flex flex-col">
         <div className={cn(
-          "grid gap-8 xl:gap-12 flex-1 min-h-0", 
+          "grid gap-8 xl:gap-12 flex-1 min-h-0",
           kind === "reading" && (currentSection?.passage || currentSection?.imageUrl) ? "lg:grid-cols-2" : "grid-cols-1"
         )}>
           {/* LEFT PANEL: PASSAGE (READING ONLY) */}
           {kind === "reading" && (currentSection?.passage || currentSection?.imageUrl) && (
-            <Card className="flex flex-col min-h-[450px] lg:max-h-[calc(100vh-220px)] w-full max-w-3xl mx-auto border-slate-200/50 dark:border-white/5 shadow-xl shadow-slate-100/50 dark:shadow-none bg-white dark:bg-slate-900/40 backdrop-blur-md rounded-2xl overflow-hidden">
+            <Card className="flex flex-col min-h-[calc(100vh-180px)] w-full max-w-3xl mx-auto border-slate-200/50 dark:border-white/5 shadow-xl shadow-slate-100/50 dark:shadow-none bg-white dark:bg-slate-900/40 backdrop-blur-md rounded-2xl overflow-hidden">
               {currentSection.title && (
                 <div className="px-6 py-4 border-b border-slate-100 dark:border-white/5 flex items-center justify-between shrink-0 bg-slate-50/50 dark:bg-slate-950/20">
                   <h2 className="font-display font-extrabold text-base tracking-tight text-slate-800 dark:text-white">
@@ -852,7 +885,7 @@ export default function MockTake() {
           )}
 
           {/* RIGHT PANEL: QUESTIONS */}
-          <Card className="flex flex-col min-h-[450px] lg:max-h-[calc(100vh-220px)] w-full max-w-3xl mx-auto border-slate-200/50 dark:border-white/5 shadow-xl shadow-slate-100/50 dark:shadow-none bg-white dark:bg-slate-900/40 backdrop-blur-md rounded-2xl overflow-hidden">
+          <Card className="flex flex-col min-h-[calc(100vh-180px)] w-full max-w-3xl mx-auto border-slate-200/50 dark:border-white/5 shadow-xl shadow-slate-100/50 dark:shadow-none bg-white dark:bg-slate-900/40 backdrop-blur-md rounded-2xl overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-100 dark:border-white/5 flex items-center justify-between shrink-0 bg-slate-50/50 dark:bg-slate-950/20">
               <span className="text-xs font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                 Savollar va Topshiriqlar
@@ -865,10 +898,10 @@ export default function MockTake() {
             <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar space-y-6">
               {/* Listening Visual Reference */}
               {kind === "listening" && currentSection?.imageUrl && (
-                 <div className="mb-6 rounded-2xl overflow-hidden border border-slate-200/60 dark:border-white/5 bg-slate-50 dark:bg-slate-950 p-3 shadow-inner">
-                    <img src={currentSection.imageUrl} alt="Map/Diagram" className="max-w-full h-auto mx-auto rounded-lg" />
-                    <p className="text-[10px] text-center text-slate-400 dark:text-slate-500 mt-2 uppercase tracking-widest font-black">Visual Reference</p>
-                 </div>
+                <div className="mb-6 rounded-2xl overflow-hidden border border-slate-200/60 dark:border-white/5 bg-slate-50 dark:bg-slate-950 p-3 shadow-inner">
+                  <img src={currentSection.imageUrl} alt="Map/Diagram" className="max-w-full h-auto mx-auto rounded-lg" />
+                  <p className="text-[10px] text-center text-slate-400 dark:text-slate-500 mt-2 uppercase tracking-widest font-black">Visual Reference</p>
+                </div>
               )}
 
               {sectionQs.length === 0 ? (
@@ -879,19 +912,20 @@ export default function MockTake() {
               ) : (
                 <div className="space-y-6">
                   {sectionQs.map((q) => {
-                    const isInline = q.qtype === "fill" || q.qtype === "short";
+                    // isInline only if fill/short AND no options exist
+                    const isInline = (q.qtype === "fill" || q.qtype === "short") && (!q.options || q.options.length === 0);
                     const LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H"];
                     const hasAnswer = !!answers[q.id];
                     const isFlagged = flagged.has(q.id);
 
                     return (
-                      <div 
-                        key={q.id} 
+                      <div
+                        key={q.id}
                         id={`q-${q.id}`}
                         className={cn(
                           "group rounded-2xl p-4 md:p-5 border transition-all duration-300",
-                          isFlagged 
-                            ? "bg-amber-500/5 border-amber-500/20 shadow-sm shadow-amber-500/5" 
+                          isFlagged
+                            ? "bg-amber-500/5 border-amber-500/20 shadow-sm shadow-amber-500/5"
                             : hasAnswer
                               ? "bg-emerald-500/5 border-emerald-500/20 shadow-sm shadow-emerald-500/5"
                               : "bg-slate-50/50 dark:bg-white/[0.01] border-slate-200/60 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10"
@@ -913,24 +947,38 @@ export default function MockTake() {
                           {/* Question Content */}
                           <div className="flex-1 min-w-0">
                             {isInline ? (
-                              <div className="text-slate-800 dark:text-slate-200 font-medium">
+                              <div className="text-slate-800 dark:text-slate-200 font-medium space-y-2">
+                                {/* Show image even for inline/short answer questions */}
+                                {q.imageUrl && (
+                                  <div className="mb-3">
+                                    {q.imagePosition === "top" && <img src={q.imageUrl} alt="Question" className="max-h-64 w-auto rounded-xl object-contain border border-slate-200 dark:border-white/10 shadow-sm" />}
+                                    {q.imagePosition === "left" && <img src={q.imageUrl} alt="Question" className="float-left mr-3 max-h-40 rounded-xl object-contain border border-slate-200 dark:border-white/10" />}
+                                    {q.imagePosition === "right" && <img src={q.imageUrl} alt="Question" className="float-right ml-3 max-h-40 rounded-xl object-contain border border-slate-200 dark:border-white/10" />}
+                                    {q.imagePosition === "bottom" && <img src={q.imageUrl} alt="Question" className="max-h-64 w-auto rounded-xl object-contain border border-slate-200 dark:border-white/10 shadow-sm" />}
+                                  </div>
+                                )}
                                 {renderInlinePrompt(q)}
                               </div>
                             ) : (
                               <div className="space-y-4">
                                 <p className="text-slate-800 dark:text-slate-200 font-bold text-sm md:text-base leading-snug">
+                                  {q.imagePosition === "top" && q.imageUrl && <img src={q.imageUrl} alt="Question" className="mb-3 max-h-48 rounded object-contain border" />}
+                                  {q.imagePosition === "left" && q.imageUrl && <img src={q.imageUrl} alt="Question" className="float-left mr-3 max-h-48 rounded object-contain border" />}
                                   {q.prompt}
+                                  {q.imagePosition === "right" && q.imageUrl && <img src={q.imageUrl} alt="Question" className="float-right ml-3 max-h-48 rounded object-contain border" />}
+                                  {q.imagePosition === "bottom" && q.imageUrl && <img src={q.imageUrl} alt="Question" className="mt-3 max-h-48 rounded object-contain border" />}
                                 </p>
 
                                 {/* Multiple Choice options */}
                                 {q.qtype === "mcq" && Array.isArray(q.options) && q.options.length > 0 ? (
                                   <div className="grid gap-2.5 mt-3">
-                                    {q.options.map((opt, idx) => {
+                                    {q.options.map((optObj, idx) => {
+                                      const opt = optObj.text;
                                       const letter = LETTERS[idx] ?? String(idx + 1);
                                       const selected = answers[q.id] === opt;
                                       return (
-                                        <button 
-                                          key={opt} 
+                                        <button
+                                          key={optObj.id || idx}
                                           type="button"
                                           onClick={() => onAnswer(q.id, opt)}
                                           className={cn(
@@ -942,13 +990,21 @@ export default function MockTake() {
                                         >
                                           <span className={cn(
                                             "flex-none w-6 h-6 rounded-lg border flex items-center justify-center text-[10px] font-black tracking-wider transition-all",
-                                            selected 
-                                              ? "bg-white text-emerald-500 border-white shadow-inner" 
+                                            selected
+                                              ? "bg-white text-emerald-500 border-white shadow-inner"
                                               : "border-slate-300 dark:border-white/10 bg-slate-50 dark:bg-slate-900 text-slate-500"
                                           )}>
                                             {letter}
                                           </span>
-                                          <span className="flex-1 leading-snug">{opt}</span>
+                                          <span className="flex-1 leading-snug flex items-center gap-3">
+                                            {optObj.imagePosition === 'left' && optObj.imageUrl && <img src={optObj.imageUrl} alt="Option" className="max-h-16 rounded border bg-white object-contain" />}
+                                            <span className="flex-1">
+                                              {optObj.imagePosition === 'top' && optObj.imageUrl && <img src={optObj.imageUrl} alt="Option" className="max-h-16 rounded border bg-white object-contain mb-2" />}
+                                              {opt}
+                                              {optObj.imagePosition === 'bottom' && optObj.imageUrl && <img src={optObj.imageUrl} alt="Option" className="max-h-16 rounded border bg-white object-contain mt-2" />}
+                                            </span>
+                                            {optObj.imagePosition === 'right' && optObj.imageUrl && <img src={optObj.imageUrl} alt="Option" className="max-h-16 rounded border bg-white object-contain" />}
+                                          </span>
                                         </button>
                                       );
                                     })}
@@ -965,13 +1021,13 @@ export default function MockTake() {
                                     {(q.qtype === "tfng" ? ["TRUE", "FALSE", "NOT GIVEN"] : ["YES", "NO", "NOT GIVEN"]).map((v) => {
                                       const selected = answers[q.id] === v;
                                       return (
-                                        <button 
-                                          key={v} 
+                                        <button
+                                          key={v}
                                           onClick={() => onAnswer(q.id, v)}
                                           className={cn(
                                             "py-3 rounded-xl text-[10px] md:text-xs font-black tracking-wider border transition-all duration-200 active:scale-95",
-                                            selected 
-                                              ? "bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/10" 
+                                            selected
+                                              ? "bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/10"
                                               : "bg-white dark:bg-slate-950 hover:bg-slate-50 dark:hover:bg-white/[0.02] border-slate-200 dark:border-white/5 text-slate-500 dark:text-slate-400"
                                           )}
                                         >
@@ -984,13 +1040,13 @@ export default function MockTake() {
 
                                 {/* Matching / Headings Dropdown */}
                                 {(q.qtype === "matching" || q.qtype === "headings") && Array.isArray(q.options) && (
-                                  <select 
+                                  <select
                                     className="w-full h-11 px-3.5 rounded-xl border border-slate-200 dark:border-white/5 bg-white dark:bg-slate-950 text-xs md:text-sm font-semibold text-slate-700 dark:text-slate-350 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-all outline-none"
-                                    value={answers[q.id] ?? ""} 
+                                    value={answers[q.id] ?? ""}
                                     onChange={(e) => onAnswer(q.id, e.target.value)}
                                   >
                                     <option value="">— Variantni tanlang —</option>
-                                    {q.options.map((o) => <option key={o} value={o}>{o}</option>)}
+                                    {q.options.map((o) => <option key={o.id || o.text} value={o.text}>{o.text}</option>)}
                                   </select>
                                 )}
                               </div>
@@ -998,12 +1054,12 @@ export default function MockTake() {
                           </div>
 
                           {/* Flag/Bookmark Button */}
-                          <button 
+                          <button
                             onClick={() => toggleFlag(q.id)}
                             className={cn(
                               "p-2 rounded-xl border transition-all shrink-0 hover:scale-105 active:scale-95",
-                              isFlagged 
-                                ? "text-amber-500 bg-amber-500/10 border-amber-500/20 opacity-100" 
+                              isFlagged
+                                ? "text-amber-500 bg-amber-500/10 border-amber-500/20 opacity-100"
                                 : "text-slate-300 dark:text-slate-600 hover:text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5 border-transparent"
                             )}
                             title="Keyinchalik qaytish uchun belgilash"
@@ -1019,19 +1075,19 @@ export default function MockTake() {
 
               {/* In-Panel Next/Prev Buttons */}
               <div className="flex justify-between pt-6 border-t border-slate-100 dark:border-white/5 shrink-0">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => setSectionIdx((i) => Math.max(0, i - 1))} 
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSectionIdx((i) => Math.max(0, i - 1))}
                   disabled={sectionIdx === 0}
                   className="rounded-xl border-slate-200 dark:border-white/5 px-4 h-10 font-bold hover:bg-slate-50 dark:hover:bg-white/5"
                 >
                   <ChevronLeft className="h-4 w-4 mr-1.5" /> Oldingi Passage
                 </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => setSectionIdx((i) => Math.min(sections.length - 1, i + 1))} 
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSectionIdx((i) => Math.min(sections.length - 1, i + 1))}
                   disabled={sectionIdx === sections.length - 1}
                   className="rounded-xl border-slate-200 dark:border-white/5 px-4 h-10 font-bold hover:bg-slate-50 dark:hover:bg-white/5"
                 >
@@ -1053,12 +1109,12 @@ export default function MockTake() {
               const partLabel = kind === "reading" ? `Passage ${i + 1}` : `Part ${i + 1}`;
               return (
                 <div key={i} className="flex items-center gap-2 shrink-0">
-                  <button 
+                  <button
                     onClick={() => setSectionIdx(i)}
                     className={cn(
                       "px-4 py-2 rounded-xl text-xs font-black whitespace-nowrap transition-all duration-300 border active:scale-95",
-                      isActive 
-                        ? "bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/20" 
+                      isActive
+                        ? "bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/20"
                         : "bg-slate-100 dark:bg-white/5 text-slate-500 border-transparent hover:bg-slate-200/60 dark:hover:bg-white/10 hover:text-slate-800 dark:hover:text-white"
                     )}
                   >
@@ -1071,18 +1127,18 @@ export default function MockTake() {
                         const hasAns = !!answers[q.id];
                         const isFlg = flagged.has(q.id);
                         return (
-                          <button 
-                            key={q.id} 
-                            onClick={() => { 
-                              const el = document.getElementById(`q-${q.id}`); 
-                              el?.scrollIntoView({ behavior: "smooth", block: "center" }); 
+                          <button
+                            key={q.id}
+                            onClick={() => {
+                              const el = document.getElementById(`q-${q.id}`);
+                              el?.scrollIntoView({ behavior: "smooth", block: "center" });
                             }}
                             className={cn(
                               "h-8 w-8 rounded-xl text-[10px] font-black border transition-all shrink-0 hover:scale-105 active:scale-90",
-                              hasAns 
-                                ? "bg-emerald-500 text-white border-emerald-500 shadow-sm shadow-emerald-500/10" 
-                                : isFlg 
-                                  ? "bg-amber-500 text-white border-amber-500 shadow-sm shadow-amber-500/10" 
+                              hasAns
+                                ? "bg-emerald-500 text-white border-emerald-500 shadow-sm shadow-emerald-500/10"
+                                : isFlg
+                                  ? "bg-amber-500 text-white border-amber-500 shadow-sm shadow-amber-500/10"
                                   : "bg-white dark:bg-slate-900 border-slate-200 dark:border-white/5 hover:border-emerald-500/40 text-slate-600 dark:text-slate-400"
                             )}
                           >
@@ -1101,13 +1157,13 @@ export default function MockTake() {
               );
             })}
           </div>
-          
+
           <div className="flex-none w-px h-6 bg-slate-200 dark:bg-white/10 shrink-0 mx-2 hidden sm:block" />
-          
-          <Button 
-            size="default" 
-            onClick={() => submit()} 
-            disabled={submitting} 
+
+          <Button
+            size="default"
+            onClick={() => submit()}
+            disabled={submitting}
             className="shrink-0 bg-slate-900 dark:bg-white text-white dark:text-slate-950 font-black rounded-xl hover:scale-105 active:scale-95 transition-all shadow-md px-6 h-10 text-xs tracking-tight"
           >
             {submitting && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />}
@@ -1134,13 +1190,13 @@ export default function MockTake() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-col sm:flex-row gap-2 mt-4">
-            <AlertDialogCancel 
-              onClick={() => blocker.reset?.()} 
+            <AlertDialogCancel
+              onClick={() => blocker.reset?.()}
               className="flex-1 border-slate-200 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-white/5 font-bold h-11 rounded-xl"
             >
               Testda qolish
             </AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogAction
               onClick={() => {
                 blocker.proceed?.();
               }}
@@ -1151,6 +1207,27 @@ export default function MockTake() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      {/* 🧮 FLOATING DESMOS CALCULATOR */}
+      <AnimatePresence>
+        {showCalculator && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            className="fixed bottom-24 right-4 md:right-8 w-[90vw] md:w-[600px] h-[600px] max-h-[70vh] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-white/10 z-50 overflow-hidden flex flex-col"
+          >
+            <div className="flex items-center justify-between p-3 border-b border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-slate-950 shrink-0 cursor-move">
+              <span className="font-bold text-sm flex items-center gap-2 text-slate-700 dark:text-slate-300"><Calculator className="h-4 w-4 text-emerald-500" /> Desmos Graphing Calculator</span>
+              <Button size="icon" variant="ghost" className="h-6 w-6 rounded-full hover:bg-slate-200 dark:hover:bg-white/10" onClick={() => setShowCalculator(false)}><X className="h-4 w-4 text-slate-500" /></Button>
+            </div>
+            <div className="flex-1 w-full bg-white relative">
+              {/* Note: Desmos doesn't support embedding calculator.js without an API key easily in React without the script, so we use their standard embed iframe */}
+              <iframe src="https://www.desmos.com/calculator" width="100%" height="100%" style={{ border: 0 }}></iframe>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }

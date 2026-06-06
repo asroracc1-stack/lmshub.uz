@@ -13,6 +13,7 @@ import {
   Send,
   PanelLeftClose,
   PanelLeftOpen,
+  Gift,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -444,6 +445,15 @@ export default function RoleLayout({
                 </kbd>
               </button>
               <div className="flex items-center gap-1.5 md:gap-3 pl-2 md:pl-4 border-l border-border h-8">
+                {/* Referral button */}
+                <button
+                  onClick={() => navigate(`${basePath}/referral`)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500 text-white hover:bg-emerald-600 transition-colors text-xs font-semibold shadow-sm shadow-emerald-500/30"
+                  title="Taklif qilish"
+                >
+                  <Gift className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Taklif qilish</span>
+                </button>
                 <NotificationsBell />
                 <ProfileMenu role={role} basePath={basePath} />
               </div>

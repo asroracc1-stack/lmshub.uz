@@ -92,6 +92,16 @@ public class AdminUserController {
             appRole = AppRole.STUDENT; // default
         }
 
+        // Role restriction check
+        if (currentUser.getRole() != AppRole.SUPER_ADMIN) {
+            if (appRole == AppRole.SUPER_ADMIN || 
+                appRole == AppRole.PAYMENT_MANAGER || 
+                appRole == AppRole.PACK_MANAGER || 
+                appRole == AppRole.MANAGER) {
+                throw new RuntimeException("Ruxsat etilmagan harakat: Faqat Super Admin Pack Manager yoki Super Admin yaratishi mumkin!");
+            }
+        }
+
         // organizationId: use from request if superAdmin provides it, otherwise strictly from current user
         UUID orgId;
         if (currentUser.getRole() == AppRole.SUPER_ADMIN) {

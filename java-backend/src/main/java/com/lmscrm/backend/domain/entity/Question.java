@@ -39,6 +39,12 @@ public class Question {
     @Column(name = "position_order")
     private Integer positionOrder;
 
+    @Column(name = "image_url")
+    private String imageUrl;
+
+    @Column(name = "image_position")
+    private String imagePosition;
+
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
     private java.util.List<QuestionOption> options;
 }

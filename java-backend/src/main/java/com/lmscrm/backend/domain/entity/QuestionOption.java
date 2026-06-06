@@ -31,4 +31,10 @@ public class QuestionOption {
 
     @Column(name = "position_order")
     private Integer positionOrder;
+
+    @Column(name = "image_url")
+    private String imageUrl;
+
+    @Column(name = "image_position")
+    private String imagePosition;
 }

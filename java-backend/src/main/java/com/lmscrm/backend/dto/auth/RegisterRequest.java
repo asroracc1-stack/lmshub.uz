@@ -40,4 +40,7 @@ public class RegisterRequest {
 
     @JsonProperty("otpCode")
     private String otpCode;
+
+    @JsonProperty("referralCode")
+    private String referralCode;
 }

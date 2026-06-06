@@ -112,13 +112,13 @@ export default function OrgEvents({ canManage }: Props) {
         id: e.id,
         title: e.title,
         description: e.description,
-        starts_at: e.startsAt,
-        ends_at: e.endsAt,
+        starts_at: e.starts_at || e.startsAt,
+        ends_at: e.ends_at || e.endsAt,
         location: e.location,
         color: e.color || "primary",
-        all_day: e.isAllDay ?? false,
+        all_day: e.is_all_day ?? e.isAllDay ?? false,
         organization_id: e.organization?.id ?? null,
-        created_by: e.createdBy?.id ?? null,
+        created_by: e.created_by?.id ?? e.createdBy?.id ?? null,
       }));
       setEvents(mapped);
     } catch (e: any) {
@@ -247,12 +247,16 @@ export default function OrgEvents({ canManage }: Props) {
         title: payload.title,
         description: payload.description,
         startsAt: payload.starts_at,
+        starts_at: payload.starts_at,
         endsAt: payload.ends_at,
+        ends_at: payload.ends_at,
         location: payload.location,
         color: payload.color,
         isAllDay: payload.all_day,
+        is_all_day: payload.all_day,
         organization: profile?.organization_id ? { id: profile.organization_id } : null,
         createdBy: user?.id ? { id: user.id } : null,
+        created_by: user?.id ? { id: user.id } : null,
       };
 
       if (editing) {

@@ -86,6 +86,12 @@ public class User implements UserDetails {
     @Builder.Default
     private Long coins = 0L;
 
+    @Column(name = "referral_code", unique = true)
+    private String referralCode;
+
+    @Column(name = "referred_by")
+    private UUID referredBy;
+
     @Column(name = "target_band")
     private Double targetBand;
 
@@ -103,6 +109,17 @@ public class User implements UserDetails {
         if (createdAt == null) {
             createdAt = LocalDateTime.now();
         }
+        if (referralCode == null || referralCode.isEmpty()) {
+            referralCode = generateReferralCode();
+        }
+    }
+
+    private String generateReferralCode() {
+        String chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+        StringBuilder sb = new StringBuilder();
+        java.util.Random rnd = new java.util.Random();
+        for (int i = 0; i < 8; i++) sb.append(chars.charAt(rnd.nextInt(chars.length())));
+        return sb.toString();
     }
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)

@@ -29,6 +29,7 @@ import {
   Moon,
   Globe,
   ChevronRight,
+  Gift,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { api } from "@/lib/axios";
@@ -139,6 +140,13 @@ export default function ProfileMenu({ role, basePath }: ProfileMenuProps) {
           <DropdownMenuItem onClick={() => go(`${basePath}/profile`)} className="rounded-xl gap-3 cursor-pointer py-3 focus:bg-emerald-500/10 focus:text-emerald-600 dark:focus:text-emerald-400 group">
             <UserIcon className="h-4.5 w-4.5 text-muted-foreground group-focus:text-emerald-500 transition-colors" />
             <span className="text-sm font-medium">Profile</span>
+          </DropdownMenuItem>
+
+          {/* Referral */}
+          <DropdownMenuItem onClick={() => go(`${basePath}/referral`)} className="rounded-xl gap-3 cursor-pointer py-3 focus:bg-emerald-500/10 focus:text-emerald-600 dark:focus:text-emerald-400 group">
+            <Gift className="h-4.5 w-4.5 text-muted-foreground group-focus:text-emerald-500 transition-colors" />
+            <span className="text-sm font-medium">Taklif qilish</span>
+            <span className="ml-auto text-[10px] font-bold text-emerald-500 uppercase tracking-widest">+10 🪙</span>
           </DropdownMenuItem>
 
           {role === "super_admin" && (

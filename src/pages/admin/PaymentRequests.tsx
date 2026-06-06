@@ -44,7 +44,7 @@ import {
   Clock,
   Receipt,
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+
 
 interface PaymentTxRow {
   id: string;
@@ -88,11 +88,15 @@ export default function PaymentRequests() {
 
   const transactions: PaymentTxRow[] = Array.isArray(data) ? data : [];
 
-  const filteredTx = transactions.filter((tx) =>
-    tx.studentName.toLowerCase().includes(search.toLowerCase()) ||
-    tx.payerName.toLowerCase().includes(search.toLowerCase()) ||
-    (tx.note && tx.note.toLowerCase().includes(search.toLowerCase()))
-  );
+  const filteredTx = transactions.filter((tx) => {
+    const q = search.toLowerCase();
+    return (
+      (tx.studentName ?? "").toLowerCase().includes(q) ||
+      (tx.payerName ?? "").toLowerCase().includes(q) ||
+      (tx.adminName ?? "").toLowerCase().includes(q) ||
+      (tx.note ?? "").toLowerCase().includes(q)
+    );
+  });
 
   const approveMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -130,10 +134,11 @@ export default function PaymentRequests() {
     },
   });
 
-  const getProofUrl = (path: string) => {
+  const getProofUrl = (path?: string | null): string => {
+    if (!path) return "";
     if (path.startsWith("http")) return path;
-    const { data } = supabase.storage.from("receipts").getPublicUrl(path);
-    return data.publicUrl;
+    // Serve via Java backend file endpoint
+    return `${import.meta.env.VITE_API_URL || "http://localhost:8080"}/api/v1/files/${path}`;
   };
 
   const columns = [
@@ -191,11 +196,22 @@ export default function PaymentRequests() {
     }),
     columnHelper.accessor("createdAt", {
       header: "Sana",
-      cell: (info) => (
-        <span className="text-xs text-muted-foreground">
-          {new Date(info.getValue()).toLocaleString("uz-UZ")}
-        </span>
-      ),
+      cell: (info) => {
+        const val = info.getValue() as any;
+        let dateObj = new Date();
+        if (val) {
+          if (Array.isArray(val)) {
+            dateObj = new Date(val[0], val[1] - 1, val[2], val[3] || 0, val[4] || 0, val[5] || 0);
+          } else {
+            dateObj = new Date(val);
+          }
+        }
+        return (
+          <span className="text-xs text-muted-foreground">
+            {dateObj.toLocaleString("uz-UZ")}
+          </span>
+        );
+      },
     }),
     columnHelper.display({
       id: "actions",
@@ -352,14 +368,18 @@ export default function PaymentRequests() {
         )}
       </div>
 
-      <AnimatePresence>
-        {selectedTx && (
-          <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-            <DialogContent className="max-w-2xl bg-card border-border shadow-2xl">
+      <Dialog open={modalOpen} onOpenChange={(open) => {
+        setModalOpen(open);
+        if (!open) setTimeout(() => setSelectedTx(null), 300); // clear after animation
+      }}>
+        <DialogContent className="max-w-2xl bg-card border-border shadow-2xl">
+          {selectedTx && (
+            <>
               <DialogHeader>
                 <DialogTitle className="text-xl font-display flex items-center gap-2">
                   <Receipt className="h-5 w-5 text-primary" /> To'lov chekini tekshirish
                 </DialogTitle>
+                <p className="sr-only" id="dialog-description">To'lov cheki ma'lumotlari va tasdiqlash</p>
               </DialogHeader>
 
               <div className="grid md:grid-cols-2 gap-6 my-4">
@@ -393,7 +413,18 @@ export default function PaymentRequests() {
                   <div>
                     <p className="text-xs text-muted-foreground uppercase tracking-wider">Yuborilgan sana</p>
                     <p className="text-sm">
-                      {new Date(selectedTx.createdAt).toLocaleString("uz-UZ")}
+                      {(() => {
+                        const val = selectedTx.createdAt as any;
+                        let dateObj = new Date();
+                        if (val) {
+                          if (Array.isArray(val)) {
+                            dateObj = new Date(val[0], val[1] - 1, val[2], val[3] || 0, val[4] || 0, val[5] || 0);
+                          } else {
+                            dateObj = new Date(val);
+                          }
+                        }
+                        return dateObj.toLocaleString("uz-UZ");
+                      })()}
                     </p>
                   </div>
                 </div>
@@ -401,20 +432,26 @@ export default function PaymentRequests() {
                 <div className="flex flex-col items-center justify-center bg-muted/20 p-2 rounded-xl border border-border">
                   <p className="text-xs text-muted-foreground mb-2 font-medium">Chek / Skrinshot rasmi</p>
                   <div className="relative w-full h-72 rounded-lg overflow-hidden flex items-center justify-center bg-black/5">
-                    <img
-                      src={getProofUrl(selectedTx.paymentProofUrl)}
-                      alt="Chek"
-                      className="max-w-full max-h-full object-contain hover:scale-105 transition-transform duration-300"
-                    />
+                    {selectedTx.paymentProofUrl ? (
+                      <img
+                        src={getProofUrl(selectedTx.paymentProofUrl)}
+                        alt="Chek"
+                        className="max-w-full max-h-full object-contain hover:scale-105 transition-transform duration-300"
+                      />
+                    ) : (
+                      <p className="text-sm text-muted-foreground">Chek rasmi yuklanmagan</p>
+                    )}
                   </div>
-                  <a
-                    href={getProofUrl(selectedTx.paymentProofUrl)}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-xs text-primary hover:underline mt-2 block"
-                  >
-                    To'liq o'lchamda ochish ↗
-                  </a>
+                  {selectedTx.paymentProofUrl && (
+                    <a
+                      href={getProofUrl(selectedTx.paymentProofUrl)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-xs text-primary hover:underline mt-2 block"
+                    >
+                      To'liq o'lchamda ochish ↗
+                    </a>
+                  )}
                 </div>
               </div>
 
@@ -435,7 +472,6 @@ export default function PaymentRequests() {
                       Rad etish
                     </Button>
                     <Button
-                      variant="hero"
                       className="bg-success hover:bg-success/90 text-white"
                       onClick={() => approveMutation.mutate(selectedTx.id)}
                       disabled={approveMutation.isPending || rejectMutation.isPending}
@@ -454,10 +490,10 @@ export default function PaymentRequests() {
                   </Button>
                 )}
               </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        )}
-      </AnimatePresence>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

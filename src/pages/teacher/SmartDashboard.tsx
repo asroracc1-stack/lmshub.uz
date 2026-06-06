@@ -71,6 +71,17 @@ export default function SmartDashboard() {
   const [coinReason, setCoinReason] = useState("Faol ishtiroki va a'lo baholari uchun");
   const [coinComment, setCoinComment] = useState("");
 
+  // Local coins buffer
+  const [localCoins, setLocalCoins] = useState<Record<string, number>>({});
+  // Coin burst animation state: studentId -> show burst
+  const [coinBurst, setCoinBurst] = useState<Record<string, boolean>>({});
+  // Live today date
+  const [today, setToday] = useState(new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setToday(new Date()), 60000);
+    return () => clearInterval(timer);
+  }, []);
+
   // Local optimistic state buffers
   const [localAttendances, setLocalAttendances] = useState<Record<string, "PRESENT" | "ABSENT" | "LATE">>({});
   const [localGrades, setLocalGrades] = useState<Record<string, { score: number; comment: string }>>({});
@@ -206,8 +217,7 @@ export default function SmartDashboard() {
     setLocalGrades(grMap);
   }, [gradesData]);
 
-  // Local coins buffer
-  const [localCoins, setLocalCoins] = useState<Record<string, number>>({});
+
 
   // Mutations
   const saveAllDashboardDataMutation = useMutation({
@@ -290,8 +300,11 @@ export default function SmartDashboard() {
       ...prev,
       [coinStudentId]: (prev[coinStudentId] || 0) + amount,
     }));
+    // Trigger burst animation
+    setCoinBurst((prev) => ({ ...prev, [coinStudentId]: true }));
+    setTimeout(() => setCoinBurst((prev) => ({ ...prev, [coinStudentId]: false })), 1200);
     setCoinModalOpen(false);
-    toast.success("Coin miqdori belgilandi. Saqlash tugmasini bosganda saqlanadi. ✨🎁");
+    toast.success("🪙 Coin belgilandi! Saqlash tugmasini bosganda saqlanadi. ✨🎁");
   };
 
   // PDF report handler
@@ -480,14 +493,15 @@ export default function SmartDashboard() {
               <tr className="border-b border-border/40 bg-muted/40 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 <th className="py-4 px-6 font-display">#</th>
                 <th className="py-4 px-6 font-display">Talaba Ismi</th>
-                {lessons.map((l) => (
-                  <th key={l.id} className="py-4 px-4 text-center font-display min-w-[145px]">
-                    <div className="flex flex-col items-center gap-1">
-                      <Calendar className="h-3.5 w-3.5 text-primary" />
-                      <span>{new Date(l.starts_at).toLocaleDateString("uz", { month: "short", day: "numeric", weekday: "short" })}</span>
-                    </div>
-                  </th>
-                ))}
+                {/* Date column: show today's date dynamically */}
+                <th className="py-4 px-4 text-center font-display min-w-[145px]">
+                  <div className="flex flex-col items-center gap-1">
+                    <Calendar className="h-3.5 w-3.5 text-primary" />
+                    <span>
+                      {today.toLocaleDateString("uz", { month: "numeric", day: "numeric", year: "numeric" })}
+                    </span>
+                  </div>
+                </th>
                 <th className="py-4 px-6 font-display min-w-[180px]">Fikr / Izoh (Feedback)</th>
                 <th className="py-4 px-6 font-display text-center min-w-[120px]">Rag'bat (Rewards)</th>
                 <th className="py-4 px-6 font-display text-center min-w-[140px]">Baho (Score)</th>
@@ -546,8 +560,8 @@ export default function SmartDashboard() {
                         </div>
                       </td>
 
-                      {/* Attendance Toggles */}
-                      {lessons.map((l) => {
+                      {/* Attendance Toggle — single column for today */}
+                      {lessons.slice(0, 1).map((l) => {
                         const status = localAttendances[`${l.id}-${s.id}`] || "PRESENT";
                         return (
                           <td key={l.id} className="py-4 px-4 text-center">
@@ -614,15 +628,41 @@ export default function SmartDashboard() {
 
                       {/* Rewards */}
                       <td className="py-4 px-6 text-center">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => openCoinModal(s.id)}
-                          className="gap-1.5 border-primary/20 hover:border-primary/40 text-primary hover:bg-primary/10 transition-all duration-300"
-                        >
-                          <Star className={`h-4 w-4 text-primary ${localCoins[s.id] ? "fill-primary scale-125 animate-pulse" : ""}`} />
-                          <span>+ Coin {localCoins[s.id] ? `(${localCoins[s.id]})` : ""}</span>
-                        </Button>
+                        <div className="relative inline-block">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openCoinModal(s.id)}
+                            className="gap-1.5 border-primary/20 hover:border-primary/40 text-primary hover:bg-primary/10 transition-all duration-300"
+                          >
+                            <Star className={`h-4 w-4 text-primary ${localCoins[s.id] ? "fill-primary scale-125 animate-pulse" : ""}`} />
+                            <span>+ Coin {localCoins[s.id] ? `(${localCoins[s.id]})` : ""}</span>
+                          </Button>
+                          {/* Coin burst animation */}
+                          <AnimatePresence>
+                            {coinBurst[s.id] && (
+                              <>
+                                {[...Array(8)].map((_, i) => (
+                                  <motion.span
+                                    key={i}
+                                    initial={{ opacity: 1, scale: 0.5, x: 0, y: 0 }}
+                                    animate={{
+                                      opacity: 0,
+                                      scale: 1.4,
+                                      x: Math.cos((i * Math.PI * 2) / 8) * 48,
+                                      y: Math.sin((i * Math.PI * 2) / 8) * 48,
+                                    }}
+                                    exit={{ opacity: 0 }}
+                                    transition={{ duration: 0.9, ease: "easeOut" }}
+                                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-lg pointer-events-none select-none z-50"
+                                  >
+                                    🪙
+                                  </motion.span>
+                                ))}
+                              </>
+                            )}
+                          </AnimatePresence>
+                        </div>
                       </td>
 
                       {/* Score Input + Letter Grade */}

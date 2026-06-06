@@ -31,15 +31,16 @@ public class CalendarController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'ADMINISTRATOR')")
     public ResponseEntity<CalendarEvent> create(@Valid @RequestBody CalendarEvent event) {
         if (event.getStartsAt() == null || event.getEndsAt() == null) {
             throw new IllegalArgumentException("Boshlanish va tugash vaqti majburiy");
         }
         UUID orgId = event.getOrganization() != null ? event.getOrganization().getId() : null;
-        List<CalendarEvent> overlaps = calendarEventRepository.findOverlappingEvents(
-                orgId, event.getStartsAt(), event.getEndsAt(), null
-        );
+        List<CalendarEvent> overlaps = orgId != null
+                ? calendarEventRepository.findByOrganizationIdAndStartsAtLessThanAndEndsAtGreaterThan(orgId, event.getEndsAt(), event.getStartsAt())
+                : calendarEventRepository.findByOrganizationIsNullAndStartsAtLessThanAndEndsAtGreaterThan(event.getEndsAt(), event.getStartsAt());
+        
         if (!overlaps.isEmpty()) {
             throw new BusinessException("Ushbu vaqtda boshqa tadbir mavjud");
         }
@@ -47,7 +48,7 @@ public class CalendarController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'ADMINISTRATOR')")
     public ResponseEntity<CalendarEvent> update(@PathVariable UUID id, @Valid @RequestBody CalendarEvent details) {
         CalendarEvent event = calendarEventRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Event not found"));
@@ -56,9 +57,11 @@ public class CalendarController {
             throw new IllegalArgumentException("Boshlanish va tugash vaqti majburiy");
         }
         UUID orgId = details.getOrganization() != null ? details.getOrganization().getId() : null;
-        List<CalendarEvent> overlaps = calendarEventRepository.findOverlappingEvents(
-                orgId, details.getStartsAt(), details.getEndsAt(), id
-        );
+        List<CalendarEvent> overlaps = orgId != null
+                ? calendarEventRepository.findByOrganizationIdAndStartsAtLessThanAndEndsAtGreaterThan(orgId, details.getEndsAt(), details.getStartsAt())
+                : calendarEventRepository.findByOrganizationIsNullAndStartsAtLessThanAndEndsAtGreaterThan(details.getEndsAt(), details.getStartsAt());
+        
+        overlaps.removeIf(e -> e.getId().equals(id));
         if (!overlaps.isEmpty()) {
             throw new BusinessException("Ushbu vaqtda boshqa tadbir mavjud");
         }
@@ -75,7 +78,7 @@ public class CalendarController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'ADMINISTRATOR')")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         calendarEventRepository.deleteById(id);
         return ResponseEntity.noContent().build();

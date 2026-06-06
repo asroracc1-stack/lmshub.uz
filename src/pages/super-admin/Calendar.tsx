@@ -128,13 +128,13 @@ export default function CalendarPage() {
         title: e.title,
         description: e.description,
         location: e.location,
-        starts_at: e.startsAt,
-        ends_at: e.endsAt,
-        is_all_day: e.isAllDay ?? false,
+        starts_at: e.starts_at || e.startsAt,
+        ends_at: e.ends_at || e.endsAt,
+        is_all_day: e.is_all_day ?? e.isAllDay ?? false,
         color: e.color || "primary",
         organization: e.organization,
         organization_id: e.organization?.id ?? null,
-        created_at: e.createdAt,
+        created_at: e.created_at || e.createdAt,
       }));
     },
     staleTime: 300_000, // 5 minutes cache
@@ -261,10 +261,13 @@ export default function CalendarPage() {
       description: parsed.data.description || null,
       location: parsed.data.location || null,
       startsAt: parsed.data.starts_at.length === 16 ? `${parsed.data.starts_at}:00` : parsed.data.starts_at,
+      starts_at: parsed.data.starts_at.length === 16 ? `${parsed.data.starts_at}:00` : parsed.data.starts_at,
       endsAt: parsed.data.ends_at.length === 16 ? `${parsed.data.ends_at}:00` : parsed.data.ends_at,
+      ends_at: parsed.data.ends_at.length === 16 ? `${parsed.data.ends_at}:00` : parsed.data.ends_at,
       organization: parsed.data.organization_id === "all" ? null : { id: parsed.data.organization_id },
       color: parsed.data.color,
       isAllDay: parsed.data.is_all_day,
+      is_all_day: parsed.data.is_all_day,
     };
     try {
       if (editing) {

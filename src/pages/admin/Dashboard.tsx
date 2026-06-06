@@ -494,7 +494,7 @@ export default function AdminDashboard() {
           </Card>
 
           {/* Upcoming Events Card */}
-          <Card className="p-8 border border-slate-200 dark:border-white/5 shadow-sm bg-white dark:bg-slate-900/40 rounded-xl">
+          <Card className="p-8 border border-slate-200/80 dark:border-white/5 shadow-md hover:shadow-lg bg-white dark:bg-slate-900/40 rounded-2xl ring-1 ring-slate-100 dark:ring-white/5 transition-shadow duration-300">
             <div className="flex items-center justify-between mb-8">
               <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
                 <Activity className="h-6 w-6 text-primary" /> Yaqindagi Voqealar
@@ -513,7 +513,7 @@ export default function AdminDashboard() {
                 </div>
               ) : overview?.upcomingEvents && overview.upcomingEvents.length > 0 ? (
                 overview.upcomingEvents.map((ev, i) => (
-                  <motion.div key={ev.id} initial={{ opacity: 0, x: -5 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }} className="flex items-center justify-between p-4 rounded-lg bg-slate-50 dark:bg-white/5 hover:bg-white dark:hover:bg-white/10 transition-all border border-slate-100 dark:border-white/5 group">
+                  <motion.div key={ev.id} initial={{ opacity: 0, x: -5 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }} className="flex items-center justify-between p-4 rounded-xl bg-slate-50/80 dark:bg-white/5 hover:bg-slate-100/80 dark:hover:bg-white/10 transition-all border border-slate-200/60 dark:border-white/5 group shadow-sm">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-lg bg-white dark:bg-white/10 flex flex-col items-center justify-center border border-slate-100 dark:border-white/5 shadow-sm group-hover:border-primary/30 transition-colors">
                         <p className="text-[9px] font-bold uppercase text-primary leading-none mb-1">{format(new Date(ev.startsAt), "MMM", { locale: uz })}</p>
@@ -530,7 +530,7 @@ export default function AdminDashboard() {
                   </motion.div>
                 ))
               ) : (
-                <div className="flex flex-col items-center justify-center py-12 text-center space-y-4">
+                <div className="flex flex-col items-center justify-center py-12 text-center space-y-4 bg-gradient-to-b from-slate-50/50 to-slate-100/30 dark:from-white/[0.02] dark:to-white/[0.01] rounded-xl border border-dashed border-slate-200/60 dark:border-white/5">
                   <motion.div
                     animate={{ 
                       scale: [1, 1.05, 1],
@@ -540,7 +540,7 @@ export default function AdminDashboard() {
                   >
                     <TigerPlayer text="Dam olish vaqti! Hozircha tadbirlar yo'q... 🐯✨" size={220} />
                   </motion.div>
-                  <p className="text-xs text-slate-400 font-semibold uppercase tracking-widest">Tinchlik va osoyishtalik</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-widest">Tinchlik va osoyishtalik</p>
                 </div>
               )}
             </div>
@@ -549,7 +549,7 @@ export default function AdminDashboard() {
 
         {/* Sidebar Actions & Subscription */}
         <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} className="space-y-8">
-          <Card className="p-8 border border-slate-200 dark:border-white/5 shadow-sm bg-white dark:bg-slate-900/40 rounded-xl">
+          <Card className="p-8 border border-slate-200/80 dark:border-white/5 shadow-md hover:shadow-lg bg-white dark:bg-slate-900/40 rounded-2xl ring-1 ring-slate-100 dark:ring-white/5 transition-shadow duration-300">
             <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-3 mb-6">
               <BellRing className="h-5 w-5 text-amber-500" /> Tezkor Amallar
             </h3>
@@ -575,8 +575,8 @@ export default function AdminDashboard() {
           </Card>
 
           <Card className={cn(
-            "p-8 border border-transparent shadow-lg rounded-xl text-white relative overflow-hidden group transition-all duration-500",
-            isExpiring ? "bg-gradient-to-br from-rose-600 to-rose-700 shadow-rose-200 animate-pulse" : "bg-gradient-primary"
+            "p-8 border border-transparent shadow-lg rounded-2xl text-white relative overflow-hidden group transition-all duration-500",
+            isExpiring ? "bg-gradient-to-br from-rose-600 to-rose-700 shadow-rose-500/20 dark:shadow-rose-500/10 animate-pulse" : "bg-gradient-primary shadow-primary/20 dark:shadow-primary/10"
           )}>
             <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
               <Crown className="h-24 w-24" />

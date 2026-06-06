@@ -26,9 +26,18 @@ public class CreateExamRequest {
     public static class QuestionDto {
         private String prompt;
         private String qtype;
-        private List<String> options;
-        private String correct_answer;
+        private List<OptionDto> options;
         private Integer points;
         private String explanation;
+        private String imageUrl;
+        private String imagePosition;
+    }
+
+    @Data
+    public static class OptionDto {
+        private String text;
+        private Boolean isCorrect;
+        private String imageUrl;
+        private String imagePosition;
     }
 }

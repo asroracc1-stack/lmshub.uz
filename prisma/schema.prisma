@@ -1,0 +1,35 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Test {
+  id          String     @id @default(uuid())
+  title       String
+  description String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  duration    Int?       // optional duration in minutes
+  questions   Question[]
+}
+
+model Question {
+  id        String   @id @default(uuid())
+  testId    String
+  order     Int      // order within the test
+  content   String   // HTML content (sanitized)
+  options   Option[]
+  test      Test     @relation(fields: [testId], references: [id])
+}
+
+model Option {
+  id          String   @id @default(uuid())
+  questionId  String
+  text        String   // HTML text for option
+  isCorrect   Boolean
+  question    Question @relation(fields: [questionId], references: [id])
+}

@@ -231,6 +231,20 @@ public class AuthService {
                     .build();
             user = userRepository.save(user);
             
+            // Apply referral code if provided
+            if (request.getReferralCode() != null && !request.getReferralCode().trim().isEmpty()) {
+                Optional<User> inviter = userRepository.findByReferralCode(request.getReferralCode().trim().toUpperCase());
+                if (inviter.isPresent() && !inviter.get().getId().equals(user.getId())) {
+                    user.setReferredBy(inviter.get().getId());
+                    // Award coins to both
+                    user.setCoins((user.getCoins() != null ? user.getCoins() : 0L) + 10L);
+                    User inv = inviter.get();
+                    inv.setCoins((inv.getCoins() != null ? inv.getCoins() : 0L) + 10L);
+                    userRepository.save(inv);
+                    log.info("🎁 Referral: {} invited {} — both +10 coins", inv.getUsername(), user.getUsername());
+                }
+            }
+            
             String[] parts = request.getFullName().split("\\s+", 2);
             Profile profile = Profile.builder()
                     .user(user)

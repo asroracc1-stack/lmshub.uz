@@ -605,9 +605,16 @@ export default function UsersManager({ filterRole, title, description }: Props) 
                   >
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {Object.keys(roleLabel).map((r) => (
-                        <SelectItem key={r} value={r}>{roleLabel[r as AppRole]}</SelectItem>
-                      ))}
+                      {Object.keys(roleLabel)
+                        .filter((r) => {
+                          if (myRole !== "super_admin") {
+                            return r !== "payment_manager" && r !== "super_admin";
+                          }
+                          return true;
+                        })
+                        .map((r) => (
+                          <SelectItem key={r} value={r}>{roleLabel[r as AppRole]}</SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
                 </div>

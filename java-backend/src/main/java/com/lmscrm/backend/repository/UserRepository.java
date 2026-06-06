@@ -88,4 +88,9 @@ public interface UserRepository extends JpaRepository<User, UUID> {
            "LOWER(u.email) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
            "u.phoneNumber LIKE CONCAT('%', :query, '%'))")
     Page<User> searchByRoleAndOrganizationAndQuery(@Param("role") AppRole role, @Param("orgId") UUID orgId, @Param("query") String query, Pageable pageable);
+
+    // Referral system
+    Optional<User> findByReferralCode(String referralCode);
+    List<User> findByReferredBy(UUID referredBy);
+    long countByReferredBy(UUID referredBy);
 }

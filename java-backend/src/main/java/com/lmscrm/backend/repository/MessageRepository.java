@@ -13,10 +13,10 @@ import java.util.UUID;
 @Repository
 public interface MessageRepository extends JpaRepository<Message, UUID> {
 
-    @Query("SELECT m FROM Message m WHERE m.receiver.id = :userId OR m.sender.id = :userId OR m.type = 'BROADCAST' ORDER BY m.sentAt DESC")
+    @Query("SELECT m FROM Message m LEFT JOIN m.receiver r LEFT JOIN m.sender s WHERE r.id = :userId OR s.id = :userId OR m.type = 'BROADCAST' ORDER BY m.sentAt DESC")
     List<Message> findMessagesForUser(@Param("userId") UUID userId);
 
-    @Query("SELECT COUNT(m) FROM Message m WHERE m.receiver.id = :userId OR m.sender.id = :userId OR m.type = 'BROADCAST'")
+    @Query("SELECT COUNT(m) FROM Message m LEFT JOIN m.receiver r LEFT JOIN m.sender s WHERE r.id = :userId OR s.id = :userId OR m.type = 'BROADCAST'")
     long countMessagesForUser(@Param("userId") UUID userId);
 
     @Query("SELECT COUNT(m) FROM Message m WHERE m.sender.id = :userId")

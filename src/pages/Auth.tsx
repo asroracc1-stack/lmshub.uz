@@ -192,6 +192,7 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
         }
 
         const cleanPhone = phone.replace(/\D/g, "");
+        const referralCode = new URLSearchParams(window.location.search).get("invite") || "";
         const response = await api.post<LoginResponseData>("/auth/register", {
           email: email.trim(),
           username: username.trim(),
@@ -200,6 +201,7 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
           password,
           confirmPassword: password, // Sending same password as confirmation
           otpCode: "777777", // Default bypass as requested previously
+          referralCode: referralCode || undefined,
         });
         handleAuthSuccess(response.data, true);
       }

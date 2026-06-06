@@ -42,18 +42,51 @@ export function useNotifications() {
     load();
   }, [load]);
 
-  // Real-time subscription - DISABLED
+  // Real-time subscription and Polling
   useEffect(() => {
     if (!user) return;
-    console.log("📡 Real-time notifications disabled (Supabase removed)");
     
-    // Polling mock (optional)
+    // 1. Polling for DB notifications (Payments, System)
     const interval = setInterval(() => {
-      // Mock new notification every 5 minutes
-    }, 300000);
+      load();
+    }, 15000); // 15 seconds
     
-    return () => clearInterval(interval);
-  }, [user]);
+    // 2. Real-time Socket connection for Chat messages
+    let socket: any = null;
+    import("socket.io-client").then(({ io }) => {
+      socket = io("http://localhost:5000", { query: { userId: user.id } });
+      
+      socket.on("global_notification", (msg: any) => {
+        // Create an in-memory notification for the new chat message
+        const newNotif: Notification = {
+          id: msg.id || Date.now().toString(),
+          user_id: user.id,
+          title: `Yangi xabar`,
+          message: `${msg.sender?.fullName || "Foydalanuvchi"}: ${msg.body}`,
+          body: msg.body,
+          type: "NEW_MESSAGE",
+          link: "/admin/messages",
+          is_read: false,
+          created_at: msg.createdAt || new Date().toISOString()
+        };
+        
+        setItems(prev => {
+          // Prevent duplicates
+          if (prev.some(n => n.id === newNotif.id)) return prev;
+          return [newNotif, ...prev];
+        });
+        
+        toast.success(`Yangi xabar: ${msg.sender?.fullName || ""}`, {
+          description: msg.body?.length > 30 ? msg.body.substring(0, 30) + "..." : msg.body,
+        });
+      });
+    });
+    
+    return () => {
+      clearInterval(interval);
+      if (socket) socket.disconnect();
+    };
+  }, [user, load]);
 
   const unread = items.filter((n) => !n.is_read).length;
 

@@ -13,17 +13,29 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Loader2, Plus, Trash2, Upload, Sparkles, Music, FileText, Wand2, Save, BrainCircuit, ChevronLeft, ChevronRight, Image as ImageIcon, X } from "lucide-react";
 
+interface OptionState {
+  text: string;
+  isCorrect: boolean;
+  imageUrl?: string;
+  imagePosition?: "top" | "bottom" | "left" | "right";
+}
+
 interface Q {
   prompt: string;
   qtype: "mcq" | "tfng" | "ynng" | "fill" | "short" | "matching" | "headings";
-  options: string;
-  correct_answer: string;
+  options: OptionState[];
+  imageUrl?: string;
+  imagePosition?: "top" | "bottom" | "left" | "right";
   points: number;
   explanation?: string;
 }
-interface Section { title: string; passage: string; questions: Q[]; }
 
-const newQ = (): Q => ({ prompt: "", qtype: "mcq", options: "A,B,C,D", correct_answer: "", points: 1 });
+const newQ = (): Q => ({ 
+  prompt: "", 
+  qtype: "mcq", 
+  options: [{text: "A", isCorrect: true}, {text: "B", isCorrect: false}, {text: "C", isCorrect: false}, {text: "D", isCorrect: false}], 
+  points: 1 
+});
 const newSection = (): Section => ({ title: "", passage: "", questions: [newQ()] });
 
 export default function MockEditor({ basePath = "/super-admin" }: { basePath?: string }) {
@@ -81,8 +93,14 @@ export default function MockEditor({ basePath = "/super-admin" }: { basePath?: s
                 questions: p.questions?.length ? p.questions.map((q: any) => ({
                     prompt: q.text || "",
                     qtype: q.questionType || "short",
-                    options: Array.isArray(q.options) ? q.options.map((o: any) => o.text).join(", ") : "",
-                    correct_answer: q.correctAnswer || "",
+                    options: Array.isArray(q.options) ? q.options.map((o: any) => ({
+                        text: o.text || "",
+                        isCorrect: o.isCorrect || false,
+                        imageUrl: o.imageUrl || "",
+                        imagePosition: o.imagePosition || "left"
+                    })) : [],
+                    imageUrl: q.imageUrl || "",
+                    imagePosition: q.imagePosition || "top",
                     points: q.points || 1,
                     explanation: q.explanation || ""
                 })) : [newQ()]
@@ -138,6 +156,18 @@ export default function MockEditor({ basePath = "/super-admin" }: { basePath?: s
     finally { setAudioBusy(false); }
   };
 
+  const uploadSingleImage = async (file: File): Promise<string | null> => {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await api.post("/files/upload", formData, { headers: { "Content-Type": "multipart/form-data" } });
+      return res.data;
+    } catch (e) {
+      toast.error("Rasm yuklashda xatolik yuz berdi.");
+      return null;
+    }
+  };
+
   const onImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const files = Array.from(e.target.files);
@@ -182,14 +212,28 @@ export default function MockEditor({ basePath = "/super-admin" }: { basePath?: s
           title: s.title ?? "",
           passage: s.passage ?? "",
           imageUrl: s.imageUrl ?? "",
-          questions: (s.questions ?? []).filter((q: any) => q.prompt).map((q: any) => ({
-            prompt: q.prompt ?? "",
-            qtype: ["mcq", "tfng", "ynng", "fill", "short", "matching", "headings"].includes(q.qtype) ? q.qtype : "short",
-            options: Array.isArray(q.options) ? q.options.join(", ") : "",
-            correct_answer: q.correct_answer ?? "",
-            points: q.points ?? 1,
-            explanation: q.explanation ?? "",
-          })),
+          questions: (s.questions ?? []).filter((q: any) => q.prompt).map((q: any) => {
+            const rawOptions = Array.isArray(q.options) ? q.options : [];
+            const correctAns = String(q.correct_answer ?? "").trim();
+            const opts = rawOptions.map(o => ({
+                text: String(o),
+                isCorrect: String(o).trim() === correctAns,
+                imageUrl: "",
+                imagePosition: "left" as const
+            }));
+            if (opts.length === 0 && correctAns) {
+                opts.push({ text: correctAns, isCorrect: true, imageUrl: "", imagePosition: "left" as const });
+            }
+            return {
+                prompt: q.prompt ?? "",
+                qtype: ["mcq", "tfng", "ynng", "fill", "short", "matching", "headings"].includes(q.qtype) ? q.qtype : "short",
+                options: opts,
+                imageUrl: "",
+                imagePosition: "top" as const,
+                points: q.points ?? 1,
+                explanation: q.explanation ?? "",
+            };
+          }),
         }));
 
         // Validate that we actually have questions
@@ -261,8 +305,14 @@ export default function MockEditor({ basePath = "/super-admin" }: { basePath?: s
             questions: s.questions.filter(q => q.prompt && q.prompt.trim() !== "").map(q => ({
                 prompt: q.prompt,
                 qtype: q.qtype,
-                options: q.options ? q.options.split(",").map(o => o.trim()).filter(Boolean) : [],
-                correct_answer: q.correct_answer || "",
+                options: q.options.map(o => ({
+                    text: o.text,
+                    isCorrect: o.isCorrect,
+                    imageUrl: o.imageUrl || null,
+                    imagePosition: o.imagePosition || "left"
+                })),
+                imageUrl: q.imageUrl || null,
+                imagePosition: q.imagePosition || "top",
                 points: q.points || 1,
                 explanation: q.explanation || ""
             }))
@@ -443,9 +493,38 @@ export default function MockEditor({ basePath = "/super-admin" }: { basePath?: s
                   <Card key={qi} className="p-3 space-y-2 bg-muted/20 border-dashed">
                     <div className="flex justify-between items-start gap-2">
                       <span className="text-xs font-bold mt-2 w-6">#{qi + 1}</span>
-                      <Textarea rows={2} placeholder="Savol matni..." className="flex-1 text-sm" value={q.prompt} onChange={(e) => updQ(si, qi, { prompt: e.target.value })} />
-                      <Button size="sm" variant="ghost" onClick={() => rmQ(si, qi)}><Trash2 className="h-3 w-3" /></Button>
+                      <div className="flex-1 space-y-2">
+                        <Textarea rows={2} placeholder="Savol matni..." className="text-sm" value={q.prompt} onChange={(e) => updQ(si, qi, { prompt: e.target.value })} />
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <label className="cursor-pointer">
+                            <input type="file" accept="image/*" hidden onChange={async (e) => {
+                               if (e.target.files?.[0]) {
+                                   const url = await uploadSingleImage(e.target.files[0]);
+                                   if (url) updQ(si, qi, { imageUrl: url });
+                               }
+                            }} />
+                            <Button type="button" variant="outline" size="sm" className="h-8 text-xs pointer-events-none" asChild>
+                              <span><ImageIcon className="h-3 w-3 mr-1" />Savol rasmi</span>
+                            </Button>
+                          </label>
+                          {q.imageUrl && (
+                             <Select value={q.imagePosition || "top"} onValueChange={(v: any) => updQ(si, qi, { imagePosition: v })}>
+                               <SelectTrigger className="h-8 text-xs w-24"><SelectValue /></SelectTrigger>
+                               <SelectContent>
+                                 <SelectItem value="top">Tepa</SelectItem>
+                                 <SelectItem value="bottom">Past</SelectItem>
+                                 <SelectItem value="left">Chap</SelectItem>
+                                 <SelectItem value="right">O'ng</SelectItem>
+                               </SelectContent>
+                             </Select>
+                          )}
+                          {q.imageUrl && <Button variant="ghost" size="sm" className="h-8 text-rose-500" onClick={() => updQ(si, qi, { imageUrl: "" })}><X className="h-3 w-3" /></Button>}
+                        </div>
+                        {q.imageUrl && <img src={q.imageUrl} alt="preview" className="max-h-64 w-auto object-contain rounded border mt-2" />}
+                      </div>
+                      <Button size="sm" variant="ghost" onClick={() => rmQ(si, qi)}><Trash2 className="h-3 w-3 text-destructive" /></Button>
                     </div>
+
                     <div className="grid md:grid-cols-2 gap-2 pl-8">
                       <Select value={q.qtype} onValueChange={(v: any) => updQ(si, qi, { qtype: v })}>
                         <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
@@ -459,17 +538,90 @@ export default function MockEditor({ basePath = "/super-admin" }: { basePath?: s
                           <SelectItem value="headings">List of Headings</SelectItem>
                         </SelectContent>
                       </Select>
-                      <Input className="h-8 text-xs" placeholder="To'g'ri javob" value={q.correct_answer} onChange={(e) => updQ(si, qi, { correct_answer: e.target.value })} />
+                      <div className="flex justify-end">
+                         <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => {
+                             const opts = [...(q.options || []), { text: `Option ${(q.options || []).length + 1}`, isCorrect: false }];
+                             updQ(si, qi, { options: opts });
+                         }}><Plus className="h-3 w-3 mr-1" />Variant qo'shish</Button>
+                      </div>
                     </div>
-                    {(q.qtype === "mcq" || q.qtype === "matching" || q.qtype === "headings") && (
-                      <Input className="ml-8 h-8 text-xs" placeholder="Variantlar (vergul bilan): A, B, C, D" value={q.options} onChange={(e) => updQ(si, qi, { options: e.target.value })} />
-                    )}
+                    
+                    <div className="pl-8 space-y-2 mt-2">
+                       {(q.options || []).map((opt, oi) => (
+                          <div key={oi} className="flex items-start gap-2">
+                             <Button size="icon" variant={opt.isCorrect ? "default" : "outline"} className={`h-8 w-8 shrink-0 ${opt.isCorrect ? "bg-emerald-500 hover:bg-emerald-600" : ""}`} onClick={() => {
+                                 const newOpts = [...q.options];
+                                 if (q.qtype === "mcq") {
+                                     newOpts.forEach((o, i) => newOpts[i] = { ...o, isCorrect: false });
+                                 }
+                                 newOpts[oi] = { ...newOpts[oi], isCorrect: !q.options[oi].isCorrect };
+                                 updQ(si, qi, { options: newOpts });
+                             }}>
+                               {opt.isCorrect ? "✅" : "❌"}
+                             </Button>
+                             <div className="flex-1 space-y-2">
+                                <div className="flex gap-2">
+                                  <Input className="h-8 text-xs flex-1" placeholder="Variant matni..." value={opt.text} onChange={(e) => {
+                                      const newOpts = [...q.options];
+                                      newOpts[oi] = { ...newOpts[oi], text: e.target.value };
+                                      updQ(si, qi, { options: newOpts });
+                                  }} />
+                                  <label className="cursor-pointer shrink-0">
+                                    <input type="file" accept="image/*" hidden onChange={async (e) => {
+                                       if (e.target.files?.[0]) {
+                                           const url = await uploadSingleImage(e.target.files[0]);
+                                           if (url) {
+                                              const newOpts = [...q.options];
+                                              newOpts[oi] = { ...newOpts[oi], imageUrl: url };
+                                              updQ(si, qi, { options: newOpts });
+                                           }
+                                       }
+                                    }} />
+                                    <Button type="button" variant="outline" size="icon" className="h-8 w-8 pointer-events-none" asChild>
+                                      <span><ImageIcon className="h-3 w-3" /></span>
+                                    </Button>
+                                  </label>
+                                  <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground" onClick={() => {
+                                      const newOpts = q.options.filter((_, i) => i !== oi);
+                                      updQ(si, qi, { options: newOpts });
+                                  }}><X className="h-4 w-4" /></Button>
+                                </div>
+                                {opt.imageUrl && (
+                                   <div className="flex items-center gap-2">
+                                     <img src={opt.imageUrl} alt="preview" className="h-12 object-contain rounded border" />
+                                     <Select value={opt.imagePosition || "left"} onValueChange={(v: any) => {
+                                         const newOpts = [...q.options];
+                                         newOpts[oi] = { ...newOpts[oi], imagePosition: v };
+                                         updQ(si, qi, { options: newOpts });
+                                     }}>
+                                       <SelectTrigger className="h-8 text-xs w-24"><SelectValue /></SelectTrigger>
+                                       <SelectContent>
+                                         <SelectItem value="top">Tepa</SelectItem>
+                                         <SelectItem value="bottom">Past</SelectItem>
+                                         <SelectItem value="left">Chap</SelectItem>
+                                         <SelectItem value="right">O'ng</SelectItem>
+                                       </SelectContent>
+                                     </Select>
+                                     <Button variant="ghost" size="sm" className="h-8 text-rose-500" onClick={() => {
+                                         const newOpts = [...q.options];
+                                         newOpts[oi] = { ...newOpts[oi], imageUrl: "" };
+                                         updQ(si, qi, { options: newOpts });
+                                     }}><Trash2 className="h-3 w-3" /></Button>
+                                   </div>
+                                )}
+                             </div>
+                          </div>
+                       ))}
+                    </div>
                   </Card>
                 ))}
+                <Button variant="outline" size="sm" onClick={() => addQ(si)} className="w-full mt-2 border-dashed">
+                  <Plus className="h-4 w-4 mr-2" /> Yangi savol qo'shish
+                </Button>
               </div>
             </Card>
           ))}
-          <Button variant="outline" onClick={addS} className="w-full border-dashed border-2">
+          <Button variant="outline" onClick={addS} className="w-full border-dashed border-2 py-8 text-lg">
             <Plus className="h-4 w-4 mr-2" />{kind === "reading" ? "Yangi passage qo'shish" : kind === "speaking" ? "Yangi part qo'shish" : "Yangi bo'lim qo'shish"}
           </Button>
         </TabsContent>

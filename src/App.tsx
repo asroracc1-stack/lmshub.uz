@@ -165,6 +165,7 @@ const SpeakingTopics = lazy(() => import("./pages/shared/SpeakingTopics"));
 const SpeakingTopicDetail = lazy(() => import("./pages/shared/SpeakingTopicDetail"));
 const SpeakingPartners = lazy(() => import("./pages/shared/SpeakingPartners"));
 const NotificationsPage = lazy(() => import("./pages/shared/NotificationsPage"));
+const ReferralPage = lazy(() => import("./pages/shared/ReferralPage"));
 const UserChat = lazy(() => import("./pages/user/UserChat"));
 const UserDashboard = lazy(() => import("./pages/user/UserDashboard"));
 const UserAccount = lazy(() => import("./pages/user/Account"));
@@ -244,6 +245,7 @@ const AppRoutes = () => {
           <Route path="groups" element={<OrgGroups />} />
           <Route path="grant-coins" element={<PMGrantCoins />} />
           <Route path="notifications" element={<NotificationsPage />} />
+          <Route path="referral" element={<ReferralPage />} />
         </Route>
 
         {/* Admin */}
@@ -274,6 +276,7 @@ const AppRoutes = () => {
           <Route path="speaking/partners" element={<SpeakingPartners />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="notifications" element={<NotificationsPage />} />
+          <Route path="referral" element={<ReferralPage />} />
         </Route>
 
         {/* Administrator */}
@@ -303,6 +306,7 @@ const AppRoutes = () => {
           <Route path="speaking/partners" element={<SpeakingPartners />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="notifications" element={<NotificationsPage />} />
+          <Route path="referral" element={<ReferralPage />} />
         </Route>
 
         {/* Teacher */}
@@ -330,6 +334,7 @@ const AppRoutes = () => {
           <Route path="speaking/partners" element={<SpeakingPartners />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="notifications" element={<NotificationsPage />} />
+          <Route path="referral" element={<ReferralPage />} />
         </Route>
 
         {/* Student Role */}
@@ -361,6 +366,7 @@ const AppRoutes = () => {
           <Route path="chat" element={<UserChat />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="notifications" element={<NotificationsPage />} />
+          <Route path="referral" element={<ReferralPage />} />
         </Route>
 
         {/* Regular User Role */}
@@ -372,12 +378,15 @@ const AppRoutes = () => {
           <Route path="mocks" element={<SectionGuard section="ielts" title="IELTS Mocks"><MockTests basePath="/user" /></SectionGuard>} />
           <Route path="mocks/c/:kind" element={<MockCategory basePath="/user" />} />
           <Route path="mocks/take/:testId" element={<MockTake />} />
+          <Route path="sat" element={<SectionGuard section="sat" title="SAT tayyorgarlik"><Navigate to="/user/mocks/c/sat" replace /></SectionGuard>} />
+          <Route path="national-cert" element={<SectionGuard section="milliy" title="Milliy sertifikat"><Navigate to="/user/mocks/c/national_cert" replace /></SectionGuard>} />
           <Route path="speaking" element={<SpeakingHub basePath="/user" />} />
           <Route path="achievements" element={<UserAchievements />} />
           <Route path="leaderboard" element={<UserLeaderboard />} />
           <Route path="messages" element={<UserChat />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="notifications" element={<NotificationsPage />} />
+          <Route path="referral" element={<ReferralPage />} />
         </Route>
 
         {/* Parent */}
@@ -397,6 +406,7 @@ const AppRoutes = () => {
           <Route path="speaking/topics" element={<SpeakingTopics basePath="/parent" />} />
           <Route path="speaking/topics/:slug" element={<SpeakingTopicDetail basePath="/parent" />} />
           <Route path="notifications" element={<NotificationsPage />} />
+          <Route path="referral" element={<ReferralPage />} />
         </Route>
 
 
@@ -420,6 +430,7 @@ const AppRoutes = () => {
           <Route path="profile" element={<SharedProfile />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="notifications" element={<NotificationsPage />} />
+          <Route path="referral" element={<ReferralPage />} />
         </Route>
 
         <Route path="/403" element={<Forbidden />} />

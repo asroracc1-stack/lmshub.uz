@@ -32,17 +32,23 @@ public class EventController {
     @Operation(summary = "Create an event")
     public ResponseEntity<CalendarEvent> create(@RequestBody CreateEventRequest req,
                                                @AuthenticationPrincipal User currentUser) {
+        if (req.getEventDate() == null) {
+            throw new IllegalArgumentException("eventDate must not be null");
+        }
+
         UUID orgId = currentUser.getOrganizationId();
         Organization org = null;
         if (orgId != null) {
             org = organizationRepository.findById(orgId).orElse(null);
         }
 
+        LocalDateTime startsAt = req.getEventDate().toLocalDateTime();
+
         CalendarEvent event = CalendarEvent.builder()
                 .title(req.getTitle())
                 .description(req.getDescription())
-                .startsAt(req.getEventDate())
-                .endsAt(req.getEventDate().plusHours(1))
+                .startsAt(startsAt)
+                .endsAt(startsAt.plusHours(1))
                 .organization(org)
                 .createdBy(currentUser)
                 .isAllDay(false)
@@ -57,6 +63,6 @@ public class EventController {
     public static class CreateEventRequest {
         private String title;
         private String description;
-        private LocalDateTime eventDate;
+        private java.time.OffsetDateTime eventDate;
     }
 }
