@@ -78,11 +78,10 @@ export default function MockEditor({ basePath = "/super-admin" }: { basePath?: s
         setKind(t.type?.toLowerCase() || "reading");
         setTitle(t.title ?? "");
         setDescription(t.description ?? "");
-        setAudioUrl(t.audioUrl ?? "");
-        setDuration(t.durationMinutes ?? 60);
+        setAudioUrl(t.audioUrl ?? t.audio_url ?? "");
+        setDuration(t.durationMinutes ?? t.duration_minutes ?? 60);
         setDifficulty(t.difficulty?.toLowerCase() || "medium");
-        // partType and requiredPack might not be in Java DTO yet, but we'll keep the state
-        // setIsPublished(t.isActive ?? true);
+        setRequiredPack(t.required_pack || t.requiredPack || "free");
 
         const isExam = ["reading", "listening", "sat", "national_cert"].includes(t.type?.toLowerCase());
         
@@ -90,17 +89,18 @@ export default function MockEditor({ basePath = "/super-admin" }: { basePath?: s
             const built: Section[] = t.passages.map((p: any) => ({
                 title: p.title || "",
                 passage: p.content || "",
+                imageUrl: p.imageUrl ?? p.image_url ?? "",
                 questions: p.questions?.length ? p.questions.map((q: any) => ({
                     prompt: q.text || "",
-                    qtype: q.questionType || "short",
+                    qtype: q.questionType ?? q.question_type ?? "short",
                     options: Array.isArray(q.options) ? q.options.map((o: any) => ({
                         text: o.text || "",
-                        isCorrect: o.isCorrect || false,
-                        imageUrl: o.imageUrl || "",
-                        imagePosition: o.imagePosition || "left"
+                        isCorrect: o.isCorrect ?? o.is_correct ?? false,
+                        imageUrl: o.imageUrl ?? o.image_url ?? "",
+                        imagePosition: o.imagePosition ?? o.image_position ?? "left"
                     })) : [],
-                    imageUrl: q.imageUrl || "",
-                    imagePosition: q.imagePosition || "top",
+                    imageUrl: q.imageUrl ?? q.image_url ?? "",
+                    imagePosition: q.imagePosition ?? q.image_position ?? "top",
                     points: q.points || 1,
                     explanation: q.explanation || ""
                 })) : [newQ()]
@@ -298,6 +298,7 @@ export default function MockEditor({ basePath = "/super-admin" }: { basePath?: s
         duration_minutes: duration,
         passing_score: 50,
         difficulty: difficulty.toUpperCase(),
+        required_pack: requiredPack,
         sections: sections.filter(s => s.title.trim() || s.passage.trim() || s.questions.length > 0).map(s => ({
             title: s.title || "Section",
             passage: s.passage || "",
@@ -307,12 +308,12 @@ export default function MockEditor({ basePath = "/super-admin" }: { basePath?: s
                 qtype: q.qtype,
                 options: q.options.map(o => ({
                     text: o.text,
-                    isCorrect: o.isCorrect,
-                    imageUrl: o.imageUrl || null,
-                    imagePosition: o.imagePosition || "left"
+                    is_correct: o.isCorrect,
+                    image_url: o.imageUrl || null,
+                    image_position: o.imagePosition || "left"
                 })),
-                imageUrl: q.imageUrl || null,
-                imagePosition: q.imagePosition || "top",
+                image_url: q.imageUrl || null,
+                image_position: q.imagePosition || "top",
                 points: q.points || 1,
                 explanation: q.explanation || ""
             }))

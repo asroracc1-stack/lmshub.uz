@@ -22,6 +22,7 @@ public class ExamDto {
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private Boolean isActive;
+    private String requiredPack;
     // Exam player uchun - passages va ichidagi questions
     private List<PassageDto> passages;
 }

@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0030-1
+      author: antigravity
+      changes:
+        - addColumn:
+            tableName: exams
+            columns:
+              - column:
+                  name: required_pack
+                  type: varchar(50)
+                  defaultValue: "free"
+                  constraints:
+                    nullable: false

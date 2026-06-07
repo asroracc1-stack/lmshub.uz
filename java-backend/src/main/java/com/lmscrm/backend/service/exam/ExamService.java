@@ -117,6 +117,7 @@ public class ExamService {
                 .type(ExamType.valueOf(request.getType().toUpperCase()))
                 .durationMinutes(request.getDurationMinutes() != null ? request.getDurationMinutes() : 60)
                 .passingScore(request.getPassingScore() != null ? request.getPassingScore() : 50)
+                .requiredPack(request.getRequiredPack() != null ? request.getRequiredPack().toLowerCase() : "free")
                 .organization(org)
                 .createdBy(author)
                 .isActive(true)
@@ -139,6 +140,7 @@ public class ExamService {
         exam.setAudioUrl(request.getAudioUrl());
         exam.setDurationMinutes(request.getDurationMinutes() != null ? request.getDurationMinutes() : 60);
         exam.setPassingScore(request.getPassingScore() != null ? request.getPassingScore() : 50);
+        exam.setRequiredPack(request.getRequiredPack() != null ? request.getRequiredPack().toLowerCase() : "free");
 
         // Clear existing passages to trigger orphanRemoval
         if (exam.getPassages() != null) {

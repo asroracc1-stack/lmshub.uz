@@ -5,7 +5,7 @@ import {
   Check, Sparkles, Crown, Gift, Loader2, CreditCard, Copy, Send, X,
   Plus, Pencil, Trash2, Settings, ShieldCheck, XCircle, Clock, Zap, Rocket, 
   ChevronRight, Info, Users, BarChart3, Star, Layers, TrendingUp, Infinity,
-  MessageCircle, Bell, AlertTriangle, CheckCircle2, RefreshCw, Search
+  MessageCircle, Bell, AlertTriangle, CheckCircle2, RefreshCw, Search, Globe
 } from "lucide-react";
 import { api } from "@/lib/axios";
 import { useAuth } from "@/contexts/AuthContext";
@@ -97,6 +97,18 @@ export default function Packs() {
   const [uploadingReceipt, setUploadingReceipt] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  const [clientName, setClientName] = useState("");
+  const [clientPhone, setClientPhone] = useState("");
+  const [clientEmail, setClientEmail] = useState("");
+
+  useEffect(() => {
+    if (profile) {
+      setClientName(profile.full_name || "");
+      setClientPhone(profile.phone || "");
+      setClientEmail(profile.email || "");
+    }
+  }, [profile, checkoutPack]);
+
   // CRUD states
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<Partial<Pack> | null>(null);
@@ -111,7 +123,19 @@ export default function Packs() {
     queryKey: ["packs-list"],
     queryFn: async () => {
       const { data } = await api.get("/pack-manager/packages");
-      return (data || []).sort((a: Pack, b: Pack) => a.price - b.price);
+      return (data || []).map((p: any) => ({
+        id: p.id,
+        code: p.code,
+        name: p.name,
+        price: p.price,
+        duration: p.duration,
+        features: p.features || [],
+        isPopular: p.isPopular ?? p.is_popular ?? false,
+        status: p.status,
+        type: p.type,
+        totalPurchases: p.totalPurchases ?? p.total_purchases ?? 0,
+        examIds: p.examIds ?? p.exam_ids ?? [],
+      })).sort((a: Pack, b: Pack) => a.price - b.price);
     },
   });
 
@@ -243,6 +267,95 @@ export default function Packs() {
     toast.success("Karta raqami nusxalandi! 💳");
   };
 
+  const handleSiteSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!checkoutPack) return;
+    if (!clientName.trim() || !clientPhone.trim() || !clientEmail.trim()) {
+      toast.error("Iltimos, ismingiz, telefon raqamingiz va emailingizni to'liq kiriting");
+      return;
+    }
+
+    setUploadingReceipt(true);
+    try {
+      // 1. Update user profile details
+      await api.put("/profile/update", {
+        fullName: clientName,
+        email: clientEmail,
+        phoneNumber: clientPhone
+      });
+
+      // 2. Submit subscription request
+      await api.post("/admin/subscription-requests/submit", {
+        pack_id: checkoutPack.id
+      });
+
+      // Confetti splash
+      import("canvas-confetti").then(({ default: confetti }) => {
+        confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+      });
+
+      toast.success("So'rovingiz muvaffaqiyatli yuborildi! ✅", {
+        description: "Admin tekshirib tasdiqlagach, obunangiz faollashtiriladi.",
+      });
+
+      setRequestSent(checkoutPack);
+      setCheckoutPack(null);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "So'rov yuborishda xatolik yuz berdi");
+    } finally {
+      setUploadingReceipt(false);
+    }
+  };
+
+  const handleTelegramSubmit = async () => {
+    if (!checkoutPack) return;
+    if (!clientName.trim() || !clientPhone.trim() || !clientEmail.trim()) {
+      toast.error("Iltimos, ismingiz, telefon raqamingiz va emailingizni to'liq kiriting");
+      return;
+    }
+
+    setUploadingReceipt(true);
+    try {
+      // 1. Update profile details and submit request to DB
+      await api.put("/profile/update", {
+        fullName: clientName,
+        email: clientEmail,
+        phoneNumber: clientPhone
+      });
+
+      await api.post("/admin/subscription-requests/submit", {
+        pack_id: checkoutPack.id
+      });
+
+      // 2. Open Telegram link
+      const messageText = `🚀 Yangi Obuna So'rovi (LMSHub)
+
+👤 Foydalanuvchi: ${clientName}
+📧 Gmail: ${clientEmail}
+📞 Telefon: ${clientPhone}
+📦 Tarif: ${checkoutPack.name}
+💰 Narxi: ${checkoutPack.price.toLocaleString()} UZS`;
+
+      window.open(`https://t.me/asror_programmer?text=${encodeURIComponent(messageText)}`, "_blank");
+
+      // Confetti
+      import("canvas-confetti").then(({ default: confetti }) => {
+        confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+      });
+
+      toast.success("Telegram orqali yuborildi! 🚀", {
+        description: "Telegram ochildi, xabarni yuboring va admin tasdiqlashini kuting.",
+      });
+
+      setRequestSent(checkoutPack);
+      setCheckoutPack(null);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "So'rov yuborishda xatolik yuz berdi");
+    } finally {
+      setUploadingReceipt(false);
+    }
+  };
+
   // CRUD Mutations
   const saveMutation = useMutation({
     mutationFn: async (payload: any) => {
@@ -328,13 +441,22 @@ export default function Packs() {
       return;
     }
 
+    // Generate unique code: TYPE-timestamp (only on create)
+    const uniqueCode = editing.id 
+      ? (editing.code || editing.type)  // keep existing code on edit
+      : `${editing.type}-${Date.now()}`;
+
     const payload = {
-      ...editing,
-      features: cleanFeatures,
+      id: editing.id,
+      name: editing.name,
+      type: editing.type,
+      code: uniqueCode,
       price: editing.type === "FREE" ? 0 : Number(editing.price),
       duration: Number(editing.duration),
+      features: cleanFeatures,
+      isPopular: editing.isPopular ?? false,
+      status: editing.status ?? "ACTIVE",
       totalPurchases: Number(editing.totalPurchases || 0),
-      code: editing.type,
       examIds: selectedExams,
     };
 
@@ -468,112 +590,239 @@ export default function Packs() {
           {/* Premium Cards Grid for Client view */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {packs.map((p) => {
-              const PackIcon = ICONS[p.type] || Zap;
-              const isPopular = p.isPopular;
+              const PackIcon = p.type === "FREE" ? Gift : p.type === "ELITE" ? Zap : Crown;
               const isOwn = profile?.subscriptionPackCode === p.code || (p.type === "FREE" && !profile?.subscriptionPackCode);
+              
+              const isElite = p.type === "ELITE";
+              const isPro = p.type === "PRO";
+              const isFree = p.type === "FREE";
+
+              const displayFeatures = isFree ? [
+                { text: "5 ta test yaratish", active: true },
+                { text: "Basic statistika", active: true },
+                { text: "Leaderboard", active: true },
+                { text: "AI tekshiruv", active: false },
+                { text: "Premium mock testlar", active: false },
+                { text: "Natijalar tahlili", active: false }
+              ] : isElite ? [
+                { text: "50 ta mock test / oy", active: true },
+                { text: "IELTS testlari", active: true },
+                { text: "SAT testlari", active: true },
+                { text: "AI analiz va tekshiruv", active: true },
+                { text: "Natijalar tahlili", active: true },
+                { text: "Priority qo'llab-quvvatlash", active: true }
+              ] : isPro ? [
+                { text: "Cheksiz testlar", active: true },
+                { text: "Cheksiz mock testlar", active: true },
+                { text: "AI Coach (shaxsay mentor)", active: true },
+                { text: "Premium analytics", active: true },
+                { text: "Telegram bot integratsiyasi", active: true },
+                { text: "Rasmiy sertifikat", active: true }
+              ] : p.features.map(f => ({ text: f, active: !f.startsWith("x ") }));
+
+              const packSubtitles: Record<string, string> = {
+                FREE: "Boshlang'ich paket",
+                ELITE: "Eng ko'p tanlangan",
+                PRO: "Cheksiz imkoniyatlar"
+              };
 
               return (
                 <motion.div
                   key={p.id}
-                  whileHover={{ y: -8 }}
+                  whileHover={{ y: -8, scale: 1.015 }}
                   transition={{ type: "spring", stiffness: 300, damping: 20 }}
                   className="relative group flex"
                 >
-                  {isPopular && (
-                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-black tracking-widest uppercase py-1.5 px-4 rounded-full shadow-lg shadow-amber-500/20 z-10 flex items-center gap-1.5 animate-pulse">
-                      <Sparkles className="h-3 w-3" /> Eng Ommabop
+                  {/* Super Admin / Manager Action controls overlay */}
+                  {isManager && (
+                    <div className="absolute top-4 right-4 z-30 flex items-center gap-1.5 bg-slate-900/90 dark:bg-slate-950/90 backdrop-blur-md p-1.5 rounded-full border border-white/10 shadow-xl opacity-80 group-hover:opacity-100 transition-opacity">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          openEdit(p);
+                        }}
+                        className="h-8 w-8 rounded-full text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 transition-colors"
+                        title="Tahrirlash"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          setDeleteId(p.id);
+                        }}
+                        className="h-8 w-8 rounded-full text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors"
+                        title="O'chirish"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   )}
 
-                  <Card className={cn(
-                    "w-full p-8 rounded-[2.5rem] border flex flex-col justify-between overflow-hidden relative transition-all duration-500 shadow-xl",
-                    isPopular 
-                      ? "bg-slate-900 border-amber-500/30 text-white shadow-amber-500/5 dark:bg-slate-900/90" 
-                      : "bg-white/80 border-slate-100 dark:bg-slate-900/40 dark:border-white/5 text-slate-800 dark:text-slate-200"
-                  )}>
-                    {/* Background glows */}
-                    <div className={cn(
-                      "absolute -right-20 -top-20 h-52 w-52 rounded-full blur-[100px] opacity-40 pointer-events-none transition-transform duration-700 group-hover:scale-150",
-                      p.type === "ELITE" && "bg-amber-500",
-                      p.type === "PRO" && "bg-primary",
-                      p.type === "FREE" && "bg-emerald-500"
-                    )} />
+                  {/* Neon border glow effect */}
+                  <div className={cn(
+                    "absolute inset-0 rounded-[2.5rem] blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500 pointer-events-none",
+                    isFree && "bg-slate-400/20",
+                    isElite && "bg-emerald-500/40",
+                    isPro && "bg-indigo-500/40"
+                  )} />
 
-                    <div className="relative space-y-6">
-                      <div className="flex items-center justify-between">
-                        <div className={cn(
-                          "h-14 w-14 rounded-2xl flex items-center justify-center border shadow-sm",
-                          isPopular ? "bg-amber-500/10 text-amber-400 border-amber-500/20" : "bg-primary/5 text-primary border-primary/10"
-                        )}>
-                          <PackIcon className="h-7 w-7" />
-                        </div>
-                        {isOwn && (
-                          <Badge className="bg-emerald-500 text-white px-3.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
-                            Joriy Obuna
-                          </Badge>
-                        )}
+                  {/* Elite "MOST POPULAR" centered badge */}
+                  {isElite && (
+                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#10b981] text-white text-[9px] font-black tracking-widest uppercase py-1.5 px-4 rounded-full shadow-lg z-10 flex items-center gap-1 border border-emerald-450/20">
+                      <Star className="h-3 w-3 fill-white text-white" /> MOST POPULAR
+                    </div>
+                  )}
+
+                  <div className={cn(
+                    "w-full rounded-[2.5rem] border flex flex-col justify-between overflow-hidden relative transition-all duration-500 shadow-2xl bg-white dark:bg-slate-900/60",
+                    isFree && "border-slate-200 dark:border-slate-800",
+                    isElite && "border-2 border-[#10b981] dark:border-emerald-500/50 shadow-emerald-500/5",
+                    isPro && "border-2 border-[#6366f1] dark:border-indigo-500/50 shadow-indigo-500/5"
+                  )}>
+                    {/* Top half wrapper */}
+                    <div className={cn(
+                      "p-8 pb-6 relative flex flex-col gap-4",
+                      isFree && "bg-slate-50/50 dark:bg-slate-950/20 border-b border-slate-100 dark:border-slate-800/50",
+                      isElite && "bg-gradient-to-b from-[#10b981] to-[#059669] text-white",
+                      isPro && "bg-gradient-to-b from-[#4f46e5] to-[#6366f1] text-white"
+                    )}>
+                      {/* Circle icon container */}
+                      <div className={cn(
+                        "w-12 h-12 rounded-full flex items-center justify-center shadow-sm",
+                        isFree 
+                          ? "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+                          : "bg-white/20 text-white backdrop-blur-md"
+                      )}>
+                        <PackIcon className="h-6 w-6" />
                       </div>
 
+                      {/* Header Titles */}
                       <div>
-                        <h3 className={cn("text-2xl font-black tracking-tight", isPopular ? "text-white" : "text-slate-900 dark:text-white")}>
-                          {p.name}
-                        </h3>
-                        <p className="text-xs text-slate-400 dark:text-slate-400 mt-2 font-medium leading-relaxed">
-                          {NARRATIVES[p.type] || "Premium paket imkoniyatlari"}
+                        <div className="flex items-center justify-between">
+                          <h3 className={cn(
+                            "text-2xl font-black tracking-tight",
+                            isFree ? "text-slate-900 dark:text-white" : "text-white"
+                          )}>
+                            {p.name}
+                          </h3>
+                          {isOwn && (
+                            <Badge className={cn(
+                              "px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border",
+                              isFree 
+                                ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" 
+                                : "bg-white text-emerald-600 border-white/20 shadow-sm"
+                            )}>
+                              Joriy Obuna
+                            </Badge>
+                          )}
+                        </div>
+                        <p className={cn(
+                          "text-[11px] font-bold mt-1.5",
+                          isFree ? "text-slate-400 dark:text-slate-500" : "text-white/80"
+                        )}>
+                          {packSubtitles[p.type] || "Premium paket imkoniyatlari"}
                         </p>
                       </div>
 
-                      <div className="flex items-baseline gap-1 py-2">
-                        <span className={cn("text-4xl font-black tracking-tight", isPopular ? "text-white" : "text-slate-900 dark:text-white")}>
-                          {p.price === 0 ? "0" : p.price.toLocaleString()}
-                        </span>
-                        <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">UZS / {p.duration === -1 ? "Abadiy" : `${p.duration} oy`}</span>
-                      </div>
-
-                      <div className="border-t border-slate-100 dark:border-white/5 pt-6 space-y-4">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Paket tarkibi:</p>
-                        <div className="space-y-3">
-                          {p.features.map((f, i) => (
-                            <div key={i} className="flex items-start gap-3">
-                              <div className="h-5 w-5 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0 mt-0.5">
-                                <Check className="h-3.5 w-3.5" />
-                              </div>
-                              <span className="text-xs font-medium text-slate-500 dark:text-slate-300 leading-relaxed">{f}</span>
-                            </div>
-                          ))}
+                      {/* Price Section */}
+                      <div className="mt-1">
+                        <div className="flex items-baseline gap-1">
+                          <span className={cn(
+                            "text-3xl font-black tracking-tight",
+                            isFree ? "text-slate-950 dark:text-white" : "text-white"
+                          )}>
+                            {p.price === 0 ? "0" : p.price.toLocaleString()}
+                          </span>
+                          <span className={cn(
+                            "text-[10px] font-black tracking-wider uppercase",
+                            isFree ? "text-slate-500" : "text-white/80"
+                          )}>
+                            UZS
+                          </span>
                         </div>
-
-                        {p.examIds && p.examIds.length > 0 && (
-                          <div className="pt-4 border-t border-slate-100 dark:border-white/5 space-y-2">
-                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Kiritilgan mock testlar:</p>
-                            <Badge variant="outline" className="text-primary border-primary/20 bg-primary/5 font-bold text-[10px]">
-                              {p.examIds.length} ta IELTS Mock Testlari
-                            </Badge>
+                        {!isFree && (
+                          <div className={cn(
+                            "text-[10px] font-bold mt-0.5",
+                            isFree ? "text-slate-400" : "text-white/70"
+                          )}>
+                            / oy
                           </div>
                         )}
                       </div>
                     </div>
 
-                    <div className="relative pt-8 mt-auto">
-                      {p.type === "FREE" ? (
-                        <Button className="w-full bg-slate-100 dark:bg-white/5 hover:bg-slate-200 text-slate-600 dark:text-slate-300 h-14 rounded-2xl font-black uppercase text-xs tracking-widest" disabled>
-                          Bepul Kirish
-                        </Button>
-                      ) : (
-                        <Button
-                          onClick={() => setCheckoutPack(p)}
-                          className={cn(
-                            "w-full h-14 rounded-2xl font-black uppercase text-xs tracking-widest shadow-lg transition-transform hover:scale-[1.02] active:scale-[0.98]",
-                            isPopular 
-                              ? "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-amber-500/20" 
-                              : "bg-gradient-primary text-white shadow-primary/20"
-                          )}
-                        >
-                          Sotib olish
-                        </Button>
-                      )}
+                    {/* Bottom half container */}
+                    <div className="p-8 flex flex-col gap-6 flex-1 justify-between bg-white dark:bg-slate-900">
+                      {/* Features List */}
+                      <div className="space-y-4">
+                        {displayFeatures.map((f, i) => (
+                          <div key={i} className="flex items-center gap-3">
+                            <div className={cn(
+                              "w-5 h-5 rounded-full flex items-center justify-center shrink-0",
+                              f.active 
+                                ? (isPro 
+                                    ? "bg-indigo-500/10 text-indigo-500 dark:text-indigo-400"
+                                    : "bg-emerald-500/10 text-emerald-500 dark:text-emerald-400")
+                                : "bg-slate-100 dark:bg-slate-800 text-slate-300 dark:text-slate-650"
+                            )}>
+                              {f.active ? (
+                                <Check className="h-3 w-3" strokeWidth={3} />
+                              ) : (
+                                <X className="h-3 w-3" strokeWidth={3} />
+                              )}
+                            </div>
+                            <span className={cn(
+                              "text-xs font-semibold tracking-tight",
+                              f.active 
+                                ? "text-slate-750 dark:text-slate-200" 
+                                : "text-slate-400 dark:text-slate-550 line-through opacity-70"
+                            )}>
+                              {f.text}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Action Button & Period Text */}
+                      <div className="flex flex-col items-center gap-2.5 pt-2">
+                        {isFree ? (
+                          <>
+                            <Button className="w-full bg-transparent border border-[#10b981] hover:bg-emerald-500/5 text-[#10b981] h-12 rounded-xl font-bold uppercase text-[10px] tracking-widest transition-transform duration-300 hover:scale-[1.02] shadow-none">
+                              Boshlash
+                            </Button>
+                            <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 tracking-wider">Doimiy bepul</span>
+                          </>
+                        ) : (
+                          <>
+                            <Button
+                              onClick={() => setCheckoutPack(p)}
+                              className={cn(
+                                "w-full h-12 rounded-xl font-bold uppercase text-[10px] tracking-widest shadow-lg transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] text-white border-none",
+                                isElite 
+                                  ? "bg-gradient-to-r from-emerald-500 to-teal-500 shadow-emerald-500/20 hover:shadow-emerald-500/40" 
+                                  : "bg-gradient-to-r from-indigo-500 to-purple-600 shadow-indigo-500/20 hover:shadow-indigo-500/40"
+                              )}
+                            >
+                              {isElite ? "Obuna bo'lish" : "Pro olish"}
+                            </Button>
+                            <span className={cn(
+                              "text-[9px] font-bold tracking-wider flex items-center gap-1",
+                              isElite ? "text-[#10b981]" : "text-[#6366f1]"
+                            )}>
+                              <Check className="h-3 w-3" strokeWidth={3} /> 7 kunlik bepul sinov
+                            </span>
+                          </>
+                        )}
+                      </div>
                     </div>
-                  </Card>
+                  </div>
                 </motion.div>
               );
             })}
@@ -584,142 +833,127 @@ export default function Packs() {
       {/* Checkout Modal */}
       <Dialog open={!!checkoutPack} onOpenChange={(v) => !v && setCheckoutPack(null)}>
         <DialogContent className="max-w-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl rounded-[3rem] border-none shadow-2xl p-8 overflow-hidden flex flex-col max-h-[90vh]">
-          <DialogHeader className="relative pb-4">
+          <DialogHeader className="relative pb-4 border-b border-slate-100 dark:border-white/5">
             <DialogTitle className="text-2xl font-black tracking-tight flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                <CreditCard className="h-5 w-5 text-primary animate-pulse" />
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                <CreditCard className="h-5 w-5 text-emerald-500 animate-pulse" />
               </div>
-              To'lov va Sotib Olish
+              Tarifni Sotib Olish
             </DialogTitle>
-            <p className="text-xs text-slate-400 font-medium">To'lov chekini yuklab paketni faollashtiring</p>
+            <p className="text-xs text-slate-400 font-medium mt-1">Ma'lumotlaringizni to'ldiring va to'lovni tasdiqlang</p>
           </DialogHeader>
 
           {checkoutPack && (
-            <form onSubmit={handleCheckoutSubmit} className="space-y-5 overflow-y-auto pr-2 custom-scrollbar flex-1 pb-4">
+            <div className="space-y-6 overflow-y-auto pr-2 custom-scrollbar flex-1 py-4">
               {/* Pack details preview */}
-              <div className="p-5 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-white/5 flex items-center justify-between">
+              <div className="p-5 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 dark:from-emerald-500/5 dark:to-teal-500/5 rounded-2xl border border-emerald-500/20 flex items-center justify-between">
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Tanlangan paket</p>
-                  <p className="text-lg font-black text-slate-800 dark:text-white">{checkoutPack.name}</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500 dark:text-emerald-400">Tanlangan tarif</p>
+                  <p className="text-xl font-black text-slate-800 dark:text-white">{checkoutPack.name}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Narxi</p>
-                  <p className="text-lg font-black text-primary">{checkoutPack.price.toLocaleString()} UZS</p>
+                  <p className="text-xl font-black text-emerald-500">{checkoutPack.price.toLocaleString()} UZS</p>
                 </div>
               </div>
 
-              {/* Admin Picker */}
-              <div className="space-y-2">
-                <Label className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Qabul qiluvchi mas'ul (Admin/Reception)</Label>
-                {loadingAdmins ? (
-                  <div className="h-12 w-full bg-slate-100 dark:bg-white/5 animate-pulse rounded-xl" />
-                ) : (
-                  <Select value={selectedAdmin?.id} onValueChange={(val) => setSelectedAdmin(admins.find(a => a.id === val) || null)}>
-                    <SelectTrigger className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border-none">
-                      <SelectValue placeholder="Adminni tanlang" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {admins.map((a) => (
-                        <SelectItem key={a.id} value={a.id}>
-                          {a.fullName} ({a.role.toUpperCase()})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
+              {/* Client Info Fields */}
+              <div className="space-y-4">
+                <h4 className="text-[11px] font-black uppercase tracking-widest text-slate-400">Sizning ma'lumotlaringiz</h4>
+                <div className="grid grid-cols-1 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Ism Familiya</Label>
+                    <Input 
+                      value={clientName} 
+                      onChange={e => setClientName(e.target.value)} 
+                      placeholder="Ism va familiyangizni kiriting" 
+                      className="bg-slate-50 dark:bg-white/5 h-11 rounded-xl border-none text-sm font-semibold" 
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Gmail / Email</Label>
+                      <Input 
+                        type="email"
+                        value={clientEmail} 
+                        onChange={e => setClientEmail(e.target.value)} 
+                        placeholder="example@gmail.com" 
+                        className="bg-slate-50 dark:bg-white/5 h-11 rounded-xl border-none text-sm font-semibold" 
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Telefon Raqam</Label>
+                      <Input 
+                        value={clientPhone} 
+                        onChange={e => setClientPhone(e.target.value)} 
+                        placeholder="+998 90 123 4567" 
+                        className="bg-slate-50 dark:bg-white/5 h-11 rounded-xl border-none text-sm font-semibold" 
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              {/* Virtual Glassmorphic Credit Card mockup */}
-              {selectedAdmin && (
-                <div className="relative h-44 w-full rounded-2xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 p-6 text-white shadow-xl shadow-purple-600/20 overflow-hidden flex flex-col justify-between group">
-                  <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-white/5 blur-xl pointer-events-none group-hover:scale-150 transition-transform duration-700" />
+              {/* Payment card */}
+              <div className="space-y-3">
+                <h4 className="text-[11px] font-black uppercase tracking-widest text-slate-400">To'lov uchun karta ma'lumotlari</h4>
+                <div className="relative h-40 w-full rounded-2xl bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-900 p-6 text-white shadow-xl overflow-hidden flex flex-col justify-between group border border-emerald-500/20">
+                  <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-emerald-500/5 blur-xl pointer-events-none group-hover:scale-150 transition-transform duration-700" />
                   
                   <div className="flex justify-between items-start">
                     <div className="space-y-1">
-                      <p className="text-[9px] uppercase tracking-widest font-bold opacity-75">Qabul qiluvchi admin kartasi</p>
-                      <p className="font-bold text-sm tracking-tight">{selectedAdmin.fullName}</p>
+                      <p className="text-[9px] uppercase tracking-widest font-bold text-emerald-400/80">Karta egasi (Ahror Fayzullayev)</p>
+                      <p className="font-bold text-sm tracking-tight text-slate-200">Ahror Fayzullayev</p>
                     </div>
-                    <CreditCard className="h-6 w-6 opacity-80" />
+                    <CreditCard className="h-5 w-5 text-emerald-500" />
                   </div>
 
-                  <div className="flex justify-between items-center bg-white/10 p-3.5 rounded-xl border border-white/10 backdrop-blur-md">
-                    <p className="font-mono text-base font-black tracking-widest">
-                      {formatCard(selectedAdmin.cardNumber)}
+                  <div className="flex justify-between items-center bg-white/5 p-3 rounded-xl border border-white/5 backdrop-blur-md">
+                    <p className="font-mono text-base font-black tracking-widest text-slate-100">
+                      9860 1701 0590 7738
                     </p>
                     <Button
                       type="button"
                       size="icon"
                       variant="ghost"
-                      onClick={() => copyCard(selectedAdmin.cardNumber)}
-                      className="h-8 w-8 hover:bg-white/10 text-white rounded-lg"
+                      onClick={() => copyCard("9860170105907738")}
+                      className="h-8 w-8 hover:bg-white/10 text-emerald-400 rounded-lg border-none"
                     >
                       <Copy className="h-4 w-4" />
                     </Button>
                   </div>
 
-                  <div className="flex justify-between items-end text-xs opacity-80">
-                    <div>
-                      <p className="text-[8px] uppercase tracking-wider font-bold">Karta egasi</p>
-                      <p className="font-bold text-[10px]">{selectedAdmin.cardHolder || selectedAdmin.fullName}</p>
-                    </div>
-                    <Badge variant="outline" className="text-white border-white/30 text-[9px] uppercase font-bold tracking-wider">
-                      UzsCard/Humo
+                  <div className="flex justify-between items-end text-xs">
+                    <span className="text-[8px] uppercase tracking-wider font-bold text-slate-400">To'lov tizimi</span>
+                    <Badge variant="outline" className="text-emerald-400 border-emerald-500/30 text-[9px] uppercase font-bold tracking-wider">
+                      HUMO
                     </Badge>
                   </div>
                 </div>
-              )}
-
-              {/* Drag and Drop Dropzone for Receipt Upload */}
-              <div className="space-y-2">
-                <Label className="text-[10px] uppercase font-black text-slate-400 tracking-widest">To'lov Cheki (Rasmi)</Label>
-                
-                {preview ? (
-                  <div className="relative rounded-2xl overflow-hidden border border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-white/5 p-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <img src={preview} alt="Receipt preview" className="h-16 w-16 object-cover rounded-xl" />
-                      <div>
-                        <p className="text-xs font-bold text-slate-800 dark:text-white">Chek rasmi tanlandi</p>
-                        <p className="text-[10px] text-slate-400">{file?.name}</p>
-                      </div>
-                    </div>
-                    <Button type="button" size="icon" onClick={clearFile} className="h-9 w-9 rounded-xl bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white border-none">
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ) : (
-                  <div
-                    onDragEnter={handleDrag}
-                    onDragOver={handleDrag}
-                    onDragLeave={handleDrag}
-                    onDrop={handleDrop}
-                    onClick={() => fileRef.current?.click()}
-                    className={cn(
-                      "border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-2 bg-slate-50/50 hover:bg-slate-50 dark:bg-white/5 dark:hover:bg-white/10",
-                      dragActive ? "border-primary bg-primary/5" : "border-slate-200 dark:border-white/10"
-                    )}
-                  >
-                    <input type="file" ref={fileRef} onChange={handleFileChange} accept="image/*" className="hidden" />
-                    <div className="h-12 w-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-                      <Send className="h-5 w-5" />
-                    </div>
-                    <p className="text-xs font-bold text-slate-700 dark:text-slate-300">Chek rasmini tortib tashlang yoki bosing</p>
-                    <p className="text-[10px] text-slate-400">JPG, PNG formatlar, maksimal 5MB</p>
-                  </div>
-                )}
               </div>
 
-              {/* Note / Comment */}
-              <div className="space-y-2">
-                <Label className="text-[10px] uppercase font-black text-slate-400 tracking-widest">To'lovga izoh (Ixtiyoriy)</Label>
-                <Input value={note} onChange={e => setNote(e.target.value)} placeholder="Telefon raqamingiz yoki telegram username kiriting" className="bg-slate-50 dark:bg-white/5 h-12 rounded-xl border-none" />
-              </div>
+              {/* Action Buttons */}
+              <div className="space-y-3 pt-2">
+                <Button 
+                  onClick={handleTelegramSubmit}
+                  disabled={uploadingReceipt} 
+                  className="w-full bg-emerald-500 hover:bg-emerald-600 text-white h-13 rounded-xl font-bold uppercase tracking-wider text-xs shadow-lg flex items-center justify-center gap-2 transition-all duration-300"
+                >
+                  {uploadingReceipt ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                  Telegram Orqali Yuborish
+                </Button>
 
-              <div className="pt-4 sticky bottom-0 bg-white/95 dark:bg-slate-900/95 z-10">
-                <Button type="submit" disabled={uploadingReceipt} className="w-full bg-gradient-primary h-14 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] text-white shadow-lg flex items-center justify-center gap-2">
-                  {uploadingReceipt ? <Loader2 className="h-4 w-4 animate-spin" /> : "To'lov Chekini Tasdiqqa Yuborish"}
+                <Button 
+                  onClick={() => handleSiteSubmit()}
+                  disabled={uploadingReceipt} 
+                  variant="outline"
+                  className="w-full h-13 rounded-xl font-bold uppercase tracking-wider text-xs border border-slate-200 dark:border-white/10 flex items-center justify-center gap-2 hover:bg-slate-50 dark:hover:bg-white/5 transition-all duration-300"
+                >
+                  {uploadingReceipt ? <Loader2 className="h-4 w-4 animate-spin" /> : <Globe className="h-4 w-4 text-primary" />}
+                  Sayt Orqali So'rov Yuborish
                 </Button>
               </div>
-            </form>
+            </div>
           )}
         </DialogContent>
       </Dialog>

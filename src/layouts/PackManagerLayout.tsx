@@ -49,6 +49,7 @@ export default function PackManagerLayout() {
     { to: "/pack-manager/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { to: "/pack-manager/payments", label: "To'lovlar (Sales)", icon: Wallet },
     { to: "/pack-manager/subscriptions", label: "Obunalar", icon: Crown },
+    { to: "/pack-manager/subscription-requests", label: "Obuna so'rovlari", icon: FileText },
     { to: "/pack-manager/packs", label: "Tariflar (Packs)", icon: Package },
     { to: "/pack-manager/mocks", label: "Imtihon paketlari", icon: FileText },
   ];

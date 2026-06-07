@@ -12,6 +12,7 @@ public class CreateExamRequest {
     private Integer passingScore;
     private String difficulty; // easy, medium, hard
     private String audioUrl;
+    private String requiredPack;
     private List<SectionDto> sections;
     
     @Data

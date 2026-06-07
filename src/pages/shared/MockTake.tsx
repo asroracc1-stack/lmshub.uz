@@ -19,8 +19,10 @@ import { Progress } from "@/components/ui/progress";
 import {
   Loader2, Sparkles, CheckCircle2, Clock, AlertCircle, Headphones,
   BookOpen, ChevronLeft, ChevronRight, Flag, Play, Pause,
-  Volume2, VolumeX, Maximize2, Minimize2, Mic, Calculator, X, PenLine
+  Volume2, VolumeX, Maximize2, Minimize2, Mic, Calculator, X, PenLine,
+  Award, Target, ThumbsUp, Lightbulb, BookMarked, Sun, Moon
 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { rawToBand, checkAnswer } from "@/lib/ielts";
 import { cn } from "@/lib/utils";
@@ -31,13 +33,75 @@ import { useTheme } from "@/contexts/ThemeContext";
 // Icons are already imported above
 
 // Java API dan keluvchi tuzilma
-interface QuestionOption { id: string; text: string; isCorrect?: boolean; positionOrder: number; imageUrl?: string; imagePosition?: string; }
-interface Q { id: string; text: string; questionType: string; correctAnswer: string | null; points: number; positionOrder: number; passageId: string; options: QuestionOption[] | null; imageUrl?: string; imagePosition?: string; }
-interface Passage { id: string; title: string; content: string; imageUrl?: string; positionOrder: number; questions: Q[]; }
-interface ExamData { id: string; title: string; description?: string; type: string; difficulty?: string; audio_url?: string; duration_minutes: number; passages: Passage[]; }
+interface QuestionOption {
+  id: string;
+  text: string;
+  isCorrect?: boolean;
+  is_correct?: boolean;
+  positionOrder: number;
+  position_order?: number;
+  imageUrl?: string;
+  image_url?: string;
+  imagePosition?: string;
+  image_position?: string;
+}
+
+interface Q {
+  id: string;
+  text: string;
+  questionType?: string;
+  question_type?: string;
+  correctAnswer?: string | null;
+  correct_answer?: string | null;
+  points: number;
+  positionOrder?: number;
+  position_order?: number;
+  passageId?: string;
+  passage_id?: string;
+  options: QuestionOption[] | null;
+  imageUrl?: string;
+  image_url?: string;
+  imagePosition?: string;
+  image_position?: string;
+}
+
+interface Passage {
+  id: string;
+  title: string;
+  content: string;
+  imageUrl?: string;
+  image_url?: string;
+  positionOrder?: number;
+  position_order?: number;
+  questions: Q[];
+}
+
+interface ExamData {
+  id: string;
+  title: string;
+  description?: string;
+  type: string;
+  difficulty?: string;
+  audio_url?: string;
+  audioUrl?: string;
+  duration_minutes?: number;
+  durationMinutes?: number;
+  passages: Passage[];
+}
 
 // MockTake ichki state uchun normallashtirish
-interface NormalQ { id: string; position: number; section_index: number; prompt: string; qtype: string; options: QuestionOption[] | null; correct_answer: string | null; points: number; imageUrl?: string; imagePosition?: string; }
+interface NormalQ {
+  id: string;
+  position: number;
+  section_index: number;
+  prompt: string;
+  qtype: string;
+  options: QuestionOption[] | null;
+  correct_answer: string | null;
+  points: number;
+  imageUrl?: string;
+  imagePosition?: string;
+}
 
 /** Java'dan kelgan questionType → frontend qtype ga mapping */
 function mapQtype(raw: string | null | undefined): string {
@@ -55,11 +119,21 @@ function normalize(exam: ExamData): { sections: { title: string; passage: string
   const sections: { title: string; passage: string; imageUrl: string }[] = [];
   const questions: NormalQ[] = [];
   (exam.passages ?? []).forEach((p, sIdx) => {
-    sections.push({ title: p.title ?? "", passage: p.content ?? "", imageUrl: p.imageUrl ?? "" });
+    sections.push({ title: p.title ?? "", passage: p.content ?? "", imageUrl: p.imageUrl ?? p.image_url ?? "" });
     (p.questions ?? []).forEach((q) => {
-      const qtype = mapQtype(q.questionType);
-      // Options: faqat mcq/matching/headings uchun kerak
-      const rawOpts = q.options && q.options.length > 0 ? [...q.options].sort((a, b) => a.positionOrder - b.positionOrder) : null;
+      const qtype = mapQtype(q.questionType ?? q.question_type);
+      
+      const rawOpts = q.options && q.options.length > 0 
+        ? q.options.map(o => ({
+            id: o.id,
+            text: o.text,
+            isCorrect: o.isCorrect ?? o.is_correct ?? false,
+            positionOrder: o.positionOrder ?? o.position_order ?? 0,
+            imageUrl: o.imageUrl ?? o.image_url,
+            imagePosition: o.imagePosition ?? o.image_position ?? "left"
+          })).sort((a, b) => a.positionOrder - b.positionOrder) 
+        : null;
+
       questions.push({
         id: q.id,
         position: questions.length + 1, // Global question number
@@ -67,10 +141,10 @@ function normalize(exam: ExamData): { sections: { title: string; passage: string
         prompt: q.text ?? "",
         qtype,
         options: rawOpts,
-        correct_answer: q.correctAnswer ?? null,
+        correct_answer: q.correctAnswer ?? q.correct_answer ?? null,
         points: q.points ?? 1,
-        imageUrl: q.imageUrl,
-        imagePosition: q.imagePosition,
+        imageUrl: q.imageUrl ?? q.image_url,
+        imagePosition: q.imagePosition ?? q.image_position,
       });
     });
   });
@@ -95,6 +169,23 @@ const getFullAudioUrl = (url?: string) => {
   }
 
   // Standart holatda API orqali faylni ko'rish
+  return `/api/v1/files/view/${cleanPath}`;
+};
+
+const getFullImageUrl = (url?: string) => {
+  if (!url) return "";
+  if (url.startsWith("http") || url.startsWith("data:")) return url;
+
+  // Trim leading slashes
+  const cleanPath = url.startsWith("/") ? url.slice(1) : url;
+
+  // If URL already starts with api/
+  if (cleanPath.startsWith("api/")) return `/${cleanPath}`;
+
+  // If it starts with uploads/
+  if (cleanPath.startsWith("uploads/")) return `/${cleanPath}`;
+
+  // Default to files view API
   return `/api/v1/files/view/${cleanPath}`;
 };
 
@@ -339,7 +430,7 @@ function CustomAudioPlayer({ src, isExternalPaused }: { src: string, isExternalP
 }
 
 export default function MockTake() {
-  const { theme } = useTheme();
+  const { theme, toggle } = useTheme();
   const { testId } = useParams();
   const nav = useNavigate();
 
@@ -539,80 +630,328 @@ export default function MockTake() {
   const kind = (exam.type ?? "").toLowerCase();
 
   if (result) {
-    const isExam = result.kind === "reading" || result.kind === "listening";
-    const band = result.bandScore ?? result.band;
+    const isExam = result.kind !== "writing" && result.kind !== "speaking";
+    const band = result.bandScore ?? result.band ?? 0;
+    
+    // Calculate 100-point scale
+    const totalCount = result.total || questions.length || 40;
+    const correctCount = result.correct ?? 0;
+    const score100 = Math.round((correctCount / Math.max(totalCount, 1)) * 100);
+
+    // Filter incorrect questions
+    const incorrectDetails = result.detail ? result.detail.filter((d: any) => !d.ok) : [];
+    
+    // Group incorrect questions by type to determine weaknesses
+    const incorrectByQtype: Record<string, number> = {};
+    incorrectDetails.forEach((d: any) => {
+      const q = questions.find(question => question.id === d.questionId);
+      if (q) {
+        incorrectByQtype[q.qtype] = (incorrectByQtype[q.qtype] || 0) + 1;
+      }
+    });
+
+    // Generate personalized recommendations
+    const recommendations: string[] = [];
+    if (incorrectByQtype["mcq"] && incorrectByQtype["mcq"] > 0) {
+      recommendations.push("Ko'p variantli savollar (Multiple Choice): Variantlar orasidagi nozik farqlarni ajratish, chalg'ituvchi variantlarni (distractors) chiqarib tashlash ustida ko'proq ishlang. Matnda to'g'ridan-to'g'ri berilgan kalit so'zlarga emas, balki ularning sinonimlariga (paraphrasing) e'tibor bering.");
+    }
+    if (incorrectByQtype["tfng"] && incorrectByQtype["tfng"] > 0) {
+      recommendations.push("True/False/Not Given savollari: 'False' va 'Not Given' o'rtasidagi farqga alohida ahamiyat qarating. Agar matnda ma'lumotga qarama-qarshi fikr isbotlansa 'False', ma'lumotning o'zi yoki uning to'g'riligini tasdiqlovchi fakt umuman bo'lmasa 'Not Given' deb belgilang.");
+    }
+    if (incorrectByQtype["ynng"] && incorrectByQtype["ynng"] > 0) {
+      recommendations.push("Yes/No/Not Given savollari: Muallifning fikri yoki qarashlarini aniqlashda ehtiyot bo'ling. Matndagi faktlarni emas, balki muallifning nuqtai nazarini tushunishga harakat qiling.");
+    }
+    if (incorrectByQtype["fill"] && incorrectByQtype["fill"] > 0) {
+      recommendations.push("Bo'sh joylarni to'ldirish (Fill in the Blanks): Gap strukturasiga qarab qaysi so'z turkumi (ot, fe'l, sifat) kerakligini oldindan aniqlang. Javobni matndagidek o'zgarishsiz ko'chiring va spelling (imlo) xatolariga yo'l qo'ymang.");
+    }
+    if (incorrectByQtype["short"] && incorrectByQtype["short"] > 0) {
+      recommendations.push("Qisqa javobli savollar (Short Answer): So'z chegarasiga (Word Limit - masalan, 'NO MORE THAN TWO WORDS') qat'iy amal qiling. Keraksiz so'zlarni yozish balingizni tushiradi.");
+    }
+    if (incorrectByQtype["matching"] && incorrectByQtype["matching"] > 0) {
+      recommendations.push("Moslashtirish savollari (Matching): Abzatslarning asosiy mazmunini tezda tushunish (skimming) ko'nikmasini rivojlantiring. Matn bo'limlari sarlavhalarini kalit so'zlar bilan bog'lang.");
+    }
+    if (result.kind === "listening" && incorrectDetails.length > 3) {
+      recommendations.push("Eshitish va yozib olish tezligi: Audio eshitish jarayonida kalit so'zlarni tezda yozib borish ko'nikmangizni oshiring. Nutq tempiga moslashish uchun har kuni 20-30 daqiqa ingliz tilida podkast yoki yangiliklar tinglang.");
+    }
+
+    if (recommendations.length === 0) {
+      recommendations.push("Sizda muayyan turdagi savollarda tizimli xatoliklar aniqlanmadi. Natijangizni yanada mukammal qilish uchun umumiy grammatika va lug'at boyligini oshirishda davom eting.");
+    }
+
+    // Motivational message based on Band score
+    let motivationTitle = "";
+    let motivationMessage = "";
+    let motivationColor = "";
+    const numBand = Number(band) || 0;
+    if (numBand >= 8.0) {
+      motivationTitle = "Ajoyib Natija! 🌟";
+      motivationMessage = "Siz yuqori professional tayyorgarlik darajasini ko'rsatdingiz. C1/C2 darajasidagi mukammal bilimingiz bilan IELTSda eng yuqori natijalarni zabt eta olasiz!";
+      motivationColor = "text-emerald-650 dark:text-emerald-450 border-emerald-500/20 bg-emerald-500/5";
+    } else if (numBand >= 6.5) {
+      motivationTitle = "Juda yaxshi ko'rsatkich! 🚀";
+      motivationMessage = "Siz IELTS imtihonini muvaffaqiyatli topshirishga to'liq tayyorsiz. Yo'l qo'yilgan kichik xatolar ustida biroz ishlab, balingizni yanada maksimal darajaga ko'tarishingiz mumkin.";
+      motivationColor = "text-violet-650 dark:text-violet-450 border-violet-500/20 bg-violet-500/5";
+    } else if (numBand >= 5.0) {
+      motivationTitle = "Yaxshi boshlanish! 👍";
+      motivationMessage = "Imtihonda o'rtacha darajani qayd etdingiz. Natijani yanada yaxshilash va maqsadli balingizga erishish uchun tavsiya etilgan mavzular va savol turlari bo'yicha ko'proq mashq qiling.";
+      motivationColor = "text-amber-650 dark:text-amber-450 border-amber-500/20 bg-amber-500/5";
+    } else {
+      motivationTitle = "Tushkunlikka tushmang! 💪";
+      motivationMessage = "Har bir xato - bu o'rganish uchun ajoyib imkoniyat. Kuchsiz tomonlaringizni aniqlab oldik. Tizimli tayyorgarlik va tavsiyalarimiz yordamida natijangizni tez fursatda yuqori darajaga ko'tara olasiz.";
+      motivationColor = "text-rose-650 dark:text-rose-450 border-rose-500/20 bg-rose-500/5";
+    }
+
+    const getExplanation = (qtype: string, correct: string, user: string) => {
+      const u = user ? `"${user}"` : "belgilanmagan";
+      const c = `"${correct}"`;
+      if (qtype === "tfng") {
+        return `True/False/Not Given savollarida: agar gap matndagi ma'lumotni tasdiqlasa "True", unga butunlay zid bo'lsa "False", matnda bu haqda ma'lumot bo'lmasa "Not Given" bo'ladi. Matnga ko'ra to'g'ri javob ${c} bo'lishi kerak. Siz esa ${u} javobini belgilagansiz.`;
+      }
+      if (qtype === "ynng") {
+        return `Yes/No/Not Given savollarida: agar gap muallifning fikriga mos kelsa "Yes", unga qarshi bo'lsa "No", bu haqda muallif fikr bildirmagan bo'lsa "Not Given" bo'ladi. Ushbu savolda to'g'ri javob muallif fikriga ko'ra ${c} deb baholangan.`;
+      }
+      if (qtype === "mcq") {
+        return `Ko'p variantli savollarda (MCQ) to'g'ri javob varianti matndagi so'zlarning sinonimlari va paraphrase (boshqacha ifodalash) orqali yashiringan bo'ladi. Bu savolda eng to'g'ri variant ${c} hisoblanadi.`;
+      }
+      if (qtype === "fill") {
+        return `Bo'sh joyni to'ldirishda (Fill in the Blanks) so'z matndagidek harfma-harf aniq va grammatik jihatdan to'g'ri tushishi shart. To'g'ri javob ${c} bo'lib, imlo va so'z chegarasiga e'tibor qaratilishi talab etiladi.`;
+      }
+      return `Qisqa javobli savollarda to'g'ri javob matndagi faktlar asosida ${c} qilib belgilangan. Mashqlar davomida so'z chegarasi va to'g'ri yozilishiga e'tibor bering.`;
+    };
 
     return (
-      <div className="w-full space-y-6 pb-20">
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-          <Card className="p-8 text-center bg-gradient-to-br from-primary/10 via-violet-500/5 to-emerald-500/10 border-primary/30 relative overflow-hidden">
+      <div className="w-full max-w-[1200px] mx-auto space-y-8 pb-20 px-4 md:px-8">
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+          <Card className="p-8 text-center bg-gradient-to-br from-slate-900/5 via-violet-500/5 to-emerald-500/5 dark:from-slate-950/40 dark:via-violet-500/5 dark:to-emerald-500/10 border-slate-200 dark:border-white/5 relative overflow-hidden rounded-2xl shadow-xl">
             <div className="absolute -top-12 -right-12 w-48 h-48 bg-primary/10 rounded-full blur-3xl" />
             <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-violet-500/10 rounded-full blur-3xl" />
-            <div className="h-32 w-32 mx-auto mb-4 relative z-10">
-              <TigerPlayer text="" />
+            
+            <div className="relative z-10">
+              <CheckCircle2 className="h-14 w-14 text-emerald-500 mx-auto mb-4" />
+              <h2 className="text-3xl font-display font-extrabold text-slate-950 dark:text-white mb-2">Test Yakunlandi!</h2>
+              <p className="text-slate-500 dark:text-slate-400 text-sm max-w-md mx-auto">Siz topshiriqlarni yakunladingiz. Quyida natijangiz tahlili va shaxsiy tavsiyalar bilan tanishing.</p>
             </div>
-            <h2 className="text-4xl font-display font-bold mb-2 relative z-10">Tabriklaymiz!</h2>
-            <p className="text-muted-foreground mb-6 relative z-10">Test muvaffaqiyatli topshirildi</p>
-
-            <CheckCircle2 className="h-12 w-12 text-emerald-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-display font-bold">Test yakunlandi!</h2>
-
-            <div className="mt-8 flex flex-col items-center">
-              <div className="relative h-40 w-40 flex items-center justify-center">
-                <svg className="h-full w-full -rotate-90">
-                  <circle
-                    cx="80" cy="80" r="70"
-                    fill="transparent"
-                    stroke="currentColor"
-                    strokeWidth="8"
-                    className="text-muted/20"
-                  />
-                  <circle
-                    cx="80" cy="80" r="70"
-                    fill="transparent"
-                    stroke="currentColor"
-                    strokeWidth="8"
-                    strokeDasharray={440}
-                    strokeDashoffset={440 - (440 * (Number(band) || 0)) / 9}
-                    strokeLinecap="round"
-                    className="text-primary transition-all duration-1000 ease-out"
-                  />
-                </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-5xl font-display font-bold bg-gradient-to-br from-primary to-violet-500 bg-clip-text text-transparent">
-                    {band || "0.0"}
-                  </span>
-                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-tighter">Band Score</span>
-                </div>
-              </div>
-              <p className="text-sm text-muted-foreground mt-4 font-medium uppercase tracking-widest">IELTS {result.kind}</p>
-            </div>
-
-            {isExam && (
-              <div className="mt-8 grid grid-cols-3 gap-4 max-w-md mx-auto">
-                <Card className="p-4 bg-background/50 backdrop-blur border-emerald-500/20">
-                  <p className="text-[10px] uppercase font-bold text-muted-foreground">To'g'ri</p>
-                  <p className="text-2xl font-bold text-emerald-500">{result.correct}</p>
-                </Card>
-                <Card className="p-4 bg-background/50 backdrop-blur">
-                  <p className="text-[10px] uppercase font-bold text-muted-foreground">Jami</p>
-                  <p className="text-2xl font-bold">{result.total}</p>
-                </Card>
-                <Card className="p-4 bg-background/50 backdrop-blur border-primary/20">
-                  <p className="text-[10px] uppercase font-bold text-muted-foreground">%</p>
-                  <p className="text-2xl font-bold text-primary">
-                    {Math.round((result.correct / Math.max(result.total, 1)) * 100)}%
-                  </p>
-                </Card>
-              </div>
-            )}
           </Card>
         </motion.div>
-        <div className="flex gap-3 mt-4">
-          <Button onClick={() => nav(-1)} variant="outline" size="lg" className="flex-1">
+
+        <Tabs defaultValue="overview" className="w-full space-y-6">
+          <TabsList className="grid w-full grid-cols-3 rounded-xl bg-slate-100 dark:bg-white/5 p-1 h-12">
+            <TabsTrigger value="overview" className="rounded-lg font-bold text-xs md:text-sm">Umumiy Natija</TabsTrigger>
+            <TabsTrigger value="errors" className="rounded-lg font-bold text-xs md:text-sm flex items-center justify-center gap-1.5">
+              Xatolar Tahlili 
+              {isExam && incorrectDetails.length > 0 && (
+                <Badge variant="destructive" className="h-5 px-1.5 text-[10px] font-black">{incorrectDetails.length}</Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="recommendations" className="rounded-lg font-bold text-xs md:text-sm">Tavsiyalar</TabsTrigger>
+          </TabsList>
+
+          {/* 📊 TAB 1: OVERVIEW */}
+          <TabsContent value="overview" className="space-y-6 outline-none">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Score Display Card */}
+              <Card className="p-6 flex flex-col items-center justify-center border-slate-200 dark:border-white/5 bg-white dark:bg-slate-900/40 shadow-md rounded-2xl">
+                <p className="text-xs uppercase font-extrabold text-slate-400 dark:text-slate-500 tracking-wider mb-6">IELTS BAND SCORE</p>
+                <div className="relative h-44 w-44 flex items-center justify-center">
+                  <svg className="h-full w-full -rotate-90">
+                    <circle
+                      cx="88" cy="88" r="76"
+                      fill="transparent"
+                      stroke="currentColor"
+                      strokeWidth="10"
+                      className="text-slate-100 dark:text-white/5"
+                    />
+                    <circle
+                      cx="88" cy="88" r="76"
+                      fill="transparent"
+                      stroke="currentColor"
+                      strokeWidth="10"
+                      strokeDasharray={477}
+                      strokeDashoffset={477 - (477 * (Number(band) || 0)) / 9}
+                      strokeLinecap="round"
+                      className="text-emerald-500 dark:text-emerald-400 transition-all duration-1000 ease-out"
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-5xl font-display font-black text-slate-800 dark:text-white">
+                      {band || "0.0"}
+                    </span>
+                    <span className="text-[8px] sm:text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1 text-center px-2">
+                      {result.kind.replace("_", " ")}
+                    </span>
+                  </div>
+                </div>
+              </Card>
+
+              {/* 100-Point Scale Card */}
+              <Card className="p-6 flex flex-col justify-between border-slate-200 dark:border-white/5 bg-white dark:bg-slate-900/40 shadow-md rounded-2xl">
+                <div>
+                  <p className="text-xs uppercase font-extrabold text-slate-400 dark:text-slate-500 tracking-wider mb-4">100 BALLIK SHKALA</p>
+                  <div className="flex items-baseline gap-2 mb-2">
+                    <span className="text-6xl font-display font-black text-slate-800 dark:text-white">{score100}</span>
+                    <span className="text-xl font-bold text-slate-400 dark:text-slate-500">/ 100 ball</span>
+                  </div>
+                  <Progress value={score100} className="h-3.5 bg-slate-100 dark:bg-white/10 rounded-full" />
+                </div>
+
+                {isExam ? (
+                  <div className="grid grid-cols-3 gap-3 mt-6 pt-4 border-t border-slate-100 dark:border-white/5">
+                    <div className="text-center">
+                      <p className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">To'g'ri</p>
+                      <p className="text-xl font-black text-emerald-500 mt-0.5">{correctCount}</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">Noto'g'ri</p>
+                      <p className="text-xl font-black text-rose-500 mt-0.5">{incorrectDetails.length}</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">Jami</p>
+                      <p className="text-xl font-black text-slate-700 dark:text-slate-350 mt-0.5">{totalCount}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mt-6 pt-4 border-t border-slate-100 dark:border-white/5">
+                    <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Yozma / Og'zaki javob muvaffaqiyatli topshirildi va sun'iy intellekt tomonidan baholandi.</p>
+                  </div>
+                )}
+              </Card>
+            </div>
+
+            {/* Motivational message banner */}
+            <Card className={cn("p-6 border rounded-2xl flex items-start gap-4 shadow-sm", motivationColor)}>
+              <Award className="h-6 w-6 shrink-0 mt-0.5" />
+              <div>
+                <h4 className="font-extrabold text-sm uppercase tracking-wider mb-1">{motivationTitle}</h4>
+                <p className="text-sm font-medium leading-relaxed opacity-95">{motivationMessage}</p>
+              </div>
+            </Card>
+
+            {/* AI feedback section for Writing/Speaking */}
+            {!isExam && result.feedback && (
+              <Card className="p-6 md:p-8 border-slate-200 dark:border-white/5 bg-white dark:bg-slate-900/40 shadow-md rounded-2xl space-y-4">
+                <div className="flex items-center gap-2.5 border-b border-slate-100 dark:border-white/5 pb-4">
+                  <Sparkles className="h-5 w-5 text-violet-500" />
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white">AI Examiner Feedback & Analysis</h3>
+                </div>
+                <div className="text-slate-700 dark:text-slate-300 text-sm md:text-base leading-relaxed whitespace-pre-wrap select-text">
+                  {result.feedback}
+                </div>
+              </Card>
+            )}
+          </TabsContent>
+
+          {/* ❌ TAB 2: ERRORS ANALYSIS */}
+          <TabsContent value="errors" className="space-y-6 outline-none">
+            {!isExam ? (
+              <Card className="p-8 text-center border-slate-200 dark:border-white/5 bg-white dark:bg-slate-900/40 shadow-md rounded-2xl py-12">
+                <AlertCircle className="h-10 w-10 text-slate-400 mx-auto mb-3" />
+                <p className="text-slate-500 dark:text-slate-400 font-semibold text-sm">Writing yoki Speaking bo'limlarida avtomatik xatolar tahlili mavjud emas.</p>
+                <p className="text-slate-400 dark:text-slate-500 text-xs mt-1">Ushbu bo'limlarda batafsil tavsiyalarni AI Examiner Feedback bo'limidan olishingiz mumkin.</p>
+              </Card>
+            ) : incorrectDetails.length === 0 ? (
+              <Card className="p-8 text-center border-slate-200 dark:border-white/5 bg-white dark:bg-slate-900/40 shadow-md rounded-2xl py-12">
+                <ThumbsUp className="h-12 w-12 text-emerald-500 mx-auto mb-3 animate-bounce" />
+                <h3 className="text-xl font-bold text-emerald-500 mb-1">Ajoyib! Hech qanday xato topilmadi!</h3>
+                <p className="text-slate-500 dark:text-slate-400 text-sm">Siz barcha savollarga to'g'ri javob berdingiz. Mukammal natija! 🎉</p>
+              </Card>
+            ) : (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-bold text-sm text-slate-400 uppercase tracking-widest">Yo'l qo'yilgan xatolar ro'yxati ({incorrectDetails.length})</h3>
+                </div>
+                {incorrectDetails.map((detail: any, idx: number) => {
+                  const q = questions.find(question => question.id === detail.questionId);
+                  if (!q) return null;
+
+                  return (
+                    <Card key={detail.questionId || idx} className="p-6 border-slate-200 dark:border-white/5 bg-white dark:bg-slate-900/40 shadow-md rounded-2xl space-y-4 text-left">
+                      {/* Mistake Header */}
+                      <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-3">
+                        <div className="flex items-center gap-3">
+                          <span className="h-7 w-7 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-450 flex items-center justify-center text-xs font-black">
+                            {q.position}
+                          </span>
+                          <Badge variant="outline" className="capitalize text-[10px] font-extrabold border-slate-250 dark:border-white/10 text-slate-500 bg-slate-50 dark:bg-slate-900 px-2.5 py-0.5">
+                            {q.qtype.toUpperCase()}
+                          </Badge>
+                        </div>
+                      </div>
+
+                      {/* Prompt */}
+                      <div>
+                        <p className="text-slate-800 dark:text-slate-200 text-sm md:text-base font-semibold leading-relaxed">
+                          {q.prompt}
+                        </p>
+                      </div>
+
+                      {/* Answers comparison */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="p-3.5 rounded-xl border border-rose-500/20 bg-rose-500/5 flex items-center gap-2">
+                          <span className="text-[10px] uppercase font-bold text-rose-500 dark:text-rose-400 bg-rose-500/10 px-1.5 py-0.5 rounded">Sizning javobingiz</span>
+                          <span className="font-bold text-xs text-rose-700 dark:text-rose-400 truncate">{detail.userAns || "(javob berilmagan)"}</span>
+                        </div>
+                        <div className="p-3.5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 flex items-center gap-2">
+                          <span className="text-[10px] uppercase font-bold text-emerald-500 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">To'g'ri javob</span>
+                          <span className="font-bold text-xs text-emerald-700 dark:text-emerald-400 truncate">{detail.correctAns}</span>
+                        </div>
+                      </div>
+
+                      {/* Dynamic explanation */}
+                      <div className="p-4 rounded-xl border border-slate-200/50 dark:border-white/5 bg-slate-50 dark:bg-slate-950/40 flex gap-3">
+                        <Lightbulb className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Tushuntirish (Explanation)</p>
+                          <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
+                            {getExplanation(q.qtype, detail.correctAns, detail.userAns)}
+                          </p>
+                        </div>
+                      </div>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* 💡 TAB 3: RECOMMENDATIONS */}
+          <TabsContent value="recommendations" className="space-y-6 outline-none">
+            <Card className="p-6 md:p-8 border-slate-200 dark:border-white/5 bg-white dark:bg-slate-900/40 shadow-md rounded-2xl space-y-6 text-left">
+              <div className="flex items-center gap-2.5 border-b border-slate-100 dark:border-white/5 pb-4">
+                <Target className="h-5 w-5 text-primary" />
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">Zaif tomonlaringiz asosida shaxsiy tavsiyalar</h3>
+              </div>
+
+              <div className="space-y-4">
+                {recommendations.map((rec, idx) => (
+                  <div key={idx} className="p-4 rounded-xl border border-slate-200/50 dark:border-white/5 bg-slate-50/50 dark:bg-slate-950/20 flex gap-3.5 items-start">
+                    <span className="h-6 w-6 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-xs font-black shrink-0">
+                      {idx + 1}
+                    </span>
+                    <p className="text-sm text-slate-700 dark:text-slate-350 leading-relaxed font-medium">
+                      {rec}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="pt-4 border-t border-slate-100 dark:border-white/5 flex gap-3 items-start p-4 rounded-xl bg-violet-500/5 text-violet-600 dark:text-violet-400">
+                <BookMarked className="h-5 w-5 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-xs font-extrabold uppercase tracking-widest mb-1">Keyingi qadamlar</p>
+                  <p className="text-xs text-slate-650 dark:text-slate-400 leading-relaxed font-medium">
+                    Tavsiyalarimiz asosida o'xshash bo'limlar yoki savol turlari bo'yicha qo'shimcha testlarni ishlang. Xatoliklar tushuntirishini tahlil qilish orqali siz real IELTS imtihonida bunday xatolarga qayta yo'l qo'ymaysiz.
+                  </p>
+                </div>
+              </div>
+            </Card>
+          </TabsContent>
+        </Tabs>
+
+        <div className="flex gap-4 pt-4">
+          <Button onClick={() => nav(-1)} variant="outline" size="lg" className="flex-1 rounded-xl font-bold h-12 shadow-sm">
             Chiqish
           </Button>
-          <Button onClick={() => window.location.reload()} size="lg" className="flex-1">
+          <Button onClick={() => window.location.reload()} size="lg" className="flex-1 rounded-xl font-bold h-12 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-655 text-white shadow-md shadow-emerald-500/10">
             Qaytadan topshirish
           </Button>
         </div>
@@ -796,6 +1135,17 @@ export default function MockTake() {
             {isPaused ? <Play className="h-4.5 w-4.5 fill-current text-emerald-500" /> : <Pause className="h-4.5 w-4.5 fill-current" />}
           </Button>
 
+          {/* Theme Toggle Button */}
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={toggle}
+            className="h-10 w-10 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300 transition-all shrink-0"
+            title={theme === "dark" ? "Kunduzgi rejim" : "Tungi rejim"}
+          >
+            {theme === "dark" ? <Sun className="h-4.5 w-4.5 text-amber-500" /> : <Moon className="h-4.5 w-4.5 text-indigo-500" />}
+          </Button>
+
           {/* Fullscreen Button (Hidden on Mobile) */}
           <Button
             size="icon"
@@ -822,7 +1172,7 @@ export default function MockTake() {
 
       {/* 🎧 LISTENING COMPACT PLAYER */}
       {(kind === "listening" || exam.title.toLowerCase().includes("listening")) && (
-        <div className="shrink-0 w-full max-w-[1440px] mx-auto px-4 md:px-8 py-3 bg-transparent z-30">
+        <div className="shrink-0 w-full max-w-[1600px] mx-auto px-4 md:px-8 py-3 bg-transparent z-30">
           <CustomAudioPlayer
             src={exam.audio_url || (exam as any).audioUrl}
             isExternalPaused={isPaused}
@@ -856,14 +1206,14 @@ export default function MockTake() {
       </AnimatePresence>
 
       {/* 📝 EXAM WORKSPACE */}
-      <main className="flex-1 w-full max-w-[1440px] mx-auto px-4 md:px-8 py-4 min-h-0 flex flex-col">
+      <main className="flex-1 w-full max-w-[1600px] mx-auto px-4 md:px-8 py-4 min-h-0 flex flex-col">
         <div className={cn(
           "grid gap-8 xl:gap-12 flex-1 min-h-0",
           kind === "reading" && (currentSection?.passage || currentSection?.imageUrl) ? "lg:grid-cols-2" : "grid-cols-1"
         )}>
           {/* LEFT PANEL: PASSAGE (READING ONLY) */}
           {kind === "reading" && (currentSection?.passage || currentSection?.imageUrl) && (
-            <Card className="flex flex-col min-h-[calc(100vh-180px)] w-full max-w-3xl mx-auto border-slate-200/50 dark:border-white/5 shadow-xl shadow-slate-100/50 dark:shadow-none bg-white dark:bg-slate-900/40 backdrop-blur-md rounded-2xl overflow-hidden">
+            <Card className="flex flex-col min-h-[85vh] w-full max-w-6xl mx-auto border-slate-200/50 dark:border-white/5 shadow-xl shadow-slate-100/50 dark:shadow-none bg-white dark:bg-slate-900/40 backdrop-blur-md rounded-2xl overflow-hidden">
               {currentSection.title && (
                 <div className="px-6 py-4 border-b border-slate-100 dark:border-white/5 flex items-center justify-between shrink-0 bg-slate-50/50 dark:bg-slate-950/20">
                   <h2 className="font-display font-extrabold text-base tracking-tight text-slate-800 dark:text-white">
@@ -874,7 +1224,7 @@ export default function MockTake() {
               <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar space-y-6">
                 {currentSection.imageUrl && (
                   <div className="rounded-xl overflow-hidden border border-slate-200/60 dark:border-white/5 bg-slate-50 dark:bg-slate-950 p-3 shadow-inner">
-                    <img src={currentSection.imageUrl} alt="Map/Diagram" className="max-w-full h-auto mx-auto rounded-lg" />
+                    <img src={getFullImageUrl(currentSection.imageUrl)} alt="Map/Diagram" className="max-w-full h-auto mx-auto rounded-lg" />
                   </div>
                 )}
                 <div className="prose prose-slate dark:prose-invert max-w-none text-slate-750 dark:text-slate-350 text-sm md:text-base leading-relaxed font-normal whitespace-pre-wrap select-text selection:bg-emerald-500/20 selection:text-emerald-500">
@@ -885,7 +1235,10 @@ export default function MockTake() {
           )}
 
           {/* RIGHT PANEL: QUESTIONS */}
-          <Card className="flex flex-col min-h-[calc(100vh-180px)] w-full max-w-3xl mx-auto border-slate-200/50 dark:border-white/5 shadow-xl shadow-slate-100/50 dark:shadow-none bg-white dark:bg-slate-900/40 backdrop-blur-md rounded-2xl overflow-hidden">
+          <Card className={cn(
+            "flex flex-col min-h-[85vh] w-full mx-auto border-slate-200/50 dark:border-white/5 shadow-xl shadow-slate-100/50 dark:shadow-none bg-white dark:bg-slate-900/40 backdrop-blur-md rounded-2xl overflow-hidden",
+            kind === "reading" && (currentSection?.passage || currentSection?.imageUrl) ? "max-w-6xl" : "max-w-full"
+          )}>
             <div className="px-6 py-4 border-b border-slate-100 dark:border-white/5 flex items-center justify-between shrink-0 bg-slate-50/50 dark:bg-slate-950/20">
               <span className="text-xs font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                 Savollar va Topshiriqlar
@@ -899,7 +1252,7 @@ export default function MockTake() {
               {/* Listening Visual Reference */}
               {kind === "listening" && currentSection?.imageUrl && (
                 <div className="mb-6 rounded-2xl overflow-hidden border border-slate-200/60 dark:border-white/5 bg-slate-50 dark:bg-slate-950 p-3 shadow-inner">
-                  <img src={currentSection.imageUrl} alt="Map/Diagram" className="max-w-full h-auto mx-auto rounded-lg" />
+                  <img src={getFullImageUrl(currentSection.imageUrl)} alt="Map/Diagram" className="max-w-full h-auto mx-auto rounded-lg" />
                   <p className="text-[10px] text-center text-slate-400 dark:text-slate-500 mt-2 uppercase tracking-widest font-black">Visual Reference</p>
                 </div>
               )}
@@ -910,7 +1263,7 @@ export default function MockTake() {
                   <p className="text-slate-400 dark:text-slate-500 text-sm font-semibold">Bu bo'limda hech qanday savollar kiritilmagan.</p>
                 </div>
               ) : (
-                <div className="space-y-6">
+                <div className="space-y-8">
                   {sectionQs.map((q) => {
                     // isInline only if fill/short AND no options exist
                     const isInline = (q.qtype === "fill" || q.qtype === "short") && (!q.options || q.options.length === 0);
@@ -923,7 +1276,7 @@ export default function MockTake() {
                         key={q.id}
                         id={`q-${q.id}`}
                         className={cn(
-                          "group rounded-2xl p-4 md:p-5 border transition-all duration-300",
+                          "group rounded-2xl p-6 md:p-8 border transition-all duration-300",
                           isFlagged
                             ? "bg-amber-500/5 border-amber-500/20 shadow-sm shadow-amber-500/5"
                             : hasAnswer
@@ -951,27 +1304,27 @@ export default function MockTake() {
                                 {/* Show image even for inline/short answer questions */}
                                 {q.imageUrl && (
                                   <div className="mb-3">
-                                    {q.imagePosition === "top" && <img src={q.imageUrl} alt="Question" className="max-h-64 w-auto rounded-xl object-contain border border-slate-200 dark:border-white/10 shadow-sm" />}
-                                    {q.imagePosition === "left" && <img src={q.imageUrl} alt="Question" className="float-left mr-3 max-h-40 rounded-xl object-contain border border-slate-200 dark:border-white/10" />}
-                                    {q.imagePosition === "right" && <img src={q.imageUrl} alt="Question" className="float-right ml-3 max-h-40 rounded-xl object-contain border border-slate-200 dark:border-white/10" />}
-                                    {q.imagePosition === "bottom" && <img src={q.imageUrl} alt="Question" className="max-h-64 w-auto rounded-xl object-contain border border-slate-200 dark:border-white/10 shadow-sm" />}
+                                    {(q.imagePosition === "top" || !q.imagePosition) && <img src={getFullImageUrl(q.imageUrl)} alt="Question" className="max-h-64 md:max-h-80 w-auto rounded-xl object-contain border border-slate-200 dark:border-white/10 shadow-sm" />}
+                                    {q.imagePosition === "left" && <img src={getFullImageUrl(q.imageUrl)} alt="Question" className="float-left mr-3 max-h-40 rounded-xl object-contain border border-slate-200 dark:border-white/10" />}
+                                    {q.imagePosition === "right" && <img src={getFullImageUrl(q.imageUrl)} alt="Question" className="float-right ml-3 max-h-40 rounded-xl object-contain border border-slate-200 dark:border-white/10" />}
+                                    {q.imagePosition === "bottom" && <img src={getFullImageUrl(q.imageUrl)} alt="Question" className="max-h-64 md:max-h-80 w-auto rounded-xl object-contain border border-slate-200 dark:border-white/10 shadow-sm" />}
                                   </div>
                                 )}
                                 {renderInlinePrompt(q)}
                               </div>
                             ) : (
                               <div className="space-y-4">
-                                <p className="text-slate-800 dark:text-slate-200 font-bold text-sm md:text-base leading-snug">
-                                  {q.imagePosition === "top" && q.imageUrl && <img src={q.imageUrl} alt="Question" className="mb-3 max-h-48 rounded object-contain border" />}
-                                  {q.imagePosition === "left" && q.imageUrl && <img src={q.imageUrl} alt="Question" className="float-left mr-3 max-h-48 rounded object-contain border" />}
-                                  {q.prompt}
-                                  {q.imagePosition === "right" && q.imageUrl && <img src={q.imageUrl} alt="Question" className="float-right ml-3 max-h-48 rounded object-contain border" />}
-                                  {q.imagePosition === "bottom" && q.imageUrl && <img src={q.imageUrl} alt="Question" className="mt-3 max-h-48 rounded object-contain border" />}
-                                </p>
+                                <div className="text-slate-800 dark:text-slate-200 font-bold text-sm md:text-base leading-snug">
+                                  {(q.imagePosition === "top" || !q.imagePosition) && q.imageUrl && <img src={getFullImageUrl(q.imageUrl)} alt="Question" className="mb-3 max-h-64 md:max-h-80 w-auto rounded-xl object-contain border border-slate-200/60 dark:border-white/10 shadow-sm" />}
+                                  {q.imagePosition === "left" && q.imageUrl && <img src={getFullImageUrl(q.imageUrl)} alt="Question" className="float-left mr-4 max-h-48 rounded-xl object-contain border border-slate-200/60 dark:border-white/10" />}
+                                  <div className="inline">{q.prompt}</div>
+                                  {q.imagePosition === "right" && q.imageUrl && <img src={getFullImageUrl(q.imageUrl)} alt="Question" className="float-right ml-4 max-h-48 rounded-xl object-contain border border-slate-200/60 dark:border-white/10" />}
+                                  {q.imagePosition === "bottom" && q.imageUrl && <img src={getFullImageUrl(q.imageUrl)} alt="Question" className="mt-3 max-h-64 md:max-h-80 w-auto rounded-xl object-contain border border-slate-200/60 dark:border-white/10 shadow-sm" />}
+                                </div>
 
                                 {/* Multiple Choice options */}
-                                {q.qtype === "mcq" && Array.isArray(q.options) && q.options.length > 0 ? (
-                                  <div className="grid gap-2.5 mt-3">
+                                {Array.isArray(q.options) && q.options.length > 0 && q.qtype !== "matching" && q.qtype !== "headings" ? (
+                                  <div className="grid gap-4 mt-3">
                                     {q.options.map((optObj, idx) => {
                                       const opt = optObj.text;
                                       const letter = LETTERS[idx] ?? String(idx + 1);
@@ -982,7 +1335,7 @@ export default function MockTake() {
                                           type="button"
                                           onClick={() => onAnswer(q.id, opt)}
                                           className={cn(
-                                            "w-full flex items-center gap-3.5 px-4 py-3 rounded-xl border text-xs md:text-sm text-left transition-all duration-200",
+                                            "w-full flex items-center gap-3.5 px-5 py-4 rounded-xl border text-xs md:text-sm text-left transition-all duration-200",
                                             selected
                                               ? "bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/20 font-bold"
                                               : "bg-white dark:bg-slate-950 hover:bg-slate-100/50 dark:hover:bg-white/[0.03] border-slate-200 dark:border-white/5 text-slate-700 dark:text-slate-300"
@@ -997,19 +1350,19 @@ export default function MockTake() {
                                             {letter}
                                           </span>
                                           <span className="flex-1 leading-snug flex items-center gap-3">
-                                            {optObj.imagePosition === 'left' && optObj.imageUrl && <img src={optObj.imageUrl} alt="Option" className="max-h-16 rounded border bg-white object-contain" />}
+                                            {optObj.imagePosition === 'left' && optObj.imageUrl && <img src={getFullImageUrl(optObj.imageUrl)} alt="Option" className="max-h-16 rounded border bg-white object-contain" />}
                                             <span className="flex-1">
-                                              {optObj.imagePosition === 'top' && optObj.imageUrl && <img src={optObj.imageUrl} alt="Option" className="max-h-16 rounded border bg-white object-contain mb-2" />}
+                                              {optObj.imagePosition === 'top' && optObj.imageUrl && <img src={getFullImageUrl(optObj.imageUrl)} alt="Option" className="max-h-16 rounded border bg-white object-contain mb-2" />}
                                               {opt}
-                                              {optObj.imagePosition === 'bottom' && optObj.imageUrl && <img src={optObj.imageUrl} alt="Option" className="max-h-16 rounded border bg-white object-contain mt-2" />}
+                                              {optObj.imagePosition === 'bottom' && optObj.imageUrl && <img src={getFullImageUrl(optObj.imageUrl)} alt="Option" className="max-h-16 rounded border bg-white object-contain mt-2" />}
                                             </span>
-                                            {optObj.imagePosition === 'right' && optObj.imageUrl && <img src={optObj.imageUrl} alt="Option" className="max-h-16 rounded border bg-white object-contain" />}
+                                            {optObj.imagePosition === 'right' && optObj.imageUrl && <img src={getFullImageUrl(optObj.imageUrl)} alt="Option" className="max-h-16 rounded border bg-white object-contain" />}
                                           </span>
                                         </button>
                                       );
                                     })}
                                   </div>
-                                ) : q.qtype === "mcq" ? (
+                                ) : (q.qtype === "mcq" || q.qtype === "short" || q.qtype === "fill") ? (
                                   <div className="mt-2">
                                     {renderInlineInput(q)}
                                   </div>
@@ -1227,6 +1580,9 @@ export default function MockTake() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* 📝 FLOATING SCRATCHPAD (DRAWING BOARD) */}
+      <Scratchpad isOpen={showScratchpad} onClose={() => setShowScratchpad(false)} />
 
     </div>
   );

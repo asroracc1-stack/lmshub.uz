@@ -64,6 +64,10 @@ public class Exam {
     @Builder.Default
     private Boolean isActive = true;
 
+    @Column(name = "required_pack", nullable = false)
+    @Builder.Default
+    private String requiredPack = "free";
+
     @OneToMany(mappedBy = "exam", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Passage> passages;
 

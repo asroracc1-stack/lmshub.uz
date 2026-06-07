@@ -83,6 +83,7 @@ export default function SuperAdminLayout() {
     { to: "/super-admin/mocks", label: t("nav.ielts"), icon: FileText },
     { to: "/super-admin/speaking", label: t("nav.speaking"), icon: Mic },
     { to: "/super-admin/packs", label: t("nav.packs"), icon: Package },
+    { to: "/super-admin/subscription-requests", label: "Obuna so'rovlari", icon: FileText },
     { to: "/super-admin/pricing-plans", label: t("nav.pricingPlans"), icon: CreditCard },
     { to: "/super-admin/pitch", label: "Loyiha Taqdimoti", icon: Presentation },
     { to: "/super-admin/news", label: "Yangiliklar", icon: Newspaper },

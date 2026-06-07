@@ -125,6 +125,7 @@ const SuperAdminParents = lazy(() => import("./pages/super-admin/Parents"));
 const StartupPitch = lazy(() => import("./pages/super-admin/StartupPitch"));
 const AdminUsers = lazy(() => import("./pages/admin/Users"));
 const PaymentRequests = lazy(() => import("./pages/admin/PaymentRequests"));
+const SubscriptionRequests = lazy(() => import("./pages/admin/SubscriptionRequests"));
 
 const AdminDashboard = lazy(() => import("./pages/admin/Dashboard"));
 const AdminAdministrators = lazy(() => import("./pages/admin/Administrators"));
@@ -229,6 +230,7 @@ const AppRoutes = () => {
           <Route path="national-cert" element={<MockCategory basePath="/super-admin" forcedKind="national_cert" />} />
           <Route path="packs" element={<Packs />} />
           <Route path="subscriptions" element={<Subscriptions />} />
+          <Route path="subscription-requests" element={<SubscriptionRequests />} />
           <Route path="payment-receivers" element={<PaymentReceivers />} />
           <Route path="packages" element={<SuperAdminPackages />} />
           <Route path="speaking" element={<SpeakingHub basePath="/super-admin" />} />
@@ -417,6 +419,7 @@ const AppRoutes = () => {
           <Route path="payments" element={<PMPayments />} />
           <Route path="pending" element={<PMPending />} />
           <Route path="subscriptions" element={<PMSubscriptions />} />
+          <Route path="subscription-requests" element={<SubscriptionRequests />} />
           <Route path="packs" element={<PMPacks />} />
           <Route path="history" element={<PMHistory />} />
           <Route path="chat" element={<PMChat />} />

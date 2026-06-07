@@ -57,3 +57,5 @@ databaseChangeLog:
       file: db/changelog/changes/v0028_add_is_google_user.yaml
   - include:
       file: db/changelog/changes/v0029_add_image_to_question_and_options.yaml
+  - include:
+      file: db/changelog/changes/v0030_add_required_pack_to_exams.yaml
