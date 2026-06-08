@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/ai")
 @RequiredArgsConstructor
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:8081"})
 @Tag(name = "AI Controller", description = "Endpoints for AI generations using Gemini")
 public class AiController {
 

@@ -20,7 +20,6 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/admin/payments/manage")
 @RequiredArgsConstructor
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:8081"})
 @Tag(name = "Admin Payment Controller", description = "Endpoints for Admins to manage payment requests")
 public class AdminPaymentController {
 

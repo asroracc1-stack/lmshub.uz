@@ -27,7 +27,6 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/v1/finance")
 @RequiredArgsConstructor
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:8081"})
 @Tag(name = "Finance Controller", description = "Endpoints for Finance Dashboard stats and CRUD management")
 public class FinanceController {
 

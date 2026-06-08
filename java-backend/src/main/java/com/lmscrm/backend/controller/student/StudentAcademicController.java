@@ -34,7 +34,6 @@ import java.util.UUID;
 @RequestMapping("/api/v1/student")
 @RequiredArgsConstructor
 @Slf4j
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:8081"})
 @Tag(name = "Student Academic Controller", description = "Endpoints for students to view attendance, grades and dashboard stats")
 public class StudentAcademicController {
 

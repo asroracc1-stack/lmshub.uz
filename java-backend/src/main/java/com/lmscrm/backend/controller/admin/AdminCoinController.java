@@ -17,7 +17,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/admin/coins")
 @RequiredArgsConstructor
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:8081"})
 @Tag(name = "Admin Coin Controller", description = "Endpoints for granting coins to users")
 public class AdminCoinController {
 

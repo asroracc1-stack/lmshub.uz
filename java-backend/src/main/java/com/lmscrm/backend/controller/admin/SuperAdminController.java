@@ -26,7 +26,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/super-admin")
 @RequiredArgsConstructor
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:8081"})
 @Tag(name = "Super Admin Controller", description = "Endpoints for SuperAdmin dashboard and management")
 public class SuperAdminController {
 

@@ -138,7 +138,7 @@ export default function PaymentRequests() {
     if (!path) return "";
     if (path.startsWith("http")) return path;
     // Serve via Java backend file endpoint
-    return `${import.meta.env.VITE_API_URL || "http://localhost:8080"}/api/v1/files/${path}`;
+    return `${import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api/v1"}/files/${path}`;
   };
 
   const columns = [

@@ -51,7 +51,7 @@ const statusMeta = (s: string) => {
 const getImageUrl = (url?: string | null) => {
   if (!url) return null;
   if (url.startsWith("http")) return url;
-  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8080";
+  const apiUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api/v1";
   const baseUrl = apiUrl.replace(/\/api\/v1\/?$/, ""); // extract just the host
   
   if (url.startsWith("/api/")) return `${baseUrl}${url}`;

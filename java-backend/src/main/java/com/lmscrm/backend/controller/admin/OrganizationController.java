@@ -18,7 +18,6 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/organizations")
 @RequiredArgsConstructor
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:8081"})
 @Tag(name = "Organization Controller", description = "Endpoints for SuperAdmin to manage organizations")
 public class OrganizationController {
 

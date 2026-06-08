@@ -19,7 +19,6 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/admin")
 @RequiredArgsConstructor
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:8081"})
 @Tag(name = "Admin Academic Controller", description = "Endpoints for administrators to manage overarching academic entities like groups")
 public class AdminAcademicController {
 

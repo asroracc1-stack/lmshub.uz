@@ -27,7 +27,6 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/v1/admin/attendance")
 @RequiredArgsConstructor
 @Slf4j
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:8081"})
 @Tag(name = "Admin Attendance Controller", description = "Endpoints for managing student attendance")
 public class AdminAttendanceController {
 

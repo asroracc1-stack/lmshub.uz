@@ -21,7 +21,6 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/teacher/chat")
 @RequiredArgsConstructor
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:8081"})
 @Tag(name = "Teacher Chat Controller", description = "Endpoints for teachers to chat with students and parents")
 public class TeacherChatController {
 

@@ -19,7 +19,6 @@ import java.util.UUID;
 @RestController("financePaymentController")
 @RequestMapping("/api/v1/payments")
 @RequiredArgsConstructor
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:8081"})
 @Tag(name = "Payment Controller", description = "Endpoints for students/parents to initiate payments")
 public class PaymentController {
 

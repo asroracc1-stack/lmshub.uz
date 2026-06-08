@@ -19,7 +19,6 @@ import com.lmscrm.backend.dto.admin.InvoiceRequestDto;
 @RestController
 @RequestMapping("/api/v1/admin/invoices")
 @RequiredArgsConstructor
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:8081"})
 @Tag(name = "Admin Invoice Controller", description = "Endpoints for SuperAdmin to manage invoices")
 public class AdminInvoiceController {
 

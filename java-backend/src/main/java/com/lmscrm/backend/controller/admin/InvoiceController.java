@@ -31,7 +31,6 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/admin/invoices")
 @RequiredArgsConstructor
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:8081"})
 @Tag(name = "Invoice Controller", description = "Endpoints for managing and generating invoices PDF")
 @Slf4j
 public class InvoiceController {

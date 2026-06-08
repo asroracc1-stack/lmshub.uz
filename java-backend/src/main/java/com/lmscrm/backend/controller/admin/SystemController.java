@@ -13,7 +13,6 @@ import java.lang.management.ManagementFactory;
 @RestController
 @RequestMapping("/api/v1/admin/system")
 @RequiredArgsConstructor
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:8081"})
 @Tag(name = "System Controller", description = "System health and management endpoints")
 public class SystemController {
 

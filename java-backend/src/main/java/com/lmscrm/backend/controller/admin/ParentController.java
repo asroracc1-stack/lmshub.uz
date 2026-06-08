@@ -25,7 +25,6 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/v1/admin/parents")
 @RequiredArgsConstructor
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:8081"})
 @Tag(name = "Parent Controller", description = "Ota-onalarni boshqarish endpointlari")
 public class ParentController {
 
