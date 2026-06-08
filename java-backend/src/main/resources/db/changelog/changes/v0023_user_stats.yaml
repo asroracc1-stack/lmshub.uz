@@ -8,7 +8,7 @@ databaseChangeLog:
             columns:
               - column:
                   name: target_band
-                  type: double precision
+                  type: double
               - column:
                   name: exam_date
                   type: date
@@ -18,7 +18,7 @@ databaseChangeLog:
               - column:
                   name: id
                   type: uuid
-                  defaultValueComputed: gen_random_uuid()
+                  defaultValueComputed: random_uuid()
                   constraints:
                     primaryKey: true
                     nullable: false
@@ -32,7 +32,7 @@ databaseChangeLog:
                     referencedColumnNames: id
               - column:
                   name: minutes
-                  type: double precision
+                  type: double
                   constraints:
                     nullable: false
               - column:

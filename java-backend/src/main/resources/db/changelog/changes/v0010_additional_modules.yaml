@@ -27,7 +27,7 @@ databaseChangeLog:
                   type: varchar(255)
               - column:
                   name: meta
-                  type: jsonb
+                  type: clob
               - column:
                   name: created_at
                   type: timestamp

@@ -3,43 +3,55 @@ databaseChangeLog:
       id: v0026_single_superadmin_v4
       author: asror
       validCheckSum: ANY
+      preConditions:
+        onFail: MARK_RAN
+        onError: MARK_RAN
+        not:
+          - dbms:
+              type: h2
       changes:
-        # 1. Agar 'asrorsuperadmin' username'i boshqa IDda bo'lsa — rename
+        # 1️⃣ Rename a duplicate super‑admin username (idempotent)
         - sql:
             sql: >
               UPDATE public.users
-              SET username = CONCAT('demoted_', SUBSTRING(id::text, 1, 8))
+              SET username = 'demoted_' || SUBSTRING(CAST(id AS VARCHAR), 1, 8)
               WHERE username = 'asrorsuperadmin'
-                AND id != '00000000-0000-0000-0000-000000000001';
-
-        # 2. Boshqa SUPER_ADMIN larni ADMIN roliga tushirish
+                AND id <> '00000000-0000-0000-0000-000000000001';
+        # 2️⃣ Demote any other SUPER_ADMIN to ADMIN (idempotent)
         - sql:
             sql: >
               UPDATE public.users
               SET role = 'ADMIN'
               WHERE role = 'SUPER_ADMIN'
-                AND id != '00000000-0000-0000-0000-000000000001';
-
-        # 3. Canonical superadminni upsert (BCrypt: ilhomhamdamarguba)
+                AND id <> '00000000-0000-0000-0000-000000000001';
+        # 3️⃣ Ensure the canonical super‑admin exists (upsert, idempotent)
         - sql:
             sql: >
-              INSERT INTO public.users (
-                id, username, email, password, role,
-                full_name, active, coins, created_at
-              ) VALUES (
-                '00000000-0000-0000-0000-000000000001',
-                'asrorsuperadmin',
-                'asrorsuperadmin@lmshub.uz',
-                '$2a$12$pznT0b3C7OZoUdmQMFDOGeMqyHFV.4WT.Q7GN9vUaXRwCWcSxqjWa',
-                'SUPER_ADMIN',
-                'Asror Super Admin',
-                true,
-                0,
-                CURRENT_TIMESTAMP
-              )
-              ON CONFLICT (id) DO UPDATE SET
-                username = EXCLUDED.username,
-                password = EXCLUDED.password,
-                role     = EXCLUDED.role,
-                active   = EXCLUDED.active;
-        # Profil DataInitializer tomonidan startup da yaratiladi (id auto-gen uchun)
+              MERGE INTO public.users AS tgt
+              USING (SELECT
+                       '00000000-0000-0000-0000-000000000001' AS id,
+                       'asrorsuperadmin'                 AS username,
+                       'asrorsuperadmin@lmshub.uz'       AS email,
+                       '$2a$12$pznT0b3C7OZoUdmQMFDOGeMqyHFV.4WT.Q7GN9vUaXRwCWcSxqjWa' AS password,
+                       'SUPER_ADMIN'                     AS role,
+                       'Asror Super Admin'               AS full_name,
+                       true                              AS active,
+                       0                                 AS coins,
+                       CURRENT_TIMESTAMP                AS created_at) AS src
+              ON tgt.id = src.id
+              WHEN MATCHED THEN
+                UPDATE SET
+                  username = src.username,
+                  password = src.password,
+                  role     = src.role,
+                  active   = src.active
+              WHEN NOT MATCHED THEN
+                INSERT (id, username, email, password, role, full_name, active, coins, created_at)
+                VALUES (src.id, src.username, src.email, src.password, src.role,
+                        src.full_name, src.active, src.coins, src.created_at);
+      rollback:
+        - sql:
+            sql: >
+              DELETE FROM public.users
+              WHERE id = '00000000-0000-0000-0000-000000000001'
+                AND username = 'asrorsuperadmin';
