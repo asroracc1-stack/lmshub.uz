@@ -27,28 +27,13 @@ databaseChangeLog:
         # 3️⃣ Ensure the canonical super‑admin exists (upsert, idempotent)
         - sql:
             sql: >
-              MERGE INTO public.users AS tgt
-              USING (SELECT
-                       '00000000-0000-0000-0000-000000000001' AS id,
-                       'asrorsuperadmin'                 AS username,
-                       'asrorsuperadmin@lmshub.uz'       AS email,
-                       '$2a$12$pznT0b3C7OZoUdmQMFDOGeMqyHFV.4WT.Q7GN9vUaXRwCWcSxqjWa' AS password,
-                       'SUPER_ADMIN'                     AS role,
-                       'Asror Super Admin'               AS full_name,
-                       true                              AS active,
-                       0                                 AS coins,
-                       CURRENT_TIMESTAMP                AS created_at) AS src
-              ON tgt.id = src.id
-              WHEN MATCHED THEN
-                UPDATE SET
-                  username = src.username,
-                  password = src.password,
-                  role     = src.role,
-                  active   = src.active
-              WHEN NOT MATCHED THEN
-                INSERT (id, username, email, password, role, full_name, active, coins, created_at)
-                VALUES (src.id, src.username, src.email, src.password, src.role,
-                        src.full_name, src.active, src.coins, src.created_at);
+              INSERT INTO public.users (id, username, email, password, role, full_name, active, coins, created_at)
+              VALUES ('00000000-0000-0000-0000-000000000001'::uuid, 'asrorsuperadmin', 'asrorsuperadmin@lmshub.uz', '$2a$12$pznT0b3C7OZoUdmQMFDOGeMqyHFV.4WT.Q7GN9vUaXRwCWcSxqjWa', 'SUPER_ADMIN', 'Asror Super Admin', true, 0, CURRENT_TIMESTAMP)
+              ON CONFLICT (id) DO UPDATE SET
+                username = EXCLUDED.username,
+                password = EXCLUDED.password,
+                role     = EXCLUDED.role,
+                active   = EXCLUDED.active;
       rollback:
         - sql:
             sql: >
