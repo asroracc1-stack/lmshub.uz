@@ -120,14 +120,19 @@ public class AuthService {
             String picture = (String) payload.get("picture");
 
             // Extra info
-            if (name == null || picture == null) {
+            if (email == null || name == null || picture == null) {
                 try {
                     java.util.Map<String, Object> userInfo = restTemplate.getForObject("https://www.googleapis.com/oauth2/v3/userinfo?access_token=" + token, java.util.Map.class);
                     if (userInfo != null) {
+                        if (email == null) email = (String) userInfo.get("email");
                         if (name == null) name = (String) userInfo.get("name");
                         if (picture == null) picture = (String) userInfo.get("picture");
                     }
                 } catch (Exception ignore) {}
+            }
+
+            if (email == null || email.trim().isEmpty()) {
+                throw new BadCredentialsException("Google profilingizda email topilmadi");
             }
 
             final String finalEmail = email;
