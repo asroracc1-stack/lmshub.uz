@@ -10,6 +10,7 @@ import com.lmscrm.backend.repository.SubscriptionRequestRepository;
 import com.lmscrm.backend.repository.UserRepository;
 import com.lmscrm.backend.service.communication.NotificationService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +21,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class SubscriptionRequestService {
 
     private final SubscriptionRequestRepository repository;
@@ -114,19 +116,25 @@ public class SubscriptionRequestService {
 
     @Transactional
     public void approveRequest(UUID requestId, String adminUsername) {
+        log.info("▶ approveRequest START: requestId={}, admin={}", requestId, adminUsername);
+
         SubscriptionRequest request = repository.findById(requestId)
-                .orElseThrow(() -> new RuntimeException("Request not found"));
+                .orElseThrow(() -> new RuntimeException("Request not found: " + requestId));
 
         request.setStatus("APPROVED");
         request.setProcessedAt(LocalDateTime.now());
         request.setProcessedBy(adminUsername);
         repository.save(request);
+        log.info("✅ Step 1: Status APPROVED saved");
 
         // 1. Upgrade user role from USER to STUDENT
         User user = request.getUser();
         if (user.getRole() == AppRole.USER) {
             user.setRole(AppRole.STUDENT);
             userRepository.save(user);
+            log.info("✅ Step 2: User role upgraded to STUDENT: {}", user.getUsername());
+        } else {
+            log.info("ℹ Step 2: User {} already has role {}", user.getUsername(), user.getRole());
         }
 
         // 2. Insert or update user_subscriptions table
@@ -135,39 +143,72 @@ public class SubscriptionRequestService {
         // Increment totalPurchases counter on the pack
         pack.setTotalPurchases(pack.getTotalPurchases() + 1);
         packRepository.save(pack);
+        log.info("✅ Step 3: totalPurchases incremented for pack: {}", pack.getName());
 
         int durationMonths = pack.getDuration() > 0 ? pack.getDuration() : 12;
         LocalDateTime startsAt = LocalDateTime.now();
         LocalDateTime expiresAt = startsAt.plusMonths(durationMonths);
 
-        List<?> existing = entityManager.createNativeQuery(
-            "SELECT id FROM public.user_subscriptions WHERE user_id = :userId AND pack_id = :packId"
-        )
-        .setParameter("userId", user.getId())
-        .setParameter("packId", pack.getId())
-        .getResultList();
+        // Ensure user_subscriptions table exists
+        try {
+            entityManager.createNativeQuery(
+                "CREATE TABLE IF NOT EXISTS public.user_subscriptions (" +
+                "  id UUID PRIMARY KEY, " +
+                "  user_id UUID NOT NULL, " +
+                "  pack_id UUID NOT NULL, " +
+                "  starts_at TIMESTAMP, " +
+                "  expires_at TIMESTAMP, " +
+                "  is_active BOOLEAN DEFAULT true, " +
+                "  status VARCHAR(50) DEFAULT 'active', " +
+                "  created_at TIMESTAMP DEFAULT NOW()" +
+                ")"
+            ).executeUpdate();
+            log.info("✅ Step 4: user_subscriptions table ensured");
+        } catch (Exception e) {
+            log.warn("⚠ Step 4: Could not create table (may already exist): {}", e.getMessage());
+        }
 
-        if (!existing.isEmpty()) {
-            entityManager.createNativeQuery(
-                "UPDATE public.user_subscriptions SET starts_at = :startsAt, expires_at = :expiresAt, is_active = true, status = 'active' WHERE user_id = :userId AND pack_id = :packId"
+        // Use String UUIDs for PostgreSQL compatibility
+        String userIdStr = user.getId().toString();
+        String packIdStr = pack.getId().toString();
+
+        try {
+            List<?> existing = entityManager.createNativeQuery(
+                "SELECT id FROM public.user_subscriptions WHERE user_id = CAST(:userId AS UUID) AND pack_id = CAST(:packId AS UUID)"
             )
-            .setParameter("userId", user.getId())
-            .setParameter("packId", pack.getId())
-            .setParameter("startsAt", startsAt)
-            .setParameter("expiresAt", expiresAt)
-            .executeUpdate();
-        } else {
-            entityManager.createNativeQuery(
-                "INSERT INTO public.user_subscriptions (id, user_id, pack_id, starts_at, expires_at, is_active, status, created_at) " +
-                "VALUES (:id, :userId, :packId, :startsAt, :expiresAt, true, 'active', :createdAt)"
-            )
-            .setParameter("id", UUID.randomUUID())
-            .setParameter("userId", user.getId())
-            .setParameter("packId", pack.getId())
-            .setParameter("startsAt", startsAt)
-            .setParameter("expiresAt", expiresAt)
-            .setParameter("createdAt", LocalDateTime.now())
-            .executeUpdate();
+            .setParameter("userId", userIdStr)
+            .setParameter("packId", packIdStr)
+            .getResultList();
+
+            if (!existing.isEmpty()) {
+                entityManager.createNativeQuery(
+                    "UPDATE public.user_subscriptions SET starts_at = :startsAt, expires_at = :expiresAt, " +
+                    "is_active = true, status = 'active' " +
+                    "WHERE user_id = CAST(:userId AS UUID) AND pack_id = CAST(:packId AS UUID)"
+                )
+                .setParameter("userId", userIdStr)
+                .setParameter("packId", packIdStr)
+                .setParameter("startsAt", startsAt)
+                .setParameter("expiresAt", expiresAt)
+                .executeUpdate();
+                log.info("✅ Step 5: user_subscriptions UPDATED for user {}", user.getUsername());
+            } else {
+                entityManager.createNativeQuery(
+                    "INSERT INTO public.user_subscriptions (id, user_id, pack_id, starts_at, expires_at, is_active, status, created_at) " +
+                    "VALUES (CAST(:id AS UUID), CAST(:userId AS UUID), CAST(:packId AS UUID), :startsAt, :expiresAt, true, 'active', :createdAt)"
+                )
+                .setParameter("id", UUID.randomUUID().toString())
+                .setParameter("userId", userIdStr)
+                .setParameter("packId", packIdStr)
+                .setParameter("startsAt", startsAt)
+                .setParameter("expiresAt", expiresAt)
+                .setParameter("createdAt", LocalDateTime.now())
+                .executeUpdate();
+                log.info("✅ Step 5: user_subscriptions INSERTED for user {}", user.getUsername());
+            }
+        } catch (Exception e) {
+            log.error("❌ Step 5 FAILED (user_subscriptions): {}", e.getMessage(), e);
+            throw new RuntimeException("Obuna jadvaliga yozishda xatolik: " + e.getMessage(), e);
         }
 
         // 3. Notify user via in-app notification
@@ -177,6 +218,7 @@ public class SubscriptionRequestService {
                 pack.getName(), expiresAt.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))),
             NotificationType.ALERT
         );
+        log.info("✅ Step 6: In-app notification sent to user {}", user.getUsername());
 
         // 4. Send Telegram Notification
         String tgMsg = String.format(
@@ -192,7 +234,9 @@ public class SubscriptionRequestService {
             expiresAt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
         );
         telegramBotService.sendMessage(tgMsg);
+        log.info("▶ approveRequest DONE: user={}, pack={}", user.getUsername(), pack.getName());
     }
+
 
     @Transactional
     public void rejectRequest(UUID requestId, String adminUsername) {
