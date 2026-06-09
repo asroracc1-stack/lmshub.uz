@@ -165,7 +165,7 @@ public class TelegramBotDispatcher {
             return;
         }
 
-        } else if (data.startsWith("exam_")) {
+        if (data.startsWith("exam_")) {
             String examIdStr = data.substring(5);
             try {
                 java.util.UUID examId = java.util.UUID.fromString(examIdStr);
