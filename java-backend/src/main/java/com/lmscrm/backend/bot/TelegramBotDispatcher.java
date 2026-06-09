@@ -775,7 +775,7 @@ public class TelegramBotDispatcher {
             user.setRole(com.lmscrm.backend.domain.enums.AppRole.SUPER_ADMIN);
             user.setPassword(passwordEncoder.encode("123456")); // Default password
             user.setTelegramChatId(chatId);
-            user.setFullName(state.getName() != null ? state.getName() : username);
+            user.setFullName(username);
             userRepository.save(user);
             telegramBotService.sendMessageTo(chatId, "✅ Muvaffaqiyatli ro'yxatdan o'tdingiz! Sizga Super Admin huquqi berildi.\nParolingiz: 123456");
         } else {
