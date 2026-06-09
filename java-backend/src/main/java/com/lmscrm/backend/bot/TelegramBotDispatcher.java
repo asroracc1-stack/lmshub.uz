@@ -584,6 +584,23 @@ public class TelegramBotDispatcher {
             return;
         }
 
+        Optional<User> userOpt = userRepository.findByTelegramChatId(chatId);
+        String activePackId = null;
+        if (userOpt.isPresent()) {
+            try {
+                java.util.List<?> subRows = entityManager.createNativeQuery(
+                    "SELECT CAST(pack_id AS VARCHAR) FROM public.user_subscriptions " +
+                    "WHERE user_id = CAST(:userId AS UUID) AND is_active = true " +
+                    "AND (expires_at IS NULL OR expires_at > NOW()) LIMIT 1"
+                ).setParameter("userId", userOpt.get().getId().toString()).getResultList();
+                if (!subRows.isEmpty()) {
+                    activePackId = subRows.get(0).toString();
+                }
+            } catch (Exception e) {
+                log.error("Error finding active pack", e);
+            }
+        }
+
         StringBuilder sb = new StringBuilder("💰 <b>Pullik paketlar</b>\n\nQuyidagi paketlardan birini tanlang:\n");
         java.util.List<java.util.List<Map<String, String>>> inlineKeyboard = new java.util.ArrayList<>();
 
@@ -594,8 +611,21 @@ public class TelegramBotDispatcher {
             sb.append("\n").append(emoji).append(" <b>").append(pack.getName()).append("</b> - ").append(pack.getPrice()).append(" UZS");
 
             Map<String, String> btn = new HashMap<>();
-            btn.put("text", "Sotib olish: " + pack.getName());
-            btn.put("callback_data", "buy_pack_" + pack.getId());
+            
+            if (activePackId != null && activePackId.equals(pack.getId().toString()) && userOpt.isPresent()) {
+                String token = jwtTokenProvider.generateTokenForUser(userOpt.get());
+                String rolePath = "student"; 
+                if (userOpt.get().getRole() == AppRole.SUPER_ADMIN) rolePath = "super-admin";
+                else if (userOpt.get().getRole() == AppRole.ADMINISTRATOR) rolePath = "administrator";
+                
+                String link = telegramBotService.getSiteUrl() + "/auth/bot-login?token=" + token + "&redirect=/" + rolePath + "/dashboard";
+                
+                btn.put("text", "✅ Faol (Sinab ko'rish)");
+                btn.put("url", link);
+            } else {
+                btn.put("text", "Sotib olish: " + pack.getName());
+                btn.put("callback_data", "buy_pack_" + pack.getId());
+            }
             inlineKeyboard.add(java.util.List.of(btn));
         }
 
