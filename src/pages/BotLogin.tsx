@@ -3,11 +3,12 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { api } from "@/lib/axios";
 
 const BotLogin = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { loginWithToken } = useAuth(); // Assuming this or similar exists, or we just set token directly.
+  const { setAuth } = useAuth();
 
   useEffect(() => {
     const token = searchParams.get("token");
@@ -19,18 +20,37 @@ const BotLogin = () => {
       return;
     }
 
-    // Save token to localStorage
-    localStorage.setItem("token", token);
-    
-    // Check if the auth context has a method to refresh the user from token
-    // If we just reload the page to the redirect URL, AuthContext will pick up the token from localStorage
-    
-    toast.success("Muvaffaqiyatli kirdingiz!");
-    
-    // Quick redirect via window.location to force AuthContext to re-read the token from localStorage on mount
-    window.location.href = redirect;
+    const authenticate = async () => {
+      try {
+        localStorage.setItem("access_token", token);
+        const res = await api.get('/user/profile', {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        const userData = {
+            id: res.data.id,
+            email: res.data.email,
+            role: res.data.role,
+            username: res.data.username,
+            firstName: res.data.firstName || res.data.full_name?.split(' ')[0],
+            lastName: res.data.lastName || res.data.full_name?.split(' ').slice(1).join(' '),
+            avatarUrl: res.data.avatarUrl || res.data.avatar_url,
+            phone: res.data.phone || res.data.phoneNumber
+        };
 
-  }, [searchParams, navigate]);
+        setAuth(token, userData as any);
+        toast.success("Muvaffaqiyatli kirdingiz!");
+        window.location.href = redirect;
+      } catch (err) {
+        console.error("Bot login error:", err);
+        toast.error("Token eskirgan yoki xatolik yuz berdi");
+        navigate("/auth");
+      }
+    };
+
+    authenticate();
+
+  }, [searchParams, navigate, setAuth]);
 
   return (
     <div className="flex h-screen w-full items-center justify-center bg-background">

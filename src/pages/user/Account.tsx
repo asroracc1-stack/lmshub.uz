@@ -244,6 +244,5 @@ export default function UserAccount() {
       </Tabs>
     </div>
   );
-  );
 }
 
