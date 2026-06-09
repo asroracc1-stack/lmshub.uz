@@ -119,6 +119,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
            phone: res.data.phone || res.data.phoneNumber || res.data.phone_number || null,
            avatar_url: res.data.avatarUrl || res.data.avatar_url || null,
            organization_id: res.data.organizationId || res.data.organization_id || null,
+           coins: res.data.coins || 0,
+           exam_date: res.data.examDate || null,
          };
          setProfile(mappedProfile);
          
@@ -179,6 +181,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               phone: res.data.phone || res.data.phoneNumber || res.data.phone_number || null,
               avatar_url: res.data.avatarUrl || res.data.avatar_url || null,
               organization_id: res.data.organizationId || res.data.organization_id || null,
+              coins: res.data.coins || 0,
+              exam_date: res.data.examDate || null,
             };
             setProfile(refreshedProfile);
           } catch (refreshErr: any) {
