@@ -46,6 +46,7 @@ public class TelegramBotDispatcher {
     private final SubscriptionRequestRepository subscriptionRequestRepository;
     private final BotReviewRepository botReviewRepository;
     private final JwtTokenProvider jwtTokenProvider;
+    private final jakarta.persistence.EntityManager entityManager;
     private final RestTemplate restTemplate = new RestTemplate();
 
     @Value("${telegram.bot.token}")
@@ -187,15 +188,43 @@ public class TelegramBotDispatcher {
 
                     int questionCount = questionRepository.countByExamId(examId);
 
-                    String text = String.format("📄 <b>Test ma'lumoti</b>\n\n<b>Nomi:</b> %s\n<b>Savollar soni:</b> %s\n<b>Vaqt:</b> %s daqiqa\n<b>Turi:</b> %s %s\n\nBot orqali quyidagi tugmani bosib saytga kiring va testni yeching:",
+                    String reqPack = exam.getRequiredPack() != null ? exam.getRequiredPack().toUpperCase() : "FREE";
+                    String emoji = reqPack.equals("ELITE") ? "🟡" : reqPack.equals("PRO") ? "🟢" : "🔵";
+                    String packName = reqPack.equals("FREE") ? "Bepul test" : reqPack + " Obuna";
+                    
+                    String text = String.format("📄 <b>Test ma'lumoti</b>\n\n<b>Nomi:</b> %s\n<b>Savollar soni:</b> %s\n<b>Vaqt:</b> %s daqiqa\n<b>Turi:</b> %s %s\n\n",
                             exam.getTitle(), questionCount, exam.getDurationMinutes(), emoji, packName);
 
-                    // Generate JWT token for deep linking
                     Optional<User> userOpt = userRepository.findByTelegramChatId(chatId);
                     if (userOpt.isEmpty()) {
                         telegramBotService.answerCallbackQuery(queryId, "Foydalanuvchi topilmadi", true);
                         return;
                     }
+
+                    boolean hasAccess = false;
+                    if (reqPack.equals("FREE")) {
+                        hasAccess = true;
+                    } else {
+                        try {
+                            List<?> subRows = entityManager.createNativeQuery(
+                                "SELECT sp.type FROM public.user_subscriptions us " +
+                                "JOIN public.subscription_packs sp ON sp.id = us.pack_id " +
+                                "WHERE us.user_id = :userId AND us.is_active = true " +
+                                "AND (us.expires_at IS NULL OR us.expires_at > NOW()) " +
+                                "ORDER BY CASE sp.type WHEN 'ELITE' THEN 1 WHEN 'PRO' THEN 2 ELSE 3 END LIMIT 1"
+                            ).setParameter("userId", userOpt.get().getId()).getResultList();
+                            
+                            String activePack = subRows.isEmpty() ? "FREE" : subRows.get(0).toString();
+                            if (reqPack.equals("ELITE") && activePack.equals("ELITE")) {
+                                hasAccess = true;
+                            } else if (reqPack.equals("PRO") && (activePack.equals("PRO") || activePack.equals("ELITE"))) {
+                                hasAccess = true;
+                            }
+                        } catch (Exception e) {
+                            log.error("Failed to fetch subscription for user {}", userOpt.get().getId(), e);
+                        }
+                    }
+
                     String token = jwtTokenProvider.generateTokenForUser(userOpt.get());
                     
                     String roleLower = userOpt.get().getRole().name().toLowerCase();
@@ -207,15 +236,23 @@ public class TelegramBotDispatcher {
                     else if (roleLower.equals("super_admin")) rolePath = "super-admin";
                     else if (roleLower.equals("payment_manager") || roleLower.equals("pack_manager") || roleLower.equals("manager")) rolePath = "pack-manager";
 
-                    String link = telegramBotService.getSiteUrl() + "/auth/bot-login?token=" + token + "&redirect=/" + rolePath + "/mocks/take/" + examId;
-
                     java.util.List<java.util.List<Map<String, String>>> kb = new java.util.ArrayList<>();
                     
-                    Map<String, String> startBtn = new HashMap<>();
-                    startBtn.put("text", "🚀 Sinab ko'rish");
-                    startBtn.put("url", link);
-                    
-                    kb.add(java.util.List.of(startBtn));
+                    if (hasAccess) {
+                        text += "Bot orqali quyidagi tugmani bosib saytga kiring va testni yeching:";
+                        String link = telegramBotService.getSiteUrl() + "/auth/bot-login?token=" + token + "&redirect=/" + rolePath + "/mocks/take/" + examId;
+                        Map<String, String> startBtn = new HashMap<>();
+                        startBtn.put("text", "🚀 Sinab ko'rish");
+                        startBtn.put("url", link);
+                        kb.add(java.util.List.of(startBtn));
+                    } else {
+                        text += "⚠️ Ushbu testni ishlash uchun sizda <b>" + reqPack + "</b> obunasi faol bo'lishi kerak.\n\nIltimos, quyidagi tugma orqali saytga kiring va obuna xarid qiling:";
+                        String link = telegramBotService.getSiteUrl() + "/auth/bot-login?token=" + token + "&redirect=/" + rolePath + "/subscriptions";
+                        Map<String, String> buyBtn = new HashMap<>();
+                        buyBtn.put("text", "💳 Sotib olish");
+                        buyBtn.put("url", link);
+                        kb.add(java.util.List.of(buyBtn));
+                    }
 
                     // Instead of new message, edit the current one or answer and send new
                     telegramBotService.answerCallbackQuery(queryId, "Test yuklanmoqda...", false);
