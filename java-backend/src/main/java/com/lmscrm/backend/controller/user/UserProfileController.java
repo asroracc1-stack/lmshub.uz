@@ -24,6 +24,7 @@ public class UserProfileController {
 
     private final UserRepository userRepository;
     private final ProfileRepository profileRepository;
+    private final jakarta.persistence.EntityManager entityManager;
 
     @GetMapping("/profile")
     @Operation(summary = "Get Current User Profile")
@@ -54,6 +55,27 @@ public class UserProfileController {
             response.put("firstName", profile.getFirstName());
             response.put("lastName", profile.getLastName());
             response.put("phone", profile.getPhone());
+        }
+
+        try {
+            // Find the most prominent active subscription
+            java.util.List<?> subs = entityManager.createNativeQuery(
+                "SELECT p.code FROM public.user_subscriptions us " +
+                "JOIN public.subscription_packages p ON us.pack_id = p.id " +
+                "WHERE us.user_id = CAST(:userId AS UUID) AND us.is_active = true " +
+                "AND us.expires_at > NOW() " +
+                "ORDER BY p.price DESC LIMIT 1"
+            )
+            .setParameter("userId", user.getId().toString())
+            .getResultList();
+
+            if (!subs.isEmpty() && subs.get(0) != null) {
+                response.put("subscriptionPackCode", subs.get(0).toString());
+            } else {
+                response.put("subscriptionPackCode", null);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
         return ResponseEntity.ok(response);

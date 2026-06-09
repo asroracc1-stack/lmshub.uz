@@ -17,6 +17,7 @@ interface Profile {
   coins?: number | null;
   exam_date?: string | null;
   last_login_at?: string | null;
+  subscriptionPackCode?: string | null;
 }
 
 interface User {
