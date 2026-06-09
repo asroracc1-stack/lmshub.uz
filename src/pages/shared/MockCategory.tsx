@@ -384,6 +384,7 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
                           </Button>
                         )}
                       </div>
+                    </div>
                   </div>
                 </motion.div>
               );
