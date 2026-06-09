@@ -51,6 +51,18 @@ const BotLogin = () => {
             else if (roleLower === "payment_manager" || roleLower === "pack_manager" || roleLower === "manager") rolePath = "pack-manager";
             
             redirect = `/${rolePath}/mocks/take/${testId}`;
+        } else if (redirect === "/admin/dashboard" || redirect === "/super-admin/dashboard" || redirect === "/administrator/dashboard" || redirect === "/teacher/dashboard" || redirect === "/pack-manager/dashboard") {
+            // Automatically map dashboard redirects to the user's actual role dashboard
+            const roleLower = (res.data.role || "user").toLowerCase();
+            let rolePath = "user";
+            if (roleLower === "student") rolePath = "student";
+            else if (roleLower === "teacher") rolePath = "teacher";
+            else if (roleLower === "admin") rolePath = "admin";
+            else if (roleLower === "administrator") rolePath = "administrator";
+            else if (roleLower === "super_admin") rolePath = "super-admin";
+            else if (roleLower === "payment_manager" || roleLower === "pack_manager" || roleLower === "manager") rolePath = "pack-manager";
+            
+            redirect = `/${rolePath}/dashboard`;
         }
 
         setAuth(token, userData as any);

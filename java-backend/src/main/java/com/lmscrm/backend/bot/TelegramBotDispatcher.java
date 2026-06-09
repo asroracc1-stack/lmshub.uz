@@ -46,6 +46,7 @@ public class TelegramBotDispatcher {
     private final SubscriptionRequestRepository subscriptionRequestRepository;
     private final BotReviewRepository botReviewRepository;
     private final JwtTokenProvider jwtTokenProvider;
+    private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
     private final jakarta.persistence.EntityManager entityManager;
     private final RestTemplate restTemplate = new RestTemplate();
 
@@ -126,6 +127,9 @@ public class TelegramBotDispatcher {
                 break;
             case AWAITING_REVIEW:
                 handleReviewInput(chatId, text, state);
+                break;
+            case AWAITING_ADMIN_LOGIN:
+                handleAdminLogin(chatId, text, state);
                 break;
             case MAIN_MENU:
                 handleMainMenu(chatId, text, state);
@@ -667,25 +671,61 @@ public class TelegramBotDispatcher {
     }
 
     private void handleAdminPanel(String chatId) {
-        // Simple admin panel logic
-        if (!chatId.equals(adminChatId)) {
-            telegramBotService.sendMessageTo(chatId, "Sizda ushbu bo'limga kirish huquqi yo'q.");
+        BotUserState state = stateRepository.findByTelegramChatId(chatId).orElse(new BotUserState());
+        state.setTelegramChatId(chatId);
+        state.setState(BotState.AWAITING_ADMIN_LOGIN);
+        stateRepository.save(state);
+
+        telegramBotService.sendMessageTo(chatId, "🔐 Admin panelga kirish uchun username va parolingizni probel bilan ajratib yozing:\n(Masalan: asrorsuperadmin 123456)");
+    }
+
+    private void handleAdminLogin(String chatId, String text, BotUserState state) {
+        String[] parts = text.split("\\s+");
+        if (parts.length != 2) {
+            telegramBotService.sendMessageTo(chatId, "❌ Noto'g'ri format. Iltimos, username va parolni probel bilan ajratib yozing:\n(Masalan: asrorsuperadmin 123456)");
             return;
         }
         
-        // Generate Deep Link to the admin panel
-        Optional<User> userOpt = userRepository.findByTelegramChatId(chatId);
-        if (userOpt.isEmpty()) return;
-        String token = jwtTokenProvider.generateTokenForUser(userOpt.get());
-        String link = telegramBotService.getSiteUrl() + "/auth/bot-login?token=" + token + "&redirect=/admin/dashboard";
+        String username = parts[0];
+        String password = parts[1];
+
+        Optional<User> userOpt = userRepository.findByUsername(username);
+        if (userOpt.isEmpty() || !passwordEncoder.matches(password, userOpt.get().getPassword())) {
+            telegramBotService.sendMessageTo(chatId, "❌ Username yoki parol xato! Qaytadan urinib ko'ring yoki /start ni bosing.");
+            return;
+        }
+
+        User user = userOpt.get();
+        if (user.getRole() == AppRole.USER || user.getRole() == AppRole.STUDENT) {
+            telegramBotService.sendMessageTo(chatId, "❌ Sizda admin panelga kirish huquqi yo'q!");
+            return;
+        }
+
+        state.setState(BotState.MAIN_MENU);
+        stateRepository.save(state);
+
+        String token = jwtTokenProvider.generateTokenForUser(user);
+        
+        String redirect = "/admin/dashboard";
+        if (user.getRole() == AppRole.SUPER_ADMIN) {
+            redirect = "/super-admin/dashboard";
+        } else if (user.getRole() == AppRole.ADMINISTRATOR) {
+            redirect = "/administrator/dashboard";
+        } else if (user.getRole() == AppRole.TEACHER) {
+            redirect = "/teacher/dashboard";
+        } else if (user.getRole() == AppRole.PAYMENT_MANAGER || user.getRole() == AppRole.PACK_MANAGER) {
+            redirect = "/pack-manager/dashboard";
+        }
+
+        String link = telegramBotService.getSiteUrl() + "/auth/bot-login?token=" + token + "&redirect=" + redirect;
 
         java.util.List<java.util.List<Map<String, String>>> kb = new java.util.ArrayList<>();
         Map<String, String> linkBtn = new HashMap<>();
-        linkBtn.put("text", "🌐 Saytga o'tish (Admin)");
+        linkBtn.put("text", "🌐 Saytga o'tish (" + user.getRole().name() + ")");
         linkBtn.put("url", link);
         kb.add(java.util.List.of(linkBtn));
 
-        telegramBotService.sendMessageWithInlineButtons(chatId, "👨‍💻 <b>Admin Panel</b>\nTo'liq boshqaruv uchun saytga o'ting:", "", "");
+        telegramBotService.sendMessageWithInlineButtons(chatId, "✅ <b>Muvaffaqiyatli kirdingiz!</b>\nTo'liq boshqaruv uchun saytga o'ting:", "", "");
         sendMessageWithMarkup(chatId, "Saytga o'tish tugmasini bosing:", KeyboardFactory.createInlineKeyboard(kb));
     }
 
