@@ -442,7 +442,7 @@ public class TelegramBotDispatcher {
                 telegramBotService.sendMessageTo(chatId, BotConstants.MSG_ASK_NAME);
                 break;
             case BotConstants.BTN_MY_COINS:
-                telegramBotService.sendMessageTo(chatId, "Coinlaringiz: Tez orada ishga tushadi");
+                handleMyCoins(chatId);
                 break;
             case BotConstants.BTN_PAID_TESTS:
                 handlePaidTestsMenu(chatId);
@@ -459,12 +459,34 @@ public class TelegramBotDispatcher {
                 telegramBotService.sendMessageTo(chatId, "Iltimos, o'z izohingizni yoki takliflaringizni yozib yuboring:");
                 break;
             case BotConstants.BTN_ABOUT:
-                telegramBotService.sendMessageTo(chatId, BotConstants.MSG_COMING_SOON);
+                handleAbout(chatId);
                 break;
             default:
                 sendMainMenu(chatId, state);
                 break;
         }
+    }
+
+    private void handleMyCoins(String chatId) {
+        userRepository.findByTelegramChatId(chatId).ifPresentOrElse(user -> {
+            int coins = user.getCoins() != null ? user.getCoins() : 0;
+            String msg = "💰 Sizning hisobingizda: *" + coins + " coin* mavjud!\n\n" +
+                         "Coinlarni turli xil testlar ishlab hamda do'stlaringizni taklif qilib yig'ishingiz mumkin. " +
+                         "Tez orada ushbu coinlar orqali platforma xizmatlarini xarid qilishingiz mumkin bo'ladi!";
+            telegramBotService.sendMessageTo(chatId, msg);
+        }, () -> {
+            telegramBotService.sendMessageTo(chatId, "Foydalanuvchi topilmadi.");
+        });
+    }
+
+    private void handleAbout(String chatId) {
+        String msg = "🏫 *LMSHub* - bu o'quv markazlar, o'qituvchilar va o'quvchilar uchun eng zamonaviy platforma!\n\n" +
+                     "Bizning maqsadimiz ta'lim jarayonini butunlay raqamlashtirish, osonlashtirish va shaffof qilishdir. " +
+                     "Platforma orqali siz turli xil *Mock testlar (IELTS, SAT, Milliy Sertifikat)* ishlashingiz, " +
+                     "o'z natijalaringizni tahlil qilishingiz hamda o'sish dinamikasini kuzatishingiz mumkin.\n\n" +
+                     "📞 *Murojaat uchun:* +998 90 123 45 67\n" +
+                     "🌐 *Sayt:* https://lmshub.uz";
+        telegramBotService.sendMessageTo(chatId, msg);
     }
 
     private void handleCategoryInput(String chatId, String text, BotUserState state) {
