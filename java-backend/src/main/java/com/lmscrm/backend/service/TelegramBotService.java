@@ -145,7 +145,13 @@ public class TelegramBotService {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
-            log.info("Message with button sent to {}", targetChatId);
+            HttpEntity<java.util.Map<String, Object>> entity = new HttpEntity<>(body, headers);
+            ResponseEntity<String> response = restTemplate.postForEntity(apiUrl, entity, String.class);
+            if (response.getStatusCode().is2xxSuccessful()) {
+                log.info("Message with button sent to {} successfully", targetChatId);
+            } else {
+                log.warn("sendMessage returned non-2xx: {}", response.getStatusCode());
+            }
         } catch (Exception e) {
             log.error("Failed to send message with button to {}: {}", targetChatId, e.getMessage());
             sendMessageTo(targetChatId, text);

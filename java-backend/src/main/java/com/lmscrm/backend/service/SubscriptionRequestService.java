@@ -71,6 +71,7 @@ public class SubscriptionRequestService {
         String approveCallback = "approve_sub:" + saved.getId();
         String rejectCallback = "reject_sub:" + saved.getId();
 
+        String adminChatId = telegramBotService.getDefaultChatId();
         if (receiptUrl != null && !receiptUrl.isBlank()) {
             String localFilePath = null;
             if (receiptUrl.contains("/view/")) {
@@ -78,13 +79,13 @@ public class SubscriptionRequestService {
                 localFilePath = "uploads/" + filename;
             }
             if (localFilePath != null && new java.io.File(localFilePath).exists()) {
-                telegramBotService.sendPhotoWithInlineButtons("7499973776", message, localFilePath, approveCallback, rejectCallback);
+                telegramBotService.sendPhotoWithInlineButtons(adminChatId, message, localFilePath, approveCallback, rejectCallback);
             } else {
                 String fullUrl = receiptUrl.startsWith("http") ? receiptUrl : (telegramBotService.getSiteUrl() + receiptUrl);
-                telegramBotService.sendPhotoWithInlineButtons("7499973776", message, fullUrl, approveCallback, rejectCallback);
+                telegramBotService.sendPhotoWithInlineButtons(adminChatId, message, fullUrl, approveCallback, rejectCallback);
             }
         } else {
-            telegramBotService.sendMessageWithInlineButtons("7499973776", message, approveCallback, rejectCallback);
+            telegramBotService.sendMessageWithInlineButtons(adminChatId, message, approveCallback, rejectCallback);
         }
 
         // 2. Send in-app site notifications to all SUPER_ADMIN and PACK_MANAGER users
@@ -130,6 +131,11 @@ public class SubscriptionRequestService {
 
         // 2. Insert or update user_subscriptions table
         SubscriptionPack pack = request.getPack();
+
+        // Increment totalPurchases counter on the pack
+        pack.setTotalPurchases(pack.getTotalPurchases() + 1);
+        packRepository.save(pack);
+
         int durationMonths = pack.getDuration() > 0 ? pack.getDuration() : 12;
         LocalDateTime startsAt = LocalDateTime.now();
         LocalDateTime expiresAt = startsAt.plusMonths(durationMonths);

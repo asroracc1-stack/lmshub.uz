@@ -4,6 +4,7 @@ import com.lmscrm.backend.service.SubscriptionRequestService;
 import com.lmscrm.backend.service.TelegramBotService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,6 +20,9 @@ public class TelegramWebhookController {
     private final SubscriptionRequestService subscriptionRequestService;
     private final TelegramBotService telegramBotService;
 
+    @Value("${telegram.bot.chat-id:7499973776}")
+    private String adminChatId;
+
     @PostMapping
     public ResponseEntity<?> handleUpdate(@RequestBody Map<String, Object> update) {
         log.info("Received Telegram Update payload: {}", update);
@@ -30,7 +34,8 @@ public class TelegramWebhookController {
                 Map<String, Object> from = (Map<String, Object>) callbackQuery.get("from");
                 Number fromId = (Number) from.get("id");
 
-                if (fromId == null || fromId.longValue() != 7499973776L) {
+                long adminChatIdLong = Long.parseLong(adminChatId);
+                if (fromId == null || fromId.longValue() != adminChatIdLong) {
                     telegramBotService.answerCallbackQuery(queryId, "Sizga ruxsat etilmagan!", true);
                     return ResponseEntity.ok().build();
                 }
@@ -52,10 +57,10 @@ public class TelegramWebhookController {
 
                     if (message.containsKey("caption")) {
                         String caption = (String) message.get("caption");
-                        telegramBotService.editMessageCaption(7499973776L, messageId, caption + "\n\n✅ <b>Tasdiqlandi</b> (Bot orqali)");
+                        telegramBotService.editMessageCaption(Long.parseLong(adminChatId), messageId, caption + "\n\n✅ <b>Tasdiqlandi</b> (Bot orqali)");
                     } else if (message.containsKey("text")) {
                         String text = (String) message.get("text");
-                        telegramBotService.editMessageText(7499973776L, messageId, text + "\n\n✅ <b>Tasdiqlandi</b> (Bot orqali)");
+                        telegramBotService.editMessageText(Long.parseLong(adminChatId), messageId, text + "\n\n✅ <b>Tasdiqlandi</b> (Bot orqali)");
                     }
                 } else if (data.startsWith("reject_sub:")) {
                     String reqIdStr = data.substring("reject_sub:".length());
@@ -66,10 +71,10 @@ public class TelegramWebhookController {
 
                     if (message.containsKey("caption")) {
                         String caption = (String) message.get("caption");
-                        telegramBotService.editMessageCaption(7499973776L, messageId, caption + "\n\n❌ <b>Rad etildi</b> (Bot orqali)");
+                        telegramBotService.editMessageCaption(Long.parseLong(adminChatId), messageId, caption + "\n\n❌ <b>Rad etildi</b> (Bot orqali)");
                     } else if (message.containsKey("text")) {
                         String text = (String) message.get("text");
-                        telegramBotService.editMessageText(7499973776L, messageId, text + "\n\n❌ <b>Rad etildi</b> (Bot orqali)");
+                        telegramBotService.editMessageText(Long.parseLong(adminChatId), messageId, text + "\n\n❌ <b>Rad etildi</b> (Bot orqali)");
                     }
                 }
             }

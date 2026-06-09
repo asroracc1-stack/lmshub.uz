@@ -90,8 +90,16 @@ export default function MockEditor({ basePath = "/super-admin" }: { basePath?: s
       const formData = new FormData();
       formData.append("file", file);
       const res = await api.post("/admin/exams/analyze-pdf", formData, {
-        headers: { "Content-Type": "multipart/form-data" }
+        headers: { "Content-Type": "multipart/form-data" },
+        timeout: 120000, // 2 minutes for large PDFs
       });
+
+      // Server returned plain text error (e.g. "AI xizmati sozlanmagan...")
+      if (typeof res.data === "string" && !res.data.trim().startsWith("{")) {
+        toast.error("AI xatolik: " + res.data, { duration: 8000 });
+        return;
+      }
+
       const data = typeof res.data === "string" ? JSON.parse(res.data) : res.data;
       if (data?.sections && Array.isArray(data.sections) && data.sections.length > 0) {
         const mapped: Section[] = data.sections.map((s: any) => ({
@@ -133,7 +141,13 @@ export default function MockEditor({ basePath = "/super-admin" }: { basePath?: s
       }
     } catch (e: any) {
       console.error("PDF AI Parse Error:", e);
-      toast.error("PDF AI tahlilida xatolik: " + (e.response?.data?.message || e.message));
+      // Try to extract the actual message from server response
+      const serverMsg = e.response?.data;
+      if (typeof serverMsg === "string" && serverMsg.trim()) {
+        toast.error("PDF AI xatolik: " + serverMsg, { duration: 8000 });
+      } else {
+        toast.error("PDF AI tahlilida xatolik: " + (e.response?.data?.message || e.message), { duration: 6000 });
+      }
     } finally {
       setAiBusy(false);
     }
