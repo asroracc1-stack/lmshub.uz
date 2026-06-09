@@ -198,7 +198,7 @@ public class SubscriptionRequestService {
             user,
             "🎉 Obuna tasdiqlandi",
             String.format("Tabriklaymiz! Sizning %s paketingiz tasdiqlandi. Endi testlarni ishlashingiz mumkin.", pack.getName()),
-            NotificationType.SUCCESS
+            NotificationType.INFO
         );
 
         // 5. Telegram notification to the user
