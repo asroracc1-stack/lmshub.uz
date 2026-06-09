@@ -469,7 +469,7 @@ public class TelegramBotDispatcher {
 
     private void handleMyCoins(String chatId) {
         userRepository.findByTelegramChatId(chatId).ifPresentOrElse(user -> {
-            int coins = user.getCoins() != null ? user.getCoins() : 0;
+            long coins = user.getCoins() != null ? user.getCoins() : 0L;
             String msg = "💰 Sizning hisobingizda: *" + coins + " coin* mavjud!\n\n" +
                          "Coinlarni turli xil testlar ishlab hamda do'stlaringizni taklif qilib yig'ishingiz mumkin. " +
                          "Tez orada ushbu coinlar orqali platforma xizmatlarini xarid qilishingiz mumkin bo'ladi!";
@@ -486,7 +486,8 @@ public class TelegramBotDispatcher {
                      "o'z natijalaringizni tahlil qilishingiz hamda o'sish dinamikasini kuzatishingiz mumkin.\n\n" +
                      "📞 *Murojaat uchun:* +998 90 123 45 67\n" +
                      "🌐 *Sayt:* https://lmshub.uz";
-        telegramBotService.sendMessageTo(chatId, msg);
+        String photoUrl = "https://cdn4.telesco.pe/file/Jx-ZNM9yhSIudYjSg3yK2MC_aPr6V4fHR1mA82B_NFQeJhIGqUsxma6Jp0-HY7G4ZchTaaOtBBNmh3wZ-9Pwa2sgawikji7gO9LPcXdeG7xjaUs93k_66iJgDvsrO0YGpFNM_9zLtSMLuf65QfUJiXuxR2WJlWqkBs6KW_8elYcAhFukIu-g8QcFnH2zpVKEew2g1STJOsFwHxTN0w2na9FHDi-qoqnbKNyl5Prz9gu27Ubr6GAQ_botpYVcNLMsj_CeiSxV0dfobRaCrBlU5IQP4vWV3rZ_uh0dDK6KXeU75CuD3I9uURcGOvZWi2cTh9PK8_vqdGlbC82s8lwyRw.jpg";
+        telegramBotService.sendPhotoWithButton(chatId, msg, photoUrl);
     }
 
     private void handleCategoryInput(String chatId, String text, BotUserState state) {
