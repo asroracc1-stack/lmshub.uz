@@ -367,6 +367,7 @@ const AppRoutes = () => {
           <Route path="speaking/topics/:slug" element={<SpeakingTopicDetail basePath="/student" />} />
           <Route path="speaking/partners" element={<SpeakingPartners />} />
           <Route path="packs" element={<Packs />} />
+          <Route path="subscriptions" element={<Navigate to="/student/packs" replace />} />
           <Route path="chat" element={<UserChat />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="notifications" element={<NotificationsPage />} />
