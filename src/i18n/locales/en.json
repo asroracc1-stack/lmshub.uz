@@ -68,14 +68,36 @@
     "activityLogs": "Activity Logs",
     "subjectsMenu": "SAT & Mathematics",
     "sat": "SAT Mocks",
-    "nationalCert": "National Certificate"
+    "nationalCert": "National Certificate",
+    "subscriptions": "Subscriptions",
+    "achievements": "Achievements",
+    "referral": "Invite Friends",
+    "packManagers": "Pack Managers",
+    "smartDashboard": "Smart Dashboard",
+    "myChildren": "My Children",
+    "pitchPresentation": "Pitch Presentation",
+    "paymentsSales": "Payments (Sales)",
+    "pricingPacks": "Tariffs (Packs)",
+    "examPacks": "Exam Packs",
+    "subscriptionManagement": "Subscription Management",
+    "securityCenter": "Security Center",
+    "systemLogs": "System Logs",
+    "notifications": "Notifications"
   },
   "common": {
     "hello": "Hello",
     "search": "Search",
     "logout": "Logout",
     "telegramBot": "Telegram Bot",
-    "saved": "Saved successfully!"
+    "saved": "Saved successfully!",
+    "hideMenu": "Hide menu",
+    "showMenu": "Show menu",
+    "lmsManagement": "LMS Management",
+    "theme": "Theme",
+    "profile": "Profile",
+    "edit": "Edit",
+    "delete": "Delete",
+    "cancel": "Cancel"
   },
   "roles": {
     "super_admin": "Super Admin",
@@ -83,7 +105,9 @@
     "teacher": "Teacher",
     "student": "Student",
     "parent": "Parent",
-    "user": "User"
+    "user": "User",
+    "administrator": "Administrator",
+    "payment_manager": "Manager"
   },
   "settings": {
     "title": "Settings & Preferences",
@@ -161,5 +185,61 @@
     "secretOwlDesc": "Take an exam past midnight to unlock this badge",
     "secretUnstoppableName": "Unstoppable",
     "secretUnstoppableDesc": "Collect over 700 coins to reach the ultimate milestone"
+  },
+  "mockCategory": {
+    "sections": {
+      "listening": "Listening",
+      "reading": "Reading",
+      "writing": "Writing",
+      "speaking": "Speaking",
+      "sat": "SAT Mocks",
+      "national_cert": "National Certificate"
+    },
+    "difficulty": {
+      "easy": "Easy",
+      "medium": "Medium",
+      "hard": "Hard"
+    },
+    "title": "{{name}} Tests",
+    "loadError": "Error loading tests",
+    "deleteSuccess": "Test deleted successfully",
+    "deleteError": "Error deleting test",
+    "unknownSection": "Unknown section",
+    "testsTitle": "Tests",
+    "loading": "Loading tests...",
+    "noTests": "No tests found matching the criteria",
+    "minutesShort": "min",
+    "part": {
+      "all": "All Tests",
+      "number": "Part {{num}}",
+      "full": "Full Tests",
+      "fullLabel": "Full",
+      "numberLabel": "Part {{num}}"
+    },
+    "deleteConfirmTitle": "Delete test?",
+    "deleteConfirmDesc": "The test \"{{title}}\" and all its questions will be permanently deleted.",
+    "tryBtn": "Try test",
+    "startBtn": "Start",
+    "viewPackBtn": "View Pack",
+    "newBtn": "New",
+    "filter": {
+      "all": "All",
+      "free": "Free",
+      "pack": "Pack",
+      "title": "Filter Tests",
+      "foundCount": "{{count}} tests found",
+      "searchPlaceholder": "Search by title or tag...",
+      "difficulty": "Difficulty",
+      "allLevels": "All levels",
+      "partType": "Part Type",
+      "allTypes": "All types",
+      "clearBtn": "Clear"
+    },
+    "promo": {
+      "premium": "Premium",
+      "testsAvailable": "{{count}} tests available",
+      "desc": "Purchase a plan to gain access to PRO and ELITE tests.",
+      "viewPlansBtn": "View Plans"
+    }
   }
 }

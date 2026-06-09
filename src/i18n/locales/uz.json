@@ -68,14 +68,36 @@
     "activityLogs": "Faollik loglari",
     "subjectsMenu": "SAT & Matematika",
     "sat": "SAT Mocks",
-    "nationalCert": "Milliy sertifikat"
+    "nationalCert": "Milliy sertifikat",
+    "subscriptions": "Obunalar",
+    "achievements": "Yutuqlar",
+    "referral": "Taklif qilish",
+    "packManagers": "Tarif menejerlari",
+    "smartDashboard": "Smart Dashboard",
+    "myChildren": "Farzandlarim",
+    "pitchPresentation": "Loyiha taqdimoti",
+    "paymentsSales": "To'lovlar (Savdo)",
+    "pricingPacks": "Tariflar (Paketlar)",
+    "examPacks": "Imtihon paketlari",
+    "subscriptionManagement": "Obunalar boshqaruvi",
+    "securityCenter": "Xavfsizlik markazi",
+    "systemLogs": "Tizim loglari",
+    "notifications": "Bildirishnomalar"
   },
   "common": {
     "hello": "Salom",
     "search": "Qidirish",
     "logout": "Chiqish",
     "telegramBot": "Telegram Bot",
-    "saved": "Muvaffaqiyatli saqlandi!"
+    "saved": "Muvaffaqiyatli saqlandi!",
+    "hideMenu": "Menyuni yashirish",
+    "showMenu": "Menyuni ochish",
+    "lmsManagement": "Ta'lim tizimi boshqaruvi",
+    "theme": "Mavzu",
+    "profile": "Profil",
+    "edit": "Tahrirlash",
+    "delete": "O'chirish",
+    "cancel": "Bekor qilish"
   },
   "roles": {
     "super_admin": "Super Admin",
@@ -83,7 +105,9 @@
     "teacher": "O'qituvchi",
     "student": "Talaba",
     "parent": "Ota-ona",
-    "user": "Foydalanuvchi"
+    "user": "Foydalanuvchi",
+    "administrator": "Administrator",
+    "payment_manager": "Menejer"
   },
   "settings": {
     "title": "Sozlamalar va afzalliklar",
@@ -161,5 +185,61 @@
     "secretOwlDesc": "Yarim tunda test topshirib, maxsus yutuqni oching",
     "secretUnstoppableName": "To'xtatib Bo'lmas",
     "secretUnstoppableDesc": "700 dan ortiq coin to'plab, eng oliy yutuqqa erishing"
+  },
+  "mockCategory": {
+    "sections": {
+      "listening": "Listening",
+      "reading": "Reading",
+      "writing": "Writing",
+      "speaking": "Speaking",
+      "sat": "SAT",
+      "national_cert": "Milliy sertifikat"
+    },
+    "difficulty": {
+      "easy": "Oson",
+      "medium": "O'rta",
+      "hard": "Qiyin"
+    },
+    "title": "{{name}} testlari",
+    "loadError": "Testlarni yuklashda xatolik",
+    "deleteSuccess": "Test o'chirildi",
+    "deleteError": "O'chirishda xatolik yuz berdi",
+    "unknownSection": "Noma'lum bo'lim",
+    "testsTitle": "Testlar",
+    "loading": "Testlar yuklanmoqda...",
+    "noTests": "Hozircha mos testlar yo'q",
+    "minutesShort": "daq",
+    "part": {
+      "all": "Barcha testlar",
+      "number": "{{num}}-qism",
+      "full": "To'liq testlar",
+      "fullLabel": "To'liq",
+      "numberLabel": "{{num}}-qism"
+    },
+    "deleteConfirmTitle": "Testni o'chirish?",
+    "deleteConfirmDesc": "\"{{title}}\" testi va unga tegishli barcha savollar butunlay o'chiriladi.",
+    "tryBtn": "Sinab ko'rish",
+    "startBtn": "Boshlash",
+    "viewPackBtn": "Packni ko'rish",
+    "newBtn": "Yangi",
+    "filter": {
+      "all": "Barchasi",
+      "free": "Bepul",
+      "pack": "Pack",
+      "title": "Testlarni filtrlash",
+      "foundCount": "{{count}} ta test topildi",
+      "searchPlaceholder": "Sarlavha yoki tag qidiring...",
+      "difficulty": "Qiyinlik",
+      "allLevels": "Barcha darajalar",
+      "partType": "Part turi",
+      "allTypes": "Barcha turlar",
+      "clearBtn": "Tozalash"
+    },
+    "promo": {
+      "premium": "Premium",
+      "testsAvailable": "{{count}} ta test mavjud",
+      "desc": "PRO va ELITE testlardan foydalanish uchun tarifni sotib oling.",
+      "viewPlansBtn": "Tarifni ko'rish"
+    }
   }
 }

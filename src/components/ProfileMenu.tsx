@@ -80,18 +80,27 @@ export default function ProfileMenu({ role, basePath }: ProfileMenuProps) {
 
   const go = (p: string) => navigate(p);
 
-  const roleBadge: Record<Role, { label: string; className: string }> = {
-    super_admin: { label: "👑 Super Admin", className: "bg-amber-500/15 text-amber-600 dark:text-amber-400" },
-    admin: { label: "⭐ Admin", className: "bg-blue-500/15 text-blue-600 dark:text-blue-400" },
-    administrator: { label: "🛡 Administrator", className: "bg-violet-500/15 text-violet-600 dark:text-violet-400" },
-    teacher: { label: "🎓 Teacher", className: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" },
-    student: { label: "🎒 Student", className: "bg-sky-500/15 text-sky-600 dark:text-sky-400" },
-    user: { label: "🔥 User", className: "bg-rose-500/15 text-rose-600 dark:text-rose-400" },
-    parent: { label: "👨‍👩‍👧 Parent", className: "bg-cyan-500/15 text-cyan-600 dark:text-cyan-400" },
-    payment_manager: { label: "💼 Manager", className: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" },
+  const roleBadgeEmojis: Record<Role, string> = {
+    super_admin: "👑 ",
+    admin: "⭐ ",
+    administrator: "🛡 ",
+    teacher: "🎓 ",
+    student: "🎒 ",
+    user: "🔥 ",
+    parent: "👨‍👩‍👧 ",
+    payment_manager: "💼 ",
   };
 
-  const badge = roleBadge[role];
+  const roleBadgeClass: Record<Role, string> = {
+    super_admin: "bg-amber-500/15 text-amber-600 dark:text-amber-400",
+    admin: "bg-blue-500/15 text-blue-600 dark:text-blue-400",
+    administrator: "bg-violet-500/15 text-violet-600 dark:text-violet-400",
+    teacher: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
+    student: "bg-sky-500/15 text-sky-600 dark:text-sky-400",
+    user: "bg-rose-500/15 text-rose-600 dark:text-rose-400",
+    parent: "bg-cyan-500/15 text-cyan-600 dark:text-cyan-400",
+    payment_manager: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
+  };
 
   return (
     <DropdownMenu>
@@ -128,8 +137,8 @@ export default function ProfileMenu({ role, basePath }: ProfileMenuProps) {
                 {displayName}
               </p>
               <p className="text-xs text-muted-foreground truncate mb-1.5">{displayEmail}</p>
-              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${badge.className}`}>
-                {badge.label}
+              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${roleBadgeClass[role]}`}>
+                {roleBadgeEmojis[role] + t("roles." + role)}
               </span>
             </div>
           </div>
@@ -139,13 +148,13 @@ export default function ProfileMenu({ role, basePath }: ProfileMenuProps) {
           {/* Profile */}
           <DropdownMenuItem onClick={() => go(`${basePath}/profile`)} className="rounded-xl gap-3 cursor-pointer py-3 focus:bg-emerald-500/10 focus:text-emerald-600 dark:focus:text-emerald-400 group">
             <UserIcon className="h-4.5 w-4.5 text-muted-foreground group-focus:text-emerald-500 transition-colors" />
-            <span className="text-sm font-medium">Profile</span>
+            <span className="text-sm font-medium">{t("common.profile")}</span>
           </DropdownMenuItem>
 
           {/* Referral */}
           <DropdownMenuItem onClick={() => go(`${basePath}/referral`)} className="rounded-xl gap-3 cursor-pointer py-3 focus:bg-emerald-500/10 focus:text-emerald-600 dark:focus:text-emerald-400 group">
             <Gift className="h-4.5 w-4.5 text-muted-foreground group-focus:text-emerald-500 transition-colors" />
-            <span className="text-sm font-medium">Taklif qilish</span>
+            <span className="text-sm font-medium">{t("nav.referral")}</span>
             <span className="ml-auto text-[10px] font-bold text-emerald-500 uppercase tracking-widest">+10 🪙</span>
           </DropdownMenuItem>
 
@@ -153,48 +162,48 @@ export default function ProfileMenu({ role, basePath }: ProfileMenuProps) {
             <>
               <DropdownMenuItem onClick={() => go(`${basePath}/subscriptions`)} className="rounded-xl gap-3 cursor-pointer py-3 focus:bg-emerald-500/10 focus:text-emerald-600 dark:focus:text-emerald-400 group">
                 <Wallet className="h-4.5 w-4.5 text-muted-foreground group-focus:text-emerald-500 transition-colors" />
-                <span className="text-sm font-medium">Obunalar boshqaruvi</span>
+                <span className="text-sm font-medium">{t("nav.subscriptionManagement")}</span>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => go(`${basePath}/admins`)} className="rounded-xl gap-3 cursor-pointer py-3 focus:bg-emerald-500/10 focus:text-emerald-600 dark:focus:text-emerald-400 group">
                 <Users className="h-4.5 w-4.5 text-muted-foreground group-focus:text-emerald-500 transition-colors" />
-                <span className="text-sm font-medium">Payment Managerlar</span>
+                <span className="text-sm font-medium">{t("nav.packManagers")}</span>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => go(`${basePath}/activity`)} className="rounded-xl gap-3 cursor-pointer py-3 focus:bg-emerald-500/10 focus:text-emerald-600 dark:focus:text-emerald-400 group">
                 <ShieldCheck className="h-4.5 w-4.5 text-muted-foreground group-focus:text-emerald-500 transition-colors" />
-                <span className="text-sm font-medium">Security Center</span>
+                <span className="text-sm font-medium">{t("nav.securityCenter")}</span>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => { prefetchRouteData(`${basePath}/activity`); go(`${basePath}/activity`); }} className="rounded-xl gap-3 cursor-pointer py-3 focus:bg-emerald-500/10 focus:text-emerald-600 dark:focus:text-emerald-400 group">
                 <Activity className="h-4.5 w-4.5 text-muted-foreground group-focus:text-emerald-500 transition-colors" />
-                <span className="text-sm font-medium">System Logs</span>
+                <span className="text-sm font-medium">{t("nav.systemLogs")}</span>
               </DropdownMenuItem>
             </>
           )}
 
           <DropdownMenuItem onClick={() => go(`${basePath}/settings`)} className="rounded-xl gap-3 cursor-pointer py-3 focus:bg-emerald-500/10 focus:text-emerald-600 dark:focus:text-emerald-400 group">
             <Settings className="h-4.5 w-4.5 text-muted-foreground group-focus:text-emerald-500 transition-colors" />
-            <span className="text-sm font-medium">Settings</span>
+            <span className="text-sm font-medium">{t("nav.settings")}</span>
           </DropdownMenuItem>
 
           <DropdownMenuItem onClick={() => go(`${basePath}/notifications`)} className="rounded-xl gap-3 cursor-pointer py-3 focus:bg-emerald-500/10 focus:text-emerald-600 dark:focus:text-emerald-400 group">
             <Bell className="h-4.5 w-4.5 text-muted-foreground group-focus:text-emerald-500 transition-colors" />
-            <span className="text-sm font-medium">Bildirishnomalar</span>
+            <span className="text-sm font-medium">{t("nav.notifications")}</span>
           </DropdownMenuItem>
 
           {/* Theme Submenu */}
           <DropdownMenuSub>
             <DropdownMenuSubTrigger className="rounded-xl gap-3 py-3 focus:bg-emerald-500/10 group">
               {theme === "dark" ? <Moon className="h-4.5 w-4.5 text-muted-foreground" /> : <Sun className="h-4.5 w-4.5 text-muted-foreground" />}
-              <span className="text-sm font-medium">Theme</span>
+              <span className="text-sm font-medium">{t("common.theme")}</span>
               <ChevronRight className="ml-auto h-4 w-4 text-muted-foreground/50" />
             </DropdownMenuSubTrigger>
             <DropdownMenuPortal>
               <DropdownMenuSubContent className="rounded-2xl p-1.5 border-border/40 bg-card/95 backdrop-blur-2xl shadow-2xl animate-in slide-in-from-right-2">
                 <DropdownMenuRadioGroup value={theme} onValueChange={(v) => setTheme(v as "dark" | "light")}>
                   <DropdownMenuRadioItem value="light" className="rounded-lg gap-3 py-2.5">
-                    <Sun className="h-4 w-4" /> Light
+                    <Sun className="h-4 w-4" /> {t("settings.themeLight")}
                   </DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="dark" className="rounded-lg gap-3 py-2.5">
-                    <Moon className="h-4 w-4" /> Dark
+                    <Moon className="h-4 w-4" /> {t("settings.themeDark")}
                   </DropdownMenuRadioItem>
                 </DropdownMenuRadioGroup>
               </DropdownMenuSubContent>
@@ -205,7 +214,7 @@ export default function ProfileMenu({ role, basePath }: ProfileMenuProps) {
           <DropdownMenuSub>
             <DropdownMenuSubTrigger className="rounded-xl gap-3 py-3 focus:bg-emerald-500/10 group">
               <Globe className="h-4.5 w-4.5 text-muted-foreground" />
-              <span className="text-sm font-medium">Language</span>
+              <span className="text-sm font-medium">{t("settings.language")}</span>
               <span className="ml-auto text-[10px] font-bold text-emerald-500 uppercase tracking-widest">{i18n.language}</span>
               <ChevronRight className="ml-1 h-4 w-4 text-muted-foreground/50" />
             </DropdownMenuSubTrigger>
@@ -233,7 +242,7 @@ export default function ProfileMenu({ role, basePath }: ProfileMenuProps) {
             className="rounded-xl gap-3 cursor-pointer py-3 text-destructive focus:text-destructive focus:bg-destructive/10 transition-colors"
           >
             <LogOut className="h-4.5 w-4.5" />
-            <span className="text-sm font-bold">Sign out</span>
+            <span className="text-sm font-bold">{t("common.logout")}</span>
           </DropdownMenuItem>
         </div>
       </DropdownMenuContent>

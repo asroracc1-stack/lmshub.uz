@@ -5,6 +5,7 @@ import { api } from "@/lib/axios";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePackAccess, canAccessPack } from "@/hooks/usePackAccess";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 import SectionGuard from "@/components/SectionGuard";
 import { Card } from "@/components/ui/card";
@@ -36,10 +37,10 @@ const META: Record<Kind, { icon: any; label: string; color: string; group: strin
   national_cert: { icon: Landmark,   label: "Milliy sertifikat", color: "text-amber-600",   group: "Milliy" },
 };
 
-const DIFFICULTY_META: Record<string, { label: string; cls: string; icon: any }> = {
-  easy:   { label: "Oson",  cls: "bg-emerald-500/15 text-emerald-700 border-emerald-500/30 dark:text-emerald-400", icon: Leaf },
-  medium: { label: "O'rta", cls: "bg-amber-500/15 text-amber-700 border-amber-500/30 dark:text-amber-400",        icon: Sparkles },
-  hard:   { label: "Qiyin", cls: "bg-rose-500/15 text-rose-700 border-rose-500/30 dark:text-rose-400",            icon: FileText },
+const DIFFICULTY_META: Record<string, { labelKey: string; cls: string; icon: any }> = {
+  easy:   { labelKey: "mockCategory.difficulty.easy",   cls: "bg-emerald-500/15 text-emerald-700 border-emerald-500/30 dark:text-emerald-400", icon: Leaf },
+  medium: { labelKey: "mockCategory.difficulty.medium", cls: "bg-amber-500/15 text-amber-700 border-amber-500/30 dark:text-amber-400",        icon: Sparkles },
+  hard:   { labelKey: "mockCategory.difficulty.hard",   cls: "bg-rose-500/15 text-rose-700 border-rose-500/30 dark:text-rose-400",            icon: FileText },
 };
 
 // Card theme per pack type
@@ -47,10 +48,10 @@ const PACK_THEME = {
   free: {
     card: "bg-white dark:bg-slate-900 border border-emerald-100 dark:border-emerald-900/40 hover:border-emerald-300 dark:hover:border-emerald-700/60 hover:shadow-lg hover:shadow-emerald-500/5",
     badge: "bg-emerald-500 text-white border-0 shadow-sm",
-    badgeLabel: "BEPUL",
+    badgeLabelKey: "mockCategory.filter.free",
     badgeIcon: null,
     button: "bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40",
-    buttonLabel: "Boshlash",
+    buttonLabelKey: "mockCategory.startBtn",
     buttonIcon: ArrowRight,
     titleBar: "from-emerald-500/8 to-transparent",
   },
@@ -60,7 +61,7 @@ const PACK_THEME = {
     badgeLabel: "PRO",
     badgeIcon: Zap,
     button: "bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-600 hover:to-violet-700 text-white shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50",
-    buttonLabel: "Packni ko'rish",
+    buttonLabelKey: "mockCategory.viewPackBtn",
     buttonIcon: Crown,
     titleBar: "from-indigo-500/10 to-transparent",
   },
@@ -70,13 +71,14 @@ const PACK_THEME = {
     badgeLabel: "ELITE",
     badgeIcon: Crown,
     button: "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50",
-    buttonLabel: "Packni ko'rish",
+    buttonLabelKey: "mockCategory.viewPackBtn",
     buttonIcon: Crown,
     titleBar: "from-amber-500/10 to-transparent",
   },
 };
 
 export default function MockCategory({ basePath = "/user", forcedKind }: { basePath?: string; forcedKind?: Kind }) {
+  const { t } = useTranslation();
   const { kind: paramKind } = useParams<{ kind: Kind }>();
   const kind = forcedKind || paramKind;
   const nav = useNavigate();
@@ -104,7 +106,7 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
       }));
       setTests(mappedData);
     } catch (e) {
-      toast.error("Testlarni yuklashda xatolik");
+      toast.error(t("mockCategory.loadError"));
     }
     setLoading(false);
   };
@@ -114,9 +116,9 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
   const onDelete = async (id: string) => {
     try {
       await api.delete(`/admin/exams/${id}`);
-      toast.success("Test o'chirildi");
+      toast.success(t("mockCategory.deleteSuccess"));
       setTests((p) => p.filter((t) => t.id !== id));
-    } catch (e: any) { toast.error("O'chirishda xatolik yuz berdi"); }
+    } catch (e: any) { toast.error(t("mockCategory.deleteError")); }
   };
 
   const filtered = useMemo(() => {
@@ -131,11 +133,10 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
   }, [tests, search, difficulty, partType, access]);
 
   if (!kind || !META[kind as Kind]) {
-    return <div className="p-8 text-center text-muted-foreground">Noma'lum bo'lim</div>;
+    return <div className="p-8 text-center text-muted-foreground">{t("mockCategory.unknownSection")}</div>;
   }
   const meta = META[kind as Kind];
   const Icon = meta.icon;
-  const sectionKey = meta.group === "IELTS" ? "ielts" : meta.group === "SAT" ? "sat" : "milliy";
 
   const getPackType = (required_pack: string): "free" | "pro" | "elite" => {
     const p = (required_pack || "free").toLowerCase();
@@ -153,6 +154,8 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
   const proCnt  = tests.filter(t => getPackType(t.required_pack) === "pro").length;
   const eliteCnt= tests.filter(t => getPackType(t.required_pack) === "elite").length;
 
+  const categoryName = t(`mockCategory.sections.${kind}`);
+
   return ( <div className="space-y-6 pb-8">
 
       {/* Header */}
@@ -167,7 +170,7 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
               <Icon className={`h-3 w-3 mr-1 ${meta.color}`} />{meta.group}
             </Badge>
             <h1 className={`text-3xl md:text-4xl font-display font-bold ${meta.color}`}>
-              {meta.group === "IELTS" ? `IELTS ${meta.label}` : meta.label} Testlari
+              {t("mockCategory.title", { name: meta.group === "IELTS" ? `IELTS ${categoryName}` : categoryName })}
             </h1>
           </div>
         </div>
@@ -175,9 +178,9 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
         <div className="flex items-center gap-2 flex-wrap">
           {/* Access filter pills */}
           {([
-            { v: "all", l: "Barchasi", cnt: tests.length, cls: "border-slate-200 dark:border-white/10" },
-            { v: "free", l: "Bepul", cnt: freeCnt,  cls: "border-emerald-200 text-emerald-700 dark:border-emerald-800/60 dark:text-emerald-400" },
-            { v: "pack", l: "Pack",  cnt: proCnt + eliteCnt, cls: "border-indigo-200 text-indigo-700 dark:border-indigo-800/60 dark:text-indigo-400" },
+            { v: "all", l: t("mockCategory.filter.all"), cnt: tests.length, cls: "border-slate-200 dark:border-white/10" },
+            { v: "free", l: t("mockCategory.filter.free"), cnt: freeCnt,  cls: "border-emerald-200 text-emerald-700 dark:border-emerald-800/60 dark:text-emerald-400" },
+            { v: "pack", l: t("mockCategory.filter.pack"),  cnt: proCnt + eliteCnt, cls: "border-indigo-200 text-indigo-700 dark:border-indigo-800/60 dark:text-indigo-400" },
           ] as const).map((a) => (
             <button
               key={a.v}
@@ -197,7 +200,7 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
           ))}
           {canManage && (
             <Button size="sm" asChild className="ml-2 rounded-xl">
-              <Link to={`${basePath}/mocks/new`}><Plus className="h-4 w-4 mr-1" />Yangi</Link>
+              <Link to={`${basePath}/mocks/new`}><Plus className="h-4 w-4 mr-1" />{t("mockCategory.newBtn")}</Link>
             </Button>
           )}
         </div>
@@ -206,12 +209,12 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
       {/* Part filter chips */}
       <div className="flex gap-2 flex-wrap">
         {[
-          { v: "all",  l: "Barcha testlar" },
-          { v: "1",    l: "1-qism" },
-          { v: "2",    l: "2-qism" },
-          { v: "3",    l: "3-qism" },
-          { v: "4",    l: "4-qism" },
-          { v: "full", l: "To'liq testlar" },
+          { v: "all",  l: t("mockCategory.part.all") },
+          { v: "1",    l: t("mockCategory.part.number", { num: 1 }) },
+          { v: "2",    l: t("mockCategory.part.number", { num: 2 }) },
+          { v: "3",    l: t("mockCategory.part.number", { num: 3 }) },
+          { v: "4",    l: t("mockCategory.part.number", { num: 4 }) },
+          { v: "full", l: t("mockCategory.part.full") },
         ].map((c) => (
           <Button
             key={c.v}
@@ -231,11 +234,11 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
           {loading ? (
             <div className="p-12 flex flex-col items-center gap-3">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="text-sm text-muted-foreground font-medium">Testlar yuklanmoqda...</p>
+              <p className="text-sm text-muted-foreground font-medium">{t("mockCategory.loading")}</p>
             </div>
           ) : filtered.length === 0 ? (
             <Card className="p-12 text-center text-muted-foreground rounded-2xl border-dashed">
-              Hozircha mos testlar yo'q
+              {t("mockCategory.noTests")}
             </Card>
           ) : (
             filtered.map((t, i) => {
@@ -291,7 +294,7 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
                           {/* Pack badge */}
                           <Badge className={cn("text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg flex items-center gap-1", theme.badge)}>
                             {BadgeIconComp && <BadgeIconComp className="h-3 w-3" />}
-                            {theme.badgeLabel}
+                            {"badgeLabelKey" in theme ? t(theme.badgeLabelKey as string) : theme.badgeLabel}
                           </Badge>
 
                           {!t.is_published && (
@@ -303,14 +306,14 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
 
                         <div className="flex items-center gap-2 flex-wrap">
                           <Badge variant="outline" className="rounded-full text-[11px] font-medium bg-white/60 dark:bg-white/5">
-                            <Clock className="h-3 w-3 mr-1" /> {t.duration_minutes ?? 60} daq
+                            <Clock className="h-3 w-3 mr-1" /> {t.duration_minutes ?? 60} {t("mockCategory.minutesShort")}
                           </Badge>
                           <Badge variant="outline" className={cn("rounded-full text-[11px] font-medium", diff.cls)}>
-                            <DIcon className="h-3 w-3 mr-1" /> {diff.label}
+                            <DIcon className="h-3 w-3 mr-1" /> {t(diff.labelKey)}
                           </Badge>
                           <Badge variant="outline" className="rounded-full text-[11px] font-medium bg-white/60 dark:bg-white/5">
                             <Layers className="h-3 w-3 mr-1" />
-                            {t.part_type === "full" ? "To'liq" : `${t.part_type ?? 1} qism`}
+                            {t.part_type === "full" ? t("mockCategory.part.fullLabel") : t("mockCategory.part.numberLabel", { num: t.part_type ?? 1 })}
                           </Badge>
                         </div>
 
@@ -325,7 +328,7 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
                         {canManage && (
                           <>
                             <Button asChild size="icon" variant="outline"
-                              className="rounded-xl h-10 w-10 bg-white/60 dark:bg-white/5" title="Tahrirlash">
+                              className="rounded-xl h-10 w-10 bg-white/60 dark:bg-white/5" title={t("common.edit")}>
                               <Link to={`${basePath}/mocks/edit/${t.id}`}>
                                 <Pencil className="h-4 w-4" />
                               </Link>
@@ -334,22 +337,22 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
                               <AlertDialogTrigger asChild>
                                 <Button size="icon" variant="outline"
                                   className="rounded-xl h-10 w-10 text-destructive hover:bg-destructive/10 bg-white/60 dark:bg-white/5"
-                                  title="O'chirish">
+                                  title={t("common.delete")}>
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
                               </AlertDialogTrigger>
                               <AlertDialogContent>
                                 <AlertDialogHeader>
-                                  <AlertDialogTitle>Testni o'chirish?</AlertDialogTitle>
+                                  <AlertDialogTitle>{t("mockCategory.deleteConfirmTitle")}</AlertDialogTitle>
                                   <AlertDialogDescription>
-                                    "{t.title}" testi va unga tegishli barcha savollar butunlay o'chiriladi.
+                                    {t("mockCategory.deleteConfirmDesc", { title: t.title })}
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
-                                  <AlertDialogCancel>Bekor qilish</AlertDialogCancel>
+                                  <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
                                   <AlertDialogAction onClick={() => onDelete(t.id)}
                                     className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                                    O'chirish
+                                    {t("common.delete")}
                                   </AlertDialogAction>
                                 </AlertDialogFooter>
                               </AlertDialogContent>
@@ -364,7 +367,7 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
                             className={cn("rounded-xl h-11 px-6 font-bold text-sm transition-all duration-300 opacity-90", theme.button)}
                             onClick={() => nav(getPacksPath())}
                           >
-                            Sinab ko'rish <Lock className="h-4 w-4 ml-1.5" />
+                            {t("mockCategory.tryBtn")} <Lock className="h-4 w-4 ml-1.5" />
                           </Button>
                         ) : (
                           <Button
@@ -378,7 +381,7 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
                             )}
                           >
                             <Link to={`${basePath}/mocks/take/${t.id}`}>
-                              {canManage ? "Sinab ko'rish" : theme.buttonLabel}
+                              {canManage ? t("mockCategory.tryBtn") : t(theme.buttonLabelKey)}
                               <BtnIcon className="h-4 w-4 ml-1.5" />
                             </Link>
                           </Button>
@@ -395,14 +398,14 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
         {/* Filters sidebar */}
         <Card className="p-5 h-fit lg:sticky lg:top-4 space-y-5 rounded-2xl border shadow-sm">
           <div>
-            <h3 className={cn("font-display font-bold text-lg", meta.color)}>Testlarni filtrlash</h3>
-            <p className="text-xs text-muted-foreground mt-1">{filtered.length} ta test topildi</p>
+            <h3 className={cn("font-display font-bold text-lg", meta.color)}>{t("mockCategory.filter.title")}</h3>
+            <p className="text-xs text-muted-foreground mt-1">{t("mockCategory.filter.foundCount", { count: filtered.length })}</p>
           </div>
 
           {/* Pack type mini stats */}
           <div className="grid grid-cols-3 gap-2">
             {[
-              { label: "Bepul", cnt: freeCnt, cls: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40" },
+              { label: t("mockCategory.filter.free"), cnt: freeCnt, cls: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40" },
               { label: "Pro",   cnt: proCnt,  cls: "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/40" },
               { label: "Elite", cnt: eliteCnt,cls: "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200 dark:border-amber-800/40" },
             ].map(s => (
@@ -414,42 +417,42 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
           </div>
 
           <div className="space-y-2">
-            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Qidiruv</Label>
+            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("common.search")}</Label>
             <div className="relative">
               <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Sarlavha yoki tag qidiring..."
+                placeholder={t("mockCategory.filter.searchPlaceholder")}
                 className="pl-9 rounded-xl"
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Qiyinlik</Label>
+            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("mockCategory.filter.difficulty")}</Label>
             <Select value={difficulty} onValueChange={setDifficulty}>
               <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Barcha darajalar</SelectItem>
-                <SelectItem value="easy">Oson</SelectItem>
-                <SelectItem value="medium">O'rta</SelectItem>
-                <SelectItem value="hard">Qiyin</SelectItem>
+                <SelectItem value="all">{t("mockCategory.filter.allLevels")}</SelectItem>
+                <SelectItem value="easy">{t("mockCategory.difficulty.easy")}</SelectItem>
+                <SelectItem value="medium">{t("mockCategory.difficulty.medium")}</SelectItem>
+                <SelectItem value="hard">{t("mockCategory.difficulty.hard")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-2">
-            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Part turi</Label>
+            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("mockCategory.filter.partType")}</Label>
             <Select value={partType} onValueChange={setPartType}>
               <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Barcha turlar</SelectItem>
-                <SelectItem value="1">1-qism</SelectItem>
-                <SelectItem value="2">2-qism</SelectItem>
-                <SelectItem value="3">3-qism</SelectItem>
-                <SelectItem value="4">4-qism</SelectItem>
-                <SelectItem value="full">To'liq</SelectItem>
+                <SelectItem value="all">{t("mockCategory.filter.allTypes")}</SelectItem>
+                <SelectItem value="1">{t("mockCategory.part.number", { num: 1 })}</SelectItem>
+                <SelectItem value="2">{t("mockCategory.part.number", { num: 2 })}</SelectItem>
+                <SelectItem value="3">{t("mockCategory.part.number", { num: 3 })}</SelectItem>
+                <SelectItem value="4">{t("mockCategory.part.number", { num: 4 })}</SelectItem>
+                <SelectItem value="full">{t("mockCategory.part.fullLabel")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -460,7 +463,7 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
               className="flex-1 rounded-xl"
               onClick={() => { setSearch(""); setDifficulty("all"); setPartType("all"); setAccess("all"); }}
             >
-              Tozalash
+              {t("mockCategory.filter.clearBtn")}
             </Button>
           </div>
 
@@ -472,19 +475,19 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
                   <Star className="h-4 w-4 text-white" />
                 </div>
                 <div>
-                  <p className="text-xs font-black text-indigo-700 dark:text-indigo-300 uppercase tracking-wider">Premium</p>
-                  <p className="text-[10px] text-indigo-500/80 dark:text-indigo-400/80">{proCnt + eliteCnt} ta test mavjud</p>
+                  <p className="text-xs font-black text-indigo-700 dark:text-indigo-300 uppercase tracking-wider">{t("mockCategory.promo.premium")}</p>
+                  <p className="text-[10px] text-indigo-500/80 dark:text-indigo-400/80">{t("mockCategory.promo.testsAvailable", { count: proCnt + eliteCnt })}</p>
                 </div>
               </div>
               <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
-                PRO va ELITE testlardan foydalanish uchun tarifni sotib oling.
+                {t("mockCategory.promo.desc")}
               </p>
               <Button
                 size="sm"
                 className="w-full rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 text-white shadow-md hover:shadow-lg hover:from-indigo-600 hover:to-violet-700 font-bold text-xs"
                 onClick={() => nav(getPacksPath())}
               >
-                <Crown className="h-3.5 w-3.5 mr-1.5" /> Tarifni ko'rish
+                <Crown className="h-3.5 w-3.5 mr-1.5" /> {t("mockCategory.promo.viewPlansBtn")}
               </Button>
             </div>
           )}

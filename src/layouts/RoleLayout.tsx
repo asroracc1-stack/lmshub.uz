@@ -144,8 +144,8 @@ export default function RoleLayout({
                 className="flex items-center justify-center h-8 w-8 shrink-0 rounded-lg border border-border/60
                   bg-background/40 hover:bg-primary/10 hover:border-primary/40
                   text-muted-foreground hover:text-primary transition-all duration-200 cursor-pointer"
-                title="Menyuni yashirish"
-                aria-label="Menyuni yashirish"
+                title={t("common.hideMenu")}
+                aria-label={t("common.hideMenu")}
               >
                 <PanelLeftClose className="h-4 w-4" />
               </button>
@@ -159,7 +159,7 @@ export default function RoleLayout({
               "flex items-center justify-center transition-all duration-300",
               !isMobile && "cursor-pointer hover:scale-105"
             )}
-            title="Menyuni ochish"
+            title={t("common.showMenu")}
           >
             <Logo
               size={36}
@@ -323,7 +323,7 @@ export default function RoleLayout({
           href="https://t.me/CRMSystme_bot"
           target="_blank"
           rel="noopener noreferrer"
-          title={mini ? (role === "user" ? "Telegram bot" : t("common.telegramBot")) : undefined}
+          title={mini ? t("common.telegramBot") : undefined}
           className={cn(
             "flex items-center gap-3 rounded-xl text-sm font-semibold text-slate-500 dark:text-slate-400",
             "hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white transition-all duration-200",
@@ -332,12 +332,12 @@ export default function RoleLayout({
         >
           <Send size={18} className="shrink-0 text-slate-400" />
           {!mini && (
-            <span className="truncate">{role === "user" ? "Telegram bot" : t("common.telegramBot")}</span>
+            <span className="truncate">{t("common.telegramBot")}</span>
           )}
         </a>
         <button
           onClick={handleSignOut}
-          title={mini ? (role === "user" ? "Chiqish" : t("common.logout")) : undefined}
+          title={mini ? t("common.logout") : undefined}
           className={cn(
             "w-full flex items-center gap-3 rounded-xl text-sm font-semibold text-red-500",
             "hover:bg-red-50 dark:hover:bg-red-500/10 transition-all duration-200",
@@ -346,7 +346,7 @@ export default function RoleLayout({
         >
           <LogOut size={18} className="shrink-0" />
           {!mini && (
-            <span className="truncate">{role === "user" ? "Chiqish" : t("common.logout")}</span>
+            <span className="truncate">{t("common.logout")}</span>
           )}
         </button>
       </div>
@@ -449,10 +449,10 @@ export default function RoleLayout({
                 <button
                   onClick={() => navigate(`${basePath}/referral`)}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500 text-white hover:bg-emerald-600 transition-colors text-xs font-semibold shadow-sm shadow-emerald-500/30"
-                  title="Taklif qilish"
+                  title={t("nav.referral")}
                 >
                   <Gift className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">Taklif qilish</span>
+                  <span className="hidden sm:inline">{t("nav.referral")}</span>
                 </button>
                 <NotificationsBell />
                 <ProfileMenu role={role} basePath={basePath} />

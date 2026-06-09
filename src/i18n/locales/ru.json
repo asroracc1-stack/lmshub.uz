@@ -68,14 +68,36 @@
     "activityLogs": "Логи активности",
     "subjectsMenu": "SAT & Математика",
     "sat": "SAT Mocks",
-    "nationalCert": "Нац. сертификат"
+    "nationalCert": "Нац. сертификат",
+    "subscriptions": "Подписки",
+    "achievements": "Достижения",
+    "referral": "Пригласить друга",
+    "packManagers": "Менеджеры тарифов",
+    "smartDashboard": "Умная панель",
+    "myChildren": "Мои дети",
+    "pitchPresentation": "Презентация проекта",
+    "paymentsSales": "Платежи (Продажи)",
+    "pricingPacks": "Тарифы (Пакеты)",
+    "examPacks": "Экзаменационные пакеты",
+    "subscriptionManagement": "Управление подписками",
+    "securityCenter": "Центр безопасности",
+    "systemLogs": "Системные логи",
+    "notifications": "Уведомления"
   },
   "common": {
     "hello": "Привет",
     "search": "Поиск",
     "logout": "Выйти",
     "telegramBot": "Telegram Бот",
-    "saved": "Успешно сохранено!"
+    "saved": "Успешно сохранено!",
+    "hideMenu": "Скрыть меню",
+    "showMenu": "Показать меню",
+    "lmsManagement": "Управление системой обучения",
+    "theme": "Тема",
+    "profile": "Профиль",
+    "edit": "Редактировать",
+    "delete": "Удалить",
+    "cancel": "Отмена"
   },
   "roles": {
     "super_admin": "Супер Админ",
@@ -83,7 +105,9 @@
     "teacher": "Учитель",
     "student": "Студент",
     "parent": "Родитель",
-    "user": "Пользователь"
+    "user": "Пользователь",
+    "administrator": "Администратор",
+    "payment_manager": "Менеджер"
   },
   "settings": {
     "title": "Настройки и параметры",
@@ -161,5 +185,61 @@
     "secretOwlDesc": "Пройдите тест после полуночи, чтобы открыть этот значок",
     "secretUnstoppableName": "Неудержимый",
     "secretUnstoppableDesc": "Соберите более 700 монет для достижения высшего ранга"
+  },
+  "mockCategory": {
+    "sections": {
+      "listening": "Listening",
+      "reading": "Reading",
+      "writing": "Writing",
+      "speaking": "Speaking",
+      "sat": "SAT",
+      "national_cert": "Нац. сертификат"
+    },
+    "difficulty": {
+      "easy": "Легко",
+      "medium": "Средне",
+      "hard": "Сложно"
+    },
+    "title": "Тесты {{name}}",
+    "loadError": "Ошибка при загрузке тестов",
+    "deleteSuccess": "Тест успешно удален",
+    "deleteError": "Ошибка при удалении теста",
+    "unknownSection": "Неизвестный раздел",
+    "testsTitle": "Тесты",
+    "loading": "Загрузка тестов...",
+    "noTests": "Тестов по вашему запросу не найдено",
+    "minutesShort": "мин.",
+    "part": {
+      "all": "Все тесты",
+      "number": "Часть {{num}}",
+      "full": "Полные тесты",
+      "fullLabel": "Полный",
+      "numberLabel": "Часть {{num}}"
+    },
+    "deleteConfirmTitle": "Удалить тест?",
+    "deleteConfirmDesc": "Тест «{{title}}» и все связанные с ним вопросы будут безвозвратно удалены.",
+    "tryBtn": "Попробовать",
+    "startBtn": "Начать",
+    "viewPackBtn": "Посмотреть пакет",
+    "newBtn": "Новый",
+    "filter": {
+      "all": "Все",
+      "free": "Бесплатные",
+      "pack": "Пакетные",
+      "title": "Фильтрация тестов",
+      "foundCount": "Найдено тестов: {{count}}",
+      "searchPlaceholder": "Поиск по названию или тегу...",
+      "difficulty": "Сложность",
+      "allLevels": "Все уровни",
+      "partType": "Тип части",
+      "allTypes": "Все типы",
+      "clearBtn": "Сбросить"
+    },
+    "promo": {
+      "premium": "Premium",
+      "testsAvailable": "Доступно тестов: {{count}}",
+      "desc": "Купите тарифный план, чтобы получить доступ к тестам PRO и ELITE.",
+      "viewPlansBtn": "Посмотреть тарифы"
+    }
   }
 }

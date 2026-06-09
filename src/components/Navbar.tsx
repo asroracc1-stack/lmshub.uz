@@ -4,6 +4,7 @@ import ProfileMenu from "./ProfileMenu";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 interface NavbarProps {
   isCollapsed: boolean;
@@ -16,6 +17,7 @@ export default function Navbar({ isCollapsed, setIsCollapsed, setIsMenuOpen }: N
   const navigate = useNavigate();
   const basePath = `/${role}`;
   const go = (path: string) => navigate(path);
+  const { t } = useTranslation();
 
   return (
     <header className="h-20 border-b border-slate-200 bg-white/80 backdrop-blur-md sticky top-0 z-40 px-4 md:px-6 flex items-center justify-between transition-all duration-300">
@@ -38,7 +40,7 @@ export default function Navbar({ isCollapsed, setIsCollapsed, setIsMenuOpen }: N
 
         <div className="h-4 w-px bg-slate-200 mx-2 hidden md:block" />
         <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] hidden sm:block">
-          Ta'lim tizimi boshqaruvi
+          {t("common.lmsManagement")}
         </h2>
       </div>
 
@@ -47,10 +49,10 @@ export default function Navbar({ isCollapsed, setIsCollapsed, setIsMenuOpen }: N
         <button
           onClick={() => go(`${basePath}/referral`)}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition-colors"
-          title="Taklif qilish"
+          title={t("nav.referral")}
         >
           <Gift className="h-4 w-4" />
-          <span className="hidden sm:inline">Taklif qilish</span>
+          <span className="hidden sm:inline">{t("nav.referral")}</span>
         </button>
 
         <LanguageSwitcher />
