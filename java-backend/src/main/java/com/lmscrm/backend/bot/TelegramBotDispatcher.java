@@ -266,6 +266,8 @@ public class TelegramBotDispatcher {
                     newUser.setUsername("tg_" + chatId);
                     newUser.setPassword("tg_" + chatId);
                     newUser.setRole(AppRole.STUDENT);
+                    newUser.setCoins(0L);
+                    newUser.setActive(true);
                     newUser.setReferredBy(inviterOpt.get().getId());
                     userRepository.save(newUser);
                 }
@@ -295,6 +297,8 @@ public class TelegramBotDispatcher {
             newUser.setUsername("tg_" + chatId);
             newUser.setPassword("tg_" + chatId); // dummy password
             newUser.setRole(AppRole.STUDENT);
+            newUser.setCoins(0L);
+            newUser.setActive(true);
             return newUser;
         });
         
