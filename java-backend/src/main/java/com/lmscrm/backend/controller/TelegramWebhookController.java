@@ -87,7 +87,12 @@ public class TelegramWebhookController {
 
                     // 2. Update message in Telegram to remove buttons and show result
                     if (message != null && messageId != null) {
-                        long chatIdLong = fromId != null ? fromId.longValue() : Long.parseLong(adminChatId);
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> chat = (Map<String, Object>) message.get("chat");
+                        long chatIdLong = (chat != null && chat.containsKey("id"))
+                                ? ((Number) chat.get("id")).longValue()
+                                : (fromId != null ? fromId.longValue() : Long.parseLong(adminChatId));
+                        
                         String suffix = "\n\n✅ <b>TASDIQLANDI</b> ✅\n<i>Paket faollashtirildi!</i>";
                         if (message.containsKey("caption")) {
                             String caption = (String) message.get("caption");
@@ -118,7 +123,12 @@ public class TelegramWebhookController {
 
                     // 2. Update message in Telegram to remove buttons and show result
                     if (message != null && messageId != null) {
-                        long chatIdLong = fromId != null ? fromId.longValue() : Long.parseLong(adminChatId);
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> chat = (Map<String, Object>) message.get("chat");
+                        long chatIdLong = (chat != null && chat.containsKey("id"))
+                                ? ((Number) chat.get("id")).longValue()
+                                : (fromId != null ? fromId.longValue() : Long.parseLong(adminChatId));
+                        
                         String suffix = "\n\n❌ <b>RAD ETILDI</b> ❌\n<i>So'rov bekor qilindi.</i>";
                         if (message.containsKey("caption")) {
                             String caption = (String) message.get("caption");

@@ -149,25 +149,6 @@ public class SubscriptionRequestService {
         LocalDateTime startsAt = LocalDateTime.now();
         LocalDateTime expiresAt = startsAt.plusMonths(durationMonths);
 
-        // Ensure user_subscriptions table exists
-        try {
-            entityManager.createNativeQuery(
-                "CREATE TABLE IF NOT EXISTS public.user_subscriptions (" +
-                "  id UUID PRIMARY KEY, " +
-                "  user_id UUID NOT NULL, " +
-                "  pack_id UUID NOT NULL, " +
-                "  starts_at TIMESTAMP, " +
-                "  expires_at TIMESTAMP, " +
-                "  is_active BOOLEAN DEFAULT true, " +
-                "  status VARCHAR(50) DEFAULT 'active', " +
-                "  created_at TIMESTAMP DEFAULT NOW()" +
-                ")"
-            ).executeUpdate();
-            log.info("✅ Step 4: user_subscriptions table ensured");
-        } catch (Exception e) {
-            log.warn("⚠ Step 4: Could not create table (may already exist): {}", e.getMessage());
-        }
-
         // Use String UUIDs for PostgreSQL compatibility
         String userIdStr = user.getId().toString();
         String packIdStr = pack.getId().toString();
@@ -188,10 +169,10 @@ public class SubscriptionRequestService {
                 )
                 .setParameter("userId", userIdStr)
                 .setParameter("packId", packIdStr)
-                .setParameter("startsAt", startsAt)
-                .setParameter("expiresAt", expiresAt)
+                .setParameter("startsAt", java.sql.Timestamp.valueOf(startsAt))
+                .setParameter("expiresAt", java.sql.Timestamp.valueOf(expiresAt))
                 .executeUpdate();
-                log.info("✅ Step 5: user_subscriptions UPDATED for user {}", user.getUsername());
+                log.info("✅ Step 4: user_subscriptions UPDATED for user {}", user.getUsername());
             } else {
                 entityManager.createNativeQuery(
                     "INSERT INTO public.user_subscriptions (id, user_id, pack_id, starts_at, expires_at, is_active, status, created_at) " +
@@ -200,14 +181,14 @@ public class SubscriptionRequestService {
                 .setParameter("id", UUID.randomUUID().toString())
                 .setParameter("userId", userIdStr)
                 .setParameter("packId", packIdStr)
-                .setParameter("startsAt", startsAt)
-                .setParameter("expiresAt", expiresAt)
-                .setParameter("createdAt", LocalDateTime.now())
+                .setParameter("startsAt", java.sql.Timestamp.valueOf(startsAt))
+                .setParameter("expiresAt", java.sql.Timestamp.valueOf(expiresAt))
+                .setParameter("createdAt", java.sql.Timestamp.valueOf(LocalDateTime.now()))
                 .executeUpdate();
-                log.info("✅ Step 5: user_subscriptions INSERTED for user {}", user.getUsername());
+                log.info("✅ Step 4: user_subscriptions INSERTED for user {}", user.getUsername());
             }
         } catch (Exception e) {
-            log.error("❌ Step 5 FAILED (user_subscriptions): {}", e.getMessage(), e);
+            log.error("❌ Step 4 FAILED (user_subscriptions): {}", e.getMessage(), e);
             throw new RuntimeException("Obuna jadvaliga yozishda xatolik: " + e.getMessage(), e);
         }
 
@@ -218,7 +199,7 @@ public class SubscriptionRequestService {
                 pack.getName(), expiresAt.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))),
             NotificationType.ALERT
         );
-        log.info("✅ Step 6: In-app notification sent to user {}", user.getUsername());
+        log.info("✅ Step 5: In-app notification sent to user {}", user.getUsername());
 
         // 4. Send Telegram Notification
         String tgMsg = String.format(
