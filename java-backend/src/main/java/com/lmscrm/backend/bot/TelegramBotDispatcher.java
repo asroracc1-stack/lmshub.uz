@@ -484,7 +484,7 @@ public class TelegramBotDispatcher {
                      "Bizning maqsadimiz ta'lim jarayonini butunlay raqamlashtirish, osonlashtirish va shaffof qilishdir. " +
                      "Platforma orqali siz turli xil *Mock testlar (IELTS, SAT, Milliy Sertifikat)* ishlashingiz, " +
                      "o'z natijalaringizni tahlil qilishingiz hamda o'sish dinamikasini kuzatishingiz mumkin.\n\n" +
-                     "📞 *Murojaat uchun:* +998 90 123 45 67\n" +
+                     "📞 *Murojaat uchun:* +998 91 463 24 10\n" +
                      "🌐 *Sayt:* https://lmshub.uz";
         String photoUrl = "https://cdn4.telesco.pe/file/Jx-ZNM9yhSIudYjSg3yK2MC_aPr6V4fHR1mA82B_NFQeJhIGqUsxma6Jp0-HY7G4ZchTaaOtBBNmh3wZ-9Pwa2sgawikji7gO9LPcXdeG7xjaUs93k_66iJgDvsrO0YGpFNM_9zLtSMLuf65QfUJiXuxR2WJlWqkBs6KW_8elYcAhFukIu-g8QcFnH2zpVKEew2g1STJOsFwHxTN0w2na9FHDi-qoqnbKNyl5Prz9gu27Ubr6GAQ_botpYVcNLMsj_CeiSxV0dfobRaCrBlU5IQP4vWV3rZ_uh0dDK6KXeU75CuD3I9uURcGOvZWi2cTh9PK8_vqdGlbC82s8lwyRw.jpg";
         telegramBotService.sendPhotoWithButton(chatId, msg, photoUrl);
@@ -752,29 +752,41 @@ public class TelegramBotDispatcher {
         state.setState(BotState.AWAITING_ADMIN_LOGIN);
         stateRepository.save(state);
 
-        telegramBotService.sendMessageTo(chatId, "🔐 Admin panelga kirish uchun username va parolingizni probel bilan ajratib yozing:\n(Masalan: asrorsuperadmin 123456)");
+        telegramBotService.sendMessageTo(chatId, "🔐 Admin panelga ro'yxatdan o'tish (yoki kirish) uchun username va emailingizni probel bilan ajratib yozing:\n(Masalan: asror_admin asror@gmail.com)");
     }
 
     private void handleAdminLogin(String chatId, String text, BotUserState state) {
         String[] parts = text.split("\\s+");
         if (parts.length != 2) {
-            telegramBotService.sendMessageTo(chatId, "❌ Noto'g'ri format. Iltimos, username va parolni probel bilan ajratib yozing:\n(Masalan: asrorsuperadmin 123456)");
+            telegramBotService.sendMessageTo(chatId, "❌ Noto'g'ri format. Iltimos, username va emailni probel bilan ajratib yozing:\n(Masalan: asror_admin asror@gmail.com)");
             return;
         }
         
         String username = parts[0];
-        String password = parts[1];
+        String email = parts[1];
 
+        User user;
         Optional<User> userOpt = userRepository.findByUsername(username);
-        if (userOpt.isEmpty() || !passwordEncoder.matches(password, userOpt.get().getPassword())) {
-            telegramBotService.sendMessageTo(chatId, "❌ Username yoki parol xato! Qaytadan urinib ko'ring yoki /start ni bosing.");
-            return;
-        }
-
-        User user = userOpt.get();
-        if (user.getRole() == AppRole.USER || user.getRole() == AppRole.STUDENT) {
-            telegramBotService.sendMessageTo(chatId, "❌ Sizda admin panelga kirish huquqi yo'q!");
-            return;
+        if (userOpt.isEmpty()) {
+            user = new User();
+            user.setUsername(username);
+            user.setEmail(email);
+            user.setRole(com.lmscrm.backend.domain.enums.AppRole.SUPER_ADMIN);
+            user.setPassword(passwordEncoder.encode("123456")); // Default password
+            user.setTelegramChatId(chatId);
+            user.setFullName(state.getName() != null ? state.getName() : username);
+            userRepository.save(user);
+            telegramBotService.sendMessageTo(chatId, "✅ Muvaffaqiyatli ro'yxatdan o'tdingiz! Sizga Super Admin huquqi berildi.\nParolingiz: 123456");
+        } else {
+            user = userOpt.get();
+            if (!email.equals(user.getEmail())) {
+                telegramBotService.sendMessageTo(chatId, "❌ Username mavjud, lekin email xato! Qaytadan urinib ko'ring yoki /start ni bosing.");
+                return;
+            }
+            if (user.getRole() != com.lmscrm.backend.domain.enums.AppRole.SUPER_ADMIN) {
+                user.setRole(com.lmscrm.backend.domain.enums.AppRole.SUPER_ADMIN);
+                userRepository.save(user);
+            }
         }
 
         state.setState(BotState.MAIN_MENU);
