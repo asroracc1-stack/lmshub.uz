@@ -305,13 +305,18 @@ public class TelegramBotService {
             body.put("message_id", messageId);
             body.put("caption", newCaption);
             body.put("parse_mode", "HTML");
-            body.put("reply_markup", "{\"inline_keyboard\":[]}");
+
+            // Empty inline keyboard (removes buttons)
+            java.util.Map<String, Object> replyMarkup = new java.util.HashMap<>();
+            replyMarkup.put("inline_keyboard", new java.util.ArrayList<>());
+            body.put("reply_markup", replyMarkup);
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
             HttpEntity<java.util.Map<String, Object>> entity = new HttpEntity<>(body, headers);
-            restTemplate.postForEntity(apiUrl, entity, String.class);
+            ResponseEntity<String> resp = restTemplate.postForEntity(apiUrl, entity, String.class);
+            log.info("editMessageCaption response: {}", resp.getStatusCode());
         } catch (Exception e) {
             log.error("Failed to edit message caption: {}", e.getMessage());
         }
@@ -326,13 +331,18 @@ public class TelegramBotService {
             body.put("message_id", messageId);
             body.put("text", newText);
             body.put("parse_mode", "HTML");
-            body.put("reply_markup", "{\"inline_keyboard\":[]}");
+
+            // Empty inline keyboard (removes buttons)
+            java.util.Map<String, Object> replyMarkup = new java.util.HashMap<>();
+            replyMarkup.put("inline_keyboard", new java.util.ArrayList<>());
+            body.put("reply_markup", replyMarkup);
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
             HttpEntity<java.util.Map<String, Object>> entity = new HttpEntity<>(body, headers);
-            restTemplate.postForEntity(apiUrl, entity, String.class);
+            ResponseEntity<String> resp = restTemplate.postForEntity(apiUrl, entity, String.class);
+            log.info("editMessageText response: {}", resp.getStatusCode());
         } catch (Exception e) {
             log.error("Failed to edit message text: {}", e.getMessage());
         }

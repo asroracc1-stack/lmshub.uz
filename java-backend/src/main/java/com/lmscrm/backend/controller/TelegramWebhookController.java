@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/telegram/webhook")
+@RequestMapping("/api/v1/telegram")
 @RequiredArgsConstructor
 @Slf4j
 public class TelegramWebhookController {
@@ -23,64 +23,125 @@ public class TelegramWebhookController {
     @Value("${telegram.bot.chat-id:7499973776}")
     private String adminChatId;
 
-    @PostMapping
-    public ResponseEntity<?> handleUpdate(@RequestBody Map<String, Object> update) {
-        log.info("Received Telegram Update payload: {}", update);
+    /**
+     * Manual endpoint to re-register Telegram webhook.
+     * Call this after deployment: GET /api/v1/telegram/register
+     */
+    @GetMapping("/register")
+    public ResponseEntity<String> registerWebhook() {
         try {
-            if (update.containsKey("callback_query")) {
-                Map<String, Object> callbackQuery = (Map<String, Object>) update.get("callback_query");
-                String queryId = (String) callbackQuery.get("id");
-                
-                Map<String, Object> from = (Map<String, Object>) callbackQuery.get("from");
-                Number fromId = (Number) from.get("id");
-
-                long adminChatIdLong = Long.parseLong(adminChatId);
-                if (fromId == null || fromId.longValue() != adminChatIdLong) {
-                    telegramBotService.answerCallbackQuery(queryId, "Sizga ruxsat etilmagan!", true);
-                    return ResponseEntity.ok().build();
-                }
-
-                String data = (String) callbackQuery.get("data");
-                Map<String, Object> message = (Map<String, Object>) callbackQuery.get("message");
-                Integer messageId = (Integer) message.get("message_id");
-
-                if (data == null) {
-                    return ResponseEntity.ok().build();
-                }
-
-                if (data.startsWith("approve_sub:")) {
-                    String reqIdStr = data.substring("approve_sub:".length());
-                    UUID requestId = UUID.fromString(reqIdStr);
-                    
-                    subscriptionRequestService.approveRequest(requestId, "Telegram Bot (Admin)");
-                    telegramBotService.answerCallbackQuery(queryId, "Obuna tasdiqlandi! ✅", false);
-
-                    if (message.containsKey("caption")) {
-                        String caption = (String) message.get("caption");
-                        telegramBotService.editMessageCaption(Long.parseLong(adminChatId), messageId, caption + "\n\n✅ <b>Tasdiqlandi</b> (Bot orqali)");
-                    } else if (message.containsKey("text")) {
-                        String text = (String) message.get("text");
-                        telegramBotService.editMessageText(Long.parseLong(adminChatId), messageId, text + "\n\n✅ <b>Tasdiqlandi</b> (Bot orqali)");
-                    }
-                } else if (data.startsWith("reject_sub:")) {
-                    String reqIdStr = data.substring("reject_sub:".length());
-                    UUID requestId = UUID.fromString(reqIdStr);
-                    
-                    subscriptionRequestService.rejectRequest(requestId, "Telegram Bot (Admin)");
-                    telegramBotService.answerCallbackQuery(queryId, "Obuna rad etildi! ❌", false);
-
-                    if (message.containsKey("caption")) {
-                        String caption = (String) message.get("caption");
-                        telegramBotService.editMessageCaption(Long.parseLong(adminChatId), messageId, caption + "\n\n❌ <b>Rad etildi</b> (Bot orqali)");
-                    } else if (message.containsKey("text")) {
-                        String text = (String) message.get("text");
-                        telegramBotService.editMessageText(Long.parseLong(adminChatId), messageId, text + "\n\n❌ <b>Rad etildi</b> (Bot orqali)");
-                    }
-                }
-            }
+            telegramBotService.registerWebhook();
+            return ResponseEntity.ok("✅ Webhook muvaffaqiyatli ro'yxatdan o'tdi!");
         } catch (Exception e) {
-            log.error("Error handling Telegram Webhook update: {}", e.getMessage(), e);
+            log.error("Webhook re-registration failed: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().body("❌ Xatolik: " + e.getMessage());
         }
+    }
+
+    /**
+     * Main Telegram webhook endpoint.
+     * Telegram sends all updates here.
+     */
+    @PostMapping("/webhook")
+    public ResponseEntity<?> handleUpdate(@RequestBody Map<String, Object> update) {
+        log.info("📩 Telegram Update received: {}", update);
+
+        try {
+            if (!update.containsKey("callback_query")) {
+                log.info("Update has no callback_query, ignoring.");
+                return ResponseEntity.ok().build();
+            }
+
+            @SuppressWarnings("unchecked")
+            Map<String, Object> callbackQuery = (Map<String, Object>) update.get("callback_query");
+            String queryId = (String) callbackQuery.get("id");
+            String data    = (String) callbackQuery.get("data");
+
+            @SuppressWarnings("unchecked")
+            Map<String, Object> from = (Map<String, Object>) callbackQuery.get("from");
+            Number fromId = from != null ? (Number) from.get("id") : null;
+
+            @SuppressWarnings("unchecked")
+            Map<String, Object> message = (Map<String, Object>) callbackQuery.get("message");
+            Integer messageId = message != null ? (Integer) message.get("message_id") : null;
+
+            log.info("📌 Callback: queryId={}, data={}, fromId={}, messageId={}", queryId, data, fromId, messageId);
+
+            if (data == null || queryId == null) {
+                log.warn("Empty data or queryId, ignoring.");
+                return ResponseEntity.ok().build();
+            }
+
+            // ─── APPROVE ────────────────────────────────────────────────────
+            if (data.startsWith("approve_sub:")) {
+                String reqIdStr = data.substring("approve_sub:".length()).trim();
+                log.info("🟢 APPROVE request: {}", reqIdStr);
+
+                // 1. Immediately acknowledge Telegram button press
+                telegramBotService.answerCallbackQuery(queryId, "⏳ Tasdiqlanmoqda...", false);
+
+                try {
+                    UUID requestId = UUID.fromString(reqIdStr);
+                    subscriptionRequestService.approveRequest(requestId, "Telegram Bot (Admin)");
+                    log.info("✅ Subscription approved: {}", requestId);
+
+                    // 2. Update message in Telegram to remove buttons and show result
+                    if (message != null && messageId != null) {
+                        long chatIdLong = fromId != null ? fromId.longValue() : Long.parseLong(adminChatId);
+                        String suffix = "\n\n✅ <b>TASDIQLANDI</b> ✅\n<i>Paket faollashtirildi!</i>";
+                        if (message.containsKey("caption")) {
+                            String caption = (String) message.get("caption");
+                            telegramBotService.editMessageCaption(chatIdLong, messageId, caption + suffix);
+                        } else if (message.containsKey("text")) {
+                            String text = (String) message.get("text");
+                            telegramBotService.editMessageText(chatIdLong, messageId, text + suffix);
+                        }
+                    }
+
+                } catch (Exception e) {
+                    log.error("❌ approveRequest failed: {}", e.getMessage(), e);
+                    telegramBotService.answerCallbackQuery(queryId, "❌ Xatolik: " + e.getMessage(), true);
+                }
+
+            // ─── REJECT ─────────────────────────────────────────────────────
+            } else if (data.startsWith("reject_sub:")) {
+                String reqIdStr = data.substring("reject_sub:".length()).trim();
+                log.info("🔴 REJECT request: {}", reqIdStr);
+
+                // 1. Immediately acknowledge Telegram button press
+                telegramBotService.answerCallbackQuery(queryId, "⏳ Rad etilmoqda...", false);
+
+                try {
+                    UUID requestId = UUID.fromString(reqIdStr);
+                    subscriptionRequestService.rejectRequest(requestId, "Telegram Bot (Admin)");
+                    log.info("❌ Subscription rejected: {}", requestId);
+
+                    // 2. Update message in Telegram to remove buttons and show result
+                    if (message != null && messageId != null) {
+                        long chatIdLong = fromId != null ? fromId.longValue() : Long.parseLong(adminChatId);
+                        String suffix = "\n\n❌ <b>RAD ETILDI</b> ❌\n<i>So'rov bekor qilindi.</i>";
+                        if (message.containsKey("caption")) {
+                            String caption = (String) message.get("caption");
+                            telegramBotService.editMessageCaption(chatIdLong, messageId, caption + suffix);
+                        } else if (message.containsKey("text")) {
+                            String text = (String) message.get("text");
+                            telegramBotService.editMessageText(chatIdLong, messageId, text + suffix);
+                        }
+                    }
+
+                } catch (Exception e) {
+                    log.error("❌ rejectRequest failed: {}", e.getMessage(), e);
+                    telegramBotService.answerCallbackQuery(queryId, "❌ Xatolik: " + e.getMessage(), true);
+                }
+
+            } else {
+                log.info("Unknown callback data: {}", data);
+            }
+
+        } catch (Exception e) {
+            log.error("🔥 Critical error in webhook handler: {}", e.getMessage(), e);
+        }
+
         return ResponseEntity.ok().build();
     }
 }
