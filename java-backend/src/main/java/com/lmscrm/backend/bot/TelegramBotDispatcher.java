@@ -189,8 +189,9 @@ public class TelegramBotDispatcher {
                     int questionCount = questionRepository.countByExamId(examId);
 
                     String reqPack = exam.getRequiredPack() != null ? exam.getRequiredPack().toUpperCase() : "FREE";
-                    String emoji = reqPack.equals("ELITE") ? "🟡" : reqPack.equals("PRO") ? "🟢" : "🔵";
-                    String packName = reqPack.equals("FREE") ? "Bepul test" : reqPack + " Obuna";
+                    // Overwrite the previously declared emoji and packName
+                    emoji = reqPack.equals("ELITE") ? "🟡" : reqPack.equals("PRO") ? "🟢" : "🔵";
+                    packName = reqPack.equals("FREE") ? "Bepul test" : reqPack + " Obuna";
                     
                     String text = String.format("📄 <b>Test ma'lumoti</b>\n\n<b>Nomi:</b> %s\n<b>Savollar soni:</b> %s\n<b>Vaqt:</b> %s daqiqa\n<b>Turi:</b> %s %s\n\n",
                             exam.getTitle(), questionCount, exam.getDurationMinutes(), emoji, packName);
@@ -206,7 +207,7 @@ public class TelegramBotDispatcher {
                         hasAccess = true;
                     } else {
                         try {
-                            List<?> subRows = entityManager.createNativeQuery(
+                            java.util.List<?> subRows = entityManager.createNativeQuery(
                                 "SELECT sp.type FROM public.user_subscriptions us " +
                                 "JOIN public.subscription_packs sp ON sp.id = us.pack_id " +
                                 "WHERE us.user_id = :userId AND us.is_active = true " +
