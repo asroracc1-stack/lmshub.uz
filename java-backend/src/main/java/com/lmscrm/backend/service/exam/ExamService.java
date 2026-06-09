@@ -114,6 +114,7 @@ public class ExamService {
                 .description(request.getDescription())
                 .difficulty(request.getDifficulty() != null ? request.getDifficulty().toUpperCase() : "MEDIUM")
                 .audioUrl(request.getAudioUrl())
+                .pdfUrl(request.getPdfUrl())
                 .type(ExamType.valueOf(request.getType().toUpperCase()))
                 .durationMinutes(request.getDurationMinutes() != null ? request.getDurationMinutes() : 60)
                 .passingScore(request.getPassingScore() != null ? request.getPassingScore() : 50)
@@ -138,6 +139,7 @@ public class ExamService {
         exam.setDescription(request.getDescription());
         exam.setDifficulty(request.getDifficulty() != null ? request.getDifficulty().toUpperCase() : "MEDIUM");
         exam.setAudioUrl(request.getAudioUrl());
+        exam.setPdfUrl(request.getPdfUrl());
         exam.setDurationMinutes(request.getDurationMinutes() != null ? request.getDurationMinutes() : 60);
         exam.setPassingScore(request.getPassingScore() != null ? request.getPassingScore() : 50);
         exam.setRequiredPack(request.getRequiredPack() != null ? request.getRequiredPack().toLowerCase() : "free");
@@ -189,6 +191,7 @@ public class ExamService {
                                 .imageUrl(qDto.getImageUrl())
                                 .imagePosition(qDto.getImagePosition() != null ? qDto.getImagePosition() : "top")
                                 .positionOrder(qOrder++)
+                                .explanation(qDto.getExplanation())
                                 .options(new java.util.ArrayList<>())
                                 .build();
                         

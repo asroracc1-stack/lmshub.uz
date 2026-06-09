@@ -45,6 +45,9 @@ public class Question {
     @Column(name = "image_position")
     private String imagePosition;
 
+    @Column(columnDefinition = "TEXT")
+    private String explanation;
+
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
     private java.util.List<QuestionOption> options;
 }

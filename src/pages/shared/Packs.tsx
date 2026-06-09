@@ -274,6 +274,10 @@ export default function Packs() {
       toast.error("Iltimos, ismingiz, telefon raqamingiz va emailingizni to'liq kiriting");
       return;
     }
+    if (!file) {
+      toast.error("Iltimos, to'lov cheki rasmini yuklang");
+      return;
+    }
 
     setUploadingReceipt(true);
     try {
@@ -284,9 +288,18 @@ export default function Packs() {
         phoneNumber: clientPhone
       });
 
-      // 2. Submit subscription request
+      // 2. Upload receipt image
+      const formData = new FormData();
+      formData.append("file", file);
+      const uploadRes = await api.post("/files/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      const proofUrl = uploadRes.data;
+
+      // 3. Submit subscription request
       await api.post("/admin/subscription-requests/submit", {
-        pack_id: checkoutPack.id
+        pack_id: checkoutPack.id,
+        receipt_url: proofUrl
       });
 
       // Confetti splash
@@ -300,6 +313,7 @@ export default function Packs() {
 
       setRequestSent(checkoutPack);
       setCheckoutPack(null);
+      clearFile();
     } catch (err: any) {
       toast.error(err.response?.data?.message || "So'rov yuborishda xatolik yuz berdi");
     } finally {
@@ -313,6 +327,10 @@ export default function Packs() {
       toast.error("Iltimos, ismingiz, telefon raqamingiz va emailingizni to'liq kiriting");
       return;
     }
+    if (!file) {
+      toast.error("Iltimos, to'lov cheki rasmini yuklang");
+      return;
+    }
 
     setUploadingReceipt(true);
     try {
@@ -323,11 +341,20 @@ export default function Packs() {
         phoneNumber: clientPhone
       });
 
+      // 2. Upload receipt image
+      const formData = new FormData();
+      formData.append("file", file);
+      const uploadRes = await api.post("/files/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      const proofUrl = uploadRes.data;
+
       await api.post("/admin/subscription-requests/submit", {
-        pack_id: checkoutPack.id
+        pack_id: checkoutPack.id,
+        receipt_url: proofUrl
       });
 
-      // 2. Open Telegram link
+      // 3. Open Telegram link
       const messageText = `🚀 Yangi Obuna So'rovi (LMSHub)
 
 👤 Foydalanuvchi: ${clientName}
@@ -349,6 +376,7 @@ export default function Packs() {
 
       setRequestSent(checkoutPack);
       setCheckoutPack(null);
+      clearFile();
     } catch (err: any) {
       toast.error(err.response?.data?.message || "So'rov yuborishda xatolik yuz berdi");
     } finally {
@@ -930,6 +958,54 @@ export default function Packs() {
                     </Badge>
                   </div>
                 </div>
+              </div>
+
+              {/* Receipt File Upload */}
+              <div className="space-y-2">
+                <Label className="text-[10px] uppercase font-black text-slate-400 tracking-widest">To'lov cheki (Rasm yoki Chek)</Label>
+                {preview ? (
+                  <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-white/10 p-3 bg-slate-50 dark:bg-white/5 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <img src={preview} alt="Receipt Preview" className="w-14 h-14 object-cover rounded-xl" />
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-slate-800 dark:text-white truncate max-w-[200px]">{file?.name}</p>
+                        <p className="text-[10px] text-slate-400 font-medium">{(file!.size / 1024 / 1024).toFixed(2)} MB</p>
+                      </div>
+                    </div>
+                    <Button type="button" size="icon" variant="ghost" onClick={clearFile} className="h-8 w-8 text-red-500 rounded-lg hover:bg-red-500/10">
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div
+                    onDragEnter={handleDrag}
+                    onDragOver={handleDrag}
+                    onDragLeave={handleDrag}
+                    onDrop={handleDrop}
+                    onClick={() => fileRef.current?.click()}
+                    className={cn(
+                      "border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all duration-200 flex flex-col items-center justify-center gap-2",
+                      dragActive
+                        ? "border-emerald-500 bg-emerald-500/10"
+                        : "border-slate-200 dark:border-white/15 hover:border-emerald-500/50 hover:bg-slate-50/50 dark:hover:bg-white/5"
+                    )}
+                  >
+                    <input
+                      ref={fileRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleFileChange}
+                    />
+                    <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center text-slate-400">
+                      <Send className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-slate-700 dark:text-slate-350">To'lov chekini yuklang</p>
+                      <p className="text-[10px] text-slate-400 mt-1">Bosing yoki bu yerga sudrab olib keling (PNG, JPG)</p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Action Buttons */}

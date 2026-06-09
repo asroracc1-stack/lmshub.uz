@@ -354,11 +354,11 @@ const AppRoutes = () => {
           <Route path="account" element={<UserAccount />} />
           <Route path="achievements" element={<UserAchievements />} />
           <Route path="profile" element={<SharedProfile />} />
-          <Route path="mocks" element={<SectionGuard section="ielts" title="IELTS Mocks"><MockTests basePath="/student" /></SectionGuard>} />
+          <Route path="mocks" element={<MockTests basePath="/student" />} />
           <Route path="mocks/c/:kind" element={<MockCategory basePath="/student" />} />
           <Route path="mocks/take/:testId" element={<MockTake />} />
-          <Route path="sat" element={<SectionGuard section="sat" title="SAT tayyorgarlik"><Navigate to="/student/mocks/c/sat" replace /></SectionGuard>} />
-          <Route path="national-cert" element={<SectionGuard section="milliy" title="Milliy sertifikat"><Navigate to="/student/mocks/c/national_cert" replace /></SectionGuard>} />
+          <Route path="sat" element={<Navigate to="/student/mocks/c/sat" replace />} />
+          <Route path="national-cert" element={<Navigate to="/student/mocks/c/national_cert" replace />} />
           <Route path="speaking" element={<SpeakingHub basePath="/student" />} />
           <Route path="speaking/ai" element={<AISpeaking />} />
           <Route path="speaking/topics" element={<SpeakingTopics basePath="/student" />} />
@@ -377,11 +377,11 @@ const AppRoutes = () => {
           <Route path="dashboard" element={<UserDashboard />} />
           <Route path="profile" element={<UserAccount />} />
           <Route path="subscriptions" element={<Packs />} />
-          <Route path="mocks" element={<SectionGuard section="ielts" title="IELTS Mocks"><MockTests basePath="/user" /></SectionGuard>} />
+          <Route path="mocks" element={<MockTests basePath="/user" />} />
           <Route path="mocks/c/:kind" element={<MockCategory basePath="/user" />} />
           <Route path="mocks/take/:testId" element={<MockTake />} />
-          <Route path="sat" element={<SectionGuard section="sat" title="SAT tayyorgarlik"><Navigate to="/user/mocks/c/sat" replace /></SectionGuard>} />
-          <Route path="national-cert" element={<SectionGuard section="milliy" title="Milliy sertifikat"><Navigate to="/user/mocks/c/national_cert" replace /></SectionGuard>} />
+          <Route path="sat" element={<Navigate to="/user/mocks/c/sat" replace />} />
+          <Route path="national-cert" element={<Navigate to="/user/mocks/c/national_cert" replace />} />
           <Route path="speaking" element={<SpeakingHub basePath="/user" />} />
           <Route path="achievements" element={<UserAchievements />} />
           <Route path="leaderboard" element={<UserLeaderboard />} />

@@ -35,4 +35,7 @@ public class SubscriptionRequest {
     private String status; // PENDING, APPROVED, REJECTED
 
     private String processedBy; // Admin username
+
+    @Column(name = "receipt_url")
+    private String receiptUrl;
 }

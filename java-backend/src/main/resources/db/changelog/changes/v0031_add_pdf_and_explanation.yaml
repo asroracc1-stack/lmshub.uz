@@ -1,0 +1,17 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0031-1
+      author: antigravity
+      changes:
+        - addColumn:
+            tableName: exams
+            columns:
+              - column:
+                  name: pdf_url
+                  type: varchar(1024)
+        - addColumn:
+            tableName: questions
+            columns:
+              - column:
+                  name: explanation
+                  type: text

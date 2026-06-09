@@ -16,5 +16,6 @@ public class QuestionDto {
     private Integer positionOrder;
     private String imageUrl;
     private String imagePosition;
+    private String explanation;
     private List<QuestionOptionDto> options;
 }

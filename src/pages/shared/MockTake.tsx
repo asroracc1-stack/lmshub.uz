@@ -63,6 +63,7 @@ interface Q {
   image_url?: string;
   imagePosition?: string;
   image_position?: string;
+  explanation?: string;
 }
 
 interface Passage {
@@ -101,6 +102,7 @@ interface NormalQ {
   points: number;
   imageUrl?: string;
   imagePosition?: string;
+  explanation?: string;
 }
 
 /** Java'dan kelgan questionType → frontend qtype ga mapping */
@@ -145,6 +147,7 @@ function normalize(exam: ExamData): { sections: { title: string; passage: string
         points: q.points ?? 1,
         imageUrl: q.imageUrl ?? q.image_url,
         imagePosition: q.imagePosition ?? q.image_position,
+        explanation: q.explanation ?? "",
       });
     });
   });
@@ -436,6 +439,8 @@ export default function MockTake() {
 
   const [exam, setExam] = useState<ExamData | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [activeTab, setActiveTab] = useState("overview");
+  const [showAllInReview, setShowAllInReview] = useState(false);
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -513,6 +518,25 @@ export default function MockTake() {
       return () => document.body.classList.remove("exam-mode");
     }
   }, [started, result]);
+
+  useEffect(() => {
+    if (result) {
+      const timer = setTimeout(() => {
+        if (typeof (window as any).renderMathInElement === "function") {
+          (window as any).renderMathInElement(document.body, {
+            delimiters: [
+              { left: "$$", right: "$$", display: true },
+              { left: "$", right: "$", display: false },
+              { left: "\\(", right: "\\)", display: false },
+              { left: "\\[", right: "\\]", display: true }
+            ],
+            throwOnError: false
+          });
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [result, activeTab, showAllInReview]);
 
   useEffect(() => {
     if (!testId) return;
@@ -641,6 +665,10 @@ export default function MockTake() {
     // Filter incorrect questions
     const incorrectDetails = result.detail ? result.detail.filter((d: any) => !d.ok) : [];
     
+    const reviewDetails = result.detail 
+      ? (showAllInReview ? result.detail : result.detail.filter((d: any) => !d.ok))
+      : [];
+    
     // Group incorrect questions by type to determine weaknesses
     const incorrectByQtype: Record<string, number> = {};
     incorrectDetails.forEach((d: any) => {
@@ -734,7 +762,7 @@ export default function MockTake() {
           </Card>
         </motion.div>
 
-        <Tabs defaultValue="overview" className="w-full space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-6">
           <TabsList className="grid w-full grid-cols-3 rounded-xl bg-slate-100 dark:bg-white/5 p-1 h-12">
             <TabsTrigger value="overview" className="rounded-lg font-bold text-xs md:text-sm">Umumiy Natija</TabsTrigger>
             <TabsTrigger value="errors" className="rounded-lg font-bold text-xs md:text-sm flex items-center justify-center gap-1.5">
@@ -856,59 +884,126 @@ export default function MockTake() {
               </Card>
             ) : (
               <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-bold text-sm text-slate-400 uppercase tracking-widest">Yo'l qo'yilgan xatolar ro'yxati ({incorrectDetails.length})</h3>
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <h3 className="font-bold text-sm text-slate-400 uppercase tracking-widest">Savollar Tahlili ({reviewDetails.length})</h3>
+                  <div className="flex items-center gap-2 bg-slate-100 dark:bg-white/5 p-1 rounded-xl border">
+                    <button
+                      onClick={() => setShowAllInReview(false)}
+                      className={cn(
+                        "px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
+                        !showAllInReview ? "bg-white dark:bg-slate-900 shadow text-slate-800 dark:text-white" : "text-slate-500 hover:text-slate-850"
+                      )}
+                    >
+                      Faqat xatolar ({incorrectDetails.length})
+                    </button>
+                    <button
+                      onClick={() => setShowAllInReview(true)}
+                      className={cn(
+                        "px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
+                        showAllInReview ? "bg-white dark:bg-slate-900 shadow text-slate-800 dark:text-white" : "text-slate-500 hover:text-slate-850"
+                      )}
+                    >
+                      Barcha savollar ({result.detail?.length || 0})
+                    </button>
+                  </div>
                 </div>
-                {incorrectDetails.map((detail: any, idx: number) => {
-                  const q = questions.find(question => question.id === detail.questionId);
-                  if (!q) return null;
 
-                  return (
-                    <Card key={detail.questionId || idx} className="p-6 border-slate-200 dark:border-white/5 bg-white dark:bg-slate-900/40 shadow-md rounded-2xl space-y-4 text-left">
-                      {/* Mistake Header */}
-                      <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-3">
-                        <div className="flex items-center gap-3">
-                          <span className="h-7 w-7 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-450 flex items-center justify-center text-xs font-black">
-                            {q.position}
-                          </span>
-                          <Badge variant="outline" className="capitalize text-[10px] font-extrabold border-slate-250 dark:border-white/10 text-slate-500 bg-slate-50 dark:bg-slate-900 px-2.5 py-0.5">
-                            {q.qtype.toUpperCase()}
-                          </Badge>
+                {reviewDetails.length === 0 && !showAllInReview ? (
+                  <Card className="p-8 text-center border-slate-200 dark:border-white/5 bg-white dark:bg-slate-900/40 shadow-md rounded-2xl py-12">
+                    <ThumbsUp className="h-12 w-12 text-emerald-500 mx-auto mb-3 animate-bounce" />
+                    <h3 className="text-xl font-bold text-emerald-500 mb-1">Ajoyib! Hech qanday xato topilmadi!</h3>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm">Siz barcha savollarga to'g'ri javob berdingiz. Mukammal natija! 🎉</p>
+                  </Card>
+                ) : (
+                  reviewDetails.map((detail: any, idx: number) => {
+                    const q = questions.find(question => question.id === detail.questionId);
+                    if (!q) return null;
+                    const isCorrect = detail.ok;
+
+                    return (
+                      <Card key={detail.questionId || idx} className="p-6 border-slate-200 dark:border-white/5 bg-white dark:bg-slate-900/40 shadow-md rounded-2xl space-y-4 text-left">
+                        {/* Mistake Header */}
+                        <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-3">
+                          <div className="flex items-center gap-3">
+                            <span className={cn(
+                              "h-7 w-7 rounded-lg flex items-center justify-center text-xs font-black",
+                              isCorrect 
+                                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-450" 
+                                : "bg-rose-500/10 text-rose-600 dark:text-rose-450"
+                            )}>
+                              {q.position}
+                            </span>
+                            <Badge variant="outline" className="capitalize text-[10px] font-extrabold border-slate-250 dark:border-white/10 text-slate-500 bg-slate-50 dark:bg-slate-900 px-2.5 py-0.5">
+                              {q.qtype.toUpperCase()}
+                            </Badge>
+                            <Badge className={cn(
+                              "text-[10px] font-extrabold px-2.5 py-0.5",
+                              isCorrect ? "bg-emerald-500 hover:bg-emerald-600 text-white" : "bg-rose-500 hover:bg-rose-600 text-white"
+                            )}>
+                              {isCorrect ? "To'g'ri" : "Noto'g'ri"}
+                            </Badge>
+                          </div>
                         </div>
-                      </div>
 
-                      {/* Prompt */}
-                      <div>
-                        <p className="text-slate-800 dark:text-slate-200 text-sm md:text-base font-semibold leading-relaxed">
-                          {q.prompt}
-                        </p>
-                      </div>
-
-                      {/* Answers comparison */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div className="p-3.5 rounded-xl border border-rose-500/20 bg-rose-500/5 flex items-center gap-2">
-                          <span className="text-[10px] uppercase font-bold text-rose-500 dark:text-rose-400 bg-rose-500/10 px-1.5 py-0.5 rounded">Sizning javobingiz</span>
-                          <span className="font-bold text-xs text-rose-700 dark:text-rose-400 truncate">{detail.userAns || "(javob berilmagan)"}</span>
-                        </div>
-                        <div className="p-3.5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 flex items-center gap-2">
-                          <span className="text-[10px] uppercase font-bold text-emerald-500 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">To'g'ri javob</span>
-                          <span className="font-bold text-xs text-emerald-700 dark:text-emerald-400 truncate">{detail.correctAns}</span>
-                        </div>
-                      </div>
-
-                      {/* Dynamic explanation */}
-                      <div className="p-4 rounded-xl border border-slate-200/50 dark:border-white/5 bg-slate-50 dark:bg-slate-950/40 flex gap-3">
-                        <Lightbulb className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+                        {/* Prompt */}
                         <div>
-                          <p className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Tushuntirish (Explanation)</p>
-                          <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
-                            {getExplanation(q.qtype, detail.correctAns, detail.userAns)}
+                          <p className="text-slate-800 dark:text-slate-200 text-sm md:text-base font-semibold leading-relaxed">
+                            {q.prompt}
                           </p>
                         </div>
-                      </div>
-                    </Card>
-                  );
-                })}
+
+                        {/* Answers comparison */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div className={cn(
+                            "p-3.5 rounded-xl border flex items-center gap-2",
+                            isCorrect 
+                              ? "border-emerald-500/25 bg-emerald-500/5" 
+                              : "border-rose-500/20 bg-rose-500/5"
+                          )}>
+                            <span className={cn(
+                              "text-[10px] uppercase font-bold px-1.5 py-0.5 rounded",
+                              isCorrect ? "bg-emerald-500/10 text-emerald-500 dark:text-emerald-400" : "bg-rose-500/10 text-rose-500 dark:text-rose-400"
+                            )}>Sizning javobingiz</span>
+                            <span className={cn(
+                              "font-bold text-xs truncate",
+                              isCorrect ? "text-emerald-700 dark:text-emerald-400" : "text-rose-700 dark:text-rose-400"
+                            )}>{detail.userAns || "(javob berilmagan)"}</span>
+                          </div>
+                          {!isCorrect && (
+                            <div className="p-3.5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 flex items-center gap-2">
+                              <span className="text-[10px] uppercase font-bold text-emerald-500 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">To'g'ri javob</span>
+                              <span className="font-bold text-xs text-emerald-700 dark:text-emerald-400 truncate">{detail.correctAns}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Generic Explanation */}
+                        <div className="p-4 rounded-xl border border-slate-200/50 dark:border-white/5 bg-slate-50 dark:bg-slate-950/40 flex gap-3">
+                          <Lightbulb className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Tushuntirish (Explanation)</p>
+                            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
+                              {getExplanation(q.qtype, detail.correctAns, detail.userAns)}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Custom Explanation */}
+                        {q.explanation && (
+                          <div className="p-4 rounded-xl border border-violet-500/20 bg-violet-500/5 dark:bg-violet-950/20 flex gap-3 mt-3">
+                            <Lightbulb className="h-5 w-5 text-violet-500 shrink-0 mt-0.5" />
+                            <div>
+                              <p className="text-[11px] font-extrabold text-violet-500 dark:text-violet-400 uppercase tracking-widest mb-1">To'liq Yechim / Tahlil</p>
+                              <div className="text-xs text-slate-700 dark:text-slate-350 leading-relaxed font-medium whitespace-pre-wrap">
+                                {q.explanation}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </Card>
+                    );
+                  })
+                )}
               </div>
             )}
           </TabsContent>
@@ -1209,29 +1304,47 @@ export default function MockTake() {
       <main className="flex-1 w-full max-w-[1600px] mx-auto px-4 md:px-8 py-4 min-h-0 flex flex-col">
         <div className={cn(
           "grid gap-8 xl:gap-12 flex-1 min-h-0",
-          kind === "reading" && (currentSection?.passage || currentSection?.imageUrl) ? "lg:grid-cols-2" : "grid-cols-1"
+          (exam.pdfUrl || (kind === "reading" && (currentSection?.passage || currentSection?.imageUrl))) ? "lg:grid-cols-2" : "grid-cols-1"
         )}>
-          {/* LEFT PANEL: PASSAGE (READING ONLY) */}
-          {kind === "reading" && (currentSection?.passage || currentSection?.imageUrl) && (
+          {/* LEFT PANEL: PDF VIEWER OR PASSAGE */}
+          {exam.pdfUrl ? (
             <Card className="flex flex-col min-h-[85vh] w-full max-w-6xl mx-auto border-slate-200/50 dark:border-white/5 shadow-xl shadow-slate-100/50 dark:shadow-none bg-white dark:bg-slate-900/40 backdrop-blur-md rounded-2xl overflow-hidden">
-              {currentSection.title && (
-                <div className="px-6 py-4 border-b border-slate-100 dark:border-white/5 flex items-center justify-between shrink-0 bg-slate-50/50 dark:bg-slate-950/20">
-                  <h2 className="font-display font-extrabold text-base tracking-tight text-slate-800 dark:text-white">
-                    {currentSection.title}
-                  </h2>
-                </div>
-              )}
-              <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar space-y-6">
-                {currentSection.imageUrl && (
-                  <div className="rounded-xl overflow-hidden border border-slate-200/60 dark:border-white/5 bg-slate-50 dark:bg-slate-950 p-3 shadow-inner">
-                    <img src={getFullImageUrl(currentSection.imageUrl)} alt="Map/Diagram" className="max-w-full h-auto mx-auto rounded-lg" />
-                  </div>
-                )}
-                <div className="prose prose-slate dark:prose-invert max-w-none text-slate-750 dark:text-slate-350 text-sm md:text-base leading-relaxed font-normal whitespace-pre-wrap select-text selection:bg-emerald-500/20 selection:text-emerald-500">
-                  {currentSection.passage}
-                </div>
+              <div className="px-6 py-4 border-b border-slate-100 dark:border-white/5 flex items-center justify-between shrink-0 bg-slate-50/50 dark:bg-slate-950/20">
+                <h2 className="font-display font-extrabold text-base tracking-tight text-slate-800 dark:text-white">
+                  Imtihon Savollari (PDF)
+                </h2>
+              </div>
+              <div className="flex-1 w-full h-full relative">
+                <iframe 
+                  src={getFullImageUrl(exam.pdfUrl)} 
+                  className="w-full h-full min-h-[75vh]" 
+                  style={{ border: 0 }} 
+                  title="Imtihon PDF"
+                />
               </div>
             </Card>
+          ) : (
+            kind === "reading" && (currentSection?.passage || currentSection?.imageUrl) && (
+              <Card className="flex flex-col min-h-[85vh] w-full max-w-6xl mx-auto border-slate-200/50 dark:border-white/5 shadow-xl shadow-slate-100/50 dark:shadow-none bg-white dark:bg-slate-900/40 backdrop-blur-md rounded-2xl overflow-hidden">
+                {currentSection.title && (
+                  <div className="px-6 py-4 border-b border-slate-100 dark:border-white/5 flex items-center justify-between shrink-0 bg-slate-50/50 dark:bg-slate-950/20">
+                    <h2 className="font-display font-extrabold text-base tracking-tight text-slate-800 dark:text-white">
+                      {currentSection.title}
+                    </h2>
+                  </div>
+                )}
+                <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar space-y-6">
+                  {currentSection.imageUrl && (
+                    <div className="rounded-xl overflow-hidden border border-slate-200/60 dark:border-white/5 bg-slate-50 dark:bg-slate-950 p-3 shadow-inner">
+                      <img src={getFullImageUrl(currentSection.imageUrl)} alt="Map/Diagram" className="max-w-full h-auto mx-auto rounded-lg" />
+                    </div>
+                  )}
+                  <div className="prose prose-slate dark:prose-invert max-w-none text-slate-750 dark:text-slate-350 text-sm md:text-base leading-relaxed font-normal whitespace-pre-wrap select-text selection:bg-emerald-500/20 selection:text-emerald-500">
+                    {currentSection.passage}
+                  </div>
+                </div>
+              </Card>
+            )
           )}
 
           {/* RIGHT PANEL: QUESTIONS */}

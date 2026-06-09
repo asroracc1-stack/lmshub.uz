@@ -137,8 +137,15 @@ export default function PaymentRequests() {
   const getProofUrl = (path?: string | null): string => {
     if (!path) return "";
     if (path.startsWith("http")) return path;
-    // Serve via Java backend file endpoint
-    return `${import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api/v1"}/files/${path}`;
+    const apiUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api/v1";
+    const baseUrl = apiUrl.replace(/\/api\/v1\/?$/, ""); // extract just the host
+    
+    if (path.startsWith("/api/")) return `${baseUrl}${path}`;
+    if (path.startsWith("view/")) return `${baseUrl}/api/v1/files/${path}`;
+    if (path.startsWith("receipts/")) return `${baseUrl}/api/v1/files/view/${path}`;
+    if (path.startsWith("files/")) return `${baseUrl}/api/v1/${path}`;
+    
+    return `${baseUrl}/api/v1/files/view/${path}`; // default to viewing file directly
   };
 
   const columns = [

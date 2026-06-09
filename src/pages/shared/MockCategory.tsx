@@ -153,7 +153,6 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
   const eliteCnt= tests.filter(t => getPackType(t.required_pack) === "elite").length;
 
   return (
-    <SectionGuard section={sectionKey} title={`${meta.label} bo'limi`}>
     <div className="space-y-6 pb-8">
 
       {/* Header */}
@@ -362,10 +361,10 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
                         {isLocked ? (
                           <Button
                             size="lg"
-                            className={cn("rounded-xl h-11 px-6 font-bold text-sm transition-all duration-300", theme.button)}
+                            className={cn("rounded-xl h-11 px-6 font-bold text-sm transition-all duration-300 opacity-90", theme.button)}
                             onClick={() => nav(getPacksPath())}
                           >
-                            {theme.buttonLabel} <BtnIcon className="h-4 w-4 ml-1.5" />
+                            Sinab ko'rish <Lock className="h-4 w-4 ml-1.5" />
                           </Button>
                         ) : (
                           <Button
@@ -385,7 +384,6 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
                           </Button>
                         )}
                       </div>
-                    </div>
                   </div>
                 </motion.div>
               );
@@ -492,6 +490,5 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
         </Card>
       </div>
     </div>
-    </SectionGuard>
   );
 }

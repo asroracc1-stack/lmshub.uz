@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
@@ -14,6 +15,7 @@ import java.net.URI;
 
 @Service
 @Slf4j
+@Async
 public class TelegramBotService {
 
     @Value("${telegram.bot.token}")
@@ -143,12 +145,185 @@ public class TelegramBotService {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
-            HttpEntity<java.util.Map<String, Object>> entity = new HttpEntity<>(body, headers);
-            restTemplate.postForEntity(apiUrl, entity, String.class);
             log.info("Message with button sent to {}", targetChatId);
         } catch (Exception e) {
             log.error("Failed to send message with button to {}: {}", targetChatId, e.getMessage());
             sendMessageTo(targetChatId, text);
+        }
+    }
+
+    public String getSiteUrl() {
+        return siteUrl;
+    }
+
+    @jakarta.annotation.PostConstruct
+    public void registerWebhook() {
+        if (botToken == null || botToken.equals("your_bot_token") || botToken.isBlank()) {
+            log.warn("Telegram bot token not configured. Webhook not registered.");
+            return;
+        }
+        try {
+            String webhookUrl = siteUrl + "/api/v1/telegram/webhook";
+            String apiUrl = String.format("https://api.telegram.org/bot%s/setWebhook?url=%s", botToken, webhookUrl);
+            restTemplate.getForObject(new URI(apiUrl), String.class);
+            log.info("Telegram Webhook registered successfully pointing to: {}", webhookUrl);
+        } catch (Exception e) {
+            log.error("Failed to register Telegram Webhook: {}", e.getMessage());
+        }
+    }
+
+    public void sendPhotoWithInlineButtons(String targetChatId, String caption, String photoPathOrUrl, String approveCallback, String rejectCallback) {
+        if (botToken == null || botToken.equals("your_bot_token") || targetChatId == null || targetChatId.isBlank()) {
+            log.warn("Telegram bot not configured. Photo not sent.");
+            return;
+        }
+
+        try {
+            // Build inline keyboard
+            String inlineKeyboard = String.format(
+                    "{\"inline_keyboard\":[[{\"text\":\"✅ Tasdiqlash\",\"callback_data\":\"%s\"},{\"text\":\"❌ Rad etish\",\"callback_data\":\"%s\"}]]}",
+                    approveCallback, rejectCallback
+            );
+
+            String apiUrl = String.format("https://api.telegram.org/bot%s/sendPhoto", botToken);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+            MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+            body.add("chat_id", targetChatId);
+            body.add("caption", caption);
+            body.add("parse_mode", "HTML");
+            body.add("reply_markup", inlineKeyboard);
+
+            if (photoPathOrUrl.startsWith("http")) {
+                body.add("photo", photoPathOrUrl);
+            } else {
+                File imageFile = new File(photoPathOrUrl);
+                if (!imageFile.exists()) {
+                    log.warn("Photo file not found at: {}. Falling back to text message.", photoPathOrUrl);
+                    sendMessageWithInlineButtons(targetChatId, caption, approveCallback, rejectCallback);
+                    return;
+                }
+                body.add("photo", new FileSystemResource(imageFile));
+            }
+
+            HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+            ResponseEntity<String> response = restTemplate.postForEntity(apiUrl, requestEntity, String.class);
+
+            if (response.getStatusCode().is2xxSuccessful()) {
+                log.info("Photo with inline buttons sent to {} successfully", targetChatId);
+            } else {
+                log.warn("sendPhoto returned non-2xx: {}", response.getStatusCode());
+            }
+        } catch (Exception e) {
+            log.error("Failed to send photo to {}: {}. Falling back to text.", targetChatId, e.getMessage());
+            sendMessageWithInlineButtons(targetChatId, caption, approveCallback, rejectCallback);
+        }
+    }
+
+    public void sendMessageWithInlineButtons(String targetChatId, String text, String approveCallback, String rejectCallback) {
+        if (botToken == null || botToken.equals("your_bot_token") || targetChatId == null || targetChatId.isBlank()) {
+            log.warn("Telegram bot not configured. Message not sent.");
+            return;
+        }
+        try {
+            String apiUrl = String.format("https://api.telegram.org/bot%s/sendMessage", botToken);
+
+            java.util.Map<String, Object> body = new java.util.HashMap<>();
+            body.put("chat_id", targetChatId);
+            body.put("text", text);
+            body.put("parse_mode", "HTML");
+
+            java.util.Map<String, Object> approveBtn = new java.util.HashMap<>();
+            approveBtn.put("text", "✅ Tasdiqlash");
+            approveBtn.put("callback_data", approveCallback);
+
+            java.util.Map<String, Object> rejectBtn = new java.util.HashMap<>();
+            rejectBtn.put("text", "❌ Rad etish");
+            rejectBtn.put("callback_data", rejectCallback);
+
+            java.util.List<java.util.Map<String, Object>> row = new java.util.ArrayList<>();
+            row.add(approveBtn);
+            row.add(rejectBtn);
+
+            java.util.List<java.util.List<java.util.Map<String, Object>>> keyboard = new java.util.ArrayList<>();
+            keyboard.add(row);
+
+            java.util.Map<String, Object> replyMarkup = new java.util.HashMap<>();
+            replyMarkup.put("inline_keyboard", keyboard);
+            body.put("reply_markup", replyMarkup);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            HttpEntity<java.util.Map<String, Object>> entity = new HttpEntity<>(body, headers);
+            restTemplate.postForEntity(apiUrl, entity, String.class);
+            log.info("Message with inline buttons sent to {}", targetChatId);
+        } catch (Exception e) {
+            log.error("Failed to send message with inline buttons to {}: {}", targetChatId, e.getMessage());
+            sendMessageTo(targetChatId, text);
+        }
+    }
+
+    public void answerCallbackQuery(String callbackQueryId, String text, boolean showAlert) {
+        if (botToken == null || botToken.equals("your_bot_token")) return;
+        try {
+            String apiUrl = String.format("https://api.telegram.org/bot%s/answerCallbackQuery", botToken);
+            java.util.Map<String, Object> body = new java.util.HashMap<>();
+            body.put("callback_query_id", callbackQueryId);
+            body.put("text", text);
+            body.put("show_alert", showAlert);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            HttpEntity<java.util.Map<String, Object>> entity = new HttpEntity<>(body, headers);
+            restTemplate.postForEntity(apiUrl, entity, String.class);
+        } catch (Exception e) {
+            log.error("Failed to answer callback query: {}", e.getMessage());
+        }
+    }
+
+    public void editMessageCaption(Long chatId, Integer messageId, String newCaption) {
+        if (botToken == null || botToken.equals("your_bot_token")) return;
+        try {
+            String apiUrl = String.format("https://api.telegram.org/bot%s/editMessageCaption", botToken);
+            java.util.Map<String, Object> body = new java.util.HashMap<>();
+            body.put("chat_id", chatId);
+            body.put("message_id", messageId);
+            body.put("caption", newCaption);
+            body.put("parse_mode", "HTML");
+            body.put("reply_markup", "{\"inline_keyboard\":[]}");
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            HttpEntity<java.util.Map<String, Object>> entity = new HttpEntity<>(body, headers);
+            restTemplate.postForEntity(apiUrl, entity, String.class);
+        } catch (Exception e) {
+            log.error("Failed to edit message caption: {}", e.getMessage());
+        }
+    }
+
+    public void editMessageText(Long chatId, Integer messageId, String newText) {
+        if (botToken == null || botToken.equals("your_bot_token")) return;
+        try {
+            String apiUrl = String.format("https://api.telegram.org/bot%s/editMessageText", botToken);
+            java.util.Map<String, Object> body = new java.util.HashMap<>();
+            body.put("chat_id", chatId);
+            body.put("message_id", messageId);
+            body.put("text", newText);
+            body.put("parse_mode", "HTML");
+            body.put("reply_markup", "{\"inline_keyboard\":[]}");
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            HttpEntity<java.util.Map<String, Object>> entity = new HttpEntity<>(body, headers);
+            restTemplate.postForEntity(apiUrl, entity, String.class);
+        } catch (Exception e) {
+            log.error("Failed to edit message text: {}", e.getMessage());
         }
     }
 }

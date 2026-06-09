@@ -68,6 +68,9 @@ public class Exam {
     @Builder.Default
     private String requiredPack = "free";
 
+    @Column(name = "pdf_url")
+    private String pdfUrl;
+
     @OneToMany(mappedBy = "exam", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Passage> passages;
 

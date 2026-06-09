@@ -59,3 +59,8 @@ databaseChangeLog:
       file: db/changelog/changes/v0029_add_image_to_question_and_options.yaml
   - include:
       file: db/changelog/changes/v0030_add_required_pack_to_exams.yaml
+  - include:
+      file: db/changelog/changes/v0031_add_pdf_and_explanation.yaml
+  - include:
+      file: db/changelog/changes/v0032_add_receipt_to_subscription_requests.yaml
+

@@ -42,7 +42,8 @@ public class SubscriptionRequestController {
     @PostMapping("/submit")
     public ResponseEntity<?> submit(@RequestBody Map<String, String> body, Authentication auth) {
         UUID packId = UUID.fromString(body.get("pack_id"));
-        service.createRequest(auth.getName(), packId);
+        String receiptUrl = body.get("receipt_url");
+        service.createRequest(auth.getName(), packId, receiptUrl);
         return ResponseEntity.ok().build();
     }
 }

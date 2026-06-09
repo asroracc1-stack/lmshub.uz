@@ -23,6 +23,7 @@ public class ExamDto {
     private LocalDateTime endTime;
     private Boolean isActive;
     private String requiredPack;
+    private String pdfUrl;
     // Exam player uchun - passages va ichidagi questions
     private List<PassageDto> passages;
 }

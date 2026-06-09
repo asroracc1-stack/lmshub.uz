@@ -32,7 +32,7 @@ public class SubscriptionRequestService {
     private jakarta.persistence.EntityManager entityManager;
 
     @Transactional
-    public SubscriptionRequest createRequest(String username, UUID packId) {
+    public SubscriptionRequest createRequest(String username, UUID packId, String receiptUrl) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         SubscriptionPack pack = packRepository.findById(packId)
@@ -43,6 +43,7 @@ public class SubscriptionRequestService {
                 .pack(pack)
                 .requestedAt(LocalDateTime.now())
                 .status("PENDING")
+                .receiptUrl(receiptUrl)
                 .build();
 
         SubscriptionRequest saved = repository.save(request);
@@ -51,18 +52,40 @@ public class SubscriptionRequestService {
         String message = String.format(
             "🚀 <b>Yangi Obuna So'rovi!</b>\n\n" +
             "👤 <b>Foydalanuvchi:</b> %s (@%s)\n" +
+            "📧 <b>Gmail:</b> %s\n" +
+            "📞 <b>Telefon:</b> %s\n" +
             "📦 <b>Paket:</b> %s (%s)\n" +
             "💰 <b>Narxi:</b> %s UZS\n" +
             "🕒 <b>Vaqt:</b> %s\n\n" +
-            "✅ Iltimos, saytdan yoki bot orqali faollashtiring!",
+            "Tasdiqlash yoki rad etish uchun quyidagi tugmalarni bosing:",
             user.getFullName() != null ? user.getFullName() : user.getUsername(),
             user.getUsername(),
+            user.getEmail() != null ? user.getEmail() : "Kiritilmagan",
+            user.getPhoneNumber() != null ? user.getPhoneNumber() : "Kiritilmagan",
             pack.getName(),
             pack.getType(),
             pack.getPrice(),
             LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
         );
-        telegramBotService.sendMessage(message);
+
+        String approveCallback = "approve_sub:" + saved.getId();
+        String rejectCallback = "reject_sub:" + saved.getId();
+
+        if (receiptUrl != null && !receiptUrl.isBlank()) {
+            String localFilePath = null;
+            if (receiptUrl.contains("/view/")) {
+                String filename = receiptUrl.substring(receiptUrl.lastIndexOf("/view/") + 6);
+                localFilePath = "uploads/" + filename;
+            }
+            if (localFilePath != null && new java.io.File(localFilePath).exists()) {
+                telegramBotService.sendPhotoWithInlineButtons("7499973776", message, localFilePath, approveCallback, rejectCallback);
+            } else {
+                String fullUrl = receiptUrl.startsWith("http") ? receiptUrl : (telegramBotService.getSiteUrl() + receiptUrl);
+                telegramBotService.sendPhotoWithInlineButtons("7499973776", message, fullUrl, approveCallback, rejectCallback);
+            }
+        } else {
+            telegramBotService.sendMessageWithInlineButtons("7499973776", message, approveCallback, rejectCallback);
+        }
 
         // 2. Send in-app site notifications to all SUPER_ADMIN and PACK_MANAGER users
         String notifTitle = "📦 Yangi obuna so'rovi";

@@ -180,6 +180,87 @@ public class GeminiService {
         return extractJson(resultText);
     }
 
+    public String executeWithRotation(Map<String, Object> requestBody, int maxOverallRetries) {
+        for (int attempt = 0; attempt < maxOverallRetries; attempt++) {
+            String key = getValidKey();
+            
+            if (key == null) {
+                long now = System.currentTimeMillis();
+                long minWait = keyCooldowns.values().stream().mapToLong(v -> v - now).min().orElse(30000L);
+                log.info("Barcha kalitlar band. {}ms kutilmoqda...", minWait);
+                try { Thread.sleep(Math.min(minWait, 10000L)); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+                key = getValidKey();
+            }
+
+            if (key == null) continue;
+
+            try {
+                return callGeminiWithKeyAndBody(requestBody, key);
+            } catch (org.springframework.web.client.HttpStatusCodeException e) {
+                int statusCode = e.getStatusCode().value();
+                if (statusCode == 429) {
+                    markKeyAsLimited(key, 60);
+                    continue;
+                } else if (statusCode == 403) {
+                    bannedKeys.add(key);
+                    keyCooldowns.put(key, Long.MAX_VALUE);
+                    log.error("🔑 Gemini API key ...{} banned/leaked (403). Marking as permanently disabled.",
+                        key.substring(Math.max(0, key.length() - 4)));
+                    if (bannedKeys.size() >= apiKeysList.size()) {
+                        throw new RuntimeException("AI xizmati mavjud emas: API kaliti muddati o'tgan yoki bloklangan. Yangi Gemini API kaliti kerak.");
+                    }
+                    continue;
+                }
+                throw new RuntimeException("AI tahlilida xatolik: " + e.getResponseBodyAsString());
+            } catch (Exception e) {
+                log.error("AI Error with key {}: {}", key.substring(Math.max(0, key.length()-4)), e.getMessage());
+                if (attempt == maxOverallRetries - 1) throw new RuntimeException("AI tahlili muvaffaqiyatsiz bo'ldi: " + e.getMessage());
+            }
+        }
+        throw new com.lmscrm.backend.exception.AiServiceLimitException("Barcha AI serverlari band. Iltimos 1 daqiqadan so'ng urinib ko'ring.", 60);
+    }
+
+    private String callGeminiWithKeyAndBody(Map<String, Object> requestBody, String key) throws Exception {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
+
+        ResponseEntity<String> response = restTemplate.postForEntity(GEMINI_API_URL + key, entity, String.class);
+        
+        JsonNode rootNode = objectMapper.readTree(response.getBody());
+        String resultText = rootNode.path("candidates").get(0).path("content").path("parts").get(0).path("text").asText();
+        
+        return extractJson(resultText);
+    }
+
+    public String analyzePdfMock(byte[] pdfBytes) {
+        if (apiKeysList.isEmpty()) {
+            throw new RuntimeException("Tizim sozlamalarida xatolik: Yaroqli Gemini API kaliti (GEMINI_API_KEY) topilmadi.");
+        }
+
+        String base64Pdf = Base64.getEncoder().encodeToString(pdfBytes);
+        
+        String prompt = "You are a professional teacher and exam creator. Analyze this exam PDF document.\n" +
+                "Extract all the questions, their possible options (if multiple choice), find the correct answer for each, and write a detailed step-by-step explanation for the solution of each question.\n" +
+                "CRITICAL: For any mathematical expressions, formulas, integrals, fractions, exponents, equations, or special characters, you MUST write them in standard, clean LaTeX format using $...$ for inline math and $$...$$ for block display math (e.g. use \\frac{a}{b}, \\int_{a}^{b}, \\sqrt{x}, \\cdot, etc.) so they render exactly 1-to-1 on the web page.\n" +
+                "Output ONLY a raw JSON object with the following root structure: {\"sections\": [...]}\n" +
+                "There should be at least one section. Each section must look like this: {\"title\": \"...\", \"passage\": \"...\", \"questions\": [...]}\n" +
+                "Each question must look like this: {\"prompt\": \"Savol matni (prompt)\", \"qtype\": \"mcq\", \"options\": [\"Option A text\", \"Option B text\", \"Option C text\", \"Option D text\"], \"correct_answer\": \"The exact text of the correct option\", \"points\": 1, \"explanation\": \"Step-by-step explanation of the solution in LaTeX/Markdown\"}\n" +
+                "If the PDF questions are not MCQs, use \"qtype\": \"short\" and leave options array empty.";
+
+        Map<String, Object> partText = Map.of("text", prompt);
+        Map<String, Object> partPdf = Map.of("inlineData", Map.of(
+            "mimeType", "application/pdf",
+            "data", base64Pdf
+        ));
+        
+        Map<String, Object> requestBody = Map.of(
+            "contents", List.of(Map.of("parts", List.of(partText, partPdf)))
+        );
+
+        return executeWithRotation(requestBody, 3);
+    }
+
     public String analyzeIeltsWriting(String essay, String taskType) {
         String prompt = "You are an IELTS Examiner. Grade this " + taskType + ". Output JSON: {\"bandScore\": 7.0, \"criteria\": {...}, \"mistakes\": [...], \"detailedAnalysis\": \"...\"}\nEssay:\n" + cleanHtml(essay);
         return executeWithRotation(prompt, 3);

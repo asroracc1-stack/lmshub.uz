@@ -119,14 +119,9 @@ export const getSidebarRoutes = (role: string, t: TFunction, options: { ielts?: 
     case "user":
       return [
         { to: "/user/dashboard", label: "Dashboard", icon: LayoutDashboard },
-        { 
-          label: t("nav.subjectsMenu", "SAT & Matematika"), 
-          icon: Target,
-          children: [
-            { to: "/user/sat", label: t("nav.sat", "SAT"), icon: Target },
-            { to: "/user/national-cert", label: t("nav.nationalCert", "Milliy Sertifikat"), icon: Landmark },
-          ]
-        },
+        { to: "/user/mocks", label: "IELTS Mocks", icon: FileText },
+        { to: "/user/sat", label: "SAT", icon: Target },
+        { to: "/user/national-cert", label: "Milliy Sertifikat", icon: Landmark },
         { to: "/user/subscriptions", label: "Obunalar", icon: Package },
         { to: "/user/achievements", label: "Yutuqlar", icon: Award },
         { to: "/user/leaderboard", label: "Peshqadamlar", icon: Trophy },

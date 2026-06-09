@@ -60,10 +60,84 @@ export default function MockEditor({ basePath = "/super-admin" }: { basePath?: s
   const [images, setImages] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const [aiText, setAiText] = useState("");
+  const [pdfUrl, setPdfUrl] = useState("");
+  const [pdfBusy, setPdfBusy] = useState(false);
   const [aiBusy, setAiBusy] = useState(false);
   const [audioBusy, setAudioBusy] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(isEdit);
+
+  const onPdfUpload = async (file: File) => {
+    setPdfBusy(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await api.post("/files/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      setPdfUrl(res.data);
+      toast.success("PDF variant yuklandi");
+    } catch (e: any) { 
+      toast.error("PDF yuklashda xatolik: " + (e.response?.data?.message || e.message)); 
+    } finally {
+      setPdfBusy(false);
+    }
+  };
+
+  const onParsePdfAi = async (file: File) => {
+    setAiBusy(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await api.post("/admin/exams/analyze-pdf", formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      const data = typeof res.data === "string" ? JSON.parse(res.data) : res.data;
+      if (data?.sections && Array.isArray(data.sections) && data.sections.length > 0) {
+        const mapped: Section[] = data.sections.map((s: any) => ({
+          title: s.title ?? "",
+          passage: s.passage ?? "",
+          imageUrl: s.imageUrl ?? "",
+          questions: (s.questions ?? []).filter((q: any) => q.prompt).map((q: any) => {
+            const rawOptions = Array.isArray(q.options) ? q.options : [];
+            const correctAns = String(q.correct_answer ?? "").trim();
+            const opts = rawOptions.map(o => ({
+                text: String(o),
+                isCorrect: String(o).trim() === correctAns,
+                imageUrl: "",
+                imagePosition: "left" as const
+            }));
+            if (opts.length === 0 && correctAns) {
+                opts.push({ text: correctAns, isCorrect: true, imageUrl: "", imagePosition: "left" as const });
+            }
+            return {
+                prompt: q.prompt ?? "",
+                qtype: ["mcq", "tfng", "ynng", "fill", "short", "matching", "headings"].includes(q.qtype) ? q.qtype : "short",
+                options: opts,
+                imageUrl: "",
+                imagePosition: "top" as const,
+                points: q.points ?? 1,
+                explanation: q.explanation ?? "",
+            };
+          }),
+        }));
+        const totalQs = mapped.reduce((acc, s) => acc + s.questions.length, 0);
+        if (totalQs === 0) {
+          toast.error("AI PDF-dan savollarni ajrata olmadi.");
+          return;
+        }
+        setSections(mapped);
+        toast.success(`Muvaffaqiyatli: PDF tahlil qilindi, ${mapped.length} bo'lim va ${totalQs} ta savol olindi.`);
+      } else {
+        toast.error("AI PDF ma'lumotlarini noto'g'ri formatda qaytardi.");
+      }
+    } catch (e: any) {
+      console.error("PDF AI Parse Error:", e);
+      toast.error("PDF AI tahlilida xatolik: " + (e.response?.data?.message || e.message));
+    } finally {
+      setAiBusy(false);
+    }
+  };
 
   // Load existing test in edit mode
   useEffect(() => {
@@ -79,6 +153,7 @@ export default function MockEditor({ basePath = "/super-admin" }: { basePath?: s
         setTitle(t.title ?? "");
         setDescription(t.description ?? "");
         setAudioUrl(t.audioUrl ?? t.audio_url ?? "");
+        setPdfUrl(t.pdfUrl ?? t.pdf_url ?? "");
         setDuration(t.durationMinutes ?? t.duration_minutes ?? 60);
         setDifficulty(t.difficulty?.toLowerCase() || "medium");
         setRequiredPack(t.required_pack || t.requiredPack || "free");
@@ -295,6 +370,7 @@ export default function MockEditor({ basePath = "/super-admin" }: { basePath?: s
         description: description || null,
         type: kind.toUpperCase(),
         audio_url: kind === "listening" ? audioUrl : null,
+        pdf_url: pdfUrl || null,
         duration_minutes: duration,
         passing_score: 50,
         difficulty: difficulty.toUpperCase(),
@@ -406,6 +482,24 @@ export default function MockEditor({ basePath = "/super-admin" }: { basePath?: s
           <Label>Tavsif (ixtiyoriy)</Label>
           <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
         </div>
+        <div className="space-y-1.5">
+          <Label>PDF Variant (ixtiyoriy)</Label>
+          <div className="flex gap-3 items-center flex-wrap">
+            <label className="cursor-pointer">
+              <input type="file" accept="application/pdf" hidden disabled={pdfBusy} onChange={(e) => e.target.files?.[0] && onPdfUpload(e.target.files[0])} />
+              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-dashed border-primary/40 hover:bg-primary/5 transition-smooth">
+                {pdfBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                PDF yuklash
+              </span>
+            </label>
+            <Input value={pdfUrl} onChange={(e) => setPdfUrl(e.target.value)} placeholder="yoki PDF URL kiriting" className="flex-1" />
+            {pdfUrl && (
+              <Button variant="ghost" className="text-rose-500" onClick={() => setPdfUrl("")}>
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        </div>
       </Card>
 
       {/* Type Specific Fields */}
@@ -435,32 +529,57 @@ export default function MockEditor({ basePath = "/super-admin" }: { basePath?: s
 
         <TabsContent value="ai" className="space-y-3">
           <Card className="p-6 space-y-3 bg-gradient-to-br from-violet-500/5 to-indigo-500/5 border-violet-500/30">
-            <div className="flex items-center gap-2"><Sparkles className="h-5 w-5 text-violet-500" /><h3 className="font-bold">AI Tahlil</h3></div>
-            <p className="text-sm text-muted-foreground">Test matnini, savollarini va kalitini joylang.</p>
-            <Textarea rows={10} value={aiText} onChange={(e) => setAiText(e.target.value)} placeholder="Passage + Questions + Answers..." />
-              <div className="flex items-center gap-2">
-                <Button onClick={onParseAi} disabled={aiBusy} className="flex-1 bg-violet-600 hover:bg-violet-700 text-white shadow-lg shadow-violet-500/20">
-                  {aiBusy ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Wand2 className="h-4 w-4 mr-2" />}
-                  AI bilan ajratish
-                </Button>
-                <input type="file" id="ai-images" multiple accept="image/*" className="hidden" onChange={onImageSelect} />
-                <Button variant="outline" size="icon" onClick={() => document.getElementById('ai-images')?.click()} title="Rasm yuklash">
-                  <ImageIcon className="h-4 w-4" />
-                </Button>
-              </div>
-
-              {previews.length > 0 && (
-                <div className="flex flex-wrap gap-2 pt-2 border-t mt-2">
-                  {previews.map((src, i) => (
-                    <div key={i} className="relative group w-16 h-16 rounded-md overflow-hidden border bg-muted">
-                      <img src={src} className="w-full h-full object-cover" alt="Preview" />
-                      <button onClick={() => removeImage(i)} className="absolute top-1 right-1 p-0.5 bg-rose-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                        <X className="h-3 w-3" />
-                      </button>
-                    </div>
-                  ))}
+            <Tabs defaultValue="text-ai">
+              <TabsList className="grid w-full grid-cols-2 mb-3 bg-violet-500/10">
+                <TabsTrigger value="text-ai" className="text-xs">Matn va Rasm orqali</TabsTrigger>
+                <TabsTrigger value="pdf-ai" className="text-xs">PDF hujjat orqali</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="text-ai" className="space-y-3">
+                <div className="flex items-center gap-2"><Sparkles className="h-5 w-5 text-violet-500" /><h3 className="font-bold">AI Matn Tahlili</h3></div>
+                <p className="text-sm text-muted-foreground">Test matnini, savollarini va kalitini joylang.</p>
+                <Textarea rows={10} value={aiText} onChange={(e) => setAiText(e.target.value)} placeholder="Passage + Questions + Answers..." />
+                <div className="flex items-center gap-2">
+                  <Button onClick={onParseAi} disabled={aiBusy} className="flex-1 bg-violet-600 hover:bg-violet-700 text-white shadow-lg shadow-violet-500/20">
+                    {aiBusy ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Wand2 className="h-4 w-4 mr-2" />}
+                    AI bilan ajratish
+                  </Button>
+                  <input type="file" id="ai-images" multiple accept="image/*" className="hidden" onChange={onImageSelect} />
+                  <Button variant="outline" size="icon" onClick={() => document.getElementById('ai-images')?.click()} title="Rasm yuklash">
+                    <ImageIcon className="h-4 w-4" />
+                  </Button>
                 </div>
-              )}
+                {previews.length > 0 && (
+                  <div className="flex flex-wrap gap-2 pt-2 border-t mt-2">
+                    {previews.map((src, i) => (
+                      <div key={i} className="relative group w-16 h-16 rounded-md overflow-hidden border bg-muted">
+                        <img src={src} className="w-full h-full object-cover" alt="Preview" />
+                        <button onClick={() => removeImage(i)} className="absolute top-1 right-1 p-0.5 bg-rose-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="pdf-ai" className="space-y-3">
+                <div className="flex items-center gap-2"><BrainCircuit className="h-5 w-5 text-violet-500" /><h3 className="font-bold">AI PDF Tahlili</h3></div>
+                <p className="text-sm text-muted-foreground">PDF variantni yuklang, AI savollar, variantlar, to'g'ri javoblar va LaTeX yechimlarini tahlil qilib avtomatik to'ldiradi.</p>
+                <div className="flex flex-col items-center justify-center border-2 border-dashed border-violet-500/30 rounded-xl p-8 bg-violet-500/5 hover:bg-violet-500/10 transition-colors">
+                  <input type="file" id="ai-pdf-file" accept="application/pdf" className="hidden" onChange={(e) => {
+                    if (e.target.files?.[0]) {
+                      onParsePdfAi(e.target.files[0]);
+                    }
+                  }} />
+                  <Button onClick={() => document.getElementById('ai-pdf-file')?.click()} disabled={aiBusy} className="bg-violet-600 hover:bg-violet-700 text-white shadow-lg shadow-violet-500/20">
+                    {aiBusy ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
+                    PDF yuklash va tahlil qilish
+                  </Button>
+                  <p className="text-xs text-muted-foreground mt-2">Faqat .pdf formatdagi fayllar qabul qilinadi</p>
+                </div>
+              </TabsContent>
+            </Tabs>
           </Card>
         </TabsContent>
 
@@ -496,6 +615,7 @@ export default function MockEditor({ basePath = "/super-admin" }: { basePath?: s
                       <span className="text-xs font-bold mt-2 w-6">#{qi + 1}</span>
                       <div className="flex-1 space-y-2">
                         <Textarea rows={2} placeholder="Savol matni..." className="text-sm" value={q.prompt} onChange={(e) => updQ(si, qi, { prompt: e.target.value })} />
+                        <Textarea rows={2} placeholder="Yechim tushuntirishi (LaTeX formulalarini yozish uchun $...$ va $$...$$ dan foydalaning)..." className="text-sm border-violet-500/20" value={q.explanation || ""} onChange={(e) => updQ(si, qi, { explanation: e.target.value })} />
                         <div className="flex items-center gap-2 flex-wrap">
                           <label className="cursor-pointer">
                             <input type="file" accept="image/*" hidden onChange={async (e) => {

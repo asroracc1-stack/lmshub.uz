@@ -78,7 +78,7 @@ public class AdminExamController {
 
     // Exam player — ID bo'yicha to'liq exam (passages + questions + options)
     @GetMapping("/{examId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER', 'STUDENT')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER', 'STUDENT', 'USER')")
     public ResponseEntity<ExamDto> getExamById(@PathVariable UUID examId) {
         return ResponseEntity.ok(examService.getExamDetails(examId));
     }
@@ -97,7 +97,7 @@ public class AdminExamController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER', 'STUDENT', 'USER')")
     public ResponseEntity<List<ExamDto>> getExams(@RequestParam("type") String type) {
         return ResponseEntity.ok(examService.getExamsByType(type));
     }
@@ -107,5 +107,19 @@ public class AdminExamController {
     public ResponseEntity<Void> deleteExam(@PathVariable UUID examId) {
         examService.deleteExam(examId);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping(value = "/analyze-pdf", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
+    public ResponseEntity<String> analyzePdf(@RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
+        try {
+            if (file.isEmpty()) {
+                return ResponseEntity.badRequest().body("Fayl bo'sh");
+            }
+            return ResponseEntity.ok(geminiService.analyzePdfMock(file.getBytes()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("PDF AI tahlilida xatolik: " + e.getMessage());
+        }
     }
 }

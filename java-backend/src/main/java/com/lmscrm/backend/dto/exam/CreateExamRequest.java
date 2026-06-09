@@ -13,6 +13,7 @@ public class CreateExamRequest {
     private String difficulty; // easy, medium, hard
     private String audioUrl;
     private String requiredPack;
+    private String pdfUrl;
     private List<SectionDto> sections;
     
     @Data
