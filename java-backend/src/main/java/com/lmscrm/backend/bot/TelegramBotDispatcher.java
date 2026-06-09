@@ -290,25 +290,30 @@ public class TelegramBotDispatcher {
     }
 
     private void handleNameInput(String chatId, String name, BotUserState state) {
-        // Create or update user
-        User user = userRepository.findByTelegramChatId(chatId).orElseGet(() -> {
-            User newUser = new User();
-            newUser.setTelegramChatId(chatId);
-            newUser.setUsername("tg_" + chatId);
-            newUser.setPassword("tg_" + chatId); // dummy password
-            newUser.setRole(AppRole.STUDENT);
-            newUser.setCoins(0L);
-            newUser.setActive(true);
-            return newUser;
-        });
-        
-        user.setFullName(name);
-        userRepository.save(user);
+        try {
+            // Create or update user
+            User user = userRepository.findByTelegramChatId(chatId).orElseGet(() -> {
+                User newUser = new User();
+                newUser.setTelegramChatId(chatId);
+                newUser.setUsername("tg_" + chatId);
+                newUser.setPassword("tg_" + chatId); // dummy password
+                newUser.setRole(AppRole.STUDENT);
+                newUser.setCoins(0L);
+                newUser.setActive(true);
+                return newUser;
+            });
+            
+            user.setFullName(name);
+            userRepository.save(user);
 
-        state.setState(BotState.AWAITING_PHONE);
-        stateRepository.save(state);
+            state.setState(BotState.AWAITING_PHONE);
+            stateRepository.save(state);
 
-        sendMessageWithMarkup(chatId, BotConstants.MSG_ASK_PHONE, KeyboardFactory.createPhoneRequestMenu());
+            sendMessageWithMarkup(chatId, BotConstants.MSG_ASK_PHONE, KeyboardFactory.createPhoneRequestMenu());
+        } catch (Exception e) {
+            log.error("Error in handleNameInput", e);
+            telegramBotService.sendMessageTo(chatId, "Xatolik yuz berdi: " + e.getMessage() + "\nCause: " + (e.getCause() != null ? e.getCause().getMessage() : "none"));
+        }
     }
 
     private void handleContact(String chatId, Map<String, Object> contact) {
