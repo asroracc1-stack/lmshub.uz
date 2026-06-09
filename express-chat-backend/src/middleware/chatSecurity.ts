@@ -85,8 +85,19 @@ export async function canUserMessage(senderId: string, receiverId: string): Prom
     return false;
   }
 
+  // Rule 6: USER can only write to PACK_MANAGER
+  if (sender.role === "USER") {
+    return receiver.role === "PACK_MANAGER";
+  }
+
+  // Rule 7: PACK_MANAGER can write to USER, STUDENT, ADMIN, SUPER_ADMIN
+  if (sender.role === "PACK_MANAGER") {
+    return receiver.role === "USER" || receiver.role === "STUDENT" || receiver.role === "ADMIN" || receiver.role === "SUPER_ADMIN";
+  }
+
   return false;
 }
+
 
 /**
  * Checks if a user has access to a specific conversation thread.

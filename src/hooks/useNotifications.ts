@@ -54,7 +54,8 @@ export function useNotifications() {
     // 2. Real-time Socket connection for Chat messages
     let socket: any = null;
     import("socket.io-client").then(({ io }) => {
-      socket = io("http://localhost:5000", { query: { userId: user.id } });
+      const socketUrl = import.meta.env.VITE_CHAT_SERVER_URL || "http://localhost:5000";
+      socket = io(socketUrl, { query: { userId: user.id } });
       
       socket.on("global_notification", (msg: any) => {
         // Create an in-memory notification for the new chat message

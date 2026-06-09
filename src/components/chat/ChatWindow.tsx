@@ -15,7 +15,7 @@ import {
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 
-const BACKEND_URL = "http://localhost:5000";
+const BACKEND_URL = import.meta.env.VITE_CHAT_SERVER_URL || "http://localhost:5000";
 
 interface ChatUser {
   id: string;
