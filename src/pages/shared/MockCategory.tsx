@@ -153,8 +153,7 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
   const proCnt  = tests.filter(t => getPackType(t.required_pack) === "pro").length;
   const eliteCnt= tests.filter(t => getPackType(t.required_pack) === "elite").length;
 
-  return ( <SectionGuard section={sectionKey} title={meta.label} description={meta.group}>
-    <div className="space-y-6 pb-8">
+  return ( <div className="space-y-6 pb-8">
 
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
@@ -492,6 +491,5 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
         </Card>
       </div>
     </div>
-  </SectionGuard>
   );
 }

@@ -2,6 +2,7 @@ package com.lmscrm.backend.domain.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import jakarta.persistence.PrePersist;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -63,6 +64,7 @@ public class Organization {
         return name;
     }
 
+    @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         if (isActive == null) {
