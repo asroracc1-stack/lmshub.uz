@@ -92,6 +92,7 @@ import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import Forbidden from "./pages/Forbidden";
 import RoleLayout from "./layouts/RoleLayout";
+import BotLogin from "./pages/BotLogin";
 
 const PMDashboard = lazy(() => import("./pages/pack-manager/Dashboard"));
 const PMPayments = lazy(() => import("./pages/pack-manager/Payments"));
@@ -199,6 +200,7 @@ const AppRoutes = () => {
       <Route errorElement={<ErrorBoundary />}>
         <Route path="/" element={<Landing />} />
         <Route path="/auth" element={<Auth />} />
+        <Route path="/auth/bot-login" element={<BotLogin />} />
         <Route path="/signin" element={<Auth defaultMode="signin" />} />
         <Route path="/signup" element={<Auth defaultMode="signup" />} />
         <Route path="/pitch-debug" element={<StartupPitch />} />

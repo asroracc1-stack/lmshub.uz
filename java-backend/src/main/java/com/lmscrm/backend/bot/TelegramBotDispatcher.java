@@ -14,6 +14,7 @@ import com.lmscrm.backend.repository.StudentAttemptRepository;
 import com.lmscrm.backend.repository.SubscriptionPackRepository;
 import com.lmscrm.backend.repository.SubscriptionRequestRepository;
 import com.lmscrm.backend.repository.UserRepository;
+import com.lmscrm.backend.repository.QuestionRepository;
 import com.lmscrm.backend.security.JwtTokenProvider;
 import com.lmscrm.backend.service.TelegramBotService;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +41,7 @@ public class TelegramBotDispatcher {
     private final ExamRepository examRepository;
     private final StudentAttemptRepository attemptRepository;
     private final StudentAnswerRepository answerRepository;
+    private final QuestionRepository questionRepository;
     private final SubscriptionPackRepository packRepository;
     private final SubscriptionRequestRepository subscriptionRequestRepository;
     private final BotReviewRepository botReviewRepository;
@@ -174,11 +176,19 @@ public class TelegramBotDispatcher {
                     com.lmscrm.backend.domain.entity.Exam exam = examOpt.get();
                     
                     String emoji = BotConstants.EMOJI_FREE;
-                    if ("pro".equalsIgnoreCase(exam.getRequiredPack())) emoji = BotConstants.EMOJI_PRO;
-                    else if ("elite".equalsIgnoreCase(exam.getRequiredPack())) emoji = BotConstants.EMOJI_ELITE;
+                    String packName = "Bepul";
+                    if ("pro".equalsIgnoreCase(exam.getRequiredPack())) {
+                        emoji = BotConstants.EMOJI_PRO;
+                        packName = "PRO Obuna";
+                    } else if ("elite".equalsIgnoreCase(exam.getRequiredPack())) {
+                        emoji = BotConstants.EMOJI_ELITE;
+                        packName = "ELITE Obuna";
+                    }
 
-                    String text = String.format("📄 <b>Test ma'lumoti</b>\n\n<b>Nomi:</b> %s %s\n<b>Savollar soni:</b> %s\n<b>Vaqt:</b> %s daqiqa\n\nBot orqali quyidagi tugmani bosib saytga kiring va testni yeching:",
-                            exam.getTitle(), emoji, exam.getPassages() != null ? exam.getPassages().size() * 10 : "?", exam.getDurationMinutes());
+                    int questionCount = questionRepository.countByExamId(examId);
+
+                    String text = String.format("📄 <b>Test ma'lumoti</b>\n\n<b>Nomi:</b> %s\n<b>Savollar soni:</b> %s\n<b>Vaqt:</b> %s daqiqa\n<b>Turi:</b> %s %s\n\nBot orqali quyidagi tugmani bosib saytga kiring va testni yeching:",
+                            exam.getTitle(), questionCount, exam.getDurationMinutes(), emoji, packName);
 
                     // Generate JWT token for deep linking
                     Optional<User> userOpt = userRepository.findByTelegramChatId(chatId);
