@@ -354,7 +354,6 @@ public class TelegramBotDispatcher {
             case BotConstants.BTN_TEST_ANALYSIS:
                 handleTestAnalysisMenu(chatId);
                 break;
-            case BotConstants.BTN_PAID_TESTS:
             case BotConstants.BTN_REFERRAL:
                 handleReferralMenu(chatId);
                 break;
