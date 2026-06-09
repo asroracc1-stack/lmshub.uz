@@ -265,6 +265,7 @@ public class TelegramBotDispatcher {
                     newUser.setTelegramChatId(chatId);
                     newUser.setUsername("tg_" + chatId);
                     newUser.setPassword("tg_" + chatId);
+                    newUser.setEmail("tg_" + chatId + "@lmshub.uz");
                     newUser.setRole(AppRole.STUDENT);
                     newUser.setCoins(0L);
                     newUser.setActive(true);
@@ -297,6 +298,7 @@ public class TelegramBotDispatcher {
                 newUser.setTelegramChatId(chatId);
                 newUser.setUsername("tg_" + chatId);
                 newUser.setPassword("tg_" + chatId); // dummy password
+                newUser.setEmail("tg_" + chatId + "@lmshub.uz");
                 newUser.setRole(AppRole.STUDENT);
                 newUser.setCoins(0L);
                 newUser.setActive(true);
