@@ -276,7 +276,12 @@ public class AdminUserService {
             parentStudentLinkRepository.deleteAll(links);
         }
 
-        userRepository.delete(user);
+        try {
+            userRepository.delete(user);
+            userRepository.flush(); // To force the exception if there's a constraint violation
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            throw new com.lmscrm.backend.exception.BusinessException("Bu foydalanuvchida test natijalari, to'lovlar yoki boshqa bog'liq ma'lumotlar mavjud bo'lganligi sababli, uni tizimdan butunlay o'chirib bo'lmaydi. Iltimos, uning o'rniga foydalanuvchini 'Faol emas' holatiga o'tkazing.");
+        }
     }
 
     public void resetPassword(UUID id, String newPassword, User currentUser) {
