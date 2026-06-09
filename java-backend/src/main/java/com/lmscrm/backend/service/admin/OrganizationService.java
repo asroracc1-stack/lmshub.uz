@@ -43,21 +43,23 @@ public class OrganizationService {
     }
 
     public OrganizationDto createOrganization(OrganizationDto dto) {
-        Organization org = Organization.builder()
-                .name(dto.getName())
-                .slug(dto.getSlug())
-                .description(dto.getDescription())
-                .logoUrl(dto.getLogoUrl())
-                .subscriptionPackage(dto.getPlanId() != null ? com.lmscrm.backend.domain.entity.SubscriptionPackage.builder().id(dto.getPlanId()).build() : null)
-                .address(dto.getAddress() != null ? Address.builder()
-                        .region(dto.getAddress().getRegion())
-                        .district(dto.getAddress().getDistrict())
-                        .streetAddress(dto.getAddress().getStreetAddress())
-                        .build() : null)
-                .phone(dto.getPhone())
-                .email(dto.getEmail())
-                .isActive(dto.getIsActive())
-                .build();
+        // Ensure slug is generated if not provided
+                String slug = (dto.getSlug() != null && !dto.getSlug().isEmpty()) ? dto.getSlug() : dto.getName().toLowerCase().replaceAll("\\s+", "-");
+                Organization org = Organization.builder()
+                        .name(dto.getName())
+                        .slug(slug)
+                        .description(dto.getDescription())
+                        .logoUrl(dto.getLogoUrl())
+                        .subscriptionPackage(dto.getPlanId() != null ? com.lmscrm.backend.domain.entity.SubscriptionPackage.builder().id(dto.getPlanId()).build() : null)
+                        .address(dto.getAddress() != null ? Address.builder()
+                                .region(dto.getAddress().getRegion())
+                                .district(dto.getAddress().getDistrict())
+                                .streetAddress(dto.getAddress().getStreetAddress())
+                                .build() : null)
+                        .phone(dto.getPhone())
+                        .email(dto.getEmail())
+                        .isActive(dto.getIsActive())
+                        .build();
         return toDto(organizationRepository.save(org));
     }
 

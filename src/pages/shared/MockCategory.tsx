@@ -5,6 +5,7 @@ import { api } from "@/lib/axios";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePackAccess, canAccessPack } from "@/hooks/usePackAccess";
 import { cn } from "@/lib/utils";
+
 import SectionGuard from "@/components/SectionGuard";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -152,7 +153,7 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
   const proCnt  = tests.filter(t => getPackType(t.required_pack) === "pro").length;
   const eliteCnt= tests.filter(t => getPackType(t.required_pack) === "elite").length;
 
-  return (
+  return ( <SectionGuard section={sectionKey} title={meta.label} description={meta.group}>
     <div className="space-y-6 pb-8">
 
       {/* Header */}
@@ -491,5 +492,6 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
         </Card>
       </div>
     </div>
+  </SectionGuard>
   );
 }
