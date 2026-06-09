@@ -76,6 +76,17 @@ public class TelegramBotDispatcher {
 
         String chatId = String.valueOf(chat.get("id"));
         String text = (String) message.get("text");
+        String telegramUsername = (String) from.get("username");
+
+        // Optional: Update telegramUsername if user exists
+        if (telegramUsername != null) {
+            userRepository.findByTelegramChatId(chatId).ifPresent(u -> {
+                if (!telegramUsername.equals(u.getTelegramUsername())) {
+                    u.setTelegramUsername(telegramUsername);
+                    userRepository.save(u);
+                }
+            });
+        }
 
         // Process contact
         if (message.containsKey("contact")) {
@@ -142,12 +153,23 @@ public class TelegramBotDispatcher {
 
     private void handleCallbackQuery(Map<String, Object> callbackQuery) {
         String queryId = (String) callbackQuery.get("id");
+        Map<String, Object> from = (Map<String, Object>) callbackQuery.get("from");
         String data = (String) callbackQuery.get("data");
         Map<String, Object> message = (Map<String, Object>) callbackQuery.get("message");
-        if (message == null || data == null) return;
+        if (message == null || data == null || from == null) return;
 
         Map<String, Object> chat = (Map<String, Object>) message.get("chat");
         String chatId = String.valueOf(chat.get("id"));
+
+        String telegramUsername = (String) from.get("username");
+        if (telegramUsername != null) {
+            userRepository.findByTelegramChatId(chatId).ifPresent(u -> {
+                if (!telegramUsername.equals(u.getTelegramUsername())) {
+                    u.setTelegramUsername(telegramUsername);
+                    userRepository.save(u);
+                }
+            });
+        }
 
         BotUserState state = getOrCreateState(chatId);
 
@@ -325,6 +347,7 @@ public class TelegramBotDispatcher {
                 if (currentUserOpt.isEmpty()) {
                     User newUser = new User();
                     newUser.setTelegramChatId(chatId);
+                    // if they hit /start, handleMessage already captured telegramUsername, but let's be safe
                     newUser.setUsername("tg_" + chatId);
                     newUser.setPassword("tg_" + chatId);
                     newUser.setEmail("tg_" + chatId + "@lmshub.uz");

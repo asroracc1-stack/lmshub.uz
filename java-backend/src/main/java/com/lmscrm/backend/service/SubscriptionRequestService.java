@@ -61,7 +61,7 @@ public class SubscriptionRequestService {
             "🕒 <b>Vaqt:</b> %s\n\n" +
             "Tasdiqlash yoki rad etish uchun quyidagi tugmalarni bosing:",
             user.getFullName() != null ? user.getFullName() : user.getUsername(),
-            user.getUsername(),
+            user.getTelegramUsername() != null ? user.getTelegramUsername() : user.getUsername(),
             user.getEmail() != null ? user.getEmail() : "Kiritilmagan",
             user.getPhoneNumber() != null ? user.getPhoneNumber() : "Kiritilmagan",
             pack.getName(),
@@ -193,14 +193,24 @@ public class SubscriptionRequestService {
             throw new RuntimeException("Obuna jadvaliga yozishda xatolik: " + e.getMessage(), e);
         }
 
-        // 3. Notify user via in-app notification
-        notificationService.createNotification(user,
-            "✅ Obunangiz faollashtirildi!",
-            String.format("%s paketi faollashtirildi. %s gacha amal qiladi. Barcha premium imkoniyatlardan foydalaning!",
-                pack.getName(), expiresAt.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))),
-            NotificationType.ALERT
+        // 3. Notify and 4. In-App notification
+        notificationService.createNotification(
+            user,
+            "🎉 Obuna tasdiqlandi",
+            String.format("Tabriklaymiz! Sizning %s paketingiz tasdiqlandi. Endi testlarni ishlashingiz mumkin.", pack.getName()),
+            NotificationType.SUCCESS
         );
-        log.info("✅ Step 5: In-app notification sent to user {}", user.getUsername());
+
+        // 5. Telegram notification to the user
+        if (user.getTelegramChatId() != null) {
+            String userMsg = String.format(
+                "🎉 <b>Tabriklaymiz!</b>\n\nSizning <b>%s</b> paketingiz ma'muriyat tomonidan tasdiqlandi!\n\nEndi saytga kirib, testlarni to'liq ishlashingiz mumkin. Omad yor bo'lsin!",
+                pack.getName()
+            );
+            telegramBotService.sendMessageTo(user.getTelegramChatId(), userMsg);
+        }
+
+        log.info("✅ Step 5: Notifications sent");
 
         // 4. Send Telegram Notification
         String tgMsg = String.format(
