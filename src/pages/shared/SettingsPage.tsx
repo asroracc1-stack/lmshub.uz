@@ -82,7 +82,7 @@ export default function SettingsPage() {
       i18n.changeLanguage(s.language);
       toast.success(t("common.saved"));
     } catch {
-      toast.error("Saqlashda xatolik");
+      toast.error(t("settings.saveError"));
     } finally {
       setSaving(false);
     }
@@ -97,15 +97,15 @@ export default function SettingsPage() {
       });
       toast.success(t("common.saved"));
     } catch (e: any) {
-      toast.error(e.response?.data?.message || "Xatolik yuz berdi");
+      toast.error(e.response?.data?.message || t("settings.errorOccurred"));
     } finally {
       setTgSaving(false);
     }
   };
 
   const changePassword = async () => {
-    if (pwdNew.length < 6) return toast.error("Kamida 6 ta belgi kiriting");
-    if (pwdNew !== pwdConfirm) return toast.error("Parollar mos kelmadi");
+    if (pwdNew.length < 6) return toast.error(t("settings.passwordLength"));
+    if (pwdNew !== pwdConfirm) return toast.error(t("settings.passwordMismatch"));
     setPwdSaving(true);
     try {
       const isSuperAdmin = user?.role?.toLowerCase() === "super_admin";
@@ -119,7 +119,7 @@ export default function SettingsPage() {
         if (res.data?.access_token) {
           localStorage.setItem("access_token", res.data.access_token);
         }
-        toast.success("Profil muvaffaqiyatli yangilandi!");
+        toast.success(t("settings.profileUpdated"));
         setNewUsername("");
       } else {
         await api.post(`/admin/users/${user?.id}/password`, { password: pwdNew });
@@ -128,7 +128,7 @@ export default function SettingsPage() {
       setPwdNew("");
       setPwdConfirm("");
     } catch (e: any) {
-      toast.error(e.response?.data?.message || "Xatolik yuz berdi");
+      toast.error(e.response?.data?.message || t("settings.errorOccurred"));
     } finally {
       setPwdSaving(false);
     }
@@ -203,7 +203,7 @@ export default function SettingsPage() {
                       </TabsTrigger>
                       <TabsTrigger value="telegram">
                         <Send className="h-3.5 w-3.5 mr-1.5" />
-                        <span className="hidden sm:inline">Telegram</span>
+                        <span className="hidden sm:inline">{t("settings.tabs.telegram")}</span>
                       </TabsTrigger>
                       <TabsTrigger value="security">
                         <Shield className="h-3.5 w-3.5 mr-1.5" />
@@ -344,16 +344,16 @@ export default function SettingsPage() {
                       {user?.role?.toLowerCase() === "super_admin" && (
                         <div className="space-y-1.5">
                           <Label className="flex items-center gap-2 text-sm font-semibold">
-                            <Shield className="h-3.5 w-3.5" /> Yangi Username
+                            <Shield className="h-3.5 w-3.5" /> {t("settings.newUsername")}
                           </Label>
                           <Input
                             type="text"
                             value={newUsername}
                             onChange={(e) => setNewUsername(e.target.value)}
-                            placeholder="Yangi username (ixtiyoriy)"
+                            placeholder={t("settings.newUsername")}
                           />
                           <p className="text-xs text-muted-foreground">
-                            Bo'sh qoldirilsa username o'zgarmaydi
+                            {t("settings.newUsernameDesc")}
                           </p>
                         </div>
                       )}
@@ -388,9 +388,7 @@ export default function SettingsPage() {
                         ) : (
                           <KeyRound className="h-4 w-4 mr-2" />
                         )}
-                        {user?.role?.toLowerCase() === "super_admin"
-                          ? "Profilni Yangilash"
-                          : t("settings.changePassword")}
+                        {t("settings.changePassword")}
                       </Button>
                     </TabsContent>
                   </Tabs>

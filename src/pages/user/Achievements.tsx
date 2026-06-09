@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
@@ -31,6 +32,7 @@ interface Achievement {
 }
 
 export default function UserAchievements() {
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const [activeTab, setActiveTab] = useState<"all" | "in_progress" | "completed" | "secret">("all");
 
@@ -75,8 +77,8 @@ export default function UserAchievements() {
     return [
       {
         id: "first_step",
-        name: "Birinchi Qadam",
-        description: "LMSHub platformasiga birinchi marta tizimga kirdingiz",
+        name: t("achievements.firstStepName"),
+        description: t("achievements.firstStepDesc"),
         type: "special",
         icon: Zap,
         iconBg: "from-amber-500/20 to-yellow-500/25 border-amber-500/30 dark:border-amber-500/30",
@@ -88,8 +90,8 @@ export default function UserAchievements() {
       },
       {
         id: "profile_setup",
-        name: "Profil Sozlamalari",
-        description: "Maqsadli ballingiz va imtihon sanasini o'rnating",
+        name: t("achievements.profileSetupName"),
+        description: t("achievements.profileSetupDesc"),
         type: "special",
         icon: UserCheck,
         iconBg: profileSetupCompleted 
@@ -103,8 +105,8 @@ export default function UserAchievements() {
       },
       {
         id: "streak_master",
-        name: "Streak Master",
-        description: "Ketma-ket kunlar davomida tizimda faol bo'ling",
+        name: t("achievements.streakMasterName"),
+        description: t("achievements.streakMasterDesc"),
         type: "core",
         icon: Flame,
         iconBg: "from-orange-500/20 to-red-500/25 border-orange-500/30 dark:border-orange-500/30",
@@ -117,8 +119,8 @@ export default function UserAchievements() {
       },
       {
         id: "practice_master",
-        name: "Mock Master",
-        description: "Platformada mock testlarni yakunlang",
+        name: t("achievements.practiceMasterName"),
+        description: t("achievements.practiceMasterDesc"),
         type: "core",
         icon: Target,
         iconBg: "from-emerald-500/20 to-teal-500/25 border-emerald-500/30 dark:border-emerald-500/30",
@@ -131,8 +133,8 @@ export default function UserAchievements() {
       },
       {
         id: "vocabulary_master",
-        name: "Lug'at Boyligi",
-        description: "Yangi IELTS / SAT so'zlarini o'zlashtiring",
+        name: t("achievements.vocabularyMasterName"),
+        description: t("achievements.vocabularyMasterDesc"),
         type: "core",
         icon: BookOpen,
         iconBg: "from-blue-500/20 to-indigo-500/25 border-blue-500/30 dark:border-blue-500/30",
@@ -145,8 +147,8 @@ export default function UserAchievements() {
       },
       {
         id: "community_builder",
-        name: "Hamjamiyat Yaratuvchi",
-        description: "Referral havola orqali do'stlaringizni taklif qiling",
+        name: t("achievements.communityBuilderName"),
+        description: t("achievements.communityBuilderDesc"),
         type: "core",
         icon: Users,
         iconBg: "from-cyan-500/20 to-blue-500/25 border-cyan-500/30 dark:border-cyan-500/30",
@@ -159,8 +161,8 @@ export default function UserAchievements() {
       },
       {
         id: "ielts_legend",
-        name: "IELTS Afsonasi",
-        description: "Premium o'quvchi darajasiga erishing (500+ Coin)",
+        name: t("achievements.ieltsLegendName"),
+        description: t("achievements.ieltsLegendDesc"),
         type: "special",
         icon: Trophy,
         iconBg: "from-rose-500/20 to-pink-500/25 border-rose-500/30 dark:border-rose-500/30",
@@ -172,8 +174,8 @@ export default function UserAchievements() {
       },
       {
         id: "secret_owl",
-        name: "Tungi Boyqush",
-        description: "Yarim tunda test topshirib, maxsus yutuqni oching",
+        name: t("achievements.secretOwlName"),
+        description: t("achievements.secretOwlDesc"),
         type: "secret",
         icon: Lock,
         iconBg: coins >= 300 
@@ -184,12 +186,12 @@ export default function UserAchievements() {
         progressMax: 1,
         progressCurrent: coins >= 300 ? 1 : 0,
         isCompleted: coins >= 300,
-        secretLabel: "Kamida Level 3 ga erishing"
+        secretLabel: t("achievements.secretOwlLabel", "Kamida Level 3 ga erishing")
       },
       {
         id: "secret_unstoppable",
-        name: "To'xtatib Bo'lmas",
-        description: "700 dan ortiq coin to'plab, eng oliy yutuqqa erishing",
+        name: t("achievements.secretUnstoppableName"),
+        description: t("achievements.secretUnstoppableDesc"),
         type: "secret",
         icon: Lock,
         iconBg: coins >= 700 
@@ -200,7 +202,7 @@ export default function UserAchievements() {
         progressMax: 700,
         progressCurrent: Math.min(700, coins),
         isCompleted: coins >= 700,
-        secretLabel: "700 coin to'plang"
+        secretLabel: t("achievements.secretUnstoppableLabel", "700 coin to'plang")
       }
     ];
   }, [coins, streakDays, testsCompleted, examDate]);
@@ -223,22 +225,22 @@ export default function UserAchievements() {
   // Recent activity list
   const recentActivities = useMemo(() => {
     const list = [
-      { id: "1", text: "Birinchi Qadam yutug'i ochildi", time: "2 soat oldin", done: true },
+      { id: "1", text: t("achievements.recent_activity_first_step", "Birinchi Qadam yutug'i ochildi"), time: t("time.hours_ago_2", "2 soat oldin"), done: true },
     ];
     if (examDate) {
-      list.unshift({ id: "2", text: "Profil Sozlamalari yutug'i ochildi", time: "1 kun oldin", done: true });
+      list.unshift({ id: "2", text: t("achievements.recent_activity_profile_setup", "Profil Sozlamalari yutug'i ochildi"), time: t("time.days_ago_1", "1 kun oldin"), done: true });
     }
     if (coins >= 100) {
-      list.unshift({ id: "3", text: "Hamjamiyat Yaratuvchi yutug'i ochildi", time: "3 kun oldin", done: true });
+      list.unshift({ id: "3", text: t("achievements.recent_activity_community_builder", "Hamjamiyat Yaratuvchi yutug'i ochildi"), time: t("time.days_ago_3", "3 kun oldin"), done: true });
     }
     if (coins >= 300) {
-      list.unshift({ id: "4", text: "Tungi Boyqush maxfiy nishoni ochildi!", time: "Yaqinda", done: true });
+      list.unshift({ id: "4", text: t("achievements.recent_activity_secret_owl", "Tungi Boyqush maxfiy nishoni ochildi!"), time: t("time.just_now", "Yaqinda"), done: true });
     }
     if (coins >= 500) {
-      list.unshift({ id: "5", text: "IELTS Afsonasi darajasi faollashdi!", time: "Yaqinda", done: true });
+      list.unshift({ id: "5", text: t("achievements.recent_activity_ielts_legend", "IELTS Afsonasi darajasi faollashdi!"), time: t("time.just_now", "Yaqinda"), done: true });
     }
     return list.slice(0, 4);
-  }, [coins, examDate]);
+  }, [coins, examDate, t]);
 
   // Badge list for gallery
   const badgeGallery = useMemo(() => {
@@ -260,19 +262,19 @@ export default function UserAchievements() {
 
   const timelineEvents = useMemo(() => {
     const list = [
-      { date: "Bugun", title: "LMS Hub-ga xush kelibsiz!", desc: "Platformada birinchi qadamingiz." },
+      { date: t("time.today", "Bugun"), title: t("achievements.timeline.welcome.title", "LMS Hub-ga xush kelibsiz!"), desc: t("achievements.timeline.welcome.desc", "Platformada birinchi qadamingiz.") },
     ];
     if (examDate) {
-      list.unshift({ date: "Kecha", title: "Maqsad belgilandi", desc: "Imtihon topshirish sanasini o'rnatdingiz." });
+      list.unshift({ date: t("time.yesterday", "Kecha"), title: t("achievements.timeline.target.title", "Maqsad belgilandi"), desc: t("achievements.timeline.target.desc", "Imtihon topshirish sanasini o'rnatdingiz.") });
     }
     if (testsCompleted > 0) {
-      list.unshift({ date: "Hafta boshida", title: "Birinchi Mock Test", desc: "Mock imtihonini muvaffaqiyatli yakunladingiz." });
+      list.unshift({ date: t("time.week_start", "Hafta boshida"), title: t("achievements.timeline.mock.title", "Birinchi Mock Test"), desc: t("achievements.timeline.mock.desc", "Mock imtihonini muvaffaqiyatli yakunladingiz.") });
     }
     if (coins >= 100) {
-      list.unshift({ date: "O'tgan hafta", title: "Coin Master", desc: "Balansingiz 100 dan ortiq coinga yetdi." });
+      list.unshift({ date: t("time.last_week", "O'tgan hafta"), title: t("achievements.timeline.coins.title", "Coin Master"), desc: t("achievements.timeline.coins.desc", "Balansingiz 100 dan ortiq coinga yetdi.") });
     }
     return list;
-  }, [coins, examDate, testsCompleted]);
+  }, [coins, examDate, testsCompleted, t]);
 
   // Loading skeleton layout
   if (loadingProfile) {
@@ -333,32 +335,32 @@ export default function UserAchievements() {
             <div className="flex-1 w-full space-y-4 text-center md:text-left">
               <div className="space-y-1">
                 <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 tracking-wider uppercase flex items-center justify-center md:justify-start gap-1.5">
-                  <Sparkles className="h-3.5 w-3.5" /> Achievement Daraja
+                  <Sparkles className="h-3.5 w-3.5" /> {t("achievements.title")}
                 </span>
                 <div className="flex items-baseline justify-center md:justify-start gap-2">
                   <h1 className="text-5xl font-black font-display text-slate-900 dark:text-white tracking-tight">{level}</h1>
-                  <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">daraja</span>
+                  <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">{t("achievements.level").toLowerCase()}</span>
                 </div>
               </div>
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs font-medium">
-                  <span className="text-slate-500 dark:text-slate-400">{coins} coin to'plangan</span>
+                  <span className="text-slate-500 dark:text-slate-400">{coins} {t("achievements.coinsEarned")}</span>
                   <span className="text-emerald-600 dark:text-emerald-400 font-bold">{levelProgressPercent}%</span>
                 </div>
                 <Progress value={levelProgressPercent} className="h-2.5 bg-slate-200 dark:bg-slate-900 border border-slate-300/65 dark:border-slate-800/40 rounded-full overflow-hidden" />
                 <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                  Keyingi daraja uchun yana <strong className="text-slate-900 dark:text-white font-semibold">{xpToNextLevel} coin</strong> to'plashingiz kerak
+                  {t("achievements.nextLevelSubtitle", { count: xpToNextLevel })}
                 </p>
               </div>
 
               {/* Badges and Streak mini badges */}
               <div className="flex items-center justify-center md:justify-start gap-3 pt-2">
                 <Badge className="bg-orange-500/10 hover:bg-orange-500/20 text-orange-600 dark:text-orange-400 border border-orange-500/25 px-3 py-1 text-xs gap-1">
-                  <Flame className="h-3.5 w-3.5 fill-orange-500/25" /> {streakDays} Kunlik Streak
+                  <Flame className="h-3.5 w-3.5 fill-orange-500/25" /> {t("achievements.streakDays", { count: streakDays })}
                 </Badge>
                 <Badge className="bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/25 px-3 py-1 text-xs gap-1">
-                  <Shield className="h-3.5 w-3.5" /> {completedCount} Nishon ochilgan
+                  <Shield className="h-3.5 w-3.5" /> {t("achievements.badgesUnlocked", { count: completedCount })}
                 </Badge>
               </div>
             </div>
@@ -375,9 +377,9 @@ export default function UserAchievements() {
             </div>
             
             <div className="space-y-2 pt-6">
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Ajoyib natija!</h3>
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">{t("common.greatResult", "Ajoyib natija!")}</h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                Siz hozirda platformadagi barcha faol o'quvchilar orasida coin yig'ish ko'rsatkichi bo'yicha <strong className="text-emerald-600 dark:text-emerald-400 font-semibold">top 12%</strong> guruhidasiz. Shunday davom eting!
+                {t("achievements.leaderboardRank", { count: 12 })}
               </p>
             </div>
           </Card>
@@ -386,10 +388,10 @@ export default function UserAchievements() {
         {/* METRICS GRID */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { label: "Ketma-ket faollik", value: `${streakDays} Kun`, desc: "Joriy streak muddati", icon: Flame, color: "text-orange-600 dark:text-orange-400 bg-orange-500/10 border-orange-500/20" },
-            { label: "Jami to'plangan XP", value: `${xp} Ball`, desc: `${coins} ta coinga asosan`, icon: Trophy, color: "text-yellow-600 dark:text-yellow-400 bg-yellow-500/10 border-yellow-500/20" },
-            { label: "Ochilgan nishonlar", value: `${completedCount} ta`, desc: "Nishonlar va medallar", icon: Shield, color: "text-purple-600 dark:text-purple-400 bg-purple-500/10 border-purple-500/20" },
-            { label: "Tugatilgan mocklar", value: `${testsCompleted} ta`, desc: "Mock testlar topshiriqlari", icon: Target, color: "text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 border-cyan-500/20" }
+            { label: t("dashboard.metric_streak", "Ketma-ket faollik"), value: t("achievements.streakDaysVal", "{{count}} Kun", { count: streakDays }), desc: t("achievements.streakDaysDesc", "Joriy streak muddati"), icon: Flame, color: "text-orange-600 dark:text-orange-400 bg-orange-500/10 border-orange-500/20" },
+            { label: t("achievements.totalXpLabel", "Jami to'plangan XP"), value: t("achievements.xpValue", "{{count}} Ball", { count: xp }), desc: t("achievements.xpDesc", "{{count}} ta coinga asosan", { count: coins }), icon: Trophy, color: "text-yellow-600 dark:text-yellow-400 bg-yellow-500/10 border-yellow-500/20" },
+            { label: t("achievements.badgesUnlockedCount", "Ochilgan nishonlar"), value: t("achievements.badgesCountVal", "{{count}} ta", { count: completedCount }), desc: t("achievements.badgesDesc", "Nishonlar va medallar"), icon: Shield, color: "text-purple-600 dark:text-purple-400 bg-purple-500/10 border-purple-500/20" },
+            { label: t("achievements.completedMocksLabel", "Tugatilgan mocklar"), value: t("achievements.mocksCountVal", "{{count}} ta", { count: testsCompleted }), desc: t("achievements.mocksDesc", "Mock testlar topshiriqlari"), icon: Target, color: "text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 border-cyan-500/20" }
           ].map((item, i) => (
             <Card key={i} className="p-4 bg-white dark:bg-[#0f172a]/50 border-slate-200 dark:border-slate-800/50 backdrop-blur-sm rounded-xl space-y-3 shadow-sm">
               <div className="flex items-center justify-between">
@@ -415,10 +417,10 @@ export default function UserAchievements() {
             {/* FILTER TABS */}
             <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800/40 rounded-xl w-fit">
               {[
-                { id: "all", label: "Barchasi" },
-                { id: "in_progress", label: "Jarayonda", count: inProgressCount },
-                { id: "completed", label: "Bajarildi", count: completedCount },
-                { id: "secret", label: "Maxfiy", count: secretCount }
+                { id: "all", label: t("achievements.tabs.all") },
+                { id: "in_progress", label: t("achievements.tabs.in_progress"), count: inProgressCount },
+                { id: "completed", label: t("achievements.tabs.completed"), count: completedCount },
+                { id: "secret", label: t("achievements.tabs.secret"), count: secretCount }
               ].map(tab => (
                 <Button
                   key={tab.id}
@@ -483,7 +485,7 @@ export default function UserAchievements() {
                                 )}
                               </div>
                               <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
-                                {isLocked ? `Maxfiy yutuq: ${ach.secretLabel}` : ach.levelText || "Maxsus topshiriq"}
+                                {isLocked ? t("achievements.secretLabelText", "Maxfiy yutuq: {{requirement}}", { requirement: ach.secretLabel }) : ach.levelText || t("achievements.specialTask", "Maxsus topshiriq")}
                               </p>
                             </div>
 
@@ -498,7 +500,7 @@ export default function UserAchievements() {
 
                           {/* Card Description */}
                           <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed min-h-[32px]">
-                            {isLocked ? "Ushbu yutuq shartlarini bajarib uni ochishingiz kerak. Hozircha yopiq." : ach.description}
+                            {isLocked ? t("achievements.lockedDesc") : ach.description}
                           </p>
                         </div>
 
@@ -506,7 +508,7 @@ export default function UserAchievements() {
                         {!isLocked && (
                           <div className="space-y-2 pt-4">
                             <div className="flex items-center justify-between text-[10px] font-semibold">
-                              <span className="text-slate-500">Jarayon</span>
+                              <span className="text-slate-500">{t("achievements.process")}</span>
                               <span className="text-slate-700 dark:text-slate-300">
                                 {ach.progressCurrent} / {ach.progressMax}
                               </span>
@@ -520,7 +522,7 @@ export default function UserAchievements() {
 
                         {isLocked && (
                           <div className="mt-4 p-2 bg-slate-100/60 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-900 rounded-xl flex items-center justify-center gap-1 text-[10px] font-bold text-slate-400 dark:text-slate-500">
-                            <Eye className="h-3 w-3" /> Qulfni ochish uchun faol bo'ling
+                            <Eye className="h-3 w-3" /> {t("achievements.secretLabel")}
                           </div>
                         )}
 
@@ -539,7 +541,7 @@ export default function UserAchievements() {
             <Card className="p-5 bg-white dark:bg-[#0f172a]/70 border-slate-200 dark:border-slate-800/60 backdrop-blur-md rounded-2xl shadow-md dark:shadow-xl space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="font-display font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
-                  <Shield className="h-4.5 w-4.5 text-primary" /> Medal galereyasi
+                  <Shield className="h-4.5 w-4.5 text-primary" /> {t("achievements.badgesUnlockedCount")}
                 </h3>
                 <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold">{completedCount} / 12</span>
               </div>
@@ -567,7 +569,7 @@ export default function UserAchievements() {
             {/* RECENT ACTIVITY LOG */}
             <Card className="p-5 bg-white dark:bg-[#0f172a]/70 border-slate-200 dark:border-slate-800/60 backdrop-blur-md rounded-2xl shadow-md dark:shadow-xl space-y-4">
               <h3 className="font-display font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
-                <Activity className="h-4.5 w-4.5 text-emerald-600 dark:text-emerald-400" /> Oxirgi natijalar
+                <Activity className="h-4.5 w-4.5 text-emerald-600 dark:text-emerald-400" /> {t("achievements.recent")}
               </h3>
 
               <div className="space-y-3.5">
@@ -586,7 +588,7 @@ export default function UserAchievements() {
             {/* ACHIEVEMENT TIMELINE */}
             <Card className="p-5 bg-white dark:bg-[#0f172a]/70 border-slate-200 dark:border-slate-800/60 backdrop-blur-md rounded-2xl shadow-md dark:shadow-xl space-y-4">
               <h3 className="font-display font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
-                <Calendar className="h-4.5 w-4.5 text-blue-500 dark:text-blue-400" /> Tarixiy xronologiya
+                <Calendar className="h-4.5 w-4.5 text-blue-500 dark:text-blue-400" /> {t("achievements.timeline")}
               </h3>
 
               <div className="relative border-l border-slate-250 dark:border-slate-800 pl-4 ml-2 space-y-4">
