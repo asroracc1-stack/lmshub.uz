@@ -1,0 +1,60 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0033-1
+      author: antigravity
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: user_subscriptions
+      changes:
+        - createTable:
+            tableName: user_subscriptions
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_user_subscriptions_user
+                    references: users(id)
+              - column:
+                  name: pack_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_user_subscriptions_pack
+                    references: subscription_packs(id)
+              - column:
+                  name: starts_at
+                  type: timestamp
+                  defaultValueComputed: now()
+              - column:
+                  name: expires_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: is_active
+                  type: boolean
+                  defaultValueBoolean: false
+              - column:
+                  name: status
+                  type: varchar(50)
+                  defaultValue: "pending"
+              - column:
+                  name: granted_by
+                  type: uuid
+                  constraints:
+                    foreignKeyName: fk_user_subscriptions_grantor
+                    references: users(id)
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: now()
