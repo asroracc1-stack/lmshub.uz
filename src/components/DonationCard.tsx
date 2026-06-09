@@ -3,6 +3,7 @@ import { Heart, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 const DONATION_DATA = {
   cardNumber: "9860 1701 0590 7738",
@@ -12,10 +13,11 @@ const DONATION_DATA = {
 export default function DonationCard() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
+  const { t } = useTranslation();
 
   const copy = () => {
     navigator.clipboard.writeText(DONATION_DATA.cardNumber.replace(/\s/g, ""));
-    toast.success("Karta raqami nusxalandi");
+    toast.success(t("userDashboard.donation.toastSuccess"));
   };
 
   return (
@@ -39,11 +41,11 @@ export default function DonationCard() {
             <Heart className={cn("h-5 w-5", isDark ? "text-emerald-400 fill-emerald-400/10" : "text-emerald-600 fill-emerald-600/10")} />
           </div>
           <h3 className={cn("font-display font-black text-lg md:text-xl tracking-tight", isDark ? "text-white" : "text-slate-900")}>
-            LMSHUB rivojiga plastik karta orqali hissa qo'shing
+            {t("userDashboard.donation.title")}
           </h3>
         </div>
         <p className={cn("text-xs md:text-sm mb-8 font-medium max-w-xl", isDark ? "text-slate-400" : "text-slate-500")}>
-          Sizning donat yoki premium xaridingiz platformani rivojlantirishga yordam beradi.
+          {t("userDashboard.donation.desc")}
         </p>
         
         <div className="grid sm:grid-cols-2 gap-6">
@@ -57,7 +59,7 @@ export default function DonationCard() {
             onClick={copy}
           >
             <p className={cn("text-[10px] uppercase tracking-[0.2em] font-black mb-3", isDark ? "text-slate-500" : "text-slate-400")}>
-              KARTA RAQAMI
+              {t("userDashboard.donation.cardNumber")}
             </p>
             <div className="flex items-center justify-between gap-3">
               <p className={cn("font-mono text-lg md:text-xl font-bold tracking-wider", isDark ? "text-white" : "text-slate-900")}>
@@ -77,7 +79,7 @@ export default function DonationCard() {
             isDark ? "bg-slate-950/50 border-white/5" : "bg-slate-50/50 border-slate-100"
           )}>
             <p className={cn("text-[10px] uppercase tracking-[0.2em] font-black mb-3", isDark ? "text-slate-500" : "text-slate-400")}>
-              KARTA EGASI
+              {t("userDashboard.donation.cardOwner")}
             </p>
             <p className={cn("text-lg md:text-xl font-bold tracking-tight", isDark ? "text-white" : "text-slate-900")}>
               {DONATION_DATA.cardOwner}

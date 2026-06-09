@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import com.lmscrm.backend.domain.enums.AppRole;
+
 @Service
 @RequiredArgsConstructor
 public class GradeService {
@@ -57,7 +59,7 @@ public class GradeService {
                     .subject(subject)
                     .lesson(lesson)
                     .score(request.getScore())
-                    .maxScore(request.getMaxScore() != null ? request.getMaxScore() : 100)
+                    .maxScore(request.getMaxScore() != null ? request.getMaxScore() : 5)
                     .comment(request.getComment())
                     .organization(subject.getOrganization())
                     .build();
@@ -97,5 +99,42 @@ public class GradeService {
         return gradeRepository.findByStudentIdInAndSubjectId(studentIds, subjectId).stream()
                 .map(mapper::toGradeDto)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<GradeDto> getTeacherGrades(UUID teacherId) {
+        return gradeRepository.findByTeacherId(teacherId).stream()
+                .map(mapper::toGradeDto)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public GradeDto updateGrade(UUID gradeId, GradeDto request, User teacher) {
+        Grade grade = gradeRepository.findById(gradeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Grade not found"));
+        if (teacher.getRole() != AppRole.SUPER_ADMIN && 
+            teacher.getRole() != AppRole.ADMIN && 
+            !grade.getTeacher().getId().equals(teacher.getId())) {
+            throw new RuntimeException("Unauthorized to update this grade");
+        }
+        grade.setScore(request.getScore());
+        grade.setComment(request.getComment());
+        if (request.getMaxScore() != null) {
+            grade.setMaxScore(request.getMaxScore());
+        }
+        Grade savedGrade = gradeRepository.save(grade);
+        return mapper.toGradeDto(savedGrade);
+    }
+
+    @Transactional
+    public void deleteGrade(UUID gradeId, User teacher) {
+        Grade grade = gradeRepository.findById(gradeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Grade not found"));
+        if (teacher.getRole() != AppRole.SUPER_ADMIN && 
+            teacher.getRole() != AppRole.ADMIN && 
+            !grade.getTeacher().getId().equals(teacher.getId())) {
+            throw new RuntimeException("Unauthorized to delete this grade");
+        }
+        gradeRepository.delete(grade);
     }
 }

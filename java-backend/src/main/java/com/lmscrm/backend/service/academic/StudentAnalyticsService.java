@@ -1,16 +1,15 @@
 package com.lmscrm.backend.service.academic;
 
 import com.lmscrm.backend.domain.entity.Attendance;
-import com.lmscrm.backend.domain.entity.Feedback;
+import com.lmscrm.backend.domain.entity.StudentFeedback;
 import com.lmscrm.backend.domain.entity.Grade;
 import com.lmscrm.backend.domain.enums.AttendanceStatus;
-import com.lmscrm.backend.domain.enums.FeedbackStatus;
 import com.lmscrm.backend.dto.academic.AttendanceDto;
 import com.lmscrm.backend.dto.academic.GradeDto;
 import com.lmscrm.backend.dto.academic.StudentAnalyticsDto;
-import com.lmscrm.backend.dto.communication.FeedbackDto;
+import com.lmscrm.backend.dto.communication.StudentFeedbackDto;
 import com.lmscrm.backend.repository.AttendanceRepository;
-import com.lmscrm.backend.repository.FeedbackRepository;
+import com.lmscrm.backend.repository.StudentFeedbackRepository;
 import com.lmscrm.backend.repository.GradeRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +31,7 @@ public class StudentAnalyticsService {
 
     private final GradeRepository gradeRepository;
     private final AttendanceRepository attendanceRepository;
-    private final FeedbackRepository feedbackRepository;
+    private final StudentFeedbackRepository studentFeedbackRepository;
 
     @Transactional(readOnly = true)
     public StudentAnalyticsDto getAnalytics(UUID studentId) {
@@ -41,7 +40,7 @@ public class StudentAnalyticsService {
         List<Grade> grades = gradeRepository.findByStudentId(studentId);
 
         double totalScore = grades.stream().mapToDouble(g -> g.getScore() != null ? g.getScore() : 0).sum();
-        double totalMax   = grades.stream().mapToDouble(g -> g.getMaxScore() != null ? g.getMaxScore() : 100).sum();
+        double totalMax   = grades.stream().mapToDouble(g -> g.getMaxScore() != null ? g.getMaxScore() : 5).sum();
         double averageScore = totalMax > 0 ? (totalScore / totalMax) * 100.0 : 0.0;
 
         List<GradeDto> gradeDtos = grades.stream().map(g -> {
@@ -83,19 +82,21 @@ public class StudentAnalyticsService {
         }).collect(Collectors.toList());
 
         // ─── 3. FEEDBACKS (o'qituvchi fikrlari) ──────────────────────────────
-        List<Feedback> feedbackList = feedbackRepository.findAllByUserId(studentId);
+        List<StudentFeedback> feedbackList = studentFeedbackRepository.findByStudentIdOrderByCreatedAtDesc(studentId);
 
-        List<FeedbackDto> feedbackDtos = feedbackList.stream().map(f -> {
-            FeedbackDto dto = new FeedbackDto();
-            dto.setId(f.getId());
-            dto.setUserId(f.getUser() != null ? f.getUser().getId() : null);
-            dto.setSubject(f.getSubject());
-            dto.setMessage(f.getMessage());
-            dto.setStatus(f.getStatus());
-            dto.setSupportComment(f.getSupportComment());
-            dto.setCreatedAt(f.getCreatedAt());
-            dto.setUpdatedAt(f.getUpdatedAt());
-            return dto;
+        List<StudentFeedbackDto> feedbackDtos = feedbackList.stream().map(f -> {
+            return StudentFeedbackDto.builder()
+                    .id(f.getId())
+                    .studentId(f.getStudent().getId())
+                    .studentName(f.getStudent().getFullName() != null ? f.getStudent().getFullName() : f.getStudent().getUsername())
+                    .teacherId(f.getTeacher().getId())
+                    .teacherName(f.getTeacher().getFullName() != null ? f.getTeacher().getFullName() : f.getTeacher().getUsername())
+                    .organizationId(f.getOrganization().getId())
+                    .title(f.getTitle())
+                    .body(f.getBody())
+                    .type(f.getType())
+                    .createdAt(f.getCreatedAt())
+                    .build();
         }).collect(Collectors.toList());
 
         return StudentAnalyticsDto.builder()

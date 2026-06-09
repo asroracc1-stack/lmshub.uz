@@ -9,22 +9,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-
-interface GreetingInfo {
-  text: string;
-  emoji: string;
-  sub: string;
-}
-
-function getGreeting(hour: number): GreetingInfo {
-  if (hour >= 6 && hour < 12) {
-    return { text: "Xayrli tong", emoji: "🌅", sub: "Yangi kun — yangi imkoniyatlar sizi kutmoqda!" };
-  } else if (hour >= 12 && hour < 18) {
-    return { text: "Xayrli kun", emoji: "☀️", sub: "Bugungi maqsadlaringizga erishishda omad!" };
-  } else {
-    return { text: "Xayrli kech", emoji: "🌙", sub: "Bugun ko'p narsa qildingiz. Yaxshi dam oling!" };
-  }
-}
+import { useTranslation } from "react-i18next";
 
 const WATERMARKS = [
   { Icon: Headphones,  top: "8%",  right: "6%",   size: 72, rotate: -15 },
@@ -35,29 +20,45 @@ const WATERMARKS = [
   { Icon: Zap,         top: "70%", right: "38%",   size: 40, rotate: -5 },
 ];
 
-const MOTIVATIONS = [
-  "Har kuni kichik qadamlar katta natijalarga olib boradi.",
-  "Bilim — bu boylikning eng ishonchli manbai.",
-  "Bugun o'rgangan narsang ertangi kuchingdir.",
-  "Muvaffaqiyat — bu har kuni bir oz yaxshilanishdir.",
-];
-
 export default function WelcomeBanner() {
   const { profile } = useAuth();
+  const { t } = useTranslation();
 
-  const greeting = useMemo(() => getGreeting(new Date().getHours()), []);
+  const currentHour = new Date().getHours();
+
+  const greeting = useMemo(() => {
+    if (currentHour >= 6 && currentHour < 12) {
+      return { 
+        text: t("welcomeBanner.greeting.morning"), 
+        emoji: "🌅", 
+        sub: t("welcomeBanner.sub.morning") 
+      };
+    } else if (currentHour >= 12 && currentHour < 18) {
+      return { 
+        text: t("welcomeBanner.greeting.afternoon"), 
+        emoji: "☀️", 
+        sub: t("welcomeBanner.sub.afternoon") 
+      };
+    } else {
+      return { 
+        text: t("welcomeBanner.greeting.evening"), 
+        emoji: "🌙", 
+        sub: t("welcomeBanner.sub.evening") 
+      };
+    }
+  }, [currentHour, t]);
 
   const displayName = useMemo(() => {
-    if (!profile) return "Foydalanuvchi";
+    if (!profile) return t("welcomeBanner.defaultName");
     const full = profile.full_name?.trim();
     if (full) return full.split(" ")[0]; // only first name
-    return profile.username || "Foydalanuvchi";
-  }, [profile]);
+    return profile.username || t("welcomeBanner.defaultName");
+  }, [profile, t]);
 
-  const motivation = useMemo(
-    () => MOTIVATIONS[new Date().getDay() % MOTIVATIONS.length],
-    []
-  );
+  const motivation = useMemo(() => {
+    const index = new Date().getDay() % 4;
+    return t(`welcomeBanner.motivations.${index}`);
+  }, [t]);
 
   return (
     <motion.div
@@ -103,13 +104,13 @@ export default function WelcomeBanner() {
               className="text-xl origin-bottom-right inline-block animate-wave select-none"
               aria-hidden
             >
-              👋
+              {greeting.emoji}
             </span>
           </div>
 
           {/* Main welcome headline */}
           <h2 className="font-display text-2xl md:text-3xl lg:text-4xl font-extrabold text-white leading-tight tracking-tight">
-            Xush kelibsiz,{" "}
+            {t("welcomeBanner.title", { name: "" })}
             <span className="text-yellow-300 drop-shadow-sm">{displayName}!</span>
           </h2>
 
@@ -140,7 +141,7 @@ export default function WelcomeBanner() {
             </div>
             <div>
               <p className="text-white/60 text-xs font-semibold uppercase tracking-wider mb-1">
-                Bugungi ilhom
+                {t("welcomeBanner.motivationTitle")}
               </p>
               <p className="text-white text-sm md:text-base font-medium leading-snug">
                 "{motivation}"

@@ -99,6 +99,85 @@
     "delete": "Delete",
     "cancel": "Cancel"
   },
+  "gradesPage": {
+    "title": "Grades & Feedback",
+    "subtitle": "Grade students and leave feedback",
+    "addGrade": "Add Grade",
+    "addFeedback": "Leave Feedback",
+    "tabs": {
+      "grades": "Grades",
+      "feedbacks": "Feedback"
+    },
+    "gradeDialog": {
+      "title": "New Grade",
+      "editTitle": "Edit Grade",
+      "description": "Add a new grade for the selected student and subject.",
+      "editDescription": "Edit grade for the selected student.",
+      "student": "Student",
+      "subject": "Subject",
+      "selectPlaceholder": "Select",
+      "scoreLabel": "Score (0–5)",
+      "scorePlaceholder": "Select score",
+      "comment": "Comment",
+      "save": "Save",
+      "cancel": "Cancel",
+      "update": "Update"
+    },
+    "feedbackDialog": {
+      "title": "Feedback",
+      "editTitle": "Edit Feedback",
+      "description": "Send your feedback to the student.",
+      "editDescription": "Edit your feedback.",
+      "student": "Student",
+      "type": "Type",
+      "positive": "👍 Positive",
+      "neutral": "💬 Neutral",
+      "negative": "⚠️ Negative",
+      "heading": "Title",
+      "comment": "Comment",
+      "send": "Send",
+      "update": "Update",
+      "cancel": "Cancel"
+    },
+    "emptyGrades": "No grades yet",
+    "emptyFeedbacks": "No feedback yet",
+    "deleteGradeConfirm": "Are you sure you want to delete this grade?",
+    "deleteFeedbackConfirm": "Are you sure you want to delete this?",
+    "deleted": "Deleted",
+    "gradeSaved": "Grade saved",
+    "gradeUpdated": "Grade updated",
+    "feedbackSent": "Feedback sent",
+    "feedbackUpdated": "Feedback updated",
+    "fillRequired": "Please fill in all required fields",
+    "scoreRange": "Score must be between 0 and 5",
+    "studentAndTitle": "Please enter student and title",
+    "loadError": "Error loading data",
+    "error": "Error"
+  },
+  "studentGrades": {
+    "title": "My Results",
+    "subtitle": "Grades, attendance, and teacher feedback",
+    "avgScore": "Average Score",
+    "totalGrades": "Total Grades",
+    "attendance": "Attendance",
+    "totalLessons": "Total Lessons",
+    "tabs": {
+      "grades": "Grades",
+      "attendance": "Attendance",
+      "feedbacks": "Feedback"
+    },
+    "noGrades": "No grades yet",
+    "noRecords": "No records yet",
+    "noFeedbacks": "No feedback yet",
+    "lessonRecord": "Lesson record",
+    "subject": "Subject",
+    "status": {
+      "present": "Present",
+      "absent": "Absent",
+      "late": "Late",
+      "excused": "Excused"
+    }
+  },
   "roles": {
     "super_admin": "Super Admin",
     "admin": "Admin",
@@ -241,5 +320,97 @@
       "desc": "Purchase a plan to gain access to PRO and ELITE tests.",
       "viewPlansBtn": "View Plans"
     }
+  },
+  "userDashboard": {
+    "toast": {
+      "examDateSaved": "Exam date saved ✅",
+      "examDateDesc": "We will send you daily reminders",
+      "errorOccurred": "An error occurred"
+    },
+    "stats": {
+      "targetBand": "Target Band",
+      "avgScore": "Average Score",
+      "daysLeft": "Days Until Exam",
+      "daysValue": "{{count}} days",
+      "practiceTime": "Practice Time",
+      "minutesValue": "{{count}} min",
+      "dailyStreak": "Daily Streak"
+    },
+    "modal": {
+      "targetDesc": "Set your target IELTS band.",
+      "currentGoal": "Your current target: {{value}}",
+      "notSet": "Not set",
+      "editProfile": "Edit Profile",
+      "avgDesc": "Your average band score will appear here once you complete mock tests.",
+      "viewMocks": "Go to Mock Tests",
+      "examDateTitle": "Exam Date",
+      "examDateDesc": "Enter your exam date — we will show you a countdown.",
+      "timeLeft": "Days Left",
+      "days": "days",
+      "examDateLabel": "Exam Date",
+      "saving": "Saving...",
+      "save": "Save",
+      "practiceDesc": "Details for the last 7 days",
+      "total": "Total",
+      "activeDays": "Active Days",
+      "dailyAverage": "Daily Average",
+      "bestDay": "Best Day",
+      "trySpeakingBtn": "Practice with AI Speaking",
+      "streakDesc": "You practiced for {{count}} consecutive days."
+    },
+    "promo": {
+      "onboardingTitle": "Welcome! Select a package to start learning or contact our branch office.",
+      "onboardingDesc": "Premium mock tests, AI speaking exercises, and learning plans await you!",
+      "choosePlansBtn": "Select Plan"
+    },
+    "freeMocks": {
+      "title": "My Free Tests",
+      "subtitle": "List of diagnostic tests you can take immediately without purchasing",
+      "emptyState": "Currently, there are no free diagnostic tests available in the system."
+    },
+    "chart": {
+      "title": "Weekly Progress",
+      "subtitle": "last 7 days",
+      "totalMinutes": "Total: {{count}} min"
+    },
+    "telegram": {
+      "title": "Our Telegram Channel",
+      "desc": "Useful materials and updates about IELTS and English language learning.",
+      "subscribeBtn": "Subscribe to channel"
+    },
+    "dailyTasks": {
+      "title": "Today's Goals",
+      "superResult": "Super result! 🔥",
+      "allDoneTitle": "Daily Goal Completed!",
+      "allDoneDesc": "You showed great results today. Keep it up tomorrow!"
+    },
+    "donation": {
+      "toastSuccess": "Card number copied",
+      "title": "Support LMSHUB development with a card donation",
+      "desc": "Your donation or premium purchase helps develop the platform.",
+      "cardNumber": "CARD NUMBER",
+      "cardOwner": "CARD HOLDER"
+    }
+  },
+  "welcomeBanner": {
+    "greeting": {
+      "morning": "Good morning",
+      "afternoon": "Good afternoon",
+      "evening": "Good evening"
+    },
+    "sub": {
+      "morning": "A new day — new opportunities await you!",
+      "afternoon": "Good luck achieving today's goals!",
+      "evening": "You did a lot today. Rest well!"
+    },
+    "title": "Welcome, {{name}}!",
+    "defaultName": "User",
+    "motivationTitle": "Inspiration of the day",
+    "motivations": [
+      "Every day small steps lead to big results.",
+      "Knowledge is the most reliable source of wealth.",
+      "What you learn today is your strength tomorrow.",
+      "Success is improving a little bit every day."
+    ]
   }
 }

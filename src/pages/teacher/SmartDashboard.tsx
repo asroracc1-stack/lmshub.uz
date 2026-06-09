@@ -351,7 +351,7 @@ export default function SmartDashboard() {
         idx + 1,
         s.full_name || s.username,
         statusText,
-        gr.score ? `${gr.score} / 100` : "—",
+        gr.score ? `${gr.score} / 5` : "—",
         coins > 0 ? `+${coins} coin` : "—",
         gr.comment || "—"
       ];
@@ -388,11 +388,11 @@ export default function SmartDashboard() {
   }, [students, search]);
 
   const getLetterGrade = (score?: number) => {
-    if (!score) return "—";
-    if (score >= 90) return "A+";
-    if (score >= 80) return "A";
-    if (score >= 70) return "B";
-    if (score >= 60) return "C";
+    if (score === undefined || score === null || score === 0) return "—";
+    if (score >= 5) return "A+";
+    if (score >= 4) return "A";
+    if (score >= 3) return "B";
+    if (score >= 2) return "C";
     return "D";
   };
 
@@ -561,59 +561,65 @@ export default function SmartDashboard() {
                       </td>
 
                       {/* Attendance Toggle — single column for today */}
-                      {lessons.slice(0, 1).map((l) => {
-                        const status = localAttendances[`${l.id}-${s.id}`] || "PRESENT";
-                        return (
-                          <td key={l.id} className="py-4 px-4 text-center">
-                            <div className="flex items-center justify-center gap-1 bg-muted/40 p-1 rounded-xl w-fit mx-auto border border-border/40">
-                              {/* Present */}
-                              <button
-                                type="button"
-                                onClick={() => handleSetAttendance(l.id, s.id, "PRESENT")}
-                                className={cn(
-                                  "p-1.5 rounded-lg transition-all",
-                                  status === "PRESENT"
-                                    ? "bg-emerald-500 text-white shadow-sm scale-105"
-                                    : "text-muted-foreground/50 hover:text-emerald-500 hover:bg-emerald-500/10"
-                                )}
-                                title="Bor (Present)"
-                              >
-                                <CheckCircle2 className="h-4 w-4" />
-                              </button>
+                      {lessons.length === 0 ? (
+                        <td className="py-4 px-4 text-center text-xs text-muted-foreground italic">
+                          Dars yo'q
+                        </td>
+                      ) : (
+                        lessons.slice(0, 1).map((l) => {
+                          const status = localAttendances[`${l.id}-${s.id}`] || "PRESENT";
+                          return (
+                            <td key={l.id} className="py-4 px-4 text-center">
+                              <div className="flex items-center justify-center gap-1 bg-muted/40 p-1 rounded-xl w-fit mx-auto border border-border/40">
+                                {/* Present */}
+                                <button
+                                  type="button"
+                                  onClick={() => handleSetAttendance(l.id, s.id, "PRESENT")}
+                                  className={cn(
+                                    "p-1.5 rounded-lg transition-all",
+                                    status === "PRESENT"
+                                      ? "bg-emerald-500 text-white shadow-sm scale-105"
+                                      : "text-muted-foreground/50 hover:text-emerald-500 hover:bg-emerald-500/10"
+                                  )}
+                                  title="Bor (Present)"
+                                >
+                                  <CheckCircle2 className="h-4 w-4" />
+                                </button>
 
-                              {/* Late */}
-                              <button
-                                type="button"
-                                onClick={() => handleSetAttendance(l.id, s.id, "LATE")}
-                                className={cn(
-                                  "p-1.5 rounded-lg transition-all",
-                                  status === "LATE"
-                                    ? "bg-amber-500 text-white shadow-sm scale-105"
-                                    : "text-muted-foreground/50 hover:text-amber-500 hover:bg-amber-500/10"
-                                )}
-                                title="Kechikdi (Late)"
-                              >
-                                <MinusCircle className="h-4 w-4" />
-                              </button>
+                                {/* Late */}
+                                <button
+                                  type="button"
+                                  onClick={() => handleSetAttendance(l.id, s.id, "LATE")}
+                                  className={cn(
+                                    "p-1.5 rounded-lg transition-all",
+                                    status === "LATE"
+                                      ? "bg-amber-500 text-white shadow-sm scale-105"
+                                      : "text-muted-foreground/50 hover:text-amber-500 hover:bg-amber-500/10"
+                                  )}
+                                  title="Kechikdi (Late)"
+                                >
+                                  <MinusCircle className="h-4 w-4" />
+                                </button>
 
-                              {/* Absent */}
-                              <button
-                                type="button"
-                                onClick={() => handleSetAttendance(l.id, s.id, "ABSENT")}
-                                className={cn(
-                                  "p-1.5 rounded-lg transition-all",
-                                  status === "ABSENT"
-                                    ? "bg-rose-500 text-white shadow-sm scale-105"
-                                    : "text-muted-foreground/50 hover:text-rose-500 hover:bg-rose-500/10"
-                                )}
-                                title="Yo'q (Absent)"
-                              >
-                                <XCircle className="h-4 w-4" />
-                              </button>
-                            </div>
-                          </td>
-                        );
-                      })}
+                                {/* Absent */}
+                                <button
+                                  type="button"
+                                  onClick={() => handleSetAttendance(l.id, s.id, "ABSENT")}
+                                  className={cn(
+                                    "p-1.5 rounded-lg transition-all",
+                                    status === "ABSENT"
+                                      ? "bg-rose-500 text-white shadow-sm scale-105"
+                                      : "text-muted-foreground/50 hover:text-rose-500 hover:bg-rose-500/10"
+                                  )}
+                                  title="Yo'q (Absent)"
+                                >
+                                  <XCircle className="h-4 w-4" />
+                                </button>
+                              </div>
+                            </td>
+                          );
+                        })
+                      )}
 
                       {/* Feedback Input */}
                       <td className="py-4 px-6">
@@ -671,7 +677,7 @@ export default function SmartDashboard() {
                           <Input
                             type="number"
                             min="0"
-                            max="100"
+                            max="5"
                             placeholder="0"
                             value={gr.score || ""}
                             onChange={(e) => handleGradeChange(s.id, e.target.value)}

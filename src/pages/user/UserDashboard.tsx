@@ -20,14 +20,13 @@ import {
   Clock,
   Flame,
   ArrowRight,
-  Copy,
-  Send,
   ChevronRight,
   Crown,
   Layers,
   Sparkles,
   Leaf,
   FileText,
+  Send,
   Gift
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
@@ -36,7 +35,6 @@ import { cn } from "@/lib/utils";
 import DonationCard from "@/components/DonationCard";
 import DailyTasks from "@/components/DailyTasks";
 import { useTheme } from "@/contexts/ThemeContext";
-import TigerPlayer from "@/components/TigerPlayer";
 import WelcomeBanner from "@/components/shared/WelcomeBanner";
 
 interface DailyData {
@@ -63,16 +61,16 @@ interface FreeExam {
   requiredPack?: string;
 }
 
-const DIFFICULTY_META: Record<string, { label: string; cls: string; icon: any }> = {
-  easy:   { label: "Oson",  cls: "bg-emerald-500/15 text-emerald-700 border-emerald-500/30", icon: Leaf },
-  medium: { label: "O'rta", cls: "bg-amber-500/15 text-amber-700 border-amber-500/30",      icon: Sparkles },
-  hard:   { label: "Qiyin", cls: "bg-rose-500/15 text-rose-700 border-rose-500/30",          icon: FileText },
+const DIFFICULTY_META: Record<string, { labelKey: string; cls: string; icon: any }> = {
+  easy:   { labelKey: "mockCategory.difficulty.easy",   cls: "bg-emerald-500/15 text-emerald-700 border-emerald-500/30", icon: Leaf },
+  medium: { labelKey: "mockCategory.difficulty.medium", cls: "bg-amber-500/15 text-amber-700 border-amber-500/30",      icon: Sparkles },
+  hard:   { labelKey: "mockCategory.difficulty.hard",   cls: "bg-rose-500/15 text-rose-700 border-rose-500/30",          icon: FileText },
 };
 
 export default function UserDashboard() {
   const { profile, user, refresh } = useAuth();
   const { theme } = useTheme();
-  const { t: _t } = useTranslation();
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const [stats, setStats] = useState<UserStats | null>(null);
@@ -138,61 +136,54 @@ export default function UserDashboard() {
     setSavingExam(true);
     try {
       await api.put("/user/profile", { examDate });
-      toast.success("Imtihon sanasi saqlandi ✅", {
-        description: "Sizga har kuni eslatmalar yuboramiz",
+      toast.success(t("userDashboard.toast.examDateSaved"), {
+        description: t("userDashboard.toast.examDateDesc"),
       });
       await refresh();
       const res = await api.get("/user/stats");
       setStats(res.data);
       setOpenKey(null);
     } catch (e: any) {
-      toast.error(e.response?.data?.message || "Xatolik yuz berdi");
+      toast.error(e.response?.data?.message || t("userDashboard.toast.errorOccurred"));
     } finally {
       setSavingExam(false);
     }
   };
-
-  const greet = (() => {
-    const h = new Date().getHours();
-    if (h < 12) return "Xayrli tong";
-    if (h < 18) return "Xayrli kun";
-    return "Xayrli kech";
-  })();
 
   const isDark = theme === "dark";
 
   const statCards = [
     {
       key: "target",
-      label: "Target Band",
+      label: t("userDashboard.stats.targetBand"),
       value: stats?.targetBand ? stats.targetBand.toFixed(1) : "--",
       icon: Target,
       color: isDark ? "bg-blue-500/10 text-blue-400 border-blue-500/20" : "bg-blue-50 text-blue-600 border-blue-100",
     },
     {
       key: "avg",
-      label: "O'rtacha ball",
+      label: t("userDashboard.stats.avgScore"),
       value: stats?.avgScore ? stats.avgScore.toFixed(1) : "--",
       icon: Activity,
       color: isDark ? "bg-violet-500/10 text-violet-400 border-violet-500/20" : "bg-violet-50 text-violet-600 border-violet-100",
     },
     {
       key: "exam",
-      label: "Imtihongacha",
-      value: (stats?.examDaysLeft !== null && stats?.examDaysLeft !== undefined) ? `${stats?.examDaysLeft} kun` : "--",
+      label: t("userDashboard.stats.daysLeft"),
+      value: (stats?.examDaysLeft !== null && stats?.examDaysLeft !== undefined) ? t("userDashboard.stats.daysValue", { count: stats?.examDaysLeft }) : "--",
       icon: CalendarDays,
       color: isDark ? "bg-rose-500/10 text-rose-400 border-rose-500/20" : "bg-rose-50 text-rose-600 border-rose-100",
     },
     {
       key: "minutes",
-      label: "Mashq vaqti",
-      value: `${(stats?.totalMinutes || 0).toFixed(1)} m`,
+      label: t("userDashboard.stats.practiceTime"),
+      value: t("userDashboard.stats.minutesValue", { count: (stats?.totalMinutes || 0).toFixed(1) }),
       icon: Clock,
       color: isDark ? "bg-orange-500/10 text-orange-400 border-orange-500/20" : "bg-orange-50 text-orange-600 border-orange-100",
     },
     {
       key: "streak",
-      label: "Kunlik streak",
+      label: t("userDashboard.stats.dailyStreak"),
       value: stats?.streak ?? 0,
       icon: Flame,
       color: isDark ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-emerald-50 text-emerald-600 border-emerald-100",
@@ -221,14 +212,14 @@ export default function UserDashboard() {
           <Dialog {...common}>
             <DialogContent className={cn(dialogClass, "shadow-2xl rounded-2xl")}>
               <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">🎯 Target Band</DialogTitle>
+                <DialogTitle className="flex items-center gap-2">🎯 {t("userDashboard.stats.targetBand")}</DialogTitle>
                 <DialogDescription className={descClass}>
-                  O'zingizga maqsadli IELTS bandini belgilang.
+                  {t("userDashboard.modal.targetDesc")}
                 </DialogDescription>
               </DialogHeader>
               <div className="py-4 space-y-4">
-                 <p className={cn("text-sm font-medium", labelClass)}>Sizning joriy maqsadingiz: <span className="text-blue-500 font-bold">{stats?.targetBand || "Belgilanmagan"}</span></p>
-                 <Button onClick={() => navigate("/user/profile")} className="w-full bg-[#00c2ff] hover:bg-[#00a8e0] text-white font-bold h-12 rounded-xl">Profilni tahrirlash</Button>
+                 <p className={cn("text-sm font-medium", labelClass)}>{t("userDashboard.modal.currentGoal", { value: stats?.targetBand ? stats.targetBand.toFixed(1) : t("userDashboard.modal.notSet") })}</p>
+                 <Button onClick={() => navigate("/user/profile")} className="w-full bg-[#00c2ff] hover:bg-[#00a8e0] text-white font-bold h-12 rounded-xl">{t("userDashboard.modal.editProfile")}</Button>
               </div>
             </DialogContent>
           </Dialog>
@@ -238,13 +229,13 @@ export default function UserDashboard() {
           <Dialog {...common}>
             <DialogContent className={cn(dialogClass, "shadow-2xl rounded-2xl")}>
               <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">📊 O'rtacha ball</DialogTitle>
+                <DialogTitle className="flex items-center gap-2">📊 {t("userDashboard.stats.avgScore")}</DialogTitle>
                 <DialogDescription className={descClass}>
-                  Mock testlar yakunlanganda o'rtacha bandingiz shu yerda ko'rinadi.
+                  {t("userDashboard.modal.avgDesc")}
                 </DialogDescription>
               </DialogHeader>
               <div className="py-4">
-                 <Button onClick={() => navigate("/user/mocks")} className="w-full bg-[#00c2ff] hover:bg-[#00a8e0] text-white font-bold h-12 rounded-xl">Mock testlarga o'tish</Button>
+                 <Button onClick={() => navigate("/user/mocks")} className="w-full bg-[#00c2ff] hover:bg-[#00a8e0] text-white font-bold h-12 rounded-xl">{t("userDashboard.modal.viewMocks")}</Button>
               </div>
             </DialogContent>
           </Dialog>
@@ -254,22 +245,22 @@ export default function UserDashboard() {
           <Dialog {...common}>
             <DialogContent className={cn(dialogClass, "shadow-2xl rounded-2xl")}>
               <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">🗓️ Imtihon sanasi</DialogTitle>
+                <DialogTitle className="flex items-center gap-2">🗓️ {t("userDashboard.modal.examDateTitle")}</DialogTitle>
                 <DialogDescription className={descClass}>
-                  Imtihon sanangizni kiriting — biz sizga countdown ko'rsatamiz.
+                  {t("userDashboard.modal.examDateDesc")}
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
                 {stats?.examDaysLeft !== null && (
                   <div className="rounded-2xl bg-gradient-to-br from-rose-500 to-orange-500 text-white p-6 text-center shadow-lg shadow-rose-500/20">
-                    <p className="text-xs uppercase tracking-widest opacity-80 font-bold">Qoldi</p>
+                    <p className="text-xs uppercase tracking-widest opacity-80 font-bold">{t("userDashboard.modal.timeLeft")}</p>
                     <p className="font-display text-4xl font-bold mt-2">
-                      {stats?.examDaysLeft} <span className="text-lg opacity-80 font-normal">kun</span>
+                      {stats?.examDaysLeft} <span className="text-lg opacity-80 font-normal">{t("userDashboard.modal.days")}</span>
                     </p>
                   </div>
                 )}
                 <div className="space-y-2">
-                  <label className={cn("text-sm font-semibold", labelClass)}>Imtihon sanasi</label>
+                  <label className={cn("text-sm font-semibold", labelClass)}>{t("userDashboard.modal.examDateLabel")}</label>
                   <input
                     type="date"
                     value={examDate}
@@ -283,7 +274,7 @@ export default function UserDashboard() {
                   disabled={!examDate || savingExam}
                   className="w-full h-12 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold transition-all shadow-lg shadow-rose-500/20"
                 >
-                  {savingExam ? "Saqlanmoqda..." : "Saqlash"}
+                  {savingExam ? t("userDashboard.modal.saving") : t("userDashboard.modal.save")}
                 </Button>
               </div>
             </DialogContent>
@@ -294,15 +285,15 @@ export default function UserDashboard() {
           <Dialog {...common}>
             <DialogContent className={cn(dialogClass, "shadow-2xl rounded-2xl")}>
               <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">⏱️ Mashq vaqti</DialogTitle>
-                <DialogDescription className={descClass}>So'nggi 7 kunlik mashq tafsiloti</DialogDescription>
+                <DialogTitle className="flex items-center gap-2">⏱️ {t("userDashboard.stats.practiceTime")}</DialogTitle>
+                <DialogDescription className={descClass}>{t("userDashboard.modal.practiceDesc")}</DialogDescription>
               </DialogHeader>
               <div className="space-y-3 py-4 text-sm">
-                <div className={cn("flex justify-between p-3 rounded-xl border", itemClass)}><span>Jami</span><b>{(stats?.totalMinutes || 0).toFixed(1)} min</b></div>
-                <div className={cn("flex justify-between p-3 rounded-xl border", itemClass)}><span>Faol kunlar</span><b>{activeDays} / 7</b></div>
-                <div className={cn("flex justify-between p-3 rounded-xl border", itemClass)}><span>Kunlik o'rtacha</span><b>{avgMin} min</b></div>
-                <div className={cn("flex justify-between p-3 rounded-xl border", itemClass)}><span>Eng yaxshi kun</span><b>{maxMin.toFixed(1)} min</b></div>
-                <Button onClick={() => navigate("/user/speaking")} className="w-full mt-4 h-11 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold shadow-lg shadow-orange-500/20">AI Speaking bilan mashq</Button>
+                <div className={cn("flex justify-between p-3 rounded-xl border", itemClass)}><span>{t("userDashboard.modal.total")}</span><b>{(stats?.totalMinutes || 0).toFixed(1)} {t("mockCategory.minutesShort")}</b></div>
+                <div className={cn("flex justify-between p-3 rounded-xl border", itemClass)}><span>{t("userDashboard.modal.activeDays")}</span><b>{activeDays} / 7</b></div>
+                <div className={cn("flex justify-between p-3 rounded-xl border", itemClass)}><span>{t("userDashboard.modal.dailyAverage")}</span><b>{avgMin} {t("mockCategory.minutesShort")}</b></div>
+                <div className={cn("flex justify-between p-3 rounded-xl border", itemClass)}><span>{t("userDashboard.modal.bestDay")}</span><b>{maxMin.toFixed(1)} {t("mockCategory.minutesShort")}</b></div>
+                <Button onClick={() => navigate("/user/speaking")} className="w-full mt-4 h-11 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold shadow-lg shadow-orange-500/20">{t("userDashboard.modal.trySpeakingBtn")}</Button>
               </div>
             </DialogContent>
           </Dialog>
@@ -312,9 +303,9 @@ export default function UserDashboard() {
           <Dialog {...common}>
             <DialogContent className={cn(dialogClass, "shadow-2xl rounded-2xl")}>
               <DialogHeader>
-                <DialogTitle className="flex items-center gap-2 text-white">🔥 Kunlik streak</DialogTitle>
+                <DialogTitle className="flex items-center gap-2 text-white">🔥 {t("userDashboard.stats.dailyStreak")}</DialogTitle>
                 <DialogDescription className={descClass}>
-                  Siz <b>{stats?.streak}</b> kun ketma-ket mashq qildingiz.
+                  {t("userDashboard.modal.streakDesc", { count: stats?.streak })}
                 </DialogDescription>
               </DialogHeader>
               <div className="flex flex-wrap gap-2 py-4">
@@ -355,17 +346,17 @@ export default function UserDashboard() {
                 Onboarding Portal
               </Badge>
               <h2 className="text-xl md:text-2xl font-black text-slate-800 dark:text-white leading-tight">
-                Xush kelibsiz! Ta'limni boshlash uchun paket tanlang yoki markazimiz filialiga murojaat qiling
+                {t("userDashboard.promo.onboardingTitle")}
               </h2>
               <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
-                Premium mock testlar, AI speaking mashqlari va o'quv planlari sizni kutmoqda!
+                {t("userDashboard.promo.onboardingDesc")}
               </p>
             </div>
             <Button
               onClick={() => navigate("/user/subscriptions")}
               className="bg-gradient-primary hover:opacity-90 text-white px-8 h-14 rounded-2xl font-black uppercase text-xs tracking-widest shadow-lg shadow-primary/20 shrink-0 flex items-center gap-2 group/btn"
             >
-              Ta'riflarni Tanlash <ChevronRight className="h-4 w-4 group-hover/btn:translate-x-1 transition-transform" />
+              {t("userDashboard.promo.choosePlansBtn")} <ChevronRight className="h-4 w-4 group-hover/btn:translate-x-1 transition-transform" />
             </Button>
           </div>
         </Card>
@@ -376,10 +367,10 @@ export default function UserDashboard() {
         <div className="flex items-center justify-between">
           <div>
             <h3 className="font-display font-black text-2xl text-slate-800 dark:text-white flex items-center gap-2">
-              Mening Bepul Testlarim <Gift className="h-6 w-6 text-emerald-500 animate-pulse" />
+              {t("userDashboard.freeMocks.title")} <Gift className="h-6 w-6 text-emerald-500 animate-pulse" />
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-              Sotib olmasdan darhol topshirishingiz mumkin bo'lgan diagnostic testlar ro'yxati
+              {t("userDashboard.freeMocks.subtitle")}
             </p>
           </div>
           <Badge className="bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 px-3.5 py-1.5 rounded-full font-black text-[10px] uppercase">
@@ -395,7 +386,7 @@ export default function UserDashboard() {
           </div>
         ) : freeExams.length === 0 ? (
           <Card className="p-8 text-center bg-white/40 dark:bg-slate-900/40 border border-slate-100 dark:border-white/5 rounded-3xl">
-            <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">Hozircha tizimda bepul diagnostic testlar mavjud emas.</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">{t("userDashboard.freeMocks.emptyState")}</p>
           </Card>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -419,7 +410,7 @@ export default function UserDashboard() {
                           Diagnostic Free
                         </Badge>
                         <Badge variant="outline" className={`rounded-full ${diff.cls} text-[9px] px-2 py-0.5`}>
-                          <DIcon className="h-3 w-3 mr-1" /> {diff.label}
+                          <DIcon className="h-3 w-3 mr-1" /> {t(diff.labelKey)}
                         </Badge>
                       </div>
 
@@ -435,7 +426,7 @@ export default function UserDashboard() {
                       </div>
 
                       <div className="flex items-center gap-3 text-[11px] font-bold text-slate-500">
-                        <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> {e.durationMinutes} daqiqa</span>
+                        <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> {e.durationMinutes} {t("mockCategory.minutesShort")}</span>
                         <span className="flex items-center gap-1"><Layers className="h-3.5 w-3.5" /> {e.type}</span>
                       </div>
                     </div>
@@ -445,7 +436,7 @@ export default function UserDashboard() {
                         onClick={() => navigate(`/user/mocks/take/${e.id}`)}
                         className="w-full h-11 bg-slate-100 dark:bg-white/5 hover:bg-primary hover:text-white text-slate-700 dark:text-slate-200 rounded-xl font-black uppercase text-[10px] tracking-wider transition-all"
                       >
-                        Boshlash <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
+                        {t("mockCategory.startBtn")} <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
                       </Button>
                     </div>
                   </Card>
@@ -495,11 +486,11 @@ export default function UserDashboard() {
       )}>
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h3 className={cn("font-display font-black text-2xl", isDark ? "text-white" : "text-slate-900")}>Haftalik natija</h3>
-            <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mt-1">so'nggi 7 kun</p>
+            <h3 className={cn("font-display font-black text-2xl", isDark ? "text-white" : "text-slate-900")}>{t("userDashboard.chart.title")}</h3>
+            <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mt-1">{t("userDashboard.chart.subtitle")}</p>
           </div>
           <Badge className="bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 px-4 py-1.5 rounded-full font-black text-xs">
-            Jami: {(stats?.totalMinutes || 0).toFixed(1)} min
+            {t("userDashboard.chart.totalMinutes", { count: (stats?.totalMinutes || 0).toFixed(1) })}
           </Badge>
         </div>
         <div className="flex items-stretch justify-between gap-3 h-48 mt-12">
@@ -538,9 +529,9 @@ export default function UserDashboard() {
             <div className={cn("h-14 w-14 rounded-2xl flex items-center justify-center mb-6 border transition-all", isDark ? "bg-blue-500/10 text-blue-400 border-blue-500/20" : "bg-blue-50 text-blue-600 border-blue-100")}>
               <Send size={28} />
             </div>
-            <h4 className={cn("font-display font-black text-2xl mb-3 tracking-tight", isDark ? "text-white" : "text-slate-900")}>Telegram kanalimiz</h4>
+            <h4 className={cn("font-display font-black text-2xl mb-3 tracking-tight", isDark ? "text-white" : "text-slate-900")}>{t("userDashboard.telegram.title")}</h4>
             <p className="text-slate-500 text-base font-medium leading-relaxed mb-8">
-              IELTS va ingliz tili haqida foydali materiallar va yangiliklar.
+              {t("userDashboard.telegram.desc")}
             </p>
             <a
               href="https://t.me/LMSHub_uz"
@@ -548,7 +539,7 @@ export default function UserDashboard() {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-3 text-blue-600 font-black text-sm uppercase tracking-widest group/link hover:text-blue-500 transition-colors"
             >
-              Kanalga obuna bo'lish <ChevronRight size={18} className="group-hover/link:translate-x-2 transition-transform" />
+              {t("userDashboard.telegram.subscribeBtn")} <ChevronRight size={18} className="group-hover/link:translate-x-2 transition-transform" />
             </a>
           </div>
         </Card>
@@ -563,9 +554,9 @@ export default function UserDashboard() {
       {/* Quick links */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
-          { to: "/user/leaderboard", label: "Peshqadamlar", emoji: "🏆", color: "from-amber-400 to-orange-500", shadow: "shadow-amber-500/10" },
-          { to: "/user/achievements", label: "Yutuqlar", emoji: "🎖️", color: "from-blue-400 to-indigo-500", shadow: "shadow-blue-500/10" },
-          { to: "/user/profile", label: "Hisob", emoji: "👤", color: "from-slate-400 to-slate-600", shadow: "shadow-slate-500/10" },
+          { to: "/user/leaderboard", label: t("nav.leaderboard"), emoji: "🏆", color: "from-amber-400 to-orange-500", shadow: "shadow-amber-500/10" },
+          { to: "/user/achievements", label: t("nav.achievements"), emoji: "🎖️", color: "from-blue-400 to-indigo-500", shadow: "shadow-blue-500/10" },
+          { to: "/user/profile", label: t("nav.account"), emoji: "👤", color: "from-slate-400 to-slate-600", shadow: "shadow-slate-500/10" },
         ].map((q) => (
           <Link key={q.to} to={q.to}>
              <Card className={cn(
@@ -588,4 +579,3 @@ export default function UserDashboard() {
     </div>
   );
 }
-

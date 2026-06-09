@@ -99,6 +99,85 @@
     "delete": "O'chirish",
     "cancel": "Bekor qilish"
   },
+  "gradesPage": {
+    "title": "Baholar va Fikrlar",
+    "subtitle": "Talabalarga baho qo'ying va fikr-mulohaza qoldiring",
+    "addGrade": "Baho qo'yish",
+    "addFeedback": "Fikr qoldirish",
+    "tabs": {
+      "grades": "Baholar",
+      "feedbacks": "Fikrlar"
+    },
+    "gradeDialog": {
+      "title": "Yangi baho",
+      "editTitle": "Bahoni tahrirlash",
+      "description": "Tanlangan talaba va fan bo'yicha yangi baho qo'shish.",
+      "editDescription": "Tanlangan talabaning bahosini tahrirlash.",
+      "student": "Talaba",
+      "subject": "Fan",
+      "selectPlaceholder": "Tanlang",
+      "scoreLabel": "Baho (0–5)",
+      "scorePlaceholder": "Baho tanlang",
+      "comment": "Izoh",
+      "save": "Saqlash",
+      "cancel": "Bekor",
+      "update": "Yangilash"
+    },
+    "feedbackDialog": {
+      "title": "Fikr-mulohaza",
+      "editTitle": "Fikrni tahrirlash",
+      "description": "Talabaga o'z fikr-mulohazalaringizni yuboring.",
+      "editDescription": "Fikr-mulohazangizni tahrirlang.",
+      "student": "Talaba",
+      "type": "Turi",
+      "positive": "👍 Ijobiy",
+      "neutral": "💬 Neytral",
+      "negative": "⚠️ Salbiy",
+      "heading": "Sarlavha",
+      "comment": "Izoh",
+      "send": "Yuborish",
+      "update": "Yangilash",
+      "cancel": "Bekor"
+    },
+    "emptyGrades": "Hali baholar yo'q",
+    "emptyFeedbacks": "Hali fikrlar yo'q",
+    "deleteGradeConfirm": "Bahoni o'chirishni tasdiqlaysizmi?",
+    "deleteFeedbackConfirm": "O'chirishni tasdiqlaysizmi?",
+    "deleted": "O'chirildi",
+    "gradeSaved": "Baho qo'yildi",
+    "gradeUpdated": "Baho yangilandi",
+    "feedbackSent": "Fikr-mulohaza yuborildi",
+    "feedbackUpdated": "Fikr-mulohaza yangilandi",
+    "fillRequired": "Barcha kerakli maydonlarni to'ldiring",
+    "scoreRange": "Baho 0 dan 5 gacha bo'lishi kerak",
+    "studentAndTitle": "Talaba va sarlavhani kiriting",
+    "loadError": "Ma'lumotlarni yuklashda xatolik yuz berdi",
+    "error": "Xatolik"
+  },
+  "studentGrades": {
+    "title": "Mening natijalarim",
+    "subtitle": "Baholar, davomat va o'qituvchi fikrlari",
+    "avgScore": "O'rtacha ball",
+    "totalGrades": "Jami baholar",
+    "attendance": "Davomat",
+    "totalLessons": "Jami darslar",
+    "tabs": {
+      "grades": "Baholar",
+      "attendance": "Davomat",
+      "feedbacks": "Fikrlar"
+    },
+    "noGrades": "Hali baholar yo'q",
+    "noRecords": "Hali yozuvlar yo'q",
+    "noFeedbacks": "Hali fikrlar yo'q",
+    "lessonRecord": "Dars yozuvi",
+    "subject": "Fan",
+    "status": {
+      "present": "Keldi",
+      "absent": "Kelmadi",
+      "late": "Kech keldi",
+      "excused": "Sababli"
+    }
+  },
   "roles": {
     "super_admin": "Super Admin",
     "admin": "Admin",
@@ -241,5 +320,97 @@
       "desc": "PRO va ELITE testlardan foydalanish uchun tarifni sotib oling.",
       "viewPlansBtn": "Tarifni ko'rish"
     }
+  },
+  "userDashboard": {
+    "toast": {
+      "examDateSaved": "Imtihon sanasi saqlandi ✅",
+      "examDateDesc": "Sizga har kuni eslatmalar yuboramiz",
+      "errorOccurred": "Xatolik yuz berdi"
+    },
+    "stats": {
+      "targetBand": "Target Band",
+      "avgScore": "O'rtacha ball",
+      "daysLeft": "Imtihongacha",
+      "daysValue": "{{count}} kun",
+      "practiceTime": "Mashq vaqti",
+      "minutesValue": "{{count}} m",
+      "dailyStreak": "Kunlik streak"
+    },
+    "modal": {
+      "targetDesc": "O'zingizga maqsadli IELTS bandini belgilang.",
+      "currentGoal": "Sizning joriy maqsadingiz: {{value}}",
+      "notSet": "Belgilanmagan",
+      "editProfile": "Profilni tahrirlash",
+      "avgDesc": "Mock testlar yakunlanganda o'rtacha bandingiz shu yerda ko'rinadi.",
+      "viewMocks": "Mock testlarga o'tish",
+      "examDateTitle": "Imtihon sanasi",
+      "examDateDesc": "Imtihon sanangizni kiriting — biz sizga countdown ko'rsatamiz.",
+      "timeLeft": "Qoldi",
+      "days": "kun",
+      "examDateLabel": "Imtihon sanasi",
+      "saving": "Saqlanmoqda...",
+      "save": "Saqlash",
+      "practiceDesc": "So'nggi 7 kunlik mashq tafsiloti",
+      "total": "Jami",
+      "activeDays": "Faol kunlar",
+      "dailyAverage": "Kunlik o'rtacha",
+      "bestDay": "Eng yaxshi kun",
+      "trySpeakingBtn": "AI Speaking bilan mashq",
+      "streakDesc": "Siz {{count}} kun ketma-ket mashq qildingiz."
+    },
+    "promo": {
+      "onboardingTitle": "Xush kelibsiz! Ta'limni boshlash uchun paket tanlang yoki markazimiz filialiga murojaat qiling",
+      "onboardingDesc": "Premium mock testlar, AI speaking mashqlari va o'quv planlari sizni kutmoqda!",
+      "choosePlansBtn": "Ta'riflarni Tanlash"
+    },
+    "freeMocks": {
+      "title": "Mening Bepul Testlarim",
+      "subtitle": "Sotib olmasdan darhol topshirishingiz mumkin bo'lgan diagnostic testlar ro'yxati",
+      "emptyState": "Hozircha tizimda bepul diagnostic testlar mavjud emas."
+    },
+    "chart": {
+      "title": "Haftalik natija",
+      "subtitle": "so'nggi 7 kun",
+      "totalMinutes": "Jami: {{count}} min"
+    },
+    "telegram": {
+      "title": "Telegram kanalimiz",
+      "desc": "IELTS va ingliz tili haqida foydali materiallar va yangiliklar.",
+      "subscribeBtn": "Kanalga obuna bo'lish"
+    },
+    "dailyTasks": {
+      "title": "Bugungi maqsadlar",
+      "superResult": "Super natija! 🔥",
+      "allDoneTitle": "Kunlik maqsad bajarildi!",
+      "allDoneDesc": "Siz bugun ajoyib natija ko'rsatdingiz. Ertaga ham shunday davom eting!"
+    },
+    "donation": {
+      "toastSuccess": "Karta raqami nusxalandi",
+      "title": "LMSHUB rivojiga plastik karta orqali hissa qo'shing",
+      "desc": "Sizning donat yoki premium xaridingiz platformani rivojlantirishga yordam beradi.",
+      "cardNumber": "KARTA RAQAMI",
+      "cardOwner": "KARTA EGASI"
+    }
+  },
+  "welcomeBanner": {
+    "greeting": {
+      "morning": "Xayrli tong",
+      "afternoon": "Xayrli kun",
+      "evening": "Xayrli kech"
+    },
+    "sub": {
+      "morning": "Yangi kun — yangi imkoniyatlar sizi kutmoqda!",
+      "afternoon": "Bugungi maqsadlaringizga erishishda omad!",
+      "evening": "Bugun ko'p narsa qildingiz. Yaxshi dam oling!"
+    },
+    "title": "Xush kelibsiz, {{name}}!",
+    "defaultName": "Foydalanuvchi",
+    "motivationTitle": "Bugungi ilhom",
+    "motivations": [
+      "Har kuni kichik qadamlar katta natijalarga olib boradi.",
+      "Bilim — bu boylikning eng ishonchli manbai.",
+      "Bugun o'rgangan narsang ertangi kuchingdir.",
+      "Muvaffaqiyat — bu har kuni bir oz yaxshilanishdir."
+    ]
   }
 }

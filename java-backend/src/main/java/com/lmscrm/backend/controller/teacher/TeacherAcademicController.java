@@ -10,6 +10,8 @@ import com.lmscrm.backend.service.academic.AttendanceService;
 import com.lmscrm.backend.service.academic.GradeService;
 import com.lmscrm.backend.service.academic.GroupService;
 import com.lmscrm.backend.service.academic.DashboardBatchService;
+import com.lmscrm.backend.service.communication.StudentFeedbackService;
+import com.lmscrm.backend.dto.communication.StudentFeedbackDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -33,6 +35,7 @@ public class TeacherAcademicController {
     private final AttendanceService attendanceService;
     private final GradeService gradeService;
     private final DashboardBatchService dashboardBatchService;
+    private final StudentFeedbackService studentFeedbackService;
 
     @GetMapping("/groups/{groupId}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN') or (hasRole('TEACHER') and @securityUtils.isTeacherOfGroup(#groupId))")
@@ -109,5 +112,69 @@ public class TeacherAcademicController {
             @RequestParam List<UUID> studentIds,
             @RequestParam UUID subjectId) {
         return ResponseEntity.ok(gradeService.getGradesForStudentsAndSubject(studentIds, subjectId));
+    }
+
+    @GetMapping("/grades/my")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
+    @Operation(summary = "Get current teacher's grades")
+    public ResponseEntity<List<GradeDto>> getMyGrades(@AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(gradeService.getTeacherGrades(user.getId()));
+    }
+
+    @PutMapping("/grades/{gradeId}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
+    @Operation(summary = "Update Student Grade")
+    public ResponseEntity<GradeDto> updateGrade(
+            @PathVariable UUID gradeId,
+            @Valid @RequestBody GradeDto request,
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(gradeService.updateGrade(gradeId, request, user));
+    }
+
+    @DeleteMapping("/grades/{gradeId}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
+    @Operation(summary = "Delete Student Grade")
+    public ResponseEntity<Void> deleteGrade(
+            @PathVariable UUID gradeId,
+            @AuthenticationPrincipal User user) {
+        gradeService.deleteGrade(gradeId, user);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/feedbacks")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
+    @Operation(summary = "Add Student Feedback/Comment")
+    public ResponseEntity<StudentFeedbackDto> addStudentFeedback(
+            @Valid @RequestBody StudentFeedbackDto request,
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(studentFeedbackService.createFeedback(request, user));
+    }
+
+    @PutMapping("/feedbacks/{feedbackId}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
+    @Operation(summary = "Update Student Feedback/Comment")
+    public ResponseEntity<StudentFeedbackDto> updateFeedback(
+            @PathVariable UUID feedbackId,
+            @Valid @RequestBody StudentFeedbackDto request,
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(studentFeedbackService.updateFeedback(feedbackId, request, user));
+    }
+
+    @GetMapping("/feedbacks/my")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
+    @Operation(summary = "Get current teacher's student feedbacks")
+    public ResponseEntity<List<StudentFeedbackDto>> getMyFeedbacks(@AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(studentFeedbackService.getTeacherFeedbacks(user.getId()));
+    }
+
+    @DeleteMapping("/feedbacks/{feedbackId}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
+    @Operation(summary = "Delete Student Feedback/Comment")
+    public ResponseEntity<Void> deleteFeedback(
+            @PathVariable UUID feedbackId,
+            @AuthenticationPrincipal User user) {
+        studentFeedbackService.deleteFeedback(feedbackId, user);
+        return ResponseEntity.noContent().build();
     }
 }

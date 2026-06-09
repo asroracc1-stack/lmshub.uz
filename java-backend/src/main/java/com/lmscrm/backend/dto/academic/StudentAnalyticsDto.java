@@ -1,6 +1,6 @@
 package com.lmscrm.backend.dto.academic;
 
-import com.lmscrm.backend.dto.communication.FeedbackDto;
+import com.lmscrm.backend.dto.communication.StudentFeedbackDto;
 import lombok.*;
 import java.util.List;
 
@@ -35,5 +35,5 @@ public class StudentAnalyticsDto {
 
     /** Feedback ro'yxati */
     @com.fasterxml.jackson.annotation.JsonProperty("feedbacks")
-    private List<FeedbackDto> feedbacks;
+    private List<StudentFeedbackDto> feedbacks;
 }

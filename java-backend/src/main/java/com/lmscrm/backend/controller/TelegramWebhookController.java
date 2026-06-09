@@ -19,6 +19,7 @@ public class TelegramWebhookController {
 
     private final SubscriptionRequestService subscriptionRequestService;
     private final TelegramBotService telegramBotService;
+    private final com.lmscrm.backend.bot.TelegramBotDispatcher telegramBotDispatcher;
 
     @Value("${telegram.bot.chat-id:7499973776}")
     private String adminChatId;
@@ -48,7 +49,7 @@ public class TelegramWebhookController {
 
         try {
             if (!update.containsKey("callback_query")) {
-                log.info("Update has no callback_query, ignoring.");
+                telegramBotDispatcher.dispatch(update);
                 return ResponseEntity.ok().build();
             }
 
@@ -68,7 +69,7 @@ public class TelegramWebhookController {
             log.info("📌 Callback: queryId={}, data={}, fromId={}, messageId={}", queryId, data, fromId, messageId);
 
             if (data == null || queryId == null) {
-                log.warn("Empty data or queryId, ignoring.");
+                telegramBotDispatcher.dispatch(update);
                 return ResponseEntity.ok().build();
             }
 
@@ -177,7 +178,8 @@ public class TelegramWebhookController {
                 }
 
             } else {
-                log.info("Unknown callback data: {}", data);
+                // Forward to dispatcher
+                telegramBotDispatcher.dispatch(update);
             }
 
         } catch (Exception e) {

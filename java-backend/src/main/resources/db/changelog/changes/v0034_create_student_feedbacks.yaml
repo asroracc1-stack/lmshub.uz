@@ -1,0 +1,57 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0034-1
+      author: antigravity
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: student_feedbacks
+      changes:
+        - createTable:
+            tableName: student_feedbacks
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: student_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_student_feedbacks_student
+                    references: users(id)
+              - column:
+                  name: teacher_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_student_feedbacks_teacher
+                    references: users(id)
+              - column:
+                  name: organization_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_student_feedbacks_org
+                    references: organizations(id)
+              - column:
+                  name: title
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: body
+                  type: text
+              - column:
+                  name: type
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: now()

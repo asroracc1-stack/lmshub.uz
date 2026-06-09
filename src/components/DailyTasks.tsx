@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 interface DailyTask {
   title: string;
@@ -20,6 +21,7 @@ export default function DailyTasks() {
   const isDark = theme === "dark";
   const [tasks, setTasks] = useState<DailyTask[]>([]);
   const [loading, setLoading] = useState(true);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const fetchTasks = async () => {
@@ -71,10 +73,12 @@ export default function DailyTasks() {
       
       <div className="relative z-10 flex flex-col h-full">
         <div className="flex items-center justify-between mb-8">
-          <h3 className={cn("font-display font-black text-2xl tracking-tight", isDark ? "text-white" : "text-slate-900")}>Bugungi maqsadlar</h3>
+          <h3 className={cn("font-display font-black text-2xl tracking-tight", isDark ? "text-white" : "text-slate-900")}>
+            {t("userDashboard.dailyTasks.title")}
+          </h3>
           {allCompleted && (
             <span className="inline-flex items-center text-[10px] font-black uppercase tracking-widest px-3 py-1 bg-emerald-500 text-white rounded-full animate-bounce shadow-lg shadow-emerald-500/20">
-              Super natija! 🔥
+              {t("userDashboard.dailyTasks.superResult")}
             </span>
           )}
         </div>
@@ -143,10 +147,10 @@ export default function DailyTasks() {
             >
               <div className={cn("flex items-center justify-center gap-2 font-black text-xs uppercase tracking-widest mb-2", isDark ? "text-emerald-400" : "text-emerald-600")}>
                 <Trophy size={16} />
-                <span>Kunlik maqsad bajarildi!</span>
+                <span>{t("userDashboard.dailyTasks.allDoneTitle")}</span>
               </div>
               <p className={cn("text-[11px] font-bold leading-relaxed", isDark ? "text-emerald-50/50" : "text-emerald-900/60")}>
-                Siz bugun ajoyib natija ko'rsatdingiz. <br/> Ertaga ham shunday davom eting!
+                {t("userDashboard.dailyTasks.allDoneDesc")}
               </p>
             </motion.div>
           )}

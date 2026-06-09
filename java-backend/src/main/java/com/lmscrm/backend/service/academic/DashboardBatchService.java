@@ -72,7 +72,7 @@ public class DashboardBatchService {
                             .subject(subject)
                             .lesson(lesson)
                             .score(record.getScore())
-                            .maxScore(100)
+                            .maxScore(5)
                             .comment(record.getComment())
                             .organization(subject.getOrganization())
                             .build();

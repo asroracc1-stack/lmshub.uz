@@ -23,7 +23,7 @@ public class TelegramBotService {
     @Value("${telegram.bot.chat-id}")
     private String chatId;
 
-    @Value("${app.site.url:https://lmshub.uz}")
+    @Value("${app.site.url:https://www.lmshub.uz}")
     private String siteUrl;
 
     private final RestTemplate restTemplate = new RestTemplate();
