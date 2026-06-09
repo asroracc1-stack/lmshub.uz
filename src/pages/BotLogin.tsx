@@ -38,6 +38,21 @@ const BotLogin = () => {
             phone: res.data.phone || res.data.phoneNumber
         };
 
+        // Fix old bot links that had /exam/:id
+        if (redirect.startsWith("/exam/")) {
+            const testId = redirect.split("/exam/")[1];
+            const roleLower = (res.data.role || "user").toLowerCase();
+            let rolePath = "user";
+            if (roleLower === "student") rolePath = "student";
+            else if (roleLower === "teacher") rolePath = "teacher";
+            else if (roleLower === "admin") rolePath = "admin";
+            else if (roleLower === "administrator") rolePath = "administrator";
+            else if (roleLower === "super_admin") rolePath = "super-admin";
+            else if (roleLower === "payment_manager" || roleLower === "pack_manager" || roleLower === "manager") rolePath = "pack-manager";
+            
+            redirect = `/${rolePath}/mocks/take/${testId}`;
+        }
+
         setAuth(token, userData as any);
         toast.success("Muvaffaqiyatli kirdingiz!");
         window.location.href = redirect;

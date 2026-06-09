@@ -197,7 +197,17 @@ public class TelegramBotDispatcher {
                         return;
                     }
                     String token = jwtTokenProvider.generateTokenForUser(userOpt.get());
-                    String link = telegramBotService.getSiteUrl() + "/auth/bot-login?token=" + token + "&redirect=/exam/" + examId;
+                    
+                    String roleLower = userOpt.get().getRole().name().toLowerCase();
+                    String rolePath = "user";
+                    if (roleLower.equals("student")) rolePath = "student";
+                    else if (roleLower.equals("teacher")) rolePath = "teacher";
+                    else if (roleLower.equals("admin")) rolePath = "admin";
+                    else if (roleLower.equals("administrator")) rolePath = "administrator";
+                    else if (roleLower.equals("super_admin")) rolePath = "super-admin";
+                    else if (roleLower.equals("payment_manager") || roleLower.equals("pack_manager") || roleLower.equals("manager")) rolePath = "pack-manager";
+
+                    String link = telegramBotService.getSiteUrl() + "/auth/bot-login?token=" + token + "&redirect=/" + rolePath + "/mocks/take/" + examId;
 
                     java.util.List<java.util.List<Map<String, String>>> kb = new java.util.ArrayList<>();
                     
