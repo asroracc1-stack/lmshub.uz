@@ -11,13 +11,14 @@ import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import SplashCursor from "@/components/SplashCursor";
 import { useTranslation } from "react-i18next";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-
 import LightRays from "@/components/LightRays";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export default function Landing() {
   const navigate = useNavigate();
   const { user, role } = useAuth();
   const { t, i18n } = useTranslation();
+  const { theme } = useTheme();
   const [scrolled, setScrolled] = useState(false);
   const [headlineIndex, setHeadlineIndex] = useState(0);
   const [authButtonIndex, setAuthButtonIndex] = useState(0);
@@ -87,7 +88,7 @@ export default function Landing() {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#f8fafc] text-slate-900 font-sans overflow-x-hidden flex flex-col selection:bg-emerald-100 selection:text-emerald-900">
+    <div className="relative min-h-screen bg-[#f8fafc] dark:bg-[#0b0f1a] text-slate-900 dark:text-slate-100 font-sans overflow-x-hidden flex flex-col selection:bg-emerald-100 selection:text-emerald-900 dark:selection:bg-emerald-900/30 dark:selection:text-emerald-100">
       <SplashCursor
         RAINBOW_MODE={false}
         COLOR="#10b981"
@@ -98,7 +99,7 @@ export default function Landing() {
       {/* --- Premium Background Layer --- */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
         {/* Subtle Grid Pattern */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-[0.4]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-[0.4] dark:opacity-[0.2]" />
 
         {/* Blurred Gradient Blobs */}
         <motion.div
@@ -109,7 +110,7 @@ export default function Landing() {
             y: [0, -20, 0]
           }}
           transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-[-10%] right-[-5%] w-[60vw] h-[60vw] rounded-full bg-emerald-100/40 blur-[120px]"
+          className="absolute top-[-10%] right-[-5%] w-[60vw] h-[60vw] rounded-full bg-emerald-100/40 dark:bg-emerald-900/20 blur-[120px]"
         />
         <motion.div
           animate={{
@@ -119,7 +120,7 @@ export default function Landing() {
             y: [0, 30, 0]
           }}
           transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-          className="absolute bottom-[-10%] left-[-5%] w-[50vw] h-[50vw] rounded-full bg-blue-50/30 blur-[100px]"
+          className="absolute bottom-[-10%] left-[-5%] w-[50vw] h-[50vw] rounded-full bg-blue-50/30 dark:bg-blue-900/20 blur-[100px]"
         />
 
         {/* Tech Ornaments & Corner Lines */}
@@ -135,11 +136,11 @@ export default function Landing() {
           <nav className={cn(
             "flex items-center justify-between px-3 sm:px-6 py-1.5 sm:py-2.5 rounded-2xl transition-all duration-500 border",
             scrolled
-              ? "bg-white/90 backdrop-blur-xl border-slate-200 shadow-xl shadow-slate-200/20"
-              : "bg-white/50 backdrop-blur-md border-white/40 shadow-sm"
+              ? "bg-white/90 dark:bg-[#0f172a]/90 backdrop-blur-xl border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/20 dark:shadow-slate-900/40"
+              : "bg-white/50 dark:bg-[#0f172a]/50 backdrop-blur-md border-white/40 dark:border-slate-700/40 shadow-sm"
           )}>
             <div className="cursor-pointer group flex items-center gap-2" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-              <Logo size={42} showText variant="dark" />
+              <Logo size={42} showText variant={theme === "dark" ? "light" : "dark"} />
             </div>
 
             <div className="hidden lg:flex items-center gap-10">
@@ -147,7 +148,7 @@ export default function Landing() {
                 <a
                   key={item}
                   href={`#${item.toLowerCase()}`}
-                  className="text-sm font-semibold text-slate-500 hover:text-emerald-600 transition-colors relative group"
+                  className="text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors relative group"
                 >
                   {t(`navbar.${item.toLowerCase()}`)}
                   <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-emerald-500 transition-all group-hover:w-full" />
@@ -171,7 +172,7 @@ export default function Landing() {
                       <Button
                         variant="ghost"
                         onClick={() => navigate("/signin")}
-                        className="text-slate-600 hover:text-emerald-600 font-bold hover:bg-emerald-50/50"
+                        className="text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 font-bold hover:bg-emerald-50/50 dark:hover:bg-emerald-900/30"
                       >
                         {t("navbar.signIn")}
                       </Button>
@@ -204,7 +205,7 @@ export default function Landing() {
         <div className="absolute inset-0 pointer-events-none opacity-30 mix-blend-screen">
           <LightRays
             raysOrigin="top-center"
-            raysColor="#ff00ff"
+            raysColor="#197c17ff"
             raysSpeed={1.5}
             lightSpread={0.8}
             rayLength={1.2}
@@ -238,7 +239,7 @@ export default function Landing() {
                   animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                   exit={{ opacity: 0, y: -30, filter: "blur(8px)" }}
                   transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-                  className="text-4xl xs:text-5xl md:text-6xl lg:text-6xl xl:text-7xl 2xl:text-[5rem] font-bold text-slate-900 leading-[1.1] md:leading-[1.05] tracking-tight"
+                  className="text-4xl xs:text-5xl md:text-6xl lg:text-6xl xl:text-7xl 2xl:text-[5rem] font-bold text-slate-900 dark:text-slate-50 leading-[1.1] md:leading-[1.05] tracking-tight"
                 >
                   {headlines[headlineIndex].split(' ').map((word, i) => (
                     <span key={i} className={cn(
@@ -260,7 +261,7 @@ export default function Landing() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.5, delay: 0.1 }}
-                className="mt-6 text-lg md:text-xl xl:text-2xl 2xl:text-3xl text-slate-500 leading-relaxed max-w-lg xl:max-w-xl 2xl:max-w-2xl font-medium opacity-80 mx-auto lg:mx-0"
+                className="mt-6 text-lg md:text-xl xl:text-2xl 2xl:text-3xl text-slate-500 dark:text-slate-400 leading-relaxed max-w-lg xl:max-w-xl 2xl:max-w-2xl font-medium opacity-80 mx-auto lg:mx-0"
               >
                 {t("hero.subheadline")}
               </motion.p>
@@ -285,7 +286,7 @@ export default function Landing() {
                 <Button
                   onClick={handleAuthClick}
                   variant="outline"
-                  className="bg-white/80 backdrop-blur-md border-emerald-100 hover:border-emerald-200 hover:bg-emerald-50/30 text-emerald-700 rounded-2xl px-6 sm:px-10 h-14 sm:h-16 xl:h-20 text-base sm:text-lg xl:text-xl font-bold transition-all hover:-translate-y-1 shadow-sm w-full sm:w-auto"
+                  className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-emerald-100 dark:border-emerald-900/30 hover:border-emerald-200 dark:hover:border-emerald-800 hover:bg-emerald-50/30 dark:hover:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 rounded-2xl px-6 sm:px-10 h-14 sm:h-16 xl:h-20 text-base sm:text-lg xl:text-xl font-bold transition-all hover:-translate-y-1 shadow-sm w-full sm:w-auto"
                 >
                   {t("hero.trialBtn")}
                 </Button>
@@ -331,28 +332,28 @@ function TechOrnaments() {
   return (
     <div className="absolute inset-0 pointer-events-none select-none">
       {/* Top Left Corner */}
-      <svg className="absolute top-0 left-0 w-64 h-64 opacity-30 stroke-slate-300 hidden md:block" viewBox="0 0 200 200" fill="none">
+      <svg className="absolute top-0 left-0 w-64 h-64 opacity-30 dark:opacity-10 stroke-slate-300 dark:stroke-slate-600 hidden md:block" viewBox="0 0 200 200" fill="none">
         <path d="M20 20H60M20 20V60M20 20L40 40" strokeWidth="1.5" strokeLinecap="round" />
         <circle cx="20" cy="20" r="3" fill="currentColor" opacity="0.5" />
         <path d="M80 20L100 20" strokeWidth="1" strokeDasharray="4 4" />
       </svg>
 
       {/* Top Right Corner */}
-      <svg className="absolute top-0 right-0 w-64 h-64 opacity-30 stroke-emerald-300 hidden md:block" viewBox="0 0 200 200" fill="none">
+      <svg className="absolute top-0 right-0 w-64 h-64 opacity-30 dark:opacity-20 stroke-emerald-300 dark:stroke-emerald-700 hidden md:block" viewBox="0 0 200 200" fill="none">
         <path d="M180 20H140M180 20V60" strokeWidth="1.5" strokeLinecap="round" />
         <path d="M180 80V120" strokeWidth="1" strokeDasharray="4 4" />
         <rect x="170" y="15" width="20" height="10" rx="2" strokeWidth="1" />
       </svg>
 
       {/* Bottom Left Corner */}
-      <svg className="absolute bottom-0 left-0 w-64 h-64 opacity-30 stroke-slate-300 hidden md:block" viewBox="0 0 200 200" fill="none">
+      <svg className="absolute bottom-0 left-0 w-64 h-64 opacity-30 dark:opacity-10 stroke-slate-300 dark:stroke-slate-600 hidden md:block" viewBox="0 0 200 200" fill="none">
         <path d="M20 180H60M20 180V140" strokeWidth="1.5" strokeLinecap="round" />
         <path d="M20 120L40 100" strokeWidth="1" opacity="0.5" />
         <circle cx="65" cy="180" r="2" fill="currentColor" />
       </svg>
 
       {/* Bottom Right Corner */}
-      <svg className="absolute bottom-0 right-0 w-64 h-64 opacity-40 stroke-emerald-400 hidden md:block" viewBox="0 0 200 200" fill="none">
+      <svg className="absolute bottom-0 right-0 w-64 h-64 opacity-40 dark:opacity-20 stroke-emerald-400 dark:stroke-emerald-700 hidden md:block" viewBox="0 0 200 200" fill="none">
         <path d="M180 180H140M180 180V140" strokeWidth="1.5" strokeLinecap="round" />
         <path d="M150 180L130 160" strokeWidth="2" strokeLinecap="round" />
         <circle cx="180" cy="180" r="4" strokeWidth="1" />
@@ -385,12 +386,12 @@ function FloatingBadge({ icon: Icon, title, className }: { icon: any, title: str
         repeat: Infinity,
         ease: "easeInOut"
       }}
-      className={cn("absolute z-20 bg-white/80 backdrop-blur-xl p-4 rounded-2xl shadow-2xl shadow-slate-200/50 border border-white items-center gap-3", className)}
+      className={cn("absolute z-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-4 rounded-2xl shadow-2xl shadow-slate-200/50 dark:shadow-black/50 border border-white dark:border-slate-800 items-center gap-3", className)}
     >
-      <div className="h-10 w-10 bg-emerald-500/10 text-emerald-600 rounded-xl flex items-center justify-center shrink-0">
+      <div className="h-10 w-10 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl flex items-center justify-center shrink-0">
         <Icon className="h-5 w-5" />
       </div>
-      <p className="font-bold text-slate-800 text-sm whitespace-nowrap tracking-tight">{title}</p>
+      <p className="font-bold text-slate-800 dark:text-slate-200 text-sm whitespace-nowrap tracking-tight">{title}</p>
     </motion.div>
   );
 }
