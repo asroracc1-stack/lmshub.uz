@@ -140,12 +140,13 @@ public class SubscriptionRequestService {
         // 2. Insert or update user_subscriptions table
         SubscriptionPack pack = request.getPack();
 
-        // Increment totalPurchases counter on the pack
-        pack.setTotalPurchases(pack.getTotalPurchases() + 1);
+        // Increment totalPurchases counter on the pack safely
+        int currentPurchases = pack.getTotalPurchases() != null ? pack.getTotalPurchases() : 0;
+        pack.setTotalPurchases(currentPurchases + 1);
         packRepository.save(pack);
         log.info("✅ Step 3: totalPurchases incremented for pack: {}", pack.getName());
 
-        int durationMonths = pack.getDuration() > 0 ? pack.getDuration() : 12;
+        int durationMonths = (pack.getDuration() != null && pack.getDuration() > 0) ? pack.getDuration() : 12;
         LocalDateTime startsAt = LocalDateTime.now();
         LocalDateTime expiresAt = startsAt.plusMonths(durationMonths);
 
