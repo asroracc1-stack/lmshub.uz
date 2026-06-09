@@ -15,7 +15,6 @@ import java.net.URI;
 
 @Service
 @Slf4j
-@Async
 public class TelegramBotService {
 
     @Value("${telegram.bot.token}")
@@ -33,10 +32,12 @@ public class TelegramBotService {
         return chatId;
     }
 
+    @Async
     public void sendMessage(String text) {
         sendMessageTo(chatId, text);
     }
 
+    @Async
     public void sendMessageTo(String targetChatId, String text) {
         if (botToken == null || botToken.equals("your_bot_token") || targetChatId == null || targetChatId.isBlank()) {
             log.warn("Telegram bot token or target chat ID is not configured. Message not sent.");
@@ -61,6 +62,7 @@ public class TelegramBotService {
      * @param caption       Caption shown under the photo
      * @param localFilePath Full path to the image file on disk (e.g. "uploads/abc.jpg")
      */
+    @Async
     public void sendPhotoWithButton(String targetChatId, String caption, String photoPathOrUrl) {
         if (botToken == null || botToken.equals("your_bot_token") || targetChatId == null || targetChatId.isBlank()) {
             log.warn("Telegram bot not configured. Photo not sent.");
@@ -116,6 +118,7 @@ public class TelegramBotService {
     /**
      * Sends text message with an inline "Saytga kirish" button.
      */
+    @Async
     public void sendMessageWithButton(String targetChatId, String text) {
         if (botToken == null || botToken.equals("your_bot_token") || targetChatId == null || targetChatId.isBlank()) {
             log.warn("Telegram bot not configured. Message not sent.");
@@ -178,6 +181,7 @@ public class TelegramBotService {
         }
     }
 
+    @Async
     public void sendPhotoWithInlineButtons(String targetChatId, String caption, String photoPathOrUrl, String approveCallback, String rejectCallback) {
         if (botToken == null || botToken.equals("your_bot_token") || targetChatId == null || targetChatId.isBlank()) {
             log.warn("Telegram bot not configured. Photo not sent.");
@@ -228,6 +232,7 @@ public class TelegramBotService {
         }
     }
 
+    @Async
     public void sendMessageWithInlineButtons(String targetChatId, String text, String approveCallback, String rejectCallback) {
         if (botToken == null || botToken.equals("your_bot_token") || targetChatId == null || targetChatId.isBlank()) {
             log.warn("Telegram bot not configured. Message not sent.");
