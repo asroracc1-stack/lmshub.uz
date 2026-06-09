@@ -26,6 +26,9 @@ public class TelegramBotService {
     @Value("${app.site.url:https://www.lmshub.uz}")
     private String siteUrl;
 
+    @Value("${app.backend.url:https://lmshubuz-production.up.railway.app}")
+    private String backendUrl;
+
     private final RestTemplate restTemplate = new RestTemplate();
 
     public String getDefaultChatId() {
@@ -172,7 +175,7 @@ public class TelegramBotService {
             return;
         }
         try {
-            String webhookUrl = siteUrl + "/api/v1/telegram/webhook";
+            String webhookUrl = backendUrl + "/api/v1/telegram/webhook";
             String apiUrl = String.format("https://api.telegram.org/bot%s/setWebhook?url=%s", botToken, webhookUrl);
             restTemplate.getForObject(new URI(apiUrl), String.class);
             log.info("Telegram Webhook registered successfully pointing to: {}", webhookUrl);
