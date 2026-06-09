@@ -116,7 +116,22 @@ public class AdminExamController {
             if (file.isEmpty()) {
                 return ResponseEntity.badRequest().body("Fayl bo'sh");
             }
-            return ResponseEntity.ok(geminiService.analyzePdfMock(file.getBytes()));
+            if (!file.getOriginalFilename().toLowerCase().endsWith(".pdf")) {
+                return ResponseEntity.badRequest().body("Faqat PDF formatdagi fayllar qabul qilinadi");
+            }
+            byte[] bytes = file.getBytes();
+            if (bytes.length > 20 * 1024 * 1024) {
+                return ResponseEntity.badRequest().body("PDF fayli 20MB dan kichik bo'lishi kerak");
+            }
+            String result = geminiService.analyzePdfMock(bytes);
+            return ResponseEntity.ok(result);
+        } catch (RuntimeException e) {
+            // Surface clear error messages to the frontend (e.g. missing API key, rate limit)
+            String msg = e.getMessage() != null ? e.getMessage() : "Noma'lum xatolik";
+            if (msg.contains("Yaroqli Gemini API kaliti") || msg.contains("GEMINI_API_KEY")) {
+                return ResponseEntity.status(503).body("AI xizmati sozlanmagan: Server administratori Gemini API kalitini o'rnatishi kerak.");
+            }
+            return ResponseEntity.status(500).body("PDF AI tahlilida xatolik: " + msg);
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(500).body("PDF AI tahlilida xatolik: " + e.getMessage());
