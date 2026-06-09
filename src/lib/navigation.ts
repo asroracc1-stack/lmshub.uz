@@ -110,6 +110,7 @@ export const getSidebarRoutes = (role: string, t: TFunction, options: { ielts?: 
       { to: "/student/calendar", label: t("nav.schedule"), icon: Calendar },
       { to: "/student/payment", label: t("nav.payment"), icon: Wallet },
       { to: "/student/messages", label: t("nav.messages"), icon: MessagesSquare },
+      { to: "/student/achievements", label: "Yutuqlar", icon: Award },
       { to: "/student/leaderboard", label: t("nav.leaderboard"), icon: Trophy },
       // { to: "/student/packs", label: t("nav.packs"), icon: Package },
       { to: "/student/account", label: t("nav.account"), icon: User },
