@@ -13,4 +13,7 @@ public interface ExamRepository extends JpaRepository<Exam, UUID> {
     List<Exam> findBySubjectId(UUID subjectId);
     List<Exam> findByTypeOrderByCreatedAtDesc(com.lmscrm.backend.domain.enums.ExamType type);
     boolean existsByTitle(String title);
+
+    @org.springframework.data.jpa.repository.Query("SELECT e FROM Exam e LEFT JOIN FETCH e.passages WHERE e.id = :id")
+    java.util.Optional<Exam> findByIdWithPassages(@org.springframework.data.repository.query.Param("id") UUID id);
 }

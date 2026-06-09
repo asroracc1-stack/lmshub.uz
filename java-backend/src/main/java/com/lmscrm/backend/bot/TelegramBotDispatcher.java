@@ -169,7 +169,7 @@ public class TelegramBotDispatcher {
             String examIdStr = data.substring(5);
             try {
                 java.util.UUID examId = java.util.UUID.fromString(examIdStr);
-                Optional<com.lmscrm.backend.domain.entity.Exam> examOpt = examRepository.findById(examId);
+                Optional<com.lmscrm.backend.domain.entity.Exam> examOpt = examRepository.findByIdWithPassages(examId);
                 if (examOpt.isPresent()) {
                     com.lmscrm.backend.domain.entity.Exam exam = examOpt.get();
                     
