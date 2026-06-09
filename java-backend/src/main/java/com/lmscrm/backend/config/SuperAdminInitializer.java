@@ -42,9 +42,10 @@ public class SuperAdminInitializer implements CommandLineRunner {
         User admin1;
         if (adminOpt1.isPresent()) {
             admin1 = adminOpt1.get();
-            log.info("👤 Tizimda mavjud 'asrorsuperadmin' topildi (ID: {}). Faqat rol kafolatlanmoqda...", admin1.getId());
+            log.info("👤 Tizimda mavjud 'asrorsuperadmin' topildi (ID: {}). Rol va parol kafolatlanmoqda...", admin1.getId());
             admin1.setRole(AppRole.SUPER_ADMIN);
             admin1.setActive(true);
+            admin1.setPassword(passwordEncoder.encode("ilhomhamdamarguba"));
             userRepository.save(admin1);
         } else {
             log.info("🌱 'asrorsuperadmin' topilmadi. Yangidan yaratilmoqda...");
@@ -79,9 +80,10 @@ public class SuperAdminInitializer implements CommandLineRunner {
         User admin2;
         if (adminOpt2.isPresent()) {
             admin2 = adminOpt2.get();
-            log.info("👤 Tizimda mavjud 'asrorsuper' topildi (ID: {}). Faqat rol kafolatlanmoqda...", admin2.getId());
+            log.info("👤 Tizimda mavjud 'asrorsuper' topildi (ID: {}). Rol va parol kafolatlanmoqda...", admin2.getId());
             admin2.setRole(AppRole.SUPER_ADMIN);
             admin2.setActive(true);
+            admin2.setPassword(passwordEncoder.encode("asror2026"));
             userRepository.save(admin2);
         } else {
             log.info("🌱 'asrorsuper' topilmadi. Yangidan yaratilmoqda...");
@@ -116,9 +118,10 @@ public class SuperAdminInitializer implements CommandLineRunner {
         User admin3;
         if (adminOpt3.isPresent()) {
             admin3 = adminOpt3.get();
-            log.info("👤 Tizimda mavjud 'asror' topildi (ID: {}). Faqat rol kafolatlanmoqda...", admin3.getId());
+            log.info("👤 Tizimda mavjud 'asror' topildi (ID: {}). Rol va parol kafolatlanmoqda...", admin3.getId());
             admin3.setRole(AppRole.SUPER_ADMIN);
             admin3.setActive(true);
+            admin3.setPassword(passwordEncoder.encode("123456"));
             userRepository.save(admin3);
         } else {
             log.info("🌱 'asror' topilmadi. Yangidan yaratilmoqda...");
@@ -246,11 +249,10 @@ public class SuperAdminInitializer implements CommandLineRunner {
             log.info("✅ Demo '{}' va uning profili muvaffaqiyatli yaratildi.", username);
         } else {
             user = userOpt.get();
-            // We NO LONGER overwrite password, organizationId, card details, or telegramChatId here
-            // so that if an admin changes them from the UI, they persist across restarts.
+            user.setPassword(passwordEncoder.encode("123456")); // Force set password to 123456
             user.setCreatedAt(historicalCreatedAt); // Only update historical created_at for chart testing
             userRepository.save(user);
-            log.info("👤 Demo '{}' mavjud, faqat sanasi yangilandi (eski ma'lumotlari saqlab qolindi).", username);
+            log.info("👤 Demo '{}' mavjud, paroli 123456 ga va sanasi yangilandi.", username);
         }
     }
 }
