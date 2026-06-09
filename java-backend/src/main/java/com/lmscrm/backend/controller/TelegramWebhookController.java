@@ -105,7 +105,23 @@ public class TelegramWebhookController {
 
                 } catch (Exception e) {
                     log.error("❌ approveRequest failed: {}", e.getMessage(), e);
-                    telegramBotService.answerCallbackQuery(queryId, "❌ Xatolik: " + e.getMessage(), true);
+                    // Update Telegram message to show error
+                    if (message != null && messageId != null) {
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> chat = (Map<String, Object>) message.get("chat");
+                        long chatIdLong = (chat != null && chat.containsKey("id"))
+                                ? ((Number) chat.get("id")).longValue()
+                                : (fromId != null ? fromId.longValue() : Long.parseLong(adminChatId));
+                        
+                        String errorSuffix = "\n\n❌ <b>XATOLIK:</b>\n<code>" + e.getMessage() + "</code>";
+                        if (message.containsKey("caption")) {
+                            String caption = (String) message.get("caption");
+                            telegramBotService.editMessageCaption(chatIdLong, messageId, caption + errorSuffix);
+                        } else if (message.containsKey("text")) {
+                            String text = (String) message.get("text");
+                            telegramBotService.editMessageText(chatIdLong, messageId, text + errorSuffix);
+                        }
+                    }
                 }
 
             // ─── REJECT ─────────────────────────────────────────────────────
@@ -141,7 +157,23 @@ public class TelegramWebhookController {
 
                 } catch (Exception e) {
                     log.error("❌ rejectRequest failed: {}", e.getMessage(), e);
-                    telegramBotService.answerCallbackQuery(queryId, "❌ Xatolik: " + e.getMessage(), true);
+                    // Update Telegram message to show error
+                    if (message != null && messageId != null) {
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> chat = (Map<String, Object>) message.get("chat");
+                        long chatIdLong = (chat != null && chat.containsKey("id"))
+                                ? ((Number) chat.get("id")).longValue()
+                                : (fromId != null ? fromId.longValue() : Long.parseLong(adminChatId));
+                        
+                        String errorSuffix = "\n\n❌ <b>XATOLIK:</b>\n<code>" + e.getMessage() + "</code>";
+                        if (message.containsKey("caption")) {
+                            String caption = (String) message.get("caption");
+                            telegramBotService.editMessageCaption(chatIdLong, messageId, caption + errorSuffix);
+                        } else if (message.containsKey("text")) {
+                            String text = (String) message.get("text");
+                            telegramBotService.editMessageText(chatIdLong, messageId, text + errorSuffix);
+                        }
+                    }
                 }
 
             } else {
