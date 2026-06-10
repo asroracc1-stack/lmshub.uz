@@ -57,6 +57,7 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
   const [isSignIn, setIsSignIn] = useState(defaultMode === "signin");
   const [submitting, setSubmitting] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [isGoogleSuccess, setIsGoogleSuccess] = useState(false);
   const [showPwd, setShowPwd] = useState(false);
   const [successMode, setSuccessMode] = useState(false);
   const [phoneError, setPhoneError] = useState(false);
@@ -230,6 +231,7 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
         sessionStorage.clear();
 
         const res = await api.post<LoginResponseData>("/auth/google", { token: tokenResponse.access_token });
+        setIsGoogleSuccess(true);
         handleAuthSuccess(res.data, false);
       } catch (err: unknown) {
         const apiErr = err as { response?: { data?: { message?: string } }; message?: string };
@@ -253,7 +255,9 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
         <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-center">
           <DotLottieReact src="https://lottie.host/05a8da46-bffb-4416-a160-0b16adbce445/CxzFkSjThh.lottie" loop autoplay className="w-[300px] h-[300px]" />
           <h2 className="text-3xl font-bold text-white mt-6 tracking-tight">Muvaffaqiyatli!</h2>
-          <p className="text-emerald-500 mt-3 font-medium">Dashboardga yo'naltirilmoqdasiz...</p>
+          <p className="text-emerald-500 mt-3 font-medium">
+            {isGoogleSuccess ? "Google orqali muvaffaqiyatli kirdingiz! Dashboardga yo'naltirilmoqdasiz..." : "Dashboardga yo'naltirilmoqdasiz..."}
+          </p>
         </motion.div>
       </div>
     );
