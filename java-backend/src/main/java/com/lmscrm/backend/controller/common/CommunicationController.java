@@ -48,7 +48,7 @@ public class CommunicationController {
     public ResponseEntity<List<ChatMessageDto>> getThreadMessages(
             @PathVariable UUID threadId,
             @AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(chatService.getThreadMessages(threadId, user.getId()));
+        return ResponseEntity.ok(chatService.getThreadMessages(threadId, user.getId(), null, 50));
     }
 
     @PostMapping("/threads/{threadId}/messages")

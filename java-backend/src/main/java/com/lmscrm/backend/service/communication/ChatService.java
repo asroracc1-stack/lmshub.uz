@@ -48,9 +48,9 @@ public class ChatService {
         List<ChatMessage> messages;
         
         if (cursor == null) {
-            messages = messageRepository.findLatestMessages(threadId, userId.toString(), PageRequest.of(0, limit));
+            messages = messageRepository.findLatestMessages(threadId, userId.toString(), org.springframework.data.domain.PageRequest.of(0, limit));
         } else {
-            messages = messageRepository.findMessagesBeforeCursor(threadId, cursor, userId.toString(), PageRequest.of(0, limit));
+            messages = messageRepository.findMessagesBeforeCursor(threadId, cursor, userId.toString(), org.springframework.data.domain.PageRequest.of(0, limit));
         }
         
         java.util.Collections.reverse(messages);
