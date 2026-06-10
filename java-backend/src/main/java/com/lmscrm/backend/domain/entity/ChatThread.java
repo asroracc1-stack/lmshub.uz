@@ -42,6 +42,9 @@ public class ChatThread {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @OneToMany(mappedBy = "thread", fetch = FetchType.LAZY)
+    private java.util.List<ChatParticipant> participants;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

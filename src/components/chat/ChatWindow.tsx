@@ -242,7 +242,20 @@ export default function ChatWindow() {
       const res = await api.post("/chat/conversations", {
         targetUserId: targetUser.id
       });
-      const conv: Conversation = res.data;
+      const rawConv = res.data;
+      const conv: Conversation = {
+        ...rawConv,
+        isGroup: rawConv.is_group ?? rawConv.isGroup,
+        participants: (rawConv.participants || []).map((p: any) => ({
+          ...p,
+          userId: p.user_id || p.userId,
+          user: p.user ? {
+            ...p.user,
+            fullName: p.user.full_name || p.user.fullName,
+            organizationId: p.user.organization_id || p.user.organizationId
+          } : null
+        }))
+      };
       
       // Add conversation to list if not present
       setConversations((prev) => {

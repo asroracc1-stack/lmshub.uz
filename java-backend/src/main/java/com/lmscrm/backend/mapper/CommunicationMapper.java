@@ -22,4 +22,19 @@ public interface CommunicationMapper {
 
     @Mapping(source = "user.id", target = "userId")
     NotificationDto toNotificationDto(Notification notification);
+
+    @Mapping(source = "user.id", target = "userId")
+    com.lmscrm.backend.dto.communication.ChatParticipantDto toChatParticipantDto(com.lmscrm.backend.domain.entity.ChatParticipant participant);
+
+    default com.lmscrm.backend.dto.admin.UserSummaryDto toUserSummaryDto(com.lmscrm.backend.domain.entity.User user) {
+        if (user == null) return null;
+        return com.lmscrm.backend.dto.admin.UserSummaryDto.builder()
+                .id(user.getId())
+                .fullName(user.getFullName())
+                .email(user.getEmail())
+                .username(user.getUsername())
+                .organizationId(user.getOrganizationId())
+                .role(user.getRole() != null ? user.getRole().name() : "USER")
+                .build();
+    }
 }

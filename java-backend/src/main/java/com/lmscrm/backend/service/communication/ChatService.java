@@ -141,7 +141,15 @@ public class ChatService {
             return true;
         }
         
-        // Everyone else can ONLY message Super Admin, Pack Manager, and Payment Manager
+        // Users, Students, and Parents can ONLY message Pack Manager and Payment Manager
+        if (sender.getRole() == com.lmscrm.backend.domain.enums.AppRole.USER ||
+            sender.getRole() == com.lmscrm.backend.domain.enums.AppRole.STUDENT ||
+            sender.getRole() == com.lmscrm.backend.domain.enums.AppRole.PARENT) {
+            return target.getRole() == com.lmscrm.backend.domain.enums.AppRole.PACK_MANAGER ||
+                   target.getRole() == com.lmscrm.backend.domain.enums.AppRole.PAYMENT_MANAGER;
+        }
+        
+        // Other staff (Admin, Teacher, etc.) can message Super Admin, Pack Manager, and Payment Manager
         if (target.getRole() == com.lmscrm.backend.domain.enums.AppRole.SUPER_ADMIN || 
             target.getRole() == com.lmscrm.backend.domain.enums.AppRole.PACK_MANAGER ||
             target.getRole() == com.lmscrm.backend.domain.enums.AppRole.PAYMENT_MANAGER) {
@@ -186,6 +194,8 @@ public class ChatService {
                             
                     participantRepository.save(p1);
                     participantRepository.save(p2);
+                    
+                    newThread.setParticipants(java.util.Arrays.asList(p1, p2));
                     
                     return mapper.toChatThreadDto(newThread);
                 });

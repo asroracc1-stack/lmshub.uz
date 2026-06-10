@@ -11,4 +11,5 @@ public class ChatThreadDto {
     private Boolean isGroup;
     private UUID groupId;
     private LocalDateTime createdAt;
+    private java.util.List<ChatParticipantDto> participants;
 }
