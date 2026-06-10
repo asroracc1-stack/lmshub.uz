@@ -127,7 +127,6 @@ public class ChatService {
                         .id(u.getId())
                         .fullName(u.getFullName())
                         .email(u.getEmail())
-                        .role(u.getRole().name())
                         .build())
                 .collect(Collectors.toList());
     }
@@ -163,7 +162,7 @@ public class ChatService {
                 .orElseGet(() -> {
                     ChatThread newThread = ChatThread.builder()
                             .isGroup(false)
-                            .organization(currentUser.getOrganization())
+                            .organization(currentUser.getOrganizationId() != null ? Organization.builder().id(currentUser.getOrganizationId()).build() : null)
                             .createdBy(currentUser)
                             .build();
                     
