@@ -135,13 +135,16 @@ public class ChatService {
     private boolean canUserMessage(User sender, User target) {
         if (sender.getRole() == com.lmscrm.backend.domain.enums.AppRole.SUPER_ADMIN) return true;
         
-        // Pack Manager can message everyone
-        if (sender.getRole() == com.lmscrm.backend.domain.enums.AppRole.PACK_MANAGER) {
+        // Pack Manager and Payment Manager can message everyone
+        if (sender.getRole() == com.lmscrm.backend.domain.enums.AppRole.PACK_MANAGER || 
+            sender.getRole() == com.lmscrm.backend.domain.enums.AppRole.PAYMENT_MANAGER) {
             return true;
         }
         
-        // Everyone else can ONLY message Super Admin and Pack Manager
-        if (target.getRole() == com.lmscrm.backend.domain.enums.AppRole.SUPER_ADMIN || target.getRole() == com.lmscrm.backend.domain.enums.AppRole.PACK_MANAGER) {
+        // Everyone else can ONLY message Super Admin, Pack Manager, and Payment Manager
+        if (target.getRole() == com.lmscrm.backend.domain.enums.AppRole.SUPER_ADMIN || 
+            target.getRole() == com.lmscrm.backend.domain.enums.AppRole.PACK_MANAGER ||
+            target.getRole() == com.lmscrm.backend.domain.enums.AppRole.PAYMENT_MANAGER) {
             return true;
         }
 

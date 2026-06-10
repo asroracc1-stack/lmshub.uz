@@ -302,6 +302,7 @@ export default function ChatWindow() {
       case "SUPER_ADMIN":
         return <Badge className="bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 text-[10px] font-medium rounded-full px-2">Super Admin</Badge>;
       case "PACK_MANAGER":
+      case "PAYMENT_MANAGER":
         return <Badge className="bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 border border-purple-500/30 text-[10px] font-medium rounded-full px-2">Pack Manager</Badge>;
       case "TEACHER":
         return <Badge className="bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border border-blue-500/30 text-[10px] font-medium rounded-full px-2">O'qituvchi</Badge>;
