@@ -320,7 +320,7 @@ export default function RoleLayout({
         )}
       >
         <a
-          href="https://t.me/LMSHubBot"
+          href="https://t.me/LMSHub_bot"
           target="_blank"
           rel="noopener noreferrer"
           title={mini ? t("common.telegramBot") : undefined}

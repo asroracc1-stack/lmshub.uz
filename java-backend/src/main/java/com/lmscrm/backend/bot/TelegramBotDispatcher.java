@@ -715,7 +715,7 @@ public class TelegramBotDispatcher {
             return;
         }
 
-        String botUsername = "LMSHubBot"; // We can hardcode or get from Telegram API
+        String botUsername = "LMSHub_bot"; // We can hardcode or get from Telegram API
         String refLink = "https://t.me/" + botUsername + "?start=" + refCode;
 
         long invitedCount = userRepository.findAll().stream().filter(u -> user.getId().equals(u.getReferredBy())).count();
