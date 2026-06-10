@@ -303,10 +303,10 @@ export default function ChatWindow() {
 
   const filteredConversations = useMemo(() => conversations.filter((c) => {
     const p = c.participants.find(p => p.userId !== user?.id)?.user;
-    return (c.title || p?.fullName || "").toLowerCase().includes(searchTerm.toLowerCase());
+    return (c.title || p?.fullName || "").toLowerCase().includes((searchTerm || "").toLowerCase());
   }), [conversations, searchTerm, user?.id]);
 
-  const filteredEligibleUsers = useMemo(() => eligibleUsers.filter(u => u.fullName.toLowerCase().includes(eligibleSearch.toLowerCase())), [eligibleUsers, eligibleSearch]);
+  const filteredEligibleUsers = useMemo(() => eligibleUsers.filter(u => (u.fullName || "").toLowerCase().includes((eligibleSearch || "").toLowerCase())), [eligibleUsers, eligibleSearch]);
 
   const chatPartner = useMemo(() => activeConversation?.participants.find(p => p.userId !== user?.id)?.user || null, [activeConversation, user?.id]);
 
