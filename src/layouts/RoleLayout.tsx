@@ -370,7 +370,7 @@ export default function RoleLayout({
   return (
     <div
       className={cn(
-        "min-h-screen flex w-full overflow-x-hidden transition-colors duration-500",
+        "h-screen flex w-full overflow-hidden transition-colors duration-500",
         theme === "dark" ? "bg-[#020617] text-slate-100" : "bg-slate-50 text-slate-900"
       )}
     >
@@ -382,7 +382,7 @@ export default function RoleLayout({
         animate={{ width: collapsed ? 72 : 256 }}
         transition={{ duration: 0.3, ease: "easeInOut" }}
         className={cn(
-          "hidden md:flex shrink-0 border-r flex-col h-screen sticky top-0 z-50 overflow-hidden",
+          "hidden md:flex shrink-0 border-r flex-col h-full z-50 overflow-hidden",
           theme === "dark"
             ? "bg-slate-950 border-white/5 shadow-2xl"
             : "bg-white border-slate-200 shadow-xl shadow-slate-200/40"
@@ -401,11 +401,11 @@ export default function RoleLayout({
       </MobileSidebarDrawer>
 
       {/* ── Main content ────────────────────────────── */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-y-auto relative thin-scrollbar">
         {/* Topbar */}
         <header
           className={cn(
-            "h-16 border-b sticky top-0 z-30 transition-all w-full flex justify-center",
+            "shrink-0 h-16 border-b sticky top-0 z-30 transition-all w-full flex justify-center",
             theme === "dark"
               ? "bg-slate-950/60 backdrop-blur-xl border-white/5"
               : "bg-white/80 backdrop-blur-md border-slate-200 shadow-sm"
