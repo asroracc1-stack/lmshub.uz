@@ -12,7 +12,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/storage")
 @RequiredArgsConstructor
-public class FileController {
+public class StorageController {
 
     private final FileStorageService fileStorageService;
 
