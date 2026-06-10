@@ -241,20 +241,20 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
               {t("mockCategory.noTests")}
             </Card>
           ) : (
-            filtered.map((t, i) => {
-              const diff = DIFFICULTY_META[t.difficulty ?? "easy"] ?? DIFFICULTY_META.easy;
+            filtered.map((test, i) => {
+              const diff = DIFFICULTY_META[test.difficulty ?? "easy"] ?? DIFFICULTY_META.easy;
               const DIcon = diff.icon;
-              const packType = getPackType(t.required_pack);
+              const packType = getPackType(test.required_pack);
               const theme = PACK_THEME[packType];
               const BtnIcon = theme.buttonIcon;
               const BadgeIconComp = theme.badgeIcon;
 
               // Check if user can access this test based on their subscription
-              const isLocked = !canAccessPack(packAccess, t.required_pack, canManage);
+              const isLocked = !canAccessPack(packAccess, test.required_pack, canManage);
 
               return (
                 <motion.div
-                  key={t.id}
+                  key={test.id}
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.04, duration: 0.3 }}
@@ -288,7 +288,7 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
                       <div className="flex-1 min-w-0 space-y-3">
                         <div className="flex items-center gap-3 flex-wrap">
                           <h3 className={cn("font-display font-bold text-xl md:text-2xl", meta.color)}>
-                            {t.title}
+                            {test.title}
                           </h3>
 
                           {/* Pack badge */}
@@ -297,7 +297,7 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
                             {"badgeLabelKey" in theme ? t(theme.badgeLabelKey as string) : theme.badgeLabel}
                           </Badge>
 
-                          {!t.is_published && (
+                          {!test.is_published && (
                             <Badge variant="outline" className="uppercase text-muted-foreground border-dashed text-[9px]">
                               Draft
                             </Badge>
@@ -306,19 +306,19 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
 
                         <div className="flex items-center gap-2 flex-wrap">
                           <Badge variant="outline" className="rounded-full text-[11px] font-medium bg-white/60 dark:bg-white/5">
-                            <Clock className="h-3 w-3 mr-1" /> {t.duration_minutes ?? 60} {t("mockCategory.minutesShort")}
+                            <Clock className="h-3 w-3 mr-1" /> {test.duration_minutes ?? 60} {t("mockCategory.minutesShort")}
                           </Badge>
                           <Badge variant="outline" className={cn("rounded-full text-[11px] font-medium", diff.cls)}>
                             <DIcon className="h-3 w-3 mr-1" /> {t(diff.labelKey)}
                           </Badge>
                           <Badge variant="outline" className="rounded-full text-[11px] font-medium bg-white/60 dark:bg-white/5">
                             <Layers className="h-3 w-3 mr-1" />
-                            {t.part_type === "full" ? t("mockCategory.part.fullLabel") : t("mockCategory.part.numberLabel", { num: t.part_type ?? 1 })}
+                            {test.part_type === "full" ? t("mockCategory.part.fullLabel") : t("mockCategory.part.numberLabel", { num: test.part_type ?? 1 })}
                           </Badge>
                         </div>
 
-                        {t.description && (
-                          <p className="text-sm text-muted-foreground line-clamp-1 opacity-80">#{t.description}</p>
+                        {test.description && (
+                          <p className="text-sm text-muted-foreground line-clamp-1 opacity-80">#{test.description}</p>
                         )}
                       </div>
 
@@ -329,7 +329,7 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
                           <>
                             <Button asChild size="icon" variant="outline"
                               className="rounded-xl h-10 w-10 bg-white/60 dark:bg-white/5" title={t("common.edit")}>
-                              <Link to={`${basePath}/mocks/edit/${t.id}`}>
+                              <Link to={`${basePath}/mocks/edit/${test.id}`}>
                                 <Pencil className="h-4 w-4" />
                               </Link>
                             </Button>
@@ -345,12 +345,12 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
                                 <AlertDialogHeader>
                                   <AlertDialogTitle>{t("mockCategory.deleteConfirmTitle")}</AlertDialogTitle>
                                   <AlertDialogDescription>
-                                    {t("mockCategory.deleteConfirmDesc", { title: t.title })}
+                                    {t("mockCategory.deleteConfirmDesc", { title: test.title })}
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
                                   <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => onDelete(t.id)}
+                                  <AlertDialogAction onClick={() => onDelete(test.id)}
                                     className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
                                     {t("common.delete")}
                                   </AlertDialogAction>
@@ -380,7 +380,7 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
                                 : theme.button
                             )}
                           >
-                            <Link to={`${basePath}/mocks/take/${t.id}`}>
+                            <Link to={`${basePath}/mocks/take/${test.id}`}>
                               {canManage ? t("mockCategory.tryBtn") : t(theme.buttonLabelKey)}
                               <BtnIcon className="h-4 w-4 ml-1.5" />
                             </Link>

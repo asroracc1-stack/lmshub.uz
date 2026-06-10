@@ -98,7 +98,10 @@ public class AdminExamController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER', 'STUDENT', 'USER')")
-    public ResponseEntity<List<ExamDto>> getExams(@RequestParam("type") String type) {
+    public ResponseEntity<List<ExamDto>> getExams(@RequestParam(value = "type", required = false) String type) {
+        if (type == null || type.trim().isEmpty()) {
+            return ResponseEntity.ok(examService.getAllExams());
+        }
         return ResponseEntity.ok(examService.getExamsByType(type));
     }
 

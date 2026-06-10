@@ -223,6 +223,12 @@ public class ExamService {
     }
 
     @Transactional(readOnly = true)
+    public List<ExamDto> getAllExams() {
+        return examRepository.findAll(org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt"))
+                .stream().map(mapper::toExamDto).collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
     public List<ExamDto> getExamsByType(String type) {
         ExamType examType = ExamType.valueOf(type.toUpperCase());
         return examRepository.findByTypeOrderByCreatedAtDesc(examType)
