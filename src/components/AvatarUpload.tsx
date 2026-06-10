@@ -2,7 +2,7 @@ import { useRef, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { Camera, Upload, Trash2, Edit2, Sparkles } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { cn } from "@/lib/utils";
+import { cn, getImageUrl } from "@/lib/utils";
 import { api } from "@/lib/axios";
 import TigerPlayer from "./TigerPlayer";
 import LogoEditorModal from "./LogoEditorModal";
@@ -71,7 +71,9 @@ export default function AvatarUpload({ userId, currentUrl, initials, onUploaded,
     if (file) handleFile(file);
   }, []);
 
-  const displayUrl = previewUrl || (currentUrl ? `${currentUrl}${currentUrl.includes('?') ? '&' : '?'}t=${new Date().getTime()}` : null);
+  const rawUrl = previewUrl || currentUrl;
+  const baseUrl = getImageUrl(rawUrl);
+  const displayUrl = baseUrl ? `${baseUrl}${baseUrl.includes('?') ? '&' : '?'}t=${new Date().getTime()}` : undefined;
 
   return (
     <div className="flex flex-col items-center gap-4">

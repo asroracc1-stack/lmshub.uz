@@ -34,6 +34,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { api } from "@/lib/axios";
 import { usePrefetchHelper } from "@/hooks/useOptimizedQueries";
+import { getImageUrl } from "@/lib/utils";
 
 type Role = "super_admin" | "admin" | "administrator" | "teacher" | "student" | "user" | "parent" | "payment_manager";
 
@@ -65,7 +66,8 @@ export default function ProfileMenu({ role, basePath }: ProfileMenuProps) {
     .join("")
     .toUpperCase();
 
-  const avatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
+  const rawAvatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
+  const avatarUrl = getImageUrl(rawAvatarUrl);
 
   const handleSignOut = async () => {
     try {

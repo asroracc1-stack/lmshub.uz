@@ -196,6 +196,7 @@ export const getSidebarRoutes = (role: string, t: TFunction, options: { ielts?: 
         { to: "/pack-manager/subscriptions", label: t("nav.subscriptions"), icon: Crown },
         { to: "/pack-manager/packs", label: t("nav.pricingPacks"), icon: Package },
         { to: "/pack-manager/mocks", label: t("nav.examPacks"), icon: FileText },
+        { to: "/pack-manager/messages", label: t("nav.messages"), icon: MessagesSquare },
         { to: "/pack-manager/referral", label: t("nav.referral"), icon: Gift },
       ];
     default:
