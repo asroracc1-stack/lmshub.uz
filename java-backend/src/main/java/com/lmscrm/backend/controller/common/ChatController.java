@@ -1,9 +1,10 @@
-package com.lmscrm.backend.controller.teacher;
+package com.lmscrm.backend.controller.common;
 
 import com.lmscrm.backend.domain.entity.User;
 import com.lmscrm.backend.dto.communication.BroadcastMessageRequest;
 import com.lmscrm.backend.dto.communication.ChatMessageDto;
 import com.lmscrm.backend.dto.communication.ChatThreadDto;
+import com.lmscrm.backend.dto.admin.UserSummaryDto;
 import com.lmscrm.backend.service.communication.ChatService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -17,24 +18,25 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1/teacher/chat")
+@RequestMapping("/api/v1/chat")
 @RequiredArgsConstructor
-@Tag(name = "Teacher Chat Controller", description = "Endpoints for teachers to chat with students and parents")
-public class TeacherChatController {
+@Tag(name = "Chat Controller", description = "Endpoints for universal chat functionality")
+public class ChatController {
 
     private final ChatService chatService;
 
-    @GetMapping("/threads")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
+    @GetMapping("/conversations")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get my chat threads")
     public ResponseEntity<List<ChatThreadDto>> getMyThreads(@AuthenticationPrincipal User currentUser) {
         return ResponseEntity.ok(chatService.getMyThreads(currentUser.getId()));
     }
 
-    @GetMapping("/threads/{threadId}/messages")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
+    @GetMapping("/conversations/{threadId}/messages")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get messages for a chat thread")
     public ResponseEntity<List<ChatMessageDto>> getThreadMessages(
             @PathVariable UUID threadId,
@@ -42,8 +44,8 @@ public class TeacherChatController {
         return ResponseEntity.ok(chatService.getThreadMessages(threadId, currentUser.getId()));
     }
 
-    @PostMapping("/threads/{threadId}/messages")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
+    @PostMapping("/conversations/{threadId}/messages")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Send a message in a chat thread")
     public ResponseEntity<ChatMessageDto> sendMessage(
             @PathVariable UUID threadId,
@@ -51,6 +53,25 @@ public class TeacherChatController {
             @AuthenticationPrincipal User currentUser) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(chatService.sendMessage(threadId, request, currentUser));
+    }
+    
+    @PostMapping("/conversations")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Create or get direct chat thread")
+    public ResponseEntity<ChatThreadDto> createDirectThread(
+            @RequestBody Map<String, UUID> request,
+            @AuthenticationPrincipal User currentUser) {
+        UUID targetUserId = request.get("targetUserId");
+        if (targetUserId == null) throw new IllegalArgumentException("targetUserId is required");
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(chatService.createOrGetDirectThread(currentUser, targetUserId));
+    }
+    
+    @GetMapping("/eligible-users")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Get users the current user is allowed to message")
+    public ResponseEntity<List<UserSummaryDto>> getEligibleUsers(@AuthenticationPrincipal User currentUser) {
+        return ResponseEntity.ok(chatService.getEligibleUsers(currentUser));
     }
 
     @PostMapping("/broadcast")

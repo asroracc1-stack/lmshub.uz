@@ -26,8 +26,10 @@ public class ChatService {
     private final ChatMessageRepository messageRepository;
     private final ChatParticipantRepository participantRepository;
     private final GroupMemberRepository groupMemberRepository;
+    private final UserRepository userRepository;
     private final NotificationService notificationService;
     private final CommunicationMapper mapper;
+    private final org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate;
 
     @Transactional(readOnly = true)
     public List<ChatThreadDto> getMyThreads(UUID userId) {
@@ -74,10 +76,17 @@ public class ChatService {
         // Offline Notification Logic
         // Find other participants who might be offline and send them a notification
         List<ChatParticipant> participants = participantRepository.findByThreadId(threadId);
+        ChatMessageDto responseDto = mapper.toChatMessageDto(message);
+        
         for (ChatParticipant participant : participants) {
+            // Broadcast via WebSocket
+            messagingTemplate.convertAndSendToUser(
+                    participant.getUser().getEmail(),
+                    "/queue/messages",
+                    responseDto
+            );
+            
             if (!participant.getUser().getId().equals(sender.getId())) {
-                // In a real app with WebSockets, we'd check if they are actively connected
-                // If not connected, send DB Notification
                 String msgBody = request.getBody() != null ? request.getBody() : "Attachment";
                 notificationService.createNotification(
                         participant.getUser(),
@@ -88,7 +97,7 @@ public class ChatService {
             }
         }
 
-        return mapper.toChatMessageDto(message);
+        return responseDto;
     }
 
     @Transactional
@@ -105,5 +114,77 @@ public class ChatService {
                     NotificationType.INFO
             );
         }
+    }
+
+    @Transactional(readOnly = true)
+    public List<com.lmscrm.backend.dto.admin.UserSummaryDto> getEligibleUsers(User currentUser) {
+        List<User> allUsers = userRepository.findAll();
+        
+        return allUsers.stream()
+                .filter(u -> !u.getId().equals(currentUser.getId()))
+                .filter(u -> canUserMessage(currentUser, u))
+                .map(u -> com.lmscrm.backend.dto.admin.UserSummaryDto.builder()
+                        .id(u.getId())
+                        .fullName(u.getFullName())
+                        .email(u.getEmail())
+                        .role(u.getRole().name())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    private boolean canUserMessage(User sender, User target) {
+        if (sender.getRole() == com.lmscrm.backend.domain.enums.AppRole.SUPER_ADMIN) return true;
+        
+        // Pack Manager can message everyone
+        if (sender.getRole() == com.lmscrm.backend.domain.enums.AppRole.PACK_MANAGER) {
+            return true;
+        }
+        
+        // Everyone else can ONLY message Super Admin and Pack Manager
+        if (target.getRole() == com.lmscrm.backend.domain.enums.AppRole.SUPER_ADMIN || target.getRole() == com.lmscrm.backend.domain.enums.AppRole.PACK_MANAGER) {
+            return true;
+        }
+
+        return false;
+    }
+
+    @Transactional
+    public ChatThreadDto createOrGetDirectThread(User currentUser, UUID targetUserId) {
+        User targetUser = userRepository.findById(targetUserId)
+                .orElseThrow(() -> new BusinessException("Target user not found"));
+                
+        if (!canUserMessage(currentUser, targetUser)) {
+            throw new BusinessException("RBAC rules prevent messaging this user");
+        }
+        
+        // Find if direct thread already exists
+        return threadRepository.findDirectThread(currentUser.getId(), targetUserId)
+                .map(mapper::toChatThreadDto)
+                .orElseGet(() -> {
+                    ChatThread newThread = ChatThread.builder()
+                            .isGroup(false)
+                            .organization(currentUser.getOrganization())
+                            .createdBy(currentUser)
+                            .build();
+                    
+                    newThread = threadRepository.save(newThread);
+                    
+                    ChatParticipant p1 = ChatParticipant.builder()
+                            .thread(newThread)
+                            .user(currentUser)
+                            .joinedAt(LocalDateTime.now())
+                            .build();
+                            
+                    ChatParticipant p2 = ChatParticipant.builder()
+                            .thread(newThread)
+                            .user(targetUser)
+                            .joinedAt(LocalDateTime.now())
+                            .build();
+                            
+                    participantRepository.save(p1);
+                    participantRepository.save(p2);
+                    
+                    return mapper.toChatThreadDto(newThread);
+                });
     }
 }

@@ -12,5 +12,15 @@ import java.util.UUID;
 public interface ChatThreadRepository extends JpaRepository<ChatThread, UUID> {
 
     @Query("SELECT t FROM ChatThread t JOIN ChatParticipant p ON p.thread.id = t.id WHERE p.user.id = :userId")
-    List<ChatThread> findThreadsByUserId(UUID userId);
+    List<ChatThread> findThreadsByUserId(@org.springframework.data.repository.query.Param("userId") UUID userId);
+
+    @Query("SELECT t FROM ChatThread t " +
+            "JOIN ChatParticipant p1 ON p1.thread.id = t.id " +
+            "JOIN ChatParticipant p2 ON p2.thread.id = t.id " +
+            "WHERE t.isGroup = false " +
+            "AND p1.user.id = :userId1 " +
+            "AND p2.user.id = :userId2")
+    java.util.Optional<ChatThread> findDirectThread(
+            @org.springframework.data.repository.query.Param("userId1") UUID userId1, 
+            @org.springframework.data.repository.query.Param("userId2") UUID userId2);
 }

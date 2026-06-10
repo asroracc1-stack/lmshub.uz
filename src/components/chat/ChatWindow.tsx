@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, useMemo } from "react";
-import { io, Socket } from "socket.io-client";
-import axios from "axios";
+import { Client } from "@stomp/stompjs";
+import SockJS from "sockjs-client";
+import api from "@/lib/axios";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,12 +11,12 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { 
   Send, MessageSquare, Search, UserPlus, Loader2, Sparkles, 
-  FileText, Paperclip, CheckCheck, Check, AlertCircle, RefreshCw
+  Paperclip, CheckCheck, AlertCircle, RefreshCw
 } from "lucide-react";
 import { toast } from "sonner";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
-const BACKEND_URL = import.meta.env.VITE_CHAT_SERVER_URL || "http://localhost:5000";
+const BACKEND_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
 interface ChatUser {
   id: string;
@@ -74,12 +75,7 @@ export default function ChatWindow() {
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   
-  // Typing indicators
-  const [typingUsers, setTypingUsers] = useState<Record<string, boolean>>({});
-  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const isTypingRef = useRef(false);
-
-  const socketRef = useRef<Socket | null>(null);
+  const stompClientRef = useRef<Client | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // Active conversation ref to prevent closure traps in socket events
@@ -88,75 +84,75 @@ export default function ChatWindow() {
     activeConversationRef.current = activeConversation;
   }, [activeConversation]);
 
-  // Create customized axios instance for our backend
-  const chatApi = useMemo(() => {
-    return axios.create({
-      baseURL: `${BACKEND_URL}/api/chat`,
-      headers: {
-        "x-user-id": user?.id || ""
-      }
-    });
-  }, [user?.id]);
-
-  // Connect to Socket.io backend
+  // Connect to STOMP WebSockets
   useEffect(() => {
     if (!user?.id) return;
 
-    console.log("Connecting to Socket.io backend...");
-    const socket = io(BACKEND_URL, {
-      query: { userId: user.id }
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    console.log("Connecting to STOMP WebSocket backend...");
+    
+    const client = new Client({
+      webSocketFactory: () => new SockJS(`${BACKEND_URL}/ws-chat`),
+      connectHeaders: {
+        Authorization: `Bearer ${token}`
+      },
+      debug: (str) => {
+        // console.log(str);
+      },
+      reconnectDelay: 5000,
+      heartbeatIncoming: 4000,
+      heartbeatOutgoing: 4000,
     });
 
-    socketRef.current = socket;
-
-    socket.on("connect", () => {
-      console.log("Socket connected successfully");
+    client.onConnect = () => {
+      console.log("STOMP connected successfully");
       setIsConnected(true);
-    });
-
-    socket.on("disconnect", () => {
-      console.log("Socket disconnected");
-      setIsConnected(false);
-    });
-
-    socket.on("new_message", (message: Message) => {
-      console.log("Received new message in real-time:", message);
       
-      // If message is in the active thread, append it
-      if (activeConversationRef.current?.id === message.conversationId) {
-        setMessages((prev) => {
-          if (prev.some((m) => m.id === message.id)) return prev;
-          return [...prev, message];
-        });
-      }
-
-      // Update the conversations preview list
-      setConversations((prev) => {
-        return prev.map((conv) => {
-          if (conv.id === message.conversationId) {
-            return {
-              ...conv,
-              messages: [message]
-            };
+      // Subscribe to user's private message queue
+      client.subscribe('/user/queue/messages', (message) => {
+        if (message.body) {
+          const newMsg = JSON.parse(message.body) as Message;
+          
+          // If message is in the active thread, append it
+          if (activeConversationRef.current?.id === newMsg.conversationId) {
+            setMessages((prev) => {
+              if (prev.some((m) => m.id === newMsg.id)) return prev;
+              return [...prev, newMsg];
+            });
           }
-          return conv;
-        });
+
+          // Update the conversations preview list
+          setConversations((prev) => {
+            return prev.map((conv) => {
+              if (conv.id === newMsg.conversationId) {
+                return { ...conv, messages: [newMsg] };
+              }
+              return conv;
+            });
+          });
+        }
       });
-    });
+    };
 
-    socket.on("user_typing", ({ userId: typingUserId, isTyping }: { userId: string; isTyping: boolean }) => {
-      setTypingUsers((prev) => ({
-        ...prev,
-        [typingUserId]: isTyping
-      }));
-    });
+    client.onStompError = (frame) => {
+      console.error('Broker reported error: ' + frame.headers['message']);
+      console.error('Additional details: ' + frame.body);
+      toast.error("WebSocket xatosi: " + frame.headers['message']);
+    };
+    
+    client.onDisconnect = () => {
+      setIsConnected(false);
+    };
 
-    socket.on("error_msg", (err: { message: string }) => {
-      toast.error(err.message);
-    });
+    client.activate();
+    stompClientRef.current = client;
 
     return () => {
-      socket.disconnect();
+      if (client.active) {
+        client.deactivate();
+      }
     };
   }, [user?.id]);
 
@@ -165,7 +161,7 @@ export default function ChatWindow() {
     if (!user?.id) return;
     setLoadingConversations(true);
     try {
-      const res = await chatApi.get("/conversations");
+      const res = await api.get("/v1/chat/conversations");
       setConversations(res.data);
     } catch (err: any) {
       console.error("Error fetching conversations:", err);
@@ -177,7 +173,7 @@ export default function ChatWindow() {
 
   useEffect(() => {
     loadConversations();
-  }, [user?.id, chatApi]);
+  }, [user?.id]);
 
   // Scroll to bottom on new messages
   const scrollToBottom = () => {
@@ -192,24 +188,13 @@ export default function ChatWindow() {
 
   // Load message history when selecting a conversation thread
   const selectConversation = async (conversation: Conversation) => {
-    // Leave the previous socket room
-    if (activeConversation && socketRef.current) {
-      socketRef.current.emit("leave_room", { conversationId: activeConversation.id });
-    }
-
     setActiveConversation(conversation);
     setLoadingMessages(true);
     setMessages([]);
-    setTypingUsers({});
 
     try {
-      const res = await chatApi.get(`/conversations/${conversation.id}/messages`);
+      const res = await api.get(`/v1/chat/conversations/${conversation.id}/messages`);
       setMessages(res.data);
-
-      // Join the new socket room
-      if (socketRef.current) {
-        socketRef.current.emit("join_room", { conversationId: conversation.id });
-      }
     } catch (err: any) {
       console.error("Error loading messages:", err);
       toast.error("Xabarlarni yuklashda xatolik");
@@ -223,7 +208,7 @@ export default function ChatWindow() {
     setIsNewChatOpen(true);
     setLoadingUsers(true);
     try {
-      const res = await chatApi.get("/eligible-users");
+      const res = await api.get("/v1/chat/eligible-users");
       setEligibleUsers(res.data);
     } catch (err: any) {
       console.error("Error fetching messageable users:", err);
@@ -236,7 +221,7 @@ export default function ChatWindow() {
   // Start chat with an eligible user
   const startChatWithUser = async (targetUser: ChatUser) => {
     try {
-      const res = await chatApi.post("/conversations", {
+      const res = await api.post("/v1/chat/conversations", {
         targetUserId: targetUser.id
       });
       const conv: Conversation = res.data;
@@ -257,47 +242,37 @@ export default function ChatWindow() {
   };
 
   // Send message handler
-  const handleSendMessage = (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!messageInput.trim() && !attachmentUrl) return;
-    if (!activeConversation || !socketRef.current) return;
+    if (!activeConversation) return;
 
-    // Send via socket
-    socketRef.current.emit("send_message", {
-      conversationId: activeConversation.id,
-      body: messageInput.trim(),
-      attachmentUrl: attachmentUrl || null
-    });
+    try {
+      const res = await api.post(`/v1/chat/conversations/${activeConversation.id}/messages`, {
+        body: messageInput.trim(),
+        attachmentUrl: attachmentUrl || null
+      });
+      
+      const newMsg = res.data;
+      setMessages((prev) => [...prev, newMsg]);
+      
+      // Update conversations list with the new message
+      setConversations((prev) => {
+        return prev.map((conv) => {
+          if (conv.id === activeConversation.id) {
+            return { ...conv, messages: [newMsg] };
+          }
+          return conv;
+        });
+      });
 
-    setMessageInput("");
-    setAttachmentUrl("");
-    setShowAttachmentInput(false);
-
-    // Stop typing immediately
-    if (isTypingRef.current) {
-      isTypingRef.current = false;
-      socketRef.current.emit("typing", { conversationId: activeConversation.id, isTyping: false });
+      setMessageInput("");
+      setAttachmentUrl("");
+      setShowAttachmentInput(false);
+    } catch (err: any) {
+      console.error("Error sending message:", err);
+      toast.error("Xabarni yuborishda xatolik");
     }
-  };
-
-  // Typing event handler (debounced)
-  const handleTyping = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setMessageInput(e.target.value);
-    if (!activeConversation || !socketRef.current) return;
-
-    if (!isTypingRef.current) {
-      isTypingRef.current = true;
-      socketRef.current.emit("typing", { conversationId: activeConversation.id, isTyping: true });
-    }
-
-    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-
-    typingTimeoutRef.current = setTimeout(() => {
-      if (isTypingRef.current) {
-        isTypingRef.current = false;
-        socketRef.current?.emit("typing", { conversationId: activeConversation.id, isTyping: false });
-      }
-    }, 1500);
   };
 
   // Helpers
@@ -343,12 +318,6 @@ export default function ChatWindow() {
     if (!activeConversation) return null;
     return activeConversation.participants.find(p => p.userId !== user?.id)?.user || null;
   }, [activeConversation, user?.id]);
-
-  // Check if anyone is typing right now in the room
-  const partnerIsTyping = useMemo(() => {
-    if (!chatPartner) return false;
-    return !!typingUsers[chatPartner.id];
-  }, [typingUsers, chatPartner]);
 
   return (
     <div className="flex gap-5 h-[calc(100vh-160px)] min-h-[500px]">
@@ -418,7 +387,7 @@ export default function ChatWindow() {
               const partner = conv.participants.find(p => p.userId !== user?.id)?.user;
               const title = conv.title || partner?.fullName || "Noma'lum foydalanuvchi";
               const partnerRole = partner?.role || "";
-              const lastMsg = conv.messages[0];
+              const lastMsg = conv.messages && conv.messages.length > 0 ? conv.messages[0] : null;
 
               return (
                 <motion.button
@@ -464,7 +433,7 @@ export default function ChatWindow() {
           <span>Roli: {user?.role ? user.role.toUpperCase() : "STUDENT"}</span>
           <div className="flex items-center gap-1.5">
             <span className={`h-2.5 w-2.5 rounded-full ${isConnected ? "bg-emerald-500" : "bg-rose-500"} animate-pulse`} />
-            <span>{isConnected ? "Server faol (Socket)" : "Ulanish xatosi"}</span>
+            <span>{isConnected ? "Server faol (STOMP)" : "Ulanish xatosi"}</span>
           </div>
         </div>
       </Card>
@@ -491,14 +460,14 @@ export default function ChatWindow() {
                   <div className="flex items-center gap-1.5 mt-0.5">
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                     <span className="text-[10px] text-muted-foreground">
-                      {partnerIsTyping ? "yozmoqda..." : "onlayn"}
+                      onlayn
                     </span>
                   </div>
                 </div>
               </div>
               
               <Badge variant="outline" className="gap-1 border-primary/20 text-primary bg-primary/5 text-[10px]">
-                <Sparkles className="h-3 w-3" /> Socket Engine
+                <Sparkles className="h-3 w-3" /> STOMP Websocket
               </Badge>
             </div>
 
@@ -570,24 +539,6 @@ export default function ChatWindow() {
                 })
               )}
 
-              {/* Socket Typing Status display */}
-              {partnerIsTyping && (
-                <motion.div
-                  initial={{ opacity: 0, y: 5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="flex justify-start"
-                >
-                  <div className="bg-muted text-muted-foreground text-[10px] px-3 py-1.5 rounded-full flex items-center gap-1.5 border border-border/30">
-                    <div className="flex gap-0.5">
-                      <span className="h-1 w-1 rounded-full bg-primary animate-bounce" />
-                      <span className="h-1 w-1 rounded-full bg-primary animate-bounce [animation-delay:0.2s]" />
-                      <span className="h-1 w-1 rounded-full bg-primary animate-bounce [animation-delay:0.4s]" />
-                    </div>
-                    <span>yozmoqda...</span>
-                  </div>
-                </motion.div>
-              )}
-
               <div ref={messagesEndRef} />
             </div>
 
@@ -643,7 +594,7 @@ export default function ChatWindow() {
               <Input
                 placeholder="Xabar yozing..."
                 value={messageInput}
-                onChange={handleTyping}
+                onChange={(e) => setMessageInput(e.target.value)}
                 className="flex-1 bg-background/50 border-border/60 h-9 rounded-xl text-xs pl-3 pr-3"
               />
 

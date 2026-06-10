@@ -283,37 +283,74 @@ export function useDashboardMutations() {
 }
 
 // 5. Student Dashboard — Typed interface & hook
-export interface StudentDashboardSummary {
-  /** Talaba a'zo bo'lgan faol guruhlar soni (group_members jadvali) */
-  myGroupsCount: number;
-  /** Talaba topshirgan jami mock imtihonlari soni (student_attempts jadvali) */
-  mockExamsCount: number;
-  /**
-   * O'rtacha IELTS Band Score (1 kasr bilan, masalan: 6.5).
-   * Agar imtihon topshirilmagan bo'lsa null qaytadi → frontend "—" ko'rsatadi.
-   */
-  averageBandScore: number | null;
-  /**
-   * To'lanmagan invoicelar yig'indisi UZS da (PENDING + SENT + OVERDUE).
-   * 0 bo'lishi mumkin — qarzdorligi yo'q degani.
-   */
-  pendingBalance: number;
-  /** Foydalanuvchining yig'gan coinlari */
-  coins: number;
-  /**
-   * Keyingi IELTS imtihon sanasi (YYYY-MM-DD format).
-   * Belgilanmagan bo'lsa null qaytadi → frontend "—" ko'rsatadi.
-   */
-  nextExamDate: string | null;
-  /** Keyingi imtihon label-i (masalan: "Maqsad: 7.0 band") */
-  nextExamLabel: string | null;
+export interface ChartPointDto {
+  day: string;
+  reading: number;
+  listening: number;
+  writing: number;
+  speaking: number;
+}
+
+export interface GoalDto {
+  id: string;
+  title: string;
+  subtitle: string;
+  type: string;
+  progress: number | null;
+  isCompleted: boolean;
+}
+
+export interface AchievementDto {
+  id: string;
+  title: string;
+  description: string;
+  date: string;
+  iconType: string;
+}
+
+export interface LeaderboardDto {
+  rank: number;
+  name: string;
+  avatarUrl: string | null;
+  bandScore: number;
+  isCurrentUser: boolean;
+}
+
+export interface RecentTestDto {
+  id: string;
+  title: string;
+  subtitle: string;
+  type: string;
+  score: number;
+  date: string;
+}
+
+export interface StudentIeltsDashboardDto {
+  targetBand: number;
+  currentBand: number | null;
+  progressPercentage: number;
+  dailyStreak: number;
+  longestStreak: number;
+  weekChecklist: boolean[];
+  targetBandTrend: string;
+  averageScoreTrend: string;
+  daysUntilExam: number;
+  totalPracticeTime: string;
+  weeklyResults: ChartPointDto[];
+  todayGoals: GoalDto[];
+  achievements: AchievementDto[];
+  leaderboard: LeaderboardDto[];
+  recentTests: RecentTestDto[];
+  isPremium: boolean;
+  takenTestsCount: number;
+  overallProgress: number;
 }
 
 export function useStudentDashboard() {
-  return useQuery<StudentDashboardSummary>({
-    queryKey: ["student-dashboard-stats"],
+  return useQuery<StudentIeltsDashboardDto>({
+    queryKey: ["student-ielts-dashboard-stats"],
     queryFn: async () => {
-      const response = await api.get<StudentDashboardSummary>("/student/dashboard/summary");
+      const response = await api.get<StudentIeltsDashboardDto>("/v1/student/ielts-dashboard/summary");
       return response.data;
     },
     staleTime: 5 * 60 * 1000,
