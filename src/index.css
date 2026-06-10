@@ -136,7 +136,7 @@
   }
 }
 
-/* Slim Scrollbar Customization */
+/* Slim Scrollbar Customization - Global */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
@@ -145,4 +145,32 @@
 }
 ::-webkit-scrollbar-thumb:hover {
   background: hsla(var(--primary) / 0.4);
+}
+
+/* Explicit class for thin, visible scrollbars (e.g. sidebar) */
+.thin-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: hsla(var(--foreground) / 0.15) transparent;
+}
+.thin-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+.thin-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.thin-scrollbar::-webkit-scrollbar-thumb {
+  background: hsla(var(--foreground) / 0.15);
+  border-radius: 10px;
+}
+.thin-scrollbar:hover::-webkit-scrollbar-thumb {
+  background: hsla(var(--foreground) / 0.3);
+}
+.dark .thin-scrollbar {
+  scrollbar-color: hsla(var(--foreground) / 0.2) transparent;
+}
+.dark .thin-scrollbar::-webkit-scrollbar-thumb {
+  background: hsla(var(--foreground) / 0.2);
+}
+.dark .thin-scrollbar:hover::-webkit-scrollbar-thumb {
+  background: hsla(var(--foreground) / 0.4);
 }
