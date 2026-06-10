@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0038-chat-delete-feature
+      author: antigravity
+      changes:
+        - addColumn:
+            tableName: chat_messages
+            columns:
+              - column:
+                  name: is_deleted
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+              - column:
+                  name: deleted_for_users
+                  type: VARCHAR(2048)

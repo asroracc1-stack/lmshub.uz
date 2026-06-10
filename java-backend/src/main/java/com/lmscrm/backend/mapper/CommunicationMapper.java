@@ -18,6 +18,8 @@ public interface CommunicationMapper {
     @Mapping(source = "thread.id", target = "threadId")
     @Mapping(source = "sender.id", target = "senderId")
     @Mapping(source = "sender.email", target = "senderName")
+    @Mapping(source = "replyTo.id", target = "replyToId")
+    @Mapping(source = "forwardedFrom.id", target = "forwardedFromId")
     ChatMessageDto toChatMessageDto(ChatMessage chatMessage);
 
     @Mapping(source = "user.id", target = "userId")
@@ -35,6 +37,7 @@ public interface CommunicationMapper {
                 .username(user.getUsername())
                 .organizationId(user.getOrganizationId())
                 .role(user.getRole() != null ? user.getRole().name() : "USER")
+                .lastActive(user.getLastActive())
                 .build();
     }
 }

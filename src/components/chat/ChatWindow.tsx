@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useMemo } from "react";
+import React, { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 import api from "@/lib/axios";
@@ -9,66 +9,43 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { 
-  Send, MessageSquare, Search, UserPlus, Loader2, Sparkles, 
-  Paperclip, CheckCheck, AlertCircle, RefreshCw
-} from "lucide-react";
+import { MessageSquare, Search, UserPlus, Loader2, AlertCircle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+import { Virtuoso } from "react-virtuoso";
+
+import ChatHeader from "./ChatHeader";
+import ChatInput from "./ChatInput";
+import MessageBubble from "./MessageBubble";
 
 const BACKEND_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
-interface ChatUser {
-  id: string;
-  fullName: string;
-  role: string;
-  email: string;
-  organizationId?: string | null;
-}
-
-interface ConversationParticipant {
-  id: string;
-  userId: string;
-  user: ChatUser;
-}
-
-interface Message {
-  id: string;
-  body: string;
-  attachmentUrl?: string | null;
-  senderId: string;
-  conversationId: string;
-  createdAt: string;
-  sender: {
-    id: string;
-    fullName: string;
-    role: string;
-  };
-}
-
-interface Conversation {
-  id: string;
-  title?: string | null;
-  isGroup: boolean;
-  organizationId?: string | null;
-  createdAt: string;
-  participants: ConversationParticipant[];
-  messages: Message[];
-}
+interface ChatUser { id: string; fullName: string; role: string; email: string; lastSeen?: string; }
+interface ConversationParticipant { id: string; userId: string; user: ChatUser; }
+interface Message { id: string; body: string; attachmentUrl?: string; messageType?: string; fileUrl?: string; voiceUrl?: string; stickerUrl?: string; delivered?: boolean; seen?: boolean; isPinned?: boolean; isDeleted?: boolean; replyToId?: string; senderId: string; threadId: string; createdAt: string; senderName?: string; sender?: ChatUser; }
+interface Conversation { id: string; title?: string; isGroup: boolean; createdAt: string; participants: ConversationParticipant[]; messages: Message[]; }
 
 export default function ChatWindow() {
   const { user } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversation, setActiveConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [messageInput, setMessageInput] = useState("");
-  const [attachmentUrl, setAttachmentUrl] = useState("");
-  const [showAttachmentInput, setShowAttachmentInput] = useState(false);
   const [eligibleUsers, setEligibleUsers] = useState<ChatUser[]>([]);
   const [isNewChatOpen, setIsNewChatOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [eligibleSearch, setEligibleSearch] = useState("");
   
+  // Real-time states
+  const [typingUsers, setTypingUsers] = useState<Record<string, boolean>>({});
+  const [onlineStatus, setOnlineStatus] = useState<Record<string, { online: boolean; lastSeen: string }>>({});
+  
+  // Interactions
+  const [replyToMsg, setReplyToMsg] = useState<Message | null>(null);
+
+  // Pagination
+  const [hasMore, setHasMore] = useState(true);
+  const [cursor, setCursor] = useState<string | null>(null);
+
   // Loading states
   const [loadingConversations, setLoadingConversations] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
@@ -76,641 +53,379 @@ export default function ChatWindow() {
   const [isConnected, setIsConnected] = useState(false);
   
   const stompClientRef = useRef<Client | null>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  // Active conversation ref to prevent closure traps in socket events
   const activeConversationRef = useRef<Conversation | null>(null);
-  useEffect(() => {
-    activeConversationRef.current = activeConversation;
-  }, [activeConversation]);
+  useEffect(() => { activeConversationRef.current = activeConversation; }, [activeConversation]);
 
   // Connect to STOMP WebSockets
   useEffect(() => {
     if (!user?.id) return;
-
     const token = localStorage.getItem("token");
     if (!token) return;
 
-    console.log("Connecting to STOMP WebSocket backend...");
-    
     const client = new Client({
       webSocketFactory: () => new SockJS(`${BACKEND_URL}/ws-chat`),
-      connectHeaders: {
-        Authorization: `Bearer ${token}`
-      },
-      debug: (str) => {
-        // console.log(str);
-      },
+      connectHeaders: { Authorization: `Bearer ${token}` },
       reconnectDelay: 5000,
       heartbeatIncoming: 4000,
       heartbeatOutgoing: 4000,
     });
 
     client.onConnect = () => {
-      console.log("STOMP connected successfully");
       setIsConnected(true);
       
-      // Subscribe to user's private message queue
       client.subscribe('/user/queue/messages', (message) => {
         if (message.body) {
-          const newMsg = JSON.parse(message.body) as Message;
+          const rawMsg = JSON.parse(message.body);
+          const newMsg = {
+            ...rawMsg,
+            createdAt: rawMsg.created_at || rawMsg.createdAt,
+            senderId: rawMsg.sender_id || rawMsg.senderId,
+            threadId: rawMsg.thread_id || rawMsg.threadId,
+            messageType: rawMsg.message_type || rawMsg.messageType || "TEXT",
+            delivered: true,
+          };
           
-          // If message is in the active thread, append it
-          if (activeConversationRef.current?.id === newMsg.conversationId) {
+          if (activeConversationRef.current?.id === newMsg.threadId) {
             setMessages((prev) => {
               if (prev.some((m) => m.id === newMsg.id)) return prev;
               return [...prev, newMsg];
             });
+            client.publish({
+              destination: "/app/chat.seen",
+              body: JSON.stringify({ messageId: newMsg.id, threadId: newMsg.threadId, receiverEmail: newMsg.senderName })
+            });
           }
 
-          // Update the conversations preview list
-          setConversations((prev) => {
-            return prev.map((conv) => {
-              if (conv.id === newMsg.conversationId) {
-                return { ...conv, messages: [newMsg] };
-              }
-              return conv;
-            });
-          });
+          setConversations((prev) => prev.map((conv) => conv.id === newMsg.threadId ? { ...conv, messages: [newMsg] } : conv));
+        }
+      });
+
+      client.subscribe('/user/queue/typing', (message) => {
+        if (message.body) {
+          const payload = JSON.parse(message.body);
+          setTypingUsers(prev => ({ ...prev, [payload.threadId]: payload.isTyping }));
+        }
+      });
+
+      client.subscribe('/user/queue/seen', (message) => {
+        if (message.body) {
+          const payload = JSON.parse(message.body);
+          setMessages(prev => prev.map(m => m.id === payload.messageId ? { ...m, seen: true } : m));
+        }
+      });
+
+      client.subscribe('/topic/presence', (message) => {
+        if (message.body) {
+          const payload = JSON.parse(message.body);
+          setOnlineStatus(prev => ({ ...prev, [payload.userId]: { online: payload.online, lastSeen: payload.lastSeen } }));
         }
       });
     };
 
-    client.onStompError = (frame) => {
-      console.error('Broker reported error: ' + frame.headers['message']);
-      console.error('Additional details: ' + frame.body);
-      toast.error("WebSocket xatosi: " + frame.headers['message']);
-    };
-    
-    client.onDisconnect = () => {
-      setIsConnected(false);
-    };
-
+    client.onDisconnect = () => setIsConnected(false);
     client.activate();
     stompClientRef.current = client;
 
-    return () => {
-      if (client.active) {
-        client.deactivate();
-      }
-    };
+    return () => { if (client.active) client.deactivate(); };
   }, [user?.id]);
 
-  // Fetch Conversations history
   const loadConversations = async () => {
     if (!user?.id) return;
     setLoadingConversations(true);
     try {
       const res = await api.get("/chat/conversations");
-      const mappedConversations = res.data.map((c: any) => ({
+      const mapped = res.data.map((c: any) => ({
         ...c,
         isGroup: c.is_group ?? c.isGroup,
         participants: (c.participants || []).map((p: any) => ({
           ...p,
           userId: p.user_id || p.userId,
-          user: p.user ? {
-            ...p.user,
-            fullName: p.user.full_name || p.user.fullName,
-            organizationId: p.user.organization_id || p.user.organizationId
-          } : null
+          user: p.user ? { ...p.user, fullName: p.user.full_name || p.user.fullName } : null
         }))
       }));
-      setConversations(mappedConversations);
+      setConversations(mapped);
     } catch (err: any) {
-      console.error("Error fetching conversations:", err);
       toast.error("Suhbatlar tarixini yuklashda xatolik");
     } finally {
       setLoadingConversations(false);
     }
   };
 
-  useEffect(() => {
-    loadConversations();
-  }, [user?.id]);
+  useEffect(() => { loadConversations(); }, [user?.id]);
 
-  // Scroll to bottom on new messages
-  const scrollToBottom = () => {
-    setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, 50);
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  // Load message history when selecting a conversation thread
   const selectConversation = async (conversation: Conversation) => {
     setActiveConversation(conversation);
     setLoadingMessages(true);
     setMessages([]);
+    setCursor(null);
+    setHasMore(true);
+    setReplyToMsg(null);
 
     try {
-      const res = await api.get(`/chat/conversations/${conversation.id}/messages`);
-      setMessages(res.data);
+      const res = await api.get(`/chat/conversations/${conversation.id}/messages?limit=30`);
+      const mappedMessages = res.data.map((m: any) => ({
+        ...m,
+        createdAt: m.created_at || m.createdAt,
+        senderId: m.sender_id || m.senderId,
+        threadId: m.thread_id || m.threadId,
+      }));
+      setMessages(mappedMessages.reverse()); // Reverse because they come DESC from backend and we want oldest at top in virtual list
+      if (mappedMessages.length > 0) setCursor(mappedMessages[0].createdAt);
+      if (mappedMessages.length < 30) setHasMore(false);
+
+      const partnerUser = conversation.participants.find(p => p.userId !== user?.id)?.user;
+      if (stompClientRef.current?.active && partnerUser) {
+        mappedMessages.forEach((msg: Message) => {
+          if (msg.senderId !== user?.id && !msg.seen) {
+            stompClientRef.current!.publish({
+              destination: "/app/chat.seen",
+              body: JSON.stringify({ messageId: msg.id, threadId: msg.threadId, receiverEmail: partnerUser.email })
+            });
+          }
+        });
+      }
     } catch (err: any) {
-      console.error("Error loading messages:", err);
       toast.error("Xabarlarni yuklashda xatolik");
     } finally {
       setLoadingMessages(false);
     }
   };
 
-  // Load users that the current user is allowed to message (under RBAC rules)
+  const loadMoreMessages = useCallback(async () => {
+    if (!activeConversation || !cursor || !hasMore || loadingMessages) return;
+    setLoadingMessages(true);
+    try {
+      const res = await api.get(`/chat/conversations/${activeConversation.id}/messages?cursor=${encodeURIComponent(cursor)}&limit=30`);
+      const mappedMessages = res.data.map((m: any) => ({
+        ...m,
+        createdAt: m.created_at || m.createdAt,
+        senderId: m.sender_id || m.senderId,
+      })).reverse();
+      
+      if (mappedMessages.length > 0) {
+        setMessages(prev => [...mappedMessages, ...prev]);
+        setCursor(mappedMessages[0].createdAt);
+      }
+      if (mappedMessages.length < 30) setHasMore(false);
+    } catch (err) {
+    } finally {
+      setLoadingMessages(false);
+    }
+  }, [activeConversation, cursor, hasMore, loadingMessages]);
+
+  const handleSendMessage = async (text: string, fileUrl?: string, messageType?: string) => {
+    if (!activeConversation) return;
+    try {
+      const res = await api.post(`/chat/conversations/${activeConversation.id}/messages`, {
+        body: text,
+        attachmentUrl: messageType === "FILE" || messageType === "IMAGE" || messageType === "VOICE" ? fileUrl : null,
+        voiceUrl: messageType === "VOICE" ? fileUrl : null,
+        fileUrl: messageType === "IMAGE" ? fileUrl : null,
+        messageType: messageType || "TEXT",
+        replyToId: replyToMsg?.id
+      });
+      const rawMsg = res.data;
+      const newMsg = {
+        ...rawMsg,
+        createdAt: rawMsg.created_at || rawMsg.createdAt,
+        senderId: rawMsg.sender_id || rawMsg.senderId,
+      };
+      setMessages(prev => [...prev, newMsg]);
+      setConversations(prev => prev.map(c => c.id === activeConversation.id ? { ...c, messages: [newMsg] } : c));
+      setReplyToMsg(null);
+    } catch (err) {
+      toast.error("Xabarni yuborishda xatolik");
+    }
+  };
+
+  const handleMessageDelete = async (msgId: string, forEveryone: boolean) => {
+    try {
+      await api.delete(`/chat/messages/${msgId}?forEveryone=${forEveryone}`);
+      setMessages(prev => prev.map(m => m.id === msgId ? { ...m, isDeleted: true } : m));
+      toast.success("Xabar o'chirildi");
+    } catch (err) {
+      toast.error("O'chirishda xatolik");
+    }
+  };
+
+  const handleMessagePin = async (msgId: string) => {
+    try {
+      await api.post(`/chat/messages/${msgId}/pin`);
+      setMessages(prev => prev.map(m => m.id === msgId ? { ...m, isPinned: !m.isPinned } : m));
+    } catch (err) {
+      toast.error("Qadab qo'yishda xatolik");
+    }
+  };
+
+  const handleTyping = (isTyping: boolean) => {
+    const partnerUser = activeConversation?.participants.find(p => p.userId !== user?.id)?.user;
+    if (stompClientRef.current?.active && activeConversation && partnerUser) {
+      stompClientRef.current.publish({
+        destination: "/app/chat.typing",
+        body: JSON.stringify({ threadId: activeConversation.id, receiverEmail: partnerUser.email, isTyping, senderId: user?.id })
+      });
+    }
+  };
+
   const openNewChatDialog = async () => {
     setIsNewChatOpen(true);
     setLoadingUsers(true);
     try {
       const res = await api.get("/chat/eligible-users");
-      const mappedUsers = res.data.map((u: any) => ({
-        ...u,
-        fullName: u.full_name || u.fullName,
-        organizationId: u.organization_id || u.organizationId
-      }));
-      setEligibleUsers(mappedUsers);
-    } catch (err: any) {
-      console.error("Error fetching messageable users:", err);
-      toast.error("Muloqot qilish mumkin bo'lgan foydalanuvchilarni yuklashda xatolik");
-    } finally {
-      setLoadingUsers(false);
-    }
+      setEligibleUsers(res.data);
+    } catch (err) {
+      toast.error("Foydalanuvchilarni yuklashda xatolik");
+    } finally { setLoadingUsers(false); }
   };
 
-  // Start chat with an eligible user
   const startChatWithUser = async (targetUser: ChatUser) => {
     try {
-      const res = await api.post("/chat/conversations", {
-        targetUserId: targetUser.id
-      });
+      const res = await api.post("/chat/conversations", { targetUserId: targetUser.id });
       const rawConv = res.data;
       const conv: Conversation = {
         ...rawConv,
-        isGroup: rawConv.is_group ?? rawConv.isGroup,
-        participants: (rawConv.participants || []).map((p: any) => ({
-          ...p,
-          userId: p.user_id || p.userId,
-          user: p.user ? {
-            ...p.user,
-            fullName: p.user.full_name || p.user.fullName,
-            organizationId: p.user.organization_id || p.user.organizationId
-          } : null
-        }))
+        participants: (rawConv.participants || []).map((p: any) => ({ ...p, userId: p.user_id || p.userId }))
       };
-      
-      // Add conversation to list if not present
-      setConversations((prev) => {
-        if (prev.some((c) => c.id === conv.id)) return prev;
-        return [conv, ...prev];
-      });
-
+      setConversations((prev) => prev.some(c => c.id === conv.id) ? prev : [conv, ...prev]);
       setIsNewChatOpen(false);
       selectConversation(conv);
-      toast.success(`${targetUser.fullName} bilan suhbat boshlandi`);
-    } catch (err: any) {
-      console.error("Error starting conversation:", err);
-      toast.error(err.response?.data?.error || "Suhbatni boshlashda xatolik");
-    }
+    } catch (err) { toast.error("Suhbatni boshlashda xatolik"); }
   };
 
-  // Send message handler
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!messageInput.trim() && !attachmentUrl) return;
-    if (!activeConversation) return;
-
-    try {
-      const res = await api.post(`/chat/conversations/${activeConversation.id}/messages`, {
-        body: messageInput.trim(),
-        attachmentUrl: attachmentUrl || null
-      });
-      
-      const newMsg = res.data;
-      setMessages((prev) => [...prev, newMsg]);
-      
-      // Update conversations list with the new message
-      setConversations((prev) => {
-        return prev.map((conv) => {
-          if (conv.id === activeConversation.id) {
-            return { ...conv, messages: [newMsg] };
-          }
-          return conv;
-        });
-      });
-
-      setMessageInput("");
-      setAttachmentUrl("");
-      setShowAttachmentInput(false);
-    } catch (err: any) {
-      console.error("Error sending message:", err);
-      toast.error("Xabarni yuborishda xatolik");
-    }
-  };
-
-  const getInitials = (name: string) => {
-    if (!name) return "U";
-    return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
-  };
-
+  const getInitials = (name: string) => name ? name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2) : "U";
+  
   const getRoleBadge = (role: string) => {
     if (!role) return null;
-    switch (role) {
-      case "SUPER_ADMIN":
-        return <Badge className="bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 text-[10px] font-medium rounded-full px-2">Super Admin</Badge>;
-      case "PACK_MANAGER":
-      case "PAYMENT_MANAGER":
-        return <Badge className="bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 border border-purple-500/30 text-[10px] font-medium rounded-full px-2">Pack Manager</Badge>;
-      case "TEACHER":
-        return <Badge className="bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border border-blue-500/30 text-[10px] font-medium rounded-full px-2">O'qituvchi</Badge>;
-      case "STUDENT":
-        return <Badge className="bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border border-amber-500/30 text-[10px] font-medium rounded-full px-2">O'quvchi</Badge>;
-      case "PARENT":
-        return <Badge className="bg-teal-500/20 hover:bg-teal-500/30 text-teal-400 border border-teal-500/30 text-[10px] font-medium rounded-full px-2">Ota-ona</Badge>;
-      default:
-        return <Badge className="bg-slate-500/20 text-slate-400 border border-slate-500/30 text-[10px] font-medium rounded-full px-2">{role}</Badge>;
-    }
+    return <Badge className="bg-primary/20 text-primary border-primary/30 text-[10px]">{role}</Badge>;
   };
 
-  // Filter conversations based on search
-  const filteredConversations = useMemo(() => {
-    return conversations.filter((c) => {
-      const otherParticipant = c.participants.find(p => p.userId !== user?.id)?.user;
-      const name = c.title || otherParticipant?.fullName || "Chat Thread";
-      return name.toLowerCase().includes(searchTerm.toLowerCase());
-    });
-  }, [conversations, searchTerm, user?.id]);
+  const filteredConversations = useMemo(() => conversations.filter((c) => {
+    const p = c.participants.find(p => p.userId !== user?.id)?.user;
+    return (c.title || p?.fullName || "").toLowerCase().includes(searchTerm.toLowerCase());
+  }), [conversations, searchTerm, user?.id]);
 
-  // Filter eligible users based on search
-  const filteredEligibleUsers = useMemo(() => {
-    return eligibleUsers.filter((u) => {
-      const nameMatch = (u.fullName || "").toLowerCase().includes(eligibleSearch.toLowerCase());
-      const emailMatch = (u.email || "").toLowerCase().includes(eligibleSearch.toLowerCase());
-      const roleMatch = (u.role || "").toLowerCase().includes(eligibleSearch.toLowerCase());
-      return nameMatch || emailMatch || roleMatch;
-    });
-  }, [eligibleUsers, eligibleSearch]);
+  const filteredEligibleUsers = useMemo(() => eligibleUsers.filter(u => u.fullName.toLowerCase().includes(eligibleSearch.toLowerCase())), [eligibleUsers, eligibleSearch]);
 
-  // Identify name and role of other participant in active chat
-  const chatPartner = useMemo(() => {
-    if (!activeConversation) return null;
-    return activeConversation.participants.find(p => p.userId !== user?.id)?.user || null;
-  }, [activeConversation, user?.id]);
+  const chatPartner = useMemo(() => activeConversation?.participants.find(p => p.userId !== user?.id)?.user || null, [activeConversation, user?.id]);
 
   return (
-    <div className="flex gap-5 h-[calc(100vh-160px)] min-h-[500px]">
-      
+    <div className="flex flex-col md:flex-row gap-5 h-[calc(100vh-160px)] min-h-[500px]">
       {/* 1. Conversations Sidebar */}
-      <Card className="w-full md:w-[320px] flex flex-col rounded-2xl border border-border/40 bg-card/75 backdrop-blur-sm overflow-hidden shadow-xl">
+      <Card className={`w-full md:w-[320px] flex flex-col rounded-2xl border border-border/40 bg-card/75 backdrop-blur-sm overflow-hidden shadow-xl ${activeConversation ? 'hidden md:flex' : 'flex'}`}>
         <div className="p-4 border-b border-border/40 space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="font-display font-bold text-lg flex items-center gap-2">
-              <MessageSquare className="h-5 w-5 text-primary" /> Chat muloqot
+              <MessageSquare className="h-5 w-5 text-primary" /> Muloqot
             </h2>
             <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={loadConversations}
-                className="h-8 w-8 rounded-full hover:bg-muted"
-                title="Yangilash"
-              >
-                <RefreshCw className="h-3.5 w-3.5" />
-              </Button>
-              <Button
-                onClick={openNewChatDialog}
-                size="sm"
-                variant="outline"
-                className="h-8 gap-1 text-xs border-primary/30 hover:border-primary text-primary"
-              >
-                <UserPlus className="h-3.5 w-3.5" /> Yangi
-              </Button>
+              <Button variant="ghost" size="icon" onClick={loadConversations} className="h-8 w-8 rounded-full"><RefreshCw className="h-3.5 w-3.5" /></Button>
+              <Button onClick={openNewChatDialog} size="sm" variant="outline" className="h-8 gap-1 text-xs"><UserPlus className="h-3.5 w-3.5" /> Yangi</Button>
             </div>
           </div>
-
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Muloqot qidirish..."
-              className="pl-9 bg-background/50 border-border/60 text-xs h-9"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+            <Input placeholder="Qidirish..." className="pl-9 text-xs h-9" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
           </div>
         </div>
-
-        {/* Conversation list */}
         <div className="flex-1 overflow-y-auto p-3 space-y-1.5">
-          {loadingConversations ? (
-            <div className="space-y-3 p-2">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="flex items-center gap-3 p-2 rounded-xl">
-                  <div className="h-10 w-10 rounded-full bg-muted animate-pulse" />
-                  <div className="flex-1 space-y-2">
-                    <div className="h-3 w-1/2 bg-muted animate-pulse rounded" />
-                    <div className="h-2 w-3/4 bg-muted animate-pulse rounded" />
-                  </div>
+          {loadingConversations ? <Loader2 className="animate-spin mx-auto mt-4 text-primary" /> : filteredConversations.map(conv => {
+            const active = activeConversation?.id === conv.id;
+            const partner = conv.participants.find(p => p.userId !== user?.id)?.user;
+            const title = conv.title || partner?.fullName || "Chat";
+            return (
+              <motion.button key={conv.id} onClick={() => selectConversation(conv)} className={`w-full flex items-center gap-3 p-3 rounded-xl text-left border ${active ? "bg-primary/10 border-primary/30" : "hover:bg-muted/40 border-transparent"}`}>
+                <Avatar className="h-10 w-10 border border-border shadow-sm">
+                  <AvatarFallback className="bg-muted text-xs font-bold">{getInitials(title)}</AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold truncate">{title}</p>
+                  <p className="text-xs text-muted-foreground truncate">{conv.messages[0]?.body || "Suhbatni boshlang"}</p>
                 </div>
-              ))}
-            </div>
-          ) : filteredConversations.length === 0 ? (
-            <div className="p-6 text-center text-muted-foreground text-xs space-y-2">
-              <AlertCircle className="h-8 w-8 mx-auto text-muted-foreground/40" />
-              <p>Muloqotlar topilmadi</p>
-              <p className="text-[10px]">Tepadagi "Yangi" tugmasi orqali suhbat boshlang.</p>
-            </div>
-          ) : (
-            filteredConversations.map((conv) => {
-              const active = activeConversation?.id === conv.id;
-              const partner = conv.participants.find(p => p.userId !== user?.id)?.user;
-              const title = conv.title || partner?.fullName || "Noma'lum foydalanuvchi";
-              const partnerRole = partner?.role || "";
-              const lastMsg = conv.messages && conv.messages.length > 0 ? conv.messages[0] : null;
-
-              return (
-                <motion.button
-                  key={conv.id}
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.99 }}
-                  onClick={() => selectConversation(conv)}
-                  className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all text-left border ${
-                    active 
-                      ? "bg-primary/10 border-primary/30 shadow-md text-foreground" 
-                      : "bg-transparent border-transparent hover:bg-muted/40 hover:border-border/30"
-                  }`}
-                >
-                  <Avatar className="h-10 w-10 border border-border shadow-sm">
-                    <AvatarFallback className={active ? "bg-primary text-white font-bold text-xs" : "bg-muted text-foreground font-bold text-xs"}>
-                      {getInitials(title)}
-                    </AvatarFallback>
-                  </Avatar>
-
-                  <div className="flex-1 min-w-0 space-y-0.5">
-                    <div className="flex items-center justify-between">
-                      <p className={`text-sm font-semibold truncate ${active ? "text-primary font-bold" : "text-foreground"}`}>
-                        {title}
-                      </p>
-                      <span className="text-[9px] text-muted-foreground">Real-time</span>
-                    </div>
-                    
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="text-xs text-muted-foreground truncate flex-1">
-                        {lastMsg ? lastMsg.body : "Suhbatni boshlang..."}
-                      </p>
-                      {partnerRole && getRoleBadge(partnerRole)}
-                    </div>
-                  </div>
-                </motion.button>
-              );
-            })
-          )}
-        </div>
-
-        {/* Socket Status footer */}
-        <div className="p-3 bg-muted/30 border-t border-border/40 flex items-center justify-between text-[10px] text-muted-foreground">
-          <span>Roli: {user?.role ? user.role.toUpperCase() : "STUDENT"}</span>
-          <div className="flex items-center gap-1.5">
-            <span className={`h-2.5 w-2.5 rounded-full ${isConnected ? "bg-emerald-500" : "bg-rose-500"} animate-pulse`} />
-            <span>{isConnected ? "Server faol (STOMP)" : "Ulanish xatosi"}</span>
-          </div>
+              </motion.button>
+            )
+          })}
         </div>
       </Card>
 
       {/* 2. Main Chat Area */}
-      <Card className="flex-1 flex flex-col rounded-2xl border border-border/40 bg-card/75 backdrop-blur-sm overflow-hidden shadow-xl">
-        {activeConversation ? (
-          <>
-            {/* Chat Header */}
-            <div className="p-4 border-b border-border/40 flex items-center justify-between bg-muted/20">
-              <div className="flex items-center gap-3">
-                <Avatar className="h-10 w-10 border border-border shadow-sm">
-                  <AvatarFallback className="bg-primary/15 text-primary font-bold text-sm">
-                    {chatPartner ? getInitials(chatPartner.fullName) : "G"}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-semibold text-sm text-foreground">
-                      {chatPartner ? chatPartner.fullName : "Guruh suhbati"}
-                    </h3>
-                    {chatPartner && getRoleBadge(chatPartner.role)}
+      {activeConversation ? (
+        <Card className="flex-1 flex flex-col rounded-2xl border border-border/40 bg-card/75 backdrop-blur-sm overflow-hidden shadow-xl relative">
+          {/* Mobile Back Button */}
+          <div className="md:hidden absolute top-4 left-4 z-10">
+             <Button size="sm" variant="outline" onClick={() => setActiveConversation(null)}>Orqaga</Button>
+          </div>
+          
+          <ChatHeader 
+            chatPartner={chatPartner} 
+            activeConversation={activeConversation} 
+            typingUsers={typingUsers} 
+            onlineStatus={onlineStatus} 
+            getInitials={getInitials} 
+            getRoleBadge={getRoleBadge} 
+          />
+
+          <div className="flex-1 bg-background/20 relative">
+            {messages.length === 0 && !loadingMessages ? (
+               <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground space-y-2">
+                 <MessageSquare className="h-10 w-10 opacity-30" />
+                 <p className="text-xs font-semibold">Xabarlar yo'q</p>
+               </div>
+            ) : (
+              <Virtuoso
+                style={{ height: '100%', padding: '16px 16px' }}
+                data={messages}
+                startReached={loadMoreMessages}
+                initialTopMostItemIndex={messages.length - 1}
+                followOutput="smooth"
+                itemContent={(index, msg) => (
+                  <div className="py-1">
+                    <MessageBubble 
+                      msg={msg} 
+                      isMine={msg.senderId === user?.id} 
+                      isGroup={activeConversation.isGroup} 
+                      onReply={(m) => setReplyToMsg(m)}
+                      onForward={() => toast.info("Yo'naltirish tayyorlanmoqda")}
+                      onPin={handleMessagePin}
+                      onDelete={handleMessageDelete}
+                    />
                   </div>
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    <span className="text-[10px] text-muted-foreground">
-                      onlayn
-                    </span>
-                  </div>
-                </div>
-              </div>
-              
-              <Badge variant="outline" className="gap-1 border-primary/20 text-primary bg-primary/5 text-[10px]">
-                <Sparkles className="h-3 w-3" /> STOMP Websocket
-              </Badge>
-            </div>
-
-            {/* Message History list */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-background/20">
-              {loadingMessages ? (
-                <div className="flex flex-col items-center justify-center h-full">
-                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                  <span className="text-xs text-muted-foreground mt-2">Xabarlar yuklanmoqda...</span>
-                </div>
-              ) : messages.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground space-y-2">
-                  <MessageSquare className="h-10 w-10 text-muted-foreground/30" />
-                  <p className="text-xs font-semibold">Hech qanday xabar yo'q</p>
-                  <p className="text-[10px]">Birinchi xabarni yuboring!</p>
-                </div>
-              ) : (
-                messages.map((msg) => {
-                  const isMine = msg.senderId === user?.id;
-                  const senderName = msg.sender?.fullName || "Foydalanuvchi";
-                  
-                  return (
-                    <motion.div
-                      key={msg.id}
-                      initial={{ opacity: 0, y: 5 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className={`flex ${isMine ? "justify-end" : "justify-start"}`}
-                    >
-                      <div className={`max-w-[70%] rounded-2xl px-4 py-2.5 text-sm shadow-sm space-y-1 ${
-                        isMine 
-                          ? "bg-primary text-primary-foreground rounded-br-sm" 
-                          : "bg-muted text-foreground rounded-bl-sm border border-border/30"
-                      }`}>
-                        
-                        {!isMine && !activeConversation.isGroup && (
-                          <span className="text-[10px] font-bold text-primary block">
-                            {senderName}
-                          </span>
-                        )}
-
-                        {/* Attachment Url support */}
-                        {msg.attachmentUrl && (
-                          <div className="mb-2 p-2 rounded-lg border border-white/20 bg-black/10 flex items-center gap-2">
-                            <Paperclip className="h-4 w-4" />
-                            <a 
-                              href={msg.attachmentUrl} 
-                              target="_blank" 
-                              rel="noreferrer" 
-                              className="text-xs underline font-medium truncate max-w-[180px]"
-                            >
-                              Fayl biriktirmasi
-                            </a>
-                          </div>
-                        )}
-
-                        <p className="whitespace-pre-wrap break-words leading-relaxed text-xs">
-                          {msg.body}
-                        </p>
-
-                        <div className={`flex items-center justify-end gap-1 text-[8px] opacity-70`}>
-                          <span>
-                            {new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                          </span>
-                          {isMine && <CheckCheck className="h-3 w-3" />}
-                        </div>
-                      </div>
-                    </motion.div>
-                  );
-                })
-              )}
-
-              <div ref={messagesEndRef} />
-            </div>
-
-            {/* Attachment preview bar */}
-            {attachmentUrl && (
-              <div className="px-4 py-2 bg-muted/40 border-t border-border/40 flex items-center justify-between text-xs">
-                <span className="flex items-center gap-1 text-primary truncate max-w-[80%]">
-                  <Paperclip className="h-3.5 w-3.5" /> Fayl: <span className="underline">{attachmentUrl}</span>
-                </span>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => setAttachmentUrl("")}
-                  className="h-6 text-destructive hover:bg-destructive/10 text-[10px]"
-                >
-                  O'chirish
-                </Button>
-              </div>
-            )}
-
-            {/* Attachment input bar */}
-            {showAttachmentInput && !attachmentUrl && (
-              <div className="px-4 py-2 bg-muted/40 border-t border-border/40 flex items-center gap-2">
-                <Input
-                  placeholder="Fayl yoki rasm URL manzilini kiriting..."
-                  value={attachmentUrl}
-                  onChange={(e) => setAttachmentUrl(e.target.value)}
-                  className="text-xs h-8 bg-background/50 border-border/60"
-                />
-                <Button 
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setShowAttachmentInput(false)}
-                  className="h-8 text-xs text-muted-foreground"
-                >
-                  Yopish
-                </Button>
-              </div>
-            )}
-
-            {/* Message Send Form */}
-            <form onSubmit={handleSendMessage} className="p-3 border-t border-border/40 bg-muted/10 flex items-center gap-2">
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowAttachmentInput(!showAttachmentInput)}
-                className="h-9 w-9 rounded-xl text-muted-foreground hover:bg-primary/10 hover:text-primary"
-              >
-                <Paperclip className="h-4.5 w-4.5" />
-              </Button>
-              
-              <Input
-                placeholder="Xabar yozing..."
-                value={messageInput}
-                onChange={(e) => setMessageInput(e.target.value)}
-                className="flex-1 bg-background/50 border-border/60 h-9 rounded-xl text-xs pl-3 pr-3"
+                )}
               />
+            )}
+          </div>
 
-              <Button
-                type="submit"
-                size="icon"
-                disabled={!messageInput.trim() && !attachmentUrl}
-                className="h-9 w-9 rounded-xl bg-primary text-white hover:bg-primary/95 transition-all shadow-md"
-              >
-                <Send className="h-4 w-4" />
-              </Button>
-            </form>
-          </>
-        ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-center text-muted-foreground p-8 space-y-4">
-            <div className="h-16 w-16 bg-primary/10 rounded-full flex items-center justify-center text-primary shadow-inner">
-              <MessageSquare className="h-8 w-8" />
-            </div>
-            <div className="space-y-1 max-w-sm">
-              <h3 className="text-sm font-bold text-foreground">Suhbat tanlanmagan</h3>
-              <p className="text-xs">
-                Muloqot qilishni boshlash uchun chap tarafdagi ro'yxatdan suhbatni tanlang yoki "Yangi" tugmasini bosing.
-              </p>
+          <ChatInput 
+            onSendMessage={handleSendMessage} 
+            onTyping={handleTyping} 
+            replyTo={replyToMsg}
+            onCancelReply={() => setReplyToMsg(null)}
+          />
+        </Card>
+      ) : (
+        <Card className="hidden md:flex flex-1 flex-col items-center justify-center text-center text-muted-foreground p-8 rounded-2xl border border-border/40 bg-card/50">
+          <MessageSquare className="h-16 w-16 mb-4 text-muted-foreground/30" />
+          <h3 className="text-lg font-medium text-foreground">Suhbatni tanlang</h3>
+          <p className="text-sm">Yoki yangi suhbat boshlash uchun "Yangi" tugmasini bosing</p>
+        </Card>
+      )}
+
+      <Dialog open={isNewChatOpen} onOpenChange={setIsNewChatOpen}>
+        <DialogContent className="max-w-md p-0 overflow-hidden">
+          <DialogHeader className="p-4 pb-0"><DialogTitle>Yangi suhbat</DialogTitle></DialogHeader>
+          <div className="p-4 border-b border-border/40">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input placeholder="Foydalanuvchi qidirish..." className="pl-9" value={eligibleSearch} onChange={(e) => setEligibleSearch(e.target.value)} />
             </div>
           </div>
-        )}
-      </Card>
-
-      {/* 3. New Chat Dialog (RBAC Safe list of users) */}
-      <Dialog open={isNewChatOpen} onOpenChange={setIsNewChatOpen}>
-        <DialogContent className="max-w-[360px] rounded-2xl p-4 border border-border bg-card/95 backdrop-blur-md">
-          <DialogHeader>
-            <DialogTitle className="text-sm font-bold flex items-center gap-2">
-              <UserPlus className="h-4 w-4 text-primary" /> Yangi suhbat boshlash
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-3">
-            <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-              <Input
-                placeholder="Foydalanuvchi qidirish..."
-                className="pl-8 bg-background/50 text-xs h-8"
-                value={eligibleSearch}
-                onChange={(e) => setEligibleSearch(e.target.value)}
-              />
-            </div>
-
-            <div className="max-h-[260px] overflow-y-auto space-y-1 pr-1">
-              {loadingUsers ? (
-                <div className="flex items-center justify-center p-8">
-                  <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                </div>
-              ) : filteredEligibleUsers.length === 0 ? (
-                <p className="text-center text-muted-foreground text-[10px] py-6">
-                  Siz yozishingiz mumkin bo'lgan foydalanuvchilar topilmadi (RBAC).
-                </p>
-              ) : (
-                filteredEligibleUsers.map((target) => (
-                  <button
-                    key={target.id}
-                    onClick={() => startChatWithUser(target)}
-                    className="w-full flex items-center gap-2 p-2 hover:bg-muted/60 transition-colors border border-transparent hover:border-border/40 rounded-xl text-left"
-                  >
-                    <Avatar className="h-8 w-8 border">
-                      <AvatarFallback className="text-[10px] bg-muted font-bold">
-                        {getInitials(target.fullName || target.email || "U")}
-                      </AvatarFallback>
-                    </Avatar>
-                    
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-foreground truncate">{target.fullName || target.email || "Foydalanuvchi"}</p>
-                      <p className="text-[9px] text-muted-foreground truncate">{target.email}</p>
-                    </div>
-
-                    {getRoleBadge(target.role)}
-                  </button>
-                ))
-              )}
-            </div>
+          <div className="max-h-[300px] overflow-y-auto p-2">
+            {loadingUsers ? <Loader2 className="animate-spin mx-auto m-4" /> : filteredEligibleUsers.map(u => (
+              <Button key={u.id} variant="ghost" className="w-full justify-start gap-3 p-3 h-auto" onClick={() => startChatWithUser(u)}>
+                <Avatar className="h-8 w-8"><AvatarFallback>{getInitials(u.fullName)}</AvatarFallback></Avatar>
+                <div className="text-left flex-1"><p className="text-sm font-medium">{u.fullName}</p><p className="text-xs text-muted-foreground">{u.role}</p></div>
+              </Button>
+            ))}
           </div>
         </DialogContent>
       </Dialog>

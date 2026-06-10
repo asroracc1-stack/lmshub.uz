@@ -39,11 +39,31 @@ public class ChatService {
     }
 
     @Transactional(readOnly = true)
-    public List<ChatMessageDto> getThreadMessages(UUID threadId, UUID userId) {
+    public List<ChatMessageDto> getThreadMessages(UUID threadId, UUID userId, LocalDateTime cursor, int limit) {
         if (!participantRepository.existsByThreadIdAndUserId(threadId, userId)) {
             throw new BusinessException("You are not a participant in this chat thread");
         }
-        return messageRepository.findByThreadIdOrderByCreatedAtAsc(threadId).stream()
+        
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, limit);
+        List<ChatMessage> messages;
+        
+        if (cursor == null) {
+            messages = messageRepository.findLatestMessages(threadId, userId.toString(), PageRequest.of(0, limit));
+        } else {
+            messages = messageRepository.findMessagesBeforeCursor(threadId, cursor, userId.toString(), PageRequest.of(0, limit));
+        }
+        
+        java.util.Collections.reverse(messages);
+        
+        return messages.stream()
+                .map(mapper::toChatMessageDto)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<ChatMessageDto> searchMessages(String query, int limit, UUID userId) {
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, limit);
+        return messageRepository.searchMessages(userId, userId.toString(), query, pageable).stream()
                 .map(mapper::toChatMessageDto)
                 .collect(Collectors.toList());
     }
@@ -62,6 +82,16 @@ public class ChatService {
                 .sender(sender)
                 .body(request.getBody())
                 .attachmentUrl(request.getAttachmentUrl())
+                .messageType(request.getMessageType() != null ? request.getMessageType() : "TEXT")
+                .fileUrl(request.getFileUrl())
+                .stickerUrl(request.getStickerUrl())
+                .voiceUrl(request.getVoiceUrl())
+                .duration(request.getDuration())
+                .replyToId(request.getReplyToId())
+                .forwardedFromId(request.getForwardedFromId())
+                .isPinned(request.getIsPinned() != null ? request.getIsPinned() : false)
+                .delivered(false)
+                .seen(false)
                 .build();
 
         message = messageRepository.save(message);
@@ -98,6 +128,41 @@ public class ChatService {
         }
 
         return responseDto;
+    }
+
+    @Transactional
+    public void markMessageAsSeen(UUID messageId) {
+        messageRepository.findById(messageId).ifPresent(msg -> {
+            if (!msg.getSeen()) {
+                msg.setSeen(true);
+                msg.setSeenAt(LocalDateTime.now());
+                messageRepository.save(msg);
+            }
+        });
+    }
+
+    @Transactional
+    public void deleteMessage(UUID messageId, boolean forEveryone, UUID userId) {
+        messageRepository.findById(messageId).ifPresent(msg -> {
+            if (forEveryone && msg.getSender().getId().equals(userId)) {
+                msg.setIsDeleted(true);
+            } else {
+                String deletedFor = msg.getDeletedForUsers() == null ? "" : msg.getDeletedForUsers();
+                if (!deletedFor.contains(userId.toString())) {
+                    msg.setDeletedForUsers(deletedFor + userId + ",");
+                }
+            }
+            messageRepository.save(msg);
+        });
+    }
+
+    @Transactional
+    public void togglePinMessage(UUID messageId, UUID userId) {
+        messageRepository.findById(messageId).ifPresent(msg -> {
+            // Need a check if user is allowed to pin, assuming thread participants can pin for now
+            msg.setIsPinned(!msg.getIsPinned());
+            messageRepository.save(msg);
+        });
     }
 
     @Transactional

@@ -12,5 +12,17 @@ public class ChatMessageDto {
     private String senderName;
     private String body;
     private String attachmentUrl;
+    private String messageType;
+    private Boolean delivered;
+    private Boolean seen;
+    private LocalDateTime seenAt;
+    private String fileUrl;
+    private String stickerUrl;
+    private String voiceUrl;
+    private Integer duration;
+    private UUID replyToId;
+    private UUID forwardedFromId;
+    private Boolean isPinned;
+    private Boolean isDeleted;
     private LocalDateTime createdAt;
 }

@@ -104,6 +104,9 @@ public class User implements UserDetails {
     @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt;
 
+    @Column(name = "last_active")
+    private LocalDateTime lastActive;
+
     @PrePersist
     protected void onCreate() {
         if (createdAt == null) {

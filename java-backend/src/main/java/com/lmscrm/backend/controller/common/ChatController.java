@@ -40,8 +40,10 @@ public class ChatController {
     @Operation(summary = "Get messages for a chat thread")
     public ResponseEntity<List<ChatMessageDto>> getThreadMessages(
             @PathVariable UUID threadId,
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME) java.time.LocalDateTime cursor,
+            @RequestParam(defaultValue = "30") int limit,
             @AuthenticationPrincipal User currentUser) {
-        return ResponseEntity.ok(chatService.getThreadMessages(threadId, currentUser.getId()));
+        return ResponseEntity.ok(chatService.getThreadMessages(threadId, currentUser.getId(), cursor, limit));
     }
 
     @PostMapping("/conversations/{threadId}/messages")
@@ -72,6 +74,37 @@ public class ChatController {
     @Operation(summary = "Get users the current user is allowed to message")
     public ResponseEntity<List<UserSummaryDto>> getEligibleUsers(@AuthenticationPrincipal User currentUser) {
         return ResponseEntity.ok(chatService.getEligibleUsers(currentUser));
+    }
+
+    @GetMapping("/messages/search")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Search messages across all threads")
+    public ResponseEntity<List<ChatMessageDto>> searchMessages(
+            @RequestParam String q,
+            @RequestParam(defaultValue = "50") int limit,
+            @AuthenticationPrincipal User currentUser) {
+        return ResponseEntity.ok(chatService.searchMessages(q, limit, currentUser.getId()));
+    }
+
+    @DeleteMapping("/messages/{messageId}")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Delete a message (soft delete)")
+    public ResponseEntity<Void> deleteMessage(
+            @PathVariable UUID messageId,
+            @RequestParam(defaultValue = "false") boolean forEveryone,
+            @AuthenticationPrincipal User currentUser) {
+        chatService.deleteMessage(messageId, forEveryone, currentUser.getId());
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/messages/{messageId}/pin")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Pin or unpin a message")
+    public ResponseEntity<Void> togglePinMessage(
+            @PathVariable UUID messageId,
+            @AuthenticationPrincipal User currentUser) {
+        chatService.togglePinMessage(messageId, currentUser.getId());
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/broadcast")

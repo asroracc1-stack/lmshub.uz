@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0037-user-last-active
+      author: antigravity
+      changes:
+        - addColumn:
+            tableName: users
+            columns:
+              - column:
+                  name: last_active
+                  type: TIMESTAMP

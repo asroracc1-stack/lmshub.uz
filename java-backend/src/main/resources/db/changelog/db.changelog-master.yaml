@@ -69,3 +69,9 @@ databaseChangeLog:
       file: db/changelog/changes/v0034_create_student_feedbacks.yaml
   - include:
       file: db/changelog/changes/v0035_chat_thread_org_nullable.yaml
+  - include:
+      file: db/changelog/changes/v0036_chat_advanced_schema.yaml
+  - include:
+      file: db/changelog/changes/v0037_user_last_active.yaml
+  - include:
+      file: db/changelog/changes/v0038_chat_delete_and_file_storage.yaml

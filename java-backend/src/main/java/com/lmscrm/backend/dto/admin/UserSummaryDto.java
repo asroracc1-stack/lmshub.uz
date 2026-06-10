@@ -15,4 +15,5 @@ public class UserSummaryDto {
     private String username;
     private UUID organizationId;
     private String role;
+    private java.time.LocalDateTime lastActive;
 }

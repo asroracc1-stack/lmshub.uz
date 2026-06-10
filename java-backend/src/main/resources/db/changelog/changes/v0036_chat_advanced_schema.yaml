@@ -1,0 +1,74 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0036-chat-advanced-schema
+      author: antigravity
+      changes:
+        - addColumn:
+            tableName: chat_messages
+            columns:
+              - column:
+                  name: message_type
+                  type: VARCHAR(50)
+                  defaultValue: 'TEXT'
+              - column:
+                  name: delivered
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+              - column:
+                  name: seen
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+              - column:
+                  name: seen_at
+                  type: TIMESTAMP
+              - column:
+                  name: file_url
+                  type: VARCHAR(1024)
+              - column:
+                  name: sticker_url
+                  type: VARCHAR(1024)
+              - column:
+                  name: voice_url
+                  type: VARCHAR(1024)
+              - column:
+                  name: duration
+                  type: INT
+              - column:
+                  name: reply_to_id
+                  type: UUID
+              - column:
+                  name: forwarded_from_id
+                  type: UUID
+              - column:
+                  name: is_pinned
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+        - addForeignKeyConstraint:
+            baseTableName: chat_messages
+            baseColumnNames: reply_to_id
+            referencedTableName: chat_messages
+            referencedColumnNames: id
+            constraintName: fk_chat_messages_reply_to
+            onDelete: SET NULL
+        - addForeignKeyConstraint:
+            baseTableName: chat_messages
+            baseColumnNames: forwarded_from_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_chat_messages_forwarded_from
+            onDelete: SET NULL
+        - createIndex:
+            indexName: idx_chat_messages_thread_id_created_at
+            tableName: chat_messages
+            columns:
+              - column:
+                  name: thread_id
+              - column:
+                  name: created_at
+                  descending: true
+        - createIndex:
+            indexName: idx_chat_messages_body_search
+            tableName: chat_messages
+            columns:
+              - column:
+                  name: body
