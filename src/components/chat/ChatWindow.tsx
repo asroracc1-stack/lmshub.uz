@@ -161,7 +161,7 @@ export default function ChatWindow() {
     if (!user?.id) return;
     setLoadingConversations(true);
     try {
-      const res = await api.get("/v1/chat/conversations");
+      const res = await api.get("/chat/conversations");
       setConversations(res.data);
     } catch (err: any) {
       console.error("Error fetching conversations:", err);
@@ -193,7 +193,7 @@ export default function ChatWindow() {
     setMessages([]);
 
     try {
-      const res = await api.get(`/v1/chat/conversations/${conversation.id}/messages`);
+      const res = await api.get(`/chat/conversations/${conversation.id}/messages`);
       setMessages(res.data);
     } catch (err: any) {
       console.error("Error loading messages:", err);
@@ -208,7 +208,7 @@ export default function ChatWindow() {
     setIsNewChatOpen(true);
     setLoadingUsers(true);
     try {
-      const res = await api.get("/v1/chat/eligible-users");
+      const res = await api.get("/chat/eligible-users");
       setEligibleUsers(res.data);
     } catch (err: any) {
       console.error("Error fetching messageable users:", err);
@@ -221,7 +221,7 @@ export default function ChatWindow() {
   // Start chat with an eligible user
   const startChatWithUser = async (targetUser: ChatUser) => {
     try {
-      const res = await api.post("/v1/chat/conversations", {
+      const res = await api.post("/chat/conversations", {
         targetUserId: targetUser.id
       });
       const conv: Conversation = res.data;
@@ -248,7 +248,7 @@ export default function ChatWindow() {
     if (!activeConversation) return;
 
     try {
-      const res = await api.post(`/v1/chat/conversations/${activeConversation.id}/messages`, {
+      const res = await api.post(`/chat/conversations/${activeConversation.id}/messages`, {
         body: messageInput.trim(),
         attachmentUrl: attachmentUrl || null
       });

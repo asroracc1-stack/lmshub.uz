@@ -350,7 +350,7 @@ export function useStudentDashboard() {
   return useQuery<StudentIeltsDashboardDto>({
     queryKey: ["student-ielts-dashboard-stats"],
     queryFn: async () => {
-      const response = await api.get<StudentIeltsDashboardDto>("/v1/student/ielts-dashboard/summary");
+      const response = await api.get<StudentIeltsDashboardDto>("/student/ielts-dashboard/summary");
       return response.data;
     },
     staleTime: 5 * 60 * 1000,
