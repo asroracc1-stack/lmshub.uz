@@ -13,6 +13,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class LoginResponse {
     private String accessToken;
+    @Builder.Default
     private String tokenType = "Bearer";
     private String role;
     private UUID organizationId;
@@ -29,5 +30,7 @@ public class LoginResponse {
         private String firstName;
         private String lastName;
         private UUID organizationId;
+        @Builder.Default
+        private boolean isFirstLogin = false;
     }
 }

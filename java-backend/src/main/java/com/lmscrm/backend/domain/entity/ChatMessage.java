@@ -34,12 +34,15 @@ public class ChatMessage {
     private String attachmentUrl;
 
     @Column(name = "message_type")
+    @Builder.Default
     private String messageType = "TEXT";
 
     @Column(name = "delivered")
+    @Builder.Default
     private Boolean delivered = false;
 
     @Column(name = "seen")
+    @Builder.Default
     private Boolean seen = false;
 
     @Column(name = "seen_at")
@@ -64,9 +67,11 @@ public class ChatMessage {
     private UUID forwardedFromId;
 
     @Column(name = "is_pinned")
+    @Builder.Default
     private Boolean isPinned = false;
 
     @Column(name = "is_deleted")
+    @Builder.Default
     private Boolean isDeleted = false;
 
     @Column(name = "deleted_for_users")
