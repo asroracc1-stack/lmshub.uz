@@ -118,7 +118,7 @@ export default function ProfileMenu({ role, basePath }: ProfileMenuProps) {
       <DropdownMenuContent
         align="end"
         sideOffset={12}
-        className="w-80 p-0 overflow-hidden border-border/40 bg-card/95 backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.4)] rounded-2xl animate-in fade-in-0 zoom-in-95"
+        className="w-[90vw] sm:w-80 max-w-[320px] p-0 overflow-hidden border-border/40 bg-card/95 backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.4)] rounded-2xl animate-in fade-in-0 zoom-in-95"
       >
         {/* Header - Real-time Data */}
         <div className="p-5 border-b border-border/40 bg-gradient-to-br from-emerald-500/5 via-transparent to-teal-500/5">

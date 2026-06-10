@@ -370,7 +370,7 @@ export default function RoleLayout({
   return (
     <div
       className={cn(
-        "min-h-screen flex w-full transition-colors duration-500",
+        "min-h-screen flex w-full overflow-x-hidden transition-colors duration-500",
         theme === "dark" ? "bg-[#020617] text-slate-100" : "bg-slate-50 text-slate-900"
       )}
     >
