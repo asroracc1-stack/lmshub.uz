@@ -329,7 +329,7 @@ export default function SettingsPage() {
                         </Button>
                       </div>
                       <a
-                        href="https://t.me/CRMSystme_bot"
+                        href="https://t.me/LMSHubBot"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-2 text-sm text-primary hover:underline"

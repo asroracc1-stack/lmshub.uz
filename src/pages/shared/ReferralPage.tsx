@@ -41,7 +41,7 @@ export default function ReferralPage() {
     }).finally(() => setLoading(false));
   }, []);
 
-  const inviteLink = info ? `${SITE_URL}/signup?invite=${info.referralCode}` : "";
+  const inviteLink = info ? `https://t.me/LMSHubBot?start=${info.referralCode}` : "";
 
   const handleCopy = async () => {
     try {
