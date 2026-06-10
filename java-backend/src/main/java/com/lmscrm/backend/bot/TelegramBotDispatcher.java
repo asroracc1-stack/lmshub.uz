@@ -300,7 +300,7 @@ public class TelegramBotDispatcher {
                 if (userOpt.isEmpty()) return;
                 
                 String token = jwtTokenProvider.generateTokenForUser(userOpt.get());
-                String link = telegramBotService.getSiteUrl() + "/auth/bot-login?token=" + token + "&redirect=/student/results/" + attemptIdStr;
+                String link = telegramBotService.getSiteUrl() + "/auth/bot-login?token=" + token + "&redirect=/student/grades";
 
                 java.util.List<java.util.List<Map<String, String>>> kb = new java.util.ArrayList<>();
                 Map<String, String> linkBtn = new HashMap<>();
