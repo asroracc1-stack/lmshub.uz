@@ -63,6 +63,7 @@ public class LocalStorageServiceImpl implements FileStorageService {
         String relativeUrl = (subFolder != null && !subFolder.isEmpty()) ? subFolder + "/" + newFileName : newFileName;
         return baseUrl + relativeUrl;
     }
+    
 
     @Override
     public void deleteFile(String fileUrl) {
