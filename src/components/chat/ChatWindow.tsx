@@ -293,8 +293,10 @@ export default function ChatWindow() {
     }
   };
 
-  // Helpers
-  const getInitials = (name: string) => name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
+  const getInitials = (name: string) => {
+    if (!name) return "U";
+    return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
+  };
 
   const getRoleBadge = (role: string) => {
     if (!role) return null;
@@ -682,12 +684,12 @@ export default function ChatWindow() {
                   >
                     <Avatar className="h-8 w-8 border">
                       <AvatarFallback className="text-[10px] bg-muted font-bold">
-                        {getInitials(target.fullName)}
+                        {getInitials(target.fullName || target.email || "U")}
                       </AvatarFallback>
                     </Avatar>
                     
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-foreground truncate">{target.fullName}</p>
+                      <p className="text-xs font-semibold text-foreground truncate">{target.fullName || target.email || "Foydalanuvchi"}</p>
                       <p className="text-[9px] text-muted-foreground truncate">{target.email}</p>
                     </div>
 
