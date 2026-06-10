@@ -189,50 +189,39 @@ export default function ProfileMenu({ role, basePath }: ProfileMenuProps) {
             <span className="text-sm font-medium">{t("nav.notifications")}</span>
           </DropdownMenuItem>
 
-          {/* Theme Submenu */}
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger className="rounded-xl gap-3 py-3 focus:bg-emerald-500/10 group">
-              {theme === "dark" ? <Moon className="h-4.5 w-4.5 text-muted-foreground" /> : <Sun className="h-4.5 w-4.5 text-muted-foreground" />}
-              <span className="text-sm font-medium">{t("common.theme")}</span>
-              <ChevronRight className="ml-auto h-4 w-4 text-muted-foreground/50" />
-            </DropdownMenuSubTrigger>
-            <DropdownMenuPortal>
-              <DropdownMenuSubContent className="rounded-2xl p-1.5 border-border/40 bg-card/95 backdrop-blur-2xl shadow-2xl animate-in slide-in-from-right-2">
-                <DropdownMenuRadioGroup value={theme} onValueChange={(v) => setTheme(v as "dark" | "light")}>
-                  <DropdownMenuRadioItem value="light" className="rounded-lg gap-3 py-2.5">
-                    <Sun className="h-4 w-4" /> {t("settings.themeLight")}
-                  </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="dark" className="rounded-lg gap-3 py-2.5">
-                    <Moon className="h-4 w-4" /> {t("settings.themeDark")}
-                  </DropdownMenuRadioItem>
-                </DropdownMenuRadioGroup>
-              </DropdownMenuSubContent>
-            </DropdownMenuPortal>
-          </DropdownMenuSub>
+          {/* Theme Toggle */}
+          <DropdownMenuItem 
+            onClick={(e) => {
+              e.preventDefault();
+              setTheme(theme === "dark" ? "light" : "dark");
+            }} 
+            className="rounded-xl gap-3 cursor-pointer py-3 focus:bg-emerald-500/10 focus:text-emerald-600 dark:focus:text-emerald-400 group"
+          >
+            {theme === "dark" ? <Sun className="h-4.5 w-4.5 text-muted-foreground group-focus:text-emerald-500 transition-colors" /> : <Moon className="h-4.5 w-4.5 text-muted-foreground group-focus:text-emerald-500 transition-colors" />}
+            <span className="text-sm font-medium">{theme === "dark" ? t("settings.themeLight", "Kunduzgi mavzu") : t("settings.themeDark", "Tungi mavzu")}</span>
+            <div className="ml-auto w-8 h-4.5 rounded-full bg-slate-200 dark:bg-slate-700 relative flex items-center px-0.5">
+               <div className={`w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-all ${theme === "dark" ? 'ml-auto' : ''}`} />
+            </div>
+          </DropdownMenuItem>
 
-          {/* Language Submenu */}
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger className="rounded-xl gap-3 py-3 focus:bg-emerald-500/10 group">
-              <Globe className="h-4.5 w-4.5 text-muted-foreground" />
-              <span className="text-sm font-medium">{t("settings.language")}</span>
-              <span className="ml-auto text-[10px] font-bold text-emerald-500 uppercase tracking-widest">{i18n.language}</span>
-              <ChevronRight className="ml-1 h-4 w-4 text-muted-foreground/50" />
-            </DropdownMenuSubTrigger>
-            <DropdownMenuPortal>
-              <DropdownMenuSubContent className="rounded-2xl p-1.5 border-border/40 bg-card/95 backdrop-blur-2xl shadow-2xl animate-in slide-in-from-right-2">
-                {langs.map((l) => (
-                  <DropdownMenuItem
-                    key={l.code}
-                    onClick={() => i18n.changeLanguage(l.code)}
-                    className={`rounded-lg gap-3 py-2.5 ${i18n.language === l.code ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold" : ""}`}
-                  >
-                    <span className="text-lg">{l.flag}</span>
-                    <span className="text-sm font-medium">{l.label}</span>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuSubContent>
-            </DropdownMenuPortal>
-          </DropdownMenuSub>
+          <DropdownMenuSeparator className="bg-border/40 my-1.5" />
+          <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            {t("settings.language", "Dastur tili")}
+          </div>
+          <div className="grid grid-cols-3 gap-1 px-2 pb-1">
+            {langs.map((l) => (
+              <DropdownMenuItem
+                key={l.code}
+                onClick={() => i18n.changeLanguage(l.code)}
+                className={`flex flex-col items-center justify-center gap-1 py-2 rounded-xl cursor-pointer ${
+                  i18n.language === l.code ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold ring-1 ring-emerald-500/20" : ""
+                }`}
+              >
+                <span className="text-xl leading-none">{l.flag}</span>
+                <span className="text-[10px] uppercase tracking-wider">{l.code}</span>
+              </DropdownMenuItem>
+            ))}
+          </div>
         </div>
 
         <DropdownMenuSeparator className="bg-border/40 my-1.5" />
