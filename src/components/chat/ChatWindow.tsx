@@ -162,7 +162,20 @@ export default function ChatWindow() {
     setLoadingConversations(true);
     try {
       const res = await api.get("/chat/conversations");
-      setConversations(res.data);
+      const mappedConversations = res.data.map((c: any) => ({
+        ...c,
+        isGroup: c.is_group ?? c.isGroup,
+        participants: (c.participants || []).map((p: any) => ({
+          ...p,
+          userId: p.user_id || p.userId,
+          user: p.user ? {
+            ...p.user,
+            fullName: p.user.full_name || p.user.fullName,
+            organizationId: p.user.organization_id || p.user.organizationId
+          } : null
+        }))
+      }));
+      setConversations(mappedConversations);
     } catch (err: any) {
       console.error("Error fetching conversations:", err);
       toast.error("Suhbatlar tarixini yuklashda xatolik");
@@ -209,7 +222,12 @@ export default function ChatWindow() {
     setLoadingUsers(true);
     try {
       const res = await api.get("/chat/eligible-users");
-      setEligibleUsers(res.data);
+      const mappedUsers = res.data.map((u: any) => ({
+        ...u,
+        fullName: u.full_name || u.fullName,
+        organizationId: u.organization_id || u.organizationId
+      }));
+      setEligibleUsers(mappedUsers);
     } catch (err: any) {
       console.error("Error fetching messageable users:", err);
       toast.error("Muloqot qilish mumkin bo'lgan foydalanuvchilarni yuklashda xatolik");
@@ -279,13 +297,14 @@ export default function ChatWindow() {
   const getInitials = (name: string) => name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
 
   const getRoleBadge = (role: string) => {
-    switch (role.toUpperCase()) {
+    if (!role) return null;
+    switch (role) {
       case "SUPER_ADMIN":
-        return <Badge className="bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 border border-purple-500/30 text-[10px] font-medium rounded-full px-2">SuperAdmin</Badge>;
-      case "ADMIN":
-        return <Badge className="bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border border-blue-500/30 text-[10px] font-medium rounded-full px-2">Admin</Badge>;
+        return <Badge className="bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 text-[10px] font-medium rounded-full px-2">Super Admin</Badge>;
+      case "PACK_MANAGER":
+        return <Badge className="bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 border border-purple-500/30 text-[10px] font-medium rounded-full px-2">Pack Manager</Badge>;
       case "TEACHER":
-        return <Badge className="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30 text-[10px] font-medium rounded-full px-2">O'qituvchi</Badge>;
+        return <Badge className="bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border border-blue-500/30 text-[10px] font-medium rounded-full px-2">O'qituvchi</Badge>;
       case "STUDENT":
         return <Badge className="bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border border-amber-500/30 text-[10px] font-medium rounded-full px-2">O'quvchi</Badge>;
       case "PARENT":
