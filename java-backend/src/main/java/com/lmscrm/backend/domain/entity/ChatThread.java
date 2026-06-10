@@ -29,7 +29,7 @@ public class ChatThread {
     private Group group;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "organization_id", nullable = false)
+    @JoinColumn(name = "organization_id")
     private Organization organization;
 
     @ManyToOne(fetch = FetchType.LAZY)

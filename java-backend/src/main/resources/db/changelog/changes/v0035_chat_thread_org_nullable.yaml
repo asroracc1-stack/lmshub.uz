@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0035-1
+      author: ai
+      changes:
+        - dropNotNullConstraint:
+            tableName: chat_threads
+            columnDataType: uuid
+            columnName: organization_id

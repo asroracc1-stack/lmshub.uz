@@ -67,4 +67,5 @@ databaseChangeLog:
       file: db/changelog/changes/v0033_create_user_subscriptions.yaml
   - include:
       file: db/changelog/changes/v0034_create_student_feedbacks.yaml
-
+  - include:
+      file: db/changelog/changes/v0035_chat_thread_org_nullable.yaml
