@@ -85,6 +85,7 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
+    
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
