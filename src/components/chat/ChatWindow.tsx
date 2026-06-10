@@ -138,6 +138,7 @@ export default function ChatWindow() {
       const mapped = res.data.map((c: any) => ({
         ...c,
         isGroup: c.is_group ?? c.isGroup,
+        messages: c.messages || [],
         participants: (c.participants || []).map((p: any) => ({
           ...p,
           userId: p.user_id || p.userId,
@@ -340,7 +341,7 @@ export default function ChatWindow() {
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold truncate">{title}</p>
-                  <p className="text-xs text-muted-foreground truncate">{conv.messages[0]?.body || "Suhbatni boshlang"}</p>
+                  <p className="text-xs text-muted-foreground truncate">{conv.messages?.[0]?.body || "Suhbatni boshlang"}</p>
                 </div>
               </motion.button>
             )
