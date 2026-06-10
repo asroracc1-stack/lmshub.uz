@@ -350,8 +350,44 @@ export function useStudentDashboard() {
   return useQuery<StudentIeltsDashboardDto>({
     queryKey: ["student-ielts-dashboard-stats"],
     queryFn: async () => {
-      const response = await api.get<StudentIeltsDashboardDto>("/student/ielts-dashboard/summary");
-      return response.data;
+      const response = await api.get<any>("/student/ielts-dashboard/summary");
+      const d = response.data;
+      return {
+        targetBand: d.target_band ?? d.targetBand ?? 0,
+        currentBand: d.current_band ?? d.currentBand ?? 0,
+        progressPercentage: d.progress_percentage ?? d.progressPercentage ?? 0,
+        dailyStreak: d.daily_streak ?? d.dailyStreak ?? 0,
+        longestStreak: d.longest_streak ?? d.longestStreak ?? 0,
+        weekChecklist: d.week_checklist ?? d.weekChecklist ?? [],
+        targetBandTrend: d.target_band_trend ?? d.targetBandTrend ?? "",
+        averageScoreTrend: d.average_score_trend ?? d.averageScoreTrend ?? "",
+        daysUntilExam: d.days_until_exam ?? d.daysUntilExam ?? 0,
+        totalPracticeTime: d.total_practice_time ?? d.totalPracticeTime ?? "0h",
+        weeklyResults: (d.weekly_results ?? d.weeklyResults ?? []).map((w: any) => ({
+          ...w
+        })),
+        todayGoals: (d.today_goals ?? d.todayGoals ?? []).map((g: any) => ({
+          ...g,
+          isCompleted: g.is_completed ?? g.isCompleted ?? false
+        })),
+        achievements: (d.achievements ?? []).map((a: any) => ({
+          ...a,
+          iconType: a.icon_type ?? a.iconType ?? ""
+        })),
+        leaderboard: (d.leaderboard ?? []).map((l: any) => ({
+          ...l,
+          bandScore: l.band_score ?? l.bandScore ?? 0,
+          isCurrentUser: l.is_current_user ?? l.isCurrentUser ?? false,
+          avatarUrl: l.avatar_url ?? l.avatarUrl ?? null
+        })),
+        recentTests: (d.recent_tests ?? d.recentTests ?? []).map((t: any) => ({
+          ...t,
+          score: t.score ?? 0
+        })),
+        isPremium: d.is_premium ?? d.isPremium ?? false,
+        takenTestsCount: d.taken_tests_count ?? d.takenTestsCount ?? 0,
+        overallProgress: d.overall_progress ?? d.overallProgress ?? 0,
+      } as StudentIeltsDashboardDto;
     },
     staleTime: 5 * 60 * 1000,
     retry: 0,

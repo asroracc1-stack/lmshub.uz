@@ -14,4 +14,5 @@ public class UserSummaryDto {
     private String email;
     private String username;
     private UUID organizationId;
+    private String role;
 }

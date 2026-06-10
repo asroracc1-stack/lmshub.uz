@@ -127,6 +127,7 @@ public class ChatService {
                         .id(u.getId())
                         .fullName(u.getFullName())
                         .email(u.getEmail())
+                        .role(u.getRole() != null ? u.getRole().name() : "USER")
                         .build())
                 .collect(Collectors.toList());
     }

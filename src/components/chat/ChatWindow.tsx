@@ -307,9 +307,10 @@ export default function ChatWindow() {
   // Filter eligible users based on search
   const filteredEligibleUsers = useMemo(() => {
     return eligibleUsers.filter((u) => {
-      return u.fullName.toLowerCase().includes(eligibleSearch.toLowerCase()) || 
-             u.email.toLowerCase().includes(eligibleSearch.toLowerCase()) ||
-             u.role.toLowerCase().includes(eligibleSearch.toLowerCase());
+      const nameMatch = (u.fullName || "").toLowerCase().includes(eligibleSearch.toLowerCase());
+      const emailMatch = (u.email || "").toLowerCase().includes(eligibleSearch.toLowerCase());
+      const roleMatch = (u.role || "").toLowerCase().includes(eligibleSearch.toLowerCase());
+      return nameMatch || emailMatch || roleMatch;
     });
   }, [eligibleUsers, eligibleSearch]);
 
