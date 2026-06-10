@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0039-chat-pin-feature
+      author: antigravity
+      changes:
+        - addColumn:
+            tableName: chat_messages
+            columns:
+              - column:
+                  name: is_pinned
+                  type: BOOLEAN
+                  defaultValueBoolean: false

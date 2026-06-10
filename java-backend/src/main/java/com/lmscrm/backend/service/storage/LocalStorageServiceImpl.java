@@ -21,12 +21,19 @@ public class LocalStorageServiceImpl implements FileStorageService {
 
     public LocalStorageServiceImpl(@Value("${file.upload-dir:./uploads}") String uploadDir,
                                    @Value("${file.base-url:http://localhost:8080/uploads/}") String baseUrl) {
-        this.fileStorageLocation = Paths.get(uploadDir).toAbsolutePath().normalize();
         this.baseUrl = baseUrl;
+        Path tempPath = Paths.get(uploadDir).toAbsolutePath().normalize();
         try {
-            Files.createDirectories(this.fileStorageLocation);
+            Files.createDirectories(tempPath);
+            this.fileStorageLocation = tempPath;
         } catch (Exception ex) {
-            throw new RuntimeException("Could not create the directory where the uploaded files will be stored.", ex);
+            System.err.println("Could not create the primary directory for uploads. Falling back to /tmp/uploads");
+            this.fileStorageLocation = Paths.get("/tmp/uploads").toAbsolutePath().normalize();
+            try {
+                Files.createDirectories(this.fileStorageLocation);
+            } catch (Exception e) {
+                System.err.println("Could not create fallback directory either. Uploads will fail.");
+            }
         }
     }
 
