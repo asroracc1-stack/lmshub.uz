@@ -72,6 +72,7 @@ public class SecurityConfig {
                 "https://lmshub-uz.vercel.app", // Main Vercel deployment
                 "https://*.vercel.app",        // Any Vercel deployment/preview URLs
                 "https://lmshub.uz",           // Production domain
+                "https://www.lmshub.uz",       // Production WWW domain
                 "https://*.lmshub.uz",         // Subdomains for production
                 "https://lmshub-uz.up.railway.app",
                 "https://*.up.railway.app"     // Railway dynamic URLs

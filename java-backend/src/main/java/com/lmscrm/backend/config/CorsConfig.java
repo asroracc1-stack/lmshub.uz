@@ -21,11 +21,11 @@ public class CorsConfig {
                 if (originsEnv != null && !originsEnv.isBlank()) {
                     allowedOrigins = originsEnv.split(",");
                 } else {
-                    // Fallback to a safe default (localhost for local dev)
-                    allowedOrigins = new String[]{"http://localhost:5173", "http://localhost:3000"};
+                    // Fallback to safe defaults including production
+                    allowedOrigins = new String[]{"http://localhost:5173", "http://localhost:3000", "https://lmshub.uz", "https://www.lmshub.uz", "https://lmshub-uz.vercel.app"};
                 }
                 registry.addMapping("/**")
-                        .allowedOrigins(allowedOrigins)
+                        .allowedOriginPatterns(allowedOrigins)
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true)
