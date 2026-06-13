@@ -60,7 +60,7 @@ export default function MetricCardsRow({ data }: MetricCardsRowProps) {
           animate={{ opacity: 1, y: 0 }} 
           transition={{ delay: 0.1 + idx * 0.05 }}
         >
-          <Card className="p-4 rounded-2xl border-primary/10 dark:border-primary/10 bg-white/60 dark:bg-[#1B1230]/60 backdrop-blur-md flex items-center gap-4 hover:shadow-glow-purple hover:border-primary/30 transition-all duration-300">
+          <Card className="p-4 rounded-2xl border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800/50 shadow-sm flex items-center gap-4 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
             <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${card.iconBg} dark:bg-primary/10`}>
               {card.icon}
             </div>

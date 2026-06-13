@@ -12,7 +12,7 @@ export default function DailyStreakCard({ data }: DailyStreakCardProps) {
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-      <Card className="p-5 flex flex-col justify-between h-full rounded-3xl border-primary/10 dark:border-primary/10 bg-white/60 dark:bg-[#1B1230]/60 backdrop-blur-md hover:shadow-glow-purple hover:border-primary/30 transition-all duration-300">
+      <Card className="p-5 flex flex-col justify-between h-full rounded-3xl border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800/50 shadow-sm hover:shadow-md transition-all duration-300">
         <div>
           <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
             Kunlik streak <Flame className="h-4 w-4 text-orange-500 fill-orange-500" />

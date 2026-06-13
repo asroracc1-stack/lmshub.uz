@@ -31,10 +31,10 @@ export default function GoalsAndAchievements({ data }: GoalsAndAchievementsProps
 
   const getAchievementBg = (type: string) => {
     switch(type) {
-      case "streak": return "bg-purple-100";
-      case "star": return "bg-purple-100";
-      case "top10": return "bg-amber-100";
-      default: return "bg-slate-100";
+      case "streak": return "bg-purple-100 dark:bg-purple-500/10";
+      case "star": return "bg-purple-100 dark:bg-purple-500/10";
+      case "top10": return "bg-amber-100 dark:bg-amber-500/10";
+      default: return "bg-slate-100 dark:bg-slate-700";
     }
   };
 
@@ -43,24 +43,24 @@ export default function GoalsAndAchievements({ data }: GoalsAndAchievementsProps
       
       {/* Today's Goals */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="h-full">
-        <Card className="p-5 rounded-3xl shadow-sm border-slate-100 h-full flex flex-col">
+        <Card className="p-5 rounded-3xl border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800/50 shadow-sm hover:shadow-md transition-all duration-300 h-full flex flex-col">
           <div className="flex justify-between items-center mb-5">
-            <h3 className="font-bold text-slate-900">Bugungi maqsadlar</h3>
-            <span className="text-[10px] text-slate-500 font-medium">4/5 bajarildi</span>
+            <h3 className="font-bold text-slate-900 dark:text-white">Bugungi maqsadlar</h3>
+            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">4/5 bajarildi</span>
           </div>
 
           <div className="flex-1 space-y-4">
             {data.todayGoals.map((goal) => (
               <div key={goal.id} className="flex items-center gap-3">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-slate-50 border ${goal.isCompleted ? 'border-purple-200' : 'border-slate-200'}`}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-slate-50 dark:bg-slate-700 border ${goal.isCompleted ? 'border-purple-200 dark:border-purple-500/30' : 'border-slate-200 dark:border-slate-600'}`}>
                   {getGoalIcon(goal.type)}
                 </div>
                 
                 <div className="flex-1 min-w-0">
-                  <p className={`text-xs font-semibold truncate ${goal.isCompleted ? 'text-slate-500 line-through' : 'text-slate-900'}`}>
+                  <p className={`text-xs font-semibold truncate ${goal.isCompleted ? 'text-slate-400 line-through' : 'text-slate-900 dark:text-white'}`}>
                     {goal.title}
                   </p>
-                  <p className="text-[10px] text-slate-500 truncate">{goal.subtitle}</p>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">{goal.subtitle}</p>
                 </div>
                 
                 <div className="shrink-0 flex items-center">
@@ -71,13 +71,13 @@ export default function GoalsAndAchievements({ data }: GoalsAndAchievementsProps
                   ) : goal.progress !== null ? (
                     <div className="relative w-8 h-8 flex items-center justify-center">
                       <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                        <path className="text-slate-100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="3" />
+                        <path className="text-slate-100 dark:text-slate-600" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="3" />
                         <path className="text-blue-500" strokeDasharray={`${goal.progress}, 100`} d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="3" />
                       </svg>
-                      <span className="absolute text-[8px] font-bold text-blue-600">{goal.progress}%</span>
+                      <span className="absolute text-[8px] font-bold text-blue-500">{goal.progress}%</span>
                     </div>
                   ) : (
-                    <Circle className="h-5 w-5 text-slate-200" />
+                    <Circle className="h-5 w-5 text-slate-200 dark:text-slate-600" />
                   )}
                 </div>
               </div>
@@ -88,10 +88,10 @@ export default function GoalsAndAchievements({ data }: GoalsAndAchievementsProps
 
       {/* Achievements */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="h-full">
-        <Card className="p-5 rounded-3xl shadow-sm border-slate-100 h-full flex flex-col">
+        <Card className="p-5 rounded-3xl border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800/50 shadow-sm hover:shadow-md transition-all duration-300 h-full flex flex-col">
           <div className="flex justify-between items-center mb-5">
-            <h3 className="font-bold text-slate-900">Yutuqlar</h3>
-            <button className="text-[10px] text-purple-600 font-medium flex items-center gap-1 hover:underline">
+            <h3 className="font-bold text-slate-900 dark:text-white">Yutuqlar</h3>
+            <button className="text-[10px] text-purple-600 dark:text-primary font-medium flex items-center gap-1 hover:underline">
               Barchasini ko'rish <ArrowRight className="h-3 w-3" />
             </button>
           </div>
@@ -103,13 +103,13 @@ export default function GoalsAndAchievements({ data }: GoalsAndAchievementsProps
                   {getAchievementIcon(ach.iconType)}
                 </div>
                 <div className="flex-1 min-w-0 flex flex-col justify-center">
-                  <p className="text-xs font-bold text-slate-900 truncate mb-0.5">{ach.title}</p>
-                  <p className="text-[10px] text-slate-500 leading-tight line-clamp-2">
+                  <p className="text-xs font-bold text-slate-900 dark:text-white truncate mb-0.5">{ach.title}</p>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight line-clamp-2">
                     {ach.description}
                   </p>
                 </div>
                 <div className="shrink-0 flex items-start pt-1">
-                  <span className="text-[9px] text-slate-400 font-medium">{ach.date}</span>
+                  <span className="text-[9px] text-slate-400 dark:text-slate-500 font-medium">{ach.date}</span>
                 </div>
               </div>
             ))}

@@ -101,7 +101,7 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
     navigate(isSignIn ? "/signup" : "/signin", { replace: true });
   };
 
-  const handleAuthSuccess = (data: LoginResponseData, isSignup: boolean) => {
+  const handleAuthSuccess = (data: LoginResponseData, isSignup: boolean, isGoogle = false) => {
     const { access_token, user: userData } = data;
     if (!access_token) throw new Error("Token topilmadi");
 
@@ -109,7 +109,7 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
     localStorage.setItem("user", JSON.stringify(userData));
     setAuth(access_token, userData);
 
-    let targetPath = "/dashboard";
+    let targetPath = "/user/dashboard";
     const roleUpper = (userData.role || "").toUpperCase();
 
     switch (roleUpper) {
@@ -130,7 +130,8 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
         targetPath = "/teacher/dashboard";
         break;
       case "STUDENT":
-        targetPath = "/student/dashboard";
+        // Google orqali kirganda STUDENT rol bo'lsa → user panelga
+        targetPath = isGoogle ? "/user/dashboard" : "/student/dashboard";
         break;
       case "PARENT":
         targetPath = "/parent/dashboard";
@@ -142,12 +143,7 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
         const isSuperAdmin = userData.username?.toLowerCase() === "asror"
           || userData.username?.toLowerCase() === "asrorsuper" 
           || userData.username?.toLowerCase() === "asrorsuperadmin";
-        if (isSuperAdmin) {
-          targetPath = "/super-admin/dashboard";
-        } else {
-          // Default for Google users or unknown roles → user dashboard
-          targetPath = "/user/dashboard";
-        }
+        targetPath = isSuperAdmin ? "/super-admin/dashboard" : "/user/dashboard";
     }
 
     if (isSignup) {
@@ -235,7 +231,7 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
 
         const res = await api.post<LoginResponseData>("/auth/google", { token: tokenResponse.access_token });
         setIsGoogleSuccess(true);
-        handleAuthSuccess(res.data, false);
+        handleAuthSuccess(res.data, false, true); // isGoogle = true
       } catch (err: unknown) {
         const apiErr = err as { response?: { data?: { message?: string } }; message?: string };
         const errorMsg = apiErr.response?.data?.message || apiErr.message || "Google auth failed";

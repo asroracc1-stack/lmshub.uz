@@ -11,7 +11,7 @@ interface WeeklyChartProps {
 export default function WeeklyChart({ data }: WeeklyChartProps) {
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-      <Card className="p-5 rounded-3xl border-primary/10 dark:border-primary/10 bg-white/60 dark:bg-[#1B1230]/60 backdrop-blur-md hover:shadow-glow-purple hover:border-primary/30 transition-all duration-300 h-full flex flex-col">
+      <Card className="p-5 rounded-3xl border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800/50 shadow-sm hover:shadow-md transition-all duration-300 h-full flex flex-col">
         <div className="flex justify-between items-center mb-6">
           <h3 className="font-bold text-slate-900 dark:text-white">Haftalik natija</h3>
           <Select defaultValue="7">
