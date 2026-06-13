@@ -1,4 +1,4 @@
-import { useTranslation } from "react-i18next";
+import i18next from "i18next";
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 
 interface ErrorBoundaryProps {
@@ -39,8 +39,8 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
       // Aks holda, standart xato xabarini ko'rsatish
       return (
         <div style={{ padding: '20px', textAlign: 'center', color: 'red', border: '1px solid red', margin: '20px' }}>
-          <h2>{t("dynamic.errorboundary.something_went_wrong")}</h2>
-          <p>{t("dynamic.errorboundary.we_re_sorry_for_the_inconvenience_please")}</p>
+          <h2>{i18next.t("dynamic.errorboundary.something_went_wrong")}</h2>
+          <p>{i18next.t("dynamic.errorboundary.we_re_sorry_for_the_inconvenience_please")}</p>
           {this.state.error && (
             <details style={{ whiteSpace: 'pre-wrap', textAlign: 'left', marginTop: '10px' }}>
               {this.state.error.toString()}
