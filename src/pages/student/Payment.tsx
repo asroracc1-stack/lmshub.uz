@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -75,7 +76,7 @@ const statusMeta = (s: string) => {
   switch (s) {
     case "PENDING":
     case "pending":
-      return { label: "Kutilmoqda", icon: Clock, className: "bg-warning/15 text-warning border-warning/30 animate-pulse" };
+      return { label: t("dynamic.orgpayments.kutilmoqda"), icon: Clock, className: "bg-warning/15 text-warning border-warning/30 animate-pulse" };
     case "APPROVED":
     case "completed":
     case "paid":
@@ -90,6 +91,7 @@ const statusMeta = (s: string) => {
 };
 
 export default function StudentPayment() {
+  const { t } = useTranslation();
   const { user, profile } = useAuth();
   const queryClient = useQueryClient();
 
@@ -189,8 +191,8 @@ export default function StudentPayment() {
 
   const onPickFile = (f: File | null) => {
     if (!f) return;
-    if (!f.type.startsWith("image/")) return toast.error("Iltimos, faqat rasm fayl yuklang (JPG, PNG)");
-    if (f.size > 5 * 1024 * 1024) return toast.error("Rasm hajmi 5MB dan kichik bo'lishi kerak");
+    if (!f.type.startsWith("image/")) return toast.error(t("dynamic.payment.iltimos_faqat_rasm_fayl_yuklang_jpg_png"));
+    if (f.size > 5 * 1024 * 1024) return toast.error(t("dynamic.payment.rasm_hajmi_5mb_dan_kichik_bo_lishi_kerak"));
     setFile(f);
     setPreview(URL.createObjectURL(f));
   };
@@ -217,14 +219,14 @@ export default function StudentPayment() {
   });
 
   const submit = async () => {
-    if (!user?.id || !effectiveOrgId) return toast.error("Tashkilot aniqlanmadi");
-    if (!selectedAdmin) return toast.error("Iltimos, to'lov qabul qiluvchi adminni tanlang");
+    if (!user?.id || !effectiveOrgId) return toast.error(t("dynamic.payment.tashkilot_aniqlanmadi"));
+    if (!selectedAdmin) return toast.error(t("dynamic.payment.iltimos_to_lov_qabul_qiluvchi_adminni_ta"));
     const amt = Number(amount);
-    if (!amt || amt < 1000) return toast.error("Summa kamida 1 000 so'm bo'lishi kerak");
-    if (!file) return toast.error("Iltimos, to'lov cheki rasmini yuklang");
+    if (!amt || amt < 1000) return toast.error(t("dynamic.payment.summa_kamida_1_000_so_m_bo_lishi_kerak"));
+    if (!file) return toast.error(t("dynamic.payment.iltimos_to_lov_cheki_rasmini_yuklang"));
 
     const effectiveStudentId = isParent ? selectedChildId : user.id;
-    if (!effectiveStudentId) return toast.error("Talaba aniqlanmadi");
+    if (!effectiveStudentId) return toast.error(t("dynamic.payment.talaba_aniqlanmadi"));
 
     if (isUploading || initiateMutation.isPending) return;
     setIsUploading(true);
@@ -270,8 +272,8 @@ export default function StudentPayment() {
 
   const onPickEditFile = (f: File | null) => {
     if (!f) return;
-    if (!f.type.startsWith("image/")) return toast.error("Faqat rasm fayl yuklang (JPG, PNG)");
-    if (f.size > 5 * 1024 * 1024) return toast.error("Rasm hajmi 5MB dan kichik bo'lishi kerak");
+    if (!f.type.startsWith("image/")) return toast.error(t("dynamic.payment.faqat_rasm_fayl_yuklang_jpg_png"));
+    if (f.size > 5 * 1024 * 1024) return toast.error(t("dynamic.payment.rasm_hajmi_5mb_dan_kichik_bo_lishi_kerak"));
     setEditFile(f);
     setEditPreview(URL.createObjectURL(f));
   };
@@ -279,7 +281,7 @@ export default function StudentPayment() {
   const saveEdit = async () => {
     if (!editingTx) return;
     const amt = Number(editAmount);
-    if (!amt || amt < 1000) return toast.error("Summa kamida 1 000 so'm bo'lishi kerak");
+    if (!amt || amt < 1000) return toast.error(t("dynamic.payment.summa_kamida_1_000_so_m_bo_lishi_kerak"));
     setEditSaving(true);
     try {
       let newProofUrl: string | undefined;
@@ -349,9 +351,7 @@ export default function StudentPayment() {
                   </div>
                   <div className="text-left min-w-0">
                     <p className="font-medium text-sm truncate">{c.fullName || c.username}</p>
-                    <p className={`text-[10px] ${active ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
-                      Talaba
-                    </p>
+                    <p className={`text-[10px] ${active ? "text-primary-foreground/80" : "text-muted-foreground"}`}>{t("dynamic.orgrewards.talaba")}</p>
                   </div>
                   {active && <CheckCircle2 className="h-4 w-4 shrink-0 ml-1" />}
                 </button>
@@ -417,7 +417,7 @@ export default function StudentPayment() {
       <div className="grid lg:grid-cols-12 gap-8 items-start">
         {/* Physical Card Mock-up */}
         <div className="lg:col-span-5 space-y-4">
-          <Label className="text-sm font-semibold block">To'lov rekvizitlari (Haqiqiy Karta)</Label>
+          <Label className="text-sm font-semibold block">{t("dynamic.payment.to_lov_rekvizitlari_haqiqiy_karta")}</Label>
           {selectedAdmin ? (
             <motion.div
               key={selectedAdmin.id}
@@ -456,7 +456,7 @@ export default function StudentPayment() {
 
                   {/* Card Number */}
                   <div className="space-y-1.5">
-                    <p className="text-[11px] uppercase tracking-widest text-white/60 font-medium">Karta Raqami</p>
+                    <p className="text-[11px] uppercase tracking-widest text-white/60 font-medium">{t("dynamic.usersmanager.karta_raqami")}</p>
                     <div className="flex items-center justify-between gap-4 bg-white/5 p-3 rounded-xl border border-white/10 backdrop-blur-sm">
                       <p className="font-mono text-2xl tracking-widest font-bold drop-shadow-md text-white">
                         {formatCard(selectedAdmin.card_number)}
@@ -476,13 +476,13 @@ export default function StudentPayment() {
                   {/* Card Holder & Role */}
                   <div className="flex items-end justify-between pt-2 border-t border-white/10">
                     <div>
-                      <p className="text-[11px] uppercase tracking-widest text-white/60 font-medium mb-1">Karta Egasi</p>
+                      <p className="text-[11px] uppercase tracking-widest text-white/60 font-medium mb-1">{t("dynamic.usersmanager.karta_egasi")}</p>
                       <p className="font-display font-bold text-lg tracking-wide uppercase text-white drop-shadow">
                         {selectedAdmin.card_holder || selectedAdmin.full_name}
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-[11px] uppercase tracking-widest text-white/60 font-medium mb-1">Qabul Qiluvchi</p>
+                      <p className="text-[11px] uppercase tracking-widest text-white/60 font-medium mb-1">{t("dynamic.payment.qabul_qiluvchi")}</p>
                       <p className="font-medium text-sm text-white/90">
                         {selectedAdmin.role.toLowerCase() === "admin" ? "Tashkilot Admini" : "Administrator"}
                       </p>
@@ -495,8 +495,8 @@ export default function StudentPayment() {
             <Card className="p-8 grid place-items-center text-center text-muted-foreground min-h-[260px] rounded-[24px]">
               <div>
                 <CreditCard className="h-12 w-12 mx-auto mb-3 opacity-30 animate-pulse" />
-                <p className="font-medium">Karta rekvizitlari mavjud emas.</p>
-                <p className="text-xs mt-1">Admin o'z profilida karta raqamini sozlashi kerak.</p>
+                <p className="font-medium">{t("dynamic.payment.karta_rekvizitlari_mavjud_emas")}</p>
+                <p className="text-xs mt-1">{t("dynamic.payment.admin_o_z_profilida_karta_raqamini_sozla")}</p>
               </div>
             </Card>
           )}
@@ -512,14 +512,14 @@ export default function StudentPayment() {
                 <Receipt className="h-5 w-5" />
               </div>
               <div>
-                <h2 className="font-display font-bold text-xl">To'lov chekini yuborish</h2>
-                <p className="text-xs text-muted-foreground">To'lov skrinshotini yuklang va tasdiqlashga yuboring</p>
+                <h2 className="font-display font-bold text-xl">{t("dynamic.payment.to_lov_chekini_yuborish")}</h2>
+                <p className="text-xs text-muted-foreground">{t("dynamic.payment.to_lov_skrinshotini_yuklang_va_tasdiqlas")}</p>
               </div>
             </div>
 
             <div className="grid sm:grid-cols-2 gap-5">
               <div className="space-y-2">
-                <Label className="text-sm font-semibold">Summa (UZS) *</Label>
+                <Label className="text-sm font-semibold">{t("dynamic.payment.summa_uzs_")}</Label>
                 <div className="relative">
                   <Input
                     type="number"
@@ -530,14 +530,12 @@ export default function StudentPayment() {
                     placeholder="Masalan: 500 000"
                     className="pl-4 pr-12 font-mono font-semibold text-lg h-12 rounded-xl"
                   />
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground uppercase">
-                    UZS
-                  </span>
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground uppercase">{t("dynamic.finance.uzs")}</span>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label className="text-sm font-semibold">Izoh (Ixtiyoriy)</Label>
+                <Label className="text-sm font-semibold">{t("dynamic.payment.izoh_ixtiyoriy")}</Label>
                 <Input
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
@@ -549,7 +547,7 @@ export default function StudentPayment() {
 
             {/* Drag and Drop Dropzone */}
             <div className="space-y-2">
-              <Label className="text-sm font-semibold">Chek yoki Skrinshot rasmi *</Label>
+              <Label className="text-sm font-semibold">{t("dynamic.payment.chek_yoki_skrinshot_rasmi_")}</Label>
               <input
                 ref={fileRef}
                 type="file"
@@ -587,9 +585,7 @@ export default function StudentPayment() {
                         setPreview(null);
                         if (fileRef.current) fileRef.current.value = "";
                       }}
-                    >
-                      O'chirish
-                    </Button>
+                    >{t("dynamic.usersmanager.o_chirish")}</Button>
                   </div>
                 </motion.div>
               ) : (
@@ -614,7 +610,7 @@ export default function StudentPayment() {
                     <p className="font-display font-bold text-base text-card-foreground">
                       {dragActive ? "Chekni bu yerga tashlang!" : "Chek rasmini yuklash uchun bosing yoki tashlang"}
                     </p>
-                    <p className="text-xs text-muted-foreground mt-1">JPG, PNG fayllar (maksimal 5MB)</p>
+                    <p className="text-xs text-muted-foreground mt-1">{t("dynamic.payment.jpg_png_fayllar_maksimal_5mb")}</p>
                   </div>
                 </div>
               )}
@@ -661,8 +657,8 @@ export default function StudentPayment() {
         ) : history.length === 0 ? (
           <Card className="p-12 text-center text-muted-foreground rounded-2xl border-dashed">
             <Receipt className="h-12 w-12 mx-auto mb-3 opacity-30" />
-            <p className="font-medium text-lg">Hali to'lov so'rovlari yuborilmagan</p>
-            <p className="text-xs mt-1">Yuqoridagi shakl orqali birinchi to'lov chekini yuklang.</p>
+            <p className="font-medium text-lg">{t("dynamic.payment.hali_to_lov_so_rovlari_yuborilmagan")}</p>
+            <p className="text-xs mt-1">{t("dynamic.payment.yuqoridagi_shakl_orqali_birinchi_to_lov_")}</p>
           </Card>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -766,8 +762,8 @@ export default function StudentPayment() {
                       <Pencil className="h-5 w-5" />
                     </div>
                     <div>
-                      <h3 className="font-display font-bold text-lg">To'lovni tahrirlash</h3>
-                      <p className="text-xs text-muted-foreground">Faqat kutilmoqda holatdagi to'lovlar</p>
+                      <h3 className="font-display font-bold text-lg">{t("dynamic.payment.to_lovni_tahrirlash")}</h3>
+                      <p className="text-xs text-muted-foreground">{t("dynamic.payment.faqat_kutilmoqda_holatdagi_to_lovlar")}</p>
                     </div>
                   </div>
                   <Button variant="ghost" size="icon" onClick={() => setEditingTx(null)}>
@@ -802,13 +798,13 @@ export default function StudentPayment() {
                       />
                       <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center gap-2 backdrop-blur-sm">
                         <Upload className="h-8 w-8 text-white" />
-                        <p className="text-white text-sm font-medium">Yangi chek yuklash</p>
+                        <p className="text-white text-sm font-medium">{t("dynamic.payment.yangi_chek_yuklash")}</p>
                       </div>
                     </>
                   ) : (
                     <div className="py-8 flex flex-col items-center gap-2 text-muted-foreground">
                       <Upload className="h-8 w-8" />
-                      <p className="text-sm font-medium">Chek rasmini yuklang</p>
+                      <p className="text-sm font-medium">{t("dynamic.payment.chek_rasmini_yuklang")}</p>
                     </div>
                   )}
                   <div className="px-3 py-2 text-[11px] text-muted-foreground flex items-center gap-1.5 border-t border-border/40">
@@ -819,7 +815,7 @@ export default function StudentPayment() {
 
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label className="text-sm font-semibold">Summa (UZS)</Label>
+                    <Label className="text-sm font-semibold">{t("dynamic.payment.summa_uzs")}</Label>
                     <div className="relative">
                       <Input
                         type="number"
@@ -829,12 +825,12 @@ export default function StudentPayment() {
                         onChange={(e) => setEditAmount(e.target.value)}
                         className="pl-4 pr-12 font-mono font-semibold text-lg h-12 rounded-xl"
                       />
-                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground uppercase">UZS</span>
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground uppercase">{t("dynamic.finance.uzs")}</span>
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-sm font-semibold">Izoh</Label>
+                    <Label className="text-sm font-semibold">{t("dynamic.finance.izoh")}</Label>
                     <Input
                       value={editNote}
                       onChange={(e) => setEditNote(e.target.value)}
@@ -850,9 +846,7 @@ export default function StudentPayment() {
                     className="flex-1 h-12 rounded-xl"
                     onClick={() => setEditingTx(null)}
                     disabled={editSaving}
-                  >
-                    Bekor qilish
-                  </Button>
+                  >{t("dynamic.pricingplans.bekor_qilish")}</Button>
                   <Button
                     variant="hero"
                     className="flex-1 h-12 rounded-xl font-bold shadow-lg shadow-primary/20"

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -48,13 +49,14 @@ function timeAgo(iso: string) {
 }
 
 export default function NotificationsBell() {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const { items, unread, markAsRead, markAllAsRead, remove, clearAll } = useNotifications();
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative" aria-label="Bildirishnomalar">
+        <Button variant="ghost" size="icon" className="relative" aria-label={t("dynamic.notificationsbell.bildirishnomalar")}>
           <Bell className="h-5 w-5" />
           <AnimatePresence>
             {unread > 0 && (
@@ -73,7 +75,7 @@ export default function NotificationsBell() {
       <PopoverContent align="end" className="w-[380px] p-0 glass border-border">
         <div className="flex items-center justify-between p-4 border-b border-border">
           <div>
-            <p className="font-display font-semibold">Bildirishnomalar</p>
+            <p className="font-display font-semibold">{t("dynamic.notificationsbell.bildirishnomalar")}</p>
             <p className="text-xs text-muted-foreground">
               {unread > 0 ? `${unread} ta yangi` : "Hammasi o'qildi"}
             </p>
@@ -134,7 +136,7 @@ export default function NotificationsBell() {
                       <button
                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); remove(n.id); }}
                         className="p-1 rounded hover:bg-destructive/20 text-destructive"
-                        title="O'chirish"
+                        title={t("dynamic.usersmanager.o_chirish")}
                       >
                         <X className="h-3 w-3" />
                       </button>

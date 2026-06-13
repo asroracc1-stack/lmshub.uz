@@ -34,7 +34,7 @@ const META: Record<Kind, { icon: any; label: string; color: string; group: strin
   writing:       { icon: PenLine,    label: "Writing",           color: "text-orange-600",  group: "IELTS" },
   speaking:      { icon: Mic,        label: "Speaking",          color: "text-pink-600",    group: "IELTS" },
   sat:           { icon: Target,     label: "SAT",               color: "text-violet-600",  group: "SAT" },
-  national_cert: { icon: Landmark,   label: "Milliy sertifikat", color: "text-amber-600",   group: "Milliy" },
+  national_cert: { icon: Landmark,   label: "Milliy Sertifikat", color: "text-amber-600",   group: "Milliy" },
 };
 
 const DIFFICULTY_META: Record<string, { labelKey: string; cls: string; icon: any }> = {
@@ -154,7 +154,7 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
   const proCnt  = tests.filter(t => getPackType(t.required_pack) === "pro").length;
   const eliteCnt= tests.filter(t => getPackType(t.required_pack) === "elite").length;
 
-  const categoryName = t(`mockCategory.sections.${kind}`);
+  const categoryName = kind === "speaking" ? t("dynamic.speakingpartners.speaking") : kind === "national_cert" ? t("dynamic.usersmanager.milliy_sertifikat") : t(`mockCategory.sections.${kind}`);
 
   return ( <div className="space-y-6 pb-8">
 

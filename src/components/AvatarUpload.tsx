@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useRef, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { Camera, Upload, Trash2, Edit2, Sparkles } from "lucide-react";
@@ -23,7 +24,9 @@ const sizeMap = {
   xl: "h-48 w-48",
 };
 
-export default function AvatarUpload({ userId, currentUrl, initials, onUploaded, size = "lg" }: Props) {
+export default function AvatarUpload({
+  userId, currentUrl, initials, onUploaded, size = "lg" }: Props) {
+  const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -139,7 +142,7 @@ export default function AvatarUpload({ userId, currentUrl, initials, onUploaded,
                   <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center border border-primary/40">
                     <Edit2 className="h-4 w-4 text-primary" />
                   </div>
-                  <span className="text-[10px] uppercase font-black tracking-widest text-white shadow-sm">O'zgartirish</span>
+                  <span className="text-[10px] uppercase font-black tracking-widest text-white shadow-sm">{t("dynamic.avatarupload.o_zgartirish")}</span>
                 </>
               )}
             </div>

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -232,6 +233,7 @@ function ReactBitsLoader() {
 }
 
 export default function StartupPitch(): React.ReactElement {
+  const { t } = useTranslation();
   const [currentSlide, setCurrentSlide] = useState<number>(0);
   const [direction, setDirection] = useState<number>(0);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
@@ -584,15 +586,15 @@ export default function StartupPitch(): React.ReactElement {
           <div>
             <h1 className="font-display text-3xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
               <Layers className="h-7 w-7 text-purple-500 animate-pulse" />
-              LMSHub Loyiha Taqdimoti <span className="text-xs bg-purple-500/10 text-purple-600 dark:text-purple-400 font-bold px-2.5 py-1 rounded-full uppercase">10 Slayd</span>
+              LMSHub Loyiha Taqdimoti <span className="text-xs bg-purple-500/10 text-purple-600 dark:text-purple-400 font-bold px-2.5 py-1 rounded-full uppercase">{t("dynamic.startuppitch.10_slayd")}</span>
             </h1>
-            <p className="text-slate-500 dark:text-slate-400 mt-1">Siz izlagan super interaktiv animatsiyali premium taqdimot.</p>
+            <p className="text-slate-500 dark:text-slate-400 mt-1">{t("dynamic.startuppitch.siz_izlagan_super_interaktiv_animatsiyal")}</p>
           </div>
           
           <div className="flex items-center gap-3">
             {/* Transition selector dropdown */}
             <div className="flex flex-col text-right">
-              <span className="text-[10px] text-slate-400 font-bold uppercase">Slayd O'tish Effekti:</span>
+              <span className="text-[10px] text-slate-400 font-bold uppercase">{t("dynamic.startuppitch.slayd_o_tish_effekti")}</span>
               <select 
                 value={transitionType} 
                 onChange={(e) => setTransitionType(e.target.value as any)} 
@@ -631,8 +633,8 @@ export default function StartupPitch(): React.ReactElement {
           <div className="flex items-center gap-3">
             <Logo size={36} variant="dark" />
             <div>
-              <p className="text-[10px] tracking-widest font-black uppercase text-purple-600 dark:text-purple-500">LMSHub Ekotizimi</p>
-              <p className="text-sm font-bold text-slate-800 dark:text-slate-200">Startup Pitch Presentation</p>
+              <p className="text-[10px] tracking-widest font-black uppercase text-purple-600 dark:text-purple-500">{t("dynamic.startuppitch.lmshub_ekotizimi")}</p>
+              <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{t("dynamic.startuppitch.startup_pitch_presentation")}</p>
             </div>
           </div>
 
@@ -724,8 +726,8 @@ export default function StartupPitch(): React.ReactElement {
                         👋
                       </span>
                       <div>
-                        <p className="text-sm font-black uppercase text-purple-600 dark:text-purple-500 tracking-wider">Hakamlarga ehtiromlar!</p>
-                        <p className="text-xs text-slate-500 font-bold">LMSHub bilan bozorni yondirishga tayyormisiz?</p>
+                        <p className="text-sm font-black uppercase text-purple-600 dark:text-purple-500 tracking-wider">{t("dynamic.startuppitch.hakamlarga_ehtiromlar")}</p>
+                        <p className="text-xs text-slate-500 font-bold">{t("dynamic.startuppitch.lmshub_bilan_bozorni_yondirishga_tayyorm")}</p>
                       </div>
                     </div>
                   </div>
@@ -772,7 +774,7 @@ export default function StartupPitch(): React.ReactElement {
                           <span className="text-xs font-bold text-rose-500 animate-pulse flex items-center gap-1.5">
                             <span className="h-2 w-2 rounded-full bg-rose-500" /> EXCEL_DATABASE_CRASHED.xlsx
                           </span>
-                          <span className="text-[10px] text-slate-400 dark:text-slate-600 font-mono">100% UNSTABLE</span>
+                          <span className="text-[10px] text-slate-400 dark:text-slate-600 font-mono">{t("dynamic.startuppitch.100_unstable")}</span>
                         </div>
                         
                         <div className="flex-1 relative mt-4 overflow-hidden">
@@ -822,8 +824,8 @@ export default function StartupPitch(): React.ReactElement {
                         </div>
                         
                         <div className="border-t border-slate-200 dark:border-slate-800 pt-3 flex items-center justify-between text-xs text-rose-500 dark:text-rose-455 font-extrabold">
-                          <span>Sherlok Xolms xulosasi:</span>
-                          <span className="bg-rose-100 dark:bg-rose-500/20 text-rose-650 dark:text-rose-450 px-3 py-1 rounded-full text-[10px]">Tushunarsiz tartibsizlik</span>
+                          <span>{t("dynamic.startuppitch.sherlok_xolms_xulosasi")}</span>
+                          <span className="bg-rose-100 dark:bg-rose-500/20 text-rose-650 dark:text-rose-450 px-3 py-1 rounded-full text-[10px]">{t("dynamic.startuppitch.tushunarsiz_tartibsizlik")}</span>
                         </div>
                       </div>
                     </TiltedCard>
@@ -959,9 +961,7 @@ export default function StartupPitch(): React.ReactElement {
                           <div>
                             <h3 className="text-lg font-black text-slate-800 dark:text-white flex items-center gap-2">
                               {roles[selectedRoleIdx].name}
-                              <span className="text-[9px] bg-purple-500/10 text-purple-600 dark:text-purple-400 font-extrabold px-2 py-0.5 rounded-full uppercase">
-                                Active
-                              </span>
+                              <span className="text-[9px] bg-purple-500/10 text-purple-600 dark:text-purple-400 font-extrabold px-2 py-0.5 rounded-full uppercase">{t("dynamic.subscriptions.active")}</span>
                             </h3>
                             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">{roles[selectedRoleIdx].desc}</p>
                           </div>
@@ -969,19 +969,19 @@ export default function StartupPitch(): React.ReactElement {
                         
                         {/* Permission toggle list mockup */}
                         <div className="space-y-2.5 mt-4 bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
-                          <div className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">Ruxsatlar va Huquqlar</div>
+                          <div className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t("dynamic.startuppitch.ruxsatlar_va_huquqlar")}</div>
                           <div className="flex items-center justify-between text-xs text-slate-700 dark:text-slate-300">
-                            <span>Tizim sozlamalari</span>
+                            <span>{t("dynamic.startuppitch.tizim_sozlamalari")}</span>
                             <span className="h-4.5 w-8 bg-purple-500 rounded-full flex items-center pl-4 transition-all"><span className="h-3.5 w-3.5 bg-white rounded-full" /></span>
                           </div>
                           <div className="flex items-center justify-between text-xs text-slate-700 dark:text-slate-300">
-                            <span>Moliyaviy hisobotlar</span>
+                            <span>{t("dynamic.startuppitch.moliyaviy_hisobotlar")}</span>
                             <span className={`h-4.5 w-8 rounded-full flex items-center transition-all ${
                               ["Super Admin", "Admin", "Pack Manager"].includes(roles[selectedRoleIdx].name) ? "bg-purple-500 pl-4" : "bg-slate-200 dark:bg-slate-800 pl-0.5"
                             }`}><span className="h-3.5 w-3.5 bg-white rounded-full" /></span>
                           </div>
                           <div className="flex items-center justify-between text-xs text-slate-700 dark:text-slate-300">
-                            <span>Guruhlarni tahrirlash</span>
+                            <span>{t("dynamic.startuppitch.guruhlarni_tahrirlash")}</span>
                             <span className={`h-4.5 w-8 rounded-full flex items-center transition-all ${
                               ["Super Admin", "Admin", "Administrator", "Teacher"].includes(roles[selectedRoleIdx].name) ? "bg-purple-500 pl-4" : "bg-slate-200 dark:bg-slate-800 pl-0.5"
                             }`}><span className="h-3.5 w-3.5 bg-white rounded-full" /></span>
@@ -989,7 +989,7 @@ export default function StartupPitch(): React.ReactElement {
                         </div>
                         
                         <div className="flex justify-between items-center text-[10px] text-slate-400 pt-3 border-t border-slate-200 dark:border-slate-800/80">
-                          <span>Tizim darajasi:</span>
+                          <span>{t("dynamic.startuppitch.tizim_darajasi")}</span>
                           <span className="font-mono font-black text-purple-500">LEVEL 0{selectedRoleIdx + 1}</span>
                         </div>
                       </div>
@@ -1023,21 +1023,21 @@ export default function StartupPitch(): React.ReactElement {
                         <div className="flex items-center justify-between border-b border-slate-800 pb-2">
                           <div className="flex items-center gap-2 text-slate-300 text-xs font-bold">
                             <Sparkles className="h-4 w-4 text-purple-400 animate-pulse" />
-                            <span>Gemini AI Engine v3.5</span>
+                            <span>{t("dynamic.startuppitch.gemini_ai_engine_v35")}</span>
                           </div>
-                          <span className="text-[9px] bg-purple-500/10 text-purple-400 font-bold px-2 py-0.5 rounded border border-purple-500/20">READY</span>
+                          <span className="text-[9px] bg-purple-500/10 text-purple-400 font-bold px-2 py-0.5 rounded border border-purple-500/20">{t("dynamic.startuppitch.ready")}</span>
                         </div>
                         
                         <div className="flex-1 mt-4 space-y-3 text-[11px] overflow-y-auto pr-1">
                           <div className="bg-slate-950/80 p-3 rounded-lg border border-slate-850">
-                            <p className="text-[9px] text-slate-500 uppercase font-black">Prompt Input</p>
+                            <p className="text-[9px] text-slate-500 uppercase font-black">{t("dynamic.startuppitch.prompt_input")}</p>
                             <p className="text-white mt-1 font-bold">$ create-course --name "Python IELTS BootCamp" --weeks 4</p>
                           </div>
                           
                           {aiTypingPhase === 1 && (
                             <div className="flex items-center gap-2 text-purple-400 font-bold text-[10px] animate-pulse">
                               <Cpu className="h-4 w-4 animate-spin" />
-                              <span>Gemini AI dars rejasini tuzmoqda...</span>
+                              <span>{t("dynamic.startuppitch.gemini_ai_dars_rejasini_tuzmoqda")}</span>
                             </div>
                           )}
                           
@@ -1061,7 +1061,7 @@ export default function StartupPitch(): React.ReactElement {
                         </div>
                         
                         <div className="border-t border-slate-800 pt-3 flex items-center justify-between text-[10px] text-slate-500">
-                          <span>AI Model:</span>
+                          <span>{t("dynamic.startuppitch.ai_model")}</span>
                           <span className="text-purple-400 font-bold">Gemini 3.5 Flash 🚀</span>
                         </div>
                       </div>
@@ -1127,11 +1127,11 @@ export default function StartupPitch(): React.ReactElement {
                                 <div className="space-y-1">
                                   <div className="flex items-center justify-between text-[11px] p-2 bg-purple-55/10 dark:bg-purple-500/10 border border-purple-100 dark:border-purple-500/20 rounded-lg text-purple-600 dark:text-purple-400 font-bold">
                                     <span>🔍 Backend Bootcamp 4.0</span>
-                                    <span className="text-[9px] text-slate-400 font-medium">Guruhlar</span>
+                                    <span className="text-[9px] text-slate-400 font-medium">{t("dynamic.startuppitch.guruhlar")}</span>
                                   </div>
                                   <div className="flex items-center justify-between text-[11px] p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-55 dark:hover:bg-slate-800 rounded-lg font-bold">
                                     <span>👤 Sherzod Jo'rayev (IELTS)</span>
-                                    <span className="text-[9px] text-slate-400 font-medium">Ustozlar</span>
+                                    <span className="text-[9px] text-slate-400 font-medium">{t("dynamic.startuppitch.ustozlar")}</span>
                                   </div>
                                 </div>
                               </motion.div>
@@ -1140,7 +1140,7 @@ export default function StartupPitch(): React.ReactElement {
                         </div>
                         
                         <div className="border-t border-slate-200 dark:border-slate-800/80 pt-2 flex items-center justify-between text-[10px] text-slate-400">
-                          <span>Qidiruv tezligi:</span>
+                          <span>{t("dynamic.startuppitch.qidiruv_tezligi")}</span>
                           <span className="text-purple-500 font-bold">0ms / Instant ⚡</span>
                         </div>
                       </div>
@@ -1176,13 +1176,13 @@ export default function StartupPitch(): React.ReactElement {
                           <ReactBitsLoader />
                           
                           <div className="text-center">
-                            <h4 className="text-2xl font-black text-purple-500">12ms</h4>
+                            <h4 className="text-2xl font-black text-purple-500">{t("dynamic.startuppitch.12ms")}</h4>
                             <p className="text-[10px] text-slate-500 dark:text-slate-400 font-extrabold uppercase tracking-widest mt-1">O'rtacha javob vaqti ⚡</p>
                           </div>
                         </div>
                         
                         <div className="border-t border-slate-200 dark:border-slate-800 w-full pt-2 flex items-center justify-between text-[10px] text-slate-400">
-                          <span>Ishlash darajasi:</span>
+                          <span>{t("dynamic.startuppitch.ishlash_darajasi")}</span>
                           <span className="text-purple-500 font-bold">A+ Excellent 🏅</span>
                         </div>
                       </div>
@@ -1216,9 +1216,9 @@ export default function StartupPitch(): React.ReactElement {
                         <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
                           <div className="flex items-center gap-2">
                             <Coins className="h-4 w-4 text-amber-500" />
-                            <span className="text-xs font-bold text-slate-700 dark:text-slate-200">LMS Coins O'sish Indeksi</span>
+                            <span className="text-xs font-bold text-slate-700 dark:text-slate-200">{t("dynamic.startuppitch.lms_coins_o_sish_indeksi")}</span>
                           </div>
-                          <span className="text-[9px] text-purple-650 dark:text-purple-450 font-bold bg-purple-500/10 px-2 py-0.5 rounded">UPTREND</span>
+                          <span className="text-[9px] text-purple-650 dark:text-purple-450 font-bold bg-purple-500/10 px-2 py-0.5 rounded">{t("dynamic.startuppitch.uptrend")}</span>
                         </div>
                         
                         {/* SVG Line Chart */}
@@ -1262,7 +1262,7 @@ export default function StartupPitch(): React.ReactElement {
                         </div>
                         
                         <div className="border-t border-slate-200 dark:border-slate-800 pt-2 flex items-center justify-between text-[10px] text-slate-400">
-                          <span>Rag'batlantirish effekti:</span>
+                          <span>{t("dynamic.startuppitch.rag_batlantirish_effekti")}</span>
                           <span className="text-purple-500 font-bold">+142% faollashish 🚀</span>
                         </div>
                       </div>
@@ -1302,8 +1302,8 @@ export default function StartupPitch(): React.ReactElement {
                             <ellipse cx="50" cy="50" rx="8" ry="20" transform="rotate(120 50 50)" stroke="currentColor" strokeWidth="2.5" />
                             <circle cx="50" cy="50" r="4.5" fill="currentColor" />
                           </svg>
-                          <h4 className="text-sm font-black text-slate-800 dark:text-white mt-2">React 18</h4>
-                          <p className="text-[9px] text-slate-450 font-bold">SPA Client Frontend</p>
+                          <h4 className="text-sm font-black text-slate-800 dark:text-white mt-2">{t("dynamic.startuppitch.react_18")}</h4>
+                          <p className="text-[9px] text-slate-450 font-bold">{t("dynamic.startuppitch.spa_client_frontend")}</p>
                         </motion.div>
                         
                         <motion.div 
@@ -1314,8 +1314,8 @@ export default function StartupPitch(): React.ReactElement {
                             <path d="M85 20L50 85L15 20H85Z" fill="currentColor" opacity="0.15" />
                             <path d="M52 10L35 50H50L45 90L70 42H52L52 10Z" fill="currentColor" />
                           </svg>
-                          <h4 className="text-sm font-black text-slate-800 dark:text-white mt-2">Vite JS</h4>
-                          <p className="text-[9px] text-slate-450 font-bold">Fast HMR Bundler</p>
+                          <h4 className="text-sm font-black text-slate-800 dark:text-white mt-2">{t("dynamic.startuppitch.vite_js")}</h4>
+                          <p className="text-[9px] text-slate-450 font-bold">{t("dynamic.startuppitch.fast_hmr_bundler")}</p>
                         </motion.div>
                         
                         <motion.div 
@@ -1326,8 +1326,8 @@ export default function StartupPitch(): React.ReactElement {
                             <rect x="15" y="15" width="70" height="70" rx="16" fill="currentColor" opacity="0.15" stroke="currentColor" strokeWidth="2.5" />
                             <path d="M50 25C40 35 40 45 42 62C47 64 57 64 65 52C70 45 70 35 50 25Z" fill="currentColor" />
                           </svg>
-                          <h4 className="text-sm font-black text-slate-800 dark:text-white mt-2">Spring Boot</h4>
-                          <p className="text-[9px] text-slate-450 font-bold">Secure Java API</p>
+                          <h4 className="text-sm font-black text-slate-800 dark:text-white mt-2">{t("dynamic.startuppitch.spring_boot")}</h4>
+                          <p className="text-[9px] text-slate-450 font-bold">{t("dynamic.startuppitch.secure_java_api")}</p>
                         </motion.div>
                         
                         <motion.div 
@@ -1337,8 +1337,8 @@ export default function StartupPitch(): React.ReactElement {
                           <svg className="h-10 w-10 text-indigo-500" viewBox="0 0 100 100" fill="none">
                             <path d="M25 35C25 25 38 20 50 20C62 20 75 25 75 35C75 45 75 60 75 70C75 80 62 80 50 80C38 80 25 80 25 70C25 60 25 45 25 35Z" fill="currentColor" opacity="0.15" stroke="currentColor" strokeWidth="2.5" />
                           </svg>
-                          <h4 className="text-sm font-black text-slate-800 dark:text-white mt-2">PostgreSQL</h4>
-                          <p className="text-[9px] text-slate-450 font-bold">Robust SQL Storage</p>
+                          <h4 className="text-sm font-black text-slate-800 dark:text-white mt-2">{t("dynamic.startuppitch.postgresql")}</h4>
+                          <p className="text-[9px] text-slate-450 font-bold">{t("dynamic.startuppitch.robust_sql_storage")}</p>
                         </motion.div>
                       </div>
                     </TiltedCard>
@@ -1364,12 +1364,12 @@ export default function StartupPitch(): React.ReactElement {
                     
                     <div className="grid grid-cols-2 gap-4">
                       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl shadow-sm">
-                        <p className="text-[9px] text-purple-600 font-black uppercase tracking-wider">Aloqa</p>
-                        <p className="text-sm font-black text-slate-800 dark:text-white mt-1">LMSHub.uz</p>
-                        <p className="text-[10px] text-slate-450 font-medium mt-0.5">info@lmshub.uz</p>
+                        <p className="text-[9px] text-purple-600 font-black uppercase tracking-wider">{t("dynamic.startuppitch.aloqa")}</p>
+                        <p className="text-sm font-black text-slate-800 dark:text-white mt-1">{t("dynamic.startuppitch.lmshubuz")}</p>
+                        <p className="text-[10px] text-slate-450 font-medium mt-0.5">{t("dynamic.startuppitch.infolmshubuz")}</p>
                       </div>
                       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl shadow-sm">
-                        <p className="text-[9px] text-purple-600 font-black uppercase tracking-wider">Sloqan</p>
+                        <p className="text-[9px] text-purple-600 font-black uppercase tracking-wider">{t("dynamic.startuppitch.sloqan")}</p>
                         <p className="text-xs font-black text-slate-800 dark:text-white mt-1">"Bozorni birgalikda yondiramiz! 🚀"</p>
                       </div>
                     </div>
@@ -1413,12 +1413,12 @@ export default function StartupPitch(): React.ReactElement {
                             >
                               {rocketLaunched ? "UCHMOQDA..." : "PLATFORMANI ISHGA TUSHIRISH"}
                             </Button>
-                            <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-2">Uchirish uchun tugmani bosing!</p>
+                            <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-2">{t("dynamic.startuppitch.uchirish_uchun_tugmani_bosing")}</p>
                           </div>
                         </div>
                         
                         <div className="border-t border-slate-200 dark:border-slate-800 w-full pt-2 flex items-center justify-between text-[10px] text-slate-400">
-                          <span>Parvoz holati:</span>
+                          <span>{t("dynamic.startuppitch.parvoz_holati")}</span>
                           <span className="text-purple-500 font-bold">{rocketLaunched ? "LAUNCHED 🛰️" : "READY FOR TAKEOFF"}</span>
                         </div>
                       </div>
@@ -1493,7 +1493,7 @@ export default function StartupPitch(): React.ReactElement {
           </div>
 
           <div className="text-xs font-bold text-slate-400 dark:text-slate-500 hidden sm:block">
-            Boshqarish: <span className="text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-900 px-2 py-1 rounded-md border border-slate-200 dark:border-slate-800 ml-1">←</span> va <span className="text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-900 px-2 py-1 rounded-md border border-slate-200 dark:border-slate-800">→</span> tugmalari
+            Boshqarish: <span className="text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-900 px-2 py-1 rounded-md border border-slate-200 dark:border-slate-800 ml-1">←</span>{t("dynamic.startuppitch.va")}<span className="text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-900 px-2 py-1 rounded-md border border-slate-200 dark:border-slate-800">→</span> tugmalari
           </div>
         </div>
       </div>

@@ -1,9 +1,11 @@
+import { useTranslation } from "react-i18next";
 import { Construction, ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
-export default function ComingSoon({ title }: { title: string }) {
+export default function ComingSoon({
+  const { t } = useTranslation(); title }: { title: string }) {
   return (
     <div className="space-y-6">
       <h1 className="font-display text-3xl font-bold">{title}</h1>
@@ -21,7 +23,7 @@ export default function ComingSoon({ title }: { title: string }) {
         >
           <Construction className="h-8 w-8 text-primary-foreground" />
         </motion.div>
-        <p className="font-display text-2xl font-semibold">Tez orada</p>
+        <p className="font-display text-2xl font-semibold">{t("dynamic.comingsoon.tez_orada")}</p>
         <p className="text-sm text-muted-foreground mt-2 max-w-md mx-auto">
           Bu modul keyingi bosqichlarda ishga tushadi. Hozircha boshqa sahifalardan foydalanishingiz mumkin.
         </p>

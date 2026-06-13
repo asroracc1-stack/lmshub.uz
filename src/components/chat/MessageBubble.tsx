@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Check, CheckCheck, Paperclip, MoreVertical, Reply, Forward, Trash2, Pin } from "lucide-react";
@@ -19,6 +20,7 @@ interface MessageBubbleProps {
 }
 
 export default function MessageBubble({ msg, isMine, isGroup, onReply, onForward, onDelete, onPin }: MessageBubbleProps) {
+  const { t } = useTranslation();
   const senderName = msg.senderName || msg.sender?.fullName || "Foydalanuvchi";
   const isSeen = msg.seen;
   const isDeleted = msg.isDeleted;
@@ -62,14 +64,12 @@ export default function MessageBubble({ msg, isMine, isGroup, onReply, onForward
                 <Reply className="mr-2 h-3.5 w-3.5" /> Javob berish
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onForward?.(msg)}>
-                <Forward className="mr-2 h-3.5 w-3.5" /> Yo'naltirish
-              </DropdownMenuItem>
+                <Forward className="mr-2 h-3.5 w-3.5" />{t("dynamic.messages.yo_naltirish")}</DropdownMenuItem>
               <DropdownMenuItem onClick={() => onPin?.(msg.id)}>
                 <Pin className="mr-2 h-3.5 w-3.5" /> {msg.isPinned ? "Qadab qo'yishni bekor qilish" : "Qadab qo'yish"}
               </DropdownMenuItem>
               <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => onDelete?.(msg.id, isMine)}>
-                <Trash2 className="mr-2 h-3.5 w-3.5" /> O'chirish
-              </DropdownMenuItem>
+                <Trash2 className="mr-2 h-3.5 w-3.5" />{t("dynamic.usersmanager.o_chirish")}</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

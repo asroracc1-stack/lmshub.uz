@@ -1,8 +1,10 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { WifiOff } from "lucide-react";
 
 export default function OfflineBanner() {
+  const { t } = useTranslation();
   const [online, setOnline] = useState(typeof navigator === "undefined" ? true : navigator.onLine);
 
   useEffect(() => {
@@ -28,7 +30,7 @@ export default function OfflineBanner() {
         >
           <div className="pointer-events-auto glass shadow-elegant rounded-full px-4 py-2 flex items-center gap-2 border border-destructive/40">
             <WifiOff className="h-4 w-4 text-destructive" />
-            <span className="text-sm font-medium">Internet aloqasi uzildi</span>
+            <span className="text-sm font-medium">{t("dynamic.offlinebanner.internet_aloqasi_uzildi")}</span>
           </div>
         </motion.div>
       )}

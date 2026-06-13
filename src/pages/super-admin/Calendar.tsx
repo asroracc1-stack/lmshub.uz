@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { z } from "zod";
@@ -96,6 +97,7 @@ const toLocalInput = (iso: string) => {
 };
 
 export default function CalendarPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [orgs, setOrgs] = useState<Org[]>([]);
   const [events, setEvents] = useState<EventItem[]>([]);
@@ -253,7 +255,7 @@ export default function CalendarPage() {
     const parsed = schema.safeParse(form);
     if (!parsed.success) { toast.error(parsed.error.errors[0].message); return; }
     if (new Date(parsed.data.ends_at) < new Date(parsed.data.starts_at)) {
-      toast.error("Tugash vaqti boshlanishdan keyin bo'lishi kerak"); return;
+      toast.error(t("dynamic.calendar.tugash_vaqti_boshlanishdan_keyin_bo_lish")); return;
     }
     setSubmitting(true);
     const payload = {
@@ -272,10 +274,10 @@ export default function CalendarPage() {
     try {
       if (editing) {
         await api.put(`/calendar/${editing.id}`, payload);
-        toast.success("Yangilandi");
+        toast.success(t("dynamic.calendar.yangilandi"));
       } else {
         await api.post("/calendar", payload);
-        toast.success("Tadbir qo'shildi");
+        toast.success(t("dynamic.calendar.tadbir_qo_shildi"));
       }
       setOpen(false);
       resetForm();
@@ -290,7 +292,7 @@ export default function CalendarPage() {
   const remove = async (e: EventItem) => {
     try {
       await api.delete(`/calendar/${e.id}`);
-      toast.success("O'chirildi");
+      toast.success(t("dynamic.usersmanager.o_chirildi"));
       refetch();
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Xatolik yuz berdi");
@@ -303,8 +305,8 @@ export default function CalendarPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="font-display text-3xl font-bold">Kalendar</h1>
-          <p className="text-muted-foreground">Tadbirlar va rejalashtirish</p>
+          <h1 className="font-display text-3xl font-bold">{t("dynamic.calendar.kalendar")}</h1>
+          <p className="text-muted-foreground">{t("dynamic.calendar.tadbirlar_va_rejalashtirish")}</p>
         </div>
         <Button variant="hero" onClick={() => openCreate()}>
           <Plus className="h-4 w-4" /> Yangi tadbir
@@ -394,7 +396,7 @@ export default function CalendarPage() {
             <>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs uppercase tracking-wider text-muted-foreground">Tanlangan kun</p>
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground">{t("dynamic.calendar.tanlangan_kun")}</p>
                   <p className="font-display text-lg font-semibold">
                     {selectedDay.getDate()} {MONTHS[selectedDay.getMonth()]}
                   </p>
@@ -408,7 +410,7 @@ export default function CalendarPage() {
               </Button>
               <div className="space-y-2 max-h-[400px] overflow-y-auto">
                 {selectedEvents.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-8">Tadbirlar yo'q</p>
+                  <p className="text-sm text-muted-foreground text-center py-8">{t("dynamic.calendar.tadbirlar_yo_q")}</p>
                 ) : selectedEvents.map((e) => {
                   const c = colorMeta(e.color);
                   return (
@@ -439,8 +441,8 @@ export default function CalendarPage() {
           ) : (
             <>
               <div>
-                <p className="text-xs uppercase tracking-wider text-muted-foreground">Yaqin tadbirlar</p>
-                <p className="font-display text-lg font-semibold">Keyingi 6 ta</p>
+                <p className="text-xs uppercase tracking-wider text-muted-foreground">{t("dynamic.calendar.yaqin_tadbirlar")}</p>
+                <p className="font-display text-lg font-semibold">{t("dynamic.calendar.keyingi_6_ta")}</p>
               </div>
               <div className="space-y-2 max-h-[460px] overflow-y-auto">
                 {upcoming.length === 0 ? (
@@ -487,12 +489,12 @@ export default function CalendarPage() {
           </DialogHeader>
           <div className="grid gap-3">
             <div className="grid gap-2">
-              <Label>Sarlavha *</Label>
+              <Label>{t("dynamic.lmsnews.sarlavha_")}</Label>
               <Input value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} placeholder="Yig'ilish, dars..." />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="grid gap-2">
-                <Label>Boshlanish *</Label>
+                <Label>{t("dynamic.calendar.boshlanish_")}</Label>
                 <div className="relative">
                   <Input 
                     type="datetime-local" 
@@ -504,7 +506,7 @@ export default function CalendarPage() {
                 </div>
               </div>
               <div className="grid gap-2">
-                <Label>Tugash *</Label>
+                <Label>{t("dynamic.calendar.tugash_")}</Label>
                 <div className="relative">
                   <Input 
                     type="datetime-local" 
@@ -518,17 +520,17 @@ export default function CalendarPage() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="grid gap-2">
-                <Label>Tashkilot</Label>
+                <Label>{t("dynamic.usersmanager.tashkilot")}</Label>
                 <Select value={form.organization_id} onValueChange={(v) => setForm((f) => ({ ...f, organization_id: v }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Barcha (umumiy)</SelectItem>
+                    <SelectItem value="all">{t("dynamic.calendar.barcha_umumiy")}</SelectItem>
                     {orgs.map((o) => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label>Rang</Label>
+                <Label>{t("dynamic.calendar.rang")}</Label>
                 <div className="flex gap-1.5 h-10 items-center">
                   {COLORS.map((c) => (
                     <button
@@ -543,17 +545,17 @@ export default function CalendarPage() {
               </div>
             </div>
             <div className="grid gap-2">
-              <Label>Joy</Label>
+              <Label>{t("dynamic.calendar.joy")}</Label>
               <Input value={form.location} onChange={(e) => setForm((f) => ({ ...f, location: e.target.value }))} placeholder="Onlayn, ofis..." />
             </div>
             <div className="grid gap-2">
-              <Label>Tavsif</Label>
+              <Label>{t("dynamic.telegramlinks.tavsif")}</Label>
               <Textarea rows={2} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} placeholder="Qisqacha..." />
             </div>
             <div className="flex items-center justify-between rounded-lg border border-border p-3">
               <div>
-                <p className="text-sm font-medium">Kun bo'yi</p>
-                <p className="text-xs text-muted-foreground">Vaqt belgilanmagan tadbir</p>
+                <p className="text-sm font-medium">{t("dynamic.calendar.kun_bo_yi")}</p>
+                <p className="text-xs text-muted-foreground">{t("dynamic.calendar.vaqt_belgilanmagan_tadbir")}</p>
               </div>
               <Switch checked={form.is_all_day} onCheckedChange={(v) => setForm((f) => ({ ...f, is_all_day: v }))} />
             </div>
@@ -563,22 +565,21 @@ export default function CalendarPage() {
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button variant="ghost" className="text-destructive mr-auto">
-                    <Trash2 className="h-4 w-4" /> O'chirish
-                  </Button>
+                    <Trash2 className="h-4 w-4" />{t("dynamic.usersmanager.o_chirish")}</Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>O'chirilsinmi?</AlertDialogTitle>
+                    <AlertDialogTitle>{t("dynamic.usersmanager.o_chirilsinmi")}</AlertDialogTitle>
                     <AlertDialogDescription>"{editing.title}" tadbiri o'chiriladi.</AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>Bekor</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => { remove(editing); setOpen(false); }} className="bg-destructive">O'chirish</AlertDialogAction>
+                    <AlertDialogCancel>{t("dynamic.usersmanager.bekor")}</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => { remove(editing); setOpen(false); }} className="bg-destructive">{t("dynamic.usersmanager.o_chirish")}</AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
             )}
-            <Button variant="ghost" onClick={() => setOpen(false)}>Bekor</Button>
+            <Button variant="ghost" onClick={() => setOpen(false)}>{t("dynamic.usersmanager.bekor")}</Button>
             <Button variant="hero" onClick={submit} disabled={submitting}>
               {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
               {editing ? "Saqlash" : "Qo'shish"}

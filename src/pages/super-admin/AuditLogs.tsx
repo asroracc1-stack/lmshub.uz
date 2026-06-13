@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useQuery } from "@tanstack/react-query";
@@ -62,6 +63,7 @@ const formatDate = (date: string | number[] | Date | null | undefined) => {
 };
 
 export default function AuditLogs() {
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(0);
   const debouncedSearch = useDebounce(searchTerm, 300);
@@ -98,8 +100,8 @@ export default function AuditLogs() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-display text-3xl font-bold text-slate-900 dark:text-white">Audit jurnali</h1>
-        <p className="text-slate-500 dark:text-slate-400">Tizimdagi barcha muhim amallar tarixi</p>
+        <h1 className="font-display text-3xl font-bold text-slate-900 dark:text-white">{t("dynamic.auditlogs.audit_jurnali")}</h1>
+        <p className="text-slate-500 dark:text-slate-400">{t("dynamic.auditlogs.tizimdagi_barcha_muhim_amallar_tarixi")}</p>
       </div>
 
       <div className="glass dark:bg-slate-900/50 dark:border-slate-800 rounded-2xl p-4 transition-all duration-500">
@@ -120,11 +122,11 @@ export default function AuditLogs() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Amal</TableHead>
-                  <TableHead>Obyekt</TableHead>
-                  <TableHead>Foydalanuvchi</TableHead>
-                  <TableHead>Tafsilotlar</TableHead>
-                  <TableHead className="text-right">Vaqt</TableHead>
+                  <TableHead>{t("dynamic.auditlogs.amal")}</TableHead>
+                  <TableHead>{t("dynamic.auditlogs.obyekt")}</TableHead>
+                  <TableHead>{t("dynamic.usersmanager.foydalanuvchi")}</TableHead>
+                  <TableHead>{t("dynamic.auditlogs.tafsilotlar")}</TableHead>
+                  <TableHead className="text-right">{t("dynamic.auditlogs.vaqt")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

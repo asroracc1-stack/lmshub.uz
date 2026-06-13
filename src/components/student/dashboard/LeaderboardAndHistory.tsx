@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { ArrowRight, FileText, Crown, User, ArrowUpRight } from "lucide-react";
@@ -9,6 +10,7 @@ interface LeaderboardAndHistoryProps {
 }
 
 export default function LeaderboardAndHistory({ data }: LeaderboardAndHistoryProps) {
+  const { t } = useTranslation();
   
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-full">
@@ -17,7 +19,7 @@ export default function LeaderboardAndHistory({ data }: LeaderboardAndHistoryPro
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="h-full">
         <Card className="p-5 rounded-3xl shadow-sm border-slate-100 h-full flex flex-col">
           <div className="flex justify-between items-center mb-5">
-            <h3 className="font-bold text-slate-900">Peshqadamlar</h3>
+            <h3 className="font-bold text-slate-900">{t("dynamic.leaderboardandhistory.peshqadamlar")}</h3>
             <button className="text-[10px] text-purple-600 font-medium flex items-center gap-1 hover:underline">
               Barchasini ko'rish <ArrowRight className="h-3 w-3" />
             </button>
@@ -63,7 +65,7 @@ export default function LeaderboardAndHistory({ data }: LeaderboardAndHistoryPro
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="h-full">
         <Card className="p-5 rounded-3xl shadow-sm border-slate-100 h-full flex flex-col">
           <div className="flex justify-between items-center mb-5">
-            <h3 className="font-bold text-slate-900">So'nggi testlar</h3>
+            <h3 className="font-bold text-slate-900">{t("dynamic.leaderboardandhistory.so_nggi_testlar")}</h3>
             <button className="text-[10px] text-purple-600 font-medium flex items-center gap-1 hover:underline">
               Barchasini ko'rish <ArrowRight className="h-3 w-3" />
             </button>
@@ -94,26 +96,26 @@ export default function LeaderboardAndHistory({ data }: LeaderboardAndHistoryPro
       {/* Account Info */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }} className="h-full">
         <Card className="p-5 rounded-3xl shadow-sm border-slate-100 h-full flex flex-col bg-slate-50 relative overflow-hidden">
-          <h3 className="font-bold text-slate-900 mb-4 relative z-10">Hisobingiz</h3>
+          <h3 className="font-bold text-slate-900 mb-4 relative z-10">{t("dynamic.leaderboardandhistory.hisobingiz")}</h3>
 
           <div className="flex items-center gap-3 mb-6 relative z-10">
             <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center">
               <Crown className="h-5 w-5 text-purple-600" />
             </div>
             <div>
-              <p className="text-sm font-bold text-slate-900">Premium</p>
-              <p className="text-[10px] text-slate-500">A'zolik turi</p>
+              <p className="text-sm font-bold text-slate-900">{t("dynamic.leaderboardandhistory.premium")}</p>
+              <p className="text-[10px] text-slate-500">{t("dynamic.leaderboardandhistory.a_zolik_turi")}</p>
             </div>
           </div>
 
           <div className="flex justify-between items-end mb-4 relative z-10">
             <div>
               <p className="text-2xl font-bold text-slate-900">{data.takenTestsCount}</p>
-              <p className="text-[10px] text-slate-500">Topshirilgan testlar</p>
+              <p className="text-[10px] text-slate-500">{t("dynamic.leaderboardandhistory.topshirilgan_testlar")}</p>
             </div>
             <div className="text-right">
               <p className="text-2xl font-bold text-slate-900">{data.overallProgress}%</p>
-              <p className="text-[10px] text-slate-500">Umumiy progress</p>
+              <p className="text-[10px] text-slate-500">{t("dynamic.leaderboardandhistory.umumiy_progress")}</p>
             </div>
           </div>
 

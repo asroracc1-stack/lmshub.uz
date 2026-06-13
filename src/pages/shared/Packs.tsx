@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useState, useMemo, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
@@ -81,6 +82,7 @@ const NARRATIVES: Record<string, string> = {
 const formatCard = (raw: string) => raw.replace(/\D/g, "").replace(/(.{4})/g, "$1 ").trim();
 
 export default function Packs() {
+  const { t } = useTranslation();
   const { user, role, profile } = useAuth();
   const queryClient = useQueryClient();
   const isSuper = role === "super_admin";
@@ -214,11 +216,11 @@ export default function Packs() {
     e.preventDefault();
     if (!checkoutPack) return;
     if (!selectedAdmin) {
-      toast.error("Iltimos, to'lovni qabul qiluvchi adminni tanlang");
+      toast.error(t("dynamic.packs.iltimos_to_lovni_qabul_qiluvchi_adminni_"));
       return;
     }
     if (!file) {
-      toast.error("Iltimos, to'lov cheki rasmini yuklang");
+      toast.error(t("dynamic.payment.iltimos_to_lov_cheki_rasmini_yuklang"));
       return;
     }
 
@@ -271,11 +273,11 @@ export default function Packs() {
     if (e) e.preventDefault();
     if (!checkoutPack) return;
     if (!clientName.trim() || !clientPhone.trim() || !clientEmail.trim()) {
-      toast.error("Iltimos, ismingiz, telefon raqamingiz va emailingizni to'liq kiriting");
+      toast.error(t("dynamic.packs.iltimos_ismingiz_telefon_raqamingiz_va_e"));
       return;
     }
     if (!file) {
-      toast.error("Iltimos, to'lov cheki rasmini yuklang");
+      toast.error(t("dynamic.payment.iltimos_to_lov_cheki_rasmini_yuklang"));
       return;
     }
 
@@ -324,11 +326,11 @@ export default function Packs() {
   const handleTelegramSubmit = async () => {
     if (!checkoutPack) return;
     if (!clientName.trim() || !clientPhone.trim() || !clientEmail.trim()) {
-      toast.error("Iltimos, ismingiz, telefon raqamingiz va emailingizni to'liq kiriting");
+      toast.error(t("dynamic.packs.iltimos_ismingiz_telefon_raqamingiz_va_e"));
       return;
     }
     if (!file) {
-      toast.error("Iltimos, to'lov cheki rasmini yuklang");
+      toast.error(t("dynamic.payment.iltimos_to_lov_cheki_rasmini_yuklang"));
       return;
     }
 
@@ -415,7 +417,7 @@ export default function Packs() {
       setDeleteId(null);
     },
     onError: () => {
-      toast.error("O'chirishda xatolik yuz berdi");
+      toast.error(t("dynamic.packs.o_chirishda_xatolik_yuz_berdi"));
     },
   });
 
@@ -459,13 +461,13 @@ export default function Packs() {
   const savePack = async () => {
     if (!editing || !editing.type) return;
     if (editing.price !== undefined && editing.price < 0) {
-      toast.error("Narx manfiy bo'lishi mumkin emas!");
+      toast.error(t("dynamic.packs.narx_manfiy_bo_lishi_mumkin_emas"));
       return;
     }
 
     const cleanFeatures = editFeatures.map(f => f.text.trim()).filter(f => f !== "");
     if (cleanFeatures.length === 0) {
-      toast.error("Kamida bitta imkoniyat kiritishingiz shart!");
+      toast.error(t("dynamic.packs.kamida_bitta_imkoniyat_kiritishingiz_sha"));
       return;
     }
 
@@ -540,8 +542,8 @@ export default function Packs() {
       ) : packs.length === 0 ? (
         <Card className="p-16 text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-md rounded-[3rem] border-none shadow-xl">
           <Layers className="h-16 w-16 text-slate-400 mx-auto mb-4 animate-pulse" />
-          <h3 className="text-2xl font-bold text-slate-700 dark:text-slate-300">Hech qanday paketlar topilmadi</h3>
-          <p className="text-slate-500 dark:text-slate-400 mt-2">Hozircha tizimda faol o'quv paketlari mavjud emas.</p>
+          <h3 className="text-2xl font-bold text-slate-700 dark:text-slate-300">{t("dynamic.packs.hech_qanday_paketlar_topilmadi")}</h3>
+          <p className="text-slate-500 dark:text-slate-400 mt-2">{t("dynamic.packs.hozircha_tizimda_faol_o_quv_paketlari_ma")}</p>
         </Card>
       ) : (
         <div className="space-y-12">
@@ -561,14 +563,14 @@ export default function Packs() {
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-slate-100 dark:border-white/5 text-[11px] font-black uppercase tracking-widest text-slate-400">
-                      <th className="py-4">Paket Nomi</th>
-                      <th className="py-4">Turi</th>
-                      <th className="py-4">Narxi</th>
-                      <th className="py-4">Muddat</th>
-                      <th className="py-4">Status</th>
-                      <th className="py-4">Mocklar soni</th>
-                      <th className="py-4">Sotuvlar</th>
-                      <th className="py-4 text-right">Amallar</th>
+                      <th className="py-4">{t("dynamic.packs.paket_nomi")}</th>
+                      <th className="py-4">{t("dynamic.packs.turi")}</th>
+                      <th className="py-4">{t("dynamic.packs.narxi")}</th>
+                      <th className="py-4">{t("dynamic.packs.muddat")}</th>
+                      <th className="py-4">{t("dynamic.finance.status")}</th>
+                      <th className="py-4">{t("dynamic.packs.mocklar_soni")}</th>
+                      <th className="py-4">{t("dynamic.packs.sotuvlar")}</th>
+                      <th className="py-4 text-right">{t("dynamic.usersmanager.amallar")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-white/5 text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -686,7 +688,7 @@ export default function Packs() {
                           setDeleteId(p.id);
                         }}
                         className="h-8 w-8 rounded-full text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors"
-                        title="O'chirish"
+                        title={t("dynamic.usersmanager.o_chirish")}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -771,9 +773,7 @@ export default function Packs() {
                           <span className={cn(
                             "text-[10px] font-black tracking-wider uppercase",
                             isFree ? "text-slate-500" : "text-white/80"
-                          )}>
-                            UZS
-                          </span>
+                          )}>{t("dynamic.finance.uzs")}</span>
                         </div>
                         {!isFree && (
                           <div className={cn(
@@ -825,7 +825,7 @@ export default function Packs() {
                             <Button className="w-full bg-transparent border border-[#9F86C0] hover:bg-purple-500/5 text-[#9F86C0] h-12 rounded-xl font-bold uppercase text-[10px] tracking-widest transition-transform duration-300 hover:scale-[1.02] shadow-none">
                               Boshlash
                             </Button>
-                            <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 tracking-wider">Doimiy bepul</span>
+                            <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 tracking-wider">{t("dynamic.packs.doimiy_bepul")}</span>
                           </>
                         ) : (
                           <>
@@ -868,7 +868,7 @@ export default function Packs() {
               </div>
               Tarifni Sotib Olish
             </DialogTitle>
-            <p className="text-xs text-slate-400 font-medium mt-1">Ma'lumotlaringizni to'ldiring va to'lovni tasdiqlang</p>
+            <p className="text-xs text-slate-400 font-medium mt-1">{t("dynamic.packs.ma_lumotlaringizni_to_ldiring_va_to_lovn")}</p>
           </DialogHeader>
 
           {checkoutPack && (
@@ -876,21 +876,21 @@ export default function Packs() {
               {/* Pack details preview */}
               <div className="p-5 bg-gradient-to-r from-purple-500/10 to-violet-500/10 dark:from-purple-500/5 dark:to-violet-500/5 rounded-2xl border border-purple-500/20 flex items-center justify-between">
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-purple-500 dark:text-purple-400">Tanlangan tarif</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-purple-500 dark:text-purple-400">{t("dynamic.packs.tanlangan_tarif")}</p>
                   <p className="text-xl font-black text-slate-800 dark:text-white">{checkoutPack.name}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Narxi</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t("dynamic.packs.narxi")}</p>
                   <p className="text-xl font-black text-purple-500">{checkoutPack.price.toLocaleString()} UZS</p>
                 </div>
               </div>
 
               {/* Client Info Fields */}
               <div className="space-y-4">
-                <h4 className="text-[11px] font-black uppercase tracking-widest text-slate-400">Sizning ma'lumotlaringiz</h4>
+                <h4 className="text-[11px] font-black uppercase tracking-widest text-slate-400">{t("dynamic.packs.sizning_ma_lumotlaringiz")}</h4>
                 <div className="grid grid-cols-1 gap-3">
                   <div className="space-y-1">
-                    <Label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Ism Familiya</Label>
+                    <Label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">{t("dynamic.packs.ism_familiya")}</Label>
                     <Input 
                       value={clientName} 
                       onChange={e => setClientName(e.target.value)} 
@@ -910,7 +910,7 @@ export default function Packs() {
                       />
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Telefon Raqam</Label>
+                      <Label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">{t("dynamic.packs.telefon_raqam")}</Label>
                       <Input 
                         value={clientPhone} 
                         onChange={e => setClientPhone(e.target.value)} 
@@ -924,14 +924,14 @@ export default function Packs() {
 
               {/* Payment card */}
               <div className="space-y-3">
-                <h4 className="text-[11px] font-black uppercase tracking-widest text-slate-400">To'lov uchun karta ma'lumotlari</h4>
+                <h4 className="text-[11px] font-black uppercase tracking-widest text-slate-400">{t("dynamic.packs.to_lov_uchun_karta_ma_lumotlari")}</h4>
                 <div className="relative h-40 w-full rounded-2xl bg-gradient-to-br from-slate-900 via-purple-950 to-slate-900 p-6 text-white shadow-xl overflow-hidden flex flex-col justify-between group border border-purple-500/20">
                   <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-purple-500/5 blur-xl pointer-events-none group-hover:scale-150 transition-transform duration-700" />
                   
                   <div className="flex justify-between items-start">
                     <div className="space-y-1">
-                      <p className="text-[9px] uppercase tracking-widest font-bold text-purple-400/80">Karta egasi (Ahror Fayzullayev)</p>
-                      <p className="font-bold text-sm tracking-tight text-slate-200">Ahror Fayzullayev</p>
+                      <p className="text-[9px] uppercase tracking-widest font-bold text-purple-400/80">{t("dynamic.packs.karta_egasi_ahror_fayzullayev")}</p>
+                      <p className="font-bold text-sm tracking-tight text-slate-200">{t("dynamic.packs.ahror_fayzullayev")}</p>
                     </div>
                     <CreditCard className="h-5 w-5 text-purple-500" />
                   </div>
@@ -952,7 +952,7 @@ export default function Packs() {
                   </div>
 
                   <div className="flex justify-between items-end text-xs">
-                    <span className="text-[8px] uppercase tracking-wider font-bold text-slate-400">To'lov tizimi</span>
+                    <span className="text-[8px] uppercase tracking-wider font-bold text-slate-400">{t("dynamic.packs.to_lov_tizimi")}</span>
                     <Badge variant="outline" className="text-purple-400 border-purple-500/30 text-[9px] uppercase font-bold tracking-wider">
                       HUMO
                     </Badge>
@@ -962,7 +962,7 @@ export default function Packs() {
 
               {/* Receipt File Upload */}
               <div className="space-y-2">
-                <Label className="text-[10px] uppercase font-black text-slate-400 tracking-widest">To'lov cheki (Rasm yoki Chek)</Label>
+                <Label className="text-[10px] uppercase font-black text-slate-400 tracking-widest">{t("dynamic.packs.to_lov_cheki_rasm_yoki_chek")}</Label>
                 {preview ? (
                   <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-white/10 p-3 bg-slate-50 dark:bg-white/5 flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -1001,8 +1001,8 @@ export default function Packs() {
                       <Send className="h-5 w-5" />
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-slate-700 dark:text-slate-350">To'lov chekini yuklang</p>
-                      <p className="text-[10px] text-slate-400 mt-1">Bosing yoki bu yerga sudrab olib keling (PNG, JPG)</p>
+                      <p className="text-xs font-bold text-slate-700 dark:text-slate-350">{t("dynamic.packs.to_lov_chekini_yuklang")}</p>
+                      <p className="text-[10px] text-slate-400 mt-1">{t("dynamic.packs.bosing_yoki_bu_yerga_sudrab_olib_keling_")}</p>
                     </div>
                   </div>
                 )}
@@ -1042,7 +1042,7 @@ export default function Packs() {
           </div>
           <h3 className="text-2xl font-black tracking-tight text-slate-800 dark:text-white">To'lov yuborildi! 🎉</h3>
           <p className="text-sm text-slate-400 font-medium mt-3 leading-relaxed">
-            Tez orada mas'ul adminlar to'lovingizni tekshirib <b>{requestSent?.name}</b> paketingizni faollashtiradi va profilingiz avtomatik ravishda <b>STUDENT</b> roliga ko'tariladi. Telegram orqali xabar yuborildi!
+            Tez orada mas'ul adminlar to'lovingizni tekshirib <b>{requestSent?.name}</b>{t("dynamic.packs.paketingizni_faollashtiradi_va_profiling")}<b>{t("dynamic.packs.student")}</b> roliga ko'tariladi. Telegram orqali xabar yuborildi!
           </p>
           <Button onClick={() => setRequestSent(null)} className="w-full mt-8 bg-purple-500 hover:bg-purple-600 text-white rounded-2xl h-14 font-black uppercase text-xs tracking-widest shadow-lg shadow-purple-500/20">
             Tushunarli
@@ -1061,7 +1061,7 @@ export default function Packs() {
                 </div>
                 {editing?.id ? "Paketni Tahrirlash" : "Yangi Paket Yaratish"}
               </DialogTitle>
-              <p className="text-xs text-slate-400 font-medium">Barcha o'quv planlari va mocklar tarkibini boshqarish</p>
+              <p className="text-xs text-slate-400 font-medium">{t("dynamic.packs.barcha_o_quv_planlari_va_mocklar_tarkibi")}</p>
             </DialogHeader>
           </div>
 
@@ -1069,41 +1069,41 @@ export default function Packs() {
             {editing && (
               <div className="grid sm:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Paket Turi (KOD)</Label>
+                  <Label className="text-[10px] uppercase font-black text-slate-400 tracking-widest">{t("dynamic.packs.paket_turi_kod")}</Label>
                   <Select value={editing.type} onValueChange={(v: PackType) => setEditing({...editing, type: v, code: v, price: v === "FREE" ? 0 : (editing.price || 0)})}>
                     <SelectTrigger className={cn("h-12 rounded-xl bg-slate-50 dark:bg-white/5 border-none", editing.type === "ELITE" && "ring-2 ring-amber-500/50", editing.type === "PRO" && "ring-2 ring-primary/50")}>
                       <SelectValue placeholder="Turini tanlang" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="FREE">Tekin (FREE)</SelectItem>
-                      <SelectItem value="PRO">Professional (PRO)</SelectItem>
-                      <SelectItem value="ELITE">Cheksiz (ELITE)</SelectItem>
+                      <SelectItem value="FREE">{t("dynamic.packs.tekin_free")}</SelectItem>
+                      <SelectItem value="PRO">{t("dynamic.packs.professional_pro")}</SelectItem>
+                      <SelectItem value="ELITE">{t("dynamic.packs.cheksiz_elite")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Paket Nomi</Label>
+                  <Label className="text-[10px] uppercase font-black text-slate-400 tracking-widest">{t("dynamic.packs.paket_nomi")}</Label>
                   <Input className="bg-slate-50 dark:bg-white/5 h-12 rounded-xl border-none" value={editing.name} onChange={e => setEditing({...editing, name: e.target.value})} />
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Narx (UZS)</Label>
+                  <Label className="text-[10px] uppercase font-black text-slate-400 tracking-widest">{t("dynamic.packs.narx_uzs")}</Label>
                   <Input type="number" className="bg-slate-50 dark:bg-white/5 h-12 rounded-xl border-none disabled:opacity-50" value={editing.price} disabled={editing.type === "FREE"} onChange={e => setEditing({...editing, price: +e.target.value})} />
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Muddat (Oy)</Label>
+                  <Label className="text-[10px] uppercase font-black text-slate-400 tracking-widest">{t("dynamic.packs.muddat_oy")}</Label>
                   <Select value={String(editing.duration)} onValueChange={(v) => setEditing({...editing, duration: +v})}>
                     <SelectTrigger className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border-none">
-                      <SelectValue placeholder="Muddat" />
+                      <SelectValue placeholder={t("dynamic.packs.muddat")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1">1 oy</SelectItem>
-                      <SelectItem value="3">3 oy</SelectItem>
-                      <SelectItem value="6">6 oy</SelectItem>
-                      <SelectItem value="12">12 oy</SelectItem>
-                      <SelectItem value="-1">Cheksiz (Abadiy)</SelectItem>
+                      <SelectItem value="1">{t("dynamic.packs.1_oy")}</SelectItem>
+                      <SelectItem value="3">{t("dynamic.packs.3_oy")}</SelectItem>
+                      <SelectItem value="6">{t("dynamic.packs.6_oy")}</SelectItem>
+                      <SelectItem value="12">{t("dynamic.packs.12_oy")}</SelectItem>
+                      <SelectItem value="-1">{t("dynamic.packs.cheksiz_abadiy")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -1112,7 +1112,7 @@ export default function Packs() {
                 <div className="sm:col-span-2 grid sm:grid-cols-2 gap-6 pt-4 border-t border-slate-100 dark:border-white/5">
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <Label className="text-[11px] uppercase font-black text-slate-500 dark:text-slate-400 tracking-widest">Imkoniyatlar Ro'yxati</Label>
+                      <Label className="text-[11px] uppercase font-black text-slate-500 dark:text-slate-400 tracking-widest">{t("dynamic.packs.imkoniyatlar_ro_yxati")}</Label>
                       <Badge variant="outline" className={cn("px-2", editFeatures.length >= 10 ? "text-amber-500 border-amber-500/20" : "text-primary border-primary/20")}>{editFeatures.length} / 10</Badge>
                     </div>
                     <div className="space-y-3 max-h-[250px] overflow-y-auto pr-2 custom-scrollbar py-1">
@@ -1134,7 +1134,7 @@ export default function Packs() {
 
                   {/* Right side: Mock exams multi-select list */}
                   <div className="space-y-4">
-                    <Label className="text-[11px] uppercase font-black text-slate-500 dark:text-slate-400 tracking-widest">Kiritiladigan Mock Testlar</Label>
+                    <Label className="text-[11px] uppercase font-black text-slate-500 dark:text-slate-400 tracking-widest">{t("dynamic.packs.kiritiladigan_mock_testlar")}</Label>
                     
                     <div className="relative">
                       <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -1176,14 +1176,14 @@ export default function Packs() {
 
                 <div className="flex items-center justify-between p-5 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-white/5 shadow-sm">
                   <div className="space-y-0.5">
-                    <p className="text-xs font-black uppercase tracking-tighter text-slate-700 dark:text-white">Mashhur (Popular)</p>
+                    <p className="text-xs font-black uppercase tracking-tighter text-slate-700 dark:text-white">{t("dynamic.packs.mashhur_popular")}</p>
                   </div>
                   <Switch checked={!!editing.isPopular} onCheckedChange={v => setEditing({...editing, isPopular: v})} className="data-[state=checked]:bg-primary" />
                 </div>
 
                 <div className="flex items-center justify-between p-5 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-white/5 shadow-sm">
                   <div className="space-y-0.5">
-                    <p className="text-xs font-black uppercase tracking-tighter text-slate-700 dark:text-white">Faol (Active)</p>
+                    <p className="text-xs font-black uppercase tracking-tighter text-slate-700 dark:text-white">{t("dynamic.packs.faol_active")}</p>
                   </div>
                   <Switch checked={editing.status === "ACTIVE"} onCheckedChange={v => setEditing({...editing, status: v ? "ACTIVE" : "INACTIVE"})} className="data-[state=checked]:bg-primary" />
                 </div>
@@ -1203,14 +1203,14 @@ export default function Packs() {
       <AlertDialog open={!!deleteId} onOpenChange={v => !v && setDeleteId(null)}>
         <AlertDialogContent className="bg-white dark:bg-slate-900 border-none rounded-[2.5rem] shadow-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-2xl font-black tracking-tight">O'chirishni tasdiqlaysizmi?</AlertDialogTitle>
+            <AlertDialogTitle className="text-2xl font-black tracking-tight">{t("dynamic.finance.o_chirishni_tasdiqlaysizmi")}</AlertDialogTitle>
             <AlertDialogDescription className="text-slate-400">
               Bu paketni butunlay tizimdan o'chirasiz. Bu amalni qaytarib bo'lmaydi.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="mt-8 gap-3">
-            <AlertDialogCancel className="bg-slate-100 dark:bg-white/5 border-none text-slate-500 rounded-2xl h-14 px-8 font-bold">Bekor qilish</AlertDialogCancel>
-            <AlertDialogAction onClick={deletePack} className="bg-red-500 hover:bg-red-600 text-white rounded-2xl h-14 px-8 font-black uppercase text-xs tracking-widest shadow-lg shadow-red-500/20">Ha, o'chirilsin</AlertDialogAction>
+            <AlertDialogCancel className="bg-slate-100 dark:bg-white/5 border-none text-slate-500 rounded-2xl h-14 px-8 font-bold">{t("dynamic.pricingplans.bekor_qilish")}</AlertDialogCancel>
+            <AlertDialogAction onClick={deletePack} className="bg-red-500 hover:bg-red-600 text-white rounded-2xl h-14 px-8 font-black uppercase text-xs tracking-widest shadow-lg shadow-red-500/20">{t("dynamic.packs.ha_o_chirilsin")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

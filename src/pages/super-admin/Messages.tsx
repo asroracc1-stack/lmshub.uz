@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { z } from "zod";
@@ -84,6 +85,7 @@ const timeAgo = (iso: string) => {
 };
 
 export default function Messages() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
@@ -181,7 +183,7 @@ export default function Messages() {
         type: parsed.data.targetType === "broadcast_all" ? "BROADCAST" : "DIRECT",
         receiverId: parsed.data.receiver_id || null,
       });
-      toast.success("Xabar yuborildi");
+      toast.success(t("dynamic.messages.xabar_yuborildi"));
       setOpen(false);
       resetForm();
       load();
@@ -195,7 +197,7 @@ export default function Messages() {
   const remove = async (m: Message) => {
     try {
       await api.delete(`/messages/${m.id}`);
-      toast.success("O'chirildi");
+      toast.success(t("dynamic.usersmanager.o_chirildi"));
       if (active?.id === m.id) setActive(null);
       load();
     } catch (error: any) {
@@ -213,33 +215,33 @@ export default function Messages() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="font-display text-3xl font-bold">Xabarlar</h1>
-          <p className="text-muted-foreground">Foydalanuvchilarga xabar yo'llash</p>
+          <h1 className="font-display text-3xl font-bold">{t("dynamic.messages.xabarlar")}</h1>
+          <p className="text-muted-foreground">{t("dynamic.messages.foydalanuvchilarga_xabar_yo_llash")}</p>
         </div>
         <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
           <DialogTrigger asChild>
-            <Button variant="hero"><Plus className="h-4 w-4" /> Yangi xabar</Button>
+            <Button variant="hero"><Plus className="h-4 w-4" />{t("dynamic.messages.yangi_xabar")}</Button>
           </DialogTrigger>
           <DialogContent className="max-w-lg">
             <DialogHeader>
-              <DialogTitle>Yangi xabar yuborish</DialogTitle>
+              <DialogTitle>{t("dynamic.messages.yangi_xabar_yuborish")}</DialogTitle>
             </DialogHeader>
             <div className="grid gap-3">
               <div className="grid gap-2">
-                <Label>Yo'naltirish</Label>
+                <Label>{t("dynamic.messages.yo_naltirish")}</Label>
                 <Select value={form.targetType} onValueChange={(v: "direct" | "broadcast_org" | "broadcast_all") => setForm((f) => ({ ...f, targetType: v, organization_id: "", receiver_id: "" }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="direct"><div className="flex items-center gap-2"><UserIcon className="h-3.5 w-3.5" /> Bitta foydalanuvchiga</div></SelectItem>
-                    <SelectItem value="broadcast_org"><div className="flex items-center gap-2"><Building2 className="h-3.5 w-3.5" /> Tashkilot a'zolariga</div></SelectItem>
-                    <SelectItem value="broadcast_all"><div className="flex items-center gap-2"><Megaphone className="h-3.5 w-3.5" /> Hammasiga (broadcast)</div></SelectItem>
+                    <SelectItem value="direct"><div className="flex items-center gap-2"><UserIcon className="h-3.5 w-3.5" />{t("dynamic.messages.bitta_foydalanuvchiga")}</div></SelectItem>
+                    <SelectItem value="broadcast_org"><div className="flex items-center gap-2"><Building2 className="h-3.5 w-3.5" />{t("dynamic.messages.tashkilot_a_zolariga")}</div></SelectItem>
+                    <SelectItem value="broadcast_all"><div className="flex items-center gap-2"><Megaphone className="h-3.5 w-3.5" />{t("dynamic.messages.hammasiga_broadcast")}</div></SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               {form.targetType === "broadcast_org" && (
                 <div className="grid gap-2">
-                  <Label>Tashkilotni tanlang</Label>
+                  <Label>{t("dynamic.messages.tashkilotni_tanlang")}</Label>
                   <Select value={form.organization_id} onValueChange={(v) => setForm((f) => ({ ...f, organization_id: v, receiver_id: "" }))}>
                     <SelectTrigger><SelectValue placeholder="Tashkilotni tanlang..." /></SelectTrigger>
                     <SelectContent className="max-h-56">
@@ -253,7 +255,7 @@ export default function Messages() {
 
               {(form.targetType === "direct" || (form.targetType === "broadcast_org" && form.organization_id)) && (
                 <div className="grid gap-2">
-                  <Label>Qabul qiluvchi</Label>
+                  <Label>{t("dynamic.messages.qabul_qiluvchi")}</Label>
                   <Select value={form.receiver_id} onValueChange={(v) => setForm((f) => ({ ...f, receiver_id: v }))}>
                     <SelectTrigger><SelectValue placeholder="Foydalanuvchi tanlang..." /></SelectTrigger>
                     <SelectContent className="max-h-56">
@@ -266,16 +268,16 @@ export default function Messages() {
                   </Select>
                 </div>
               )}              <div className="grid gap-2">
-                <Label>Mavzu *</Label>
+                <Label>{t("dynamic.messages.mavzu_")}</Label>
                 <Input value={form.subject} onChange={(e) => setForm((f) => ({ ...f, subject: e.target.value }))} placeholder="Xabar mavzusi" />
               </div>
               <div className="grid gap-2">
-                <Label>Matn *</Label>
+                <Label>{t("dynamic.messages.matn_")}</Label>
                 <Textarea rows={6} value={form.content} onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))} placeholder="Xabar matnini yozing..." />
               </div>
             </div>
             <DialogFooter>
-              <Button variant="ghost" onClick={() => setOpen(false)}>Bekor</Button>
+              <Button variant="ghost" onClick={() => setOpen(false)}>{t("dynamic.usersmanager.bekor")}</Button>
               <Button variant="hero" onClick={submit} disabled={submitting}>
                 {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                 Yuborish
@@ -333,7 +335,7 @@ export default function Messages() {
             ) : filtered.length === 0 ? (
               <div className="p-12 text-center">
                 <Inbox className="h-10 w-10 text-muted-foreground mx-auto mb-3 opacity-40" />
-                <p className="text-sm text-muted-foreground">Xabarlar yo'q</p>
+                <p className="text-sm text-muted-foreground">{t("dynamic.messages.xabarlar_yo_q")}</p>
               </div>
             ) : (
               <ul className="divide-y divide-border">
@@ -415,12 +417,12 @@ export default function Messages() {
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>O'chirilsinmi?</AlertDialogTitle>
-                      <AlertDialogDescription>Xabar o'chiriladi.</AlertDialogDescription>
+                      <AlertDialogTitle>{t("dynamic.usersmanager.o_chirilsinmi")}</AlertDialogTitle>
+                      <AlertDialogDescription>{t("dynamic.messages.xabar_o_chiriladi")}</AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel>Bekor</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => remove(active)} className="bg-destructive">O'chirish</AlertDialogAction>
+                      <AlertDialogCancel>{t("dynamic.usersmanager.bekor")}</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => remove(active)} className="bg-destructive">{t("dynamic.usersmanager.o_chirish")}</AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
@@ -433,8 +435,8 @@ export default function Messages() {
             <div className="flex-1 grid place-items-center text-center p-8">
               <div>
                 <MessagesSquare className="h-14 w-14 text-muted-foreground mx-auto mb-4 opacity-40" />
-                <p className="font-display text-lg">Xabar tanlang</p>
-                <p className="text-sm text-muted-foreground">Yoki yangi xabar yuboring</p>
+                <p className="font-display text-lg">{t("dynamic.messages.xabar_tanlang")}</p>
+                <p className="text-sm text-muted-foreground">{t("dynamic.messages.yoki_yangi_xabar_yuboring")}</p>
               </div>
             </div>
           )}

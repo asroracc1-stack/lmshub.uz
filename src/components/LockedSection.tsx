@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { Lock, Sparkles } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -12,7 +13,8 @@ interface Props {
  * Premium locked overlay shown to users who haven't purchased
  * a pack that unlocks this section.
  */
-export default function LockedSection({ title, description }: Props) {
+export default function LockedSection({
+  const { t } = useTranslation(); title, description }: Props) {
   return (
     <div className="mx-auto max-w-2xl py-12">
       <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-primary/10 via-background to-accent/10 p-10 text-center shadow-xl">
@@ -33,10 +35,10 @@ export default function LockedSection({ title, description }: Props) {
           </p>
           <div className="flex flex-wrap justify-center gap-3">
             <Button asChild size="lg" className="shadow-lg shadow-primary/30">
-              <Link to="/user/packs">Paketlarni ko'rish</Link>
+              <Link to="/user/packs">{t("dynamic.lockedsection.paketlarni_ko_rish")}</Link>
             </Button>
             <Button asChild size="lg" variant="outline">
-              <Link to="/user/chat">Pack manager bilan yozish</Link>
+              <Link to="/user/chat">{t("dynamic.lockedsection.pack_manager_bilan_yozish")}</Link>
             </Button>
           </div>
         </div>

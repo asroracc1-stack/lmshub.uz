@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +9,7 @@ import { Link } from "react-router-dom";
 import WelcomeBanner from "@/components/shared/WelcomeBanner";
 
 export default function PackManagerDashboard() {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     total: 0,
@@ -80,10 +82,10 @@ export default function PackManagerDashboard() {
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
         <Stat icon={Wallet} label="Jami to'lovlar" value={stats.total} color="from-blue-500/10 to-blue-500/5" />
-        <Stat icon={Clock} label="Kutilayotgan" value={stats.pending} color="from-amber-500/15 to-amber-500/5" />
-        <Stat icon={CheckCircle2} label="Tasdiqlangan" value={stats.paid} color="from-purple-500/15 to-purple-500/5" />
-        <Stat icon={AlertTriangle} label="Rad etilgan" value={stats.rejected} color="from-rose-500/10 to-rose-500/5" />
-        <Stat icon={Crown} label="Faol obunalar" value={stats.activeSubs} color="from-violet-500/15 to-violet-500/5" />
+        <Stat icon={Clock} label={t("dynamic.payments.kutilayotgan")} value={stats.pending} color="from-amber-500/15 to-amber-500/5" />
+        <Stat icon={CheckCircle2} label={t("dynamic.orgpayments.tasdiqlangan")} value={stats.paid} color="from-purple-500/15 to-purple-500/5" />
+        <Stat icon={AlertTriangle} label={t("dynamic.payments.rad_etilgan")} value={stats.rejected} color="from-rose-500/10 to-rose-500/5" />
+        <Stat icon={Crown} label={t("dynamic.subscriptions.faol_obunalar")} value={stats.activeSubs} color="from-violet-500/15 to-violet-500/5" />
         <Stat icon={Clock} label="Tugagan obunalar" value={stats.expiredSubs} color="from-slate-500/10 to-slate-500/5" />
         <Stat icon={TrendingUp} label="Bugungi" value={`${stats.todayCount} · ${stats.todayRevenue.toLocaleString()} so'm`} color="from-fuchsia-500/15 to-fuchsia-500/5" />
         <Stat icon={TrendingUp} label="Oylik daromad" value={`${stats.monthRevenue.toLocaleString()} so'm`} color="from-purple-500/20 to-blue-500/10" />
@@ -91,7 +93,7 @@ export default function PackManagerDashboard() {
 
       <Card className="p-5">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-display font-semibold flex items-center gap-2"><Clock className="h-4 w-4 text-amber-500" /> Kutilayotgan to'lovlar</h2>
+          <h2 className="font-display font-semibold flex items-center gap-2"><Clock className="h-4 w-4 text-amber-500" />{t("dynamic.dashboard.kutilayotgan_to_lovlar")}</h2>
           <Link to="/pack-manager/payments" className="text-xs text-purple-500 hover:underline">Hammasini ko'rish →</Link>
         </div>
         {recent.length === 0 ? (
@@ -106,7 +108,7 @@ export default function PackManagerDashboard() {
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="font-display font-semibold">{Number(p.amount).toLocaleString()} so'm</span>
-                  <Badge className="bg-amber-500 text-white">Pending</Badge>
+                  <Badge className="bg-amber-500 text-white">{t("dynamic.payments.pending")}</Badge>
                 </div>
               </div>
             ))}

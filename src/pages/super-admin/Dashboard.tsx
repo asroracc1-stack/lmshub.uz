@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import {
   Building2,
@@ -96,6 +97,7 @@ import { toast } from "sonner";
 import WelcomeBanner from "@/components/shared/WelcomeBanner";
 
 export default function SuperAdminDashboard() {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const { data, isLoading } = useSuperAdminDashboard();
 
@@ -150,11 +152,11 @@ export default function SuperAdminDashboard() {
       await api.post("/admin/system/clear-cache");
     },
     onSuccess: () => {
-      toast.success("Tizim keshi tozalandi va yangilandi!");
+      toast.success(t("dynamic.dashboard.tizim_keshi_tozalandi_va_yangilandi"));
       qc.invalidateQueries({ queryKey: ["super-admin-dashboard-stats"] });
     },
     onError: () => {
-      toast.error("Xatolik yuz berdi");
+      toast.error(t("dynamic.parents.xatolik_yuz_berdi"));
     }
   });
 
@@ -167,7 +169,7 @@ export default function SuperAdminDashboard() {
     { label: "Adminlar", value: stats.admins, icon: UserCog, accent: "from-secondary to-accent" },
     { label: "Administratorlar", value: stats.administrators, icon: UserCog, accent: "from-primary to-accent" },
     { label: "Ota-onalar", value: stats.parents, icon: Heart, accent: "from-pink-500 to-rose-500" },
-    { label: "Guruhlar", value: stats.groups, icon: Users2, accent: "from-purple-400 to-violet-500" },
+    { label: t("dynamic.startuppitch.guruhlar"), value: stats.groups, icon: Users2, accent: "from-purple-400 to-violet-500" },
     { label: "Fanlar", value: stats.totalSubjects, icon: BookOpen, accent: "from-violet-400 to-purple-500" },
     { label: "Oddiy Userlar", value: stats.users, icon: Users, accent: "from-blue-500 to-fuchsia-500" },
   ];
@@ -185,8 +187,8 @@ export default function SuperAdminDashboard() {
     <div className="space-y-6">
       <WelcomeBanner />
       <div>
-        <h1 className="font-display text-3xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground">Tizim bo'yicha real-time statistika</p>
+        <h1 className="font-display text-3xl font-bold">{t("dynamic.dashboard.dashboard")}</h1>
+        <p className="text-muted-foreground">{t("dynamic.dashboard.tizim_bo_yicha_realtime_statistika")}</p>
       </div>
 
       {/* Stat cards */}
@@ -243,10 +245,10 @@ export default function SuperAdminDashboard() {
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span>
                 </span>
-                <span className="text-[9px] font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider">Online</span>
+                <span className="text-[9px] font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider">{t("dynamic.dashboard.online")}</span>
               </div>
             </div>
-            <p className="mt-3 md:mt-4 text-[10px] md:text-xs uppercase tracking-wider text-slate-600 dark:text-muted-foreground line-clamp-1">Server holati</p>
+            <p className="mt-3 md:mt-4 text-[10px] md:text-xs uppercase tracking-wider text-slate-600 dark:text-muted-foreground line-clamp-1">{t("dynamic.dashboard.server_holati")}</p>
           </div>
           {healthLoading ? (
             <Skeleton className="h-8 w-2/3 mt-1" />
@@ -271,14 +273,14 @@ export default function SuperAdminDashboard() {
                 <Zap className="h-4 w-4 md:h-5 md:w-5 text-white" />
               </div>
             </div>
-            <p className="mt-3 md:mt-4 text-[10px] md:text-xs uppercase tracking-wider text-slate-600 dark:text-muted-foreground line-clamp-1">Hozir Onlayn</p>
+            <p className="mt-3 md:mt-4 text-[10px] md:text-xs uppercase tracking-wider text-slate-600 dark:text-muted-foreground line-clamp-1">{t("dynamic.dashboard.hozir_onlayn")}</p>
           </div>
           {healthLoading ? (
             <Skeleton className="h-8 w-1/3 mt-1" />
           ) : (
             <div className="flex items-baseline gap-1 mt-1">
               <p className="font-display text-2xl md:text-3xl font-bold text-purple-500">{healthData?.activeSessions || 0}</p>
-              <span className="text-[10px] font-semibold text-muted-foreground">kishi</span>
+              <span className="text-[10px] font-semibold text-muted-foreground">{t("dynamic.dashboard.kishi")}</span>
             </div>
           )}
         </motion.div>
@@ -294,8 +296,8 @@ export default function SuperAdminDashboard() {
           <div className="h-10 w-10 md:h-12 md:w-12 rounded-full bg-purple-500/10 flex items-center justify-center group-hover:bg-purple-500/20 transition-colors mb-2">
             <RefreshCw className={`h-5 w-5 text-purple-500 ${clearCacheMutation.isPending ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'}`} />
           </div>
-          <p className="text-xs md:text-sm font-bold text-center">Tizimni<br/>yangilash</p>
-          <p className="text-[9px] text-muted-foreground mt-1 text-center">Keshni tozalash</p>
+          <p className="text-xs md:text-sm font-bold text-center">{t("dynamic.dashboard.tizimni")}<br/>{t("dynamic.dashboard.yangilash")}</p>
+          <p className="text-[9px] text-muted-foreground mt-1 text-center">{t("dynamic.dashboard.keshni_tozalash")}</p>
         </motion.div>
 
       </div>
@@ -305,8 +307,8 @@ export default function SuperAdminDashboard() {
         <div className="glass rounded-2xl p-6 lg:col-span-2">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="font-display text-lg font-semibold">O'sish dinamikasi</h3>
-              <p className="text-xs text-muted-foreground">Foydalanuvchilarning kumulativ soni (oxirgi 6 oy)</p>
+              <h3 className="font-display text-lg font-semibold">{t("dynamic.dashboard.o_sish_dinamikasi")}</h3>
+              <p className="text-xs text-muted-foreground">{t("dynamic.dashboard.foydalanuvchilarning_kumulativ_soni_oxir")}</p>
             </div>
             <TrendingUp className="h-5 w-5 text-primary" />
           </div>
@@ -346,7 +348,7 @@ export default function SuperAdminDashboard() {
         </div>
 
         <div className="glass rounded-2xl p-6">
-          <h3 className="font-display text-lg font-semibold mb-4">Rollar taqsimoti</h3>
+          <h3 className="font-display text-lg font-semibold mb-4">{t("dynamic.dashboard.rollar_taqsimoti")}</h3>
           {loading ? (
             <Skeleton className="h-[280px] w-full" />
           ) : roleDistribution.length === 0 ? (
@@ -385,8 +387,8 @@ export default function SuperAdminDashboard() {
         <div className="glass rounded-2xl p-6 lg:col-span-2">
           <div className="flex items-center justify-between mb-5">
             <div>
-              <h3 className="font-display text-lg font-semibold">Top tashkilotlar</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">Foydalanuvchilar soni bo'yicha reyting</p>
+              <h3 className="font-display text-lg font-semibold">{t("dynamic.dashboard.top_tashkilotlar")}</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">{t("dynamic.dashboard.foydalanuvchilar_soni_bo_yicha_reyting")}</p>
             </div>
             <Building2 className="h-5 w-5 text-purple-500" />
           </div>
@@ -450,8 +452,8 @@ export default function SuperAdminDashboard() {
         <div className="glass rounded-2xl p-6">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="font-display text-lg font-semibold">So'nggi faollik</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">Real-time audit logi</p>
+              <h3 className="font-display text-lg font-semibold">{t("dynamic.dashboard.so_nggi_faollik")}</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">{t("dynamic.dashboard.realtime_audit_logi")}</p>
             </div>
             <Activity className="h-4 w-4 text-primary" />
           </div>

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import React from "react";
 import { Loader2 } from "lucide-react";
 import { useStudentDashboard } from "@/hooks/useOptimizedQueries";
@@ -10,6 +11,7 @@ import GoalsAndAchievements from "@/components/student/dashboard/GoalsAndAchieve
 import LeaderboardAndHistory from "@/components/student/dashboard/LeaderboardAndHistory";
 
 export default function StudentDashboard() {
+  const { t } = useTranslation();
   const { data, isLoading, error } = useStudentDashboard();
 
   if (isLoading) {
@@ -22,14 +24,12 @@ export default function StudentDashboard() {
 
   if (error || !data) {
     return (
-      <div className="p-8 text-center text-red-500">
-        Ma'lumotlarni yuklashda xatolik yuz berdi.
-      </div>
+      <div className="p-8 text-center text-red-500">{t("dynamic.referralpage.ma_lumotlarni_yuklashda_xatolik_yuz_berd")}</div>
     );
   }
 
   return (
-    <div className="p-6 lg:p-8 space-y-6 bg-slate-50 dark:bg-slate-950 min-h-screen transition-colors duration-300">
+    <div className="space-y-6 min-h-screen transition-colors duration-300">
       {/* Ambient glow */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 dark:bg-primary/10 rounded-full blur-[120px] -z-10 pointer-events-none" />
 

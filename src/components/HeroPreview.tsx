@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import {
   Mic,
@@ -20,6 +21,7 @@ import {
  * preview composition. No stock images. Pure UI built from design tokens.
  */
 export default function HeroPreview() {
+  const { t } = useTranslation();
   return (
     <div className="relative h-[520px] sm:h-[560px] lg:h-[620px] w-full [perspective:1600px]">
       {/* Ambient glow blobs */}
@@ -51,7 +53,7 @@ export default function HeroPreview() {
                 </div>
                 <div>
                   <p className="text-sm font-display font-semibold leading-tight">IELTS Mock — Sevara A.</p>
-                  <p className="text-[10px] text-muted-foreground">Cambridge 18 · Test 3</p>
+                  <p className="text-[10px] text-muted-foreground">{t("dynamic.heropreview.cambridge_18__test_3")}</p>
                 </div>
               </div>
               <div className="flex gap-1">
@@ -64,9 +66,9 @@ export default function HeroPreview() {
             {/* Big band score */}
             <div className="rounded-2xl bg-gradient-to-br from-primary/15 via-secondary/10 to-accent/15 border border-border/50 p-4 mb-3 relative overflow-hidden">
               <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-primary/20 blur-2xl" />
-              <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Overall band</p>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{t("dynamic.heropreview.overall_band")}</p>
               <div className="flex items-end gap-2 mt-1">
-                <span className="font-display text-5xl font-bold neon-text leading-none">7.5</span>
+                <span className="font-display text-5xl font-bold neon-text leading-none">{t("dynamic.heropreview.75")}</span>
                 <span className="text-[11px] text-purple-400 mb-1.5 inline-flex items-center gap-1">
                   <TrendingUp className="h-3 w-3" /> +0.5
                 </span>
@@ -79,7 +81,7 @@ export default function HeroPreview() {
                 { icon: Headphones, label: "Listening", v: 8.0, c: "primary" },
                 { icon: BookOpen, label: "Reading", v: 7.5, c: "secondary" },
                 { icon: PenLine, label: "Writing", v: 7.0, c: "accent" },
-                { icon: Mic, label: "Speaking", v: 7.5, c: "purple" },
+                { icon: Mic, label: t("dynamic.speakingpartners.speaking"), v: 7.5, c: "purple" },
               ].map((m) => (
                 <div
                   key={m.label}
@@ -105,7 +107,7 @@ export default function HeroPreview() {
             {/* Tiny chart */}
             <div className="mt-3 rounded-xl bg-muted/20 border border-border/40 p-3">
               <div className="flex items-center justify-between mb-1">
-                <p className="text-[10px] text-muted-foreground">Progress · 30 kun</p>
+                <p className="text-[10px] text-muted-foreground">{t("dynamic.heropreview.progress__30_kun")}</p>
                 <span className="text-[10px] text-purple-400 inline-flex items-center gap-0.5">
                   <Activity className="h-2.5 w-2.5" /> +18%
                 </span>
@@ -154,8 +156,8 @@ export default function HeroPreview() {
                 <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-purple-500 ring-2 ring-background animate-glow-pulse" />
               </div>
               <div className="min-w-0">
-                <p className="text-[11px] font-semibold truncate">AI Speaking · Live</p>
-                <p className="text-[9px] text-muted-foreground">Part 2 · Cue card</p>
+                <p className="text-[11px] font-semibold truncate">{t("dynamic.heropreview.ai_speaking__live")}</p>
+                <p className="text-[9px] text-muted-foreground">{t("dynamic.heropreview.part_2__cue_card")}</p>
               </div>
             </div>
             <div className="flex items-end gap-[3px] h-8 mb-2">
@@ -169,8 +171,8 @@ export default function HeroPreview() {
               ))}
             </div>
             <div className="flex items-center justify-between text-[9px]">
-              <span className="text-muted-foreground">Fluency</span>
-              <span className="font-semibold text-purple-400">Band 7.5</span>
+              <span className="text-muted-foreground">{t("dynamic.heropreview.fluency")}</span>
+              <span className="font-semibold text-purple-400">{t("dynamic.heropreview.band_75")}</span>
             </div>
           </div>
         </motion.div>
@@ -192,9 +194,9 @@ export default function HeroPreview() {
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-1.5">
                 <Sparkles className="h-3.5 w-3.5 text-secondary" />
-                <p className="text-[11px] font-semibold">Premium Packs</p>
+                <p className="text-[11px] font-semibold">{t("dynamic.heropreview.premium_packs")}</p>
               </div>
-              <span className="text-[9px] rounded-full bg-secondary/20 text-secondary px-1.5 py-0.5">3 active</span>
+              <span className="text-[9px] rounded-full bg-secondary/20 text-secondary px-1.5 py-0.5">{t("dynamic.heropreview.3_active")}</span>
             </div>
             {[
               { name: "IELTS Premium", price: "499K", c: "from-primary to-secondary" },
@@ -229,12 +231,12 @@ export default function HeroPreview() {
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-1.5">
                 <Users className="h-3.5 w-3.5 text-primary" />
-                <p className="text-[11px] font-semibold">Active Students</p>
+                <p className="text-[11px] font-semibold">{t("dynamic.heropreview.active_students")}</p>
               </div>
               <TrendingUp className="h-3 w-3 text-purple-400" />
             </div>
-            <p className="font-display text-2xl font-bold neon-text leading-none">2,847</p>
-            <p className="text-[9px] text-muted-foreground mt-0.5">+12.4% bu hafta</p>
+            <p className="font-display text-2xl font-bold neon-text leading-none">{t("dynamic.heropreview.2847")}</p>
+            <p className="text-[9px] text-muted-foreground mt-0.5">{t("dynamic.heropreview.124_bu_hafta")}</p>
             <div className="mt-2 flex items-end gap-1 h-8">
               {[0.4, 0.6, 0.5, 0.75, 0.65, 0.85, 0.95].map((h, i) => (
                 <div
@@ -266,8 +268,8 @@ export default function HeroPreview() {
                 <Trophy className="h-4 w-4 text-amber-400" />
               </div>
               <div>
-                <p className="text-[11px] font-semibold leading-tight">Leaderboard</p>
-                <p className="text-[9px] text-muted-foreground">Haftalik top</p>
+                <p className="text-[11px] font-semibold leading-tight">{t("dynamic.achievements.leaderboard")}</p>
+                <p className="text-[9px] text-muted-foreground">{t("dynamic.heropreview.haftalik_top")}</p>
               </div>
             </div>
             {[
@@ -301,7 +303,7 @@ export default function HeroPreview() {
           className="rounded-full glass border border-purple-500/40 px-3 py-1.5 flex items-center gap-1.5 shadow-glow"
         >
           <CheckCircle2 className="h-3.5 w-3.5 text-purple-400" />
-          <span className="text-[10px] font-semibold">Attendance · 96%</span>
+          <span className="text-[10px] font-semibold">{t("dynamic.heropreview.attendance__96")}</span>
         </motion.div>
       </motion.div>
 
@@ -318,7 +320,7 @@ export default function HeroPreview() {
           className="rounded-full glass border border-primary/40 px-3 py-1.5 flex items-center gap-1.5 shadow-glow"
         >
           <Wallet className="h-3.5 w-3.5 text-primary" />
-          <span className="text-[10px] font-semibold">$48.2K MRR</span>
+          <span className="text-[10px] font-semibold">{t("dynamic.heropreview.482k_mrr")}</span>
         </motion.div>
       </motion.div>
     </div>

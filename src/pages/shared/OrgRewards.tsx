@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -43,6 +44,7 @@ interface Student {
 }
 
 export default function OrgRewards() {
+  const { t } = useTranslation();
   const { user, profile } = useAuth();
   const [rewards, setRewards] = useState<Reward[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
@@ -88,7 +90,7 @@ export default function OrgRewards() {
 
   const createReward = async () => {
     if (!profile?.organization_id) return;
-    if (!rTitle.trim()) return toast.error("Sovg'a nomi kerak");
+    if (!rTitle.trim()) return toast.error(t("dynamic.orgrewards.sovg_a_nomi_kerak"));
     const { error } = await supabase.from("rewards").insert({
       organization_id: profile.organization_id,
       title: rTitle.trim(),
@@ -98,24 +100,24 @@ export default function OrgRewards() {
       created_by: user?.id,
     });
     if (error) return toast.error(error.message);
-    toast.success("Sovg'a qo'shildi");
+    toast.success(t("dynamic.orgrewards.sovg_a_qo_shildi"));
     setRTitle(""); setRDesc(""); setRCost("100"); setRIcon("🎁");
     setOpenReward(false);
     load();
   };
 
   const removeReward = async (id: string) => {
-    if (!confirm("O'chirish?")) return;
+    if (!confirm(t("dynamic.orgrewards.o_chirish"))) return;
     await supabase.from("rewards").delete().eq("id", id);
-    toast.success("O'chirildi");
+    toast.success(t("dynamic.usersmanager.o_chirildi"));
     load();
   };
 
   const awardCoins = async () => {
-    if (!studentId) return toast.error("Talabani tanlang");
+    if (!studentId) return toast.error(t("dynamic.orgrewards.talabani_tanlang"));
     const amt = Number(coinAmount);
-    if (!amt) return toast.error("Miqdorni kiriting");
-    if (!coinReason.trim()) return toast.error("Sabab kiriting");
+    if (!amt) return toast.error(t("dynamic.orgrewards.miqdorni_kiriting"));
+    if (!coinReason.trim()) return toast.error(t("dynamic.orgrewards.sabab_kiriting"));
     const { error } = await supabase.rpc("award_coins" as any, {
       _student_id: studentId,
       _amount: amt,
@@ -141,19 +143,19 @@ export default function OrgRewards() {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="font-display text-3xl font-bold">Coin va Sovg'alar</h1>
-          <p className="text-muted-foreground">Talabalarni rag'batlantirish tizimi</p>
+          <h1 className="font-display text-3xl font-bold">{t("dynamic.orgrewards.coin_va_sovg_alar")}</h1>
+          <p className="text-muted-foreground">{t("dynamic.orgrewards.talabalarni_rag_batlantirish_tizimi")}</p>
         </div>
         <div className="flex gap-2">
           <Dialog open={openAward} onOpenChange={setOpenAward}>
             <DialogTrigger asChild>
-              <Button variant="outline"><Award className="h-4 w-4" /> Coin berish</Button>
+              <Button variant="outline"><Award className="h-4 w-4" />{t("dynamic.orgrewards.coin_berish")}</Button>
             </DialogTrigger>
             <DialogContent>
-              <DialogHeader><DialogTitle>Talabaga coin berish</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle>{t("dynamic.orgrewards.talabaga_coin_berish")}</DialogTitle></DialogHeader>
               <div className="space-y-3">
                 <div>
-                  <Label>Talaba</Label>
+                  <Label>{t("dynamic.orgrewards.talaba")}</Label>
                   <Select value={studentId} onValueChange={setStudentId}>
                     <SelectTrigger><SelectValue placeholder="Tanlang" /></SelectTrigger>
                     <SelectContent>
@@ -167,49 +169,49 @@ export default function OrgRewards() {
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label>Miqdor (manfiy ham mumkin)</Label>
+                    <Label>{t("dynamic.orgrewards.miqdor_manfiy_ham_mumkin")}</Label>
                     <Input type="number" value={coinAmount} onChange={(e) => setCoinAmount(e.target.value)} />
                   </div>
                 </div>
                 <div>
-                  <Label>Sabab</Label>
-                  <Textarea rows={2} value={coinReason} onChange={(e) => setCoinReason(e.target.value)} placeholder="Olimpiada g'olibi" />
+                  <Label>{t("dynamic.smartdashboard.sabab")}</Label>
+                  <Textarea rows={2} value={coinReason} onChange={(e) => setCoinReason(e.target.value)} placeholder={t("dynamic.usersmanager.olimpiada_g_olibi")} />
                 </div>
               </div>
               <DialogFooter>
-                <Button onClick={awardCoins}><Send className="h-4 w-4" /> Berish</Button>
+                <Button onClick={awardCoins}><Send className="h-4 w-4" />{t("dynamic.orgrewards.berish")}</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
 
           <Dialog open={openReward} onOpenChange={setOpenReward}>
             <DialogTrigger asChild>
-              <Button variant="hero"><Plus className="h-4 w-4" /> Sovg'a qo'shish</Button>
+              <Button variant="hero"><Plus className="h-4 w-4" />{t("dynamic.orgrewards.sovg_a_qo_shish")}</Button>
             </DialogTrigger>
             <DialogContent>
-              <DialogHeader><DialogTitle>Yangi sovg'a</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle>{t("dynamic.orgrewards.yangi_sovg_a")}</DialogTitle></DialogHeader>
               <div className="space-y-3">
                 <div className="grid grid-cols-[80px,1fr] gap-3">
                   <div>
-                    <Label>Emoji</Label>
+                    <Label>{t("dynamic.orgrewards.emoji")}</Label>
                     <Input value={rIcon} onChange={(e) => setRIcon(e.target.value)} maxLength={4} className="text-center text-2xl" />
                   </div>
                   <div>
-                    <Label>Nom *</Label>
+                    <Label>{t("dynamic.orgsubjects.nom_")}</Label>
                     <Input value={rTitle} onChange={(e) => setRTitle(e.target.value)} placeholder="Bepul oylik to'lov" />
                   </div>
                 </div>
                 <div>
-                  <Label>Tavsif</Label>
+                  <Label>{t("dynamic.telegramlinks.tavsif")}</Label>
                   <Textarea rows={2} value={rDesc} onChange={(e) => setRDesc(e.target.value)} />
                 </div>
                 <div>
-                  <Label>Narx (coin)</Label>
+                  <Label>{t("dynamic.orgrewards.narx_coin")}</Label>
                   <Input type="number" value={rCost} onChange={(e) => setRCost(e.target.value)} />
                 </div>
               </div>
               <DialogFooter>
-                <Button onClick={createReward}>Saqlash</Button>
+                <Button onClick={createReward}>{t("dynamic.usersmanager.saqlash")}</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -240,7 +242,7 @@ export default function OrgRewards() {
           <Gift className="h-5 w-5 text-primary" /> Sovg'alar katalogi
         </h2>
         {rewards.length === 0 ? (
-          <Card className="p-12 text-center text-muted-foreground">Hali sovg'alar yo'q. Birinchi sovg'ani qo'shing.</Card>
+          <Card className="p-12 text-center text-muted-foreground">{t("dynamic.orgrewards.hali_sovg_alar_yo_q_birinchi_sovg_ani_qo")}</Card>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {rewards.map((r) => (

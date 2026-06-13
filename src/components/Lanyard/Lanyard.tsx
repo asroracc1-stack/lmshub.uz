@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 /* eslint-disable react/no-unknown-property */
 'use client';
 import { useEffect, useRef, useState } from 'react';
@@ -31,6 +32,7 @@ interface LanyardProps {
 }
 
 export default function Lanyard({
+  const { t } = useTranslation();
   position = [0, 0, 30],
   gravity = [0, -40, 0],
   fov = 20,
@@ -39,7 +41,7 @@ export default function Lanyard({
   const [isMobile, setIsMobile] = useState<boolean>(() => typeof window !== 'undefined' && window.innerWidth < 768);
 
   useEffect(() => {
-    const handleResize = (): void => setIsMobile(window.innerWidth < 768);
+    const handleResize = (): void =>{t("dynamic.lanyard.setismobilewindowinnerwidth")}< 768);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);

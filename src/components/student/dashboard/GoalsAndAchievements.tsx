@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { ArrowRight, CheckCircle2, Circle, Flame, Star, Crown, BookOpen, Mic, PenTool, Headphones } from "lucide-react";
@@ -8,6 +9,7 @@ interface GoalsAndAchievementsProps {
 }
 
 export default function GoalsAndAchievements({ data }: GoalsAndAchievementsProps) {
+  const { t } = useTranslation();
   
   const getGoalIcon = (type: string) => {
     switch(type) {
@@ -45,7 +47,7 @@ export default function GoalsAndAchievements({ data }: GoalsAndAchievementsProps
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="h-full">
         <Card className="p-5 rounded-3xl border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800/50 shadow-sm hover:shadow-md transition-all duration-300 h-full flex flex-col">
           <div className="flex justify-between items-center mb-5">
-            <h3 className="font-bold text-slate-900 dark:text-white">Bugungi maqsadlar</h3>
+            <h3 className="font-bold text-slate-900 dark:text-white">{t("dynamic.goalsandachievements.bugungi_maqsadlar")}</h3>
             <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">4/5 bajarildi</span>
           </div>
 
@@ -90,7 +92,7 @@ export default function GoalsAndAchievements({ data }: GoalsAndAchievementsProps
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="h-full">
         <Card className="p-5 rounded-3xl border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800/50 shadow-sm hover:shadow-md transition-all duration-300 h-full flex flex-col">
           <div className="flex justify-between items-center mb-5">
-            <h3 className="font-bold text-slate-900 dark:text-white">Yutuqlar</h3>
+            <h3 className="font-bold text-slate-900 dark:text-white">{t("dynamic.goalsandachievements.yutuqlar")}</h3>
             <button className="text-[10px] text-purple-600 dark:text-primary font-medium flex items-center gap-1 hover:underline">
               Barchasini ko'rish <ArrowRight className="h-3 w-3" />
             </button>

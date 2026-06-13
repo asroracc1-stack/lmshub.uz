@@ -224,7 +224,7 @@ export default function SuperAdminLayout() {
               <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setMobileOpen(true)}><Menu className="h-5 w-5" /></Button>
               {collapsed && <Button variant="ghost" size="icon" className="hidden md:flex" onClick={toggleCollapsed}><PanelLeftOpen className="h-5 w-5" /></Button>}
               <div>
-                <p className="text-[10px] uppercase font-black tracking-widest text-primary">Super Admin</p>
+                <p className="text-[10px] uppercase font-black tracking-widest text-primary">{t("dynamic.superadminlayout.super_admin")}</p>
                 <h2 className="font-black text-slate-900 dark:text-white">{t("common.hello")}, {profile?.full_name?.split(' ')[0] || "Asror"}! 👋</h2>
               </div>
             </div>
@@ -259,7 +259,7 @@ export default function SuperAdminLayout() {
                   <TigerPlayer text="" size={150} />
                 </div>
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-primary">Yo'lbarscha</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-primary">{t("dynamic.superadminlayout.yo_lbarscha")}</p>
                   <p className="text-xs font-bold text-slate-700 dark:text-slate-200">
                     {manualToggle["Barcha foydalanuvchilar"] === false ? "Yashirdim! 🐯" : "Yangi bo'limni tayyorlayapman... 🐯"}
                   </p>

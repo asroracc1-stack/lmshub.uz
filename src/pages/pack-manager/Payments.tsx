@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
@@ -15,7 +16,10 @@ import { Loader2, Search, CheckCircle2, XCircle, Eye, Send, Wallet } from "lucid
 
 type Filter = "pending" | "paid" | "rejected" | "all";
 
-export default function PackManagerPayments({ initialFilter = "pending" as Filter }) {
+export default function PackManagerPayments({
+  initialFilter = "pending" as Filter
+}) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<Filter>(initialFilter);
   const [q, setQ] = useState("");
@@ -91,7 +95,7 @@ export default function PackManagerPayments({ initialFilter = "pending" as Filte
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["payments-list"] });
-      toast.success("To'lov rad etildi");
+      toast.success(t("dynamic.payments.to_lov_rad_etildi"));
       setBusyId(null);
       setRejecting(null);
       setRejectReason("");
@@ -109,9 +113,10 @@ export default function PackManagerPayments({ initialFilter = "pending" as Filte
   };
 
   const StatusBadge = ({ s }: { s: string }) => {
-    if (s === "paid" || s === "completed") return <Badge className="bg-purple-500 text-white">Approved</Badge>;
-    if (s === "rejected") return <Badge variant="destructive">Rejected</Badge>;
-    return <Badge className="bg-amber-500 text-white">Pending</Badge>;
+  const { t } = useTranslation();
+    if (s === "paid" || s === "completed") return <Badge className="bg-purple-500 text-white">{t("dynamic.payments.approved")}</Badge>;
+    if (s === "rejected") return <Badge variant="destructive">{t("dynamic.payments.rejected")}</Badge>;
+    return <Badge className="bg-amber-500 text-white">{t("dynamic.payments.pending")}</Badge>;
   };
 
   return (
@@ -120,7 +125,7 @@ export default function PackManagerPayments({ initialFilter = "pending" as Filte
         <h1 className="text-2xl md:text-3xl font-display font-bold flex items-center gap-2">
           <Wallet className="h-6 w-6 text-purple-500" /> Payment Requests
         </h1>
-        <p className="text-sm text-muted-foreground mt-1">Tasdiqlash, rad etish va tarix</p>
+        <p className="text-sm text-muted-foreground mt-1">{t("dynamic.payments.tasdiqlash_rad_etish_va_tarix")}</p>
       </div>
 
       <Card className="p-3 flex flex-wrap items-center gap-2">
@@ -131,10 +136,10 @@ export default function PackManagerPayments({ initialFilter = "pending" as Filte
         <Select value={filter} onValueChange={(v: Filter) => setFilter(v)}>
           <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="pending">Kutilayotgan</SelectItem>
-            <SelectItem value="paid">Tasdiqlangan</SelectItem>
-            <SelectItem value="rejected">Rad etilgan</SelectItem>
-            <SelectItem value="all">Barchasi</SelectItem>
+            <SelectItem value="pending">{t("dynamic.payments.kutilayotgan")}</SelectItem>
+            <SelectItem value="paid">{t("dynamic.orgpayments.tasdiqlangan")}</SelectItem>
+            <SelectItem value="rejected">{t("dynamic.payments.rad_etilgan")}</SelectItem>
+            <SelectItem value="all">{t("dynamic.finance.barchasi")}</SelectItem>
           </SelectContent>
         </Select>
       </Card>
@@ -143,19 +148,19 @@ export default function PackManagerPayments({ initialFilter = "pending" as Filte
         {loading ? (
           <div className="p-12 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" /></div>
         ) : filtered.length === 0 ? (
-          <p className="p-12 text-center text-muted-foreground text-sm">To'lovlar topilmadi</p>
+          <p className="p-12 text-center text-muted-foreground text-sm">{t("dynamic.payments.to_lovlar_topilmadi")}</p>
         ) : (
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Foydalanuvchi</TableHead>
-                  <TableHead>Pack</TableHead>
-                  <TableHead>Summa</TableHead>
-                  <TableHead>Telegram</TableHead>
-                  <TableHead>Sana</TableHead>
-                  <TableHead>Holat</TableHead>
-                  <TableHead className="text-right">Amallar</TableHead>
+                  <TableHead>{t("dynamic.usersmanager.foydalanuvchi")}</TableHead>
+                  <TableHead>{t("dynamic.subscriptions.pack")}</TableHead>
+                  <TableHead>{t("dynamic.orgpayments.summa")}</TableHead>
+                  <TableHead>{t("dynamic.payments.telegram")}</TableHead>
+                  <TableHead>{t("dynamic.subscriptions.sana")}</TableHead>
+                  <TableHead>{t("dynamic.subscriptions.holat")}</TableHead>
+                  <TableHead className="text-right">{t("dynamic.usersmanager.amallar")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -190,7 +195,7 @@ export default function PackManagerPayments({ initialFilter = "pending" as Filte
                           <>
                             <Button size="sm" className="bg-purple-500 hover:bg-purple-600 text-white"
                                     disabled={busyId === p.id} onClick={() => approve(p.id)}>
-                              {busyId === p.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <><CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Approve</>}
+                              {busyId === p.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <><CheckCircle2 className="h-3.5 w-3.5 mr-1" />{t("dynamic.payments.approve")}</>}
                             </Button>
                             <Button size="sm" variant="destructive" disabled={busyId === p.id}
                                     onClick={() => { setRejecting(p); setRejectReason(""); }}>
@@ -210,7 +215,7 @@ export default function PackManagerPayments({ initialFilter = "pending" as Filte
 
       <Dialog open={!!viewing} onOpenChange={(o) => !o && setViewing(null)}>
         <DialogContent className="max-w-2xl">
-          <DialogHeader><DialogTitle>Chek</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t("dynamic.payments.chek")}</DialogTitle></DialogHeader>
           {viewing?.receipt_url && (
             <img src={viewing.receipt_url} alt="Receipt" className="rounded-lg max-h-[70vh] mx-auto" />
           )}
@@ -220,13 +225,13 @@ export default function PackManagerPayments({ initialFilter = "pending" as Filte
       <Dialog open={!!rejecting} onOpenChange={(o) => !o && setRejecting(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>To'lovni rad etish</DialogTitle>
-            <DialogDescription>Sabab foydalanuvchiga yuboriladi</DialogDescription>
+            <DialogTitle>{t("dynamic.payments.to_lovni_rad_etish")}</DialogTitle>
+            <DialogDescription>{t("dynamic.payments.sabab_foydalanuvchiga_yuboriladi")}</DialogDescription>
           </DialogHeader>
           <Textarea value={rejectReason} onChange={(e) => setRejectReason(e.target.value)}
                     placeholder="Sababini yozing..." rows={4} />
           <DialogFooter>
-            <Button variant="outline" onClick={() => setRejecting(null)}>Bekor qilish</Button>
+            <Button variant="outline" onClick={() => setRejecting(null)}>{t("dynamic.pricingplans.bekor_qilish")}</Button>
             <Button variant="destructive" onClick={submitReject} disabled={busyId === rejecting?.id}>
               {busyId === rejecting?.id ? <Loader2 className="h-4 w-4 animate-spin" /> : "Rad etish"}
             </Button>

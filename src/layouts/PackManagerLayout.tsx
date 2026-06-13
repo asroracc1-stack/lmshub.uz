@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useCallback, useState, Suspense } from "react";
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -28,6 +29,7 @@ import MobileSidebarDrawer from "@/components/MobileSidebarDrawer";
 import { usePageTitle } from "@/hooks/usePageTitle";
 
 export default function PackManagerLayout() {
+  const { t } = useTranslation();
   const { profile, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -46,7 +48,7 @@ export default function PackManagerLayout() {
     });
 
   const nav = [
-    { to: "/pack-manager/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { to: "/pack-manager/dashboard", label: t("dynamic.dashboard.dashboard"), icon: LayoutDashboard },
     { to: "/pack-manager/payments", label: "To'lovlar (Sales)", icon: Wallet },
     { to: "/pack-manager/subscriptions", label: "Obunalar", icon: Crown },
     { to: "/pack-manager/subscription-requests", label: "Obuna so'rovlari", icon: FileText },
@@ -56,7 +58,7 @@ export default function PackManagerLayout() {
 
   const handleSignOut = async () => {
     await signOut();
-    toast.success("Chiqdingiz");
+    toast.success(t("dynamic.packmanagerlayout.chiqdingiz"));
     navigate("/", { replace: true });
   };
 
@@ -66,7 +68,7 @@ export default function PackManagerLayout() {
         <div className={cn("flex items-center gap-2 min-w-0", mini ? "justify-center w-full flex-col" : "flex-col items-start")}>
           <BrandLogo size={mini ? 36 : 56} />
           {!mini && (
-            <p className="text-[11px] uppercase tracking-wider text-purple-500 font-semibold">Pack Manager</p>
+            <p className="text-[11px] uppercase tracking-wider text-purple-500 font-semibold">{t("dynamic.packmanagerlayout.pack_manager")}</p>
           )}
         </div>
         {!mini && (
@@ -151,7 +153,7 @@ export default function PackManagerLayout() {
               </Button>
             )}
             <div className="hidden sm:block">
-              <p className="text-xs uppercase tracking-wider text-purple-500 font-semibold">Pack Manager Panel</p>
+              <p className="text-xs uppercase tracking-wider text-purple-500 font-semibold">{t("dynamic.packmanagerlayout.pack_manager_panel")}</p>
               <p className="font-display font-semibold text-sm">
                 Salom, {profile?.full_name || profile?.username || "Manager"} 💚
               </p>

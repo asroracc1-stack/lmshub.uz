@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
@@ -78,6 +79,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function ParentDashboard() {
+  const { t } = useTranslation();
   const { user, profile } = useAuth();
   const queryClient = useQueryClient();
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
@@ -227,8 +229,8 @@ export default function ParentDashboard() {
 
   const onPickFile = (f: File | null) => {
     if (!f) return;
-    if (!f.type.startsWith("image/")) return toast.error("Iltimos, faqat rasm fayl yuklang (JPG, PNG)");
-    if (f.size > 5 * 1024 * 1024) return toast.error("Rasm hajmi 5MB dan kichik bo'lishi kerak");
+    if (!f.type.startsWith("image/")) return toast.error(t("dynamic.payment.iltimos_faqat_rasm_fayl_yuklang_jpg_png"));
+    if (f.size > 5 * 1024 * 1024) return toast.error(t("dynamic.payment.rasm_hajmi_5mb_dan_kichik_bo_lishi_kerak"));
     setFile(f);
     setPreview(URL.createObjectURL(f));
   };
@@ -259,12 +261,12 @@ export default function ParentDashboard() {
   });
 
   const submitPayment = async () => {
-    if (!profile?.organization_id) return toast.error("Tashkilot aniqlanmadi");
-    if (!selectedAdmin) return toast.error("To'lov qabul qiluvchi adminni tanlang");
+    if (!profile?.organization_id) return toast.error(t("dynamic.payment.tashkilot_aniqlanmadi"));
+    if (!selectedAdmin) return toast.error(t("dynamic.dashboard.to_lov_qabul_qiluvchi_adminni_tanlang"));
     const amt = Number(amount);
-    if (!amt || amt < 1000) return toast.error("To'lov summasi kamida 1,000 so'm bo'lishi kerak");
-    if (!file) return toast.error("Iltimos, to'lov cheki rasmini yuklang");
-    if (!activeChild) return toast.error("Farzandingiz aniqlanmadi");
+    if (!amt || amt < 1000) return toast.error(t("dynamic.dashboard.to_lov_summasi_kamida_1000_so_m_bo_lishi"));
+    if (!file) return toast.error(t("dynamic.payment.iltimos_to_lov_cheki_rasmini_yuklang"));
+    if (!activeChild) return toast.error(t("dynamic.dashboard.farzandingiz_aniqlanmadi"));
 
     try {
       const formData = new FormData();
@@ -377,7 +379,7 @@ export default function ParentDashboard() {
                             ${activeTab === "academics" ? "bg-background text-primary shadow-sm border border-border" : "text-muted-foreground hover:text-foreground"}`}
               >
                 <BookOpen className="h-4.5 w-4.5" />
-                <span>Akademik natijalar</span>
+                <span>{t("dynamic.dashboard.akademik_natijalar")}</span>
               </button>
               <button
                 onClick={() => setActiveTab("gamification")}
@@ -393,7 +395,7 @@ export default function ParentDashboard() {
                             ${activeTab === "finance" ? "bg-background text-primary shadow-sm border border-border" : "text-muted-foreground hover:text-foreground"}`}
               >
                 <Wallet className="h-4.5 w-4.5" />
-                <span>To'lovlar markazi</span>
+                <span>{t("dynamic.dashboard.to_lovlar_markazi")}</span>
               </button>
             </div>
           </div>
@@ -413,7 +415,7 @@ export default function ParentDashboard() {
                   <div className="grid md:grid-cols-3 gap-6">
                     {/* Recharts Circular/Pie attendance summary */}
                     <Card className="p-5 rounded-2xl border border-border bg-card shadow-sm flex flex-col md:col-span-1 justify-between">
-                      <h3 className="font-bold text-sm text-foreground mb-2">Davomat foizi</h3>
+                      <h3 className="font-bold text-sm text-foreground mb-2">{t("dynamic.dashboard.davomat_foizi")}</h3>
                       {attendanceLoading ? (
                         <div className="h-40 w-full animate-pulse bg-muted rounded-xl" />
                       ) : attendance.length === 0 ? (
@@ -440,7 +442,7 @@ export default function ParentDashboard() {
                           </ResponsiveContainer>
                           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                             <span className="text-lg font-black text-purple-500">{attendanceRate}%</span>
-                            <span className="text-[9px] text-muted-foreground uppercase font-bold">Kelgan</span>
+                            <span className="text-[9px] text-muted-foreground uppercase font-bold">{t("dynamic.dashboard.kelgan")}</span>
                           </div>
                         </div>
                       )}
@@ -453,7 +455,7 @@ export default function ParentDashboard() {
 
                     {/* Progress details of child */}
                     <Card className="p-5 rounded-2xl border border-border bg-card shadow-sm md:col-span-2">
-                      <h3 className="font-bold text-sm text-foreground mb-4">Fanlararo o'zlashtirish</h3>
+                      <h3 className="font-bold text-sm text-foreground mb-4">{t("dynamic.dashboard.fanlararo_o_zlashtirish")}</h3>
                       {gradesLoading ? (
                         <div className="space-y-3.5">
                           <Skeleton className="h-4 w-full" />
@@ -494,8 +496,8 @@ export default function ParentDashboard() {
                   <Card className="p-5 rounded-2xl border border-border bg-card shadow-sm">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
                       <div>
-                        <h3 className="font-bold text-base text-foreground">Barcha baholar (Read-only)</h3>
-                        <p className="text-xs text-muted-foreground">Taqdim etilgan ballar va nazorat ishlari reyestri</p>
+                        <h3 className="font-bold text-base text-foreground">{t("dynamic.dashboard.barcha_baholar_readonly")}</h3>
+                        <p className="text-xs text-muted-foreground">{t("dynamic.dashboard.taqdim_etilgan_ballar_va_nazorat_ishlari")}</p>
                       </div>
                       <div className="relative max-w-xs w-full">
                         <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -512,11 +514,11 @@ export default function ParentDashboard() {
                       <table className="w-full border-collapse text-sm text-left">
                         <thead>
                           <tr className="bg-muted/70 text-xs font-bold uppercase tracking-wider text-muted-foreground border-b border-border">
-                            <th className="px-4 py-3">Fan nomi</th>
-                            <th className="px-4 py-3 text-center">To'plangan ball</th>
-                            <th className="px-4 py-3 text-center">Maksimal ball</th>
-                            <th className="px-4 py-3 text-center">Natija</th>
-                            <th className="px-4 py-3">Sana</th>
+                            <th className="px-4 py-3">{t("dynamic.dashboard.fan_nomi")}</th>
+                            <th className="px-4 py-3 text-center">{t("dynamic.dashboard.to_plangan_ball")}</th>
+                            <th className="px-4 py-3 text-center">{t("dynamic.dashboard.maksimal_ball")}</th>
+                            <th className="px-4 py-3 text-center">{t("dynamic.dashboard.natija")}</th>
+                            <th className="px-4 py-3">{t("dynamic.subscriptions.sana")}</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -526,7 +528,7 @@ export default function ParentDashboard() {
                             </tr>
                           ) : grades.length === 0 ? (
                             <tr>
-                              <td colSpan={5} className="py-8 text-center text-muted-foreground">Baholar mavjud emas</td>
+                              <td colSpan={5} className="py-8 text-center text-muted-foreground">{t("dynamic.dashboard.baholar_mavjud_emas")}</td>
                             </tr>
                           ) : (
                             grades
@@ -613,7 +615,7 @@ export default function ParentDashboard() {
                     <Card className="p-6 rounded-2xl border border-border bg-card shadow-sm flex flex-col justify-between md:col-span-1 text-center items-center relative overflow-hidden">
                       <div className="absolute -right-4 -bottom-4 w-20 h-20 bg-amber-500/10 rounded-full blur-2xl" />
                       <Coins className="h-12 w-12 text-amber-500 animate-spin" style={{ animationDuration: "12s" }} />
-                      <h3 className="font-bold text-lg text-foreground mt-4">Tanga balansi</h3>
+                      <h3 className="font-bold text-lg text-foreground mt-4">{t("dynamic.dashboard.tanga_balansi")}</h3>
                       <p className="text-3xl font-black text-amber-500 mt-2">
                         {activeChild?.coins ?? 0}
                       </p>
@@ -626,7 +628,7 @@ export default function ParentDashboard() {
                     <Card className="p-6 rounded-2xl border border-border bg-card shadow-sm flex flex-col justify-between md:col-span-2 relative overflow-hidden">
                       <div className="absolute -right-4 -top-4 w-32 h-32 bg-primary/5 rounded-full blur-2xl" />
                       <div className="flex justify-between items-center">
-                        <h3 className="font-bold text-sm text-foreground">Global Reytingdagi O'rni</h3>
+                        <h3 className="font-bold text-sm text-foreground">{t("dynamic.dashboard.global_reytingdagi_o_rni")}</h3>
                         <Trophy className="h-5 w-5 text-yellow-500" />
                       </div>
                       <div className="flex items-baseline gap-2 mt-4">
@@ -656,7 +658,7 @@ export default function ParentDashboard() {
                           <Skeleton className="h-10 w-full" />
                         </div>
                       ) : leaderboard.length === 0 ? (
-                        <p className="text-center text-xs text-muted-foreground py-4">Leaderboard yuklanmadi</p>
+                        <p className="text-center text-xs text-muted-foreground py-4">{t("dynamic.dashboard.leaderboard_yuklanmadi")}</p>
                       ) : (
                         leaderboard.slice(0, 5).map((u: any, idx) => {
                           const isMe = u.id === activeChild?.id || u.fullName === activeChild?.fullName;
@@ -678,7 +680,7 @@ export default function ParentDashboard() {
                                   {(u.fullName || "?")[0]}
                                 </div>
                                 <span className="font-bold text-sm text-foreground truncate max-w-[200px]">
-                                  {u.fullName} {isMe && <Badge className="ml-1 text-[9px] bg-primary text-white">Farzandingiz</Badge>}
+                                  {u.fullName} {isMe && <Badge className="ml-1 text-[9px] bg-primary text-white">{t("dynamic.dashboard.farzandingiz")}</Badge>}
                                 </span>
                               </div>
                               <div className="flex items-center gap-1">
@@ -711,7 +713,7 @@ export default function ParentDashboard() {
                           <ShieldCheck className="h-4.5 w-4.5 text-primary" />
                           To'lov rekvizitlari
                         </h3>
-                        <p className="text-xs text-muted-foreground">Admin kartasiga pul o'tkazing va chekni o'ng tomonga yuklang</p>
+                        <p className="text-xs text-muted-foreground">{t("dynamic.dashboard.admin_kartasiga_pul_o_tkazing_va_chekni_")}</p>
                       </div>
 
                       {adminsLoading ? (
@@ -719,7 +721,7 @@ export default function ParentDashboard() {
                           <Skeleton className="h-16 w-full" />
                         </div>
                       ) : admins.length === 0 ? (
-                        <p className="text-xs text-muted-foreground py-4">Tashkilot adminlari topilmadi</p>
+                        <p className="text-xs text-muted-foreground py-4">{t("dynamic.dashboard.tashkilot_adminlari_topilmadi")}</p>
                       ) : (
                         <div className="space-y-3">
                           {admins.map((adm, idx) => (
@@ -731,7 +733,7 @@ export default function ParentDashboard() {
                             >
                               <div className="flex justify-between items-start">
                                 <span className="font-bold text-xs text-foreground uppercase">{adm.fullName}</span>
-                                {selectedAdmin?.id === adm.id && <Badge className="text-[8px] bg-primary text-white">TANLANDI</Badge>}
+                                {selectedAdmin?.id === adm.id && <Badge className="text-[8px] bg-primary text-white">{t("dynamic.dashboard.tanlandi")}</Badge>}
                               </div>
                               {adm.cardNumber ? (
                                 <div className="flex items-center justify-between bg-muted/65 p-2 rounded-lg mt-2 text-xs">
@@ -746,7 +748,7 @@ export default function ParentDashboard() {
                                   </button>
                                 </div>
                               ) : (
-                                <p className="text-[10px] text-muted-foreground mt-2">Karta biriktirilmagan</p>
+                                <p className="text-[10px] text-muted-foreground mt-2">{t("dynamic.dashboard.karta_biriktirilmagan")}</p>
                               )}
                               <p className="text-[10px] text-muted-foreground mt-1">Sohibi: {adm.cardHolder || "Noma'lum"}</p>
                             </div>
@@ -757,11 +759,11 @@ export default function ParentDashboard() {
 
                     {/* Initiate Payment / Receipt dropzone */}
                     <Card className="p-5 rounded-2xl border border-border bg-card shadow-sm space-y-4">
-                      <h3 className="font-bold text-sm text-foreground">To'lovni tasdiqlash (Chek yuklash)</h3>
+                      <h3 className="font-bold text-sm text-foreground">{t("dynamic.dashboard.to_lovni_tasdiqlash_chek_yuklash")}</h3>
 
                       <div className="space-y-3 text-xs">
                         <div className="space-y-1">
-                          <label className="font-bold text-muted-foreground">To'lov summasi (so'm)</label>
+                          <label className="font-bold text-muted-foreground">{t("dynamic.dashboard.to_lov_summasi_so_m")}</label>
                           <Input
                             type="number"
                             placeholder="Masalan, 500000"
@@ -771,7 +773,7 @@ export default function ParentDashboard() {
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="font-bold text-muted-foreground">To'lov uchun izoh</label>
+                          <label className="font-bold text-muted-foreground">{t("dynamic.dashboard.to_lov_uchun_izoh")}</label>
                           <Input
                             placeholder="Farzand ismi, oy nomi yoki guruh izohi"
                             value={note}
@@ -805,8 +807,8 @@ export default function ParentDashboard() {
                           ) : (
                             <>
                               <UploadCloud className="h-7 w-7 text-primary mb-1" />
-                              <p className="font-bold text-[10px] text-foreground">Chek rasmini sudrab keling yoki bosing</p>
-                              <p className="text-[8px] text-muted-foreground mt-0.5">PNG, JPG, JPEG (Maks. 5MB)</p>
+                              <p className="font-bold text-[10px] text-foreground">{t("dynamic.dashboard.chek_rasmini_sudrab_keling_yoki_bosing")}</p>
+                              <p className="text-[8px] text-muted-foreground mt-0.5">{t("dynamic.dashboard.png_jpg_jpeg_maks_5mb")}</p>
                             </>
                           )}
                         </div>
@@ -824,17 +826,17 @@ export default function ParentDashboard() {
 
                   {/* Payment History */}
                   <Card className="p-5 rounded-2xl border border-border bg-card shadow-sm">
-                    <h3 className="font-bold text-sm text-foreground mb-4">To'lovlar tarixi</h3>
+                    <h3 className="font-bold text-sm text-foreground mb-4">{t("dynamic.dashboard.to_lovlar_tarixi")}</h3>
 
                     <div className="overflow-x-auto rounded-xl border border-border">
                       <table className="w-full border-collapse text-sm text-left">
                         <thead>
                           <tr className="bg-muted/70 text-xs font-bold uppercase tracking-wider text-muted-foreground border-b border-border">
-                            <th className="px-4 py-3">Sana</th>
-                            <th className="px-4 py-3">Summa</th>
-                            <th className="px-4 py-3">Izoh</th>
-                            <th className="px-4 py-3 text-center">Status</th>
-                            <th className="px-4 py-3 text-center">Chek</th>
+                            <th className="px-4 py-3">{t("dynamic.subscriptions.sana")}</th>
+                            <th className="px-4 py-3">{t("dynamic.orgpayments.summa")}</th>
+                            <th className="px-4 py-3">{t("dynamic.finance.izoh")}</th>
+                            <th className="px-4 py-3 text-center">{t("dynamic.finance.status")}</th>
+                            <th className="px-4 py-3 text-center">{t("dynamic.payments.chek")}</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -844,7 +846,7 @@ export default function ParentDashboard() {
                             </tr>
                           ) : paymentHistory.length === 0 ? (
                             <tr>
-                              <td colSpan={5} className="py-8 text-center text-muted-foreground">To'lovlar tarixi mavjud emas</td>
+                              <td colSpan={5} className="py-8 text-center text-muted-foreground">{t("dynamic.dashboard.to_lovlar_tarixi_mavjud_emas")}</td>
                             </tr>
                           ) : (
                             paymentHistory.map((tx, idx) => (

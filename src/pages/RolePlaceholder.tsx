@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Construction, LogOut } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -7,13 +8,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { roleLabel, AppRole } from "@/lib/auth";
 import ThemeToggle from "@/components/ThemeToggle";
 
-export default function RolePlaceholder({ role }: { role: AppRole }) {
+export default function RolePlaceholder({
+  const { t } = useTranslation(); role }: { role: AppRole }) {
   const navigate = useNavigate();
   const { signOut, profile } = useAuth();
 
   const handleSignOut = async () => {
     await signOut();
-    toast.success("Tizimdan chiqdingiz");
+    toast.success(t("dynamic.roleplaceholder.tizimdan_chiqdingiz"));
     navigate("/", { replace: true });
   };
 

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +28,7 @@ const STATUS_FILTERS = ["all", "active", "expiring", "expired"] as const;
 type StatusFilter = typeof STATUS_FILTERS[number];
 
 export default function Subscriptions() {
+  const { t } = useTranslation();
   const [subs, setSubs] = useState<Sub[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -88,7 +90,7 @@ export default function Subscriptions() {
     setSending(true);
     try {
       const targets = enriched.filter((s) => s.expiring);
-      if (targets.length === 0) { toast.info("Eslatma yuborish kerak bo'lganlar yo'q"); return; }
+      if (targets.length === 0) { toast.info(t("dynamic.subscriptions.eslatma_yuborish_kerak_bo_lganlar_yo_q")); return; }
       const rows = targets.map((s) => ({
         user_id: s.user_id,
         title: "Obunangiz tez orada tugaydi",
@@ -125,7 +127,7 @@ export default function Subscriptions() {
           <h1 className="text-2xl md:text-3xl font-display font-bold flex items-center gap-2">
             <Crown className="h-6 w-6 text-amber-500" /> Subscription Manager
           </h1>
-          <p className="text-sm text-muted-foreground">Obunalarni boshqarish, eslatmalar va to'lovlar tarixi</p>
+          <p className="text-sm text-muted-foreground">{t("dynamic.subscriptions.obunalarni_boshqarish_eslatmalar_va_to_l")}</p>
         </div>
         <Button onClick={sendReminders} disabled={sending} className="bg-gradient-to-r from-amber-500 to-orange-500 text-white">
           {sending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Bell className="h-4 w-4 mr-2" />}
@@ -136,32 +138,32 @@ export default function Subscriptions() {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <Card className="p-4 bg-gradient-to-br from-blue-500/10 to-blue-500/5">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground"><Users className="h-3.5 w-3.5" /> Jami</div>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground"><Users className="h-3.5 w-3.5" />{t("dynamic.orgmessages.jami")}</div>
           <p className="text-2xl font-display font-bold mt-1">{stats.total}</p>
         </Card>
         <Card className="p-4 bg-gradient-to-br from-purple-500/10 to-purple-500/5">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground"><CheckCircle2 className="h-3.5 w-3.5" /> Faol</div>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground"><CheckCircle2 className="h-3.5 w-3.5" />{t("dynamic.usersmanager.faol")}</div>
           <p className="text-2xl font-display font-bold text-purple-600 mt-1">{stats.active}</p>
         </Card>
         <Card className="p-4 bg-gradient-to-br from-amber-500/10 to-amber-500/5">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground"><AlertTriangle className="h-3.5 w-3.5" /> 7 kun ichida tugaydi</div>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground"><AlertTriangle className="h-3.5 w-3.5" />{t("dynamic.subscriptions.7_kun_ichida_tugaydi")}</div>
           <p className="text-2xl font-display font-bold text-amber-600 mt-1">{stats.expiringSoon}</p>
         </Card>
         <Card className="p-4 bg-gradient-to-br from-rose-500/10 to-rose-500/5">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground"><Clock className="h-3.5 w-3.5" /> Tugagan</div>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground"><Clock className="h-3.5 w-3.5" />{t("dynamic.subscriptions.tugagan")}</div>
           <p className="text-2xl font-display font-bold text-rose-600 mt-1">{stats.expired}</p>
         </Card>
         <Card className="p-4 bg-gradient-to-br from-violet-500/10 to-violet-500/5">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground"><Wallet className="h-3.5 w-3.5" /> Daromad</div>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground"><Wallet className="h-3.5 w-3.5" />{t("dynamic.subscriptions.daromad")}</div>
           <p className="text-2xl font-display font-bold text-violet-600 mt-1">{stats.revenue.toLocaleString()} so'm</p>
         </Card>
       </div>
 
       <Tabs defaultValue="active" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="active">Faol obunalar</TabsTrigger>
-          <TabsTrigger value="history"><History className="h-3.5 w-3.5 mr-1" /> Renewal History</TabsTrigger>
-          <TabsTrigger value="payments"><Wallet className="h-3.5 w-3.5 mr-1" /> To'lovlar</TabsTrigger>
+          <TabsTrigger value="active">{t("dynamic.subscriptions.faol_obunalar")}</TabsTrigger>
+          <TabsTrigger value="history"><History className="h-3.5 w-3.5 mr-1" />{t("dynamic.subscriptions.renewal_history")}</TabsTrigger>
+          <TabsTrigger value="payments"><Wallet className="h-3.5 w-3.5 mr-1" />{t("dynamic.subscriptions.to_lovlar")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="active" className="space-y-3">
@@ -174,17 +176,17 @@ export default function Subscriptions() {
             <Select value={packFilter} onValueChange={setPackFilter}>
               <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Barcha paketlar</SelectItem>
+                <SelectItem value="all">{t("dynamic.subscriptions.barcha_paketlar")}</SelectItem>
                 {packCodes.map((c) => <SelectItem key={c} value={c}>{c.toUpperCase()}</SelectItem>)}
               </SelectContent>
             </Select>
             <Select value={statusFilter} onValueChange={(v: any) => setStatusFilter(v)}>
               <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Barcha holatlar</SelectItem>
-                <SelectItem value="active">Faol</SelectItem>
-                <SelectItem value="expiring">Tez tugaydi</SelectItem>
-                <SelectItem value="expired">Tugagan</SelectItem>
+                <SelectItem value="all">{t("dynamic.subscriptions.barcha_holatlar")}</SelectItem>
+                <SelectItem value="active">{t("dynamic.usersmanager.faol")}</SelectItem>
+                <SelectItem value="expiring">{t("dynamic.subscriptions.tez_tugaydi")}</SelectItem>
+                <SelectItem value="expired">{t("dynamic.subscriptions.tugagan")}</SelectItem>
               </SelectContent>
             </Select>
           </Card>
@@ -193,18 +195,18 @@ export default function Subscriptions() {
             {loading ? (
               <div className="p-12 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" /></div>
             ) : filtered.length === 0 ? (
-              <p className="p-12 text-center text-muted-foreground text-sm">Obuna topilmadi</p>
+              <p className="p-12 text-center text-muted-foreground text-sm">{t("dynamic.subscriptions.obuna_topilmadi")}</p>
             ) : (
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Foydalanuvchi</TableHead>
-                      <TableHead>Pack</TableHead>
-                      <TableHead>Sotib olingan</TableHead>
-                      <TableHead>Tugaydi</TableHead>
-                      <TableHead>Qolgan</TableHead>
-                      <TableHead>Holat</TableHead>
+                      <TableHead>{t("dynamic.usersmanager.foydalanuvchi")}</TableHead>
+                      <TableHead>{t("dynamic.subscriptions.pack")}</TableHead>
+                      <TableHead>{t("dynamic.subscriptions.sotib_olingan")}</TableHead>
+                      <TableHead>{t("dynamic.subscriptions.tugaydi")}</TableHead>
+                      <TableHead>{t("dynamic.subscriptions.qolgan")}</TableHead>
+                      <TableHead>{t("dynamic.subscriptions.holat")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -221,12 +223,12 @@ export default function Subscriptions() {
                         <TableCell className="text-sm">{format(new Date(s.starts_at), "dd.MM.yyyy")}</TableCell>
                         <TableCell className="text-sm">{format(new Date(s.expires_at), "dd.MM.yyyy")}</TableCell>
                         <TableCell className="text-sm">
-                          {s.live ? `${s.daysLeft} kun` : <span className="text-rose-500">Tugagan</span>}
+                          {s.live ? `${s.daysLeft} kun` : <span className="text-rose-500">{t("dynamic.subscriptions.tugagan")}</span>}
                         </TableCell>
                         <TableCell>
-                          {s.expiring ? <Badge className="bg-amber-500 text-white">Tez tugaydi</Badge>
-                            : s.live ? <Badge className="bg-purple-500 text-white">Active</Badge>
-                            : <Badge variant="destructive">Expired</Badge>}
+                          {s.expiring ? <Badge className="bg-amber-500 text-white">{t("dynamic.subscriptions.tez_tugaydi")}</Badge>
+                            : s.live ? <Badge className="bg-purple-500 text-white">{t("dynamic.subscriptions.active")}</Badge>
+                            : <Badge variant="destructive">{t("dynamic.subscriptions.expired")}</Badge>}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -240,16 +242,16 @@ export default function Subscriptions() {
         <TabsContent value="history">
           <Card className="overflow-hidden">
             {history.length === 0 ? (
-              <p className="p-12 text-center text-muted-foreground text-sm">Hali takroriy obunalar yo'q</p>
+              <p className="p-12 text-center text-muted-foreground text-sm">{t("dynamic.subscriptions.hali_takroriy_obunalar_yo_q")}</p>
             ) : (
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Foydalanuvchi</TableHead>
-                      <TableHead>Renewals</TableHead>
-                      <TableHead>Oxirgi pack</TableHead>
-                      <TableHead>Oxirgi sana</TableHead>
+                      <TableHead>{t("dynamic.usersmanager.foydalanuvchi")}</TableHead>
+                      <TableHead>{t("dynamic.subscriptions.renewals")}</TableHead>
+                      <TableHead>{t("dynamic.subscriptions.oxirgi_pack")}</TableHead>
+                      <TableHead>{t("dynamic.subscriptions.oxirgi_sana")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -273,17 +275,17 @@ export default function Subscriptions() {
         <TabsContent value="payments">
           <Card className="overflow-hidden">
             {payments.length === 0 ? (
-              <p className="p-12 text-center text-muted-foreground text-sm">To'lovlar yo'q</p>
+              <p className="p-12 text-center text-muted-foreground text-sm">{t("dynamic.subscriptions.to_lovlar_yo_q")}</p>
             ) : (
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Foydalanuvchi</TableHead>
-                      <TableHead>Summa</TableHead>
-                      <TableHead>Usul</TableHead>
-                      <TableHead>Holat</TableHead>
-                      <TableHead>Sana</TableHead>
+                      <TableHead>{t("dynamic.usersmanager.foydalanuvchi")}</TableHead>
+                      <TableHead>{t("dynamic.orgpayments.summa")}</TableHead>
+                      <TableHead>{t("dynamic.subscriptions.usul")}</TableHead>
+                      <TableHead>{t("dynamic.subscriptions.holat")}</TableHead>
+                      <TableHead>{t("dynamic.subscriptions.sana")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>

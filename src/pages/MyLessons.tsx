@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import React, { useState, useEffect } from 'react';
 import api from '@/lib/axios';
 import { UserCheck, BookOpen, Clock, MapPin, Save, X, Plus, Trash2, Edit, ExternalLink, Check, Coins, Info } from 'lucide-react';
@@ -31,6 +32,7 @@ interface StudentAttendance {
 }
 
 const MyLessons = () => {
+  const { t } = useTranslation();
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [activeModal, setActiveModal] = useState<'attendance' | 'details' | 'create' | null>(null);
   const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null);
@@ -70,7 +72,7 @@ const MyLessons = () => {
       setSubjects(subjectsRes.data || []);
       if (groupsRes.data?.length > 0) setSelectedGroupId(groupsRes.data[0].id);
     } catch (err) {
-      toast.error("Dastlabki ma'lumotlarni yuklashda xatolik");
+      toast.error(t("dynamic.mylessons.dastlabki_ma_lumotlarni_yuklashda_xatoli"));
     }
   };
 
@@ -80,7 +82,7 @@ const MyLessons = () => {
       const res = await api.get(`/teacher/lessons/group/${groupId}`);
       setLessons(res.data || []);
     } catch (err) {
-      toast.error("Darslarni yuklashda xatolik");
+      toast.error(t("dynamic.mylessons.darslarni_yuklashda_xatolik"));
     } finally {
       setLoading(false);
     }
@@ -103,7 +105,7 @@ const MyLessons = () => {
         coinAmount: 0
       })));
     } catch (err) {
-      toast.error("Talabalar ro'yxatini olib bo'lmadi");
+      toast.error(t("dynamic.mylessons.talabalar_ro_yxatini_olib_bo_lmadi"));
     } finally {
       setLoading(false);
     }
@@ -120,22 +122,22 @@ const MyLessons = () => {
     try {
       const payload = { ...formData, group_id: selectedGroupId };
       const res = await api.post('/teacher/lessons', payload);
-      toast.success("Mavzu muvaffaqiyatli yaratildi");
+      toast.success(t("dynamic.mylessons.mavzu_muvaffaqiyatli_yaratildi"));
       fetchLessonsByGroup(selectedGroupId);
       setActiveModal(null);
     } catch (err) {
-      toast.error("Darsni saqlashda xatolik");
+      toast.error(t("dynamic.mylessons.darsni_saqlashda_xatolik"));
     }
   };
 
   const deleteLesson = async (id: string) => {
-    if (!window.confirm("Ushbu mavzuni o'chirishni tasdiqlaysizmi?")) return;
+    if (!window.confirm(t("dynamic.syllabus.ushbu_mavzuni_o_chirishni_tasdiqlaysizmi"))) return;
     try {
       await api.delete(`/teacher/lessons/${id}`);
-      toast.success("Mavzu o'chirildi");
+      toast.success(t("dynamic.mylessons.mavzu_o_chirildi"));
       fetchLessonsByGroup(selectedGroupId);
     } catch (err) {
-      toast.error("O'chirishda xatolik");
+      toast.error(t("dynamic.orggroups.o_chirishda_xatolik"));
     }
   };
 
@@ -150,15 +152,15 @@ const MyLessons = () => {
           status: student.status || 'PRESENT'
         });
       }
-      toast.success("Barcha talabalar yo'qlama qilindi");
+      toast.success(t("dynamic.mylessons.barcha_talabalar_yo_qlama_qilindi"));
       setActiveModal(null);
     } catch (err) {
-      toast.error("Saqlashda xatolik yuz berdi");
+      toast.error(t("dynamic.mylessons.saqlashda_xatolik_yuz_berdi"));
     }
   };
 
   const handleSaveGrade = async (student: StudentAttendance) => {
-    if (!student.grade) return toast.error("Baho kiriting");
+    if (!student.grade) return toast.error(t("dynamic.mylessons.baho_kiriting"));
     try {
       await api.post('/teacher/grades', {
         student_id: student.id, // Backend UUID kutyapti
@@ -168,7 +170,7 @@ const MyLessons = () => {
       toast.success(`${student.full_name} baholandi!`);
     } catch (error) {
       console.error("Baholash xatosi:", error);
-      toast.error("Baholashda xatolik (500)");
+      toast.error(t("dynamic.mylessons.baholashda_xatolik_500"));
     }
   };
 
@@ -178,9 +180,9 @@ const MyLessons = () => {
         student_id: student.id,
         amount: student.coinAmount
       });
-      toast.success("Coin berildi!");
+      toast.success(t("dynamic.mylessons.coin_berildi"));
     } catch (error) {
-      toast.error("Coin berishda xatolik");
+      toast.error(t("dynamic.mylessons.coin_berishda_xatolik"));
     }
   };
 
@@ -188,8 +190,8 @@ const MyLessons = () => {
     <div className="p-2 space-y-6 bg-slate-50/50 min-h-screen font-sans">
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Mening Darslarim</h1>
-          <p className="text-slate-500 text-sm mt-1">Dars rejasi (Syllabus) va Yo'qlamani boshqarish</p>
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">{t("dynamic.mylessons.mening_darslarim")}</h1>
+          <p className="text-slate-500 text-sm mt-1">{t("dynamic.mylessons.dars_rejasi_syllabus_va_yo_qlamani_boshq")}</p>
         </div>
         
         <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
@@ -210,7 +212,7 @@ const MyLessons = () => {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {loading ? (
-          <p className="col-span-full text-center py-12 text-slate-400 animate-pulse">Yuklanmoqda...</p>
+          <p className="col-span-full text-center py-12 text-slate-400 animate-pulse">{t("dynamic.mylessons.yuklanmoqda")}</p>
         ) : lessons.length > 0 ? (
           lessons.map((lesson) => (
             <Card key={lesson.id} className="hover:shadow-md transition-all border-slate-200/60 rounded-2xl overflow-hidden group">
@@ -247,8 +249,8 @@ const MyLessons = () => {
         ) : (
           <div className="col-span-full text-center py-20 bg-white rounded-3xl border border-dashed">
             <BookOpen size={48} className="mx-auto text-slate-200 mb-4" />
-            <p className="text-slate-500 font-medium text-lg">Hozircha darslar mavjud emas</p>
-            <p className="text-slate-400 text-sm mt-1">Yangi mavzu yaratish uchun yuqoridagi tugmani bosing.</p>
+            <p className="text-slate-500 font-medium text-lg">{t("dynamic.mylessons.hozircha_darslar_mavjud_emas")}</p>
+            <p className="text-slate-400 text-sm mt-1">{t("dynamic.mylessons.yangi_mavzu_yaratish_uchun_yuqoridagi_tu")}</p>
           </div>
         )}
       </div>
@@ -258,13 +260,13 @@ const MyLessons = () => {
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
           <Card className="w-full max-w-md rounded-3xl shadow-2xl animate-in zoom-in-95 duration-200">
             <CardHeader className="flex flex-row items-center justify-between border-b pb-4">
-              <CardTitle className="text-xl">Yangi Mavzu Qo'shish</CardTitle>
+              <CardTitle className="text-xl">{t("dynamic.mylessons.yangi_mavzu_qo_shish")}</CardTitle>
               <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setActiveModal(null)}><X size={20}/></Button>
             </CardHeader>
             <form onSubmit={handleCreateLesson}>
               <CardContent className="space-y-4 pt-6">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-500 uppercase ml-1">Fan *</label>
+                  <label className="text-xs font-bold text-slate-500 uppercase ml-1">{t("dynamic.syllabus.fan_")}</label>
                   <Select value={formData.subject_id} onValueChange={(val) => setFormData({...formData, subject_id: val})}>
                     <SelectTrigger className="rounded-xl h-11 border-slate-200 bg-slate-50/50">
                       <SelectValue placeholder="Fanni tanlang" />
@@ -275,7 +277,7 @@ const MyLessons = () => {
                   </Select>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-500 uppercase ml-1">Sarlavha *</label>
+                  <label className="text-xs font-bold text-slate-500 uppercase ml-1">{t("dynamic.lmsnews.sarlavha_")}</label>
                   <Input 
                     required 
                     placeholder="Mavzu nomini kiriting" 
@@ -286,7 +288,7 @@ const MyLessons = () => {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-500 uppercase ml-1">Boshlanish vaqti</label>
+                    <label className="text-xs font-bold text-slate-500 uppercase ml-1">{t("dynamic.mylessons.boshlanish_vaqti")}</label>
                     <Input 
                       type="datetime-local" 
                       className="rounded-xl h-11 border-slate-200 bg-slate-50/50"
@@ -295,7 +297,7 @@ const MyLessons = () => {
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-500 uppercase ml-1">Xona</label>
+                    <label className="text-xs font-bold text-slate-500 uppercase ml-1">{t("dynamic.orglessons.xona")}</label>
                     <Input 
                       placeholder="M-201" 
                       className="rounded-xl h-11 border-slate-200 bg-slate-50/50"
@@ -306,8 +308,8 @@ const MyLessons = () => {
                 </div>
               </CardContent>
               <div className="p-6 border-t flex gap-3">
-                <Button type="button" variant="outline" className="flex-1 rounded-xl h-11" onClick={() => setActiveModal(null)}>Bekor qilish</Button>
-                <Button type="submit" className="flex-1 rounded-xl h-11 bg-purple-600 hover:bg-purple-700">Mavzuni yaratish</Button>
+                <Button type="button" variant="outline" className="flex-1 rounded-xl h-11" onClick={() => setActiveModal(null)}>{t("dynamic.pricingplans.bekor_qilish")}</Button>
+                <Button type="submit" className="flex-1 rounded-xl h-11 bg-purple-600 hover:bg-purple-700">{t("dynamic.mylessons.mavzuni_yaratish")}</Button>
               </div>
             </form>
           </Card>
@@ -319,16 +321,16 @@ const MyLessons = () => {
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
           <Card className="w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl animate-in fade-in duration-200">
             <CardHeader className="bg-slate-50 border-b flex flex-row items-center justify-between py-5">
-              <CardTitle className="text-xl">Dars Tafsilotlari</CardTitle>
+              <CardTitle className="text-xl">{t("dynamic.mylessons.dars_tafsilotlari")}</CardTitle>
               <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setActiveModal(null)}><X size={20}/></Button>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-1 pt-4">
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Sarlavha:</h4>
+                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t("dynamic.mylessons.sarlavha")}</h4>
                 <p className="text-slate-900 font-bold text-xl">{currentLesson.title}</p>
               </div>
               <div className="space-y-1">
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Mavzu tavsifi:</h4>
+                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t("dynamic.mylessons.mavzu_tavsifi")}</h4>
                 <p className="text-slate-600 leading-relaxed">{currentLesson.description || "Tavsif mavjud emas."}</p>
               </div>
               {currentLesson.attachment_url && (
@@ -348,7 +350,7 @@ const MyLessons = () => {
               </div>
             </CardContent>
             <div className="p-6 border-t bg-slate-50/30 flex justify-end">
-              <Button variant="outline" className="rounded-xl px-8" onClick={() => setActiveModal(null)}>Yopish</Button>
+              <Button variant="outline" className="rounded-xl px-8" onClick={() => setActiveModal(null)}>{t("dynamic.syllabus.yopish")}</Button>
             </div>
           </Card>
         </div>
@@ -360,18 +362,18 @@ const MyLessons = () => {
           <Card className="w-full max-w-2xl max-h-[90vh] flex flex-col rounded-[2rem] shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
             <CardHeader className="flex flex-row items-center justify-between border-b bg-white py-6">
               <div>
-                <CardTitle className="text-2xl font-bold text-slate-900">Yo'qlama qilish</CardTitle>
+                <CardTitle className="text-2xl font-bold text-slate-900">{t("dynamic.mylessons.yo_qlama_qilish")}</CardTitle>
                 <p className="text-sm text-slate-500 font-medium mt-0.5">{currentLesson.title} — {currentLesson.group_name}</p>
               </div>
               <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setActiveModal(null)}><X size={24}/></Button>
             </CardHeader>
             <CardContent className="flex-1 overflow-y-auto p-0 bg-white">
-              {loading ? <div className="p-10 text-center">Yuklanmoqda...</div> : (
+              {loading ? <div className="p-10 text-center">{t("dynamic.mylessons.yuklanmoqda")}</div> : (
                 <table className="w-full">
                   <thead className="bg-slate-50 text-[10px] uppercase font-bold text-slate-400 tracking-widest sticky top-0 z-10">
                     <tr>
-                      <th className="p-4 text-left">Talaba</th>
-                      <th className="p-4 text-center">Yo'qlama holati</th>
+                      <th className="p-4 text-left">{t("dynamic.orgrewards.talaba")}</th>
+                      <th className="p-4 text-center">{t("dynamic.mylessons.yo_qlama_holati")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
@@ -407,10 +409,9 @@ const MyLessons = () => {
               )}
             </CardContent>
             <div className="p-6 border-t flex justify-end gap-3 bg-slate-50/50">
-              <Button variant="outline" className="rounded-xl h-12 px-8 font-bold" onClick={() => setActiveModal(null)}>Bekor qilish</Button>
+              <Button variant="outline" className="rounded-xl h-12 px-8 font-bold" onClick={() => setActiveModal(null)}>{t("dynamic.pricingplans.bekor_qilish")}</Button>
               <Button onClick={saveAttendance} className="bg-slate-900 hover:bg-slate-800 text-white rounded-xl h-12 px-10 font-bold gap-2">
-                <Save size={18}/> Saqlash
-              </Button>
+                <Save size={18}/>{t("dynamic.usersmanager.saqlash")}</Button>
             </div>
           </Card>
         </div>

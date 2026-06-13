@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { VariantProps, cva } from "class-variance-authority";
@@ -34,7 +35,7 @@ const SidebarContext = React.createContext<SidebarContext | null>(null);
 function useSidebar() {
   const context = React.useContext(SidebarContext);
   if (!context) {
-    throw new Error("useSidebar must be used within a SidebarProvider.");
+    throw new Error(t("dynamic.sidebar.usesidebar_must_be_used_within_a_sidebar"));
   }
 
   return context;
@@ -216,7 +217,7 @@ const Sidebar = React.forwardRef<
 });
 Sidebar.displayName = "Sidebar";
 
-const SidebarTrigger = React.forwardRef<React.ElementRef<typeof Button>, React.ComponentProps<typeof Button>>(
+const SidebarTrigger = React.forwardRef<React.ElementRef<typeof Button>{t("dynamic.sidebar._reactcomponentprops")}<typeof Button>>(
   ({ className, onClick, ...props }, ref) => {
     const { toggleSidebar } = useSidebar();
 
@@ -234,7 +235,7 @@ const SidebarTrigger = React.forwardRef<React.ElementRef<typeof Button>, React.C
         {...props}
       >
         <PanelLeft />
-        <span className="sr-only">Toggle Sidebar</span>
+        <span className="sr-only">{t("dynamic.sidebar.toggle_sidebar")}</span>
       </Button>
     );
   },
@@ -249,10 +250,10 @@ const SidebarRail = React.forwardRef<HTMLButtonElement, React.ComponentProps<"bu
       <button
         ref={ref}
         data-sidebar="rail"
-        aria-label="Toggle Sidebar"
+        aria-label={t("dynamic.sidebar.toggle_sidebar")}
         tabIndex={-1}
         onClick={toggleSidebar}
-        title="Toggle Sidebar"
+        title={t("dynamic.sidebar.toggle_sidebar")}
         className={cn(
           "absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 transition-all ease-linear after:absolute after:inset-y-0 after:left-1/2 after:w-[2px] group-data-[side=left]:-right-4 group-data-[side=right]:left-0 hover:after:bg-sidebar-border sm:flex",
           "[[data-side=left]_&]:cursor-w-resize [[data-side=right]_&]:cursor-e-resize",
@@ -284,7 +285,7 @@ const SidebarInset = React.forwardRef<HTMLDivElement, React.ComponentProps<"main
 });
 SidebarInset.displayName = "SidebarInset";
 
-const SidebarInput = React.forwardRef<React.ElementRef<typeof Input>, React.ComponentProps<typeof Input>>(
+const SidebarInput = React.forwardRef<React.ElementRef<typeof Input>{t("dynamic.sidebar._reactcomponentprops")}<typeof Input>>(
   ({ className, ...props }, ref) => {
     return (
       <Input
@@ -311,7 +312,7 @@ const SidebarFooter = React.forwardRef<HTMLDivElement, React.ComponentProps<"div
 });
 SidebarFooter.displayName = "SidebarFooter";
 
-const SidebarSeparator = React.forwardRef<React.ElementRef<typeof Separator>, React.ComponentProps<typeof Separator>>(
+const SidebarSeparator = React.forwardRef<React.ElementRef<typeof Separator>{t("dynamic.sidebar._reactcomponentprops")}<typeof Separator>>(
   ({ className, ...props }, ref) => {
     return (
       <Separator

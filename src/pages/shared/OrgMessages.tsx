@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -46,6 +47,7 @@ interface Profile {
 }
 
 export default function OrgMessages() {
+  const { t } = useTranslation();
   const { user, role, profile } = useAuth();
   const [loading, setLoading] = useState(true);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -165,11 +167,11 @@ export default function OrgMessages() {
   const send = async () => {
     if (!user?.id) return;
     if (!form.subject.trim() || !form.body.trim()) {
-      toast.error("Mavzu va xabar matnini kiriting");
+      toast.error(t("dynamic.orgmessages.mavzu_va_xabar_matnini_kiriting"));
       return;
     }
     if (!form.is_broadcast && !form.recipient_id) {
-      toast.error("Qabul qiluvchini tanlang");
+      toast.error(t("dynamic.orgmessages.qabul_qiluvchini_tanlang"));
       return;
     }
     setSending(true);
@@ -198,24 +200,23 @@ export default function OrgMessages() {
     <div className="space-y-6 w-full">
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
-          <h1 className="font-display text-2xl md:text-3xl font-bold">Xabarlar</h1>
-          <p className="text-sm text-muted-foreground">Sizga kelgan xabarlar va e'lonlar</p>
+          <h1 className="font-display text-2xl md:text-3xl font-bold">{t("dynamic.messages.xabarlar")}</h1>
+          <p className="text-sm text-muted-foreground">{t("dynamic.orgmessages.sizga_kelgan_xabarlar_va_e_lonlar")}</p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button variant="hero">
-              <Plus className="h-4 w-4" /> Yangi xabar
-            </Button>
+              <Plus className="h-4 w-4" />{t("dynamic.messages.yangi_xabar")}</Button>
           </DialogTrigger>
           <DialogContent className="max-w-lg">
             <DialogHeader>
-              <DialogTitle>Yangi xabar yuborish</DialogTitle>
+              <DialogTitle>{t("dynamic.messages.yangi_xabar_yuborish")}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               {canBroadcast && (
                 <div className="flex items-center justify-between rounded-lg border p-3">
                   <div>
-                    <Label className="font-medium">E'lon (broadcast)</Label>
+                    <Label className="font-medium">{t("dynamic.orgmessages.e_lon_broadcast")}</Label>
                     <p className="text-xs text-muted-foreground">
                       Tashkilotning barcha a'zolariga yuboriladi
                     </p>
@@ -228,7 +229,7 @@ export default function OrgMessages() {
               )}
               {!form.is_broadcast && (
                 <div>
-                  <Label>Qabul qiluvchi</Label>
+                  <Label>{t("dynamic.messages.qabul_qiluvchi")}</Label>
                   <Select
                     value={form.recipient_id}
                     onValueChange={(v) => setForm({ ...form, recipient_id: v })}
@@ -247,7 +248,7 @@ export default function OrgMessages() {
                 </div>
               )}
               <div>
-                <Label>Mavzu</Label>
+                <Label>{t("dynamic.orgmessages.mavzu")}</Label>
                 <Input
                   value={form.subject}
                   onChange={(e) => setForm({ ...form, subject: e.target.value })}
@@ -255,7 +256,7 @@ export default function OrgMessages() {
                 />
               </div>
               <div>
-                <Label>Xabar matni</Label>
+                <Label>{t("dynamic.orgmessages.xabar_matni")}</Label>
                 <Textarea
                   rows={5}
                   value={form.body}
@@ -265,9 +266,7 @@ export default function OrgMessages() {
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setOpen(false)}>
-                Bekor qilish
-              </Button>
+              <Button variant="outline" onClick={() => setOpen(false)}>{t("dynamic.pricingplans.bekor_qilish")}</Button>
               <Button variant="hero" onClick={send} disabled={sending}>
                 {sending ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -287,7 +286,7 @@ export default function OrgMessages() {
             <Inbox className="h-5 w-5" />
           </div>
           <div>
-            <p className="text-xs text-muted-foreground uppercase">Jami</p>
+            <p className="text-xs text-muted-foreground uppercase">{t("dynamic.orgmessages.jami")}</p>
             <p className="font-display font-bold text-2xl">{stats.total}</p>
           </div>
         </Card>
@@ -296,7 +295,7 @@ export default function OrgMessages() {
             <Megaphone className="h-5 w-5" />
           </div>
           <div>
-            <p className="text-xs text-muted-foreground uppercase">E'lonlar</p>
+            <p className="text-xs text-muted-foreground uppercase">{t("dynamic.orgmessages.e_lonlar")}</p>
             <p className="font-display font-bold text-2xl">{stats.broadcasts}</p>
           </div>
         </Card>

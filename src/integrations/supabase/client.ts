@@ -1,3 +1,4 @@
+import i18next from "i18next";
 /**
  * 🚨 SUPABASE IS DISABLED.
  * This file is kept only to prevent compilation errors in legacy components.
@@ -24,7 +25,7 @@ export const supabase = {
   auth: {
     signInWithPassword: async () => {
       console.error("❌ ERROR: Supabase is disabled. Use Java Backend API.");
-      return { data: { user: null, session: null }, error: new Error("Supabase is disabled") };
+      return { data: { user: null, session: null }, error: new Error(i18next.t("dynamic.client.supabase_is_disabled")) };
     },
     signOut: async () => {
       console.warn("Supabase signOut called (ignored)");

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { 
   Dialog, 
   DialogContent, 
@@ -17,6 +18,7 @@ interface SubscriptionModalProps {
 }
 
 export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModalProps) {
+  const { t } = useTranslation();
   const features = [
     "Cheksiz talabalar va o'qituvchilar",
     "Real-time tahliliy ma'lumotlar",
@@ -55,8 +57,8 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
               <Zap className="h-16 w-16" />
             </div>
             <div className="relative z-10 space-y-2">
-              <p className="text-[10px] font-bold uppercase tracking-widest opacity-80">Joriy Reja</p>
-              <h4 className="text-2xl font-bold tracking-tight">PREMIUM PRO</h4>
+              <p className="text-[10px] font-bold uppercase tracking-widest opacity-80">{t("dynamic.subscriptionmodal.joriy_reja")}</p>
+              <h4 className="text-2xl font-bold tracking-tight">{t("dynamic.subscriptionmodal.premium_pro")}</h4>
               <div className="flex items-center gap-2 text-[10px] font-bold bg-white/10 w-fit px-3 py-1 rounded-full backdrop-blur-md border border-white/10">
                 <CheckCircle2 className="h-3 w-3" /> Faol (31 kun qoldi)
               </div>
@@ -65,7 +67,7 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
 
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h5 className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Imkoniyatlar ro'yxati</h5>
+              <h5 className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{t("dynamic.subscriptionmodal.imkoniyatlar_ro_yxati")}</h5>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] font-black text-primary bg-primary/10 px-2 py-0.5 rounded-full">10 / 10</span>
                 <div className="h-1 w-16 bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden">

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
@@ -19,6 +20,7 @@ interface Invitee {
 }
 
 export default function ReferralPage() {
+  const { t } = useTranslation();
   const [info, setInfo] = useState<ReferralInfo | null>(null);
   const [invitees, setInvitees] = useState<Invitee[]>([]);
   const [copied, setCopied] = useState(false);
@@ -37,7 +39,7 @@ export default function ReferralPage() {
     }).catch((err) => {
       console.error(err);
       setError(true);
-      toast.error("Ma'lumot yuklanmadi. Qayta urinib ko'ring.");
+      toast.error(t("dynamic.referralpage.ma_lumot_yuklanmadi_qayta_urinib_ko_ring"));
     }).finally(() => setLoading(false));
   }, []);
 
@@ -47,10 +49,10 @@ export default function ReferralPage() {
     try {
       await navigator.clipboard.writeText(inviteLink);
       setCopied(true);
-      toast.success("Link nusxalandi!");
+      toast.success(t("dynamic.referralpage.link_nusxalandi"));
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast.error("Nusxalanmadi");
+      toast.error(t("dynamic.referralpage.nusxalanmadi"));
     }
   };
 
@@ -76,7 +78,7 @@ export default function ReferralPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center">
         <Gift className="w-12 h-12 text-muted-foreground opacity-40" />
-        <p className="text-muted-foreground">Ma'lumotlarni yuklashda xatolik yuz berdi.</p>
+        <p className="text-muted-foreground">{t("dynamic.referralpage.ma_lumotlarni_yuklashda_xatolik_yuz_berd")}</p>
         <button
           onClick={() => window.location.reload()}
           className="px-4 py-2 rounded-xl bg-primary text-white text-sm hover:bg-primary/90 transition-colors"
@@ -99,7 +101,7 @@ export default function ReferralPage() {
           Do'stlaringizni taklif qiling! 🎉
         </h1>
         <p className="text-muted-foreground mt-2 text-sm md:text-base">
-          Har bir taklif uchun siz va do'stingiz <strong className="text-yellow-500">10 coin</strong> olasiz!
+          Har bir taklif uchun siz va do'stingiz <strong className="text-yellow-500">{t("dynamic.referralpage.10_coin")}</strong> olasiz!
         </p>
       </motion.div>
 
@@ -115,7 +117,7 @@ export default function ReferralPage() {
             <Coins className="w-6 h-6 text-yellow-500" />
           </div>
           <p className="text-3xl font-bold text-yellow-500">{info?.coins ?? 0}</p>
-          <p className="text-sm text-muted-foreground mt-1">Jami coinlar</p>
+          <p className="text-sm text-muted-foreground mt-1">{t("dynamic.referralpage.jami_coinlar")}</p>
         </motion.div>
 
         <motion.div
@@ -128,7 +130,7 @@ export default function ReferralPage() {
             <Users className="w-6 h-6 text-purple-500" />
           </div>
           <p className="text-3xl font-bold text-purple-500">{info?.inviteCount ?? 0}</p>
-          <p className="text-sm text-muted-foreground mt-1">Taklif qilganlarim</p>
+          <p className="text-sm text-muted-foreground mt-1">{t("dynamic.referralpage.taklif_qilganlarim")}</p>
         </motion.div>
 
         <motion.div
@@ -141,7 +143,7 @@ export default function ReferralPage() {
             <Gift className="w-6 h-6 text-primary" />
           </div>
           <p className="text-3xl font-bold text-primary">{(info?.inviteCount ?? 0) * 10}</p>
-          <p className="text-sm text-muted-foreground mt-1">Ishlab topilgan coinlar</p>
+          <p className="text-sm text-muted-foreground mt-1">{t("dynamic.referralpage.ishlab_topilgan_coinlar")}</p>
         </motion.div>
       </div>
 
@@ -157,10 +159,10 @@ export default function ReferralPage() {
           Sizning invite havolangiz
         </h2>
         <p className="text-sm text-muted-foreground mb-4">
-          Do'stingiz havola orqali ro'yxatdan o'tib, kamida bitta test yoki vocabulary mashqini bajarsa, ikkalangiz ham <strong className="text-yellow-500">10 coin</strong> olasiz. Coinlar orqali yangi featurelarni ochishingiz mumkin.
+          Do'stingiz havola orqali ro'yxatdan o'tib, kamida bitta test yoki vocabulary mashqini bajarsa, ikkalangiz ham <strong className="text-yellow-500">{t("dynamic.referralpage.10_coin")}</strong> olasiz. Coinlar orqali yangi featurelarni ochishingiz mumkin.
         </p>
 
-        <div className="mb-2 text-xs font-semibold text-purple-500">Invite link</div>
+        <div className="mb-2 text-xs font-semibold text-purple-500">{t("dynamic.referralpage.invite_link")}</div>
         <div className="flex items-center gap-2">
           <div className="flex-1 rounded-xl border border-border bg-muted/50 px-4 py-3 text-sm font-mono truncate select-all">
             {inviteLink}
@@ -182,7 +184,7 @@ export default function ReferralPage() {
         className="rounded-2xl border border-border/50 bg-card/80 backdrop-blur-lg p-6 shadow-lg"
       >
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold">Taklif qilganlarim</h2>
+          <h2 className="text-lg font-bold">{t("dynamic.referralpage.taklif_qilganlarim")}</h2>
           <span className="text-sm text-muted-foreground">
             {invitees.length} ta foydalanuvchi
           </span>
@@ -191,7 +193,7 @@ export default function ReferralPage() {
         {invitees.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
             <Users className="w-12 h-12 mx-auto mb-3 opacity-30" />
-            <p className="text-sm">Hali hech kimni taklif qilmadingiz</p>
+            <p className="text-sm">{t("dynamic.referralpage.hali_hech_kimni_taklif_qilmadingiz")}</p>
             <p className="text-xs mt-1">Linkni do'stlaringizga yuboring va coin oling! 🎁</p>
           </div>
         ) : (
@@ -200,10 +202,10 @@ export default function ReferralPage() {
               <thead>
                 <tr className="border-b border-border/50 text-left text-muted-foreground">
                   <th className="py-3 px-2">#</th>
-                  <th className="py-3 px-2">F.I.O</th>
-                  <th className="py-3 px-2">Email</th>
-                  <th className="py-3 px-2">Referral Code</th>
-                  <th className="py-3 px-2">Qo'shilgan sana</th>
+                  <th className="py-3 px-2">{t("dynamic.profile.fio")}</th>
+                  <th className="py-3 px-2">{t("dynamic.profile.email")}</th>
+                  <th className="py-3 px-2">{t("dynamic.referralpage.referral_code")}</th>
+                  <th className="py-3 px-2">{t("dynamic.referralpage.qo_shilgan_sana")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -239,16 +241,14 @@ export default function ReferralPage() {
         transition={{ delay: 0.6 }}
         className="rounded-2xl border border-border/50 bg-card/80 backdrop-blur-lg p-6 shadow-lg"
       >
-        <h2 className="text-lg font-bold mb-1">Ijtimoiy tarmoqlarda ulashish</h2>
-        <p className="text-sm text-muted-foreground mb-4">Tezkor ulashish</p>
+        <h2 className="text-lg font-bold mb-1">{t("dynamic.referralpage.ijtimoiy_tarmoqlarda_ulashish")}</h2>
+        <p className="text-sm text-muted-foreground mb-4">{t("dynamic.referralpage.tezkor_ulashish")}</p>
         <div className="flex flex-wrap gap-3">
           <button
             onClick={shareToTelegram}
             className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0088cc]/15 text-[#0088cc] hover:bg-[#0088cc]/25 border border-[#0088cc]/20 transition-colors font-medium text-sm"
           >
-            <Send className="w-4 h-4" />
-            Telegram
-          </button>
+            <Send className="w-4 h-4" />{t("dynamic.payments.telegram")}</button>
           <button
             onClick={shareToInstagram}
             className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-500/15 to-pink-500/15 text-pink-500 hover:from-purple-500/25 hover:to-pink-500/25 border border-pink-500/20 transition-colors font-medium text-sm"

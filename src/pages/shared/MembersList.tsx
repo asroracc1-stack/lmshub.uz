@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
@@ -98,7 +99,9 @@ const schema = z.object({
   student_id: z.string().optional(),
 });
 
-export default function MembersList({ role, title, description, canManage }: Props) {
+export default function MembersList({
+  role, title, description, canManage }: Props) {
+  const { t } = useTranslation();
   const { profile, role: currentUserRole } = useAuth();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
@@ -254,7 +257,7 @@ export default function MembersList({ role, title, description, canManage }: Pro
     }
 
     if (isParent && !editing && !form.student_id) {
-      toast.error("Talabani tanlash shart");
+      toast.error(t("dynamic.memberslist.talabani_tanlash_shart"));
       return;
     }
 
@@ -279,7 +282,7 @@ export default function MembersList({ role, title, description, canManage }: Pro
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["members-list"] });
       queryClient.invalidateQueries({ queryKey: ["admin-dashboard-stats"] });
-      toast.success("O'chirib tashlandi");
+      toast.success(t("dynamic.memberslist.o_chirib_tashlandi"));
       setDelTarget(null);
     },
     onError: (error: any) => {
@@ -310,7 +313,7 @@ export default function MembersList({ role, title, description, canManage }: Pro
 
   const resetPassword = async () => {
     if (!pwdTarget || newPwd.length < 6) {
-      toast.error("Parol kamida 6 ta belgi bo'lishi kerak");
+      toast.error(t("dynamic.memberslist.parol_kamida_6_ta_belgi_bo_lishi_kerak"));
       return;
     }
     resetPwdMutation.mutate({ id: pwdTarget.id, pass: newPwd });
@@ -325,7 +328,7 @@ export default function MembersList({ role, title, description, canManage }: Pro
       toast.success(variables.active ? "Faollashtirildi" : "Bloklandi");
     },
     onError: () => {
-      toast.error("Xatolik yuz berdi");
+      toast.error(t("dynamic.parents.xatolik_yuz_berdi"));
     },
   });
 
@@ -479,18 +482,18 @@ export default function MembersList({ role, title, description, canManage }: Pro
             <Table>
               <TableHeader className="bg-slate-50/50 dark:bg-slate-900/50">
                 <TableRow>
-                  <TableHead className="font-semibold text-slate-800 dark:text-slate-200">Foydalanuvchi</TableHead>
+                  <TableHead className="font-semibold text-slate-800 dark:text-slate-200">{t("dynamic.usersmanager.foydalanuvchi")}</TableHead>
                   {role === "student" ? (
                     <>
-                      <TableHead className="font-semibold text-slate-800 dark:text-slate-200">Guruh</TableHead>
-                      <TableHead className="font-semibold text-slate-800 dark:text-slate-200">Coinlar</TableHead>
+                      <TableHead className="font-semibold text-slate-800 dark:text-slate-200">{t("dynamic.memberslist.guruh")}</TableHead>
+                      <TableHead className="font-semibold text-slate-800 dark:text-slate-200">{t("dynamic.memberslist.coinlar")}</TableHead>
                     </>
                   ) : (
-                    <TableHead className="font-semibold text-slate-800 dark:text-slate-200">Fanlar (Subject)</TableHead>
+                    <TableHead className="font-semibold text-slate-800 dark:text-slate-200">{t("dynamic.memberslist.fanlar_subject")}</TableHead>
                   )}
-                  <TableHead className="font-semibold text-slate-800 dark:text-slate-200">Aloqa Ma'lumotlari</TableHead>
-                  <TableHead className="font-semibold text-slate-800 dark:text-slate-200">Holati</TableHead>
-                  <TableHead className="text-right font-semibold text-slate-800 dark:text-slate-200">Amallar</TableHead>
+                  <TableHead className="font-semibold text-slate-800 dark:text-slate-200">{t("dynamic.memberslist.aloqa_ma_lumotlari")}</TableHead>
+                  <TableHead className="font-semibold text-slate-800 dark:text-slate-200">{t("dynamic.usersmanager.holati")}</TableHead>
+                  <TableHead className="text-right font-semibold text-slate-800 dark:text-slate-200">{t("dynamic.usersmanager.amallar")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -589,13 +592,9 @@ export default function MembersList({ role, title, description, canManage }: Pro
                         <TableCell>
                           {m.is_active !== false ? (
                             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-purple-500/10 text-purple-600 border border-purple-500/20">
-                              <span className="h-1.5 w-1.5 rounded-full bg-purple-500 animate-ping-slow mr-1" />
-                              Faol
-                            </span>
+                              <span className="h-1.5 w-1.5 rounded-full bg-purple-500 animate-ping-slow mr-1" />{t("dynamic.usersmanager.faol")}</span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-destructive/10 text-destructive border border-destructive/20">
-                              Bloklangan
-                            </span>
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-destructive/10 text-destructive border border-destructive/20">{t("dynamic.usersmanager.bloklangan")}</span>
                           )}
                         </TableCell>
 
@@ -610,7 +609,7 @@ export default function MembersList({ role, title, description, canManage }: Pro
                                   setGrantCoinsTarget(m);
                                   setGrantCoinsOpen(true);
                                 }}
-                                title="Coin hadya qilish"
+                                title={t("dynamic.usersmanager.coin_hadya_qilish")}
                               >
                                 <Gift className="h-4 w-4" />
                               </Button>
@@ -631,7 +630,7 @@ export default function MembersList({ role, title, description, canManage }: Pro
                                   size="icon"
                                   className="h-8 w-8 rounded-lg text-slate-600 hover:text-slate-700 hover:bg-slate-500/15"
                                   onClick={() => setPwdTarget(m)}
-                                  title="Parolni o'zgartirish"
+                                  title={t("dynamic.sharedprofile.parolni_o_zgartirish")}
                                 >
                                   <KeyRound className="h-4 w-4" />
                                 </Button>
@@ -649,7 +648,7 @@ export default function MembersList({ role, title, description, canManage }: Pro
                                   size="icon"
                                   onClick={() => setDelTarget(m)}
                                   className="h-8 w-8 rounded-lg text-destructive hover:text-destructive-foreground hover:bg-destructive/90"
-                                  title="O'chirish"
+                                  title={t("dynamic.usersmanager.o_chirish")}
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
@@ -687,7 +686,7 @@ export default function MembersList({ role, title, description, canManage }: Pro
               {!editing && (
                 role === "parent" ? (
                   <div className="space-y-2">
-                    <Label className="text-xs font-bold uppercase tracking-wider text-primary">Bog'lanadigan Talaba *</Label>
+                    <Label className="text-xs font-bold uppercase tracking-wider text-primary">{t("dynamic.memberslist.bog_lanadigan_talaba_")}</Label>
                     <Popover open={studentSearchOpen} onOpenChange={setStudentSearchOpen}>
                       <PopoverTrigger asChild>
                         <Button
@@ -706,7 +705,7 @@ export default function MembersList({ role, title, description, canManage }: Pro
                         <Command className="w-full">
                           <CommandInput placeholder="Ism yoki login bo'yicha qidirish..." />
                           <CommandList>
-                            <CommandEmpty>Talaba topilmadi.</CommandEmpty>
+                            <CommandEmpty>{t("dynamic.parents.talaba_topilmadi")}</CommandEmpty>
                             <CommandGroup>
                               {studentsList.map((s) => (
                                 <CommandItem
@@ -739,7 +738,7 @@ export default function MembersList({ role, title, description, canManage }: Pro
                 ) : (
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold uppercase tracking-wider opacity-70">Username *</Label>
+                      <Label className="text-xs font-bold uppercase tracking-wider opacity-70">{t("dynamic.usersmanager.username_")}</Label>
                       <Input
                         value={form.username}
                         onChange={(e) =>
@@ -750,7 +749,7 @@ export default function MembersList({ role, title, description, canManage }: Pro
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold uppercase tracking-wider opacity-70">Parol *</Label>
+                      <Label className="text-xs font-bold uppercase tracking-wider opacity-70">{t("dynamic.memberslist.parol_")}</Label>
                       <Input
                         type="password"
                         value={form.password}
@@ -764,7 +763,7 @@ export default function MembersList({ role, title, description, canManage }: Pro
               )}
               
               <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-wider opacity-70">To'liq ism *</Label>
+                <Label className="text-xs font-bold uppercase tracking-wider opacity-70">{t("dynamic.memberslist.to_liq_ism_")}</Label>
                 <Input
                   value={form.full_name}
                   onChange={(e) => setForm({ ...form, full_name: e.target.value })}
@@ -776,7 +775,7 @@ export default function MembersList({ role, title, description, canManage }: Pro
 
               {role === "student" && !editing && (
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase tracking-wider opacity-70">Guruh (Ixtiyoriy)</Label>
+                  <Label className="text-xs font-bold uppercase tracking-wider opacity-70">{t("dynamic.usersmanager.guruh_ixtiyoriy")}</Label>
                   <Popover open={groupSearchOpen} onOpenChange={setGroupSearchOpen}>
                     <PopoverTrigger asChild>
                       <Button
@@ -795,7 +794,7 @@ export default function MembersList({ role, title, description, canManage }: Pro
                       <Command className="w-full">
                         <CommandInput placeholder="Guruh qidirish..." />
                         <CommandList>
-                          <CommandEmpty>Guruh topilmadi.</CommandEmpty>
+                          <CommandEmpty>{t("dynamic.parents.guruh_topilmadi")}</CommandEmpty>
                           <CommandGroup>
                             <CommandItem
                               value="none"
@@ -840,7 +839,7 @@ export default function MembersList({ role, title, description, canManage }: Pro
 
               {role === "teacher" && (
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase tracking-wider opacity-70">Mutaxassislik (Fan)</Label>
+                  <Label className="text-xs font-bold uppercase tracking-wider opacity-70">{t("dynamic.memberslist.mutaxassislik_fan")}</Label>
                   <Input
                     value={form.subject}
                     onChange={(e) => setForm({ ...form, subject: e.target.value })}
@@ -852,7 +851,7 @@ export default function MembersList({ role, title, description, canManage }: Pro
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase tracking-wider opacity-70">Email</Label>
+                  <Label className="text-xs font-bold uppercase tracking-wider opacity-70">{t("dynamic.profile.email")}</Label>
                   <Input
                     type="email"
                     value={form.email}
@@ -862,7 +861,7 @@ export default function MembersList({ role, title, description, canManage }: Pro
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase tracking-wider opacity-70">Telefon</Label>
+                  <Label className="text-xs font-bold uppercase tracking-wider opacity-70">{t("dynamic.profile.telefon")}</Label>
                   <Input
                     value={form.phone_number}
                     onChange={(e) => setForm({ ...form, phone_number: e.target.value })}
@@ -894,9 +893,7 @@ export default function MembersList({ role, title, description, canManage }: Pro
             </div>
             
             <DialogFooter className="p-8 pt-4 border-t border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-slate-900/80 backdrop-blur-md">
-              <Button variant="ghost" type="button" onClick={() => setDialogOpen(false)} className="rounded-lg h-11 px-6">
-                Bekor
-              </Button>
+              <Button variant="ghost" type="button" onClick={() => setDialogOpen(false)} className="rounded-lg h-11 px-6">{t("dynamic.usersmanager.bekor")}</Button>
               <Button type="submit" disabled={submitting} variant="hero" className="rounded-lg h-11 px-8">
                 {submitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
                 {editing ? "Saqlash" : "Yaratish"}
@@ -918,14 +915,14 @@ export default function MembersList({ role, title, description, canManage }: Pro
       >
         <DialogContent className="max-w-sm rounded-xl" aria-describedby="pwd-reset-description">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold">Parolni yangilash</DialogTitle>
+            <DialogTitle className="text-xl font-bold">{t("dynamic.usersmanager.parolni_yangilash")}</DialogTitle>
             <DialogDescription id="pwd-reset-description">
               Foydalanuvchi: <span className="text-primary font-bold">@{pwdTarget?.username}</span>
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={(e) => { e.preventDefault(); resetPassword(); }}>
             <div className="py-4 space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-wider opacity-70">Yangi parol</Label>
+              <Label className="text-xs font-bold uppercase tracking-wider opacity-70">{t("dynamic.usersmanager.yangi_parol")}</Label>
               <Input
                 type="password"
                 value={newPwd}
@@ -935,9 +932,7 @@ export default function MembersList({ role, title, description, canManage }: Pro
               />
             </div>
             <DialogFooter className="mt-4">
-              <Button variant="ghost" type="button" onClick={() => setPwdTarget(null)} className="rounded-lg">
-                Bekor
-              </Button>
+              <Button variant="ghost" type="button" onClick={() => setPwdTarget(null)} className="rounded-lg">{t("dynamic.usersmanager.bekor")}</Button>
               <Button type="submit" disabled={submitting} variant="hero" className="rounded-lg">
                 {submitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
                 O'zgartirish
@@ -953,7 +948,7 @@ export default function MembersList({ role, title, description, canManage }: Pro
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-amber-500" />
-              <span>Coin hadya qilish</span>
+              <span>{t("dynamic.usersmanager.coin_hadya_qilish")}</span>
             </DialogTitle>
             <DialogDescription id="grant-coins-desc">
               Foydalanuvchiga rag'batlantirish uchun coin yuborish.
@@ -973,7 +968,7 @@ export default function MembersList({ role, title, description, canManage }: Pro
             </div>
 
             <div className="grid gap-2">
-              <Label>Coin miqdori</Label>
+              <Label>{t("dynamic.usersmanager.coin_miqdori")}</Label>
               <Input 
                 type="number" 
                 value={grantAmount} 
@@ -983,22 +978,22 @@ export default function MembersList({ role, title, description, canManage }: Pro
             </div>
 
             <div className="grid gap-2">
-              <Label>Sabab</Label>
+              <Label>{t("dynamic.smartdashboard.sabab")}</Label>
               <Select value={grantReason} onValueChange={setReason => setGrantReason(setReason)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="IELTS/SAT yuqori ball">IELTS/SAT yuqori ball</SelectItem>
-                  <SelectItem value="Milliy sertifikat">Milliy sertifikat</SelectItem>
-                  <SelectItem value="Olimpiada g'olibi">Olimpiada g'olibi</SelectItem>
-                  <SelectItem value="Darsdagi faollik">Darsdagi faollik</SelectItem>
-                  <SelectItem value="5+ a'lo baho">5+ a'lo baho</SelectItem>
-                  <SelectItem value="Ota-ona faolligi">Ota-ona faolligi</SelectItem>
+                  <SelectItem value="Milliy sertifikat">{t("dynamic.usersmanager.milliy_sertifikat")}</SelectItem>
+                  <SelectItem value="Olimpiada g'olibi">{t("dynamic.usersmanager.olimpiada_g_olibi")}</SelectItem>
+                  <SelectItem value="Darsdagi faollik">{t("dynamic.usersmanager.darsdagi_faollik")}</SelectItem>
+                  <SelectItem value="5+ a'lo baho">{t("dynamic.usersmanager.5_a_lo_baho")}</SelectItem>
+                  <SelectItem value="Ota-ona faolligi">{t("dynamic.usersmanager.otaona_faolligi")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="grid gap-2">
-              <Label>Izoh (Comment)</Label>
+              <Label>{t("dynamic.usersmanager.izoh_comment")}</Label>
               <Input 
                 value={grantComment} 
                 onChange={(e) => setGrantComment(e.target.value)} 
@@ -1007,7 +1002,7 @@ export default function MembersList({ role, title, description, canManage }: Pro
             </div>
           </div>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setGrantCoinsOpen(false)}>Bekor</Button>
+            <Button variant="ghost" onClick={() => setGrantCoinsOpen(false)}>{t("dynamic.usersmanager.bekor")}</Button>
             <Button 
               variant="hero" 
               className="bg-amber-500 hover:bg-amber-600 text-white"
@@ -1034,20 +1029,18 @@ export default function MembersList({ role, title, description, canManage }: Pro
       <AlertDialog open={!!delTarget} onOpenChange={(v) => !v && setDelTarget(null)}>
         <AlertDialogContent className="rounded-xl border-none shadow-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-xl font-bold">O'chirishni tasdiqlang</AlertDialogTitle>
+            <AlertDialogTitle className="text-xl font-bold">{t("dynamic.paymentreceivers.o_chirishni_tasdiqlang")}</AlertDialogTitle>
             <AlertDialogDescription>
               <span className="font-semibold text-slate-900 dark:text-white">@{delTarget?.username}</span> butunlay
               tizimdan o'chiriladi. Bu amalni qaytarib bo'lmaydi.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="mt-6">
-            <AlertDialogCancel className="rounded-lg">Bekor</AlertDialogCancel>
+            <AlertDialogCancel className="rounded-lg">{t("dynamic.usersmanager.bekor")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={remove}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-lg px-6"
-            >
-              O'chirish
-            </AlertDialogAction>
+            >{t("dynamic.usersmanager.o_chirish")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import React, { useState, useCallback } from "react";
 import Cropper from "react-easy-crop";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -29,6 +30,7 @@ const FILTERS = [
 ];
 
 export default function LogoEditorModal({ open, onOpenChange, imageSrc, onSave }: Props) {
+  const { t } = useTranslation();
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
@@ -46,7 +48,7 @@ export default function LogoEditorModal({ open, onOpenChange, imageSrc, onSave }
     try {
       const filterCss = FILTERS.find(f => f.id === activeFilter)?.css || "none";
       const croppedImageBlob = await getCroppedImg(imageSrc, croppedAreaPixels, rotation, { horizontal: false, vertical: false }, filterCss);
-      if (!croppedImageBlob) throw new Error("Failed to crop image");
+      if (!croppedImageBlob) throw new Error(t("dynamic.logoeditormodal.failed_to_crop_image"));
 
       const formData = new FormData();
       formData.append("file", croppedImageBlob, "profile.webp");
@@ -89,7 +91,7 @@ export default function LogoEditorModal({ open, onOpenChange, imageSrc, onSave }
               </div>
               Rasm Tahrirlash
             </DialogTitle>
-            <p className="sr-only">Profil rasmini kesish va filtrlar qo'llash oynasi</p>
+            <p className="sr-only">{t("dynamic.logoeditormodal.profil_rasmini_kesish_va_filtrlar_qo_lla")}</p>
           </DialogHeader>
         </div>
 
@@ -150,7 +152,7 @@ export default function LogoEditorModal({ open, onOpenChange, imageSrc, onSave }
 
             <div className="grid sm:grid-cols-2 gap-8">
               <div className="space-y-4">
-                <p className="text-[10px] uppercase font-black tracking-[0.2em] text-slate-400">Kattalashtirish</p>
+                <p className="text-[10px] uppercase font-black tracking-[0.2em] text-slate-400">{t("dynamic.logoeditormodal.kattalashtirish")}</p>
                 <div className="flex items-center gap-4">
                   <ZoomOut className="h-4 w-4 text-slate-500" />
                   <Slider value={[zoom]} min={1} max={3} step={0.1} onValueChange={([v]) => setZoom(v)} className="flex-1" />
@@ -180,9 +182,7 @@ export default function LogoEditorModal({ open, onOpenChange, imageSrc, onSave }
                 variant="ghost" 
                 onClick={() => onOpenChange(false)} 
                 className="flex-1 h-14 text-slate-400 hover:bg-white/5 rounded-2xl font-bold"
-              >
-                Bekor qilish
-              </Button>
+              >{t("dynamic.pricingplans.bekor_qilish")}</Button>
             </div>
           </div>
         </div>

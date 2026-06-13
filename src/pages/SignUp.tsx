@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
@@ -67,6 +68,7 @@ function strengthOf(pwd: string) {
 type Step = "form" | "otp" | "done";
 
 export default function SignUp() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, role, loading } = useAuth();
 
@@ -182,7 +184,7 @@ export default function SignUp() {
     if (resendIn > 0) return;
     try {
       await sendOtp(form.email);
-      toast.success("Yangi kod yuborildi");
+      toast.success(t("dynamic.signup.yangi_kod_yuborildi"));
     } catch (err: any) {
       toast.error(err?.message ?? "Kod yuborilmadi");
     }
@@ -308,14 +310,14 @@ export default function SignUp() {
                           <div className="w-full border-t border-white/10" />
                         </div>
                         <div className="relative flex justify-center text-xs">
-                          <span className="bg-transparent px-3 text-white/40">yoki email bilan</span>
+                          <span className="bg-transparent px-3 text-white/40">{t("dynamic.signup.yoki_email_bilan")}</span>
                         </div>
                       </div>
                     </div>
 
                     <form onSubmit={handleCreate} className="space-y-4">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <FieldWrap icon={UserIcon} label="To'liq ism">
+                      <FieldWrap icon={UserIcon} label={t("dynamic.sharedprofile.to_liq_ism")}>
                         <Input
                           value={form.full_name}
                           onChange={(e) =>
@@ -344,7 +346,7 @@ export default function SignUp() {
                         />
                       </FieldWrap>
 
-                      <FieldWrap icon={Mail} label="Email">
+                      <FieldWrap icon={Mail} label={t("dynamic.profile.email")}>
                         <Input
                           type="email"
                           value={form.email}
@@ -501,9 +503,7 @@ export default function SignUp() {
 
                     {submitting && (
                       <div className="flex items-center justify-center gap-2 text-sm text-white/60">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Tekshirilmoqda...
-                      </div>
+                        <Loader2 className="h-4 w-4 animate-spin" />{t("dynamic.finance.tekshirilmoqda")}</div>
                     )}
 
                     <div className="mt-4 text-center">

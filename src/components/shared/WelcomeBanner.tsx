@@ -122,8 +122,7 @@ export default function WelcomeBanner() {
           {/* Quick badges */}
           <div className="mt-4 flex flex-wrap gap-2">
             <span className="inline-flex items-center gap-1.5 bg-white/15 hover:bg-white/25 transition-colors text-white text-xs font-semibold px-3 py-1.5 rounded-full backdrop-blur-sm cursor-default select-none">
-              <Zap className="h-3.5 w-3.5 text-yellow-300" /> Super Admin
-            </span>
+              <Zap className="h-3.5 w-3.5 text-yellow-300" />{t("dynamic.superadminlayout.super_admin")}</span>
             <span className="inline-flex items-center gap-1.5 bg-white/15 hover:bg-white/25 transition-colors text-white text-xs font-semibold px-3 py-1.5 rounded-full backdrop-blur-sm cursor-default select-none">
               <Star className="h-3.5 w-3.5 text-yellow-300" /> LMSHub Platform
             </span>

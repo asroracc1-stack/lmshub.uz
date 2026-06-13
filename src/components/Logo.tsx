@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import React from "react";
 import { cn } from "@/lib/utils";
 
@@ -12,12 +13,13 @@ interface LogoProps {
   showText?: boolean;
 }
 
-export default function Logo({ 
+export default function Logo({
   className, 
   size = "md", 
   variant = "light",   // default to light background logo (dark text)
   showText = false 
 }: LogoProps) {
+  const { t } = useTranslation();
   
   const sizeMap = {
     sm: 24,
@@ -79,7 +81,7 @@ export default function Logo({
             fontFamily="'Arial Black', 'Helvetica Neue', Arial, sans-serif"
             fontSize="16" fontWeight="900" 
             fill={textColor}
-            textAnchor="middle" letterSpacing="0.5">LMS</text>
+            textAnchor="middle" letterSpacing="0.5">{t("dynamic.logo.lms")}</text>
         </g>
 
         {showText && (
@@ -91,7 +93,7 @@ export default function Logo({
             {/* "LMS" wordmark */}
             <text x="172" y="107"
               fontFamily="'Arial Black', 'Helvetica Neue', Arial, sans-serif"
-              fontSize="60" fontWeight="900" fill={textColor} letterSpacing="-1" filter="url(#glow)">LMS</text>
+              fontSize="60" fontWeight="900" fill={textColor} letterSpacing="-1" filter="url(#glow)">{t("dynamic.logo.lms")}</text>
 
             {/* "Hub" wordmark */}
             <text x="318" y="107"

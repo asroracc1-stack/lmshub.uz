@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -44,6 +45,7 @@ interface UserRow {
 }
 
 export default function CommandPalette() {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const navigate = useNavigate();
@@ -101,7 +103,7 @@ export default function CommandPalette() {
     const base = [
       { to: `/${myRole}/dashboard`, label: "Bosh sahifa", icon: LayoutDashboard },
       { to: `/${myRole}/profile`, label: "Profil sozlamalari", icon: UserIcon },
-      { to: `/${myRole}/settings`, label: "Tizim sozlamalari", icon: Settings },
+      { to: `/${myRole}/settings`, label: t("dynamic.startuppitch.tizim_sozlamalari"), icon: Settings },
     ];
 
     if (myRole === "super_admin") {
@@ -109,13 +111,13 @@ export default function CommandPalette() {
         { to: "/super-admin/dashboard", label: "SuperAdmin Dashboard", icon: LayoutDashboard },
         { to: "/super-admin/organizations", label: "Tashkilotlar boshqaruvi", icon: Building2 },
         { to: "/super-admin/users", label: "Foydalanuvchilar boshqaruvi", icon: Users },
-        { to: "/super-admin/settings", label: "Tizim sozlamalari", icon: Settings },
+        { to: "/super-admin/settings", label: t("dynamic.startuppitch.tizim_sozlamalari"), icon: Settings },
       ];
     } else if (myRole === "admin" || myRole === "administrator") {
       return [
         { to: `/${myRole}/dashboard`, label: "Admin Dashboard", icon: LayoutDashboard },
         { to: `/${myRole}/users`, label: "Foydalanuvchilar (Xodimlar & Talabalar)", icon: Users },
-        { to: `/${myRole}/settings`, label: "Tizim sozlamalari", icon: Settings },
+        { to: `/${myRole}/settings`, label: t("dynamic.startuppitch.tizim_sozlamalari"), icon: Settings },
       ];
     } else if (myRole === "teacher") {
       return [
@@ -173,7 +175,7 @@ export default function CommandPalette() {
         onValueChange={setSearch}
       />
       <CommandList className="max-h-[450px] overflow-y-auto thin-scrollbar">
-        <CommandEmpty>Hech narsa topilmadi</CommandEmpty>
+        <CommandEmpty>{t("dynamic.commandpalette.hech_narsa_topilmadi")}</CommandEmpty>
 
         {/* 1. Quick Actions / Sahifalar */}
         <CommandGroup heading="Tezkor Amallar & Sahifalar">
@@ -212,9 +214,7 @@ export default function CommandPalette() {
                       <span className="text-[10px] text-muted-foreground font-mono ml-2">/{o.slug}</span>
                     </div>
                   </div>
-                  <Badge variant="outline" className="text-[10px] bg-primary/5 text-primary border-primary/20">
-                    Tashkilot
-                  </Badge>
+                  <Badge variant="outline" className="text-[10px] bg-primary/5 text-primary border-primary/20">{t("dynamic.usersmanager.tashkilot")}</Badge>
                 </CommandItem>
               ))}
             </CommandGroup>
@@ -276,13 +276,13 @@ export default function CommandPalette() {
             onSelect={async () => {
               setOpen(false);
               await signOut();
-              toast.success("Tizimdan chiqdingiz");
+              toast.success(t("dynamic.roleplaceholder.tizimdan_chiqdingiz"));
               navigate("/", { replace: true });
             }}
             className="text-destructive cursor-pointer"
           >
             <LogOut className="mr-2.5 h-4 w-4 text-destructive" />
-            <span className="font-semibold text-destructive">Tizimdan chiqish</span>
+            <span className="font-semibold text-destructive">{t("dynamic.commandpalette.tizimdan_chiqish")}</span>
           </CommandItem>
         </CommandGroup>
       </CommandList>

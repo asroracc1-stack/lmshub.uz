@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
@@ -57,6 +58,7 @@ interface GradeRecord {
 }
 
 export default function SmartDashboard() {
+  const { t } = useTranslation();
   const { user, profile } = useAuth();
   const queryClient = useQueryClient();
 
@@ -224,7 +226,7 @@ export default function SmartDashboard() {
     mutationFn: async () => {
       const activeLesson = lessons[0];
       if (!activeLesson) {
-        throw new Error("Guruhda darslar mavjud emas!");
+        throw new Error(t("dynamic.smartdashboard.guruhda_darslar_mavjud_emas"));
       }
 
       const payload = {
@@ -310,7 +312,7 @@ export default function SmartDashboard() {
   // PDF report handler
   const handleDownloadPDF = async () => {
     if (!students.length) {
-      toast.error("Hisobot uchun talabalar mavjud emas");
+      toast.error(t("dynamic.smartdashboard.hisobot_uchun_talabalar_mavjud_emas"));
       return;
     }
 
@@ -418,7 +420,7 @@ export default function SmartDashboard() {
             </Badge>
             <span className="text-xs text-muted-foreground">Real-time attendance & grading</span>
           </div>
-          <h1 className="font-display text-2xl md:text-3xl font-bold">O'qituvchi Boshqaruv Paneli</h1>
+          <h1 className="font-display text-2xl md:text-3xl font-bold">{t("dynamic.smartdashboard.o_qituvchi_boshqaruv_paneli")}</h1>
         </div>
 
         {/* Filters */}
@@ -492,7 +494,7 @@ export default function SmartDashboard() {
             <thead>
               <tr className="border-b border-border/40 bg-muted/40 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 <th className="py-4 px-6 font-display">#</th>
-                <th className="py-4 px-6 font-display">Talaba Ismi</th>
+                <th className="py-4 px-6 font-display">{t("dynamic.smartdashboard.talaba_ismi")}</th>
                 {/* Date column: show today's date dynamically */}
                 <th className="py-4 px-4 text-center font-display min-w-[145px]">
                   <div className="flex flex-col items-center gap-1">
@@ -503,8 +505,8 @@ export default function SmartDashboard() {
                   </div>
                 </th>
                 <th className="py-4 px-6 font-display min-w-[180px]">Fikr / Izoh (Feedback)</th>
-                <th className="py-4 px-6 font-display text-center min-w-[120px]">Rag'bat (Rewards)</th>
-                <th className="py-4 px-6 font-display text-center min-w-[140px]">Baho (Score)</th>
+                <th className="py-4 px-6 font-display text-center min-w-[120px]">{t("dynamic.smartdashboard.rag_bat_rewards")}</th>
+                <th className="py-4 px-6 font-display text-center min-w-[140px]">{t("dynamic.smartdashboard.baho_score")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/30 text-sm">
@@ -699,7 +701,7 @@ export default function SmartDashboard() {
 
         {/* Footer Actions */}
         <div className="p-6 bg-muted/20 border-t border-border/40 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
-          <p>Jami talabalar: <span className="font-semibold text-foreground">{filteredStudents.length}</span> nafar</p>
+          <p>{t("dynamic.smartdashboard.jami_talabalar")}<span className="font-semibold text-foreground">{filteredStudents.length}</span>{t("dynamic.smartdashboard.nafar")}</p>
           <div className="flex items-center gap-3">
             <Button variant="outline" size="sm" onClick={handleDownloadPDF} className="gap-1.5 border-border/60 hover:bg-background/80 transition-all duration-300">
               <Download className="h-4 w-4" /> Hisobotni Yuklab Olish (PDF)
@@ -738,7 +740,7 @@ export default function SmartDashboard() {
 
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Tanga Miqdori</label>
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("dynamic.smartdashboard.tanga_miqdori")}</label>
               <Select value={coinAmount} onValueChange={setCoinAmount}>
                 <SelectTrigger>
                   <SelectValue placeholder="Miqdorni tanlang" />
@@ -752,7 +754,7 @@ export default function SmartDashboard() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Sabab</label>
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("dynamic.smartdashboard.sabab")}</label>
               <Input
                 value={coinReason}
                 onChange={(e) => setCoinReason(e.target.value)}
@@ -761,7 +763,7 @@ export default function SmartDashboard() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Qo'shimcha Izoh</label>
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("dynamic.smartdashboard.qo_shimcha_izoh")}</label>
               <Input
                 value={coinComment}
                 onChange={(e) => setCoinComment(e.target.value)}
@@ -771,9 +773,7 @@ export default function SmartDashboard() {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setCoinModalOpen(false)}>
-              Bekor
-            </Button>
+            <Button variant="outline" onClick={() => setCoinModalOpen(false)}>{t("dynamic.usersmanager.bekor")}</Button>
             <Button variant="hero" onClick={handleSaveCoinsLocally}>
               <Award className="h-4 w-4 mr-1" />
               Belgilash

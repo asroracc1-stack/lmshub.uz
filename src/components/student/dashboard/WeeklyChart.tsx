@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -9,18 +10,19 @@ interface WeeklyChartProps {
 }
 
 export default function WeeklyChart({ data }: WeeklyChartProps) {
+  const { t } = useTranslation();
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
       <Card className="p-5 rounded-3xl border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800/50 shadow-sm hover:shadow-md transition-all duration-300 h-full flex flex-col">
         <div className="flex justify-between items-center mb-6">
-          <h3 className="font-bold text-slate-900 dark:text-white">Haftalik natija</h3>
+          <h3 className="font-bold text-slate-900 dark:text-white">{t("dynamic.weeklychart.haftalik_natija")}</h3>
           <Select defaultValue="7">
             <SelectTrigger className="w-[130px] h-8 text-xs bg-slate-50 dark:bg-[#240046]/40 border-slate-200 dark:border-primary/20 rounded-full text-slate-700 dark:text-slate-300">
               <SelectValue placeholder="Davrni tanlang" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="7">So'nggi 7 kun</SelectItem>
-              <SelectItem value="30">So'nggi 30 kun</SelectItem>
+              <SelectItem value="7">{t("dynamic.weeklychart.so_nggi_7_kun")}</SelectItem>
+              <SelectItem value="30">{t("dynamic.weeklychart.so_nggi_30_kun")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -62,16 +64,16 @@ export default function WeeklyChart({ data }: WeeklyChartProps) {
 
         <div className="grid grid-cols-3 gap-4 pt-4 mt-2 border-t border-primary/10 dark:border-primary/10">
           <div>
-            <p className="text-[10px] text-slate-500 dark:text-slate-400 mb-1">Eng yaxshi kun</p>
-            <p className="text-sm font-bold text-purple-500 dark:text-primary">Juma</p>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 mb-1">{t("dynamic.weeklychart.eng_yaxshi_kun")}</p>
+            <p className="text-sm font-bold text-purple-500 dark:text-primary">{t("dynamic.weeklychart.juma")}</p>
           </div>
           <div>
-            <p className="text-[10px] text-slate-500 dark:text-slate-400 mb-1">O'rtacha natija</p>
-            <p className="text-sm font-bold text-slate-900 dark:text-white">72%</p>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 mb-1">{t("dynamic.weeklychart.o_rtacha_natija")}</p>
+            <p className="text-sm font-bold text-slate-900 dark:text-white">{t("dynamic.weeklychart.72")}</p>
           </div>
           <div>
-            <p className="text-[10px] text-slate-500 dark:text-slate-400 mb-1">Jami test</p>
-            <p className="text-sm font-bold text-slate-900 dark:text-white">12 ta</p>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 mb-1">{t("dynamic.weeklychart.jami_test")}</p>
+            <p className="text-sm font-bold text-slate-900 dark:text-white">{t("dynamic.weeklychart.12_ta")}</p>
           </div>
         </div>
       </Card>

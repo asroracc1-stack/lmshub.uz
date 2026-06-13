@@ -103,7 +103,7 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
 
   const handleAuthSuccess = (data: LoginResponseData, isSignup: boolean, isGoogle = false) => {
     const { access_token, user: userData } = data;
-    if (!access_token) throw new Error("Token topilmadi");
+    if (!access_token) throw new Error(t("dynamic.auth.token_topilmadi"));
 
     localStorage.setItem("access_token", access_token);
     localStorage.setItem("user", JSON.stringify(userData));
@@ -178,7 +178,7 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
         handleAuthSuccess(response.data, false);
       } else {
         if (phone && phone.length < 8) {
-          toast.error("Iltimos, to'g'ri telefon raqam kiriting!");
+          toast.error(t("dynamic.auth.iltimos_to_g_ri_telefon_raqam_kiriting"));
           setPhoneError(true);
           setSubmitting(false);
           return;
@@ -186,7 +186,7 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
         setPhoneError(false);
 
         if (password.length < 6) {
-          toast.error("Parol kamida 6 ta belgidan iborat bo'lishi kerak");
+          toast.error(t("dynamic.auth.parol_kamida_6_ta_belgidan_iborat_bo_lis"));
           setSubmitting(false);
           return;
         }
@@ -208,7 +208,7 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
     } catch (err: unknown) {
       const apiErr = err as { response?: { status?: number; data?: { message?: string } }; message?: string };
       if (apiErr.response?.status === 401) {
-        toast.error("Login yoki parol noto'g'ri. Iltimos tekshirib qayta kiriting!");
+        toast.error(t("dynamic.auth.login_yoki_parol_noto_g_ri_iltimos_teksh"));
       } else {
         toast.error(apiErr.response?.data?.message || apiErr.message || (isSignIn ? "Login yoki parol noto'g'ri. Iltimos tekshirib qayta kiriting!" : "Xatolik yuz berdi"));
       }
@@ -253,7 +253,7 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
       <div className="min-h-screen w-full flex flex-col items-center justify-center bg-slate-50 dark:bg-[#030712]">
         <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-center">
           <DotLottieReact src="https://lottie.host/05a8da46-bffb-4416-a160-0b16adbce445/CxzFkSjThh.lottie" loop autoplay className="w-[300px] h-[300px]" />
-          <h2 className="text-3xl font-bold text-slate-900 dark:text-white mt-6 tracking-tight">Muvaffaqiyatli!</h2>
+          <h2 className="text-3xl font-bold text-slate-900 dark:text-white mt-6 tracking-tight">{t("dynamic.dashboard.muvaffaqiyatli")}</h2>
           <p className="text-purple-600 dark:text-purple-500 mt-3 font-medium">
             {isGoogleSuccess ? "Google orqali muvaffaqiyatli kirdingiz! Dashboardga yo'naltirilmoqdasiz..." : "Dashboardga yo'naltirilmoqdasiz..."}
           </p>

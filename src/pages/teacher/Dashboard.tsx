@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Users, BookOpen, Users2 } from "lucide-react";
 import RoleDashboard, { StatCard } from "@/components/RoleDashboard";
 import { Card } from "@/components/ui/card";
@@ -6,6 +7,7 @@ import { motion } from "framer-motion";
 import WelcomeBanner from "@/components/shared/WelcomeBanner";
 
 export default function TeacherDashboard() {
+  const { t } = useTranslation();
   const { data, isLoading } = useTeacherDashboard();
 
   const stats: StatCard[] = [
@@ -22,7 +24,7 @@ export default function TeacherDashboard() {
       >
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
           <Card className="p-6">
-            <h3 className="font-display font-semibold text-lg mb-3">Bugungi vazifalar</h3>
+            <h3 className="font-display font-semibold text-lg mb-3">{t("dynamic.dashboard.bugungi_vazifalar")}</h3>
             <p className="text-sm text-muted-foreground">
               Darslar va vazifalar moduli tez orada ishga tushiriladi.
             </p>

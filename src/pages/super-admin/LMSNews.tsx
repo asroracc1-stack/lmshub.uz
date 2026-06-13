@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
@@ -28,6 +29,7 @@ interface NewsItem {
 }
 
 export default function LMSNews() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Partial<NewsItem> | null>(null);
@@ -69,7 +71,7 @@ export default function LMSNews() {
       return api.delete(`/news/${id}`);
     },
     onSuccess: () => {
-      toast.success("O'chirildi");
+      toast.success(t("dynamic.usersmanager.o_chirildi"));
       queryClient.invalidateQueries({ queryKey: ["lms-news"] });
     },
     onError: (error: any) => {
@@ -78,12 +80,12 @@ export default function LMSNews() {
   });
 
   const save = async () => {
-    if (!editing?.title || !editing?.content) return toast.error("Barcha maydonlarni to'ldiring");
+    if (!editing?.title || !editing?.content) return toast.error(t("dynamic.lmsnews.barcha_maydonlarni_to_ldiring"));
     await createUpdateMutation.mutateAsync(editing);
   };
 
   const remove = async (id: string) => {
-    if (!confirm("O'chirilsinmi?")) return;
+    if (!confirm(t("dynamic.usersmanager.o_chirilsinmi"))) return;
     await deleteMutation.mutateAsync(id);
   };
 
@@ -93,8 +95,8 @@ export default function LMSNews() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-display text-3xl font-bold">Yangiliklar va E'lonlar</h1>
-          <p className="text-muted-foreground">Butun tizim uchun umumiy xabarlar</p>
+          <h1 className="font-display text-3xl font-bold">{t("dynamic.lmsnews.yangiliklar_va_e_lonlar")}</h1>
+          <p className="text-muted-foreground">{t("dynamic.lmsnews.butun_tizim_uchun_umumiy_xabarlar")}</p>
         </div>
         <Button variant="hero" onClick={() => { setEditing({}); setOpen(true); }}>
           <Plus className="h-4 w-4 mr-2" /> Yangi e'lon
@@ -122,7 +124,7 @@ export default function LMSNews() {
           ))}
         </div>
       ) : items.length === 0 ? (
-        <Card className="p-12 text-center text-muted-foreground">Hali yangiliklar yo'q</Card>
+        <Card className="p-12 text-center text-muted-foreground">{t("dynamic.lmsnews.hali_yangiliklar_yo_q")}</Card>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {items.map((item) => (
@@ -158,26 +160,26 @@ export default function LMSNews() {
           <DialogHeader><DialogTitle>{editing?.id ? "Tahrirlash" : "Yangi e'lon"}</DialogTitle></DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label>Sarlavha *</Label>
+              <Label>{t("dynamic.lmsnews.sarlavha_")}</Label>
               <Input value={editing?.title || ""} onChange={(e) => setEditing({ ...editing, title: e.target.value })} placeholder="Muhim yangilik..." />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label>Kategoriya</Label>
+                <Label>{t("dynamic.lmsnews.kategoriya")}</Label>
                 <Input value={editing?.category || ""} onChange={(e) => setEditing({ ...editing, category: e.target.value })} placeholder="Masalan: Tanlov" />
               </div>
               <div className="grid gap-2">
-                <Label>Rasm URL (ixtiyoriy)</Label>
+                <Label>{t("dynamic.lmsnews.rasm_url_ixtiyoriy")}</Label>
                 <Input value={editing?.image_url || ""} onChange={(e) => setEditing({ ...editing, image_url: e.target.value })} placeholder="https://..." />
               </div>
             </div>
             <div className="grid gap-2">
-              <Label>Mazmuni *</Label>
+              <Label>{t("dynamic.lmsnews.mazmuni_")}</Label>
               <Textarea rows={5} value={editing?.content || ""} onChange={(e) => setEditing({ ...editing, content: e.target.value })} placeholder="Batafsil ma'lumot..." />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setOpen(false)}>Bekor</Button>
+            <Button variant="ghost" onClick={() => setOpen(false)}>{t("dynamic.usersmanager.bekor")}</Button>
             <Button variant="hero" onClick={save} disabled={createUpdateMutation.isPending}>
               {createUpdateMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />} {editing?.id ? "Saqlash" : "Chop etish"}
             </Button>

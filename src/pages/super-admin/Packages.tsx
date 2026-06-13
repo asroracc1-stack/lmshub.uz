@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
@@ -56,6 +57,7 @@ const packageSchema = z.object({
 });
 
 export default function Packages() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<SubscriptionPackage | null>(null);
@@ -100,7 +102,7 @@ export default function Packages() {
     mutationFn: async (id: string) => api.delete(`/super-admin/packages/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["packages"] });
-      toast.success("Tarif muvaffaqiyatli o'chirildi!");
+      toast.success(t("dynamic.packages.tarif_muvaffaqiyatli_o_chirildi"));
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || "O'chirishda xatolik yuz berdi");
@@ -183,7 +185,7 @@ export default function Packages() {
           <h1 className="font-display text-3xl font-bold bg-gradient-to-r from-purple-600 to-purple-400 bg-clip-text text-transparent">
             Tariflar boshqaruvi
           </h1>
-          <p className="text-muted-foreground text-sm">Tizimdagi narxlar va paketlarni to'liq nazorat qiling</p>
+          <p className="text-muted-foreground text-sm">{t("dynamic.packages.tizimdagi_narxlar_va_paketlarni_to_liq_n")}</p>
         </div>
         
         <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
@@ -202,7 +204,7 @@ export default function Packages() {
             
             <div className="grid gap-5 p-6 overflow-y-auto flex-1 custom-scrollbar">
               <div className="grid gap-2">
-                <Label>Tarif nomi *</Label>
+                <Label>{t("dynamic.packages.tarif_nomi_")}</Label>
                 <Input 
                   value={form.name} 
                   onChange={e => setForm({...form, name: e.target.value})} 
@@ -212,7 +214,7 @@ export default function Packages() {
               </div>
               
               <div className="grid gap-2">
-                <Label>Oylik narxi (UZS) *</Label>
+                <Label>{t("dynamic.packages.oylik_narxi_uzs_")}</Label>
                 <Input 
                   type="number"
                   value={form.price} 
@@ -223,36 +225,36 @@ export default function Packages() {
               </div>
 
               <div className="grid gap-4 border border-purple-500/10 p-4 rounded-xl bg-purple-500/5">
-                <Label className="text-sm font-semibold text-purple-700 dark:text-purple-400">Limitlar va Cheklovlar</Label>
+                <Label className="text-sm font-semibold text-purple-700 dark:text-purple-400">{t("dynamic.packages.limitlar_va_cheklovlar")}</Label>
                 
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="grid gap-2">
-                    <Label className="text-xs">Tashkilotlar (Filiallar)</Label>
+                    <Label className="text-xs">{t("dynamic.packages.tashkilotlar_filiallar")}</Label>
                     <Input 
                       type="number"
                       value={form.maxOrganizations} 
                       onChange={e => setForm({...form, maxOrganizations: e.target.value})} 
-                      placeholder="Cheksiz"
+                      placeholder={t("dynamic.packages.cheksiz")}
                       className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-500 h-9 transition-all duration-300"
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label className="text-xs">Maksimal Talabalar</Label>
+                    <Label className="text-xs">{t("dynamic.packages.maksimal_talabalar")}</Label>
                     <Input 
                       type="number"
                       value={form.maxStudents} 
                       onChange={e => setForm({...form, maxStudents: e.target.value})} 
-                      placeholder="Cheksiz"
+                      placeholder={t("dynamic.packages.cheksiz")}
                       className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-500 h-9 transition-all duration-300"
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label className="text-xs">Maksimal O'qituvchilar</Label>
+                    <Label className="text-xs">{t("dynamic.packages.maksimal_o_qituvchilar")}</Label>
                     <Input 
                       type="number"
                       value={form.maxTeachers} 
                       onChange={e => setForm({...form, maxTeachers: e.target.value})} 
-                      placeholder="Cheksiz"
+                      placeholder={t("dynamic.packages.cheksiz")}
                       className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-500 h-9 transition-all duration-300"
                     />
                   </div>
@@ -260,7 +262,7 @@ export default function Packages() {
               </div>
 
               <div className="grid gap-2">
-                <Label>Tavsifi</Label>
+                <Label>{t("dynamic.packages.tavsifi")}</Label>
                 <Textarea 
                   value={form.description} 
                   onChange={e => setForm({...form, description: e.target.value})} 
@@ -272,7 +274,7 @@ export default function Packages() {
             </div>
 
             <DialogFooter className="p-6 pt-4 shrink-0 border-t border-border/30 bg-background/50 backdrop-blur-md z-10">
-              <Button variant="ghost" onClick={() => setOpen(false)} className="hover:text-destructive">Bekor qilish</Button>
+              <Button variant="ghost" onClick={() => setOpen(false)} className="hover:text-destructive">{t("dynamic.pricingplans.bekor_qilish")}</Button>
               <Button variant="hero" onClick={submit} disabled={mutation.isPending}>
                 {mutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
                 {editing ? "Saqlash" : "Yaratish"}
@@ -291,12 +293,12 @@ export default function Packages() {
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead className="text-slate-900 dark:text-slate-100 font-bold">Nomi</TableHead>
-                <TableHead className="text-slate-900 dark:text-slate-100 font-bold">Narxi (UZS)</TableHead>
-                <TableHead className="text-center text-slate-900 dark:text-slate-100 font-bold">Tashkilot limit</TableHead>
-                <TableHead className="text-center text-slate-900 dark:text-slate-100 font-bold">Talaba limit</TableHead>
-                <TableHead className="text-center text-slate-900 dark:text-slate-100 font-bold">O'qituvchi limit</TableHead>
-                <TableHead className="text-right text-slate-900 dark:text-slate-100 font-bold">Amallar</TableHead>
+                <TableHead className="text-slate-900 dark:text-slate-100 font-bold">{t("dynamic.telegramlinks.nomi")}</TableHead>
+                <TableHead className="text-slate-900 dark:text-slate-100 font-bold">{t("dynamic.packages.narxi_uzs")}</TableHead>
+                <TableHead className="text-center text-slate-900 dark:text-slate-100 font-bold">{t("dynamic.packages.tashkilot_limit")}</TableHead>
+                <TableHead className="text-center text-slate-900 dark:text-slate-100 font-bold">{t("dynamic.packages.talaba_limit")}</TableHead>
+                <TableHead className="text-center text-slate-900 dark:text-slate-100 font-bold">{t("dynamic.packages.o_qituvchi_limit")}</TableHead>
+                <TableHead className="text-right text-slate-900 dark:text-slate-100 font-bold">{t("dynamic.usersmanager.amallar")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -321,13 +323,13 @@ export default function Packages() {
                       {pkg.price.toLocaleString("uz-UZ")} 
                     </TableCell>
                     <TableCell className="text-center text-slate-900 dark:text-slate-100">
-                      {pkg.maxOrganizations || <span className="text-muted-foreground dark:text-slate-500 text-xs italic">Cheksiz</span>}
+                      {pkg.maxOrganizations || <span className="text-muted-foreground dark:text-slate-500 text-xs italic">{t("dynamic.packages.cheksiz")}</span>}
                     </TableCell>
                     <TableCell className="text-center text-slate-900 dark:text-slate-100">
-                      {pkg.maxStudents || <span className="text-muted-foreground dark:text-slate-500 text-xs italic">Cheksiz</span>}
+                      {pkg.maxStudents || <span className="text-muted-foreground dark:text-slate-500 text-xs italic">{t("dynamic.packages.cheksiz")}</span>}
                     </TableCell>
                     <TableCell className="text-center text-slate-900 dark:text-slate-100">
-                      {pkg.maxTeachers || <span className="text-muted-foreground dark:text-slate-500 text-xs italic">Cheksiz</span>}
+                      {pkg.maxTeachers || <span className="text-muted-foreground dark:text-slate-500 text-xs italic">{t("dynamic.packages.cheksiz")}</span>}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="inline-flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -342,16 +344,14 @@ export default function Packages() {
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
-                              <AlertDialogTitle>O'chirilsinmi?</AlertDialogTitle>
+                              <AlertDialogTitle>{t("dynamic.usersmanager.o_chirilsinmi")}</AlertDialogTitle>
                               <AlertDialogDescription>
                                 Agar "{pkg.name}" tarifiga ulangan tashkilotlar bo'lsa, uni o'chirish imkonsiz bo'ladi.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                              <AlertDialogCancel>Bekor qilish</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => deleteMutation.mutate(pkg.id)} className="bg-destructive hover:bg-destructive/90">
-                                O'chirish
-                              </AlertDialogAction>
+                              <AlertDialogCancel>{t("dynamic.pricingplans.bekor_qilish")}</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => deleteMutation.mutate(pkg.id)} className="bg-destructive hover:bg-destructive/90">{t("dynamic.usersmanager.o_chirish")}</AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>

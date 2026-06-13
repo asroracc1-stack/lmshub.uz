@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
@@ -37,6 +38,7 @@ const fadeUp = {
 };
 
 export default function DynamicPricing() {
+  const { t } = useTranslation();
   const [plans, setPlans] = useState<PricingPlan[]>([]);
   const [billing, setBilling] = useState<"monthly" | "yearly">("monthly");
   const [loading, setLoading] = useState(true);
@@ -63,9 +65,9 @@ export default function DynamicPricing() {
     <section id="pricing" className="container py-16 md:py-24">
       <div className="text-center max-w-2xl mx-auto mb-8">
         <h2 className="font-display text-3xl md:text-5xl font-bold">
-          Sizga mos <span className="neon-text">reja</span>
+          Sizga mos <span className="neon-text">{t("dynamic.dynamicpricing.reja")}</span>
         </h2>
-        <p className="mt-3 text-muted-foreground">Bepul boshlang. Istalgan vaqtda yangilang.</p>
+        <p className="mt-3 text-muted-foreground">{t("dynamic.dynamicpricing.bepul_boshlang_istalgan_vaqtda_yangilang")}</p>
       </div>
 
       {/* Billing toggle */}

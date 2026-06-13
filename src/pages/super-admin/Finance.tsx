@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -150,6 +151,7 @@ const schema = z.object({
 const fmtAmount = (n: number, ccy: string) => n.toLocaleString("uz-UZ").replace(/,/g, " ") + " " + ccy;
 
 export default function Finance() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
@@ -196,7 +198,7 @@ export default function Finance() {
 
   useEffect(() => {
     if (dashboardQuery.isError) {
-      toast.error("Moliya statistikasi yuklashda xatolik.");
+      toast.error(t("dynamic.finance.moliya_statistikasi_yuklashda_xatolik"));
     }
   }, [dashboardQuery.isError]);
 
@@ -254,9 +256,9 @@ export default function Finance() {
       queryClient.invalidateQueries({ queryKey: ["finance-invoices"] });
       queryClient.invalidateQueries({ queryKey: ["financeDashboard"] });
       if (editing) {
-        toast.success("Invoice yangilandi.");
+        toast.success(t("dynamic.finance.invoice_yangilandi"));
       } else {
-        toast.success("Yangi invoice yaratildi.");
+        toast.success(t("dynamic.finance.yangi_invoice_yaratildi"));
         setSuccessMsg("Yangi hisob-faktura muvaffaqiyatli yaratildi va moliya bazasiga qo'shildi!");
         setSuccessOpen(true);
       }
@@ -274,7 +276,7 @@ export default function Finance() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["finance-invoices"] });
       queryClient.invalidateQueries({ queryKey: ["financeDashboard"] });
-      toast.success("Invoice to'landi deb belgilandi.");
+      toast.success(t("dynamic.finance.invoice_to_landi_deb_belgilandi"));
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || "To'lovni belgilashda xatolik yuz berdi.");
@@ -286,7 +288,7 @@ export default function Finance() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["finance-invoices"] });
       queryClient.invalidateQueries({ queryKey: ["financeDashboard"] });
-      toast.success("Invoice o'chirildi.");
+      toast.success(t("dynamic.finance.invoice_o_chirildi"));
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || "Invoice o'chirishda xatolik yuz berdi.");
@@ -387,7 +389,7 @@ export default function Finance() {
       return;
     }
     if (numberCheckQuery.data === false && !editing) {
-      toast.error("Bu hisob raqami band. Iltimos, boshqasini kiriting.");
+      toast.error(t("dynamic.finance.bu_hisob_raqami_band_iltimos_boshqasini_"));
       return;
     }
     setSubmitting(true);
@@ -481,14 +483,12 @@ export default function Finance() {
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>O'chirishni tasdiqlaysizmi?</AlertDialogTitle>
+                    <AlertDialogTitle>{t("dynamic.finance.o_chirishni_tasdiqlaysizmi")}</AlertDialogTitle>
                     <AlertDialogDescription>{inv.invoice_number} o'chiriladi.</AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>Bekor</AlertDialogCancel>
-                    <AlertDialogAction className="bg-destructive" onClick={() => remove(inv.id)}>
-                      O'chirish
-                    </AlertDialogAction>
+                    <AlertDialogCancel>{t("dynamic.usersmanager.bekor")}</AlertDialogCancel>
+                    <AlertDialogAction className="bg-destructive" onClick={() => remove(inv.id)}>{t("dynamic.usersmanager.o_chirish")}</AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
@@ -508,7 +508,7 @@ export default function Finance() {
 
   const cards = [
     { label: "Jami daromad", value: fmtAmount(stats.totalRevenue, "UZS"), icon: TrendingUp },
-    { label: "Kutilmoqda", value: fmtAmount(stats.pending, "UZS"), icon: Clock },
+    { label: t("dynamic.orgpayments.kutilmoqda"), value: fmtAmount(stats.pending, "UZS"), icon: Clock },
     { label: "Muddati o'tgan", value: fmtAmount(stats.overdue, "UZS"), icon: AlertCircle },
   ];
 
@@ -516,8 +516,8 @@ export default function Finance() {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-3xl font-bold">Moliya boshqaruvi</h1>
-          <p className="text-sm text-muted-foreground">Hisob-fakturalar, to'lovlar va moliyaviy nazorat</p>
+          <h1 className="text-3xl font-bold">{t("dynamic.finance.moliya_boshqaruvi")}</h1>
+          <p className="text-sm text-muted-foreground">{t("dynamic.finance.hisobfakturalar_to_lovlar_va_moliyaviy_n")}</p>
         </div>
         <Button variant="hero" onClick={openCreate}>
           <Plus className="h-4 w-4 mr-2" /> Yangi Invoice
@@ -550,8 +550,8 @@ export default function Finance() {
             <div className="rounded-3xl border border-border p-5 bg-card shadow-sm min-h-[320px]">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h2 className="text-lg font-semibold">Oylik tushum</h2>
-                  <p className="text-sm text-muted-foreground">Oxirgi davr bo'yicha</p>
+                  <h2 className="text-lg font-semibold">{t("dynamic.finance.oylik_tushum")}</h2>
+                  <p className="text-sm text-muted-foreground">{t("dynamic.finance.oxirgi_davr_bo_yicha")}</p>
                 </div>
                 <RefreshCw className="h-5 w-5 text-muted-foreground" />
               </div>
@@ -585,7 +585,7 @@ export default function Finance() {
               )}
             </div>
             <div className="rounded-3xl border border-border p-5 bg-card shadow-sm min-h-[320px]">
-              <h2 className="text-lg font-semibold mb-3">Status taqsimoti</h2>
+              <h2 className="text-lg font-semibold mb-3">{t("dynamic.finance.status_taqsimoti")}</h2>
               {dashboardQuery.isLoading ? (
                 <div className="h-[260px] flex items-center justify-center">
                   <div className="relative flex items-center justify-center">
@@ -624,7 +624,7 @@ export default function Finance() {
                 <Select value={filter} onValueChange={(value) => { setFilter(value as any); setPage(0); }}>
                   <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Barchasi</SelectItem>
+                    <SelectItem value="all">{t("dynamic.finance.barchasi")}</SelectItem>
                     {STATUSES.map((status) => (
                       <SelectItem key={status.value} value={status.value}>{status.label}</SelectItem>
                     ))}
@@ -701,12 +701,12 @@ export default function Finance() {
 
         <div className="space-y-4">
           <div className="rounded-3xl border border-border p-5 bg-card shadow-sm">
-            <h2 className="text-lg font-semibold mb-4">Statistika</h2>
+            <h2 className="text-lg font-semibold mb-4">{t("dynamic.finance.statistika")}</h2>
             <div className="grid gap-3">
               <div className="flex items-center gap-3 rounded-3xl border border-border p-4 bg-muted/80">
                 <Wallet className="h-5 w-5 text-primary" />
                 <div className="w-full">
-                  <p className="text-sm text-muted-foreground">Umumiy to'lovlar</p>
+                  <p className="text-sm text-muted-foreground">{t("dynamic.finance.umumiy_to_lovlar")}</p>
                   {dashboardQuery.isLoading ? (
                     <Skeleton className="h-5 w-24 mt-1" />
                   ) : (
@@ -717,7 +717,7 @@ export default function Finance() {
               <div className="flex items-center gap-3 rounded-3xl border border-border p-4 bg-muted/80">
                 <FileText className="h-5 w-5 text-slate-700" />
                 <div className="w-full">
-                  <p className="text-sm text-muted-foreground">Invoice soni</p>
+                  <p className="text-sm text-muted-foreground">{t("dynamic.finance.invoice_soni")}</p>
                   {dashboardQuery.isLoading ? (
                     <Skeleton className="h-5 w-12 mt-1" />
                   ) : (
@@ -728,7 +728,7 @@ export default function Finance() {
               <div className="flex items-center gap-3 rounded-3xl border border-border p-4 bg-muted/80">
                 <TrendingUp className="h-5 w-5 text-purple-600" />
                 <div className="w-full">
-                  <p className="text-sm text-muted-foreground">Aktiv statuslar</p>
+                  <p className="text-sm text-muted-foreground">{t("dynamic.finance.aktiv_statuslar")}</p>
                   {dashboardQuery.isLoading ? (
                     <Skeleton className="h-5 w-12 mt-1" />
                   ) : (
@@ -743,9 +743,9 @@ export default function Finance() {
             </div>
           </div>
           <div className="rounded-3xl border border-border p-5 bg-card shadow-sm">
-            <h2 className="text-lg font-semibold mb-4">Hisob-faktura yaratish</h2>
-            <p className="text-sm text-muted-foreground">Yangi invoice qo'shish yoki mavjudini tahrirlash.</p>
-            <Button className="mt-4 w-full" onClick={openCreate}>Yangi invoice</Button>
+            <h2 className="text-lg font-semibold mb-4">{t("dynamic.finance.hisobfaktura_yaratish")}</h2>
+            <p className="text-sm text-muted-foreground">{t("dynamic.finance.yangi_invoice_qo_shish_yoki_mavjudini_ta")}</p>
+            <Button className="mt-4 w-full" onClick={openCreate}>{t("dynamic.finance.yangi_invoice")}</Button>
           </div>
         </div>
       </div>
@@ -758,7 +758,7 @@ export default function Finance() {
           <div className="grid gap-4 py-4">
             <div className="grid gap-3 md:grid-cols-2">
               <div>
-                <Label>Tashkilot *</Label>
+                <Label>{t("dynamic.finance.tashkilot_")}</Label>
                 <Select value={form.organization_id} onValueChange={(value) => setForm((s) => ({ ...s, organization_id: value }))}>
                   <SelectTrigger><SelectValue placeholder="Tanlang" /></SelectTrigger>
                   <SelectContent>
@@ -769,38 +769,38 @@ export default function Finance() {
                 </Select>
               </div>
               <div>
-                <Label>Invoice raqami *</Label>
+                <Label>{t("dynamic.finance.invoice_raqami_")}</Label>
                 <Input value={form.invoice_number} onChange={(e) => setForm((s) => ({ ...s, invoice_number: e.target.value }))} />
                 {numberCheckQuery.isFetching ? (
-                  <p className="text-xs text-muted-foreground mt-1">Tekshirilmoqda...</p>
+                  <p className="text-xs text-muted-foreground mt-1">{t("dynamic.finance.tekshirilmoqda")}</p>
                 ) : numberCheckQuery.data === false && !editing ? (
-                  <p className="text-xs text-destructive mt-1">Bu raqam band.</p>
+                  <p className="text-xs text-destructive mt-1">{t("dynamic.finance.bu_raqam_band")}</p>
                 ) : numberCheckQuery.data === true && !editing ? (
-                  <p className="text-xs text-success mt-1">Raqam mavjud.</p>
+                  <p className="text-xs text-success mt-1">{t("dynamic.finance.raqam_mavjud")}</p>
                 ) : null}
               </div>
             </div>
             <div className="grid gap-3 md:grid-cols-2">
               <div>
-                <Label>Summa *</Label>
+                <Label>{t("dynamic.finance.summa_")}</Label>
                 <Input type="number" value={form.amount} onChange={(e) => setForm((s) => ({ ...s, amount: e.target.value }))} />
               </div>
               <div>
-                <Label>Valyuta</Label>
+                <Label>{t("dynamic.finance.valyuta")}</Label>
                 <Select value={form.currency} onValueChange={(value) => setForm((s) => ({ ...s, currency: value }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="UZS">UZS</SelectItem>
-                    <SelectItem value="USD">USD</SelectItem>
-                    <SelectItem value="EUR">EUR</SelectItem>
-                    <SelectItem value="RUB">RUB</SelectItem>
+                    <SelectItem value="UZS">{t("dynamic.finance.uzs")}</SelectItem>
+                    <SelectItem value="USD">{t("dynamic.finance.usd")}</SelectItem>
+                    <SelectItem value="EUR">{t("dynamic.finance.eur")}</SelectItem>
+                    <SelectItem value="RUB">{t("dynamic.finance.rub")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
             <div className="grid gap-3 md:grid-cols-2">
               <div>
-                <Label>Status</Label>
+                <Label>{t("dynamic.finance.status")}</Label>
                 <Select value={form.status} onValueChange={(value) => setForm((s) => ({ ...s, status: value as Invoice["status"] }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -811,17 +811,17 @@ export default function Finance() {
                 </Select>
               </div>
               <div>
-                <Label>Muddati</Label>
+                <Label>{t("dynamic.finance.muddati")}</Label>
                 <Input type="date" value={form.due_date} onChange={(e) => setForm((s) => ({ ...s, due_date: e.target.value }))} />
               </div>
             </div>
             <div className="grid gap-3">
-              <Label>Izoh</Label>
+              <Label>{t("dynamic.finance.izoh")}</Label>
               <Textarea rows={4} value={form.description} onChange={(e) => setForm((s) => ({ ...s, description: e.target.value }))} />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setOpen(false)}>Bekor qilish</Button>
+            <Button variant="ghost" onClick={() => setOpen(false)}>{t("dynamic.pricingplans.bekor_qilish")}</Button>
             <Button onClick={submit} disabled={submitting}>
               {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null} Saqlash
             </Button>

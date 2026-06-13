@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -35,6 +36,7 @@ interface Grant {
 }
 
 export default function StudentCoins() {
+  const { t } = useTranslation();
   const { user, profile } = useAuth();
   const [balance, setBalance] = useState(0);
   const [tx, setTx] = useState<Tx[]>([]);
@@ -66,7 +68,7 @@ export default function StudentCoins() {
   }, [user?.id, profile?.organization_id]);
 
   const claim = async (r: Reward) => {
-    if (balance < r.cost_coins) return toast.error("Coin yetarli emas");
+    if (balance < r.cost_coins) return toast.error(t("dynamic.coins.coin_yetarli_emas"));
     if (!confirm(`"${r.title}" sovg'asini olasizmi? ${r.cost_coins} coin yechiladi.`)) return;
     setClaiming(r.id);
     const { error } = await supabase.rpc("claim_reward", { _reward_id: r.id });
@@ -87,8 +89,8 @@ export default function StudentCoins() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-display text-3xl font-bold">Mening coinlarim</h1>
-        <p className="text-muted-foreground">Yaxshi natijalar uchun coin to'plang va sovg'alarga almashing</p>
+        <h1 className="font-display text-3xl font-bold">{t("dynamic.coins.mening_coinlarim")}</h1>
+        <p className="text-muted-foreground">{t("dynamic.coins.yaxshi_natijalar_uchun_coin_to_plang_va_")}</p>
       </div>
 
       {/* Balance card */}
@@ -98,16 +100,16 @@ export default function StudentCoins() {
           <div className="absolute -bottom-12 -left-12 w-56 h-56 rounded-full bg-white/5" />
           <div className="relative flex items-center justify-between flex-wrap gap-4">
             <div>
-              <p className="text-sm uppercase tracking-wider opacity-80">Joriy balans</p>
+              <p className="text-sm uppercase tracking-wider opacity-80">{t("dynamic.coins.joriy_balans")}</p>
               <p className="font-display text-6xl font-bold mt-2 flex items-center gap-3">
                 <Coins className="h-12 w-12" />
                 {balance.toLocaleString("uz-UZ")}
               </p>
-              <p className="text-sm opacity-80 mt-1">coin</p>
+              <p className="text-sm opacity-80 mt-1">{t("dynamic.coins.coin")}</p>
             </div>
             <div className="text-right text-sm opacity-90">
-              <p>✨ Yaxshi baholar uchun: <b>+5</b></p>
-              <p>📚 Davomat uchun: <b>+3</b></p>
+              <p>✨ Yaxshi baholar uchun: <b>{t("dynamic.coins.5")}</b></p>
+              <p>📚 Davomat uchun: <b>{t("dynamic.coins.3")}</b></p>
               <p>❌ Kelmaslik: <b>-3</b></p>
             </div>
           </div>
@@ -120,7 +122,7 @@ export default function StudentCoins() {
           <Gift className="h-5 w-5 text-primary" /> Mavjud sovg'alar
         </h2>
         {rewards.length === 0 ? (
-          <Card className="p-8 text-center text-muted-foreground">Hali sovg'alar yo'q</Card>
+          <Card className="p-8 text-center text-muted-foreground">{t("dynamic.coins.hali_sovg_alar_yo_q")}</Card>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {rewards.map((r) => {
@@ -149,7 +151,7 @@ export default function StudentCoins() {
                   >
                     {claiming === r.id ? <Loader2 className="h-4 w-4 animate-spin" /> :
                       out ? "Tugagan" :
-                      canAfford ? <><Gift className="h-4 w-4" /> Olish</> :
+                      canAfford ? <><Gift className="h-4 w-4" />{t("dynamic.coins.olish")}</> :
                       <><Lock className="h-3.5 w-3.5" /> Yana {need} coin kerak</>}
                   </Button>
                 </Card>
@@ -183,9 +185,9 @@ export default function StudentCoins() {
 
       {/* Transactions */}
       <div>
-        <h2 className="font-display font-semibold text-xl mb-3">So'nggi tranzaksiyalar</h2>
+        <h2 className="font-display font-semibold text-xl mb-3">{t("dynamic.coins.so_nggi_tranzaksiyalar")}</h2>
         {tx.length === 0 ? (
-          <Card className="p-8 text-center text-muted-foreground">Hali tranzaksiyalar yo'q</Card>
+          <Card className="p-8 text-center text-muted-foreground">{t("dynamic.coins.hali_tranzaksiyalar_yo_q")}</Card>
         ) : (
           <div className="grid gap-2">
             {tx.map((t) => {

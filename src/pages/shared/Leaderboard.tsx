@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { api } from "@/lib/axios";
@@ -42,13 +43,6 @@ interface LeaderboardProps {
   defaultRole?: AppRole;
   isGlobal?: boolean;
 }
-
-const PERIODS: { value: Period; label: string; emoji: string }[] = [
-  { value: "daily",      label: "Kunlik",   emoji: "☀️" },
-  { value: "monthly",    label: "Oylik",    emoji: "📅" },
-  { value: "six_months", label: "6 Oylik",  emoji: "🗓️" },
-  { value: "yearly",     label: "Yillik",   emoji: "🏆" },
-];
 
 const ALL_ROLE_TABS: { value: AppRole; label: string; icon: LucideIcon; emoji: string }[] = [
   { value: "student", label: "Talabalar",        icon: Users,       emoji: "🎓" },
@@ -297,15 +291,24 @@ function RankRow({ row, index, isCurrentUser }: { row: Row; index: number; isCur
             {Number(row.coins || 0).toLocaleString("uz-UZ")}
           </span>
         </div>
-        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">stars</span>
+        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">{t("dynamic.leaderboard.stars")}</span>
       </div>
     </motion.div>
   );
 }
 
 // ── Main Component ─────────────────────────────────────────
-export default function Leaderboard({ defaultRole = "student", isGlobal = false }: LeaderboardProps) {
+export default function Leaderboard({
+  defaultRole = "student", isGlobal = false }: LeaderboardProps) {
+  const { t } = useTranslation();
   const { user } = useAuth();
+
+  const PERIODS = useMemo((): { value: Period; label: string; emoji: string }[] => [
+    { value: "daily",      label: "Kunlik",   emoji: "☀️" },
+    { value: "monthly",    label: t("dynamic.grantcoins.oylik"),    emoji: "📅" },
+    { value: "six_months", label: "6 Oylik",  emoji: "🗓️" },
+    { value: "yearly",     label: t("dynamic.grantcoins.yillik"),   emoji: "🏆" },
+  ], [t]);
 
   const isRegularUser = user?.role === "user";
   const initialRole: AppRole = isRegularUser ? "user" : defaultRole;
@@ -375,9 +378,7 @@ export default function Leaderboard({ defaultRole = "student", isGlobal = false 
     return (
       <div className="flex h-[60vh] flex-col items-center justify-center gap-2">
         <div className="h-14 w-14 rounded-full border-4 border-[#4ab658]/30 border-t-[#4ab658] animate-spin" />
-        <p className="text-sm font-bold text-slate-500 dark:text-slate-400 animate-pulse mt-3">
-          Yuklanmoqda...
-        </p>
+        <p className="text-sm font-bold text-slate-500 dark:text-slate-400 animate-pulse mt-3">{t("dynamic.mylessons.yuklanmoqda")}</p>
       </div>
     );
   }
@@ -406,9 +407,7 @@ export default function Leaderboard({ defaultRole = "student", isGlobal = false 
         <div className="pt-8 pb-2 px-6 text-center relative z-10">
           <div className="flex items-center justify-center gap-2 mb-1">
             <Flame className="h-6 w-6 text-amber-400" />
-            <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight drop-shadow-lg">
-              Peshqadamlar
-            </h1>
+            <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight drop-shadow-lg">{t("dynamic.leaderboardandhistory.peshqadamlar")}</h1>
             <Flame className="h-6 w-6 text-amber-400" />
           </div>
           <p className="text-white/50 text-xs font-semibold uppercase tracking-widest">

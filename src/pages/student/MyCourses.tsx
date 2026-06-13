@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useState, useMemo } from "react";
 import { api } from "@/lib/axios";
 import { toast } from "sonner";
@@ -19,6 +20,7 @@ interface StudentLessonDto {
 }
 
 export default function MyCourses() {
+  const { t } = useTranslation();
   const [lessons, setLessons] = useState<StudentLessonDto[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -32,7 +34,7 @@ export default function MyCourses() {
         setLessons(data);
       } catch (error) {
         console.error("Failed to load courses", error);
-        toast.error("Darslarni yuklashda xatolik yuz berdi");
+        toast.error(t("dynamic.mycourses.darslarni_yuklashda_xatolik_yuz_berdi"));
       } finally {
         setLoading(false);
       }
@@ -53,8 +55,8 @@ export default function MyCourses() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-display text-3xl font-bold">Mening darslarim</h1>
-        <p className="text-muted-foreground">Sizga biriktirilgan guruhlar va darslar jadvali</p>
+        <h1 className="font-display text-3xl font-bold">{t("dynamic.mycourses.mening_darslarim")}</h1>
+        <p className="text-muted-foreground">{t("dynamic.mycourses.sizga_biriktirilgan_guruhlar_va_darslar_")}</p>
       </div>
 
       {loading ? (
@@ -82,10 +84,10 @@ export default function MyCourses() {
                       <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="font-display font-semibold truncate">{l.title}</h3>
                         {l.subjectName && <Badge variant="outline">{l.subjectName}</Badge>}
-                        {l.attendanceStatus === "PRESENT" && <Badge variant="default">Keldi</Badge>}
-                        {l.attendanceStatus === "ABSENT" && <Badge variant="destructive">Kelmadi</Badge>}
-                        {l.attendanceStatus === "LATE" && <Badge variant="warning">Kech qoldi</Badge>}
-                        {l.attendanceStatus === "EXCUSED" && <Badge variant="secondary">Sababli</Badge>}
+                        {l.attendanceStatus === "PRESENT" && <Badge variant="default">{t("dynamic.mycourses.keldi")}</Badge>}
+                        {l.attendanceStatus === "ABSENT" && <Badge variant="destructive">{t("dynamic.mycourses.kelmadi")}</Badge>}
+                        {l.attendanceStatus === "LATE" && <Badge variant="warning">{t("dynamic.mycourses.kech_qoldi")}</Badge>}
+                        {l.attendanceStatus === "EXCUSED" && <Badge variant="secondary">{t("dynamic.mycourses.sababli")}</Badge>}
                       </div>
                       <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1 flex-wrap">
                         <span className="flex items-center gap-1">

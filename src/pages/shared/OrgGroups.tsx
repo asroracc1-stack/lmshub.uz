@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/axios";
@@ -61,6 +62,7 @@ const COLORS = [
 ];
 
 export default function OrgGroups() {
+  const { t } = useTranslation();
   const { user, profile } = useAuth();
   const qc = useQueryClient();
   const [groups, setGroups] = useState<Group[]>([]);
@@ -107,7 +109,7 @@ export default function OrgGroups() {
         setOrganizations(orgsData.content || []);
       }
     } catch (e) {
-      toast.error("Ma'lumotlarni yuklab bo'lmadi");
+      toast.error(t("dynamic.orggroups.ma_lumotlarni_yuklab_bo_lmadi"));
     } finally {
       setLoading(false);
     }
@@ -141,17 +143,17 @@ export default function OrgGroups() {
   };
 
   const submit = async () => {
-    if (!form.name.trim()) return toast.error("Guruh nomini kiriting");
-    if (isSuper && !form.organization_id) return toast.error("Tashkilotni tanlang");
+    if (!form.name.trim()) return toast.error(t("dynamic.orggroups.guruh_nomini_kiriting"));
+    if (isSuper && !form.organization_id) return toast.error(t("dynamic.messages.tashkilotni_tanlang"));
     
     setSaving(true);
     try {
       if (editing) {
         await api.put(`/admin/groups/${editing.id}`, form);
-        toast.success("Guruh yangilandi");
+        toast.success(t("dynamic.orggroups.guruh_yangilandi"));
       } else {
         await api.post("/admin/groups", form);
-        toast.success("Guruh yaratildi");
+        toast.success(t("dynamic.orggroups.guruh_yaratildi"));
       }
       qc.invalidateQueries({ queryKey: ["super-admin-dashboard-stats"] });
       qc.invalidateQueries({ queryKey: ["admin-dashboard-stats"] });
@@ -174,10 +176,10 @@ export default function OrgGroups() {
       qc.invalidateQueries({ queryKey: ["admin-dashboard-stats"] });
       qc.invalidateQueries({ queryKey: ["groups-list"] });
       qc.invalidateQueries({ queryKey: ["all-groups-list-global"] });
-      toast.success("Guruh o'chirildi");
+      toast.success(t("dynamic.orggroups.guruh_o_chirildi"));
       load();
     } catch (e) {
-      toast.error("O'chirishda xatolik");
+      toast.error(t("dynamic.orggroups.o_chirishda_xatolik"));
     }
   };
 
@@ -207,7 +209,7 @@ export default function OrgGroups() {
           <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-400 bg-clip-text text-transparent">
             Guruhlar Boshqaruvi
           </h1>
-          <p className="text-muted-foreground mt-1">O'quv markazidagi barcha faol guruhlar ro'yxati</p>
+          <p className="text-muted-foreground mt-1">{t("dynamic.orggroups.o_quv_markazidagi_barcha_faol_guruhlar_r")}</p>
         </div>
 
         {canManage && (
@@ -224,7 +226,7 @@ export default function OrgGroups() {
               <div className="grid gap-6 py-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Guruh Nomi *</Label>
+                    <Label>{t("dynamic.orggroups.guruh_nomi_")}</Label>
                     <Input 
                       value={form.name} 
                       onChange={e => setForm({...form, name: e.target.value})}
@@ -243,7 +245,7 @@ export default function OrgGroups() {
 
                 {isSuper && (
                   <div className="space-y-2">
-                    <Label>Tashkilot *</Label>
+                    <Label>{t("dynamic.finance.tashkilot_")}</Label>
                     <Select
                       value={form.organization_id}
                       onValueChange={(v) => {
@@ -251,7 +253,7 @@ export default function OrgGroups() {
                       }}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Tashkilotni tanlang" />
+                        <SelectValue placeholder={t("dynamic.messages.tashkilotni_tanlang")} />
                       </SelectTrigger>
                       <SelectContent>
                         {organizations.map((org) => (
@@ -263,7 +265,7 @@ export default function OrgGroups() {
                 )}
 
                 <div className="space-y-2">
-                  <Label>O'qituvchi</Label>
+                  <Label>{t("dynamic.orglessons.o_qituvchi")}</Label>
                   <Popover open={teacherSearchOpen} onOpenChange={setTeacherSearchOpen}>
                     <PopoverTrigger asChild>
                       <Button
@@ -281,7 +283,7 @@ export default function OrgGroups() {
                       <Command>
                         <CommandInput placeholder="O'qituvchi qidirish..." />
                         <CommandList>
-                          <CommandEmpty>O'qituvchi topilmadi.</CommandEmpty>
+                          <CommandEmpty>{t("dynamic.orggroups.o_qituvchi_topilmadi")}</CommandEmpty>
                           <CommandGroup>
                             {teachers
                               .filter(t => !isSuper || !form.organization_id || (t as any).organization_id === form.organization_id)
@@ -311,7 +313,7 @@ export default function OrgGroups() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Tavsif</Label>
+                  <Label>{t("dynamic.telegramlinks.tavsif")}</Label>
                   <Input 
                     value={form.description} 
                     onChange={e => setForm({...form, description: e.target.value})}
@@ -320,7 +322,7 @@ export default function OrgGroups() {
                 </div>
 
                 <div className="space-y-3">
-                  <Label>Identifikatsiya Rangi</Label>
+                  <Label>{t("dynamic.orggroups.identifikatsiya_rangi")}</Label>
                   <div className="flex gap-3">
                     {COLORS.map((c) => (
                       <button
@@ -339,7 +341,7 @@ export default function OrgGroups() {
                 </div>
               </div>
               <DialogFooter>
-                <Button variant="ghost" onClick={() => setOpen(false)}>Bekor qilish</Button>
+                <Button variant="ghost" onClick={() => setOpen(false)}>{t("dynamic.pricingplans.bekor_qilish")}</Button>
                 <Button onClick={submit} disabled={saving} variant="hero">
                   {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                   {editing ? "Yangilash" : "Yaratish"}
@@ -388,7 +390,7 @@ export default function OrgGroups() {
                     <div>
                       <div className="flex items-center gap-2">
                         <h3 className="font-bold text-xl">{g.name}</h3>
-                        {!g.is_active && <Badge variant="destructive" className="text-[10px]">Nofaol</Badge>}
+                        {!g.is_active && <Badge variant="destructive" className="text-[10px]">{t("dynamic.parents.nofaol")}</Badge>}
                       </div>
                       <div className="flex flex-wrap items-center gap-y-1 gap-x-4 mt-1 text-sm text-muted-foreground">
                         <span className="flex items-center gap-1.5">
@@ -423,19 +425,17 @@ export default function OrgGroups() {
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
-                              <AlertDialogTitle>Guruhni o'chirish</AlertDialogTitle>
+                              <AlertDialogTitle>{t("dynamic.orggroups.guruhni_o_chirish")}</AlertDialogTitle>
                               <AlertDialogDescription>
                                 "{g.name}" guruhini o'chirib tashlamoqchimisiz? Bu amalni ortga qaytarib bo'lmaydi.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                              <AlertDialogCancel>Bekor qilish</AlertDialogCancel>
+                              <AlertDialogCancel>{t("dynamic.pricingplans.bekor_qilish")}</AlertDialogCancel>
                               <AlertDialogAction 
                                 onClick={() => handleDelete(g.id)}
                                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                              >
-                                O'chirish
-                              </AlertDialogAction>
+                              >{t("dynamic.usersmanager.o_chirish")}</AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>
@@ -456,8 +456,8 @@ export default function OrgGroups() {
         {!loading && filteredGroups.length === 0 && (
           <div className="text-center py-20 bg-white/30 dark:bg-slate-900/30 rounded-3xl border-2 border-dashed border-slate-200 dark:border-white/10">
             <Users2 className="h-16 w-16 mx-auto text-slate-300 dark:text-slate-700 mb-4" />
-            <h3 className="text-xl font-semibold">Guruhlar topilmadi</h3>
-            <p className="text-muted-foreground mt-2">Qidiruv shartlarini o'zgartirib ko'ring yoki yangi guruh qo'shing.</p>
+            <h3 className="text-xl font-semibold">{t("dynamic.orggroups.guruhlar_topilmadi")}</h3>
+            <p className="text-muted-foreground mt-2">{t("dynamic.orggroups.qidiruv_shartlarini_o_zgartirib_ko_ring_")}</p>
           </div>
         )}
       </div>

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
@@ -82,6 +83,7 @@ const REGIONS = [
 ];
 
 export default function Organizations() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [orgs, setOrgs] = useState<Organization[]>([]);
@@ -188,10 +190,10 @@ export default function Organizations() {
     try {
       if (editing) {
         await api.put(`/organizations/${editing.id}`, payload);
-        toast.success("Tashkilot muvaffaqiyatli yangilandi");
+        toast.success(t("dynamic.organizations.tashkilot_muvaffaqiyatli_yangilandi"));
       } else {
         await api.post("/organizations", payload);
-        toast.success("Tashkilot muvaffaqiyatli qo'shildi");
+        toast.success(t("dynamic.organizations.tashkilot_muvaffaqiyatli_qo_shildi"));
       }
       setOpen(false);
       resetForm();
@@ -210,7 +212,7 @@ export default function Organizations() {
   const remove = async (o: Organization) => {
     try {
       await api.delete(`/organizations/${o.id}`);
-      toast.success("O'chirildi");
+      toast.success(t("dynamic.usersmanager.o_chirildi"));
       queryClient.invalidateQueries({ queryKey: ["organizations"] });
       queryClient.invalidateQueries({ queryKey: ["organizations-list"] });
       queryClient.invalidateQueries({ queryKey: ["super-admin-dashboard-stats"] });
@@ -250,7 +252,7 @@ export default function Organizations() {
                 onUploaded={(url) => setForm((f) => ({ ...f, logo_url: url }))}
               />
               <div className="grid gap-2">
-                <Label>Nomi *</Label>
+                <Label>{t("dynamic.organizations.nomi_")}</Label>
                 <Input
                   value={form.name}
                   onChange={(e) => {
@@ -265,7 +267,7 @@ export default function Organizations() {
                 />
               </div>
               <div className="grid gap-2">
-                <Label>Slug *</Label>
+                <Label>{t("dynamic.organizations.slug_")}</Label>
                 <Input
                   value={form.slug}
                   onChange={(e) => setForm((f) => ({ ...f, slug: slugify(e.target.value) }))}
@@ -273,7 +275,7 @@ export default function Organizations() {
                 />
               </div>
               <div className="grid gap-2">
-                <Label>Tavsif</Label>
+                <Label>{t("dynamic.telegramlinks.tavsif")}</Label>
                 <Textarea
                   value={form.description}
                   onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
@@ -283,7 +285,7 @@ export default function Organizations() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="grid gap-2">
-                  <Label>Telefon</Label>
+                  <Label>{t("dynamic.profile.telefon")}</Label>
                   <Input
                     value={form.phone}
                     onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
@@ -291,7 +293,7 @@ export default function Organizations() {
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label>Email</Label>
+                  <Label>{t("dynamic.profile.email")}</Label>
                   <Input
                     value={form.email}
                     onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
@@ -300,7 +302,7 @@ export default function Organizations() {
                 </div>
               </div>
               <div className="grid gap-4 border border-border p-4 rounded-xl bg-muted/5">
-                <Label className="text-base font-semibold text-purple-700">Tashkilot manzili</Label>
+                <Label className="text-base font-semibold text-purple-700">{t("dynamic.organizations.tashkilot_manzili")}</Label>
                 <div className="grid gap-2">
                   <Label>Viloyat / Hudud *</Label>
                   <Select
@@ -339,7 +341,7 @@ export default function Organizations() {
                 </div>
               </div>
               <div className="grid gap-2">
-                <Label>Tarif rejasi (Package)</Label>
+                <Label>{t("dynamic.organizations.tarif_rejasi_package")}</Label>
                 <Select
                   value={form.plan_id || "none"}
                   onValueChange={(v) => setForm((f) => ({ ...f, plan_id: v === "none" ? "" : v }))}
@@ -353,8 +355,8 @@ export default function Organizations() {
               </div>
               <div className="flex items-center justify-between rounded-lg border border-border p-3">
                 <div>
-                  <p className="text-sm font-medium">Faol</p>
-                  <p className="text-xs text-muted-foreground">Tashkilot tizimda ishlay oladimi</p>
+                  <p className="text-sm font-medium">{t("dynamic.usersmanager.faol")}</p>
+                  <p className="text-xs text-muted-foreground">{t("dynamic.organizations.tashkilot_tizimda_ishlay_oladimi")}</p>
                 </div>
                 <Switch
                   checked={form.is_active}
@@ -363,7 +365,7 @@ export default function Organizations() {
               </div>
             </div>
             <DialogFooter className="p-6 pt-4 shrink-0 border-t border-border/30 bg-background/50 backdrop-blur-md z-10">
-              <Button variant="ghost" onClick={() => setOpen(false)} className="hover:bg-destructive/10 hover:text-destructive transition-colors">Bekor qilish</Button>
+              <Button variant="ghost" onClick={() => setOpen(false)} className="hover:bg-destructive/10 hover:text-destructive transition-colors">{t("dynamic.pricingplans.bekor_qilish")}</Button>
               <Button variant="hero" onClick={submit} disabled={submitting} className="shadow-glow">
                 {submitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
                 {editing ? "Saqlash" : "Tashkilot qo'shish"}
@@ -399,8 +401,8 @@ export default function Organizations() {
       ) : orgs.length === 0 ? (
         <div className="glass rounded-2xl p-16 text-center">
           <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <p className="font-display text-lg">Hali tashkilot yo'q</p>
-          <p className="text-sm text-muted-foreground mb-6">Birinchi o'quv markazingizni qo'shing</p>
+          <p className="font-display text-lg">{t("dynamic.organizations.hali_tashkilot_yo_q")}</p>
+          <p className="text-sm text-muted-foreground mb-6">{t("dynamic.organizations.birinchi_o_quv_markazingizni_qo_shing")}</p>
           <Button variant="hero" onClick={openCreate}>
             <Plus className="h-4 w-4" /> Tashkilot qo'shish
           </Button>
@@ -431,16 +433,14 @@ export default function Organizations() {
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
-                        <AlertDialogTitle>O'chirilsinmi?</AlertDialogTitle>
+                        <AlertDialogTitle>{t("dynamic.usersmanager.o_chirilsinmi")}</AlertDialogTitle>
                         <AlertDialogDescription>
                           "{o.name}" tashkiloti va unga bog'liq ma'lumotlar o'chiriladi.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel>Bekor</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => remove(o)} className="bg-destructive">
-                          O'chirish
-                        </AlertDialogAction>
+                        <AlertDialogCancel>{t("dynamic.usersmanager.bekor")}</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => remove(o)} className="bg-destructive">{t("dynamic.usersmanager.o_chirish")}</AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -41,7 +42,9 @@ const toLocalInput = (iso?: string) => {
   return new Date(d.getTime() - off).toISOString().slice(0, 16);
 };
 
-export default function OrgLessons({ canManage = false, basePath, filter = "all" }: Props) {
+export default function OrgLessons({
+  canManage = false, basePath, filter = "all" }: Props) {
+  const { t } = useTranslation();
   const { profile, user, role } = useAuth();
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
@@ -110,7 +113,7 @@ export default function OrgLessons({ canManage = false, basePath, filter = "all"
       })));
     } catch (e) {
       console.error(e);
-      toast.error("Ma'lumotlarni yuklashda xatolik yuz berdi");
+      toast.error(t("dynamic.orglessons.ma_lumotlarni_yuklashda_xatolik_yuz_berd"));
     } finally {
       setLoading(false);
     }
@@ -132,7 +135,7 @@ export default function OrgLessons({ canManage = false, basePath, filter = "all"
 
   const submit = async () => {
     if (!title.trim() || !startsAt || !endsAt || !groupId || !subjectId) {
-      return toast.error("Hamma majburiy maydonlarni to'ldiring");
+      return toast.error(t("dynamic.orglessons.hamma_majburiy_maydonlarni_to_ldiring"));
     }
     if (!profile?.organization_id) return;
     setSaving(true);
@@ -165,7 +168,7 @@ export default function OrgLessons({ canManage = false, basePath, filter = "all"
   const remove = async (l: Lesson) => {
     try {
       await api.delete(`/admin/lessons/${l.id}`);
-      toast.success("O'chirildi"); load();
+      toast.success(t("dynamic.usersmanager.o_chirildi")); load();
     } catch (e) {
       // toast error handled
     }
@@ -193,20 +196,20 @@ export default function OrgLessons({ canManage = false, basePath, filter = "all"
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="font-display text-3xl font-bold">Dars jadvali</h1>
-          <p className="text-muted-foreground">Darslar ro'yxati va vaqtlari</p>
+          <h1 className="font-display text-3xl font-bold">{t("dynamic.orglessons.dars_jadvali")}</h1>
+          <p className="text-muted-foreground">{t("dynamic.orglessons.darslar_ro_yxati_va_vaqtlari")}</p>
         </div>
         {canManage && (
           <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) reset(); }}>
-            <DialogTrigger asChild><Button variant="hero"><Plus className="h-4 w-4" /> Yangi dars</Button></DialogTrigger>
+            <DialogTrigger asChild><Button variant="hero"><Plus className="h-4 w-4" />{t("dynamic.orglessons.yangi_dars")}</Button></DialogTrigger>
             <DialogContent className="max-w-lg">
               <DialogHeader><DialogTitle>{editing ? "Tahrirlash" : "Yangi dars"}</DialogTitle></DialogHeader>
               <div className="space-y-3">
-                <div className="grid gap-2"><Label>Sarlavha *</Label>
+                <div className="grid gap-2"><Label>{t("dynamic.lmsnews.sarlavha_")}</Label>
                   <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Algoritmlar #5" /></div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="grid gap-2">
-                    <Label>Boshlanish *</Label>
+                    <Label>{t("dynamic.calendar.boshlanish_")}</Label>
                     <div className="relative">
                       <Input 
                         type="datetime-local" 
@@ -218,7 +221,7 @@ export default function OrgLessons({ canManage = false, basePath, filter = "all"
                     </div>
                   </div>
                   <div className="grid gap-2">
-                    <Label>Tugash *</Label>
+                    <Label>{t("dynamic.calendar.tugash_")}</Label>
                     <div className="relative">
                       <Input 
                         type="datetime-local" 
@@ -230,28 +233,28 @@ export default function OrgLessons({ canManage = false, basePath, filter = "all"
                     </div>
                   </div>
                 </div>
-                <div className="grid gap-2"><Label>Guruh *</Label>
+                <div className="grid gap-2"><Label>{t("dynamic.orglessons.guruh_")}</Label>
                   <Select value={groupId} onValueChange={setGroupId}>
                     <SelectTrigger><SelectValue placeholder="Tanlang" /></SelectTrigger>
                     <SelectContent>{groups.map((g) => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}</SelectContent>
                   </Select></div>
-                <div className="grid gap-2"><Label>Fan *</Label>
+                <div className="grid gap-2"><Label>{t("dynamic.syllabus.fan_")}</Label>
                   <Select value={subjectId} onValueChange={setSubjectId}>
                     <SelectTrigger><SelectValue placeholder="Tanlang" /></SelectTrigger>
                     <SelectContent>{subjects.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
                   </Select></div>
                 {!isTeacherView && (
-                  <div className="grid gap-2"><Label>O'qituvchi</Label>
+                  <div className="grid gap-2"><Label>{t("dynamic.orglessons.o_qituvchi")}</Label>
                     <Select value={teacherId} onValueChange={setTeacherId}>
                       <SelectTrigger><SelectValue placeholder="Tanlang" /></SelectTrigger>
                       <SelectContent>{teachers.map((t) => <SelectItem key={t.id} value={t.id}>{t.full_name || t.username}</SelectItem>)}</SelectContent>
                     </Select></div>
                 )}
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="grid gap-2"><Label>Xona</Label>
+                  <div className="grid gap-2"><Label>{t("dynamic.orglessons.xona")}</Label>
                     <Input value={room} onChange={(e) => setRoom(e.target.value)} placeholder="A-204" /></div>
                 </div>
-                <div className="grid gap-2"><Label>Tavsif</Label>
+                <div className="grid gap-2"><Label>{t("dynamic.telegramlinks.tavsif")}</Label>
                   <Textarea rows={2} value={description} onChange={(e) => setDescription(e.target.value)} /></div>
                 <Button onClick={submit} disabled={saving} className="w-full" variant="hero">
                   {saving && <Loader2 className="h-4 w-4 animate-spin" />} Saqlash
@@ -265,7 +268,7 @@ export default function OrgLessons({ canManage = false, basePath, filter = "all"
       {loading ? (
         <div className="flex justify-center py-16"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
       ) : grouped.length === 0 ? (
-        <Card className="p-12 text-center text-muted-foreground">Darslar yo'q</Card>
+        <Card className="p-12 text-center text-muted-foreground">{t("dynamic.orglessons.darslar_yo_q")}</Card>
       ) : (
         <div className="space-y-6">
           {grouped.map(([day, list]) => (
@@ -317,10 +320,10 @@ export default function OrgLessons({ canManage = false, basePath, filter = "all"
                                 <Button size="icon" variant="ghost" className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
                               </AlertDialogTrigger>
                               <AlertDialogContent>
-                                <AlertDialogHeader><AlertDialogTitle>O'chirilsinmi?</AlertDialogTitle>
+                                <AlertDialogHeader><AlertDialogTitle>{t("dynamic.usersmanager.o_chirilsinmi")}</AlertDialogTitle>
                                   <AlertDialogDescription>"{l.title}" darsi o'chiriladi.</AlertDialogDescription></AlertDialogHeader>
-                                <AlertDialogFooter><AlertDialogCancel>Bekor</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => remove(l)}>O'chirish</AlertDialogAction></AlertDialogFooter>
+                                <AlertDialogFooter><AlertDialogCancel>{t("dynamic.usersmanager.bekor")}</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => remove(l)}>{t("dynamic.usersmanager.o_chirish")}</AlertDialogAction></AlertDialogFooter>
                               </AlertDialogContent>
                             </AlertDialog>
                           </>

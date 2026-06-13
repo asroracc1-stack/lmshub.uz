@@ -1,9 +1,11 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { Button } from "./ui/button";
 import { X, Eraser, Pen, RotateCcw, GripHorizontal } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
 export default function Scratchpad({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -124,7 +126,7 @@ export default function Scratchpad({ isOpen, onClose }: { isOpen: boolean; onClo
               <Button size="icon" variant="ghost" className="h-7 w-7 rounded-full text-amber-500 hover:bg-amber-500/10" onClick={clearCanvas} title="Tozalash">
                 <RotateCcw className="h-3 w-3" />
               </Button>
-              <Button size="icon" variant="ghost" className="h-7 w-7 rounded-full hover:bg-slate-200 dark:hover:bg-white/10" onClick={onClose} title="Yopish">
+              <Button size="icon" variant="ghost" className="h-7 w-7 rounded-full hover:bg-slate-200 dark:hover:bg-white/10" onClick={onClose} title={t("dynamic.syllabus.yopish")}>
                 <X className="h-3.5 w-3.5 text-slate-500" />
               </Button>
             </div>
@@ -163,7 +165,7 @@ export default function Scratchpad({ isOpen, onClose }: { isOpen: boolean; onClo
               ))}
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-black uppercase tracking-wider hidden sm:block">Qalinlik</span>
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-black uppercase tracking-wider hidden sm:block">{t("dynamic.scratchpad.qalinlik")}</span>
               <input type="range" min="1" max="20" value={lineWidth} onChange={e => setLineWidth(Number(e.target.value))}
                 className="w-20 accent-violet-500 h-1 cursor-pointer" />
             </div>

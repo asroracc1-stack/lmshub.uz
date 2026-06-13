@@ -12,7 +12,8 @@ interface NavbarProps {
   setIsMenuOpen: (v: boolean) => void;
 }
 
-export default function Navbar({ isCollapsed, setIsCollapsed, setIsMenuOpen }: NavbarProps) {
+export default function Navbar({
+  const { t } = useTranslation(); isCollapsed, setIsCollapsed, setIsMenuOpen }: NavbarProps) {
   const { role } = useAuth();
   const navigate = useNavigate();
   const basePath = `/${role}`;
@@ -32,7 +33,7 @@ export default function Navbar({ isCollapsed, setIsCollapsed, setIsMenuOpen }: N
             }
           }}
           className="p-2.5 rounded-xl text-slate-500 hover:bg-purple-50 hover:text-purple-600 transition-all border border-slate-100 shadow-sm active:scale-95 group bg-white"
-          aria-label="Toggle Sidebar"
+          aria-label={t("dynamic.sidebar.toggle_sidebar")}
         >
           {isCollapsed ? <PanelLeftOpen size={20} className="md:block hidden" /> : <PanelLeftClose size={20} className="md:block hidden" />}
           <Menu size={20} className="md:hidden block" />
@@ -61,4 +62,4 @@ export default function Navbar({ isCollapsed, setIsCollapsed, setIsMenuOpen }: N
       </div>
     </header>
   );
-}
+}

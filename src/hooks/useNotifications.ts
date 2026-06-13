@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import { useEffect, useState, useCallback } from "react";
 // import { supabase } from "@/integrations/supabase/client"; // DEPRECATED
 import { useAuth } from "@/contexts/AuthContext";
@@ -32,7 +33,7 @@ export function useNotifications() {
       const { data } = await api.get<Notification[]>('/communication/notifications?unreadOnly=true');
       setItems(Array.isArray(data) ? data : []);
     } catch (e: any) {
-      toast.error('Bildirishnomalarni yuklashda xatolik');
+      toast.error(i18next.t("dynamic.usenotifications.bildirishnomalarni_yuklashda_xatolik"));
     } finally {
       setLoading(false);
     }

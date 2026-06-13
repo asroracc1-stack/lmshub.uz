@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -6,6 +7,7 @@ import { Loader2 } from "lucide-react";
 import { api } from "@/lib/axios";
 
 const BotLogin = () => {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { setAuth } = useAuth();
@@ -15,7 +17,7 @@ const BotLogin = () => {
     let redirect = searchParams.get("redirect") || "/";
 
     if (!token) {
-      toast.error("Yaroqsiz token");
+      toast.error(t("dynamic.botlogin.yaroqsiz_token"));
       navigate("/auth");
       return;
     }
@@ -66,11 +68,11 @@ const BotLogin = () => {
         }
 
         setAuth(token, userData as any);
-        toast.success("Muvaffaqiyatli kirdingiz!");
+        toast.success(t("dynamic.botlogin.muvaffaqiyatli_kirdingiz"));
         window.location.href = redirect;
       } catch (err) {
         console.error("Bot login error:", err);
-        toast.error("Token eskirgan yoki xatolik yuz berdi");
+        toast.error(t("dynamic.botlogin.token_eskirgan_yoki_xatolik_yuz_berdi"));
         navigate("/auth");
       }
     };
@@ -83,8 +85,8 @@ const BotLogin = () => {
     <div className="flex h-screen w-full items-center justify-center bg-background">
       <div className="flex flex-col items-center space-y-4">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <h2 className="text-xl font-semibold text-foreground">Tizimga ulanmoqda...</h2>
-        <p className="text-muted-foreground">Iltimos, kuting, sizni tizimga kiritmoqdamiz.</p>
+        <h2 className="text-xl font-semibold text-foreground">{t("dynamic.botlogin.tizimga_ulanmoqda")}</h2>
+        <p className="text-muted-foreground">{t("dynamic.botlogin.iltimos_kuting_sizni_tizimga_kiritmoqdam")}</p>
       </div>
     </div>
   );

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
@@ -88,6 +89,7 @@ const safeDate = (d: any) => {
 };
 
 export default function ParentsPage() {
+  const { t } = useTranslation();
   const { role } = useAuth();
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
@@ -124,7 +126,7 @@ export default function ParentsPage() {
       setPwdTarget(null);
       setNewPwd("");
     },
-    onError: () => toast.error("Parolni yangilashda xatolik"),
+    onError: () => toast.error(t("dynamic.parents.parolni_yangilashda_xatolik")),
   });
 
   // Fetch groups
@@ -169,16 +171,16 @@ export default function ParentsPage() {
       if (pwd) {
         toast.success(
           <div className="flex flex-col gap-1 text-slate-800 dark:text-slate-200">
-            <span className="font-bold text-purple-600 dark:text-purple-400">Ota-ona muvaffaqiyatli qo'shildi!</span>
+            <span className="font-bold text-purple-600 dark:text-purple-400">{t("dynamic.parents.otaona_muvaffaqiyatli_qo_shildi")}</span>
             <div className="text-xs space-y-0.5 mt-1">
-              <p>Login: <code className="bg-slate-100 dark:bg-white/10 px-1 py-0.5 rounded font-mono font-bold text-primary select-all">@{createdParent.username}</code></p>
-              <p>Parol: <code className="bg-purple-50 dark:bg-purple-950/20 px-1 py-0.5 rounded font-mono font-bold text-purple-600 dark:text-purple-400 select-all">{pwd}</code></p>
+              <p>{t("dynamic.parents.login")}<code className="bg-slate-100 dark:bg-white/10 px-1 py-0.5 rounded font-mono font-bold text-primary select-all">@{createdParent.username}</code></p>
+              <p>{t("dynamic.parents.parol")}<code className="bg-purple-50 dark:bg-purple-950/20 px-1 py-0.5 rounded font-mono font-bold text-purple-600 dark:text-purple-400 select-all">{pwd}</code></p>
             </div>
           </div>,
           { duration: 15000 }
         );
       } else {
-        toast.success("Ota-ona muvaffaqiyatli qo'shildi!");
+        toast.success(t("dynamic.parents.otaona_muvaffaqiyatli_qo_shildi"));
       }
       qc.invalidateQueries({ queryKey: ["parents"] });
       qc.invalidateQueries({ queryKey: ["super-admin-dashboard-stats"] });
@@ -186,25 +188,25 @@ export default function ParentsPage() {
       setOpen(false);
       setForm({ fullName: "", phoneOrUsername: "", email: "", password: "", studentId: "", relationship: "OTA-ONA" });
     },
-    onError: () => toast.error("Xatolik yuz berdi"),
+    onError: () => toast.error(t("dynamic.parents.xatolik_yuz_berdi")),
   });
 
   const editMutation = useMutation({
     mutationFn: (payload: any) => api.put(`/admin/parents/${payload.id}`, payload),
     onSuccess: () => {
-      toast.success("Ma'lumotlar yangilandi!");
+      toast.success(t("dynamic.parents.ma_lumotlar_yangilandi"));
       qc.invalidateQueries({ queryKey: ["parents"] });
       setOpen(false);
       setEditing(null);
     },
-    onError: () => toast.error("Yangilab bo'lmadi"),
+    onError: () => toast.error(t("dynamic.parents.yangilab_bo_lmadi")),
   });
 
   const linkChildMutation = useMutation({
     mutationFn: ({ parentId, studentId }: { parentId: string, studentId: string }) => 
       api.post(`/admin/parents/${parentId}/link-child/${studentId}`),
     onSuccess: () => {
-      toast.success("Farzand muvaffaqiyatli biriktirildi!");
+      toast.success(t("dynamic.parents.farzand_muvaffaqiyatli_biriktirildi"));
       qc.invalidateQueries({ queryKey: ["parents"] });
       setLinkOpen(false);
       setLinkingParent(null);
@@ -220,18 +222,18 @@ export default function ParentsPage() {
       toast.success(variables.active ? "Faollashtirildi" : "Bloklandi");
       qc.invalidateQueries({ queryKey: ["parents"] });
     },
-    onError: () => toast.error("Xatolik yuz berdi"),
+    onError: () => toast.error(t("dynamic.parents.xatolik_yuz_berdi")),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => api.delete(`/admin/parents/${id}`),
     onSuccess: () => {
-      toast.success("O'chirildi");
+      toast.success(t("dynamic.usersmanager.o_chirildi"));
       qc.invalidateQueries({ queryKey: ["parents"] });
       qc.invalidateQueries({ queryKey: ["super-admin-dashboard-stats"] });
       qc.invalidateQueries({ queryKey: ["admin-dashboard-stats"] });
     },
-    onError: () => toast.error("O'chirib bo'lmadi"),
+    onError: () => toast.error(t("dynamic.parents.o_chirib_bo_lmadi")),
   });
 
   const grantCoinsMutation = useMutation({
@@ -386,18 +388,18 @@ export default function ParentsPage() {
         ) : parents.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3">
             <Users className="h-12 w-12 text-slate-300 dark:text-slate-600" />
-            <p className="text-slate-500 dark:text-slate-400 font-medium">Ota-ona topilmadi</p>
+            <p className="text-slate-500 dark:text-slate-400 font-medium">{t("dynamic.parents.otaona_topilmadi")}</p>
           </div>
         ) : (
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent border-slate-200 dark:border-white/5">
-                <TableHead className="font-bold text-slate-900 dark:text-slate-200">F.I.O</TableHead>
-                <TableHead className="font-bold text-slate-900 dark:text-slate-200">Farzandlari</TableHead>
-                <TableHead className="font-bold text-slate-900 dark:text-slate-200">Aloqa</TableHead>
-                <TableHead className="font-bold text-slate-900 dark:text-slate-200">Holati</TableHead>
-                <TableHead className="font-bold text-slate-900 dark:text-slate-200">Qo'shilgan</TableHead>
-                <TableHead className="text-right font-bold text-slate-900 dark:text-slate-200">Amallar</TableHead>
+                <TableHead className="font-bold text-slate-900 dark:text-slate-200">{t("dynamic.profile.fio")}</TableHead>
+                <TableHead className="font-bold text-slate-900 dark:text-slate-200">{t("dynamic.parents.farzandlari")}</TableHead>
+                <TableHead className="font-bold text-slate-900 dark:text-slate-200">{t("dynamic.startuppitch.aloqa")}</TableHead>
+                <TableHead className="font-bold text-slate-900 dark:text-slate-200">{t("dynamic.usersmanager.holati")}</TableHead>
+                <TableHead className="font-bold text-slate-900 dark:text-slate-200">{t("dynamic.parents.qo_shilgan")}</TableHead>
+                <TableHead className="text-right font-bold text-slate-900 dark:text-slate-200">{t("dynamic.usersmanager.amallar")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -439,7 +441,7 @@ export default function ParentsPage() {
                             {name}
                           </Badge>
                         ))
-                        : <span className="text-xs text-slate-400">Bog'lanmagan</span>}
+                        : <span className="text-xs text-slate-400">{t("dynamic.parents.bog_lanmagan")}</span>}
                     </div>
                   </TableCell>
                   <TableCell>
@@ -460,12 +462,12 @@ export default function ParentsPage() {
                     {p.active ? (
                       <div className="flex items-center gap-1.5">
                         <CheckCircle2 className="h-4 w-4 text-purple-500" />
-                        <span className="text-xs font-medium text-purple-600 dark:text-purple-400">Faol</span>
+                        <span className="text-xs font-medium text-purple-600 dark:text-purple-400">{t("dynamic.usersmanager.faol")}</span>
                       </div>
                     ) : (
                       <div className="flex items-center gap-1.5">
                         <XCircle className="h-4 w-4 text-slate-400" />
-                        <span className="text-xs font-medium text-slate-500">Nofaol</span>
+                        <span className="text-xs font-medium text-slate-500">{t("dynamic.parents.nofaol")}</span>
                       </div>
                     )}
                   </TableCell>
@@ -480,7 +482,13 @@ export default function ParentsPage() {
                         onClick={() => toggleActiveMutation.mutate({ id: p.id, active: !p.active })}
                         disabled={toggleActiveMutation.isPending}
                       >
-                        {toggleActiveMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : (p.active ? <Ban className="h-4 w-4" /> : <Unlock className="h-4 w-4" />)}
+                        {toggleActiveMutation.isPending ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : p.active ? (
+                          <Ban className="h-4 w-4" />
+                        ) : (
+                          <Unlock className="h-4 w-4" />
+                        )}
                       </Button>
                       <Button
                         variant="ghost" size="icon"
@@ -489,7 +497,7 @@ export default function ParentsPage() {
                           setGrantCoinsTarget(p);
                           setGrantCoinsOpen(true);
                         }}
-                        title="Coin hadya qilish"
+                        title={t("dynamic.usersmanager.coin_hadya_qilish")}
                       >
                         <Gift className="h-4 w-4" />
                       </Button>
@@ -508,7 +516,7 @@ export default function ParentsPage() {
                         variant="ghost" size="icon"
                         className="h-8 w-8 text-amber-500 hover:text-amber-700 hover:bg-amber-500/10"
                         onClick={() => setPwdTarget(p)}
-                        title="Parolni yangilash"
+                        title={t("dynamic.usersmanager.parolni_yangilash")}
                       >
                         <KeyRound className="h-4 w-4" />
                       </Button>
@@ -516,7 +524,7 @@ export default function ParentsPage() {
                         variant="ghost" size="icon"
                         className="h-8 w-8 text-rose-500 hover:text-rose-700 hover:bg-rose-500/10"
                         onClick={() => setDelTarget(p)}
-                        title="O'chirish"
+                        title={t("dynamic.usersmanager.o_chirish")}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -589,9 +597,7 @@ export default function ParentsPage() {
 
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setOpen(false)}
-              className="border-slate-200 dark:border-white/10">
-              Bekor
-            </Button>
+              className="border-slate-200 dark:border-white/10">{t("dynamic.usersmanager.bekor")}</Button>
             <Button
               disabled={!form.phoneOrUsername || createMutation.isPending || editMutation.isPending}
               onClick={() => editing ? editMutation.mutate({ ...form, id: editing.id, username: form.phoneOrUsername }) : createMutation.mutate(form)}
@@ -637,7 +643,7 @@ export default function ParentsPage() {
                   <Command>
                     <CommandInput placeholder="Guruh ismini yozing..." />
                     <CommandList>
-                      <CommandEmpty>Guruh topilmadi.</CommandEmpty>
+                      <CommandEmpty>{t("dynamic.parents.guruh_topilmadi")}</CommandEmpty>
                       <CommandGroup>
                         <CommandItem value="all" onSelect={() => { setSelectedGroupId(null); setGroupSearchOpen(false); setForm({ ...form, studentId: "" }); }}>
                           <Check className={cn("mr-2 h-4 w-4", !selectedGroupId ? "opacity-100" : "opacity-0")} /> Barcha guruhlar
@@ -655,9 +661,7 @@ export default function ParentsPage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                Talabani tanlang
-              </Label>
+              <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">{t("dynamic.orgrewards.talabani_tanlang")}</Label>
               <Popover open={studentSearchOpen} onOpenChange={setStudentSearchOpen}>
                 <PopoverTrigger asChild>
                   <Button variant="outline" role="combobox" className="w-full justify-between font-normal bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 rounded-xl h-10">
@@ -674,7 +678,7 @@ export default function ParentsPage() {
                   <Command>
                     <CommandInput placeholder="Talaba ismini yozing..." />
                     <CommandList>
-                      <CommandEmpty>Talaba topilmadi.</CommandEmpty>
+                      <CommandEmpty>{t("dynamic.parents.talaba_topilmadi")}</CommandEmpty>
                       <CommandGroup>
                         {students.map((s) => {
                           const studentName = s.full_name || s.fullName || s.username;
@@ -700,7 +704,7 @@ export default function ParentsPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setLinkOpen(false)}>Bekor qilish</Button>
+            <Button variant="ghost" onClick={() => setLinkOpen(false)}>{t("dynamic.pricingplans.bekor_qilish")}</Button>
             <Button 
               className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl"
               disabled={!form.studentId || linkChildMutation.isPending}
@@ -721,18 +725,15 @@ export default function ParentsPage() {
         <DialogContent className="max-w-md p-0 overflow-hidden border-none shadow-2xl rounded-xl bg-white dark:bg-slate-900 border-slate-200 dark:border-white/10" aria-describedby="parents-pwd-desc">
           <DialogHeader className="p-8 pb-4 bg-slate-50 dark:bg-slate-900/50">
             <DialogTitle className="text-xl font-bold flex items-center gap-2 text-slate-900 dark:text-white">
-              <KeyRound className="h-5 w-5 text-amber-500" />
-              Parolni yangilash
-            </DialogTitle>
-            <DialogDescription id="parents-pwd-desc">
-              Foydalanuvchi <span className="font-bold text-slate-900 dark:text-white">@{pwdTarget?.username}</span> uchun yangi parol o'rnating.
+              <KeyRound className="h-5 w-5 text-amber-500" />{t("dynamic.usersmanager.parolni_yangilash")}</DialogTitle>
+            <DialogDescription id="parents-pwd-desc">{t("dynamic.usersmanager.foydalanuvchi")}<span className="font-bold text-slate-900 dark:text-white">@{pwdTarget?.username}</span> uchun yangi parol o'rnating.
             </DialogDescription>
           </DialogHeader>
 
           <form onSubmit={(e) => { e.preventDefault(); if (pwdTarget) resetPasswordMutation.mutate({ id: pwdTarget.id, password: newPwd }); }}>
             <div className="p-8 pt-4 space-y-4">
               <div className="space-y-1.5">
-                <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">Yangi parol *</Label>
+                <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">{t("dynamic.parents.yangi_parol_")}</Label>
                 <Input
                   type="password"
                   value={newPwd}
@@ -745,9 +746,7 @@ export default function ParentsPage() {
             </div>
 
             <DialogFooter className="p-8 pt-4 border-t border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-slate-900/80 backdrop-blur-md">
-              <Button variant="ghost" type="button" onClick={() => { setPwdTarget(null); setNewPwd(""); }} className="rounded-xl">
-                Bekor qilish
-              </Button>
+              <Button variant="ghost" type="button" onClick={() => { setPwdTarget(null); setNewPwd(""); }} className="rounded-xl">{t("dynamic.pricingplans.bekor_qilish")}</Button>
               <Button type="submit" disabled={resetPasswordMutation.isPending || newPwd.length < 6} className="bg-gradient-to-r from-pink-500 to-rose-600 text-white rounded-xl px-8 min-w-[120px]">
                 {resetPasswordMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
                 Yangilash
@@ -763,7 +762,7 @@ export default function ParentsPage() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-amber-500" />
-              <span>Coin hadya qilish</span>
+              <span>{t("dynamic.usersmanager.coin_hadya_qilish")}</span>
             </DialogTitle>
             <DialogDescription id="grant-coins-parent-desc">
               Ota-onaga faolligi uchun coin yuborish.
@@ -783,7 +782,7 @@ export default function ParentsPage() {
             </div>
 
             <div className="grid gap-2">
-              <Label>Coin miqdori</Label>
+              <Label>{t("dynamic.usersmanager.coin_miqdori")}</Label>
               <Input 
                 type="number" 
                 value={grantAmount} 
@@ -793,22 +792,22 @@ export default function ParentsPage() {
             </div>
 
             <div className="grid gap-2">
-              <Label>Sabab</Label>
+              <Label>{t("dynamic.smartdashboard.sabab")}</Label>
               <Select value={grantReason} onValueChange={setReason => setGrantReason(setReason)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="IELTS/SAT yuqori ball">IELTS/SAT yuqori ball</SelectItem>
-                  <SelectItem value="Milliy sertifikat">Milliy sertifikat</SelectItem>
-                  <SelectItem value="Olimpiada g'olibi">Olimpiada g'olibi</SelectItem>
-                  <SelectItem value="Darsdagi faollik">Darsdagi faollik</SelectItem>
-                  <SelectItem value="5+ a'lo baho">5+ a'lo baho</SelectItem>
-                  <SelectItem value="Ota-ona faolligi">Ota-ona faolligi</SelectItem>
+                  <SelectItem value="Milliy sertifikat">{t("dynamic.usersmanager.milliy_sertifikat")}</SelectItem>
+                  <SelectItem value="Olimpiada g'olibi">{t("dynamic.usersmanager.olimpiada_g_olibi")}</SelectItem>
+                  <SelectItem value="Darsdagi faollik">{t("dynamic.usersmanager.darsdagi_faollik")}</SelectItem>
+                  <SelectItem value="5+ a'lo baho">{t("dynamic.usersmanager.5_a_lo_baho")}</SelectItem>
+                  <SelectItem value="Ota-ona faolligi">{t("dynamic.usersmanager.otaona_faolligi")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="grid gap-2">
-              <Label>Izoh (Comment)</Label>
+              <Label>{t("dynamic.usersmanager.izoh_comment")}</Label>
               <Input 
                 value={grantComment} 
                 onChange={(e) => setGrantComment(e.target.value)} 
@@ -817,7 +816,7 @@ export default function ParentsPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setGrantCoinsOpen(false)}>Bekor</Button>
+            <Button variant="ghost" onClick={() => setGrantCoinsOpen(false)}>{t("dynamic.usersmanager.bekor")}</Button>
             <Button 
               variant="hero" 
               className="bg-amber-500 hover:bg-amber-600 text-white"
@@ -844,19 +843,17 @@ export default function ParentsPage() {
       <AlertDialog open={!!delTarget} onOpenChange={(v) => !v && setDelTarget(null)}>
         <AlertDialogContent className="rounded-xl border-none shadow-2xl bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-xl font-bold">O'chirishni tasdiqlang</AlertDialogTitle>
+            <AlertDialogTitle className="text-xl font-bold">{t("dynamic.paymentreceivers.o_chirishni_tasdiqlang")}</AlertDialogTitle>
             <AlertDialogDescription className="text-slate-500 dark:text-slate-400">
               Ota-ona <span className="font-bold text-slate-900 dark:text-white">@{delTarget?.username}</span> tizimdan butunlay o'chiriladi. Ushbu amalni ortga qaytarib bo'lmaydi.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="mt-6">
-            <AlertDialogCancel className="rounded-xl border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300">Bekor qilish</AlertDialogCancel>
+            <AlertDialogCancel className="rounded-xl border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300">{t("dynamic.pricingplans.bekor_qilish")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => { if (delTarget) deleteMutation.mutate(delTarget.id); setDelTarget(null); }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-xl px-6"
-            >
-              O'chirish
-            </AlertDialogAction>
+            >{t("dynamic.usersmanager.o_chirish")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

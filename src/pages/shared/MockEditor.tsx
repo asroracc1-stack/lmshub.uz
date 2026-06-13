@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { api } from "@/lib/axios";
@@ -38,7 +39,9 @@ const newQ = (): Q => ({
 });
 const newSection = (): Section => ({ title: "", passage: "", questions: [newQ()] });
 
-export default function MockEditor({ basePath = "/super-admin" }: { basePath?: string }) {
+export default function MockEditor({
+  basePath = "/super-admin" }: { basePath?: string }) {
+  const { t } = useTranslation();
   const { profile } = useAuth();
   const nav = useNavigate();
   const { testId } = useParams<{ testId?: string }>();
@@ -76,7 +79,7 @@ export default function MockEditor({ basePath = "/super-admin" }: { basePath?: s
         headers: { "Content-Type": "multipart/form-data" }
       });
       setPdfUrl(res.data);
-      toast.success("PDF variant yuklandi");
+      toast.success(t("dynamic.mockeditor.pdf_variant_yuklandi"));
     } catch (e: any) { 
       toast.error("PDF yuklashda xatolik: " + (e.response?.data?.message || e.message)); 
     } finally {
@@ -131,13 +134,13 @@ export default function MockEditor({ basePath = "/super-admin" }: { basePath?: s
         }));
         const totalQs = mapped.reduce((acc, s) => acc + s.questions.length, 0);
         if (totalQs === 0) {
-          toast.error("AI PDF-dan savollarni ajrata olmadi.");
+          toast.error(t("dynamic.mockeditor.ai_pdfdan_savollarni_ajrata_olmadi"));
           return;
         }
         setSections(mapped);
         toast.success(`Muvaffaqiyatli: PDF tahlil qilindi, ${mapped.length} bo'lim va ${totalQs} ta savol olindi.`);
       } else {
-        toast.error("AI PDF ma'lumotlarini noto'g'ri formatda qaytardi.");
+        toast.error(t("dynamic.mockeditor.ai_pdf_ma_lumotlarini_noto_g_ri_formatda"));
       }
     } catch (e: any) {
       console.error("PDF AI Parse Error:", e);
@@ -161,7 +164,7 @@ export default function MockEditor({ basePath = "/super-admin" }: { basePath?: s
       try {
         const res = await api.get(`/admin/exams/${testId}`);
         const t = res.data;
-        if (!t) { toast.error("Test topilmadi"); nav(`${basePath}/mocks`); return; }
+        if (!t) { toast.error(t("dynamic.mocktake.test_topilmadi")); nav(`${basePath}/mocks`); return; }
 
         setKind(t.type?.toLowerCase() || "reading");
         setTitle(t.title ?? "");
@@ -238,7 +241,7 @@ export default function MockEditor({ basePath = "/super-admin" }: { basePath?: s
       } else {
         setAudioUrl(url);
       }
-      toast.success("Audio yuklandi");
+      toast.success(t("dynamic.mockeditor.audio_yuklandi"));
     } catch (e: any) { 
         toast.error("Audio yuklashda xatolik: " + (e.response?.data?.message || e.message)); 
     }
@@ -252,7 +255,7 @@ export default function MockEditor({ basePath = "/super-admin" }: { basePath?: s
       const res = await api.post("/files/upload", formData, { headers: { "Content-Type": "multipart/form-data" } });
       return res.data;
     } catch (e) {
-      toast.error("Rasm yuklashda xatolik yuz berdi.");
+      toast.error(t("dynamic.mockeditor.rasm_yuklashda_xatolik_yuz_berdi"));
       return null;
     }
   };
@@ -273,7 +276,7 @@ export default function MockEditor({ basePath = "/super-admin" }: { basePath?: s
 
   const onParseAi = async () => {
     const trimmedText = aiText.trim();
-    if (!trimmedText || trimmedText.length < 50) { toast.error("Matn juda qisqa"); return; }
+    if (!trimmedText || trimmedText.length < 50) { toast.error(t("dynamic.mockeditor.matn_juda_qisqa")); return; }
     setAiBusy(true);
     try {
       let res;
@@ -328,7 +331,7 @@ export default function MockEditor({ basePath = "/super-admin" }: { basePath?: s
         // Validate that we actually have questions
         const totalQs = mapped.reduce((acc, s) => acc + s.questions.length, 0);
         if (totalQs === 0) {
-          toast.error("AI savollarni ajrata olmadi. Iltimos, matnni aniqroq kiriting.");
+          toast.error(t("dynamic.mockeditor.ai_savollarni_ajrata_olmadi_iltimos_matn"));
           return;
         }
 
@@ -337,7 +340,7 @@ export default function MockEditor({ basePath = "/super-admin" }: { basePath?: s
         setPreviews([]);
         toast.success(`Muvaffaqiyatli: ${mapped.length} qism, ${totalQs} savol tayyorlandi.`);
       } else { 
-        toast.error("AI ma'lumotni noto'g'ri formatda qaytardi. Iltimos, qayta urinib ko'ring."); 
+        toast.error(t("dynamic.mockeditor.ai_ma_lumotni_noto_g_ri_formatda_qaytard")); 
       }
     } catch (e: any) { 
         console.error("AI Parse Error:", e);
@@ -362,7 +365,7 @@ export default function MockEditor({ basePath = "/super-admin" }: { basePath?: s
             }, 1000);
 
         } else if (e.response?.status === 500 && e.response?.data?.message?.includes("kaliti")) {
-            toast.error("Tizim sozlamalarida xatolik (API key topilmadi), iltimos administratorga murojaat qiling.");
+            toast.error(t("dynamic.mockeditor.tizim_sozlamalarida_xatolik_api_key_topi"));
         } else if (e.response?.status === 500) {
             toast.error(e.response?.data?.message || "Serverda xatolik: AI tahlili muvaffaqiyatsiz bo'ldi.");
         } else {
@@ -376,7 +379,7 @@ export default function MockEditor({ basePath = "/super-admin" }: { basePath?: s
   }, [sections]);
 
   const save = async () => {
-    if (!title.trim()) { toast.error("Sarlavha kerak"); return; }
+    if (!title.trim()) { toast.error(t("dynamic.mockeditor.sarlavha_kerak")); return; }
     setSaving(true);
     try {
       const payload = {
@@ -420,7 +423,7 @@ export default function MockEditor({ basePath = "/super-admin" }: { basePath?: s
       nav(`${basePath}/mocks/c/${kind}`);
     } catch (e: any) { 
         if (e.response?.status === 409) {
-            toast.error("Bu sarlavhali test bor, iltimos boshqa nom tanlang");
+            toast.error(t("dynamic.mockeditor.bu_sarlavhali_test_bor_iltimos_boshqa_no"));
         } else {
             toast.error("Xatolik: " + (e.response?.data?.message || e.message)); 
         }
@@ -448,7 +451,7 @@ export default function MockEditor({ basePath = "/super-admin" }: { basePath?: s
       <Card className="p-6 space-y-4">
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="space-y-1.5">
-            <Label>Turi</Label>
+            <Label>{t("dynamic.packs.turi")}</Label>
             <Select value={kind} onValueChange={(v: any) => setKind(v)} disabled={isEdit}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -462,42 +465,42 @@ export default function MockEditor({ basePath = "/super-admin" }: { basePath?: s
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label>Vaqt (daq)</Label>
+            <Label>{t("dynamic.mockeditor.vaqt_daq")}</Label>
             <Input type="number" value={duration} onChange={(e) => setDuration(+e.target.value)} />
           </div>
           <div className="space-y-1.5">
-            <Label>Qiyinlik</Label>
+            <Label>{t("dynamic.mocktake.qiyinlik")}</Label>
             <Select value={difficulty} onValueChange={setDifficulty}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="easy">Oson</SelectItem>
-                <SelectItem value="medium">O'rta</SelectItem>
-                <SelectItem value="hard">Qiyin</SelectItem>
+                <SelectItem value="easy">{t("dynamic.mockeditor.oson")}</SelectItem>
+                <SelectItem value="medium">{t("dynamic.mockeditor.o_rta")}</SelectItem>
+                <SelectItem value="hard">{t("dynamic.mockeditor.qiyin")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label>Reja</Label>
+            <Label>{t("dynamic.mockeditor.reja")}</Label>
             <Select value={requiredPack} onValueChange={setRequiredPack}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="free">Bepul</SelectItem>
-                <SelectItem value="pro">Pro pack</SelectItem>
-                <SelectItem value="elite">Elite pack</SelectItem>
+                <SelectItem value="free">{t("dynamic.mockeditor.bepul")}</SelectItem>
+                <SelectItem value="pro">{t("dynamic.mockeditor.pro_pack")}</SelectItem>
+                <SelectItem value="elite">{t("dynamic.mockeditor.elite_pack")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
         <div className="space-y-1.5">
-          <Label>Sarlavha</Label>
+          <Label>{t("dynamic.mockeditor.sarlavha")}</Label>
           <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Cambridge 18 - Test 1 Reading" />
         </div>
         <div className="space-y-1.5">
-          <Label>Tavsif (ixtiyoriy)</Label>
+          <Label>{t("dynamic.mockeditor.tavsif_ixtiyoriy")}</Label>
           <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
         </div>
         <div className="space-y-1.5">
-          <Label>PDF Variant (ixtiyoriy)</Label>
+          <Label>{t("dynamic.mockeditor.pdf_variant_ixtiyoriy")}</Label>
           <div className="flex gap-3 items-center flex-wrap">
             <label className="cursor-pointer">
               <input type="file" accept="application/pdf" hidden disabled={pdfBusy} onChange={(e) => e.target.files?.[0] && onPdfUpload(e.target.files[0])} />
@@ -519,7 +522,7 @@ export default function MockEditor({ basePath = "/super-admin" }: { basePath?: s
       {/* Type Specific Fields */}
       {kind === "listening" && (
         <Card className="p-6 space-y-3">
-          <div className="flex items-center gap-2"><Music className="h-5 w-5 text-primary" /><h3 className="font-bold">Listening Audio</h3></div>
+          <div className="flex items-center gap-2"><Music className="h-5 w-5 text-primary" /><h3 className="font-bold">{t("dynamic.mockeditor.listening_audio")}</h3></div>
           <div className="flex gap-3 items-center flex-wrap">
             <label className="cursor-pointer">
               <input type="file" accept="audio/*" hidden disabled={audioBusy} onChange={(e) => e.target.files?.[0] && onAudioUpload(e.target.files[0])} />
@@ -537,21 +540,21 @@ export default function MockEditor({ basePath = "/super-admin" }: { basePath?: s
       {/* Sections Management */}
       <Tabs defaultValue="manual">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="manual"><FileText className="h-4 w-4 mr-2" />Qo'lda kiritish</TabsTrigger>
-          <TabsTrigger value="ai"><Wand2 className="h-4 w-4 mr-2" />AI orqali ajratish</TabsTrigger>
+          <TabsTrigger value="manual"><FileText className="h-4 w-4 mr-2" />{t("dynamic.mockeditor.qo_lda_kiritish")}</TabsTrigger>
+          <TabsTrigger value="ai"><Wand2 className="h-4 w-4 mr-2" />{t("dynamic.mockeditor.ai_orqali_ajratish")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="ai" className="space-y-3">
           <Card className="p-6 space-y-3 bg-gradient-to-br from-violet-500/5 to-indigo-500/5 border-violet-500/30">
             <Tabs defaultValue="text-ai">
               <TabsList className="grid w-full grid-cols-2 mb-3 bg-violet-500/10">
-                <TabsTrigger value="text-ai" className="text-xs">Matn va Rasm orqali</TabsTrigger>
-                <TabsTrigger value="pdf-ai" className="text-xs">PDF hujjat orqali</TabsTrigger>
+                <TabsTrigger value="text-ai" className="text-xs">{t("dynamic.mockeditor.matn_va_rasm_orqali")}</TabsTrigger>
+                <TabsTrigger value="pdf-ai" className="text-xs">{t("dynamic.mockeditor.pdf_hujjat_orqali")}</TabsTrigger>
               </TabsList>
               
               <TabsContent value="text-ai" className="space-y-3">
-                <div className="flex items-center gap-2"><Sparkles className="h-5 w-5 text-violet-500" /><h3 className="font-bold">AI Matn Tahlili</h3></div>
-                <p className="text-sm text-muted-foreground">Test matnini, savollarini va kalitini joylang.</p>
+                <div className="flex items-center gap-2"><Sparkles className="h-5 w-5 text-violet-500" /><h3 className="font-bold">{t("dynamic.mockeditor.ai_matn_tahlili")}</h3></div>
+                <p className="text-sm text-muted-foreground">{t("dynamic.mockeditor.test_matnini_savollarini_va_kalitini_joy")}</p>
                 <Textarea rows={10} value={aiText} onChange={(e) => setAiText(e.target.value)} placeholder="Passage + Questions + Answers..." />
                 <div className="flex items-center gap-2">
                   <Button onClick={onParseAi} disabled={aiBusy} className="flex-1 bg-violet-600 hover:bg-violet-700 text-white shadow-lg shadow-violet-500/20">
@@ -578,8 +581,8 @@ export default function MockEditor({ basePath = "/super-admin" }: { basePath?: s
               </TabsContent>
 
               <TabsContent value="pdf-ai" className="space-y-3">
-                <div className="flex items-center gap-2"><BrainCircuit className="h-5 w-5 text-violet-500" /><h3 className="font-bold">AI PDF Tahlili</h3></div>
-                <p className="text-sm text-muted-foreground">PDF variantni yuklang, AI savollar, variantlar, to'g'ri javoblar va LaTeX yechimlarini tahlil qilib avtomatik to'ldiradi.</p>
+                <div className="flex items-center gap-2"><BrainCircuit className="h-5 w-5 text-violet-500" /><h3 className="font-bold">{t("dynamic.mockeditor.ai_pdf_tahlili")}</h3></div>
+                <p className="text-sm text-muted-foreground">{t("dynamic.mockeditor.pdf_variantni_yuklang_ai_savollar_varian")}</p>
                 <div className="flex flex-col items-center justify-center border-2 border-dashed border-violet-500/30 rounded-xl p-8 bg-violet-500/5 hover:bg-violet-500/10 transition-colors">
                   <input type="file" id="ai-pdf-file" accept="application/pdf" className="hidden" onChange={(e) => {
                     if (e.target.files?.[0]) {
@@ -590,7 +593,7 @@ export default function MockEditor({ basePath = "/super-admin" }: { basePath?: s
                     {aiBusy ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
                     PDF yuklash va tahlil qilish
                   </Button>
-                  <p className="text-xs text-muted-foreground mt-2">Faqat .pdf formatdagi fayllar qabul qilinadi</p>
+                  <p className="text-xs text-muted-foreground mt-2">{t("dynamic.mockeditor.faqat_pdf_formatdagi_fayllar_qabul_qilin")}</p>
                 </div>
               </TabsContent>
             </Tabs>
@@ -621,7 +624,7 @@ export default function MockEditor({ basePath = "/super-admin" }: { basePath?: s
               <div className="space-y-3 pt-4 border-t">
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-semibold">Savollar ({s.questions.length})</p>
-                  <Button size="sm" variant="outline" onClick={() => addQ(si)}><Plus className="h-3 w-3 mr-1" />Savol qo'shish</Button>
+                  <Button size="sm" variant="outline" onClick={() => addQ(si)}><Plus className="h-3 w-3 mr-1" />{t("dynamic.mockeditor.savol_qo_shish")}</Button>
                 </div>
                 {s.questions.map((q, qi) => (
                   <Card key={qi} className="p-3 space-y-2 bg-muted/20 border-dashed">
@@ -639,17 +642,17 @@ export default function MockEditor({ basePath = "/super-admin" }: { basePath?: s
                                }
                             }} />
                             <Button type="button" variant="outline" size="sm" className="h-8 text-xs pointer-events-none" asChild>
-                              <span><ImageIcon className="h-3 w-3 mr-1" />Savol rasmi</span>
+                              <span><ImageIcon className="h-3 w-3 mr-1" />{t("dynamic.mockeditor.savol_rasmi")}</span>
                             </Button>
                           </label>
                           {q.imageUrl && (
                              <Select value={q.imagePosition || "top"} onValueChange={(v: any) => updQ(si, qi, { imagePosition: v })}>
                                <SelectTrigger className="h-8 text-xs w-24"><SelectValue /></SelectTrigger>
                                <SelectContent>
-                                 <SelectItem value="top">Tepa</SelectItem>
-                                 <SelectItem value="bottom">Past</SelectItem>
-                                 <SelectItem value="left">Chap</SelectItem>
-                                 <SelectItem value="right">O'ng</SelectItem>
+                                 <SelectItem value="top">{t("dynamic.mockeditor.tepa")}</SelectItem>
+                                 <SelectItem value="bottom">{t("dynamic.mockeditor.past")}</SelectItem>
+                                 <SelectItem value="left">{t("dynamic.mockeditor.chap")}</SelectItem>
+                                 <SelectItem value="right">{t("dynamic.mockeditor.o_ng")}</SelectItem>
                                </SelectContent>
                              </Select>
                           )}
@@ -664,20 +667,20 @@ export default function MockEditor({ basePath = "/super-admin" }: { basePath?: s
                       <Select value={q.qtype} onValueChange={(v: any) => updQ(si, qi, { qtype: v })}>
                         <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="mcq">Multiple Choice</SelectItem>
+                          <SelectItem value="mcq">{t("dynamic.mockeditor.multiple_choice")}</SelectItem>
                           <SelectItem value="tfng">True/False/NG</SelectItem>
                           <SelectItem value="ynng">Yes/No/NG</SelectItem>
-                          <SelectItem value="fill">Fill the blank</SelectItem>
-                          <SelectItem value="short">Short answer</SelectItem>
-                          <SelectItem value="matching">Matching</SelectItem>
-                          <SelectItem value="headings">List of Headings</SelectItem>
+                          <SelectItem value="fill">{t("dynamic.mockeditor.fill_the_blank")}</SelectItem>
+                          <SelectItem value="short">{t("dynamic.mockeditor.short_answer")}</SelectItem>
+                          <SelectItem value="matching">{t("dynamic.mockeditor.matching")}</SelectItem>
+                          <SelectItem value="headings">{t("dynamic.mockeditor.list_of_headings")}</SelectItem>
                         </SelectContent>
                       </Select>
                       <div className="flex justify-end">
                          <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => {
                              const opts = [...(q.options || []), { text: `Option ${(q.options || []).length + 1}`, isCorrect: false }];
                              updQ(si, qi, { options: opts });
-                         }}><Plus className="h-3 w-3 mr-1" />Variant qo'shish</Button>
+                         }}><Plus className="h-3 w-3 mr-1" />{t("dynamic.mockeditor.variant_qo_shish")}</Button>
                       </div>
                     </div>
                     
@@ -731,10 +734,10 @@ export default function MockEditor({ basePath = "/super-admin" }: { basePath?: s
                                      }}>
                                        <SelectTrigger className="h-8 text-xs w-24"><SelectValue /></SelectTrigger>
                                        <SelectContent>
-                                         <SelectItem value="top">Tepa</SelectItem>
-                                         <SelectItem value="bottom">Past</SelectItem>
-                                         <SelectItem value="left">Chap</SelectItem>
-                                         <SelectItem value="right">O'ng</SelectItem>
+                                         <SelectItem value="top">{t("dynamic.mockeditor.tepa")}</SelectItem>
+                                         <SelectItem value="bottom">{t("dynamic.mockeditor.past")}</SelectItem>
+                                         <SelectItem value="left">{t("dynamic.mockeditor.chap")}</SelectItem>
+                                         <SelectItem value="right">{t("dynamic.mockeditor.o_ng")}</SelectItem>
                                        </SelectContent>
                                      </Select>
                                      <Button variant="ghost" size="sm" className="h-8 text-rose-500" onClick={() => {
@@ -767,7 +770,7 @@ export default function MockEditor({ basePath = "/super-admin" }: { basePath?: s
           {sections.length} bo'lim · {totalQuestions} savol
         </p>
         <div className="flex items-center gap-3">
-          <Button variant="ghost" onClick={() => nav(-1)} disabled={saving}>Bekor qilish</Button>
+          <Button variant="ghost" onClick={() => nav(-1)} disabled={saving}>{t("dynamic.pricingplans.bekor_qilish")}</Button>
           <Button size="lg" onClick={save} disabled={saving || !title.trim()} className="bg-gradient-primary shadow-glow">
             {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
             {isEdit ? "Saqlash" : "Test yaratish"}

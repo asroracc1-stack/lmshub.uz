@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -45,6 +46,7 @@ import { api } from "@/lib/axios";
 import WelcomeBanner from "@/components/shared/WelcomeBanner";
 
 export default function AdminDashboard() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { profile } = useAuth();
   const { data: stats, isLoading: statsLoading, isError: statsError } = useAdminDashboard();
@@ -78,7 +80,7 @@ export default function AdminDashboard() {
     { label: "Talabalar",     value: realStats?.totalStudents ?? 0, growth: stats?.studentGrowth  ?? 0, icon: Users,         color: "text-purple-500", bg: "bg-purple-500/10", to: "/admin/students",  accent: "#9F86C0" },
     { label: "Ota-onalar",   value: realStats?.totalParents ?? 0, growth: 0,                          icon: Heart,         color: "text-pink-500",    bg: "bg-pink-500/10",    to: "/admin/parents",   accent: "#ec4899" },
     { label: "Administratorlar", value: realStats?.totalAdministrators ?? 0, growth: stats?.orgAdminGrowth ?? 0, icon: UserCog,   color: "text-indigo-500", bg: "bg-indigo-500/10", to: "/admin/administrators", accent: "#6366f1" },
-    { label: "Guruhlar",     value: realStats?.totalGroups ?? 0, growth: 0,                          icon: Users2,        color: "text-fuchsia-500",   bg: "bg-fuchsia-500/10",    to: "/admin/groups",         accent: "#06b6d4" },
+    { label: t("dynamic.startuppitch.guruhlar"),     value: realStats?.totalGroups ?? 0, growth: 0,                          icon: Users2,        color: "text-fuchsia-500",   bg: "bg-fuchsia-500/10",    to: "/admin/groups",         accent: "#06b6d4" },
     { label: "Tadbirlar",    value: stats?.eventsCount    ?? 0, growth: stats?.eventGrowth     ?? 0, icon: CalendarIcon,  color: "text-amber-500",  bg: "bg-amber-500/10",  to: "/admin/calendar",  accent: "#f59e0b" },
     { label: "Fanlar",       value: realStats?.totalSubjects ?? 0, growth: 0,                          icon: BookOpen,      color: "text-violet-500",    bg: "bg-violet-500/10",    to: "/admin/subjects",  accent: "#7C3AED" },
   ], [stats, realStats]);
@@ -106,8 +108,8 @@ export default function AdminDashboard() {
           <TigerPlayer text="Serverni ta'mirlayapman, biroz kuting... 🐯🛠️" size={300} />
         </motion.div>
         <div className="text-center space-y-2">
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Ulanishda xatolik yuz berdi</h2>
-          <p className="text-slate-500 max-w-md mx-auto">Tizim ma'lumotlarni yuklashda qiyinchilikka duch keldi. Iltimos, bir ozdan so'ng qayta urinib ko'ring.</p>
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">{t("dynamic.dashboard.ulanishda_xatolik_yuz_berdi")}</h2>
+          <p className="text-slate-500 max-w-md mx-auto">{t("dynamic.dashboard.tizim_ma_lumotlarni_yuklashda_qiyinchili")}</p>
           <Button onClick={() => window.location.reload()} variant="outline" className="mt-4 rounded-xl border-primary/20">
             Qayta urinish
           </Button>
@@ -129,7 +131,7 @@ export default function AdminDashboard() {
   const handleEventSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!eventTitle || !eventDate) {
-      toast.error("Iltimos, nomi va sanani kiriting!");
+      toast.error(t("dynamic.dashboard.iltimos_nomi_va_sanani_kiriting"));
       return;
     }
     setEventSubmitting(true);
@@ -153,7 +155,7 @@ export default function AdminDashboard() {
 
   const handleDownloadInvoice = async () => {
     if (!invoiceStudentId) {
-      toast.error("Iltimos, talabani tanlang!");
+      toast.error(t("dynamic.dashboard.iltimos_talabani_tanlang"));
       return;
     }
     setInvoiceDownloading(true);
@@ -176,7 +178,7 @@ export default function AdminDashboard() {
       setInvoiceStudentName(null);
     } catch (err) {
       console.error(err);
-      toast.error("Hisob-faktura generatsiya qilishda xatolik!");
+      toast.error(t("dynamic.dashboard.hisobfaktura_generatsiya_qilishda_xatoli"));
     } finally {
       setInvoiceDownloading(false);
     }
@@ -224,12 +226,12 @@ export default function AdminDashboard() {
             <DialogTitle className="text-xl font-bold flex items-center gap-2">
               <CalendarIcon className="h-5 w-5 text-purple-500" /> Yangi Tadbir Yaratish
             </DialogTitle>
-            <DialogDescription id="event-desc-id">Tashkilotingiz uchun yangi ichki yoki tashqi tadbir belgilang.</DialogDescription>
+            <DialogDescription id="event-desc-id">{t("dynamic.dashboard.tashkilotingiz_uchun_yangi_ichki_yoki_ta")}</DialogDescription>
           </DialogHeader>
 
           <form onSubmit={handleEventSubmit} className="space-y-4 mt-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Tadbir Nomi</label>
+              <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{t("dynamic.dashboard.tadbir_nomi")}</label>
               <input 
                 type="text" 
                 placeholder="Masalan: IELTS Mock Exam kuni" 
@@ -241,7 +243,7 @@ export default function AdminDashboard() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Tadbir Tavsifi</label>
+              <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{t("dynamic.dashboard.tadbir_tavsifi")}</label>
               <textarea 
                 placeholder="Tadbir haqida batafsil ma'lumot..." 
                 value={eventDesc}
@@ -251,7 +253,7 @@ export default function AdminDashboard() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Sana va Vaqt</label>
+              <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{t("dynamic.dashboard.sana_va_vaqt")}</label>
               <input 
                 type="datetime-local" 
                 value={eventDate}
@@ -262,7 +264,7 @@ export default function AdminDashboard() {
             </div>
 
             <div className="flex gap-3 justify-end pt-4">
-              <Button type="button" variant="ghost" onClick={() => setActiveModal(null)} className="rounded-xl font-bold">Bekor qilish</Button>
+              <Button type="button" variant="ghost" onClick={() => setActiveModal(null)} className="rounded-xl font-bold">{t("dynamic.pricingplans.bekor_qilish")}</Button>
               <Button type="submit" disabled={eventSubmitting} className="rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold px-6 shadow-lg shadow-purple-500/20">
                 {eventSubmitting ? "Yaratilmoqda..." : "Tadbirni Yaratish 🚀"}
               </Button>
@@ -278,12 +280,12 @@ export default function AdminDashboard() {
             <DialogTitle className="text-xl font-bold flex items-center gap-2">
               <Send className="h-5 w-5 text-amber-500" /> To'lov Hisob-Fakturasi Yaratish
             </DialogTitle>
-            <DialogDescription id="invoice-desc-id">Tanlangan talaba uchun premium PDF billing schot-fakturasini yuklab oling.</DialogDescription>
+            <DialogDescription id="invoice-desc-id">{t("dynamic.dashboard.tanlangan_talaba_uchun_premium_pdf_billi")}</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-5 mt-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Talabani Qidirish va Tanlash</label>
+              <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{t("dynamic.dashboard.talabani_qidirish_va_tanlash")}</label>
               <StudentCombobox 
                 selectedStudentId={invoiceStudentId} 
                 onSelectStudent={(id, name) => {
@@ -300,13 +302,13 @@ export default function AdminDashboard() {
             )}
 
             <div className="flex gap-3 justify-end pt-4">
-              <Button type="button" variant="ghost" onClick={() => setActiveModal(null)} className="rounded-xl font-bold">Bekor qilish</Button>
+              <Button type="button" variant="ghost" onClick={() => setActiveModal(null)} className="rounded-xl font-bold">{t("dynamic.pricingplans.bekor_qilish")}</Button>
               <Button 
                 onClick={handleDownloadInvoice} 
                 disabled={invoiceDownloading || !invoiceStudentId} 
                 className="rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold px-6 shadow-lg shadow-amber-500/20 flex gap-2"
               >
-                {invoiceDownloading ? "Yuklanmoqda..." : <>Hisob-fakturani Yuklash <Plus className="h-4.5 w-4.5" /></>}
+                {invoiceDownloading ? "Yuklanmoqda..." : <>{t("dynamic.dashboard.hisobfakturani_yuklash")}<Plus className="h-4.5 w-4.5" /></>}
               </Button>
             </div>
           </div>
@@ -317,8 +319,8 @@ export default function AdminDashboard() {
       <Dialog open={generateReport.isPending}>
         <DialogContent className="sm:max-w-[400px] border-none bg-white dark:bg-slate-900 shadow-2xl rounded-2xl p-10 flex flex-col items-center justify-center text-center space-y-6" aria-describedby="report-gen-desc">
           <DialogHeader className="sr-only">
-            <DialogTitle>Hisobot Tayyorlanmoqda</DialogTitle>
-            <DialogDescription id="report-gen-desc">Tizim joriy tashkilot statistikasini yig'moqda.</DialogDescription>
+            <DialogTitle>{t("dynamic.dashboard.hisobot_tayyorlanmoqda")}</DialogTitle>
+            <DialogDescription id="report-gen-desc">{t("dynamic.dashboard.tizim_joriy_tashkilot_statistikasini_yig")}</DialogDescription>
           </DialogHeader>
           <motion.div
             animate={{ rotate: [0, 2, 0, -2, 0], scale: [1, 1.02, 1] }}
@@ -327,7 +329,7 @@ export default function AdminDashboard() {
             <TigerPlayer text="Tahlil qilinyapti... 🐯📊" size={200} />
           </motion.div>
           <div className="space-y-2">
-            <h3 className="text-xl font-bold text-slate-900 dark:text-white">Ma'lumotlar tahlil qilinmoqda</h3>
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white">{t("dynamic.dashboard.ma_lumotlar_tahlil_qilinmoqda")}</h3>
             <p className="text-sm text-slate-500 dark:text-slate-400">Tizim joriy tashkilot statistikasini yig'moqda. Iltimos, kutib turing.</p>
           </div>
           <div className="w-full h-1 bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
@@ -347,8 +349,8 @@ export default function AdminDashboard() {
           <Dialog open={true} onOpenChange={() => setActiveModal(null)}>
             <DialogContent className="sm:max-w-[400px] border-none bg-white dark:bg-slate-900 shadow-2xl rounded-2xl p-10 flex flex-col items-center justify-center text-center space-y-6" aria-describedby="success-brand-desc">
               <DialogHeader className="sr-only">
-                <DialogTitle>Muvaffaqiyatli!</DialogTitle>
-                <DialogDescription id="success-brand-desc">Yangi brendingiz muborak!</DialogDescription>
+                <DialogTitle>{t("dynamic.dashboard.muvaffaqiyatli")}</DialogTitle>
+                <DialogDescription id="success-brand-desc">{t("dynamic.dashboard.yangi_brendingiz_muborak")}</DialogDescription>
               </DialogHeader>
               <motion.div
                 initial={{ scale: 0.8, opacity: 0 }}
@@ -368,7 +370,7 @@ export default function AdminDashboard() {
               </motion.div>
               <div className="space-y-2">
                 <h3 className="text-xl font-bold text-slate-900 dark:text-white uppercase tracking-tight">Yangi brendingiz muborak! ✨</h3>
-                <p className="text-sm text-slate-500 dark:text-slate-400">Tashkilot logotipi va ma'lumotlari butun platforma bo'ylab muvaffaqiyatli yangilandi.</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">{t("dynamic.dashboard.tashkilot_logotipi_va_ma_lumotlari_butun")}</p>
               </div>
               <Button onClick={() => setActiveModal(null)} className="w-full h-12 rounded-lg bg-gradient-primary shadow-glow text-white font-bold uppercase text-[10px] tracking-widest">
                 Davom etish
@@ -499,8 +501,7 @@ export default function AdminDashboard() {
               <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
                 <Activity className="h-6 w-6 text-primary" /> Yaqindagi Voqealar
               </h3>
-              <Button variant="ghost" className="text-[10px] font-bold uppercase tracking-widest text-primary gap-1 hover:bg-primary/5 rounded-lg px-3">
-                Barchasi <ArrowUpRight className="h-3.5 w-3.5" />
+              <Button variant="ghost" className="text-[10px] font-bold uppercase tracking-widest text-primary gap-1 hover:bg-primary/5 rounded-lg px-3">{t("dynamic.finance.barchasi")}<ArrowUpRight className="h-3.5 w-3.5" />
               </Button>
             </div>
             
@@ -526,7 +527,7 @@ export default function AdminDashboard() {
                         </p>
                       </div>
                     </div>
-                    <Badge className="bg-purple-500/10 text-purple-600 border-none text-[9px] font-bold uppercase px-2 py-0.5 rounded-md">Kutilmoqda</Badge>
+                    <Badge className="bg-purple-500/10 text-purple-600 border-none text-[9px] font-bold uppercase px-2 py-0.5 rounded-md">{t("dynamic.orgpayments.kutilmoqda")}</Badge>
                   </motion.div>
                 ))
               ) : (
@@ -540,7 +541,7 @@ export default function AdminDashboard() {
                   >
                     <TigerPlayer text="Dam olish vaqti! Hozircha tadbirlar yo'q... 🐯✨" size={220} />
                   </motion.div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-widest">Tinchlik va osoyishtalik</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-widest">{t("dynamic.dashboard.tinchlik_va_osoyishtalik")}</p>
                 </div>
               )}
             </div>

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useState } from "react";
 import { api } from "@/lib/axios";
 import { toast } from "sonner";
@@ -66,6 +67,7 @@ const empty = (): Partial<Receiver> => ({
 });
 
 export default function PaymentReceivers() {
+  const { t } = useTranslation();
   const [items, setItems] = useState<Receiver[]>([]);
   const [orgs, setOrgs] = useState<Org[]>([]);
   const [loading, setLoading] = useState(true);
@@ -85,7 +87,7 @@ export default function PaymentReceivers() {
       setItems(Array.isArray(rs) ? rs : (rs as any)?.content || []);
       setOrgs(Array.isArray(os) ? os : os?.content || []);
     } catch (e) {
-      toast.error("Yuklashda xatolik");
+      toast.error(t("dynamic.paymentreceivers.yuklashda_xatolik"));
     } finally {
       setLoading(false);
     }
@@ -119,7 +121,7 @@ export default function PaymentReceivers() {
       } else {
         await api.post("/payment-receivers", payload);
       }
-      toast.success("Saqlandi");
+      toast.success(t("dynamic.paymentreceivers.saqlandi"));
       setOpen(false);
       load();
     } catch (e) {
@@ -144,7 +146,7 @@ export default function PaymentReceivers() {
     if (!confirmDelete) return;
     try {
       await api.delete(`/payment-receivers/${confirmDelete.id}`);
-      toast.success("O'chirildi");
+      toast.success(t("dynamic.usersmanager.o_chirildi"));
       setConfirmDelete(null);
       load();
     } catch (e) {
@@ -197,7 +199,7 @@ export default function PaymentReceivers() {
                     <Building2 className="h-3 w-3" /> {orgName(r.organization)}
                   </p>
                 </div>
-                {r.is_default && <Badge variant="default" className="bg-primary/20 text-primary hover:bg-primary/30 border-none">Asosiy</Badge>}
+                {r.is_default && <Badge variant="default" className="bg-primary/20 text-primary hover:bg-primary/30 border-none">{t("dynamic.paymentreceivers.asosiy")}</Badge>}
               </div>
 
               <div className="rounded-lg bg-gradient-primary p-4 text-primary-foreground">
@@ -243,37 +245,37 @@ export default function PaymentReceivers() {
         <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{form.id ? "Tahrirlash" : "Yangi qabul qiluvchi"}</DialogTitle>
-            <DialogDescription>Karta + Telegram ma'lumotlari</DialogDescription>
+            <DialogDescription>{t("dynamic.paymentreceivers.karta__telegram_ma_lumotlari")}</DialogDescription>
           </DialogHeader>
           <div className="grid gap-3">
             <div className="grid gap-1.5">
-              <Label>F.I.O yoki Nomi *</Label>
+              <Label>{t("dynamic.paymentreceivers.fio_yoki_nomi_")}</Label>
               <Input value={form.full_name ?? ""} onChange={(e) => setForm({ ...form, full_name: e.target.value })} placeholder="Masalan: Asror, Payme yoki Kassir" />
             </div>
 
             <div className="grid sm:grid-cols-2 gap-3">
               <div className="grid gap-1.5">
-                <Label>Tashkilot</Label>
+                <Label>{t("dynamic.usersmanager.tashkilot")}</Label>
                 <Select
                   value={form.organization?.id ?? "global"}
                   onValueChange={(v) => setForm({ ...form, organization: v === "global" ? null : { id: v, name: orgs.find(o=>o.id === v)?.name || "" } })}
                 >
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="global">Global (barcha)</SelectItem>
+                    <SelectItem value="global">{t("dynamic.paymentreceivers.global_barcha")}</SelectItem>
                     {orgs.map((o) => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
               <div className="grid gap-1.5">
-                <Label>To'lov Maqsadi</Label>
+                <Label>{t("dynamic.paymentreceivers.to_lov_maqsadi")}</Label>
                 <Select value={form.payment_purpose ?? "TOLOV"} onValueChange={(v) => setForm({ ...form, payment_purpose: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="TOLOV">Oylik To'lov</SelectItem>
-                    <SelectItem value="KITOB">Kitob uchun</SelectItem>
-                    <SelectItem value="FORM">Forma uchun</SelectItem>
-                    <SelectItem value="BOSHQA">Boshqa</SelectItem>
+                    <SelectItem value="TOLOV">{t("dynamic.paymentreceivers.oylik_to_lov")}</SelectItem>
+                    <SelectItem value="KITOB">{t("dynamic.paymentreceivers.kitob_uchun")}</SelectItem>
+                    <SelectItem value="FORM">{t("dynamic.paymentreceivers.forma_uchun")}</SelectItem>
+                    <SelectItem value="BOSHQA">{t("dynamic.paymentreceivers.boshqa")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -281,7 +283,7 @@ export default function PaymentReceivers() {
 
             <div className="grid sm:grid-cols-2 gap-3">
               <div className="grid gap-1.5">
-                <Label>Karta Raqami</Label>
+                <Label>{t("dynamic.usersmanager.karta_raqami")}</Label>
                 <Input
                   value={form.card_number ?? ""}
                   onChange={(e) => {
@@ -293,7 +295,7 @@ export default function PaymentReceivers() {
                 />
               </div>
               <div className="grid gap-1.5">
-                <Label>Karta Egasi</Label>
+                <Label>{t("dynamic.usersmanager.karta_egasi")}</Label>
                 <Input
                   value={form.card_holder ?? ""}
                   onChange={(e) => setForm({ ...form, card_holder: e.target.value.toUpperCase() })}
@@ -304,7 +306,7 @@ export default function PaymentReceivers() {
 
             <div className="grid sm:grid-cols-2 gap-3">
               <div className="grid gap-1.5">
-                <Label>Telegram Username</Label>
+                <Label>{t("dynamic.usersmanager.telegram_username")}</Label>
                 <Input
                   value={form.telegram_username ?? ""}
                   onChange={(e) => setForm({ ...form, telegram_username: e.target.value })}
@@ -312,7 +314,7 @@ export default function PaymentReceivers() {
                 />
               </div>
               <div className="grid gap-1.5">
-                <Label>Telegram Chat ID</Label>
+                <Label>{t("dynamic.usersmanager.telegram_chat_id")}</Label>
                 <Input
                   value={form.telegram_chat_id ?? ""}
                   onChange={(e) => setForm({ ...form, telegram_chat_id: e.target.value })}
@@ -325,17 +327,17 @@ export default function PaymentReceivers() {
               <div className="flex gap-4">
                 <div className="flex items-center gap-2">
                   <Switch checked={!!form.active} onCheckedChange={(v) => setForm({ ...form, active: v })} />
-                  <Label className="cursor-pointer">Aktiv</Label>
+                  <Label className="cursor-pointer">{t("dynamic.paymentreceivers.aktiv")}</Label>
                 </div>
                 <div className="flex items-center gap-2">
                   <Switch checked={!!form.is_default} onCheckedChange={(v) => setForm({ ...form, is_default: v })} />
-                  <Label className="cursor-pointer">Asosiy (Default)</Label>
+                  <Label className="cursor-pointer">{t("dynamic.paymentreceivers.asosiy_default")}</Label>
                 </div>
               </div>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>Bekor</Button>
+            <Button variant="outline" onClick={() => setOpen(false)}>{t("dynamic.usersmanager.bekor")}</Button>
             <Button variant="hero" onClick={save} disabled={saving}>
               {saving && <Loader2 className="h-4 w-4 animate-spin" />} Saqlash
             </Button>
@@ -346,14 +348,14 @@ export default function PaymentReceivers() {
       <Dialog open={!!confirmDelete} onOpenChange={(o) => !o && setConfirmDelete(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>O'chirishni tasdiqlang</DialogTitle>
+            <DialogTitle>{t("dynamic.paymentreceivers.o_chirishni_tasdiqlang")}</DialogTitle>
             <DialogDescription>
               "{confirmDelete?.full_name}" qabul qiluvchisi o'chiriladi.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setConfirmDelete(null)}>Bekor</Button>
-            <Button variant="destructive" onClick={remove}>O'chirish</Button>
+            <Button variant="outline" onClick={() => setConfirmDelete(null)}>{t("dynamic.usersmanager.bekor")}</Button>
+            <Button variant="destructive" onClick={remove}>{t("dynamic.usersmanager.o_chirish")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

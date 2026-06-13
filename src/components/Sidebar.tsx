@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
@@ -17,6 +18,7 @@ interface SidebarProps {
 }
 
 const Sidebar = ({ isCollapsed, isMenuOpen, setIsMenuOpen }: SidebarProps) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -102,8 +104,8 @@ const Sidebar = ({ isCollapsed, isMenuOpen, setIsMenuOpen }: SidebarProps) => {
           A
         </div>
         <div className={`overflow-hidden transition-all duration-300 ${isCollapsed ? 'md:opacity-0 md:hidden md:w-0' : 'opacity-100 block w-auto'}`}>
-          <p className="text-[14px] font-bold text-slate-800 dark:text-white truncate">Admin User</p>
-          <p className="text-[12px] font-medium text-slate-500 dark:text-slate-400 truncate">admin@lmshub.uz</p>
+          <p className="text-[14px] font-bold text-slate-800 dark:text-white truncate">{t("dynamic.sidebar.admin_user")}</p>
+          <p className="text-[12px] font-medium text-slate-500 dark:text-slate-400 truncate">{t("dynamic.sidebar.adminlmshubuz")}</p>
         </div>
       </div>
     </aside>

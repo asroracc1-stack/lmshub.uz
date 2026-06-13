@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,13 +20,14 @@ interface Student { id: string; full_name: string | null; username: string; }
 interface Row { student_id: string; status: Status; note: string; existingId?: string; }
 
 const STATUS: { value: Status; label: string; icon: typeof CheckCircle2; color: string }[] = [
-  { value: "present", label: "Keldi", icon: CheckCircle2, color: "success" },
+  { value: "present", label: t("dynamic.mycourses.keldi"), icon: CheckCircle2, color: "success" },
   { value: "late", label: "Kech keldi", icon: Clock, color: "warning" },
-  { value: "absent", label: "Kelmadi", icon: XCircle, color: "destructive" },
-  { value: "excused", label: "Sababli", icon: FileText, color: "muted-foreground" },
+  { value: "absent", label: t("dynamic.mycourses.kelmadi"), icon: XCircle, color: "destructive" },
+  { value: "excused", label: t("dynamic.mycourses.sababli"), icon: FileText, color: "muted-foreground" },
 ];
 
 export default function AttendancePage() {
+  const { t } = useTranslation();
   const { lessonId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -41,7 +43,7 @@ export default function AttendancePage() {
       setLoading(true);
 
       const { data: l } = await supabase.from("lessons").select("*").eq("id", lessonId).maybeSingle();
-      if (!l) { toast.error("Dars topilmadi"); navigate(-1); return; }
+      if (!l) { toast.error(t("dynamic.attendancepage.dars_topilmadi")); navigate(-1); return; }
       setLesson(l as Lesson);
 
       const { data: gm } = await supabase.from("group_members").select("student_id").eq("group_id", l.group_id);
@@ -111,7 +113,7 @@ export default function AttendancePage() {
         if (error) throw error;
       }
 
-      toast.success("Yo'qlama saqlandi. Kelmaganlarga xabar yuborildi.");
+      toast.success(t("dynamic.attendancepage.yo_qlama_saqlandi_kelmaganlarga_xabar_yu"));
       // Reload to capture new ids
       navigate(-1);
     } catch (e: any) {
@@ -140,7 +142,7 @@ export default function AttendancePage() {
 
       <Card className="p-4 flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium">Hammaga:</span>
+          <span className="text-sm font-medium">{t("dynamic.attendancepage.hammaga")}</span>
           {STATUS.map((s) => {
             const Icon = s.icon;
             return (
@@ -157,7 +159,7 @@ export default function AttendancePage() {
       </Card>
 
       {rows.length === 0 ? (
-        <Card className="p-12 text-center text-muted-foreground">Bu guruhda talaba yo'q</Card>
+        <Card className="p-12 text-center text-muted-foreground">{t("dynamic.attendancepage.bu_guruhda_talaba_yo_q")}</Card>
       ) : (
         <div className="grid gap-3">
           {rows.map((r) => {

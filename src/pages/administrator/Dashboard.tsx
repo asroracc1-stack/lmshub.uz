@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { 
@@ -14,6 +15,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function AdministratorDashboard() {
+  const { t } = useTranslation();
   const { profile } = useAuth();
   const navigate = useNavigate();
   const { data: stats, isLoading: summaryLoading, isError } = useAdminDashboard();
@@ -25,7 +27,7 @@ export default function AdministratorDashboard() {
     { label: "O'qituvchilar", value: realStats?.totalTeachers ?? 0, growth: stats?.teacherGrowth ?? 0, icon: GraduationCap, color: "text-blue-500", bg: "bg-blue-500/10", to: "/administrator/teachers", accent: "#3b82f6" },
     { label: "Talabalar",     value: realStats?.totalStudents ?? 0, growth: stats?.studentGrowth  ?? 0, icon: Users,         color: "text-purple-500", bg: "bg-purple-500/10", to: "/administrator/students",  accent: "#9F86C0" },
     { label: "Ota-onalar",   value: realStats?.totalParents ?? 0, growth: 0,                          icon: Heart,         color: "text-pink-500",    bg: "bg-pink-500/10",    to: "/administrator/parents",   accent: "#ec4899" },
-    { label: "Guruhlar",     value: realStats?.totalGroups ?? 0, growth: 0,                          icon: Users2,        color: "text-fuchsia-500",    bg: "bg-fuchsia-500/10",    to: "/administrator/groups",    accent: "#06b6d4" },
+    { label: t("dynamic.startuppitch.guruhlar"),     value: realStats?.totalGroups ?? 0, growth: 0,                          icon: Users2,        color: "text-fuchsia-500",    bg: "bg-fuchsia-500/10",    to: "/administrator/groups",    accent: "#06b6d4" },
     { label: "Tadbirlar",    value: stats?.eventsCount    ?? 0, growth: stats?.eventGrowth     ?? 0, icon: CalendarIcon,  color: "text-amber-500",  bg: "bg-amber-500/10",  to: "/administrator/calendar",  accent: "#f59e0b" },
     { label: "Kurslar",      value: realStats?.totalSubjects ?? 0, growth: 0,                          icon: BookOpen,      color: "text-indigo-500", bg: "bg-indigo-500/10", to: "/administrator/subjects",  accent: "#6366f1" },
   ], [stats, realStats]);
@@ -34,7 +36,7 @@ export default function AdministratorDashboard() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-6">
         <TigerPlayer text="Xatolik yuz berdi... 🐯🛠️" size={200} />
-        <p className="text-muted-foreground">Ma'lumotlarni yuklashda xatolik yuz berdi.</p>
+        <p className="text-muted-foreground">{t("dynamic.referralpage.ma_lumotlarni_yuklashda_xatolik_yuz_berd")}</p>
       </div>
     );
   }
@@ -105,7 +107,7 @@ export default function AdministratorDashboard() {
         <Card className="p-8 border-dashed border-2 flex flex-col items-center justify-center text-center space-y-4">
           <TigerPlayer text="Yangi modullar yo'lda! 🐯🚀" size={150} />
           <div className="space-y-1">
-            <h3 className="font-bold text-lg">Tez orada...</h3>
+            <h3 className="font-bold text-lg">{t("dynamic.profile.tez_orada")}</h3>
             <p className="text-sm text-muted-foreground max-w-xs">
               Darslar, vazifalar va avtomatlashtirilgan hisobotlar moduli tez orada ishga tushiriladi.
             </p>

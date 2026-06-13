@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useRef, useState } from "react";
 import { api } from "@/lib/axios";
 import { toast } from "sonner";
@@ -11,21 +12,22 @@ interface Props {
 }
 
 export default function LogoUpload({ orgId, currentUrl, onUploaded }: Props) {
+  const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(currentUrl);
 
   const handleFile = async (file: File) => {
     if (!file.type.startsWith("image/")) {
-      toast.error("Faqat rasm fayli yuklash mumkin");
+      toast.error(t("dynamic.logoupload.faqat_rasm_fayli_yuklash_mumkin"));
       return;
     }
     if (file.size > 2 * 1024 * 1024) {
-      toast.error("Rasm 2MB dan kichik bo'lishi kerak");
+      toast.error(t("dynamic.logoupload.rasm_2mb_dan_kichik_bo_lishi_kerak"));
       return;
     }
     setUploading(true);
-    
+
     const formData = new FormData();
     formData.append("file", file);
 
@@ -33,13 +35,13 @@ export default function LogoUpload({ orgId, currentUrl, onUploaded }: Props) {
       const { data: url } = await api.post("/files/upload", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      
+
       // Vite proxy handles /api/v1 prefix, but if we need full URL:
       const fullUrl = url.startsWith("http") ? url : `${window.location.origin}${url}`;
-      
+
       setPreview(fullUrl);
       onUploaded(fullUrl);
-      toast.success("Logo yuklandi");
+      toast.success(t("dynamic.logoupload.logo_yuklandi"));
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Yuklashda xatolik");
     } finally {

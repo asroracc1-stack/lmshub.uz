@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 
 type Theme = "dark" | "light";
@@ -13,6 +14,7 @@ const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 const STORAGE_KEY = "educore.theme";
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
+  const { t } = useTranslation();
   const [theme, setThemeState] = useState<Theme>(() => {
     if (typeof window === "undefined") return "dark";
     return (localStorage.getItem(STORAGE_KEY) as Theme) || "light";

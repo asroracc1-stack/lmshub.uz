@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -81,7 +82,9 @@ function fromLocalDT(v: string) {
   return v.length === 16 ? `${v}:00` : v;
 }
 
-export default function OrgEvents({ canManage }: Props) {
+export default function OrgEvents({
+  canManage }: Props) {
+  const { t } = useTranslation();
   const { profile, user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [events, setEvents] = useState<EventRow[]>([]);
@@ -123,7 +126,7 @@ export default function OrgEvents({ canManage }: Props) {
       setEvents(mapped);
     } catch (e: any) {
       console.error("Tadbirlarni yuklashda xatolik:", e);
-      toast.error("Tadbirlarni yuklashda xatolik yuz berdi");
+      toast.error(t("dynamic.orgevents.tadbirlarni_yuklashda_xatolik_yuz_berdi"));
     } finally {
       setLoading(false);
     }
@@ -224,11 +227,11 @@ export default function OrgEvents({ canManage }: Props) {
 
   const submit = async () => {
     if (!form.title.trim()) {
-      toast.error("Sarlavha kiriting");
+      toast.error(t("dynamic.orgevents.sarlavha_kiriting"));
       return;
     }
     if (new Date(form.ends_at) < new Date(form.starts_at)) {
-      toast.error("Tugash vaqti boshlanishidan oldin bo'lmasligi kerak");
+      toast.error(t("dynamic.orgevents.tugash_vaqti_boshlanishidan_oldin_bo_lma"));
       return;
     }
     setSubmitting(true);
@@ -280,7 +283,7 @@ export default function OrgEvents({ canManage }: Props) {
     if (!delTarget) return;
     try {
       await api.delete(`/calendar/${delTarget.id}`);
-      toast.success("O'chirildi");
+      toast.success(t("dynamic.usersmanager.o_chirildi"));
       setDelTarget(null);
       load();
     } catch (e: any) {
@@ -302,7 +305,7 @@ export default function OrgEvents({ canManage }: Props) {
     <div className="space-y-6 w-full">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="font-display text-2xl md:text-3xl font-bold">Kalendar</h1>
+          <h1 className="font-display text-2xl md:text-3xl font-bold">{t("dynamic.calendar.kalendar")}</h1>
           <p className="text-sm text-muted-foreground">
             Tashkilot tadbirlari va jadval
           </p>
@@ -482,18 +485,18 @@ export default function OrgEvents({ canManage }: Props) {
             <DialogTitle>
               {editing ? "Tadbirni tahrirlash" : "Yangi tadbir"}
             </DialogTitle>
-            <DialogDescription>Tadbir tafsilotlari</DialogDescription>
+            <DialogDescription>{t("dynamic.orgevents.tadbir_tafsilotlari")}</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <div>
-              <Label>Sarlavha *</Label>
+              <Label>{t("dynamic.lmsnews.sarlavha_")}</Label>
               <Input
                 value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
               />
             </div>
             <div>
-              <Label>Tavsif</Label>
+              <Label>{t("dynamic.telegramlinks.tavsif")}</Label>
               <Textarea
                 rows={3}
                 value={form.description}
@@ -502,7 +505,7 @@ export default function OrgEvents({ canManage }: Props) {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Boshlanishi</Label>
+                <Label>{t("dynamic.orgevents.boshlanishi")}</Label>
                 <div className="relative mt-1">
                   <Input
                     type="datetime-local"
@@ -514,7 +517,7 @@ export default function OrgEvents({ canManage }: Props) {
                 </div>
               </div>
               <div>
-                <Label>Tugashi</Label>
+                <Label>{t("dynamic.orgevents.tugashi")}</Label>
                 <div className="relative mt-1">
                   <Input
                     type="datetime-local"
@@ -527,21 +530,21 @@ export default function OrgEvents({ canManage }: Props) {
               </div>
             </div>
             <div>
-              <Label>Joy</Label>
+              <Label>{t("dynamic.calendar.joy")}</Label>
               <Input
                 value={form.location}
                 onChange={(e) => setForm({ ...form, location: e.target.value })}
               />
             </div>
             <div className="flex items-center justify-between">
-              <Label>Kun bo'yi</Label>
+              <Label>{t("dynamic.calendar.kun_bo_yi")}</Label>
               <Switch
                 checked={form.all_day}
                 onCheckedChange={(v) => setForm({ ...form, all_day: v })}
               />
             </div>
             <div>
-              <Label className="mb-2 block">Rang</Label>
+              <Label className="mb-2 block">{t("dynamic.calendar.rang")}</Label>
               <div className="flex flex-wrap gap-2">
                 {COLORS.map((c) => (
                   <button
@@ -559,9 +562,7 @@ export default function OrgEvents({ canManage }: Props) {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setOpen(false)}>
-              Bekor
-            </Button>
+            <Button variant="ghost" onClick={() => setOpen(false)}>{t("dynamic.usersmanager.bekor")}</Button>
             <Button onClick={submit} disabled={submitting}>
               {submitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
               {editing ? "Saqlash" : "Yaratish"}
@@ -574,20 +575,18 @@ export default function OrgEvents({ canManage }: Props) {
       <AlertDialog open={!!delTarget} onOpenChange={(v) => !v && setDelTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Tadbirni o'chirish?</AlertDialogTitle>
+            <AlertDialogTitle>{t("dynamic.orgevents.tadbirni_o_chirish")}</AlertDialogTitle>
             <AlertDialogDescription>
               <span className="font-semibold">{delTarget?.title}</span> butunlay
               o'chiriladi.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Bekor</AlertDialogCancel>
+            <AlertDialogCancel>{t("dynamic.usersmanager.bekor")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={remove}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              O'chirish
-            </AlertDialogAction>
+            >{t("dynamic.usersmanager.o_chirish")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

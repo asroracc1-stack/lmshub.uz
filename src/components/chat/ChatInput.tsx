@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +15,7 @@ interface ChatInputProps {
 }
 
 export default function ChatInput({ onSendMessage, onTyping, replyTo, onCancelReply }: ChatInputProps) {
+  const { t } = useTranslation();
   const [text, setText] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -134,7 +136,7 @@ export default function ChatInput({ onSendMessage, onTyping, replyTo, onCancelRe
             className="px-4 py-2 bg-muted/40 border-t border-border/40 flex items-center justify-between text-xs"
           >
             <div className="border-l-2 border-primary pl-2 flex-1">
-              <span className="text-primary font-bold text-[10px] block">Javob qaytarilmoqda</span>
+              <span className="text-primary font-bold text-[10px] block">{t("dynamic.chatinput.javob_qaytarilmoqda")}</span>
               <span className="text-muted-foreground truncate max-w-full block">{replyTo.body || "Media xabar"}</span>
             </div>
             <button onClick={onCancelReply} className="p-1 hover:bg-muted rounded-full">
@@ -206,7 +208,7 @@ export default function ChatInput({ onSendMessage, onTyping, replyTo, onCancelRe
               <span className="text-sm font-medium">{formatTime(recordingTime)}</span>
             </div>
             <div className="flex items-center gap-2">
-              <Button type="button" variant="ghost" size="sm" onClick={cancelRecording} className="text-muted-foreground hover:text-destructive h-8 px-2 text-xs">Bekor qilish</Button>
+              <Button type="button" variant="ghost" size="sm" onClick={cancelRecording} className="text-muted-foreground hover:text-destructive h-8 px-2 text-xs">{t("dynamic.pricingplans.bekor_qilish")}</Button>
               <Button type="button" size="sm" onClick={stopRecording} className="bg-destructive hover:bg-destructive/90 text-white h-8 w-8 rounded-full p-0">
                 <Square className="h-3 w-3 fill-current" />
               </Button>

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -47,6 +48,7 @@ const getProofUrl = (path?: string | null): string => {
 };
 
 export default function SubscriptionRequests() {
+  const { t } = useTranslation();
   const [requests, setRequests] = useState<SubscriptionRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -58,7 +60,7 @@ export default function SubscriptionRequests() {
       const { data } = await api.get("/admin/subscription-requests");
       setRequests(data || []);
     } catch (e) {
-      toast.error("So'rovlarni yuklab bo'lmadi");
+      toast.error(t("dynamic.subscriptionrequests.so_rovlarni_yuklab_bo_lmadi"));
     } finally {
       setLoading(false);
     }
@@ -75,7 +77,7 @@ export default function SubscriptionRequests() {
       toast.success("✅ Obuna muvaffaqiyatli faollashtirildi!");
       await loadRequests();
     } catch (e) {
-      toast.error("Xatolik yuz berdi");
+      toast.error(t("dynamic.parents.xatolik_yuz_berdi"));
     } finally {
       setProcessingId(null);
     }
@@ -85,10 +87,10 @@ export default function SubscriptionRequests() {
     setProcessingId(id + "-reject");
     try {
       await api.post(`/admin/subscription-requests/${id}/reject`);
-      toast.success("So'rov rad etildi");
+      toast.success(t("dynamic.subscriptionrequests.so_rov_rad_etildi"));
       await loadRequests();
     } catch (e) {
-      toast.error("Xatolik yuz berdi");
+      toast.error(t("dynamic.parents.xatolik_yuz_berdi"));
     } finally {
       setProcessingId(null);
     }
@@ -120,7 +122,7 @@ export default function SubscriptionRequests() {
     return (
       <div className="flex flex-col items-center justify-center py-48 gap-4">
         <div className="h-12 w-12 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
-        <p className="text-muted-foreground font-medium">So'rovlar yuklanmoqda...</p>
+        <p className="text-muted-foreground font-medium">{t("dynamic.subscriptionrequests.so_rovlar_yuklanmoqda")}</p>
       </div>
     );
   }
@@ -183,10 +185,10 @@ export default function SubscriptionRequests() {
       {/* Stats cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: "Jami", val: counts.ALL, color: "from-indigo-500 to-purple-500", bg: "bg-indigo-50 dark:bg-indigo-950/30" },
-          { label: "Kutilayotgan", val: counts.PENDING, color: "from-amber-500 to-orange-500", bg: "bg-amber-50 dark:bg-amber-950/30" },
-          { label: "Tasdiqlangan", val: counts.APPROVED, color: "from-purple-500 to-violet-500", bg: "bg-purple-50 dark:bg-purple-950/30" },
-          { label: "Rad etilgan", val: counts.REJECTED, color: "from-red-500 to-rose-500", bg: "bg-red-50 dark:bg-red-950/30" },
+          { label: t("dynamic.orgmessages.jami"), val: counts.ALL, color: "from-indigo-500 to-purple-500", bg: "bg-indigo-50 dark:bg-indigo-950/30" },
+          { label: t("dynamic.payments.kutilayotgan"), val: counts.PENDING, color: "from-amber-500 to-orange-500", bg: "bg-amber-50 dark:bg-amber-950/30" },
+          { label: t("dynamic.orgpayments.tasdiqlangan"), val: counts.APPROVED, color: "from-purple-500 to-violet-500", bg: "bg-purple-50 dark:bg-purple-950/30" },
+          { label: t("dynamic.payments.rad_etilgan"), val: counts.REJECTED, color: "from-red-500 to-rose-500", bg: "bg-red-50 dark:bg-red-950/30" },
         ].map(s => (
           <Card key={s.label} className={cn("p-5 border-none shadow-sm", s.bg)}>
             <p className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">{s.label}</p>
@@ -252,7 +254,7 @@ export default function SubscriptionRequests() {
                     <div className="flex flex-wrap items-center gap-6">
                       {/* Pack info */}
                       <div className="space-y-1">
-                        <p className="text-[9px] uppercase font-black text-slate-400 tracking-widest">Paket</p>
+                        <p className="text-[9px] uppercase font-black text-slate-400 tracking-widest">{t("dynamic.subscriptionrequests.paket")}</p>
                         <div className="flex items-center gap-2">
                           {req.pack.type === "ELITE" ? <Crown className="h-4 w-4 text-amber-500" /> : <Package className="h-4 w-4 text-primary" />}
                           <span className="font-bold text-slate-800 dark:text-slate-200 text-sm">{req.pack.name}</span>
@@ -264,7 +266,7 @@ export default function SubscriptionRequests() {
 
                       {/* Price */}
                       <div className="space-y-1">
-                        <p className="text-[9px] uppercase font-black text-slate-400 tracking-widest">Narxi</p>
+                        <p className="text-[9px] uppercase font-black text-slate-400 tracking-widest">{t("dynamic.packs.narxi")}</p>
                         <div className="flex items-center gap-1 font-black text-slate-900 dark:text-white text-sm">
                           <DollarSign className="h-4 w-4 text-purple-500" />
                           {Number(req.pack.price).toLocaleString()} UZS
@@ -274,7 +276,7 @@ export default function SubscriptionRequests() {
                       {/* Receipt check view */}
                       {(req.receiptUrl || req.receipt_url) && (
                         <div className="space-y-1">
-                          <p className="text-[9px] uppercase font-black text-slate-400 tracking-widest">To'lov Cheki</p>
+                          <p className="text-[9px] uppercase font-black text-slate-400 tracking-widest">{t("dynamic.subscriptionrequests.to_lov_cheki")}</p>
                           <Button
                             variant="outline"
                             size="sm"
@@ -339,7 +341,7 @@ export default function SubscriptionRequests() {
               <div className="w-24 h-24 bg-slate-100 dark:bg-white/5 rounded-full flex items-center justify-center mx-auto">
                 <AlertCircle className="h-10 w-10 text-slate-300" />
               </div>
-              <p className="text-slate-400 font-light italic">Hech qanday so'rov topilmadi.</p>
+              <p className="text-slate-400 font-light italic">{t("dynamic.subscriptionrequests.hech_qanday_so_rov_topilmadi")}</p>
             </div>
           )}
         </AnimatePresence>

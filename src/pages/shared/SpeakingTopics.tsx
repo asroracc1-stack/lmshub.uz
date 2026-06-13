@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
@@ -12,15 +13,16 @@ const DIFF_COLOR = {
   hard: "text-rose-600 bg-rose-100 dark:bg-rose-900/30",
 };
 
-export default function SpeakingTopics({ basePath = "/user" }: { basePath?: string }) {
+export default function SpeakingTopics({
+  basePath = "/user" }: { basePath?: string }) {
+  const { t } = useTranslation();
   const nav = useNavigate();
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
         <button onClick={() => nav(`${basePath}/speaking`)} className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
-          <ArrowLeft className="h-4 w-4" /> Orqaga
-        </button>
-        <h1 className="text-2xl md:text-3xl font-display font-bold">Speaking Mavzulari</h1>
+          <ArrowLeft className="h-4 w-4" />{t("dynamic.mocktake.orqaga")}</button>
+        <h1 className="text-2xl md:text-3xl font-display font-bold">{t("dynamic.speakingtopics.speaking_mavzulari")}</h1>
       </div>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -31,7 +33,7 @@ export default function SpeakingTopics({ basePath = "/user" }: { basePath?: stri
                 <div className={`w-14 h-14 rounded-xl ${t.bg} grid place-items-center text-3xl`}>{t.emoji}</div>
                 <h3 className="font-display font-bold text-lg leading-tight">{t.title}</h3>
                 <div className="flex flex-wrap gap-1.5">
-                  <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-100 dark:bg-purple-900/30 dark:text-purple-300">FREE</Badge>
+                  <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-100 dark:bg-purple-900/30 dark:text-purple-300">{t("dynamic.speakingtopics.free")}</Badge>
                   <Badge variant="outline" className={`gap-1 ${DIFF_COLOR[t.difficulty]} border-transparent`}>
                     <TrendingUp className="h-3 w-3" /> {DIFF_LABEL[t.difficulty]}
                   </Badge>
@@ -41,7 +43,7 @@ export default function SpeakingTopics({ basePath = "/user" }: { basePath?: stri
                 </div>
                 <p className="text-sm text-muted-foreground">{t.category}</p>
                 <div className="text-xs text-muted-foreground mt-auto">
-                  <div className="flex justify-between mb-1"><span>Progress</span><span>— / {t.part1.length + 1 + t.part3.length}</span></div>
+                  <div className="flex justify-between mb-1"><span>{t("dynamic.speakingtopics.progress")}</span><span>— / {t.part1.length + 1 + t.part3.length}</span></div>
                   <div className="h-1 rounded-full bg-muted overflow-hidden"><div className="h-full w-0 bg-primary" /></div>
                 </div>
               </Card>

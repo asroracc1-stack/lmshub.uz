@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,7 @@ interface Row {
 }
 
 export default function GrantCoinsPage() {
+  const { t } = useTranslation();
   const { role } = useAuth();
   const queryClient = useQueryClient();
   const [period, setPeriod] = useState<Period>("week");
@@ -85,11 +87,11 @@ export default function GrantCoinsPage() {
 
       <Tabs value={period} onValueChange={(v) => setPeriod(v as Period)}>
         <TabsList className="grid grid-cols-5 max-w-2xl">
-          <TabsTrigger value="week">Haftalik</TabsTrigger>
-          <TabsTrigger value="month">Oylik</TabsTrigger>
-          <TabsTrigger value="6month">6 oylik</TabsTrigger>
-          <TabsTrigger value="year">Yillik</TabsTrigger>
-          <TabsTrigger value="all">Umumiy</TabsTrigger>
+          <TabsTrigger value="week">{t("dynamic.grantcoins.haftalik")}</TabsTrigger>
+          <TabsTrigger value="month">{t("dynamic.grantcoins.oylik")}</TabsTrigger>
+          <TabsTrigger value="6month">{t("dynamic.grantcoins.6_oylik")}</TabsTrigger>
+          <TabsTrigger value="year">{t("dynamic.grantcoins.yillik")}</TabsTrigger>
+          <TabsTrigger value="all">{t("dynamic.grantcoins.umumiy")}</TabsTrigger>
         </TabsList>
       </Tabs>
 
@@ -97,7 +99,7 @@ export default function GrantCoinsPage() {
         <TigerPlayer text="Global peshqadamlar yuklanmoqda..." className="py-12" />
       ) : isError ? (
         <Card className="p-12 text-center space-y-4">
-          <p className="text-destructive font-medium">Ma'lumotlarni yuklashda xatolik yuz berdi</p>
+          <p className="text-destructive font-medium">{t("dynamic.orglessons.ma_lumotlarni_yuklashda_xatolik_yuz_berd")}</p>
           <Button onClick={() => refetch()} variant="outline" className="mx-auto">
             Qayta urinish
           </Button>
@@ -146,7 +148,7 @@ export default function GrantCoinsPage() {
       <Dialog open={!!target} onOpenChange={(o) => !o && setTarget(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Coin berish</DialogTitle>
+            <DialogTitle>{t("dynamic.orgrewards.coin_berish")}</DialogTitle>
           </DialogHeader>
           {target && (
             <div className="space-y-3">
@@ -163,7 +165,7 @@ export default function GrantCoinsPage() {
                 </div>
               </div>
               <div>
-                <Label>Coin miqdori</Label>
+                <Label>{t("dynamic.usersmanager.coin_miqdori")}</Label>
                 <Input
                   type="number"
                   min={1}
@@ -172,7 +174,7 @@ export default function GrantCoinsPage() {
                 />
               </div>
               <div>
-                <Label>Sabab</Label>
+                <Label>{t("dynamic.smartdashboard.sabab")}</Label>
                 <Input value={reason} onChange={(e) => setReason(e.target.value)} />
               </div>
               <Button onClick={handleGrant} disabled={grantMutation.isPending} className="w-full">

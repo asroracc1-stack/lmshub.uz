@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Rocket, Target, Mic } from "lucide-react";
@@ -8,6 +9,7 @@ interface DashboardBannerProps {
 }
 
 export default function DashboardBanner({ data }: DashboardBannerProps) {
+  const { t } = useTranslation();
   return (
     <motion.div 
       initial={{ opacity: 0, y: 10 }}
@@ -26,15 +28,15 @@ export default function DashboardBanner({ data }: DashboardBannerProps) {
 
         <div className="flex items-center gap-8 md:gap-16">
           <div>
-            <p className="text-violet-100 text-sm mb-1">IELTS Target</p>
+            <p className="text-violet-100 text-sm mb-1">{t("dynamic.dashboardbanner.ielts_target")}</p>
             <p className="text-3xl font-bold">{data.targetBand}</p>
           </div>
           <div>
-            <p className="text-violet-100 text-sm mb-1">Current Band</p>
+            <p className="text-violet-100 text-sm mb-1">{t("dynamic.dashboardbanner.current_band")}</p>
             <p className="text-3xl font-bold">{data.currentBand || "—"}</p>
           </div>
           <div className="flex-1 max-w-[200px]">
-            <p className="text-violet-100 text-sm mb-1">Progress</p>
+            <p className="text-violet-100 text-sm mb-1">{t("dynamic.speakingtopics.progress")}</p>
             <div className="flex items-center gap-3">
               <span className="text-2xl font-bold">{data.progressPercentage}%</span>
               <div className="flex-1 h-2 bg-white/20 rounded-full overflow-hidden">

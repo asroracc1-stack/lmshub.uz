@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { 
   Dialog, 
@@ -22,6 +23,7 @@ interface AddMemberModalProps {
 }
 
 export default function AddMemberModal({ type, isOpen, onClose, onSubmit }: AddMemberModalProps) {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     full_name: "",
     email: "",
@@ -76,7 +78,7 @@ export default function AddMemberModal({ type, isOpen, onClose, onSubmit }: AddM
           <form onSubmit={handleSubmit} className="space-y-5 relative z-10">
             <div className="space-y-4">
               <div className="space-y-1.5">
-                <Label htmlFor="full_name" className="text-[10px] font-bold uppercase tracking-widest text-slate-400 pl-1">F.I.SH</Label>
+                <Label htmlFor="full_name" className="text-[10px] font-bold uppercase tracking-widest text-slate-400 pl-1">{t("dynamic.addmembermodal.fish")}</Label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                   <Input 
@@ -92,7 +94,7 @@ export default function AddMemberModal({ type, isOpen, onClose, onSubmit }: AddM
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <Label htmlFor="email" className="text-[10px] font-bold uppercase tracking-widest text-slate-400 pl-1">Email</Label>
+                  <Label htmlFor="email" className="text-[10px] font-bold uppercase tracking-widest text-slate-400 pl-1">{t("dynamic.profile.email")}</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                     <Input 
@@ -107,7 +109,7 @@ export default function AddMemberModal({ type, isOpen, onClose, onSubmit }: AddM
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="phone" className="text-[10px] font-bold uppercase tracking-widest text-slate-400 pl-1">Telefon</Label>
+                  <Label htmlFor="phone" className="text-[10px] font-bold uppercase tracking-widest text-slate-400 pl-1">{t("dynamic.profile.telefon")}</Label>
                   <div className="relative">
                     <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                     <Input 
@@ -122,7 +124,7 @@ export default function AddMemberModal({ type, isOpen, onClose, onSubmit }: AddM
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="username" className="text-[10px] font-bold uppercase tracking-widest text-slate-400 pl-1">Login (Username)</Label>
+                <Label htmlFor="username" className="text-[10px] font-bold uppercase tracking-widest text-slate-400 pl-1">{t("dynamic.addmembermodal.login_username")}</Label>
                 <Input 
                   id="username"
                   required
@@ -140,9 +142,7 @@ export default function AddMemberModal({ type, isOpen, onClose, onSubmit }: AddM
                 variant="ghost" 
                 onClick={onClose}
                 className="h-11 rounded-lg font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5"
-              >
-                Bekor qilish
-              </Button>
+              >{t("dynamic.pricingplans.bekor_qilish")}</Button>
               <Button 
                 type="submit" 
                 disabled={isSubmitting}

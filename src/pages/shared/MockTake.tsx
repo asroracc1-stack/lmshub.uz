@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useNavigate, useBlocker, useBeforeUnload } from "react-router-dom";
 import {
@@ -484,6 +485,7 @@ function CustomAudioPlayer({ src, isExternalPaused }: { src: string, isExternalP
 }
 
 export default function MockTake() {
+  const { t } = useTranslation();
   const { theme, toggle } = useTheme();
   const { testId } = useParams();
   const nav = useNavigate();
@@ -697,7 +699,7 @@ export default function MockTake() {
       // Clear localStorage on successful submit
       try { localStorage.removeItem(`lmshub_exam_${testId}`); } catch { /* ignore */ }
       setResult({ ...res.data, kind, elapsedSec });
-      toast.success("Natijangiz hisoblandi!");
+      toast.success(t("dynamic.mocktake.natijangiz_hisoblandi"));
     } catch (err: any) {
       console.error("Submission error:", err);
       toast.error("Natijani yuborishda xatolik: " + (err.response?.data?.message || err.message));
@@ -724,7 +726,7 @@ export default function MockTake() {
         </motion.div>
       </div>
       <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold animate-pulse">AI javobingizni tahlil qilmoqda...</h2>
+        <h2 className="text-2xl font-bold animate-pulse">{t("dynamic.mocktake.ai_javobingizni_tahlil_qilmoqda")}</h2>
         <p className="text-muted-foreground text-sm max-w-xs mx-auto">
           Tajribali IELTS imtihonchisi kabi kriteriyalar asosida baholanmoqda. Bu taxminan 10-20 soniya vaqt oladi.
         </p>
@@ -735,16 +737,16 @@ export default function MockTake() {
   if (loading) return (
     <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
       <Loader2 className="h-10 w-10 animate-spin text-primary" />
-      <p className="text-sm text-muted-foreground">Test yuklanmoqda...</p>
+      <p className="text-sm text-muted-foreground">{t("dynamic.mocktake.test_yuklanmoqda")}</p>
     </div>
   );
 
   if (loadError || !exam) return (
     <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 text-center px-4">
       <AlertCircle className="h-12 w-12 text-rose-500" />
-      <h2 className="text-xl font-bold">Test topilmadi</h2>
+      <h2 className="text-xl font-bold">{t("dynamic.mocktake.test_topilmadi")}</h2>
       <p className="text-sm text-muted-foreground">{loadError ?? "Noma'lum xatolik"}</p>
-      <Button variant="outline" onClick={() => nav(-1)}>Orqaga</Button>
+      <Button variant="outline" onClick={() => nav(-1)}>{t("dynamic.mocktake.orqaga")}</Button>
     </div>
   );
 
@@ -876,22 +878,22 @@ export default function MockTake() {
             
             <div className="relative z-10">
               <CheckCircle2 className="h-14 w-14 text-purple-500 mx-auto mb-4" />
-              <h2 className="text-3xl font-display font-extrabold text-slate-950 dark:text-white mb-2">Test Yakunlandi!</h2>
-              <p className="text-slate-500 dark:text-slate-400 text-sm max-w-md mx-auto">Siz topshiriqlarni yakunladingiz. Quyida natijangiz tahlili va shaxsiy tavsiyalar bilan tanishing.</p>
+              <h2 className="text-3xl font-display font-extrabold text-slate-950 dark:text-white mb-2">{t("dynamic.mocktake.test_yakunlandi")}</h2>
+              <p className="text-slate-500 dark:text-slate-400 text-sm max-w-md mx-auto">{t("dynamic.mocktake.siz_topshiriqlarni_yakunladingiz_quyida_")}</p>
             </div>
           </Card>
         </motion.div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-6">
           <TabsList className="grid w-full grid-cols-3 rounded-xl bg-slate-100 dark:bg-white/5 p-1 h-12">
-            <TabsTrigger value="overview" className="rounded-lg font-bold text-xs md:text-sm">Umumiy Natija</TabsTrigger>
+            <TabsTrigger value="overview" className="rounded-lg font-bold text-xs md:text-sm">{t("dynamic.mocktake.umumiy_natija")}</TabsTrigger>
             <TabsTrigger value="errors" className="rounded-lg font-bold text-xs md:text-sm flex items-center justify-center gap-1.5">
               Xatolar Tahlili 
               {isExam && incorrectDetails.length > 0 && (
                 <Badge variant="destructive" className="h-5 px-1.5 text-[10px] font-black">{incorrectDetails.length}</Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="recommendations" className="rounded-lg font-bold text-xs md:text-sm">Tavsiyalar</TabsTrigger>
+            <TabsTrigger value="recommendations" className="rounded-lg font-bold text-xs md:text-sm">{t("dynamic.mocktake.tavsiyalar")}</TabsTrigger>
           </TabsList>
 
           {/* 📊 TAB 1: OVERVIEW */}
@@ -902,7 +904,7 @@ export default function MockTake() {
                 {isSat ? (
                   // SAT Score: 200-800
                   <>
-                    <p className="text-xs uppercase font-extrabold text-slate-400 dark:text-slate-500 tracking-wider mb-6">SAT BALL</p>
+                    <p className="text-xs uppercase font-extrabold text-slate-400 dark:text-slate-500 tracking-wider mb-6">{t("dynamic.mocktake.sat_ball")}</p>
                     <div className="relative h-44 w-44 flex items-center justify-center">
                       <svg className="h-full w-full -rotate-90">
                         <circle cx="88" cy="88" r="76" fill="transparent" stroke="currentColor" strokeWidth="10" className="text-slate-100 dark:text-white/5" />
@@ -922,7 +924,7 @@ export default function MockTake() {
                 ) : isMilliy ? (
                   // Milliy: 0-100
                   <>
-                    <p className="text-xs uppercase font-extrabold text-slate-400 dark:text-slate-500 tracking-wider mb-6">MILLIY SERTIFIKAT BALI</p>
+                    <p className="text-xs uppercase font-extrabold text-slate-400 dark:text-slate-500 tracking-wider mb-6">{t("dynamic.mocktake.milliy_sertifikat_bali")}</p>
                     <div className="relative h-44 w-44 flex items-center justify-center">
                       <svg className="h-full w-full -rotate-90">
                         <circle cx="88" cy="88" r="76" fill="transparent" stroke="currentColor" strokeWidth="10" className="text-slate-100 dark:text-white/5" />
@@ -942,7 +944,7 @@ export default function MockTake() {
                 ) : (
                   // IELTS Band
                   <>
-                    <p className="text-xs uppercase font-extrabold text-slate-400 dark:text-slate-500 tracking-wider mb-6">IELTS BAND SCORE</p>
+                    <p className="text-xs uppercase font-extrabold text-slate-400 dark:text-slate-500 tracking-wider mb-6">{t("dynamic.mocktake.ielts_band_score")}</p>
                     <div className="relative h-44 w-44 flex items-center justify-center">
                       <svg className="h-full w-full -rotate-90">
                         <circle cx="88" cy="88" r="76" fill="transparent" stroke="currentColor" strokeWidth="10" className="text-slate-100 dark:text-white/5" />
@@ -967,10 +969,10 @@ export default function MockTake() {
               {/* STATS CARD: accuracy, correct, wrong, time */}
               <Card className="p-6 flex flex-col justify-between border-slate-200 dark:border-white/5 bg-white dark:bg-slate-900/40 shadow-md rounded-2xl">
                 <div>
-                  <p className="text-xs uppercase font-extrabold text-slate-400 dark:text-slate-500 tracking-wider mb-4">NATIJA STATISTIKASI</p>
+                  <p className="text-xs uppercase font-extrabold text-slate-400 dark:text-slate-500 tracking-wider mb-4">{t("dynamic.mocktake.natija_statistikasi")}</p>
                   <div className="flex items-baseline gap-2 mb-2">
                     <span className={cn("text-6xl font-display font-black", lvlColor)}>{accuracy}</span>
-                    <span className="text-xl font-bold text-slate-400 dark:text-slate-500">% aniqlik</span>
+                    <span className="text-xl font-bold text-slate-400 dark:text-slate-500">{t("dynamic.mocktake._aniqlik")}</span>
                   </div>
                   <Progress value={accuracy} className="h-3 bg-slate-100 dark:bg-white/10 rounded-full mb-1" />
                   <p className={cn("text-xs font-bold mt-1", lvlColor)}>{lvlLabel}</p>
@@ -979,15 +981,15 @@ export default function MockTake() {
                 {isExam ? (
                   <div className="grid grid-cols-3 gap-3 mt-4 pt-4 border-t border-slate-100 dark:border-white/5">
                     <div className="text-center">
-                      <p className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">To'g'ri</p>
+                      <p className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">{t("dynamic.mocktake.to_g_ri")}</p>
                       <p className="text-xl font-black text-emerald-500 mt-0.5">{correctCount}</p>
                     </div>
                     <div className="text-center">
-                      <p className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">Noto'g'ri</p>
+                      <p className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">{t("dynamic.mocktake.noto_g_ri")}</p>
                       <p className="text-xl font-black text-rose-500 mt-0.5">{incorrectDetails.length}</p>
                     </div>
                     <div className="text-center">
-                      <p className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">Vaqt</p>
+                      <p className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">{t("dynamic.auditlogs.vaqt")}</p>
                       <p className="text-sm font-black text-slate-700 dark:text-slate-300 mt-0.5 flex items-center justify-center gap-1">
                         <Clock className="h-3.5 w-3.5" />{timeStr}
                       </p>
@@ -1004,7 +1006,7 @@ export default function MockTake() {
             {/* SECTION PERFORMANCE */}
             {sectionPerf.length > 1 && (
               <Card className="p-6 border-slate-200 dark:border-white/5 bg-white dark:bg-slate-900/40 shadow-md rounded-2xl">
-                <p className="text-xs uppercase font-extrabold text-slate-400 dark:text-slate-500 tracking-wider mb-4">BO'LIM NATIJALARI</p>
+                <p className="text-xs uppercase font-extrabold text-slate-400 dark:text-slate-500 tracking-wider mb-4">{t("dynamic.mocktake.bo_lim_natijalari")}</p>
                 <div className="space-y-3">
                   {sectionPerf.map((sec, i) => {
                     const pct = Math.round((sec.correct / Math.max(sec.total, 1)) * 100);
@@ -1051,13 +1053,13 @@ export default function MockTake() {
             {!isExam ? (
               <Card className="p-8 text-center border-slate-200 dark:border-white/5 bg-white dark:bg-slate-900/40 shadow-md rounded-2xl py-12">
                 <AlertCircle className="h-10 w-10 text-slate-400 mx-auto mb-3" />
-                <p className="text-slate-500 dark:text-slate-400 font-semibold text-sm">Writing yoki Speaking bo'limlarida avtomatik xatolar tahlili mavjud emas.</p>
-                <p className="text-slate-400 dark:text-slate-500 text-xs mt-1">Ushbu bo'limlarda batafsil tavsiyalarni AI Examiner Feedback bo'limidan olishingiz mumkin.</p>
+                <p className="text-slate-500 dark:text-slate-400 font-semibold text-sm">{t("dynamic.mocktake.writing_yoki_speaking_bo_limlarida_avtom")}</p>
+                <p className="text-slate-400 dark:text-slate-500 text-xs mt-1">{t("dynamic.mocktake.ushbu_bo_limlarda_batafsil_tavsiyalarni_")}</p>
               </Card>
             ) : incorrectDetails.length === 0 ? (
               <Card className="p-8 text-center border-slate-200 dark:border-white/5 bg-white dark:bg-slate-900/40 shadow-md rounded-2xl py-12">
                 <ThumbsUp className="h-12 w-12 text-purple-500 mx-auto mb-3 animate-bounce" />
-                <h3 className="text-xl font-bold text-purple-500 mb-1">Ajoyib! Hech qanday xato topilmadi!</h3>
+                <h3 className="text-xl font-bold text-purple-500 mb-1">{t("dynamic.mocktake.ajoyib_hech_qanday_xato_topilmadi")}</h3>
                 <p className="text-slate-500 dark:text-slate-400 text-sm">Siz barcha savollarga to'g'ri javob berdingiz. Mukammal natija! 🎉</p>
               </Card>
             ) : (
@@ -1089,7 +1091,7 @@ export default function MockTake() {
                 {reviewDetails.length === 0 && !showAllInReview ? (
                   <Card className="p-8 text-center border-slate-200 dark:border-white/5 bg-white dark:bg-slate-900/40 shadow-md rounded-2xl py-12">
                     <ThumbsUp className="h-12 w-12 text-purple-500 mx-auto mb-3 animate-bounce" />
-                    <h3 className="text-xl font-bold text-purple-500 mb-1">Ajoyib! Hech qanday xato topilmadi!</h3>
+                    <h3 className="text-xl font-bold text-purple-500 mb-1">{t("dynamic.mocktake.ajoyib_hech_qanday_xato_topilmadi")}</h3>
                     <p className="text-slate-500 dark:text-slate-400 text-sm">Siz barcha savollarga to'g'ri javob berdingiz. Mukammal natija! 🎉</p>
                   </Card>
                 ) : (
@@ -1141,7 +1143,7 @@ export default function MockTake() {
                             <span className={cn(
                               "text-[10px] uppercase font-bold px-1.5 py-0.5 rounded",
                               isCorrect ? "bg-purple-500/10 text-purple-500 dark:text-purple-400" : "bg-rose-500/10 text-rose-500 dark:text-rose-400"
-                            )}>Sizning javobingiz</span>
+                            )}>{t("dynamic.mocktake.sizning_javobingiz")}</span>
                             <span className={cn(
                               "font-bold text-xs truncate",
                               isCorrect ? "text-purple-700 dark:text-purple-400" : "text-rose-700 dark:text-rose-400"
@@ -1149,7 +1151,7 @@ export default function MockTake() {
                           </div>
                           {!isCorrect && (
                             <div className="p-3.5 rounded-xl border border-purple-500/20 bg-purple-500/5 flex items-center gap-2">
-                              <span className="text-[10px] uppercase font-bold text-purple-500 dark:text-purple-400 bg-purple-500/10 px-1.5 py-0.5 rounded">To'g'ri javob</span>
+                              <span className="text-[10px] uppercase font-bold text-purple-500 dark:text-purple-400 bg-purple-500/10 px-1.5 py-0.5 rounded">{t("dynamic.mocktake.to_g_ri_javob")}</span>
                               <span className="font-bold text-xs text-purple-700 dark:text-purple-400 truncate">{detail.correctAns}</span>
                             </div>
                           )}
@@ -1159,7 +1161,7 @@ export default function MockTake() {
                         <div className="p-4 rounded-xl border border-slate-200/50 dark:border-white/5 bg-slate-50 dark:bg-slate-950/40 flex gap-3">
                           <Lightbulb className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
                           <div>
-                            <p className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Tushuntirish (Explanation)</p>
+                            <p className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">{t("dynamic.mocktake.tushuntirish_explanation")}</p>
                             <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
                               {getExplanation(q.qtype, detail.correctAns, detail.userAns)}
                             </p>
@@ -1191,7 +1193,7 @@ export default function MockTake() {
             <Card className="p-6 md:p-8 border-slate-200 dark:border-white/5 bg-white dark:bg-slate-900/40 shadow-md rounded-2xl space-y-6 text-left">
               <div className="flex items-center gap-2.5 border-b border-slate-100 dark:border-white/5 pb-4">
                 <Target className="h-5 w-5 text-primary" />
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white">Zaif tomonlaringiz asosida shaxsiy tavsiyalar</h3>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">{t("dynamic.mocktake.zaif_tomonlaringiz_asosida_shaxsiy_tavsi")}</h3>
               </div>
 
               <div className="space-y-4">
@@ -1210,7 +1212,7 @@ export default function MockTake() {
               <div className="pt-4 border-t border-slate-100 dark:border-white/5 flex gap-3 items-start p-4 rounded-xl bg-violet-500/5 text-violet-600 dark:text-violet-400">
                 <BookMarked className="h-5 w-5 shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-xs font-extrabold uppercase tracking-widest mb-1">Keyingi qadamlar</p>
+                  <p className="text-xs font-extrabold uppercase tracking-widest mb-1">{t("dynamic.mocktake.keyingi_qadamlar")}</p>
                   <p className="text-xs text-slate-650 dark:text-slate-400 leading-relaxed font-medium">
                     Tavsiyalarimiz asosida o'xshash bo'limlar yoki savol turlari bo'yicha qo'shimcha testlarni ishlang. Xatoliklar tushuntirishini tahlil qilish orqali siz real IELTS imtihonida bunday xatolarga qayta yo'l qo'ymaysiz.
                   </p>
@@ -1248,15 +1250,15 @@ export default function MockTake() {
 
             {(kind === "listening" || exam.title.toLowerCase().includes("listening")) && (
               <div className="py-2">
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2 ml-1">Sound Check</p>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2 ml-1">{t("dynamic.mocktake.sound_check")}</p>
                 <CustomAudioPlayer src={exam.audio_url || (exam as any).audioUrl} />
               </div>
             )}
 
             <div className="grid grid-cols-3 gap-3">
-              <Card className="p-3 text-center"><Clock className="h-5 w-5 mx-auto mb-1 text-primary" /><p className="text-xs text-muted-foreground">Vaqt</p><p className="font-bold">{exam.duration_minutes} daq</p></Card>
-              <Card className="p-3 text-center"><Flag className="h-5 w-5 mx-auto mb-1 text-primary" /><p className="text-xs text-muted-foreground">Savollar</p><p className="font-bold">{questions.length}</p></Card>
-              <Card className="p-3 text-center"><Sparkles className="h-5 w-5 mx-auto mb-1 text-primary" /><p className="text-xs text-muted-foreground">Qiyinlik</p><p className="font-bold capitalize">{exam.difficulty ?? "—"}</p></Card>
+              <Card className="p-3 text-center"><Clock className="h-5 w-5 mx-auto mb-1 text-primary" /><p className="text-xs text-muted-foreground">{t("dynamic.auditlogs.vaqt")}</p><p className="font-bold">{exam.duration_minutes} daq</p></Card>
+              <Card className="p-3 text-center"><Flag className="h-5 w-5 mx-auto mb-1 text-primary" /><p className="text-xs text-muted-foreground">{t("dynamic.mocktake.savollar")}</p><p className="font-bold">{questions.length}</p></Card>
+              <Card className="p-3 text-center"><Sparkles className="h-5 w-5 mx-auto mb-1 text-primary" /><p className="text-xs text-muted-foreground">{t("dynamic.mocktake.qiyinlik")}</p><p className="font-bold capitalize">{exam.difficulty ?? "—"}</p></Card>
             </div>
             <Button size="lg" className="w-full bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 text-white font-bold transition-all duration-300 shadow-md shadow-purple-500/10" onClick={() => { setStarted(true); startedAt.current = Date.now(); }}>
               Boshlash
@@ -1327,8 +1329,7 @@ export default function MockTake() {
             <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-purple-500 to-violet-400 flex items-center justify-center text-white font-bold shadow-md shadow-purple-500/20">
               L
             </div>
-            <span className="font-display font-extrabold text-base tracking-tight hidden sm:block">
-              LMS<span className="text-purple-500">Hub</span>
+            <span className="font-display font-extrabold text-base tracking-tight hidden sm:block">{t("dynamic.logo.lms")}<span className="text-purple-500">{t("dynamic.mocktake.hub")}</span>
             </span>
           </div>
           <div className="h-5 w-px bg-slate-200 dark:bg-white/10 shrink-0" />
@@ -1465,8 +1466,8 @@ export default function MockTake() {
             <div className="h-48 w-48 mb-6">
               <TigerPlayer />
             </div>
-            <h2 className="text-3xl font-display font-black text-white mb-2 tracking-tight">Test to'xtatildi</h2>
-            <p className="text-slate-400 max-w-md mb-8 text-sm">Hozir dam olib oling. Taymer siz davom ettirmaguningizcha to'xtatib turiladi.</p>
+            <h2 className="text-3xl font-display font-black text-white mb-2 tracking-tight">{t("dynamic.mocktake.test_to_xtatildi")}</h2>
+            <p className="text-slate-400 max-w-md mb-8 text-sm">{t("dynamic.mocktake.hozir_dam_olib_oling_taymer_siz_davom_et")}</p>
             <Button
               size="lg"
               onClick={() => setIsPaused(false)}
@@ -1544,14 +1545,14 @@ export default function MockTake() {
               {kind === "listening" && currentSection?.imageUrl && (
                 <div className="mb-6 rounded-2xl overflow-hidden border border-slate-200/60 dark:border-white/5 bg-slate-50 dark:bg-slate-950 p-3 shadow-inner">
                   <img src={getFullImageUrl(currentSection.imageUrl)} alt="Map/Diagram" className="max-w-full h-auto mx-auto rounded-lg" />
-                  <p className="text-[10px] text-center text-slate-400 dark:text-slate-500 mt-2 uppercase tracking-widest font-black">Visual Reference</p>
+                  <p className="text-[10px] text-center text-slate-400 dark:text-slate-500 mt-2 uppercase tracking-widest font-black">{t("dynamic.mocktake.visual_reference")}</p>
                 </div>
               )}
 
               {sectionQs.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 text-center gap-3">
                   <AlertCircle className="h-10 w-10 text-slate-300 dark:text-slate-700 animate-pulse" />
-                  <p className="text-slate-400 dark:text-slate-500 text-sm font-semibold">Bu bo'limda hech qanday savollar kiritilmagan.</p>
+                  <p className="text-slate-400 dark:text-slate-500 text-sm font-semibold">{t("dynamic.mocktake.bu_bo_limda_hech_qanday_savollar_kiritil")}</p>
                 </div>
               ) : (
                 <div className="space-y-8">
@@ -1826,7 +1827,7 @@ export default function MockTake() {
                 <AlertCircle className="h-10 w-10 text-rose-500 animate-pulse" />
               </div>
             </div>
-            <AlertDialogTitle className="text-center text-xl font-bold">Diqqat! Test davom etmoqda</AlertDialogTitle>
+            <AlertDialogTitle className="text-center text-xl font-bold">{t("dynamic.mocktake.diqqat_test_davom_etmoqda")}</AlertDialogTitle>
             <AlertDialogDescription className="text-center text-base text-slate-500 dark:text-slate-400 leading-relaxed mt-2">
               Agar sahifadan hozir chiqsangiz, barcha belgilangan javoblaringiz va mehnatotingiz saqlanmasligi mumkin.
               <br /><br />
@@ -1861,7 +1862,7 @@ export default function MockTake() {
             className="fixed bottom-24 right-4 md:right-8 w-[90vw] md:w-[600px] h-[600px] max-h-[70vh] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-white/10 z-50 overflow-hidden flex flex-col"
           >
             <div className="flex items-center justify-between p-3 border-b border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-slate-950 shrink-0 cursor-move">
-              <span className="font-bold text-sm flex items-center gap-2 text-slate-700 dark:text-slate-300"><Calculator className="h-4 w-4 text-purple-500" /> Desmos Graphing Calculator</span>
+              <span className="font-bold text-sm flex items-center gap-2 text-slate-700 dark:text-slate-300"><Calculator className="h-4 w-4 text-purple-500" />{t("dynamic.mocktake.desmos_graphing_calculator")}</span>
               <Button size="icon" variant="ghost" className="h-6 w-6 rounded-full hover:bg-slate-200 dark:hover:bg-white/10" onClick={() => setShowCalculator(false)}><X className="h-4 w-4 text-slate-500" /></Button>
             </div>
             <div className="flex-1 w-full bg-white relative">
@@ -1884,17 +1885,17 @@ export default function MockTake() {
               Testni topshirmoqchimisiz?
             </AlertDialogTitle>
             <AlertDialogDescription className="text-slate-500 dark:text-slate-400 text-sm mt-2 space-y-1">
-              <span className="block">Javob berilgan savollar: <strong className="text-slate-700 dark:text-slate-200">{Object.keys(answers).length}</strong> / {questions.length}</span>
+              <span className="block">{t("dynamic.mocktake.javob_berilgan_savollar")}<strong className="text-slate-700 dark:text-slate-200">{Object.keys(answers).length}</strong> / {questions.length}</span>
               {questions.length - Object.keys(answers).length > 0 && (
                 <span className="block text-amber-600 dark:text-amber-400 font-semibold">
                   ⚠️ {questions.length - Object.keys(answers).length} ta savol javobsiz qolmoqda
                 </span>
               )}
-              <span className="block pt-1">Testni topshirgandan keyin javoblarni o'zgartirib bo'lmaydi.</span>
+              <span className="block pt-1">{t("dynamic.mocktake.testni_topshirgandan_keyin_javoblarni_o_")}</span>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2 mt-2">
-            <AlertDialogCancel className="rounded-xl font-bold">Bekor qilish</AlertDialogCancel>
+            <AlertDialogCancel className="rounded-xl font-bold">{t("dynamic.pricingplans.bekor_qilish")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => submit(false)}
               disabled={submitting}

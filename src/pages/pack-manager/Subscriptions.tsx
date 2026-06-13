@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +9,7 @@ import { format } from "date-fns";
 import { Loader2, Crown } from "lucide-react";
 
 export default function PMSubscriptions() {
+  const { t } = useTranslation();
   const { data: items = [], isLoading: loading } = useQuery({
     queryKey: ["pm-subscriptions-list"],
     queryFn: async () => {
@@ -33,12 +35,12 @@ export default function PMSubscriptions() {
       </h1>
       <Card className="overflow-hidden">
         {loading ? <div className="p-12 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" /></div> :
-         items.length === 0 ? <p className="p-12 text-center text-muted-foreground text-sm">Obunalar yo'q</p> : (
+         items.length === 0 ? <p className="p-12 text-center text-muted-foreground text-sm">{t("dynamic.subscriptions.obunalar_yo_q")}</p> : (
           <div className="overflow-x-auto">
             <Table>
               <TableHeader><TableRow>
-                <TableHead>Foydalanuvchi</TableHead><TableHead>Pack</TableHead>
-                <TableHead>Boshlandi</TableHead><TableHead>Tugaydi</TableHead><TableHead>Holat</TableHead>
+                <TableHead>{t("dynamic.usersmanager.foydalanuvchi")}</TableHead><TableHead>{t("dynamic.subscriptions.pack")}</TableHead>
+                <TableHead>{t("dynamic.subscriptions.boshlandi")}</TableHead><TableHead>{t("dynamic.subscriptions.tugaydi")}</TableHead><TableHead>{t("dynamic.subscriptions.holat")}</TableHead>
               </TableRow></TableHeader>
               <TableBody>
                 {items.map((s: any) => {
@@ -49,7 +51,7 @@ export default function PMSubscriptions() {
                       <TableCell><Badge variant="outline">{s.subscription_packs?.name || s.subscription_packs?.code}</Badge></TableCell>
                       <TableCell className="text-xs">{format(new Date(s.starts_at), "dd.MM.yyyy")}</TableCell>
                       <TableCell className="text-xs">{format(new Date(s.expires_at), "dd.MM.yyyy")}</TableCell>
-                      <TableCell>{live ? <Badge className="bg-purple-500 text-white">Active</Badge> : <Badge variant="destructive">Expired</Badge>}</TableCell>
+                      <TableCell>{live ? <Badge className="bg-purple-500 text-white">{t("dynamic.subscriptions.active")}</Badge> : <Badge variant="destructive">{t("dynamic.subscriptions.expired")}</Badge>}</TableCell>
                     </TableRow>
                   );
                 })}

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/components/ui/card";
@@ -27,6 +28,7 @@ interface PresenceMeta {
 const ICE = { iceServers: [{ urls: ["stun:stun.l.google.com:19302", "stun:global.stun.twilio.com:3478"] }] };
 
 export default function SpeakingPartners() {
+  const { t } = useTranslation();
   const { user, profile } = useAuth();
   const [online, setOnline] = useState<PresenceMeta[]>([]);
   const [genderFilter, setGenderFilter] = useState<Gender>("any");
@@ -310,7 +312,7 @@ export default function SpeakingPartners() {
   };
 
   const findPartner = () => {
-    if (filtered.length === 0) { toast.info("Hozir mos partner topilmadi"); return; }
+    if (filtered.length === 0) { toast.info(t("dynamic.speakingpartners.hozir_mos_partner_topilmadi")); return; }
     setSearching(true);
     const pick = filtered[Math.floor(Math.random() * filtered.length)];
     startCallAsCaller(pick).finally(() => setSearching(false));
@@ -333,9 +335,9 @@ export default function SpeakingPartners() {
 
       <div className="flex items-end justify-between flex-wrap gap-3">
         <div>
-          <Badge variant="outline" className="mb-2">Speaking</Badge>
-          <h1 className="text-3xl md:text-4xl font-display font-bold bg-gradient-to-r from-purple-500 to-violet-500 bg-clip-text text-transparent">Speaking Practice</h1>
-          <p className="text-muted-foreground mt-1">Online partnerlar bilan jonli ovozli suhbat</p>
+          <Badge variant="outline" className="mb-2">{t("dynamic.speakingpartners.speaking")}</Badge>
+          <h1 className="text-3xl md:text-4xl font-display font-bold bg-gradient-to-r from-purple-500 to-violet-500 bg-clip-text text-transparent">{t("dynamic.speakingpartners.speaking_practice")}</h1>
+          <p className="text-muted-foreground mt-1">{t("dynamic.speakingpartners.online_partnerlar_bilan_jonli_ovozli_suh")}</p>
         </div>
       </div>
 
@@ -343,15 +345,15 @@ export default function SpeakingPartners() {
       <div className="grid sm:grid-cols-3 gap-3">
         <Card className="p-5 flex items-center gap-3">
           <div className="h-12 w-12 rounded-xl bg-purple-100 dark:bg-purple-900/30 grid place-items-center"><Mic className="h-6 w-6 text-purple-600" /></div>
-          <div><p className="text-3xl font-bold">{stats.talks}</p><p className="text-xs text-muted-foreground">Talks</p></div>
+          <div><p className="text-3xl font-bold">{stats.talks}</p><p className="text-xs text-muted-foreground">{t("dynamic.speakingpartners.talks")}</p></div>
         </Card>
         <Card className="p-5 flex items-center gap-3">
           <div className="h-12 w-12 rounded-xl bg-blue-100 dark:bg-blue-900/30 grid place-items-center"><Sparkles className="h-6 w-6 text-blue-600" /></div>
-          <div><p className="text-3xl font-bold">{stats.minutes}</p><p className="text-xs text-muted-foreground">Daqiqalar</p></div>
+          <div><p className="text-3xl font-bold">{stats.minutes}</p><p className="text-xs text-muted-foreground">{t("dynamic.speakingpartners.daqiqalar")}</p></div>
         </Card>
         <Card className="p-5 flex items-center gap-3">
           <div className="h-12 w-12 rounded-xl bg-amber-100 dark:bg-amber-900/30 grid place-items-center"><Users className="h-6 w-6 text-amber-600" /></div>
-          <div><p className="text-3xl font-bold">{online.length}</p><p className="text-xs text-muted-foreground">Online hozir</p></div>
+          <div><p className="text-3xl font-bold">{online.length}</p><p className="text-xs text-muted-foreground">{t("dynamic.speakingpartners.online_hozir")}</p></div>
         </Card>
       </div>
 
@@ -359,8 +361,8 @@ export default function SpeakingPartners() {
         {/* Online list */}
         <Card className="p-5 lg:col-span-2 space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="font-semibold flex items-center gap-2"><Users className="h-4 w-4" /> Online foydalanuvchilar</h3>
-            <Badge variant="outline" className="gap-1"><span className="h-1.5 w-1.5 rounded-full bg-purple-500 animate-pulse" /> Live</Badge>
+            <h3 className="font-semibold flex items-center gap-2"><Users className="h-4 w-4" />{t("dynamic.speakingpartners.online_foydalanuvchilar")}</h3>
+            <Badge variant="outline" className="gap-1"><span className="h-1.5 w-1.5 rounded-full bg-purple-500 animate-pulse" />{t("dynamic.speakingpartners.live")}</Badge>
           </div>
 
           {filtered.length === 0 ? (
@@ -399,9 +401,9 @@ export default function SpeakingPartners() {
 
         {/* Filters */}
         <Card className="p-5 space-y-4">
-          <h3 className="font-semibold flex items-center gap-2"><Filter className="h-4 w-4" /> Filterlari</h3>
+          <h3 className="font-semibold flex items-center gap-2"><Filter className="h-4 w-4" />{t("dynamic.speakingpartners.filterlari")}</h3>
           <div className="space-y-2">
-            <p className="text-xs uppercase tracking-wider text-muted-foreground">Mening darajam</p>
+            <p className="text-xs uppercase tracking-wider text-muted-foreground">{t("dynamic.speakingpartners.mening_darajam")}</p>
             <div className="grid grid-cols-3 gap-1.5">
               {LEVELS.map((l) => (
                 <Button key={l} size="sm" variant={myLevel === l ? "default" : "outline"} onClick={() => setMyLevel(l)}>{l}</Button>
@@ -409,14 +411,14 @@ export default function SpeakingPartners() {
             </div>
           </div>
           <div className="space-y-2">
-            <p className="text-xs uppercase tracking-wider text-muted-foreground">Jins (bo'sh = hammasi)</p>
+            <p className="text-xs uppercase tracking-wider text-muted-foreground">{t("dynamic.speakingpartners.jins_bo_sh__hammasi")}</p>
             <div className="grid grid-cols-2 gap-1.5">
-              <Button size="sm" variant={genderFilter === "male" ? "default" : "outline"} onClick={() => setGenderFilter(genderFilter === "male" ? "any" : "male")}><UserIcon className="h-3.5 w-3.5 mr-1" /> Erkak</Button>
-              <Button size="sm" variant={genderFilter === "female" ? "default" : "outline"} onClick={() => setGenderFilter(genderFilter === "female" ? "any" : "female")}><UserCircle className="h-3.5 w-3.5 mr-1" /> Ayol</Button>
+              <Button size="sm" variant={genderFilter === "male" ? "default" : "outline"} onClick={() => setGenderFilter(genderFilter === "male" ? "any" : "male")}><UserIcon className="h-3.5 w-3.5 mr-1" />{t("dynamic.speakingpartners.erkak")}</Button>
+              <Button size="sm" variant={genderFilter === "female" ? "default" : "outline"} onClick={() => setGenderFilter(genderFilter === "female" ? "any" : "female")}><UserCircle className="h-3.5 w-3.5 mr-1" />{t("dynamic.speakingpartners.ayol")}</Button>
             </div>
           </div>
           <div className="space-y-2">
-            <p className="text-xs uppercase tracking-wider text-muted-foreground">Daraja (bo'sh = hammasi)</p>
+            <p className="text-xs uppercase tracking-wider text-muted-foreground">{t("dynamic.speakingpartners.daraja_bo_sh__hammasi")}</p>
             <div className="grid grid-cols-3 gap-1.5">
               {LEVELS.map((l) => (
                 <Button key={l} size="sm" variant={levelFilter === l ? "default" : "outline"} onClick={() => setLevelFilter(levelFilter === l ? null : l)}>{l}</Button>
@@ -437,7 +439,7 @@ export default function SpeakingPartners() {
                   <AvatarFallback className="text-xl">{initials(incoming.meta.full_name)}</AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="text-xs text-muted-foreground">Kiruvchi qo'ng'iroq</p>
+                  <p className="text-xs text-muted-foreground">{t("dynamic.speakingpartners.kiruvchi_qo_ng_iroq")}</p>
                   <p className="font-display text-xl font-bold">{incoming.meta.full_name}</p>
                   {incoming.meta.level && <Badge variant="outline" className="mt-1">{incoming.meta.level}</Badge>}
                 </div>

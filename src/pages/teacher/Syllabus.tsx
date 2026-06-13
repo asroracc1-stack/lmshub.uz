@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
@@ -126,7 +127,7 @@ function DateTimePicker({
           initialFocus
         />
         <div className="flex items-center justify-between border-t border-border/30 pt-3.5 mt-2 gap-2 text-xs font-semibold text-slate-500">
-          <span>Vaqt:</span>
+          <span>{t("dynamic.syllabus.vaqt")}</span>
           <div className="flex items-center gap-1.5">
             <select
               value={date ? date.getHours() : 9}
@@ -155,6 +156,7 @@ function DateTimePicker({
 }
 
 export default function Syllabus() {
+  const { t } = useTranslation();
   const { user, profile } = useAuth();
   const queryClient = useQueryClient();
 
@@ -246,7 +248,7 @@ export default function Syllabus() {
       resetForm();
     },
     onError: () => {
-      toast.error("Mavzuni saqlashda xatolik yuz berdi");
+      toast.error(t("dynamic.syllabus.mavzuni_saqlashda_xatolik_yuz_berdi"));
     },
   });
 
@@ -255,11 +257,11 @@ export default function Syllabus() {
       await api.delete(`/teacher/lessons/${id}`);
     },
     onSuccess: () => {
-      toast.success("Mavzu o'chirildi!");
+      toast.success(t("dynamic.syllabus.mavzu_o_chirildi"));
       queryClient.invalidateQueries({ queryKey: ["teacher-lessons"] });
     },
     onError: () => {
-      toast.error("Mavzuni o'chirishda xatolik yuz berdi");
+      toast.error(t("dynamic.syllabus.mavzuni_o_chirishda_xatolik_yuz_berdi"));
     },
   });
 
@@ -296,7 +298,7 @@ export default function Syllabus() {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm("Ushbu mavzuni o'chirishni tasdiqlaysizmi?")) {
+    if (confirm(t("dynamic.syllabus.ushbu_mavzuni_o_chirishni_tasdiqlaysizmi"))) {
       deleteLessonMutation.mutate(id);
     }
   };
@@ -325,8 +327,8 @@ export default function Syllabus() {
               <Sparkles className="h-3.5 w-3.5 mr-1" /> Syllabus Management
             </Badge>
           </div>
-          <h1 className="font-display text-2xl md:text-3xl font-bold">Dars Rejasi va Mavzular (Syllabus)</h1>
-          <p className="text-sm text-muted-foreground mt-1">Guruhlar bo'yicha o'tiladigan mavzular va o'quv materiallari</p>
+          <h1 className="font-display text-2xl md:text-3xl font-bold">{t("dynamic.syllabus.dars_rejasi_va_mavzular_syllabus")}</h1>
+          <p className="text-sm text-muted-foreground mt-1">{t("dynamic.syllabus.guruhlar_bo_yicha_o_tiladigan_mavzular_v")}</p>
         </div>
 
         <div className="flex items-center gap-3">
@@ -368,8 +370,8 @@ export default function Syllabus() {
         ) : lessons.length === 0 ? (
           <div className="col-span-full bg-card/60 border border-border/40 p-12 rounded-2xl text-center text-muted-foreground">
             <BookOpen className="h-12 w-12 mx-auto mb-3 text-muted-foreground/50 animate-pulse" />
-            <p className="text-base font-medium">Ushbu guruh uchun mavzular kiritilmagan</p>
-            <p className="text-xs mt-1">Yangi mavzu qo'shish tugmasi orqali dars rejasini shakllantiring.</p>
+            <p className="text-base font-medium">{t("dynamic.syllabus.ushbu_guruh_uchun_mavzular_kiritilmagan")}</p>
+            <p className="text-xs mt-1">{t("dynamic.syllabus.yangi_mavzu_qo_shish_tugmasi_orqali_dars")}</p>
           </div>
         ) : (
           lessons.map((lesson, idx) => (
@@ -412,11 +414,10 @@ export default function Syllabus() {
                   {lesson.attachmentUrl ? (
                     <a href={lesson.attachmentUrl} target="_blank" rel="noreferrer" className="flex-1">
                       <Button variant="outline" size="sm" className="w-full gap-1.5 border-primary/20 hover:bg-primary/10 text-primary text-xs rounded-xl">
-                        <FileText className="h-3.5 w-3.5" /> Mavzu Havolasi (Link)
-                      </Button>
+                        <FileText className="h-3.5 w-3.5" />{t("dynamic.syllabus.mavzu_havolasi_link")}</Button>
                     </a>
                   ) : (
-                    <span className="text-xs text-muted-foreground italic">Havola biriktirilmagan</span>
+                    <span className="text-xs text-muted-foreground italic">{t("dynamic.syllabus.havola_biriktirilmagan")}</span>
                   )}
 
                   <div className="flex items-center gap-1">
@@ -472,7 +473,7 @@ export default function Syllabus() {
                     name="subjectId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs font-semibold text-slate-500 dark:text-slate-400">Fan *</FormLabel>
+                        <FormLabel className="text-xs font-semibold text-slate-500 dark:text-slate-400">{t("dynamic.syllabus.fan_")}</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger className="rounded-xl h-11 border-border/60 bg-transparent text-foreground">
@@ -498,7 +499,7 @@ export default function Syllabus() {
                     name="title"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs font-semibold text-slate-500 dark:text-slate-400">Mavzu Sarlavhasi *</FormLabel>
+                        <FormLabel className="text-xs font-semibold text-slate-500 dark:text-slate-400">{t("dynamic.syllabus.mavzu_sarlavhasi_")}</FormLabel>
                         <FormControl>
                           <Input 
                             placeholder="Mavzu nomini kiriting... (Tarix deb yozib ko'ring ✨)" 
@@ -543,7 +544,7 @@ export default function Syllabus() {
                       name="startsAt"
                       render={({ field }) => (
                         <FormItem className="flex flex-col gap-1">
-                          <FormLabel className="text-xs font-semibold text-slate-500 dark:text-slate-400">Boshlanish Vaqti *</FormLabel>
+                          <FormLabel className="text-xs font-semibold text-slate-500 dark:text-slate-400">{t("dynamic.syllabus.boshlanish_vaqti_")}</FormLabel>
                           <FormControl>
                             <DateTimePicker value={field.value} onChange={field.onChange} />
                           </FormControl>
@@ -557,7 +558,7 @@ export default function Syllabus() {
                       name="endsAt"
                       render={({ field }) => (
                         <FormItem className="flex flex-col gap-1">
-                          <FormLabel className="text-xs font-semibold text-slate-500 dark:text-slate-400">Tugash Vaqti</FormLabel>
+                          <FormLabel className="text-xs font-semibold text-slate-500 dark:text-slate-400">{t("dynamic.syllabus.tugash_vaqti")}</FormLabel>
                           <FormControl>
                             <DateTimePicker 
                               value={field.value || ""} 
@@ -592,7 +593,7 @@ export default function Syllabus() {
                       name="attachmentUrl"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-xs font-semibold text-slate-500 dark:text-slate-400">Mavzu Havolasi (Link)</FormLabel>
+                          <FormLabel className="text-xs font-semibold text-slate-500 dark:text-slate-400">{t("dynamic.syllabus.mavzu_havolasi_link")}</FormLabel>
                           <FormControl>
                             <div className="relative">
                               <Input 
@@ -742,7 +743,7 @@ export default function Syllabus() {
                             {watchedRoom && (
                               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                 <MapPin className="h-3.5 w-3.5 text-violet-500" />
-                                <span>Xona: <strong className="font-bold text-foreground">{watchedRoom}</strong></span>
+                                <span>{t("dynamic.syllabus.xona")}<strong className="font-bold text-foreground">{watchedRoom}</strong></span>
                               </div>
                             )}
                           </div>
@@ -756,7 +757,7 @@ export default function Syllabus() {
                             <LinkIcon className="h-3.5 w-3.5" /> Havola: {watchedLink}
                           </span>
                         ) : (
-                          <span className="italic">Resurs havolasi kiritilmagan</span>
+                          <span className="italic">{t("dynamic.syllabus.resurs_havolasi_kiritilmagan")}</span>
                         )}
                       </div>
                     </motion.div>
@@ -773,7 +774,7 @@ export default function Syllabus() {
                   className="rounded-xl flex items-center gap-1.5 border-border/50 text-slate-600 dark:text-slate-400"
                 >
                   <X className="h-4 w-4" />
-                  <span>Yopish</span>
+                  <span>{t("dynamic.syllabus.yopish")}</span>
                 </Button>
                 
                 <Button 

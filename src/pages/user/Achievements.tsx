@@ -373,7 +373,7 @@ export default function UserAchievements() {
               <div className="h-10 w-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-600 dark:text-purple-400">
                 <Star className="h-5 w-5 fill-purple-500/25 dark:fill-purple-400/25" />
               </div>
-              <Badge className="bg-purple-500/10 dark:bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/25 dark:border-purple-500/30 text-[10px]">Leaderboard</Badge>
+              <Badge className="bg-purple-500/10 dark:bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/25 dark:border-purple-500/30 text-[10px]">{t("dynamic.achievements.leaderboard")}</Badge>
             </div>
             
             <div className="space-y-2 pt-6">

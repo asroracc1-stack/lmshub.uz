@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
 import { toast } from "sonner";
@@ -219,7 +220,7 @@ export function useDashboardMutations() {
       queryClient.invalidateQueries({ queryKey: ["super-admin-dashboard-stats"] });
       toast.success("O'qituvchi muvaffaqiyatli qo'shildi! 🐯🚀");
     },
-    onError: () => toast.error("O'qituvchi qo'shishda xatolik!"),
+    onError: () => toast.error(i18next.t("dynamic.useoptimizedqueries.o_qituvchi_qo_shishda_xatolik")),
   });
 
   const addStudent = useMutation({
@@ -229,7 +230,7 @@ export function useDashboardMutations() {
       queryClient.invalidateQueries({ queryKey: ["super-admin-dashboard-stats"] });
       toast.success("Talaba muvaffaqiyatli qo'shildi! 🐯🚀");
     },
-    onError: () => toast.error("Talaba qo'shishda xatolik!"),
+    onError: () => toast.error(i18next.t("dynamic.useoptimizedqueries.talaba_qo_shishda_xatolik")),
   });
 
   const generateReport = useMutation({
@@ -241,7 +242,7 @@ export function useDashboardMutations() {
       if (data instanceof Blob && data.type === "application/json") {
         const text = await data.text();
         console.error("Server returned JSON error instead of PDF:", text);
-        toast.error("Hisobot tayyorlashda xatolik yuz berdi!");
+        toast.error(i18next.t("dynamic.useoptimizedqueries.hisobot_tayyorlashda_xatolik_yuz_berdi"));
         return;
       }
       
@@ -256,16 +257,16 @@ export function useDashboardMutations() {
       window.URL.revokeObjectURL(url);
       toast.success("Hisobot muvaffaqiyatli tayyorlandi va yuklab olindi! 🐯📊");
     },
-    onError: () => toast.error("Hisobot tayyorlashda xatolik yuz berdi!"),
+    onError: () => toast.error(i18next.t("dynamic.useoptimizedqueries.hisobot_tayyorlashda_xatolik_yuz_berdi")),
   });
 
   const updateOrgSettings = useMutation({
     mutationFn: async (data: any) => await api.put("/admin/organization/settings", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-dashboard-stats"] });
-      toast.success("Tashkilot sozlamalari yangilandi!");
+      toast.success(i18next.t("dynamic.useoptimizedqueries.tashkilot_sozlamalari_yangilandi"));
     },
-    onError: () => toast.error("Sozlamalarni saqlashda xatolik!"),
+    onError: () => toast.error(i18next.t("dynamic.useoptimizedqueries.sozlamalarni_saqlashda_xatolik")),
   });
 
   const addEvent = useMutation({
@@ -276,7 +277,7 @@ export function useDashboardMutations() {
       queryClient.invalidateQueries({ queryKey: ["upcoming-events"] });
       toast.success("Tadbir muvaffaqiyatli yaratildi! 🐯🎉");
     },
-    onError: () => toast.error("Tadbir yaratishda xatolik!"),
+    onError: () => toast.error(i18next.t("dynamic.useoptimizedqueries.tadbir_yaratishda_xatolik")),
   });
 
   return { addTeacher, addStudent, generateReport, updateOrgSettings, addEvent };

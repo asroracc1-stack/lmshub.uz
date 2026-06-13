@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 import { 
   Dialog, 
@@ -23,7 +24,7 @@ interface OrganizationSettingsModalProps {
   onClockUpdate: (settings: { visible: boolean; sound: boolean }) => void;
 }
 
-export default function OrganizationSettingsModal({ 
+export default function OrganizationSettingsModal({
   isOpen, 
   onClose, 
   orgData, 
@@ -31,6 +32,7 @@ export default function OrganizationSettingsModal({
   clockSettings,
   onClockUpdate
 }: OrganizationSettingsModalProps) {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -81,7 +83,7 @@ export default function OrganizationSettingsModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.email) {
-      toast.error("Iltimos, barcha majburiy maydonlarni to'ldiring!");
+      toast.error(t("dynamic.organizationsettingsmodal.iltimos_barcha_majburiy_maydonlarni_to_l"));
       return;
     }
     
@@ -158,7 +160,7 @@ export default function OrganizationSettingsModal({
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 pl-1">Tashkilot Nomi</Label>
+              <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 pl-1">{t("dynamic.organizationsettingsmodal.tashkilot_nomi")}</Label>
               <div className="relative">
                 <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <Input 
@@ -172,7 +174,7 @@ export default function OrganizationSettingsModal({
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 pl-1">Email</Label>
+              <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 pl-1">{t("dynamic.profile.email")}</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <Input 
@@ -187,7 +189,7 @@ export default function OrganizationSettingsModal({
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 pl-1">Telefon</Label>
+              <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 pl-1">{t("dynamic.profile.telefon")}</Label>
               <div className="relative">
                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <Input 
@@ -200,7 +202,7 @@ export default function OrganizationSettingsModal({
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 pl-1">Manzil</Label>
+              <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 pl-1">{t("dynamic.organizationsettingsmodal.manzil")}</Label>
               <div className="relative">
                 <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <Input 
@@ -214,13 +216,13 @@ export default function OrganizationSettingsModal({
           </div>
 
           <div className="pt-6 border-t border-slate-100 dark:border-white/5 space-y-4">
-            <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 pl-1">Dashboard Sozlamalari</Label>
+            <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 pl-1">{t("dynamic.organizationsettingsmodal.dashboard_sozlamalari")}</Label>
             <div className="grid gap-2">
               <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/5 hover:border-primary/20 transition-all shadow-sm">
                 <div className="flex items-center gap-3">
                   <Eye className="h-5 w-5 text-primary/60" />
                   <div>
-                    <p className="text-sm font-bold text-slate-700 dark:text-slate-200">Smart Clock Ko'rinishi</p>
+                    <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{t("dynamic.organizationsettingsmodal.smart_clock_ko_rinishi")}</p>
                     <p className="text-[10px] text-slate-400">Headerdagi soatni yoqish/o'chirish</p>
                   </div>
                 </div>
@@ -234,8 +236,8 @@ export default function OrganizationSettingsModal({
                 <div className="flex items-center gap-3">
                   <Volume2 className="h-5 w-5 text-primary/60" />
                   <div>
-                    <p className="text-sm font-bold text-slate-700 dark:text-slate-200">Soat Ovozi (Tick-Tock)</p>
-                    <p className="text-[10px] text-slate-400">Har soniyada chiqadigan ovozni boshqarish</p>
+                    <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{t("dynamic.organizationsettingsmodal.soat_ovozi_ticktock")}</p>
+                    <p className="text-[10px] text-slate-400">{t("dynamic.organizationsettingsmodal.har_soniyada_chiqadigan_ovozni_boshqaris")}</p>
                   </div>
                 </div>
                 <Switch 
@@ -250,7 +252,7 @@ export default function OrganizationSettingsModal({
         {/* Footer - Fixed Sticky */}
         <DialogFooter className="p-8 pt-4 border-t border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-slate-900/80 backdrop-blur-md shrink-0">
           <div className="flex items-center justify-end gap-3 w-full">
-            <Button type="button" variant="ghost" onClick={onClose} className="h-11 rounded-lg font-bold px-6">Bekor qilish</Button>
+            <Button type="button" variant="ghost" onClick={onClose} className="h-11 rounded-lg font-bold px-6">{t("dynamic.pricingplans.bekor_qilish")}</Button>
             <Button 
               type="submit" 
               onClick={handleSubmit}

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
@@ -34,6 +35,7 @@ const passwordSchema = z.object({
 type PasswordFormValues = z.infer<typeof passwordSchema>;
 
 export default function SharedProfile() {
+  const { t } = useTranslation();
   const { profile, refresh, role, user } = useAuth();
   const [saving, setSaving] = useState(false);
   const [savingPwd, setSavingPwd] = useState(false);
@@ -97,7 +99,7 @@ export default function SharedProfile() {
     });
     if (signErr) {
       setSavingPwd(false);
-      toast.error("Joriy parol noto'g'ri kiritildi");
+      toast.error(t("dynamic.sharedprofile.joriy_parol_noto_g_ri_kiritildi"));
       return;
     }
     const { error } = await supabase.auth.updateUser({ password: data.next });
@@ -121,7 +123,7 @@ export default function SharedProfile() {
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
       <div>
-        <h1 className="font-display text-2xl md:text-3xl font-bold">Profil</h1>
+        <h1 className="font-display text-2xl md:text-3xl font-bold">{t("dynamic.sharedprofile.profil")}</h1>
         <p className="text-sm text-muted-foreground">
           {role && roleLabel[role]} • @{profile.username}
         </p>
@@ -147,21 +149,21 @@ export default function SharedProfile() {
           <form onSubmit={handleProfileSubmit(onSaveProfile)} className="space-y-4">
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="sm:col-span-2 space-y-1">
-                <Label>To'liq ism</Label>
+                <Label>{t("dynamic.sharedprofile.to_liq_ism")}</Label>
                 <Input {...registerProfile("full_name")} />
                 {profileErrors.full_name && (
                   <p className="text-xs text-destructive">{profileErrors.full_name.message}</p>
                 )}
               </div>
               <div className="space-y-1">
-                <Label>Email</Label>
+                <Label>{t("dynamic.profile.email")}</Label>
                 <Input type="email" {...registerProfile("email")} />
                 {profileErrors.email && (
                   <p className="text-xs text-destructive">{profileErrors.email.message}</p>
                 )}
               </div>
               <div className="space-y-1">
-                <Label>Telefon</Label>
+                <Label>{t("dynamic.profile.telefon")}</Label>
                 <Input {...registerProfile("phone")} />
                 {profileErrors.phone && (
                   <p className="text-xs text-destructive">{profileErrors.phone.message}</p>
@@ -179,11 +181,11 @@ export default function SharedProfile() {
 
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
         <Card className="p-6 space-y-4">
-          <h3 className="font-display font-semibold text-lg">Parolni o'zgartirish</h3>
+          <h3 className="font-display font-semibold text-lg">{t("dynamic.sharedprofile.parolni_o_zgartirish")}</h3>
           <form onSubmit={handlePasswordSubmit(onSavePassword)} className="space-y-4">
             <div className="space-y-3">
               <div className="space-y-1">
-                <Label>Joriy parol</Label>
+                <Label>{t("dynamic.profile.joriy_parol")}</Label>
                 <Input type="password" {...registerPassword("current")} />
                 {passwordErrors.current && (
                   <p className="text-xs text-destructive">{passwordErrors.current.message}</p>
@@ -191,14 +193,14 @@ export default function SharedProfile() {
               </div>
               <div className="grid sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <Label>Yangi parol</Label>
+                  <Label>{t("dynamic.usersmanager.yangi_parol")}</Label>
                   <Input type="password" {...registerPassword("next")} />
                   {passwordErrors.next && (
                     <p className="text-xs text-destructive">{passwordErrors.next.message}</p>
                   )}
                 </div>
                 <div className="space-y-1">
-                  <Label>Tasdiqlash</Label>
+                  <Label>{t("dynamic.profile.tasdiqlash")}</Label>
                   <Input type="password" {...registerPassword("confirm")} />
                   {passwordErrors.confirm && (
                     <p className="text-xs text-destructive">{passwordErrors.confirm.message}</p>

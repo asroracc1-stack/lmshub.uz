@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
@@ -45,6 +46,7 @@ const empty: Partial<Row> = {
 };
 
 export default function TelegramLinksPage() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Partial<Row>>(empty);
@@ -86,7 +88,7 @@ export default function TelegramLinksPage() {
       return api.delete(`/bot-settings/${id}`);
     },
     onSuccess: () => {
-      toast.success("O'chirildi");
+      toast.success(t("dynamic.usersmanager.o_chirildi"));
       queryClient.invalidateQueries({ queryKey: ["telegram-bots"] });
     },
     onError: (error: any) => {
@@ -105,8 +107,8 @@ export default function TelegramLinksPage() {
   };
 
   const save = async () => {
-    if (!editing.username?.trim()) return toast.error("Username kerak");
-    if (!editing.name?.trim()) return toast.error("Nom kerak");
+    if (!editing.username?.trim()) return toast.error(t("dynamic.telegramlinks.username_kerak"));
+    if (!editing.name?.trim()) return toast.error(t("dynamic.telegramlinks.nom_kerak"));
 
     const payload = {
       kind: editing.kind,
@@ -121,7 +123,7 @@ export default function TelegramLinksPage() {
   };
 
   const remove = async (id: string) => {
-    if (!confirm("O'chirilsinmi?")) return;
+    if (!confirm(t("dynamic.usersmanager.o_chirilsinmi"))) return;
     await deleteMutation.mutateAsync(id);
   };
 
@@ -179,7 +181,7 @@ export default function TelegramLinksPage() {
                     <Badge variant={r.kind === "channel" ? "secondary" : "default"}>
                       {r.kind === "channel" ? "Kanal" : "Bot"}
                     </Badge>
-                    {!r.is_active && <Badge variant="outline">Faolsiz</Badge>}
+                    {!r.is_active && <Badge variant="outline">{t("dynamic.telegramlinks.faolsiz")}</Badge>}
                   </div>
                   <a
                     href={`https://t.me/${r.username}`}
@@ -218,7 +220,7 @@ export default function TelegramLinksPage() {
           </DialogHeader>
           <div className="space-y-3">
             <div>
-              <Label>Tur</Label>
+              <Label>{t("dynamic.telegramlinks.tur")}</Label>
               <Select
                 value={editing.kind ?? "bot"}
                 onValueChange={(v) => setEditing((e) => ({ ...e, kind: v as any }))}
@@ -227,13 +229,13 @@ export default function TelegramLinksPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="bot">Bot</SelectItem>
-                  <SelectItem value="channel">Kanal</SelectItem>
+                  <SelectItem value="bot">{t("dynamic.telegramlinks.bot")}</SelectItem>
+                  <SelectItem value="channel">{t("dynamic.telegramlinks.kanal")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <Label>Nomi</Label>
+              <Label>{t("dynamic.telegramlinks.nomi")}</Label>
               <Input
                 value={editing.name ?? ""}
                 onChange={(e) => setEditing((s) => ({ ...s, name: e.target.value }))}
@@ -241,7 +243,7 @@ export default function TelegramLinksPage() {
               />
             </div>
             <div>
-              <Label>Username (@siz)</Label>
+              <Label>{t("dynamic.telegramlinks.username_siz")}</Label>
               <Input
                 value={editing.username ?? ""}
                 onChange={(e) =>
@@ -252,7 +254,7 @@ export default function TelegramLinksPage() {
             </div>
             {editing.kind === "bot" && (
               <div>
-                <Label>Bot tokeni (ixtiyoriy)</Label>
+                <Label>{t("dynamic.telegramlinks.bot_tokeni_ixtiyoriy")}</Label>
                 <Input
                   type="password"
                   value={editing.bot_token ?? ""}
@@ -265,7 +267,7 @@ export default function TelegramLinksPage() {
               </div>
             )}
             <div>
-              <Label>Tavsif</Label>
+              <Label>{t("dynamic.telegramlinks.tavsif")}</Label>
               <Textarea
                 rows={3}
                 value={editing.description ?? ""}
@@ -273,7 +275,7 @@ export default function TelegramLinksPage() {
               />
             </div>
             <div className="flex items-center justify-between">
-              <Label>Faol</Label>
+              <Label>{t("dynamic.usersmanager.faol")}</Label>
               <Switch
                 checked={editing.is_active ?? true}
                 onCheckedChange={(v) => setEditing((s) => ({ ...s, is_active: v }))}

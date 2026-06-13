@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { createContext, useContext, useEffect, useState, ReactNode, useRef } from "react";
 import { AppRole } from "@/lib/auth";
 import { toast } from "sonner";
@@ -54,6 +55,7 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const { t } = useTranslation();
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);

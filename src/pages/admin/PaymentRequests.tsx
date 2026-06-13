@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
@@ -65,6 +66,7 @@ interface PaymentTxRow {
 const columnHelper = createColumnHelper<PaymentTxRow>();
 
 export default function PaymentRequests() {
+  const { t } = useTranslation();
   const { profile } = useAuth();
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
@@ -104,7 +106,7 @@ export default function PaymentRequests() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["payment-requests"] });
-      toast.success("To'lov muvaffaqiyatli tasdiqlandi!");
+      toast.success(t("dynamic.orgpayments.to_lov_muvaffaqiyatli_tasdiqlandi"));
       setModalOpen(false);
       setSelectedTx(null);
     },
@@ -122,7 +124,7 @@ export default function PaymentRequests() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["payment-requests"] });
-      toast.success("To'lov rad etildi.");
+      toast.success(t("dynamic.paymentrequests.to_lov_rad_etildi"));
       setModalOpen(false);
       setSelectedTx(null);
     },
@@ -175,21 +177,18 @@ export default function PaymentRequests() {
         if (s === "APPROVED") {
           return (
             <Badge className="bg-success/15 text-success border-success/30">
-              <CheckCircle2 className="h-3 w-3 mr-1" /> Tasdiqlangan
-            </Badge>
+              <CheckCircle2 className="h-3 w-3 mr-1" />{t("dynamic.orgpayments.tasdiqlangan")}</Badge>
           );
         }
         if (s === "REJECTED") {
           return (
             <Badge className="bg-destructive/15 text-destructive border-destructive/30">
-              <XCircle className="h-3 w-3 mr-1" /> Rad etilgan
-            </Badge>
+              <XCircle className="h-3 w-3 mr-1" />{t("dynamic.payments.rad_etilgan")}</Badge>
           );
         }
         return (
           <Badge className="bg-warning/15 text-warning border-warning/30 animate-pulse">
-            <Clock className="h-3 w-3 mr-1" /> Kutilmoqda
-          </Badge>
+            <Clock className="h-3 w-3 mr-1" />{t("dynamic.orgpayments.kutilmoqda")}</Badge>
         );
       },
     }),
@@ -305,10 +304,10 @@ export default function PaymentRequests() {
               <SelectValue placeholder="Holat bo'yicha" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ALL">Barchasi</SelectItem>
-              <SelectItem value="PENDING">Kutilmoqda</SelectItem>
-              <SelectItem value="APPROVED">Tasdiqlangan</SelectItem>
-              <SelectItem value="REJECTED">Rad etilgan</SelectItem>
+              <SelectItem value="ALL">{t("dynamic.finance.barchasi")}</SelectItem>
+              <SelectItem value="PENDING">{t("dynamic.orgpayments.kutilmoqda")}</SelectItem>
+              <SelectItem value="APPROVED">{t("dynamic.orgpayments.tasdiqlangan")}</SelectItem>
+              <SelectItem value="REJECTED">{t("dynamic.payments.rad_etilgan")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -337,7 +336,7 @@ export default function PaymentRequests() {
         ) : filteredTx.length === 0 ? (
           <div className="text-center py-16 text-muted-foreground space-y-2">
             <Receipt className="h-12 w-12 mx-auto opacity-30" />
-            <p className="font-medium text-lg">To'lov so'rovlari topilmadi</p>
+            <p className="font-medium text-lg">{t("dynamic.paymentrequests.to_lov_so_rovlari_topilmadi")}</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -386,39 +385,39 @@ export default function PaymentRequests() {
                 <DialogTitle className="text-xl font-display flex items-center gap-2">
                   <Receipt className="h-5 w-5 text-primary" /> To'lov chekini tekshirish
                 </DialogTitle>
-                <p className="sr-only" id="dialog-description">To'lov cheki ma'lumotlari va tasdiqlash</p>
+                <p className="sr-only" id="dialog-description">{t("dynamic.paymentrequests.to_lov_cheki_ma_lumotlari_va_tasdiqlash")}</p>
               </DialogHeader>
 
               <div className="grid md:grid-cols-2 gap-6 my-4">
                 <div className="space-y-4">
                   <div>
-                    <p className="text-xs text-muted-foreground uppercase tracking-wider">Talaba</p>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("dynamic.orgrewards.talaba")}</p>
                     <p className="font-semibold text-lg">{selectedTx.studentName}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground uppercase tracking-wider">To'lovchi (Payer)</p>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("dynamic.paymentrequests.to_lovchi_payer")}</p>
                     <p className="font-medium">{selectedTx.payerName}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground uppercase tracking-wider">Qabul qiluvchi Admin</p>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("dynamic.paymentrequests.qabul_qiluvchi_admin")}</p>
                     <p className="font-medium">{selectedTx.adminName}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground uppercase tracking-wider">To'lov miqdori</p>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("dynamic.paymentrequests.to_lov_miqdori")}</p>
                     <p className="font-mono text-2xl font-bold text-primary">
                       {selectedTx.amount.toLocaleString("uz-UZ")} UZS
                     </p>
                   </div>
                   {selectedTx.note && (
                     <div>
-                      <p className="text-xs text-muted-foreground uppercase tracking-wider">Izoh</p>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("dynamic.finance.izoh")}</p>
                       <p className="text-sm bg-muted/40 p-3 rounded-lg border border-border">
                         {selectedTx.note}
                       </p>
                     </div>
                   )}
                   <div>
-                    <p className="text-xs text-muted-foreground uppercase tracking-wider">Yuborilgan sana</p>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("dynamic.paymentrequests.yuborilgan_sana")}</p>
                     <p className="text-sm">
                       {(() => {
                         const val = selectedTx.createdAt as any;
@@ -446,7 +445,7 @@ export default function PaymentRequests() {
                         className="max-w-full max-h-full object-contain hover:scale-105 transition-transform duration-300"
                       />
                     ) : (
-                      <p className="text-sm text-muted-foreground">Chek rasmi yuklanmagan</p>
+                      <p className="text-sm text-muted-foreground">{t("dynamic.paymentrequests.chek_rasmi_yuklanmagan")}</p>
                     )}
                   </div>
                   {selectedTx.paymentProofUrl && (
@@ -492,9 +491,7 @@ export default function PaymentRequests() {
                     </Button>
                   </>
                 ) : (
-                  <Button variant="secondary" onClick={() => setModalOpen(false)}>
-                    Yopish
-                  </Button>
+                  <Button variant="secondary" onClick={() => setModalOpen(false)}>{t("dynamic.syllabus.yopish")}</Button>
                 )}
               </DialogFooter>
             </>

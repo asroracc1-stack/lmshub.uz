@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import TigerPlayer from "./TigerPlayer";
 import { motion, AnimatePresence } from "framer-motion";
@@ -9,7 +10,9 @@ interface SuccessModalProps {
   message?: string;
 }
 
-export default function SuccessModal({ open, onOpenChange, title = "Muvaffaqiyatli!", message }: SuccessModalProps) {
+export default function SuccessModal({
+  open, onOpenChange, title = "Muvaffaqiyatli!", message }: SuccessModalProps) {
+  const { t } = useTranslation();
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm sm:max-w-md p-0 overflow-hidden border-none bg-transparent shadow-none">
@@ -25,7 +28,7 @@ export default function SuccessModal({ open, onOpenChange, title = "Muvaffaqiyat
               
               <div className="space-y-2">
                 <DialogTitle className="text-2xl font-display font-bold neon-text">{title}</DialogTitle>
-                <DialogDescription className="sr-only">Success message for the current action</DialogDescription>
+                <DialogDescription className="sr-only">{t("dynamic.successmodal.success_message_for_the_current_action")}</DialogDescription>
                 {message && <p className="text-muted-foreground">{message}</p>}
               </div>
               

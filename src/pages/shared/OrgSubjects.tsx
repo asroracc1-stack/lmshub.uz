@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
@@ -166,6 +167,7 @@ const getColorClasses = (color: string) => {
 };
 
 export default function OrgSubjects() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const role = user?.role?.toLowerCase();
   const canManage = ["super_admin", "admin", "administrator"].includes(role || "");
@@ -243,7 +245,7 @@ export default function OrgSubjects() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["subjects"] });
-      toast.success("O'chirildi");
+      toast.success(t("dynamic.usersmanager.o_chirildi"));
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || "O'chirishda xatolik");
@@ -251,7 +253,7 @@ export default function OrgSubjects() {
   });
 
   const submit = () => {
-    if (!name.trim()) return toast.error("Nom kiriting");
+    if (!name.trim()) return toast.error(t("dynamic.pricingplans.nom_kiriting"));
     const payload = { name: name.trim(), code: code.trim() || null, description: description.trim() || null, color };
     mutation.mutate(payload);
   };
@@ -263,7 +265,7 @@ export default function OrgSubjects() {
   // Trigger Gemini AI details generator
   const handleAiAutofill = async () => {
     if (!name.trim()) {
-      toast.error("Avval fan nomini yozing yoki tanlang!");
+      toast.error(t("dynamic.orgsubjects.avval_fan_nomini_yozing_yoki_tanlang"));
       return;
     }
     setAiLoading(true);
@@ -286,7 +288,7 @@ export default function OrgSubjects() {
       if (status === 500 && serverMsg.includes("kaliti")) {
         toast.error("⚠️ AI xizmati vaqtincha ishlamaydi: API kaliti bloklangan. Admin bilan bog'laning.");
       } else if (status === 500) {
-        toast.error("AI server xatosi yuz berdi. Iltimos, keyinroq urinib ko'ring.");
+        toast.error(t("dynamic.orgsubjects.ai_server_xatosi_yuz_berdi_iltimos_keyin"));
       } else {
         toast.error(serverMsg || "Gemini AI bilan bog'lanishda xatolik");
       }
@@ -328,7 +330,7 @@ export default function OrgSubjects() {
                 className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600 text-white font-semibold px-5 h-11 rounded-xl shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 shrink-0 border-none"
               >
                 <Plus className="h-4 w-4" />
-                <span>Yangi fan qo'shish</span>
+                <span>{t("dynamic.orgsubjects.yangi_fan_qo_shish")}</span>
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl p-0 rounded-2xl border-none shadow-2xl bg-white dark:bg-slate-900 flex flex-col max-h-[90vh]">
@@ -349,7 +351,7 @@ export default function OrgSubjects() {
                 <div className="space-y-4">
                   {/* Smart Combobox (Nom) */}
                   <div className="grid gap-1.5 relative">
-                    <Label className="text-xs font-semibold text-slate-500 dark:text-slate-400">Nom *</Label>
+                    <Label className="text-xs font-semibold text-slate-500 dark:text-slate-400">{t("dynamic.orgsubjects.nom_")}</Label>
                     <div className="relative flex items-center">
                       <Input 
                         value={name} 
@@ -408,7 +410,7 @@ export default function OrgSubjects() {
 
                   {/* Subject Code */}
                   <div className="grid gap-1.5">
-                    <Label className="text-xs font-semibold text-slate-500 dark:text-slate-400">Fanning Kodi (AI-filled)</Label>
+                    <Label className="text-xs font-semibold text-slate-500 dark:text-slate-400">{t("dynamic.orgsubjects.fanning_kodi_aifilled")}</Label>
                     <Input 
                       value={code} 
                       onChange={(e) => setCode(e.target.value)} 
@@ -419,7 +421,7 @@ export default function OrgSubjects() {
 
                   {/* Description */}
                   <div className="grid gap-1.5">
-                    <Label className="text-xs font-semibold text-slate-500 dark:text-slate-400">Tavsif</Label>
+                    <Label className="text-xs font-semibold text-slate-500 dark:text-slate-400">{t("dynamic.telegramlinks.tavsif")}</Label>
                     <Textarea 
                       rows={3} 
                       value={description} 
@@ -431,7 +433,7 @@ export default function OrgSubjects() {
 
                   {/* Color Selector */}
                   <div className="grid gap-2">
-                    <Label className="text-xs font-semibold text-slate-500 dark:text-slate-400">Rang va Mavzu</Label>
+                    <Label className="text-xs font-semibold text-slate-500 dark:text-slate-400">{t("dynamic.orgsubjects.rang_va_mavzu")}</Label>
                     <div className="flex gap-2.5 flex-wrap">
                       {COLORS.map((c) => (
                         <button 
@@ -456,7 +458,7 @@ export default function OrgSubjects() {
                 {/* Right column — Live Preview only, no button */}
                 <div className="flex flex-col border-l border-border/30 pl-0 md:pl-6 pt-4 md:pt-0">
                   <div className="space-y-3">
-                    <Label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Jonli Ko'rinish (Live Preview)</Label>
+                    <Label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">{t("dynamic.orgsubjects.jonli_ko_rinish_live_preview")}</Label>
                     
                     {/* Live Preview Card Box */}
                     <Card className={`p-6 border rounded-2xl glass relative overflow-hidden flex flex-col justify-between min-h-[220px] transition-all duration-350 shadow-md ${getColorClasses(color)}`}>
@@ -491,11 +493,11 @@ export default function OrgSubjects() {
                       <div className="mt-5 pt-4 border-t border-border/40 grid grid-cols-2 gap-2 text-xs">
                         <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 font-medium">
                           <Users className="h-3.5 w-3.5 opacity-60" />
-                          <span>O'qituvchilar: <strong className="font-bold text-slate-900 dark:text-white">0</strong></span>
+                          <span>{t("dynamic.orgsubjects.o_qituvchilar")}<strong className="font-bold text-slate-900 dark:text-white">0</strong></span>
                         </div>
                         <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 font-medium">
                           <Layers className="h-3.5 w-3.5 opacity-60" />
-                          <span>Guruhlar: <strong className="font-bold text-slate-900 dark:text-white">0</strong></span>
+                          <span>{t("dynamic.orgsubjects.guruhlar")}<strong className="font-bold text-slate-900 dark:text-white">0</strong></span>
                         </div>
                       </div>
                     </Card>
@@ -511,9 +513,7 @@ export default function OrgSubjects() {
                   variant="ghost"
                   onClick={() => { setOpen(false); reset(); }}
                   className="rounded-xl h-11 px-6"
-                >
-                  Bekor
-                </Button>
+                >{t("dynamic.usersmanager.bekor")}</Button>
                 <Button
                   onClick={submit}
                   disabled={mutation.isPending || aiLoading}
@@ -550,8 +550,8 @@ export default function OrgSubjects() {
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           <Card className="p-16 text-center text-muted-foreground bg-slate-50/50 dark:bg-slate-900/50 border-dashed rounded-2xl">
             <BookOpen className="h-12 w-12 mx-auto mb-4 text-slate-300 dark:text-slate-700 animate-pulse" />
-            <h3 className="text-lg font-bold">Fanlar hali qo'shilmagan</h3>
-            <p className="text-sm mt-1">LMS tizimidagi darslarni biriktirish uchun birinchi fanni yarating.</p>
+            <h3 className="text-lg font-bold">{t("dynamic.orgsubjects.fanlar_hali_qo_shilmagan")}</h3>
+            <p className="text-sm mt-1">{t("dynamic.orgsubjects.lms_tizimidagi_darslarni_biriktirish_uch")}</p>
           </Card>
         </motion.div>
       ) : (
@@ -626,13 +626,13 @@ export default function OrgSubjects() {
                               </AlertDialogTrigger>
                               <AlertDialogContent className="rounded-xl border-none shadow-2xl bg-white dark:bg-slate-900">
                                 <AlertDialogHeader>
-                                  <AlertDialogTitle>O'chirilsinmi?</AlertDialogTitle>
+                                  <AlertDialogTitle>{t("dynamic.usersmanager.o_chirilsinmi")}</AlertDialogTitle>
                                   <AlertDialogDescription>
                                     "{s.name}" fani butunlay o'chiriladi. Bu fanga bog'liq darslar ham ta'sirlanishi mumkin.
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
-                                  <AlertDialogCancel className="rounded-xl">Bekor qilish</AlertDialogCancel>
+                                  <AlertDialogCancel className="rounded-xl">{t("dynamic.pricingplans.bekor_qilish")}</AlertDialogCancel>
                                   <AlertDialogAction 
                                     onClick={() => remove(s)} 
                                     className="bg-rose-600 hover:bg-rose-700 text-white rounded-xl"
@@ -669,11 +669,11 @@ export default function OrgSubjects() {
                     <div className="mt-5 pt-4 border-t border-border/40 grid grid-cols-2 gap-2 text-xs">
                       <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 font-medium">
                         <Users className="h-3.5 w-3.5 opacity-60" />
-                        <span>O'qituvchilar: <strong className="font-bold text-slate-900 dark:text-white">{subjectTeachers}</strong></span>
+                        <span>{t("dynamic.orgsubjects.o_qituvchilar")}<strong className="font-bold text-slate-900 dark:text-white">{subjectTeachers}</strong></span>
                       </div>
                       <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 font-medium">
                         <Layers className="h-3.5 w-3.5 opacity-60" />
-                        <span>Guruhlar: <strong className="font-bold text-slate-900 dark:text-white">{subjectGroups}</strong></span>
+                        <span>{t("dynamic.orgsubjects.guruhlar")}<strong className="font-bold text-slate-900 dark:text-white">{subjectGroups}</strong></span>
                       </div>
                     </div>
 

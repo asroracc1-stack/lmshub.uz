@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Trophy, Check, Flame } from "lucide-react";
@@ -8,6 +9,7 @@ interface DailyStreakCardProps {
 }
 
 export default function DailyStreakCard({ data }: DailyStreakCardProps) {
+  const { t } = useTranslation();
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
   return (
@@ -18,7 +20,7 @@ export default function DailyStreakCard({ data }: DailyStreakCardProps) {
             Kunlik streak <Flame className="h-4 w-4 text-orange-500 fill-orange-500" />
           </h3>
           <p className="text-3xl font-bold text-slate-900 dark:text-white mt-2">{data.dailyStreak}</p>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">kun davom etmoqda</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">{t("dynamic.dailystreakcard.kun_davom_etmoqda")}</p>
 
           <div className="flex justify-between items-center px-1">
             {days.map((day, idx) => {
@@ -46,11 +48,11 @@ export default function DailyStreakCard({ data }: DailyStreakCardProps) {
             <div className="w-8 h-8 rounded-full bg-purple-500 dark:bg-primary flex items-center justify-center shadow-sm">
               <Trophy className="h-4 w-4 text-white" />
             </div>
-            <span className="text-xs font-semibold text-purple-800 dark:text-primary">Eng uzun streak</span>
+            <span className="text-xs font-semibold text-purple-800 dark:text-primary">{t("dynamic.dailystreakcard.eng_uzun_streak")}</span>
           </div>
           <div className="text-right">
             <p className="text-sm font-bold text-slate-900 dark:text-white">{data.longestStreak} kun</p>
-            <p className="text-[9px] text-slate-500 dark:text-slate-400">(15.04.2024)</p>
+            <p className="text-[9px] text-slate-500 dark:text-slate-400">{t("dynamic.dailystreakcard.15042024")}</p>
           </div>
         </div>
       </Card>

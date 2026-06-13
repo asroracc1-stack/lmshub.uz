@@ -102,7 +102,7 @@ export default function NotificationsPage() {
                     <button
                       onClick={(e) => { e.preventDefault(); e.stopPropagation(); remove(n.id); }}
                       className="p-1.5 rounded hover:bg-destructive/20 text-destructive"
-                      title="O'chirish"
+                      title={t("dynamic.usersmanager.o_chirish")}
                     >
                       <X className="h-3.5 w-3.5" />
                     </button>

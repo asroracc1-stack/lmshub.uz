@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
@@ -35,7 +36,7 @@ const statusMeta = (s: string) => {
   const status = s.toLowerCase();
   switch (status) {
     case "pending":
-      return { label: "Kutilmoqda", icon: Clock, className: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20" };
+      return { label: t("dynamic.orgpayments.kutilmoqda"), icon: Clock, className: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20" };
     case "approved":
     case "completed":
     case "paid":
@@ -79,6 +80,7 @@ const formatTransactionDate = (dateVal: any): string => {
 };
 
 export default function OrgPayments() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<"PENDING" | "APPROVED" | "REJECTED" | "ALL">("PENDING");
@@ -117,7 +119,7 @@ export default function OrgPayments() {
     },
     onSuccess: (updated) => {
       queryClient.invalidateQueries({ queryKey: ["admin-payment-transactions"] });
-      toast.success("To'lov muvaffaqiyatli tasdiqlandi!");
+      toast.success(t("dynamic.orgpayments.to_lov_muvaffaqiyatli_tasdiqlandi"));
       setSelected(null);
     },
     onError: (error: any) => {
@@ -133,7 +135,7 @@ export default function OrgPayments() {
     },
     onSuccess: (updated) => {
       queryClient.invalidateQueries({ queryKey: ["admin-payment-transactions"] });
-      toast.success("To'lov so'rovi rad etildi");
+      toast.success(t("dynamic.orgpayments.to_lov_so_rovi_rad_etildi"));
       setSelected(null);
     },
     onError: (error: any) => {
@@ -171,9 +173,7 @@ export default function OrgPayments() {
             <CreditCard className="h-6 w-6 text-white" />
           </div>
           <div>
-            <h1 className="font-display text-3xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 dark:from-white dark:via-slate-200 dark:to-white bg-clip-text text-transparent">
-              To'lovlar
-            </h1>
+            <h1 className="font-display text-3xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 dark:from-white dark:via-slate-200 dark:to-white bg-clip-text text-transparent">{t("dynamic.subscriptions.to_lovlar")}</h1>
             <p className="text-sm text-muted-foreground mt-0.5">
               Talabalar to'lov cheklarini ko'ring, tahlil qiling va tasdiqlang
             </p>
@@ -186,7 +186,7 @@ export default function OrgPayments() {
         <Card className="p-6 border border-amber-500/10 hover:border-amber-500/30 glass relative overflow-hidden group transition-all duration-300">
           <div className="flex justify-between items-center">
             <div>
-              <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Kutilmoqda</p>
+              <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">{t("dynamic.orgpayments.kutilmoqda")}</p>
               <p className="font-display text-3xl font-extrabold text-slate-800 dark:text-white mt-1">{stats.pending}</p>
             </div>
             <div className="h-12 w-12 rounded-xl bg-amber-500/10 grid place-items-center text-amber-500 group-hover:scale-110 transition-transform">
@@ -199,7 +199,7 @@ export default function OrgPayments() {
         <Card className="p-6 border border-purple-500/10 hover:border-purple-500/30 glass relative overflow-hidden group transition-all duration-300">
           <div className="flex justify-between items-center">
             <div>
-              <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Tasdiqlangan</p>
+              <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">{t("dynamic.orgpayments.tasdiqlangan")}</p>
               <p className="font-display text-3xl font-extrabold text-slate-800 dark:text-white mt-1">{stats.paid}</p>
             </div>
             <div className="h-12 w-12 rounded-xl bg-purple-500/10 grid place-items-center text-purple-500 group-hover:scale-110 transition-transform">
@@ -212,9 +212,9 @@ export default function OrgPayments() {
         <Card className="p-6 border border-indigo-500/10 hover:border-indigo-500/30 glass relative overflow-hidden group transition-all duration-300">
           <div className="flex justify-between items-center">
             <div>
-              <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Jami Summa</p>
+              <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">{t("dynamic.orgpayments.jami_summa")}</p>
               <p className="font-display text-2xl font-extrabold text-slate-800 dark:text-white mt-1.5">
-                {stats.total.toLocaleString("uz-UZ")} <span className="text-xs font-medium text-muted-foreground">UZS</span>
+                {stats.total.toLocaleString("uz-UZ")} <span className="text-xs font-medium text-muted-foreground">{t("dynamic.finance.uzs")}</span>
               </p>
             </div>
             <div className="h-12 w-12 rounded-xl bg-indigo-500/10 grid place-items-center text-indigo-500 group-hover:scale-110 transition-transform">
@@ -267,8 +267,8 @@ export default function OrgPayments() {
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           <Card className="p-16 text-center text-muted-foreground bg-slate-50/50 dark:bg-slate-900/50 border-dashed rounded-2xl">
             <Receipt className="h-12 w-12 mx-auto mb-4 text-slate-300 dark:text-slate-700 animate-pulse" />
-            <h3 className="text-lg font-bold">To'lovlar mavjud emas</h3>
-            <p className="text-sm mt-1">Ushbu filtr bo'yicha hech qanday to'lov cheklari topilmadi.</p>
+            <h3 className="text-lg font-bold">{t("dynamic.orgpayments.to_lovlar_mavjud_emas")}</h3>
+            <p className="text-sm mt-1">{t("dynamic.orgpayments.ushbu_filtr_bo_yicha_hech_qanday_to_lov_")}</p>
           </Card>
         </motion.div>
       ) : (
@@ -338,7 +338,7 @@ export default function OrgPayments() {
                             onClick={() => approveMutation.mutate(p.id)}
                             disabled={isMutationPending}
                             className="rounded-xl px-3 bg-purple-600 hover:bg-purple-700 text-white shadow-md shadow-purple-600/20 border-none h-9 transition-all"
-                            title="Tasdiqlash"
+                            title={t("dynamic.profile.tasdiqlash")}
                           >
                             {approveMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
                           </Button>
@@ -375,23 +375,23 @@ export default function OrgPayments() {
             <div className="space-y-6 mt-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50/50 dark:bg-slate-800/40 p-4 rounded-2xl border border-border/30 text-xs sm:text-sm">
                 <div className="space-y-1">
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1"><User className="h-3 w-3" /> Talaba</span>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1"><User className="h-3 w-3" />{t("dynamic.orgrewards.talaba")}</span>
                   <p className="font-bold text-slate-800 dark:text-white">{selected.studentName}</p>
                 </div>
                 <div className="space-y-1">
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1"><Receipt className="h-3 w-3" /> Summa</span>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1"><Receipt className="h-3 w-3" />{t("dynamic.orgpayments.summa")}</span>
                   <p className="font-extrabold text-slate-900 dark:text-white text-base">
                     {Number(selected.amount).toLocaleString("uz-UZ")} UZS
                   </p>
                 </div>
                 {selected.studentName !== selected.payerName && selected.payerName && (
                   <div className="space-y-1">
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1"><User className="h-3 w-3" /> To'lovchi Payer</span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1"><User className="h-3 w-3" />{t("dynamic.orgpayments.to_lovchi_payer")}</span>
                     <p className="font-medium text-slate-700 dark:text-slate-300">{selected.payerName}</p>
                   </div>
                 )}
                 <div className="space-y-1">
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1"><Clock className="h-3 w-3" /> Yuborilgan Sana</span>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1"><Clock className="h-3 w-3" />{t("dynamic.orgpayments.yuborilgan_sana")}</span>
                   <p className="font-medium text-slate-700 dark:text-slate-300">{formatTransactionDate(selected.createdAt)}</p>
                 </div>
               </div>
@@ -405,7 +405,7 @@ export default function OrgPayments() {
 
               {/* Receipt Image Container */}
               <div className="space-y-2">
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">To'lov Cheki (Kvitansiya)</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">{t("dynamic.orgpayments.to_lov_cheki_kvitansiya")}</span>
                 {selected.paymentProofUrl ? (
                   <div className="rounded-xl overflow-hidden border border-border/40 bg-slate-100 dark:bg-slate-950 p-2">
                     <img 
@@ -419,9 +419,7 @@ export default function OrgPayments() {
                     />
                   </div>
                 ) : (
-                  <div className="rounded-xl border-2 border-dashed border-border p-12 text-center text-muted-foreground">
-                    Chek rasmi yuklanmagan
-                  </div>
+                  <div className="rounded-xl border-2 border-dashed border-border p-12 text-center text-muted-foreground">{t("dynamic.paymentrequests.chek_rasmi_yuklanmagan")}</div>
                 )}
               </div>
 

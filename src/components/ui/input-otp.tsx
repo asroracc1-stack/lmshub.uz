@@ -1,10 +1,11 @@
+import { useTranslation } from "react-i18next";
 import * as React from "react";
 import { OTPInput, OTPInputContext } from "input-otp";
 import { Dot } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
-const InputOTP = React.forwardRef<React.ElementRef<typeof OTPInput>, React.ComponentPropsWithoutRef<typeof OTPInput>>(
+const InputOTP = React.forwardRef<React.ElementRef<typeof OTPInput>{t("dynamic.input-otp._reactcomponentpropswithoutref")}<typeof OTPInput>>(
   ({ className, containerClassName, ...props }, ref) => (
     <OTPInput
       ref={ref}
@@ -16,7 +17,7 @@ const InputOTP = React.forwardRef<React.ElementRef<typeof OTPInput>, React.Compo
 );
 InputOTP.displayName = "InputOTP";
 
-const InputOTPGroup = React.forwardRef<React.ElementRef<"div">, React.ComponentPropsWithoutRef<"div">>(
+const InputOTPGroup = React.forwardRef<React.ElementRef<"div">{t("dynamic.input-otp._reactcomponentpropswithoutref")}<"div">>(
   ({ className, ...props }, ref) => <div ref={ref} className={cn("flex items-center", className)} {...props} />,
 );
 InputOTPGroup.displayName = "InputOTPGroup";
@@ -49,7 +50,7 @@ const InputOTPSlot = React.forwardRef<
 });
 InputOTPSlot.displayName = "InputOTPSlot";
 
-const InputOTPSeparator = React.forwardRef<React.ElementRef<"div">, React.ComponentPropsWithoutRef<"div">>(
+const InputOTPSeparator = React.forwardRef<React.ElementRef<"div">{t("dynamic.input-otp._reactcomponentpropswithoutref")}<"div">>(
   ({ ...props }, ref) => (
     <div ref={ref} role="separator" {...props}>
       <Dot />

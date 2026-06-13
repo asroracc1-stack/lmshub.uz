@@ -190,8 +190,8 @@ export default function RoleLayout({
                   aria-expanded={isExpanded}
                   title={mini ? item.label : undefined}
                   className={cn(
-                    "w-full flex items-center gap-3 rounded-xl text-sm font-medium transition-all duration-200 group",
-                    mini ? "justify-center h-11 w-11 mx-auto px-0" : "px-3 py-2.5",
+                    "w-full flex items-center gap-[14px] rounded-xl text-sm font-medium transition-all duration-200 group",
+                    mini ? "justify-center h-11 w-11 mx-auto px-0" : "px-[14px] py-[10px]",
                     isExpanded || hasActiveChild
                       ? "bg-primary/10 text-primary"
                       : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white"
@@ -238,7 +238,7 @@ export default function RoleLayout({
                             onClick={handleMobileNavClick}
                             className={({ isActive }) =>
                               cn(
-                                "relative flex items-center gap-2.5 pl-5 pr-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200",
+                                "relative flex items-center gap-[14px] pl-6 pr-3.5 py-[10px] rounded-xl text-[13px] font-medium transition-all duration-200",
                                 isActive
                                   ? "bg-primary/10 text-primary font-semibold"
                                   : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/5"
@@ -281,8 +281,8 @@ export default function RoleLayout({
               title={mini ? item.label : undefined}
               className={({ isActive }) =>
                 cn(
-                  "group flex items-center gap-3 rounded-xl text-sm font-semibold transition-all duration-200",
-                  mini ? "justify-center h-11 w-11 mx-auto px-0" : "px-3 py-2.5",
+                  "group flex items-center gap-[14px] rounded-xl text-sm font-semibold transition-all duration-200",
+                  mini ? "justify-center h-11 w-11 mx-auto px-0" : "px-[14px] py-[10px]",
                   isActive
                     ? "bg-primary text-white shadow-glow-purple"
                     : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white"
@@ -370,8 +370,8 @@ export default function RoleLayout({
   return (
     <div
       className={cn(
-        "h-screen flex w-full overflow-hidden transition-colors duration-500",
-        theme === "dark" ? "bg-[#0B0714] text-slate-100" : "bg-[#FCFAFF] text-slate-900"
+        "h-screen flex w-full overflow-hidden transition-colors duration-500 p-3 gap-3",
+        theme === "dark" ? "bg-[#080410] text-slate-100" : "bg-[#F3F4F6] text-slate-900"
       )}
     >
       <TigerLoader isLoading={authLoading} />
@@ -382,7 +382,7 @@ export default function RoleLayout({
         animate={{ width: collapsed ? 72 : 256 }}
         transition={{ duration: 0.3, ease: "easeInOut" }}
         className={cn(
-          "hidden md:flex shrink-0 border-r flex-col h-full z-50 overflow-hidden",
+          "hidden md:flex shrink-0 border flex-col h-full overflow-hidden rounded-[16px]",
           theme === "dark"
             ? "bg-[#140D23] border-[#2E1E52] shadow-2xl"
             : "bg-white border-[#E8DDFB] shadow-xl shadow-purple-100/40"
@@ -401,14 +401,21 @@ export default function RoleLayout({
       </MobileSidebarDrawer>
 
       {/* ── Main content ────────────────────────────── */}
-      <div className="flex-1 flex flex-col min-w-0 h-full overflow-y-auto relative thin-scrollbar">
+      <div 
+        className={cn(
+          "flex-1 flex flex-col min-w-0 h-full overflow-y-auto relative thin-scrollbar rounded-[16px] border",
+          theme === "dark"
+            ? "bg-[#140D23] border-[#2E1E52] shadow-2xl"
+            : "bg-white border-[#E8DDFB] shadow-xl shadow-purple-100/40"
+        )}
+      >
         {/* Topbar */}
         <header
           className={cn(
-            "shrink-0 h-16 border-b sticky top-0 z-30 transition-all w-full flex justify-center",
+            "shrink-0 h-16 border-b sticky top-0 z-30 transition-all w-full flex justify-center rounded-t-[16px]",
             theme === "dark"
               ? "bg-[#140D23]/60 backdrop-blur-xl border-[#2E1E52]"
-              : "bg-white/80 backdrop-blur-md border-[#E8DDFB] shadow-sm"
+              : "bg-white/80 backdrop-blur-md border-[#E8DDFB]"
           )}
         >
           <div className="w-full px-4 flex items-center justify-between h-full">

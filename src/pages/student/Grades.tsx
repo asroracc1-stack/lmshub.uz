@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -53,6 +54,7 @@ interface StudentAnalyticsDto {
 }
 
 export default function StudentGrades() {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [analytics, setAnalytics] = useState<StudentAnalyticsDto | null>(null);
 
@@ -64,7 +66,7 @@ export default function StudentGrades() {
         setAnalytics(response.data);
       } catch (error) {
         console.error("Failed to load analytics", error);
-        toast.error("Natijalarni yuklashda xatolik yuz berdi");
+        toast.error(t("dynamic.grades.natijalarni_yuklashda_xatolik_yuz_berdi"));
       } finally {
         setLoading(false);
       }
@@ -110,31 +112,31 @@ export default function StudentGrades() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-display text-2xl md:text-3xl font-bold">Mening natijalarim</h1>
-        <p className="text-sm text-muted-foreground">Baholar, davomat va o'qituvchi fikrlari</p>
+        <h1 className="font-display text-2xl md:text-3xl font-bold">{t("dynamic.grades.mening_natijalarim")}</h1>
+        <p className="text-sm text-muted-foreground">{t("dynamic.grades.baholar_davomat_va_o_qituvchi_fikrlari")}</p>
       </div>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="p-4">
-          <p className="text-xs text-muted-foreground uppercase">O'rtacha ball</p>
+          <p className="text-xs text-muted-foreground uppercase">{t("dynamic.grades.o_rtacha_ball")}</p>
           <p className="font-display font-bold text-3xl mt-1">
             {loading ? <Skeleton className="h-9 w-20" /> : `${stats.avg.toFixed(1)}%`}
           </p>
         </Card>
         <Card className="p-4">
-          <p className="text-xs text-muted-foreground uppercase">Jami baholar</p>
+          <p className="text-xs text-muted-foreground uppercase">{t("dynamic.grades.jami_baholar")}</p>
           <p className="font-display font-bold text-3xl mt-1">
             {loading ? <Skeleton className="h-9 w-16" /> : stats.totalGrades}
           </p>
         </Card>
         <Card className="p-4">
-          <p className="text-xs text-muted-foreground uppercase">Davomat</p>
+          <p className="text-xs text-muted-foreground uppercase">{t("dynamic.grades.davomat")}</p>
           <p className="font-display font-bold text-3xl mt-1">
             {loading ? <Skeleton className="h-9 w-20" /> : `${stats.attRate.toFixed(0)}%`}
           </p>
         </Card>
         <Card className="p-4">
-          <p className="text-xs text-muted-foreground uppercase">Jami darslar</p>
+          <p className="text-xs text-muted-foreground uppercase">{t("dynamic.grades.jami_darslar")}</p>
           <p className="font-display font-bold text-3xl mt-1">
             {loading ? <Skeleton className="h-9 w-16" /> : stats.totalAtt}
           </p>
@@ -156,7 +158,7 @@ export default function StudentGrades() {
               ))}
             </div>
           ) : grades.length === 0 ? (
-            <Card className="p-12 text-center text-muted-foreground">Hali baholar yo'q</Card>
+            <Card className="p-12 text-center text-muted-foreground">{t("dynamic.grades.hali_baholar_yo_q")}</Card>
           ) : (
             <div className="grid gap-3">
               {grades.map((g) => {
@@ -199,7 +201,7 @@ export default function StudentGrades() {
               ))}
             </div>
           ) : attendance.length === 0 ? (
-            <Card className="p-12 text-center text-muted-foreground">Hali yozuvlar yo'q</Card>
+            <Card className="p-12 text-center text-muted-foreground">{t("dynamic.grades.hali_yozuvlar_yo_q")}</Card>
           ) : (
             <div className="grid gap-2">
               {attendance.map((a) => (
@@ -207,7 +209,7 @@ export default function StudentGrades() {
                   <div className="flex items-center gap-3">
                     {attIcon(a.status)}
                     <div>
-                      <p className="font-medium">Dars yozuvi</p>
+                      <p className="font-medium">{t("dynamic.grades.dars_yozuvi")}</p>
                       <p className="text-xs text-muted-foreground">
                         {new Date(a.createdAt).toLocaleString("uz")}
                       </p>
@@ -239,7 +241,7 @@ export default function StudentGrades() {
               ))}
             </div>
           ) : feedbacks.length === 0 ? (
-            <Card className="p-12 text-center text-muted-foreground">Hali fikrlar yo'q</Card>
+            <Card className="p-12 text-center text-muted-foreground">{t("dynamic.grades.hali_fikrlar_yo_q")}</Card>
           ) : (
             <div className="grid gap-3">
               {feedbacks.map((f) => (

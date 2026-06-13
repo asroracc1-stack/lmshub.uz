@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -38,7 +39,9 @@ interface Feedback {
 const getSpeechRecognition = () =>
   (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
-export default function SpeakingTopicDetail({ basePath = "/user" }: { basePath?: string }) {
+export default function SpeakingTopicDetail({
+  basePath = "/user" }: { basePath?: string }) {
+  const { t } = useTranslation();
   const { slug } = useParams();
   const nav = useNavigate();
   const { session, role } = useAuth();
@@ -79,8 +82,8 @@ export default function SpeakingTopicDetail({ basePath = "/user" }: { basePath?:
   if (!topic) {
     return (
       <div className="p-12 text-center">
-        <p className="text-muted-foreground">Topic topilmadi</p>
-        <Button asChild variant="link"><Link to={`${basePath}/speaking/topics`}>Mavzularga qaytish</Link></Button>
+        <p className="text-muted-foreground">{t("dynamic.speakingtopicdetail.topic_topilmadi")}</p>
+        <Button asChild variant="link"><Link to={`${basePath}/speaking/topics`}>{t("dynamic.speakingtopicdetail.mavzularga_qaytish")}</Link></Button>
       </div>
     );
   }
@@ -154,7 +157,7 @@ export default function SpeakingTopicDetail({ basePath = "/user" }: { basePath?:
       mediaRecRef.current = mr;
     } catch (err: any) {
       console.warn("MediaRecorder mic access error:", err);
-      toast.error("Mikrofondan ovoz yozib olish imkoni bo'lmadi.");
+      toast.error(t("dynamic.speakingtopicdetail.mikrofondan_ovoz_yozib_olish_imkoni_bo_l"));
     }
 
     // 2. Initialize real-time Web SpeechRecognition as an instant-feedback overlay
@@ -193,7 +196,7 @@ export default function SpeakingTopicDetail({ basePath = "/user" }: { basePath?:
         console.warn("SpeechRecognition error:", err);
       }
     } else {
-      toast.info("Eslatma: Brauzeringizda real vaqtda transkriptlash rejimi mavjud emas, lekin ovozingiz to'liq yozib olinadi va baholanadi!");
+      toast.info(t("dynamic.speakingtopicdetail.eslatma_brauzeringizda_real_vaqtda_trans"));
     }
 
     setRecording(true);
@@ -231,13 +234,13 @@ export default function SpeakingTopicDetail({ basePath = "/user" }: { basePath?:
       player.onerror = () => {
         setPlayingVoice(false);
         audioPlayerRef.current = null;
-        toast.error("Ovozli faylni eshitib bo'lmadi.");
+        toast.error(t("dynamic.speakingtopicdetail.ovozli_faylni_eshitib_bo_lmadi"));
       };
 
       setPlayingVoice(true);
       player.play().catch(() => {
         setPlayingVoice(false);
-        toast.error("Audio ijro etish bloklandi.");
+        toast.error(t("dynamic.speakingtopicdetail.audio_ijro_etish_bloklandi"));
       });
     } catch (e) {
       setPlayingVoice(false);
@@ -256,7 +259,7 @@ export default function SpeakingTopicDetail({ basePath = "/user" }: { basePath?:
 
   const grade = async () => {
     if (!transcript.trim() && !audioBlob) { 
-      toast.error("Avval mikrofon tugmasini bosib gapiring!"); 
+      toast.error(t("dynamic.speakingtopicdetail.avval_mikrofon_tugmasini_bosib_gapiring")); 
       return; 
     }
     
@@ -386,16 +389,16 @@ export default function SpeakingTopicDetail({ basePath = "/user" }: { basePath?:
             </button>
             <h1 className="text-2xl md:text-4xl font-display font-bold leading-tight tracking-tight">{topic.title}</h1>
             <div className="flex flex-wrap gap-2 mt-3">
-              <Badge className="bg-purple-100 text-purple-700 dark:bg-purple-950/40 dark:text-purple-400 font-semibold px-2.5 py-0.5 text-xs">BEPUL MASHQ</Badge>
+              <Badge className="bg-purple-100 text-purple-700 dark:bg-purple-950/40 dark:text-purple-400 font-semibold px-2.5 py-0.5 text-xs">{t("dynamic.speakingtopicdetail.bepul_mashq")}</Badge>
               <Badge variant="outline" className="text-xs font-medium"><BookOpen className="h-3.5 w-3.5 mr-1" /> {topic.part1.length + 1 + topic.part3.length} ta savol</Badge>
               <Badge variant="outline" className="text-xs font-medium">{topic.category}</Badge>
             </div>
           </div>
           <Card className="p-4 bg-muted/40 text-xs space-y-1.5 shrink-0 border border-border/60 rounded-xl backdrop-blur-sm">
-            <p className="text-muted-foreground font-semibold uppercase tracking-wider text-[10px]">IELTS Speaking taqsimoti</p>
-            <p className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-violet-500" /><span className="font-bold text-violet-600 dark:text-violet-400">{topic.part1.length} ta</span> Part 1 savollari</p>
-            <p className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-amber-500" /><span className="font-bold text-amber-600 dark:text-amber-400">1 ta</span> Part 2 Cue Card</p>
-            <p className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-pink-500" /><span className="font-bold text-pink-600 dark:text-pink-400">{topic.part3.length} ta</span> Part 3 savollari</p>
+            <p className="text-muted-foreground font-semibold uppercase tracking-wider text-[10px]">{t("dynamic.speakingtopicdetail.ielts_speaking_taqsimoti")}</p>
+            <p className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-violet-500" /><span className="font-bold text-violet-600 dark:text-violet-400">{topic.part1.length} ta</span>{t("dynamic.speakingtopicdetail.part_1_savollari")}</p>
+            <p className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-amber-500" /><span className="font-bold text-amber-600 dark:text-amber-400">{t("dynamic.speakingtopicdetail.1_ta")}</span>{t("dynamic.speakingtopicdetail.part_2_cue_card")}</p>
+            <p className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-pink-500" /><span className="font-bold text-pink-600 dark:text-pink-400">{topic.part3.length} ta</span>{t("dynamic.speakingtopicdetail.part_3_savollari")}</p>
           </Card>
         </div>
       </Card>
@@ -431,7 +434,7 @@ export default function SpeakingTopicDetail({ basePath = "/user" }: { basePath?:
         </div>
 
         <Button variant="outline" size="sm" onClick={() => setMenuOpen((v) => !v)} className="gap-1.5 text-xs font-semibold h-9">
-          {menuOpen ? <><ChevronUp className="h-4 w-4" /> Menyuni yopish</> : <><ChevronDown className="h-4 w-4" /> Menyuni ochish</>}
+          {menuOpen ? <><ChevronUp className="h-4 w-4" />{t("dynamic.speakingtopicdetail.menyuni_yopish")}</> : <><ChevronDown className="h-4 w-4" />{t("dynamic.speakingtopicdetail.menyuni_ochish")}</>}
         </Button>
       </div>
 
@@ -469,7 +472,7 @@ export default function SpeakingTopicDetail({ basePath = "/user" }: { basePath?:
         <div className="space-y-6">
           <div className="space-y-1">
             <div className="flex items-center justify-between text-xs text-muted-foreground font-semibold px-1">
-              <span>SAVOL PROGRESSI</span>
+              <span>{t("dynamic.speakingtopicdetail.savol_progressi")}</span>
               <span>{qIdx + 1} / {totalQ}</span>
             </div>
             <Progress value={((qIdx + 1) / totalQ) * 100} className="h-2 rounded-full shadow-inner" />
@@ -483,7 +486,7 @@ export default function SpeakingTopicDetail({ basePath = "/user" }: { basePath?:
                   <Badge className="bg-primary/10 text-primary hover:bg-primary/10 border border-primary/20 font-bold uppercase text-[10px] tracking-wider">
                     PART {partIdx + 1}
                   </Badge>
-                  <span className="text-xs text-muted-foreground font-medium">IELTS Speaking</span>
+                  <span className="text-xs text-muted-foreground font-medium">{t("dynamic.speakingtopicdetail.ielts_speaking")}</span>
                 </div>
                 
                 <div className="flex items-start gap-3">
@@ -526,7 +529,7 @@ export default function SpeakingTopicDetail({ basePath = "/user" }: { basePath?:
                     <div className="flex items-center justify-between flex-wrap gap-2">
                       <div className="flex items-center gap-2 bg-primary/10 text-primary px-3.5 py-1.5 rounded-xl border border-primary/20 shadow-sm">
                         <Award className="h-5 w-5" /> 
-                        <span className="font-bold text-sm">AI IELTS Baholash Tahlili</span>
+                        <span className="font-bold text-sm">{t("dynamic.speakingtopicdetail.ai_ielts_baholash_tahlili")}</span>
                       </div>
                       
                       {feedback.is_test_mode && (
@@ -542,20 +545,20 @@ export default function SpeakingTopicDetail({ basePath = "/user" }: { basePath?:
                       {/* Overall Band circle */}
                       <div className="flex flex-col items-center justify-center text-center p-3 border-r md:border-r border-border/50 col-span-1">
                         <div className="relative h-24 w-24 rounded-full bg-gradient-to-tr from-purple-500 to-violet-500 flex flex-col items-center justify-center text-white shadow-elegant scale-102">
-                          <span className="text-[10px] uppercase font-bold tracking-wider opacity-85">IELTS Band</span>
+                          <span className="text-[10px] uppercase font-bold tracking-wider opacity-85">{t("dynamic.speakingtopicdetail.ielts_band")}</span>
                           <span className="text-3xl font-extrabold leading-none">{feedback.band !== undefined ? feedback.band.toFixed(1) : "N/A"}</span>
                         </div>
-                        <p className="text-xs font-bold mt-2 text-purple-600 dark:text-purple-400 uppercase tracking-widest">Umumiy Ball</p>
+                        <p className="text-xs font-bold mt-2 text-purple-600 dark:text-purple-400 uppercase tracking-widest">{t("dynamic.speakingtopicdetail.umumiy_ball")}</p>
                       </div>
 
                       {/* Criteria Visual Bar charts */}
                       <div className="col-span-1 md:col-span-3 space-y-3">
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5">IELTS Me'yoriy Ko'rsatkichlari (0 - 9)</p>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5">{t("dynamic.speakingtopicdetail.ielts_me_yoriy_ko_rsatkichlari_0__9")}</p>
                         
                         {/* Fluency */}
                         <div className="space-y-1">
                           <div className="flex items-center justify-between text-xs font-semibold">
-                            <span className="text-muted-foreground">Fluency and Coherence (Nutq ravonligi)</span>
+                            <span className="text-muted-foreground">{t("dynamic.speakingtopicdetail.fluency_and_coherence_nutq_ravonligi")}</span>
                             <span className="text-primary">{feedback.fluency ?? "N/A"} / 9.0</span>
                           </div>
                           <Progress value={((feedback.fluency ?? 0) / 9) * 100} className="h-1.5 bg-muted rounded-full" />
@@ -564,7 +567,7 @@ export default function SpeakingTopicDetail({ basePath = "/user" }: { basePath?:
                         {/* Lexical */}
                         <div className="space-y-1">
                           <div className="flex items-center justify-between text-xs font-semibold">
-                            <span className="text-muted-foreground">Lexical Resource (So'z boyligi)</span>
+                            <span className="text-muted-foreground">{t("dynamic.speakingtopicdetail.lexical_resource_so_z_boyligi")}</span>
                             <span className="text-primary">{feedback.lexical ?? "N/A"} / 9.0</span>
                           </div>
                           <Progress value={((feedback.lexical ?? 0) / 9) * 100} className="h-1.5 bg-muted rounded-full" />
@@ -582,7 +585,7 @@ export default function SpeakingTopicDetail({ basePath = "/user" }: { basePath?:
                         {/* Pronunciation */}
                         <div className="space-y-1">
                           <div className="flex items-center justify-between text-xs font-semibold">
-                            <span className="text-muted-foreground">Pronunciation (Talaffuz)</span>
+                            <span className="text-muted-foreground">{t("dynamic.speakingtopicdetail.pronunciation_talaffuz")}</span>
                             <span className="text-primary">{feedback.pronunciation ?? "N/A"} / 9.0</span>
                           </div>
                           <Progress value={((feedback.pronunciation ?? 0) / 9) * 100} className="h-1.5 bg-muted rounded-full" />
@@ -698,7 +701,7 @@ export default function SpeakingTopicDetail({ basePath = "/user" }: { basePath?:
 
             {/* Right Column: Microphone controls, audio storage and instructions */}
             <Card className="p-6 rounded-2xl shadow-elegant space-y-5 flex flex-col bg-card/60 backdrop-blur-sm border-border/40">
-              <p className="font-bold text-base tracking-tight text-foreground border-b border-border/40 pb-2">Mikrofon va Baholash</p>
+              <p className="font-bold text-base tracking-tight text-foreground border-b border-border/40 pb-2">{t("dynamic.speakingtopicdetail.mikrofon_va_baholash")}</p>
               
               <div className="flex flex-col items-center gap-3 py-6">
                 <button
@@ -767,7 +770,7 @@ export default function SpeakingTopicDetail({ basePath = "/user" }: { basePath?:
                 <div className="flex items-start gap-2.5">
                   <Lightbulb className="h-5 w-5 text-amber-600 shrink-0 mt-0.5 animate-bounce" />
                   <div>
-                    <p className="font-bold text-amber-800 dark:text-amber-400">Amaliy Maslahat (IELTS Tip):</p>
+                    <p className="font-bold text-amber-800 dark:text-amber-400">{t("dynamic.speakingtopicdetail.amaliy_maslahat_ielts_tip")}</p>
                     <p className="italic text-amber-900/80 dark:text-amber-200/80 mt-1 leading-relaxed font-medium">
                       Javobingizni qisqa, tushunarli va tabiiy gapiring. 
                       {partIdx === 1 ? " Part 2 (Cue Card)da kamida 1.5 - 2 daqiqa to'xtamasdan" : " Part 1 va 3da esa 25-45 soniya davomida"} gapirish ko'nikmangizni shakllantiring.
@@ -812,10 +815,10 @@ export default function SpeakingTopicDetail({ basePath = "/user" }: { basePath?:
               {isLoading("vocab") && vocabItems.length === 0 ? (
                 <div className="py-12 grid place-items-center text-muted-foreground space-y-2">
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                  <p className="text-xs font-semibold">IELTS yuqori balli so'z va iboralar yuklanmoqda...</p>
+                  <p className="text-xs font-semibold">{t("dynamic.speakingtopicdetail.ielts_yuqori_balli_so_z_va_iboralar_yukl")}</p>
                 </div>
               ) : vocabItems.length === 0 ? (
-                <p className="text-sm text-muted-foreground italic text-center py-6">Mavzuga oid so'zlar AI tomonidan yuklanmadi.</p>
+                <p className="text-sm text-muted-foreground italic text-center py-6">{t("dynamic.speakingtopicdetail.mavzuga_oid_so_zlar_ai_tomonidan_yuklanm")}</p>
               ) : (
                 <div className="grid sm:grid-cols-2 gap-4">
                   {vocabItems.map((v, i) => (
@@ -826,7 +829,7 @@ export default function SpeakingTopicDetail({ basePath = "/user" }: { basePath?:
                           <Badge variant="outline" className="text-[9px] uppercase font-bold py-0">{v.type}</Badge>
                         )}
                       </div>
-                      <p className="text-xs font-bold text-muted-foreground">Ma'nosi: <span className="font-medium text-foreground">{v.meaning}</span></p>
+                      <p className="text-xs font-bold text-muted-foreground">{t("dynamic.speakingtopicdetail.ma_nosi")}<span className="font-medium text-foreground">{v.meaning}</span></p>
                       <p className="text-xs font-semibold text-muted-foreground italic bg-muted/40 p-2 rounded-lg border">
                         "e.g. {v.example}"
                       </p>
@@ -842,10 +845,10 @@ export default function SpeakingTopicDetail({ basePath = "/user" }: { basePath?:
               {isLoading("ideas") && ideaItems.length === 0 ? (
                 <div className="py-12 grid place-items-center text-muted-foreground space-y-2">
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                  <p className="text-xs font-semibold">IELTS g'oya va argumentlar yuklanmoqda...</p>
+                  <p className="text-xs font-semibold">{t("dynamic.speakingtopicdetail.ielts_g_oya_va_argumentlar_yuklanmoqda")}</p>
                 </div>
               ) : ideaItems.length === 0 ? (
-                <p className="text-sm text-muted-foreground italic text-center py-6">Fikrlar topilmadi.</p>
+                <p className="text-sm text-muted-foreground italic text-center py-6">{t("dynamic.speakingtopicdetail.fikrlar_topilmadi")}</p>
               ) : (
                 <div className="space-y-4">
                   {ideaItems.map((it, i) => (
@@ -870,10 +873,10 @@ export default function SpeakingTopicDetail({ basePath = "/user" }: { basePath?:
               {isLoading("answers") && answerItems.length === 0 ? (
                 <div className="py-12 grid place-items-center text-muted-foreground space-y-2">
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                  <p className="text-xs font-semibold">IELTS turli darajadagi namunaviy javoblar yuklanmoqda...</p>
+                  <p className="text-xs font-semibold">{t("dynamic.speakingtopicdetail.ielts_turli_darajadagi_namunaviy_javobla")}</p>
                 </div>
               ) : answerItems.length === 0 ? (
-                <p className="text-sm text-muted-foreground italic text-center py-6">Namunaviy javoblar topilmadi.</p>
+                <p className="text-sm text-muted-foreground italic text-center py-6">{t("dynamic.speakingtopicdetail.namunaviy_javoblar_topilmadi")}</p>
               ) : (
                 <div className="space-y-4">
                   {answerItems

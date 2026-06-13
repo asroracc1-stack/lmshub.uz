@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/axios";
 import { Button } from "@/components/ui/button";
@@ -44,6 +45,7 @@ const empty: Omit<Plan, "id"> = {
 };
 
 export default function PricingPlansAdmin() {
+  const { t } = useTranslation();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
@@ -87,7 +89,7 @@ const save = async () => {
     const features = featuresText.split("\n").map((s) => s.trim()).filter(Boolean);
     
     if (!form.name.trim()) { 
-      toast.error("Nom kiriting"); 
+      toast.error(t("dynamic.pricingplans.nom_kiriting")); 
       return; 
     }
     
@@ -110,10 +112,10 @@ const save = async () => {
     try {
       if (editing) {
         await api.put(`/admin/pricing-plans/${editing.id}`, payload);
-        toast.success("Plan muvaffaqiyatli yangilandi!");
+        toast.success(t("dynamic.pricingplans.plan_muvaffaqiyatli_yangilandi"));
       } else {
         await api.post("/admin/pricing-plans", payload);
-        toast.success("Yangi reja qo'shildi!");
+        toast.success(t("dynamic.pricingplans.yangi_reja_qo_shildi"));
       }
       setOpen(false);
       load();
@@ -124,10 +126,10 @@ const save = async () => {
   };
 
   const remove = async (id: string) => {
-    if (!confirm("O'chirilsinmi?")) return;
+    if (!confirm(t("dynamic.usersmanager.o_chirilsinmi"))) return;
     try {
       await api.delete(`/admin/pricing-plans/${id}`);
-      toast.success("O'chirildi");
+      toast.success(t("dynamic.usersmanager.o_chirildi"));
       load();
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Xatolik yuz berdi");
@@ -138,10 +140,10 @@ const save = async () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Narxlar (Pricing Plans)</h1>
-          <p className="text-sm text-muted-foreground">Landing sahifasidagi narxlar rejasini boshqarish</p>
+          <h1 className="text-2xl font-bold">{t("dynamic.pricingplans.narxlar_pricing_plans")}</h1>
+          <p className="text-sm text-muted-foreground">{t("dynamic.pricingplans.landing_sahifasidagi_narxlar_rejasini_bo")}</p>
         </div>
-        <Button onClick={openNew}><Plus className="h-4 w-4 mr-2" /> Yangi reja</Button>
+        <Button onClick={openNew}><Plus className="h-4 w-4 mr-2" />{t("dynamic.pricingplans.yangi_reja")}</Button>
       </div>
 
       {loading ? (
@@ -164,15 +166,15 @@ const save = async () => {
               <CardContent className="space-y-3 text-sm">
                 <p className="text-muted-foreground">{p.description}</p>
                 <div className="flex gap-3 text-xs">
-                  <span><b>Oylik:</b> {p.price_monthly}</span>
-                  <span><b>Yillik:</b> {p.price_yearly}</span>
+                  <span><b>{t("dynamic.pricingplans.oylik")}</b> {p.price_monthly}</span>
+                  <span><b>{t("dynamic.pricingplans.yillik")}</b> {p.price_yearly}</span>
                 </div>
                 <ul className="text-xs text-muted-foreground list-disc pl-4 space-y-0.5">
                   {p.features.slice(0, 4).map((f, i) => <li key={i}>{f}</li>)}
                 </ul>
                 <div className="flex gap-2 pt-2">
-                  <Button size="sm" variant="outline" onClick={() => openEdit(p)}><Pencil className="h-3.5 w-3.5 mr-1" />Tahrir</Button>
-                  <Button size="sm" variant="destructive" onClick={() => remove(p.id)}><Trash2 className="h-3.5 w-3.5 mr-1" />O'chir</Button>
+                  <Button size="sm" variant="outline" onClick={() => openEdit(p)}><Pencil className="h-3.5 w-3.5 mr-1" />{t("dynamic.pricingplans.tahrir")}</Button>
+                  <Button size="sm" variant="destructive" onClick={() => remove(p.id)}><Trash2 className="h-3.5 w-3.5 mr-1" />{t("dynamic.pricingplans.o_chir")}</Button>
                 </div>
               </CardContent>
             </Card>
@@ -188,43 +190,43 @@ const save = async () => {
           <div className="grid gap-3">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Nom</Label>
+                <Label>{t("dynamic.pricingplans.nom")}</Label>
                 <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
               </div>
               <div>
-                <Label>Tartib</Label>
+                <Label>{t("dynamic.pricingplans.tartib")}</Label>
                 <Input type="number" value={form.sort_order} onChange={(e) => setForm({ ...form, sort_order: Number(e.target.value) })} />
               </div>
             </div>
             <div>
-              <Label>Tavsif</Label>
+              <Label>{t("dynamic.telegramlinks.tavsif")}</Label>
               <Textarea rows={2} value={form.description || ""} onChange={(e) => setForm({ ...form, description: e.target.value })} />
             </div>
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <Label>Oylik narx</Label>
+                <Label>{t("dynamic.pricingplans.oylik_narx")}</Label>
                 <Input type="number" value={form.price_monthly} onChange={(e) => setForm({ ...form, price_monthly: Number(e.target.value) })} />
               </div>
               <div>
-                <Label>Yillik narx</Label>
+                <Label>{t("dynamic.pricingplans.yillik_narx")}</Label>
                 <Input type="number" value={form.price_yearly} onChange={(e) => setForm({ ...form, price_yearly: Number(e.target.value) })} />
               </div>
               <div>
-                <Label>Valyuta suffix</Label>
+                <Label>{t("dynamic.pricingplans.valyuta_suffix")}</Label>
                 <Input value={form.price_suffix || ""} onChange={(e) => setForm({ ...form, price_suffix: e.target.value })} placeholder="so'm" />
               </div>
             </div>
             <div>
-              <Label>Imkoniyatlar (har biri yangi qatorda)</Label>
+              <Label>{t("dynamic.pricingplans.imkoniyatlar_har_biri_yangi_qatorda")}</Label>
               <Textarea rows={5} value={featuresText} onChange={(e) => setFeaturesText(e.target.value)} placeholder="Cheksiz mock testlar&#10;AI Speaking" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>CTA matni</Label>
+                <Label>{t("dynamic.pricingplans.cta_matni")}</Label>
                 <Input value={form.cta_label} onChange={(e) => setForm({ ...form, cta_label: e.target.value })} />
               </div>
               <div>
-                <Label>CTA havolasi</Label>
+                <Label>{t("dynamic.pricingplans.cta_havolasi")}</Label>
                 <Input value={form.cta_link} onChange={(e) => setForm({ ...form, cta_link: e.target.value })} />
               </div>
             </div>
@@ -234,14 +236,12 @@ const save = async () => {
                 Tavsiya etiladi
               </label>
               <label className="flex items-center gap-2 text-sm">
-                <Switch checked={form.is_active} onCheckedChange={(v) => setForm({ ...form, is_active: v })} />
-                Faol
-              </label>
+                <Switch checked={form.is_active} onCheckedChange={(v) => setForm({ ...form, is_active: v })} />{t("dynamic.usersmanager.faol")}</label>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>Bekor qilish</Button>
-            <Button onClick={save}>Saqlash</Button>
+            <Button variant="outline" onClick={() => setOpen(false)}>{t("dynamic.pricingplans.bekor_qilish")}</Button>
+            <Button onClick={save}>{t("dynamic.usersmanager.saqlash")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

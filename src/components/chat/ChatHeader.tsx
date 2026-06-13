@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import React from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +21,7 @@ export default function ChatHeader({
   getInitials,
   getRoleBadge
 }: ChatHeaderProps) {
+  const { t } = useTranslation();
   return (
     <div className="p-4 border-b border-border/40 flex items-center justify-between bg-muted/20 shrink-0">
       <div className="flex items-center gap-3">
@@ -37,7 +39,7 @@ export default function ChatHeader({
           </div>
           <div className="flex items-center gap-1.5 mt-0.5">
             {typingUsers[activeConversation.id] ? (
-              <span className="text-[10px] text-primary animate-pulse font-medium">Yozmoqda...</span>
+              <span className="text-[10px] text-primary animate-pulse font-medium">{t("dynamic.chatheader.yozmoqda")}</span>
             ) : (
               <>
                 <span className={`h-1.5 w-1.5 rounded-full ${chatPartner && onlineStatus[chatPartner.id]?.online ? "bg-purple-500 animate-pulse" : "bg-muted-foreground"}`} />

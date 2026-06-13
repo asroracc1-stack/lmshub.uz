@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { z } from "zod";
@@ -96,6 +97,7 @@ const passwordSchema = z.object({
 });
 
 export default function Profile() {
+  const { t } = useTranslation();
   const { profile, refresh, setAuth, signOut, role } = useAuth();
   const [successOpen, setSuccessOpen] = useState(false);
   const [twoFAOpen, setTwoFAOpen] = useState(false);
@@ -161,7 +163,7 @@ export default function Profile() {
         if (res.data?.access_token) {
           localStorage.setItem('access_token', res.data.access_token);
         }
-        toast.success("Username yangilandi! Qayta kirish kerak.");
+        toast.success(t("dynamic.profile.username_yangilandi_qayta_kirish_kerak"));
         await new Promise(r => setTimeout(r, 1500));
         await signOut();
       } else {
@@ -196,7 +198,7 @@ export default function Profile() {
         if (res.data?.access_token) {
           localStorage.setItem('access_token', res.data.access_token);
         }
-        toast.success("Parol yangilandi! Qayta kirish kerak.");
+        toast.success(t("dynamic.profile.parol_yangilandi_qayta_kirish_kerak"));
         await new Promise(r => setTimeout(r, 1500));
         await signOut();
       } else {
@@ -237,8 +239,7 @@ export default function Profile() {
           transition={{ duration: 0.5 }}
           className="text-center space-y-2 transition-all duration-500"
         >
-          <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight text-slate-900 dark:text-white">
-            Profil <span className="text-purple-500">sozlamalari</span>
+          <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight text-slate-900 dark:text-white">{t("dynamic.sharedprofile.profil")}<span className="text-purple-500">{t("dynamic.profile.sozlamalari")}</span>
           </h1>
           <p className="text-slate-500 dark:text-slate-400 text-sm md:text-base font-medium">
             Shaxsiy ma'lumotlar va xavfsizlik parametrlarini boshqaring
@@ -275,8 +276,7 @@ export default function Profile() {
                   </h2>
                   <div className="flex items-center gap-2">
                     <span className="inline-flex items-center gap-1 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 px-3 py-1 text-xs font-bold border border-purple-500/20">
-                      <Shield className="h-3.5 w-3.5" /> Super Admin
-                    </span>
+                      <Shield className="h-3.5 w-3.5" />{t("dynamic.superadminlayout.super_admin")}</span>
                   </div>
                 </div>
 
@@ -300,7 +300,7 @@ export default function Profile() {
           <SectionCard icon={UserIcon} title="Shaxsiy ma'lumotlar" desc="Hisob nomi, aloqa kanallari" index={0}>
             <form onSubmit={profileForm.handleSubmit(onUpdateProfile)} className="grid gap-4">
               <div className="grid gap-2">
-                <Label className="text-xs font-bold text-slate-600 dark:text-slate-300">F.I.O</Label>
+                <Label className="text-xs font-bold text-slate-600 dark:text-slate-300">{t("dynamic.profile.fio")}</Label>
                 <Input
                   {...profileForm.register("full_name")}
                   className="h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 transition-all duration-500"
@@ -310,7 +310,7 @@ export default function Profile() {
                 )}
               </div>
               <div className="grid gap-2">
-                <Label className="text-xs font-bold text-slate-600 dark:text-slate-300">Email</Label>
+                <Label className="text-xs font-bold text-slate-600 dark:text-slate-300">{t("dynamic.profile.email")}</Label>
                 <Input
                   type="email"
                   {...profileForm.register("email")}
@@ -321,7 +321,7 @@ export default function Profile() {
                 )}
               </div>
               <div className="grid gap-2">
-                <Label className="text-xs">Telefon</Label>
+                <Label className="text-xs">{t("dynamic.profile.telefon")}</Label>
                 <Input
                   {...profileForm.register("phone")}
                   placeholder="+998..."
@@ -342,7 +342,7 @@ export default function Profile() {
               <div className="mb-3 flex items-start gap-2 rounded-xl border border-amber-400/30 bg-amber-50 dark:bg-amber-950/30 px-3 py-2.5">
                 <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
                 <p className="text-xs text-amber-700 dark:text-amber-300 font-medium">
-                  Username o'zgartirilsa, tizimdan <strong>avtomatik chiqarilasiz</strong>. Yangi username bilan qayta kiring.
+                  Username o'zgartirilsa, tizimdan <strong>{t("dynamic.profile.avtomatik_chiqarilasiz")}</strong>. Yangi username bilan qayta kiring.
                 </p>
               </div>
             )}
@@ -360,7 +360,7 @@ export default function Profile() {
               <Button type="submit" variant="hero" disabled={usernameForm.formState.isSubmitting} className="w-full sm:w-auto">
                 {usernameForm.formState.isSubmitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
                 {isSuperAdmin ? (
-                  <><LogOut className="h-4 w-4 mr-1.5" /> Yangilab chiqish</>
+                  <><LogOut className="h-4 w-4 mr-1.5" />{t("dynamic.profile.yangilab_chiqish")}</>
                 ) : "Yangilash"}
               </Button>
             </form>
@@ -368,7 +368,7 @@ export default function Profile() {
 
           <SectionCard
             icon={Lock}
-            title="Parolni o'zgartirish"
+            title={t("dynamic.sharedprofile.parolni_o_zgartirish")}
             desc="Hisob xavfsizligini yangilab turing"
             index={2}
           >
@@ -376,7 +376,7 @@ export default function Profile() {
               <div className="mb-3 flex items-start gap-2 rounded-xl border border-amber-400/30 bg-amber-50 dark:bg-amber-950/30 px-3 py-2.5">
                 <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
                 <p className="text-xs text-amber-700 dark:text-amber-300 font-medium">
-                  Parol o'zgartirilsa, tizimdan <strong>avtomatik chiqarilasiz</strong>. Yangi parol bilan qayta kiring.
+                  Parol o'zgartirilsa, tizimdan <strong>{t("dynamic.profile.avtomatik_chiqarilasiz")}</strong>. Yangi parol bilan qayta kiring.
                 </p>
               </div>
             )}
@@ -384,7 +384,7 @@ export default function Profile() {
               <div className="grid sm:grid-cols-3 gap-3">
                 {!isSuperAdmin && (
                   <div className="grid gap-2">
-                    <Label className="text-xs font-bold text-slate-600 dark:text-slate-300">Joriy parol</Label>
+                    <Label className="text-xs font-bold text-slate-600 dark:text-slate-300">{t("dynamic.profile.joriy_parol")}</Label>
                     <Input
                       type="password"
                       {...passwordForm.register("current")}
@@ -397,7 +397,7 @@ export default function Profile() {
                   </div>
                 )}
                 <div className="grid gap-2">
-                  <Label className="text-xs font-bold text-slate-600 dark:text-slate-300">Yangi parol</Label>
+                  <Label className="text-xs font-bold text-slate-600 dark:text-slate-300">{t("dynamic.usersmanager.yangi_parol")}</Label>
                   <Input
                     type="password"
                     {...passwordForm.register("next")}
@@ -409,7 +409,7 @@ export default function Profile() {
                   )}
                 </div>
                 <div className="grid gap-2">
-                  <Label className="text-xs font-bold text-slate-600 dark:text-slate-300">Tasdiqlash</Label>
+                  <Label className="text-xs font-bold text-slate-600 dark:text-slate-300">{t("dynamic.profile.tasdiqlash")}</Label>
                   <Input
                     type="password"
                     {...passwordForm.register("confirm")}
@@ -424,7 +424,7 @@ export default function Profile() {
               <Button type="submit" variant="hero" disabled={passwordForm.formState.isSubmitting} className="w-full sm:w-auto">
                 {passwordForm.formState.isSubmitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
                 {isSuperAdmin ? (
-                  <><LogOut className="h-4 w-4 mr-1.5" /> Yangilab chiqish</>
+                  <><LogOut className="h-4 w-4 mr-1.5" />{t("dynamic.profile.yangilab_chiqish")}</>
                 ) : "Parolni saqlash"}
               </Button>
             </form>
@@ -476,14 +476,14 @@ export default function Profile() {
       <Dialog open={twoFAOpen} onOpenChange={setTwoFAOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>2FA Autentifikatsiya</DialogTitle>
+            <DialogTitle>{t("dynamic.profile.2fa_autentifikatsiya")}</DialogTitle>
           </DialogHeader>
           <div className="py-8 text-center space-y-4">
             <div className="h-16 w-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
               <Shield className="h-8 w-8 text-primary" />
             </div>
             <div className="space-y-2">
-              <h3 className="text-xl font-bold">Tez orada...</h3>
+              <h3 className="text-xl font-bold">{t("dynamic.profile.tez_orada")}</h3>
               <p className="text-muted-foreground text-sm">
                 Ikki bosqichli xavfsizlik tizimi keyingi yangilanishlarda qo'shiladi.
               </p>
