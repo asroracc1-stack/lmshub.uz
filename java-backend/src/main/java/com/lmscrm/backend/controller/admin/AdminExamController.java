@@ -8,6 +8,7 @@ import com.lmscrm.backend.service.exam.ExamService;
 import com.lmscrm.backend.service.GeminiService;
 import com.lmscrm.backend.domain.entity.User;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -85,6 +86,7 @@ public class AdminExamController {
 
     @PutMapping("/{examId}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
+    @CacheEvict(cacheNames = {"examDetails", "examsByType"}, allEntries = true)
     public ResponseEntity<ExamDto> updateExam(@PathVariable UUID examId, @RequestBody CreateExamRequest request) {
         return ResponseEntity.ok(examService.updateMockExam(examId, request));
     }
@@ -107,6 +109,7 @@ public class AdminExamController {
 
     @DeleteMapping("/{examId}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
+    @CacheEvict(cacheNames = {"examDetails", "examsByType"}, allEntries = true)
     public ResponseEntity<Void> deleteExam(@PathVariable UUID examId) {
         examService.deleteExam(examId);
         return ResponseEntity.noContent().build();

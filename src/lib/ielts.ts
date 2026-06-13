@@ -47,6 +47,27 @@ export function rawToBand(kind: string, raw: number, total: number): number {
   return 0;
 }
 
+/** SAT scoring: 200–800 per section */
+export function satScore(correct: number, total: number): number {
+  if (total === 0) return 200;
+  return Math.round(200 + (correct / total) * 600);
+}
+
+/** Milliy Sertifikat: 0–100 */
+export function milliyScore(correct: number, total: number): number {
+  if (total === 0) return 0;
+  return Math.round((correct / total) * 100);
+}
+
+/** Returns color class based on accuracy percentage */
+export function scoreLevel(pct: number): { color: string; label: string } {
+  if (pct >= 90) return { color: "text-emerald-500", label: "Ajoyib" };
+  if (pct >= 75) return { color: "text-violet-500", label: "Yaxshi" };
+  if (pct >= 60) return { color: "text-amber-500", label: "O'rtacha" };
+  if (pct >= 40) return { color: "text-orange-500", label: "Zaif" };
+  return { color: "text-rose-500", label: "Qoniqarsiz" };
+}
+
 export function normalizeAnswer(s: string): string {
   return (s ?? "").trim().toLowerCase().replace(/\s+/g, " ").replace(/[.,!?;:'"`]/g, "");
 }

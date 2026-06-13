@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { rawToBand, checkAnswer } from "@/lib/ielts";
+import { rawToBand, checkAnswer, satScore, milliyScore, scoreLevel } from "@/lib/ielts";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import Scratchpad from "@/components/Scratchpad";
@@ -530,10 +530,12 @@ export default function MockTake() {
   const [isPaused, setIsPaused] = useState(false);
   const [showCalculator, setShowCalculator] = useState(false);
   const [showScratchpad, setShowScratchpad] = useState(false);
+  const [showSubmitDialog, setShowSubmitDialog] = useState(false);
   const [grading, setGrading] = useState(false);
+  const [timeSpentSec, setTimeSpentSec] = useState(0);
   const startedAt = useRef<number>(0);
   const questionStartRef = useRef<Record<string, number>>({});
-  const timeSpentRef = useRef<Record<string, number>>({});
+  const timeSpentRef = useRef<Record<string, number>>({}); 
 
   const blocker = useBlocker(
     ({ currentLocation, nextLocation }) =>
@@ -601,6 +603,15 @@ export default function MockTake() {
         setSections(s);
         setQuestions(q);
         setTimeLeft((data.duration_minutes ?? 60) * 60);
+        // Resume saved answers from localStorage
+        try {
+          const saved = localStorage.getItem(`lmshub_exam_${testId}`);
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            setAnswers(parsed);
+            toast.info("Oldingi javoblaringiz tiklandi", { duration: 3000 });
+          }
+        } catch { /* ignore */ }
       })
       .catch((err) => {
         const msg = err?.response?.data?.message ?? err?.message ?? "Exam yuklanmadi";
@@ -609,6 +620,28 @@ export default function MockTake() {
       })
       .finally(() => setLoading(false));
   }, [testId]);
+
+  // ⌨️ Keyboard shortcuts
+  useEffect(() => {
+    if (!started || result) return;
+    const handler = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      if (e.key === "ArrowRight" || e.key === "PageDown") {
+        setSectionIdx(i => Math.min(i + 1, sections.length - 1));
+      } else if (e.key === "ArrowLeft" || e.key === "PageUp") {
+        setSectionIdx(i => Math.max(i - 1, 0));
+      } else if (e.key === "f" || e.key === "F") {
+        const curQ = questions.filter(q => q.section_index === sectionIdx)[0];
+        if (curQ) toggleFlag(curQ.id);
+      } else if (e.key === "Escape") {
+        setShowSubmitDialog(true);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [started, result, sectionIdx, sections.length, questions]);
+
 
   useEffect(() => {
     if (!started || result || isPaused) return;
@@ -625,7 +658,12 @@ export default function MockTake() {
 
   const onAnswer = (qid: string, val: string) => {
     if (!questionStartRef.current[qid]) questionStartRef.current[qid] = Date.now();
-    setAnswers((p) => ({ ...p, [qid]: val }));
+    setAnswers((p) => {
+      const next = { ...p, [qid]: val };
+      // Auto-save to localStorage
+      try { localStorage.setItem(`lmshub_exam_${testId}`, JSON.stringify(next)); } catch { /* ignore */ }
+      return next;
+    });
   };
 
   const trackQuestionTime = (qid: string) => {
@@ -640,12 +678,13 @@ export default function MockTake() {
 
   const submit = async (auto = false) => {
     if (submitting || !exam) return;
-    if (!auto && !window.confirm("Testni topshirmoqchimisiz?")) return;
+    setShowSubmitDialog(false);
 
     setSubmitting(true);
     try {
       Object.keys(questionStartRef.current).forEach(trackQuestionTime);
       const kind = (exam.type ?? "").toLowerCase();
+      const elapsedSec = Math.floor((Date.now() - startedAt.current) / 1000);
 
       const payload = {
         exam_id: exam.id,
@@ -655,7 +694,9 @@ export default function MockTake() {
       };
 
       const res = await api.post("/exams/submit", payload);
-      setResult({ ...res.data, kind });
+      // Clear localStorage on successful submit
+      try { localStorage.removeItem(`lmshub_exam_${testId}`); } catch { /* ignore */ }
+      setResult({ ...res.data, kind, elapsedSec });
       toast.success("Natijangiz hisoblandi!");
     } catch (err: any) {
       console.error("Submission error:", err);
@@ -663,6 +704,11 @@ export default function MockTake() {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleSubmitRequest = (auto = false) => {
+    if (auto) { submit(true); return; }
+    setShowSubmitDialog(true);
   };
 
   if (grading) return (
@@ -703,15 +749,38 @@ export default function MockTake() {
   );
 
   const kind = (exam.type ?? "").toLowerCase();
+  const isSat = kind === "sat";
+  const isMilliy = kind === "national_cert" || kind === "milliy";
 
   if (result) {
     const isExam = result.kind !== "writing" && result.kind !== "speaking";
     const band = result.bandScore ?? result.band ?? 0;
     
-    // Calculate 100-point scale
-    const totalCount = result.total || questions.length || 40;
+    // Universal counts
+    const totalCount = result.total || questions.length || 1;
     const correctCount = result.correct ?? 0;
-    const score100 = Math.round((correctCount / Math.max(totalCount, 1)) * 100);
+    const accuracy = Math.round((correctCount / Math.max(totalCount, 1)) * 100);
+
+    // Score by exam type
+    const satPts = satScore(correctCount, totalCount);
+    const milliyPts = milliyScore(correctCount, totalCount);
+    const score100 = accuracy;
+    const { color: lvlColor, label: lvlLabel } = scoreLevel(accuracy);
+
+    // Time spent
+    const elapsedSec = result.elapsedSec ?? 0;
+    const elapsedMin = Math.floor(elapsedSec / 60);
+    const elapsedSecRem = elapsedSec % 60;
+    const timeStr = `${elapsedMin}:${String(elapsedSecRem).padStart(2, "0")}`;
+
+    // Section performance
+    const sectionPerf = sections.map((sec, sIdx) => {
+      const secQs = questions.filter(q => q.section_index === sIdx);
+      const secCorrect = result.detail
+        ? result.detail.filter((d: any) => secQs.some(q => q.id === d.questionId) && d.ok).length
+        : 0;
+      return { title: sec.title || `Section ${sIdx + 1}`, correct: secCorrect, total: secQs.length };
+    }).filter(s => s.total > 0);
 
     // Filter incorrect questions
     const incorrectDetails = result.detail ? result.detail.filter((d: any) => !d.ok) : [];
@@ -828,64 +897,100 @@ export default function MockTake() {
           {/* 📊 TAB 1: OVERVIEW */}
           <TabsContent value="overview" className="space-y-6 outline-none">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Score Display Card */}
+              {/* MAIN SCORE CARD — type-aware */}
               <Card className="p-6 flex flex-col items-center justify-center border-slate-200 dark:border-white/5 bg-white dark:bg-slate-900/40 shadow-md rounded-2xl">
-                <p className="text-xs uppercase font-extrabold text-slate-400 dark:text-slate-500 tracking-wider mb-6">IELTS BAND SCORE</p>
-                <div className="relative h-44 w-44 flex items-center justify-center">
-                  <svg className="h-full w-full -rotate-90">
-                    <circle
-                      cx="88" cy="88" r="76"
-                      fill="transparent"
-                      stroke="currentColor"
-                      strokeWidth="10"
-                      className="text-slate-100 dark:text-white/5"
-                    />
-                    <circle
-                      cx="88" cy="88" r="76"
-                      fill="transparent"
-                      stroke="currentColor"
-                      strokeWidth="10"
-                      strokeDasharray={477}
-                      strokeDashoffset={477 - (477 * (Number(band) || 0)) / 9}
-                      strokeLinecap="round"
-                      className="text-purple-500 dark:text-purple-400 transition-all duration-1000 ease-out"
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-5xl font-display font-black text-slate-800 dark:text-white">
-                      {band || "0.0"}
-                    </span>
-                    <span className="text-[8px] sm:text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1 text-center px-2">
-                      {result.kind.replace("_", " ")}
-                    </span>
-                  </div>
-                </div>
+                {isSat ? (
+                  // SAT Score: 200-800
+                  <>
+                    <p className="text-xs uppercase font-extrabold text-slate-400 dark:text-slate-500 tracking-wider mb-6">SAT BALL</p>
+                    <div className="relative h-44 w-44 flex items-center justify-center">
+                      <svg className="h-full w-full -rotate-90">
+                        <circle cx="88" cy="88" r="76" fill="transparent" stroke="currentColor" strokeWidth="10" className="text-slate-100 dark:text-white/5" />
+                        <circle cx="88" cy="88" r="76" fill="transparent" stroke="currentColor" strokeWidth="10"
+                          strokeDasharray={477}
+                          strokeDashoffset={477 - (477 * (satPts - 200)) / 600}
+                          strokeLinecap="round"
+                          className="text-blue-500 dark:text-blue-400 transition-all duration-1000 ease-out"
+                        />
+                      </svg>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center">
+                        <span className="text-4xl font-display font-black text-slate-800 dark:text-white">{satPts}</span>
+                        <span className="text-xs font-bold text-slate-400 dark:text-slate-500 mt-1">/ 800</span>
+                      </div>
+                    </div>
+                  </>
+                ) : isMilliy ? (
+                  // Milliy: 0-100
+                  <>
+                    <p className="text-xs uppercase font-extrabold text-slate-400 dark:text-slate-500 tracking-wider mb-6">MILLIY SERTIFIKAT BALI</p>
+                    <div className="relative h-44 w-44 flex items-center justify-center">
+                      <svg className="h-full w-full -rotate-90">
+                        <circle cx="88" cy="88" r="76" fill="transparent" stroke="currentColor" strokeWidth="10" className="text-slate-100 dark:text-white/5" />
+                        <circle cx="88" cy="88" r="76" fill="transparent" stroke="currentColor" strokeWidth="10"
+                          strokeDasharray={477}
+                          strokeDashoffset={477 - (477 * milliyPts) / 100}
+                          strokeLinecap="round"
+                          className={cn("transition-all duration-1000 ease-out", milliyPts >= 60 ? "text-emerald-500" : milliyPts >= 40 ? "text-amber-500" : "text-rose-500")}
+                        />
+                      </svg>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center">
+                        <span className="text-4xl font-display font-black text-slate-800 dark:text-white">{milliyPts}</span>
+                        <span className="text-xs font-bold text-slate-400 dark:text-slate-500 mt-1">/ 100 ball</span>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  // IELTS Band
+                  <>
+                    <p className="text-xs uppercase font-extrabold text-slate-400 dark:text-slate-500 tracking-wider mb-6">IELTS BAND SCORE</p>
+                    <div className="relative h-44 w-44 flex items-center justify-center">
+                      <svg className="h-full w-full -rotate-90">
+                        <circle cx="88" cy="88" r="76" fill="transparent" stroke="currentColor" strokeWidth="10" className="text-slate-100 dark:text-white/5" />
+                        <circle cx="88" cy="88" r="76" fill="transparent" stroke="currentColor" strokeWidth="10"
+                          strokeDasharray={477}
+                          strokeDashoffset={477 - (477 * (Number(band) || 0)) / 9}
+                          strokeLinecap="round"
+                          className="text-purple-500 dark:text-purple-400 transition-all duration-1000 ease-out"
+                        />
+                      </svg>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center">
+                        <span className="text-5xl font-display font-black text-slate-800 dark:text-white">{band || "0.0"}</span>
+                        <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1 text-center px-2">
+                          {result.kind.replace("_", " ")}
+                        </span>
+                      </div>
+                    </div>
+                  </>
+                )}
               </Card>
 
-              {/* 100-Point Scale Card */}
+              {/* STATS CARD: accuracy, correct, wrong, time */}
               <Card className="p-6 flex flex-col justify-between border-slate-200 dark:border-white/5 bg-white dark:bg-slate-900/40 shadow-md rounded-2xl">
                 <div>
-                  <p className="text-xs uppercase font-extrabold text-slate-400 dark:text-slate-500 tracking-wider mb-4">100 BALLIK SHKALA</p>
+                  <p className="text-xs uppercase font-extrabold text-slate-400 dark:text-slate-500 tracking-wider mb-4">NATIJA STATISTIKASI</p>
                   <div className="flex items-baseline gap-2 mb-2">
-                    <span className="text-6xl font-display font-black text-slate-800 dark:text-white">{score100}</span>
-                    <span className="text-xl font-bold text-slate-400 dark:text-slate-500">/ 100 ball</span>
+                    <span className={cn("text-6xl font-display font-black", lvlColor)}>{accuracy}</span>
+                    <span className="text-xl font-bold text-slate-400 dark:text-slate-500">% aniqlik</span>
                   </div>
-                  <Progress value={score100} className="h-3.5 bg-slate-100 dark:bg-white/10 rounded-full" />
+                  <Progress value={accuracy} className="h-3 bg-slate-100 dark:bg-white/10 rounded-full mb-1" />
+                  <p className={cn("text-xs font-bold mt-1", lvlColor)}>{lvlLabel}</p>
                 </div>
 
                 {isExam ? (
-                  <div className="grid grid-cols-3 gap-3 mt-6 pt-4 border-t border-slate-100 dark:border-white/5">
+                  <div className="grid grid-cols-3 gap-3 mt-4 pt-4 border-t border-slate-100 dark:border-white/5">
                     <div className="text-center">
                       <p className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">To'g'ri</p>
-                      <p className="text-xl font-black text-purple-500 mt-0.5">{correctCount}</p>
+                      <p className="text-xl font-black text-emerald-500 mt-0.5">{correctCount}</p>
                     </div>
                     <div className="text-center">
                       <p className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">Noto'g'ri</p>
                       <p className="text-xl font-black text-rose-500 mt-0.5">{incorrectDetails.length}</p>
                     </div>
                     <div className="text-center">
-                      <p className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">Jami</p>
-                      <p className="text-xl font-black text-slate-700 dark:text-slate-350 mt-0.5">{totalCount}</p>
+                      <p className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">Vaqt</p>
+                      <p className="text-sm font-black text-slate-700 dark:text-slate-300 mt-0.5 flex items-center justify-center gap-1">
+                        <Clock className="h-3.5 w-3.5" />{timeStr}
+                      </p>
                     </div>
                   </div>
                 ) : (
@@ -895,6 +1000,28 @@ export default function MockTake() {
                 )}
               </Card>
             </div>
+
+            {/* SECTION PERFORMANCE */}
+            {sectionPerf.length > 1 && (
+              <Card className="p-6 border-slate-200 dark:border-white/5 bg-white dark:bg-slate-900/40 shadow-md rounded-2xl">
+                <p className="text-xs uppercase font-extrabold text-slate-400 dark:text-slate-500 tracking-wider mb-4">BO'LIM NATIJALARI</p>
+                <div className="space-y-3">
+                  {sectionPerf.map((sec, i) => {
+                    const pct = Math.round((sec.correct / Math.max(sec.total, 1)) * 100);
+                    const { color } = scoreLevel(pct);
+                    return (
+                      <div key={i}>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 truncate max-w-[60%]">{sec.title}</span>
+                          <span className={cn("text-sm font-black", color)}>{sec.correct}/{sec.total} ({pct}%)</span>
+                        </div>
+                        <Progress value={pct} className="h-2 bg-slate-100 dark:bg-white/10 rounded-full" />
+                      </div>
+                    );
+                  })}
+                </div>
+              </Card>
+            )}
 
             {/* Motivational message banner */}
             <Card className={cn("p-6 border rounded-2xl flex items-start gap-4 shadow-sm", motivationColor)}>
@@ -1156,7 +1283,7 @@ export default function MockTake() {
         <Card className="p-4 space-y-2">
           <Textarea rows={16} value={writingAnswer} onChange={(e) => setWritingAnswer(e.target.value)} placeholder="Javobingizni yozing..." />
         </Card>
-        <Button size="lg" className="w-full" onClick={() => submit()} disabled={submitting}>
+        <Button size="lg" className="w-full" onClick={() => handleSubmitRequest()} disabled={submitting}>
           {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}Topshirish
         </Button>
       </div>
@@ -1306,7 +1433,7 @@ export default function MockTake() {
           {/* Direct Submit Button */}
           <Button
             size="sm"
-            onClick={() => submit()}
+            onClick={() => handleSubmitRequest()}
             disabled={submitting}
             className="bg-purple-500 hover:bg-purple-600 active:scale-95 text-white font-extrabold px-4 md:px-5 py-2 md:py-2.5 rounded-xl transition-all shadow-md shadow-purple-500/10 shrink-0 text-[11px] md:text-xs tracking-tight"
           >
@@ -1679,7 +1806,7 @@ export default function MockTake() {
 
           <Button
             size="default"
-            onClick={() => submit()}
+            onClick={() => handleSubmitRequest()}
             disabled={submitting}
             className="shrink-0 bg-slate-900 dark:bg-white text-white dark:text-slate-950 font-black rounded-xl hover:scale-105 active:scale-95 transition-all shadow-md px-6 h-10 text-xs tracking-tight"
           >
@@ -1747,6 +1874,38 @@ export default function MockTake() {
 
       {/* 📝 FLOATING SCRATCHPAD (DRAWING BOARD) */}
       <Scratchpad isOpen={showScratchpad} onClose={() => setShowScratchpad(false)} />
+
+      {/* ✅ SUBMIT CONFIRMATION DIALOG */}
+      <AlertDialog open={showSubmitDialog} onOpenChange={setShowSubmitDialog}>
+        <AlertDialogContent className="rounded-2xl border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 shadow-2xl max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-display font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+              <CheckCircle2 className="h-6 w-6 text-purple-500" />
+              Testni topshirmoqchimisiz?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-500 dark:text-slate-400 text-sm mt-2 space-y-1">
+              <span className="block">Javob berilgan savollar: <strong className="text-slate-700 dark:text-slate-200">{Object.keys(answers).length}</strong> / {questions.length}</span>
+              {questions.length - Object.keys(answers).length > 0 && (
+                <span className="block text-amber-600 dark:text-amber-400 font-semibold">
+                  ⚠️ {questions.length - Object.keys(answers).length} ta savol javobsiz qolmoqda
+                </span>
+              )}
+              <span className="block pt-1">Testni topshirgandan keyin javoblarni o'zgartirib bo'lmaydi.</span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 mt-2">
+            <AlertDialogCancel className="rounded-xl font-bold">Bekor qilish</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => submit(false)}
+              disabled={submitting}
+              className="bg-purple-600 hover:bg-purple-700 text-white font-extrabold rounded-xl px-6"
+            >
+              {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2 inline" /> : null}
+              Topshirish ✓
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
     </div>
   );
