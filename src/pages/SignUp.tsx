@@ -58,8 +58,8 @@ function strengthOf(pwd: string) {
     "bg-destructive",
     "bg-orange-500",
     "bg-yellow-500",
-    "bg-emerald-500",
-    "bg-cyan-400",
+    "bg-purple-500",
+    "bg-fuchsia-400",
   ];
   return { score: s, label: labels[s], color: colors[s] };
 }
@@ -189,14 +189,14 @@ export default function SignUp() {
   };
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden bg-[#0a0a14] text-foreground">
+    <div className="relative min-h-screen w-full overflow-hidden bg-[#0B0714] text-foreground">
       {/* Background — premium gradient + glow blobs + grid */}
       <div className="absolute inset-0 -z-10">
         <div
           className="absolute inset-0"
           style={{
             background:
-              "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(99,102,241,0.18), transparent 60%), radial-gradient(ellipse 70% 50% at 80% 100%, rgba(34,211,238,0.12), transparent 60%), #0a0a14",
+              "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(159,134,192,0.18), transparent 60%), radial-gradient(ellipse 70% 50% at 80% 100%, rgba(231,198,255,0.12), transparent 60%), #0B0714",
           }}
         />
         <div
@@ -211,13 +211,13 @@ export default function SignUp() {
         />
         <motion.div
           className="absolute -top-40 -left-40 h-[480px] w-[480px] rounded-full blur-3xl"
-          style={{ background: "rgba(99,102,241,0.35)" }}
+          style={{ background: "rgba(159,134,192,0.35)" }}
           animate={{ scale: [1, 1.15, 1], opacity: [0.5, 0.8, 0.5] }}
           transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
         />
         <motion.div
           className="absolute -bottom-40 -right-40 h-[520px] w-[520px] rounded-full blur-3xl"
-          style={{ background: "rgba(34,211,238,0.30)" }}
+          style={{ background: "rgba(36,0,70,0.4)" }}
           animate={{ scale: [1.1, 1, 1.1], opacity: [0.4, 0.7, 0.4] }}
           transition={{ duration: 11, repeat: Infinity, ease: "easeInOut" }}
         />
@@ -264,7 +264,7 @@ export default function SignUp() {
               className="pointer-events-none absolute inset-0 rounded-3xl"
               style={{
                 background:
-                  "linear-gradient(135deg, rgba(99,102,241,0.25), transparent 40%, rgba(34,211,238,0.20))",
+                  "linear-gradient(135deg, rgba(159,134,192,0.25), transparent 40%, rgba(36,0,70,0.30))",
                 mask: "linear-gradient(black, black) content-box, linear-gradient(black, black)",
                 WebkitMask:
                   "linear-gradient(black, black) content-box, linear-gradient(black, black)",
@@ -278,7 +278,7 @@ export default function SignUp() {
               <div className="mb-7 flex flex-col items-center">
                 <BrandLogo size={64} className="mb-4" />
                 <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11px] font-medium text-white/70">
-                  <Sparkles className="h-3 w-3 text-cyan-400" />
+                  <Sparkles className="h-3 w-3 text-fuchsia-400" />
                   Premium ro'yxatdan o'tish
                 </div>
               </div>
@@ -412,11 +412,7 @@ export default function SignUp() {
                       <Button
                         type="submit"
                         disabled={submitting}
-                        className="group relative h-12 w-full overflow-hidden rounded-xl border-0 text-sm font-semibold text-white shadow-[0_8px_32px_-8px_rgba(99,102,241,0.6)] transition-all hover:shadow-[0_12px_40px_-8px_rgba(99,102,241,0.8)]"
-                        style={{
-                          background:
-                            "linear-gradient(135deg, #6366f1, #22d3ee)",
-                        }}
+                        className="group relative h-12 w-full overflow-hidden rounded-xl border-0 text-sm font-semibold text-white transition-all hover:shadow-glow-purple bg-gradient-premium"
                       >
                         {submitting ? (
                           <>
@@ -435,7 +431,7 @@ export default function SignUp() {
                         Allaqachon akkauntingiz bormi?{" "}
                         <Link
                           to="/auth"
-                          className="font-medium text-cyan-300 hover:text-cyan-200"
+                          className="font-medium text-fuchsia-300 hover:text-fuchsia-200"
                         >
                           Kirish
                         </Link>
@@ -468,9 +464,9 @@ export default function SignUp() {
                           border: "1px solid rgba(255,255,255,0.1)",
                         }}
                       >
-                        <Mail className="h-7 w-7 text-cyan-300" />
+                        <Mail className="h-7 w-7 text-fuchsia-300" />
                       </motion.div>
-                      <h1 className="bg-gradient-to-br from-white to-cyan-200 bg-clip-text text-2xl font-bold text-transparent">
+                      <h1 className="bg-gradient-to-br from-white to-fuchsia-200 bg-clip-text text-2xl font-bold text-transparent">
                         Emailingizni tekshiring
                       </h1>
                       <p className="mt-2 text-sm text-white/60">
@@ -496,7 +492,7 @@ export default function SignUp() {
                             <InputOTPSlot
                               key={i}
                               index={i}
-                              className="h-14 w-12 rounded-xl border border-white/10 bg-white/[0.04] text-xl font-bold text-white first:rounded-l-xl last:rounded-r-xl data-[active=true]:border-cyan-400/60 data-[active=true]:ring-2 data-[active=true]:ring-cyan-400/30"
+                              className="h-14 w-12 rounded-xl border border-white/10 bg-white/[0.04] text-xl font-bold text-white first:rounded-l-xl last:rounded-r-xl data-[active=true]:border-fuchsia-400/60 data-[active=true]:ring-2 data-[active=true]:ring-fuchsia-400/30"
                             />
                           ))}
                         </InputOTPGroup>
@@ -550,7 +546,7 @@ export default function SignUp() {
                         stiffness: 200,
                         damping: 12,
                       }}
-                      className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-cyan-400 shadow-[0_0_60px_rgba(34,211,238,0.5)]"
+                      className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-purple-400 to-fuchsia-400 shadow-[0_0_60px_rgba(34,211,238,0.5)]"
                     >
                       <CheckCircle2 className="h-10 w-10 text-white" />
                     </motion.div>
@@ -565,7 +561,7 @@ export default function SignUp() {
               </AnimatePresence>
 
               <div className="mt-6 flex items-center justify-center gap-2 text-[11px] text-white/40">
-                <ShieldCheck className="h-3 w-3 text-emerald-400/70" />
+                <ShieldCheck className="h-3 w-3 text-purple-400/70" />
                 Ma'lumotlaringiz shifrlangan holda himoyalangan
               </div>
             </div>

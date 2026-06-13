@@ -8,9 +8,10 @@ interface BrandLogoProps {
   size?: number;
   src?: string | null;
   isOrganization?: boolean;
+  variant?: "dark" | "light" | "monochrome";
 }
 
-export default function BrandLogo({ className, size = 36, src, isOrganization = true }: BrandLogoProps) {
+export default function BrandLogo({ className, size = 36, src, isOrganization = true, variant }: BrandLogoProps) {
   // Cache busting for dynamic logos
   const logoSrc = src ? (src.startsWith("http") ? `${src}?t=${Date.now()}` : src) : null;
 
@@ -20,7 +21,7 @@ export default function BrandLogo({ className, size = 36, src, isOrganization = 
         <Logo 
           size={size} 
           className={className} 
-          variant="dark" 
+          variant={variant} 
         />
       );
     }

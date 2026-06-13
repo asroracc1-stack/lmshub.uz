@@ -8,7 +8,7 @@ export default function Scratchpad({ isOpen, onClose }: { isOpen: boolean; onClo
   const containerRef = useRef<HTMLDivElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [mode, setMode] = useState<"pen" | "eraser">("pen");
-  const [color, setColor] = useState("#10b981");
+  const [color, setColor] = useState("#9F86C0");
   const [lineWidth, setLineWidth] = useState(3);
   const [size, setSize] = useState({ w: 500, h: 400 });
   const resizing = useRef(false);
@@ -151,7 +151,7 @@ export default function Scratchpad({ isOpen, onClose }: { isOpen: boolean; onClo
           {/* Footer */}
           <div className="h-11 border-t border-slate-200 dark:border-white/5 bg-slate-50/60 dark:bg-slate-900/60 flex items-center px-3 gap-3 justify-between shrink-0">
             <div className="flex items-center gap-1.5">
-              {["#10b981", "#3b82f6", "#8b5cf6", "#ef4444", "#f59e0b", "#1e293b", "#ffffff"].map(c => (
+              {["#9F86C0", "#3b82f6", "#8b5cf6", "#ef4444", "#f59e0b", "#1e293b", "#ffffff"].map(c => (
                 <button key={c} onClick={() => { setColor(c); setMode("pen"); }}
                   className="h-5 w-5 rounded-full transition-transform hover:scale-110 border-2"
                   style={{

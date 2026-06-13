@@ -47,7 +47,7 @@ export interface AuditLogItem {
 
 const getActionIcon = (action: string) => {
   switch (action) {
-    case 'CREATE': return <PlusCircle className="h-4 w-4 text-emerald-500" />;
+    case 'CREATE': return <PlusCircle className="h-4 w-4 text-purple-500" />;
     case 'UPDATE': return <Edit className="h-4 w-4 text-blue-500" />;
     case 'DELETE': return <Trash2 className="h-4 w-4 text-red-500" />;
     case 'LOGIN': return <LogIn className="h-4 w-4 text-purple-500" />;
@@ -167,9 +167,9 @@ export default function SuperAdminDashboard() {
     { label: "Adminlar", value: stats.admins, icon: UserCog, accent: "from-secondary to-accent" },
     { label: "Administratorlar", value: stats.administrators, icon: UserCog, accent: "from-primary to-accent" },
     { label: "Ota-onalar", value: stats.parents, icon: Heart, accent: "from-pink-500 to-rose-500" },
-    { label: "Guruhlar", value: stats.groups, icon: Users2, accent: "from-emerald-400 to-teal-500" },
-    { label: "Fanlar", value: stats.totalSubjects, icon: BookOpen, accent: "from-teal-400 to-emerald-500" },
-    { label: "Oddiy Userlar", value: stats.users, icon: Users, accent: "from-blue-500 to-cyan-500" },
+    { label: "Guruhlar", value: stats.groups, icon: Users2, accent: "from-purple-400 to-violet-500" },
+    { label: "Fanlar", value: stats.totalSubjects, icon: BookOpen, accent: "from-violet-400 to-purple-500" },
+    { label: "Oddiy Userlar", value: stats.users, icon: Users, accent: "from-blue-500 to-fuchsia-500" },
   ];
 
   const roleDistribution = [
@@ -231,19 +231,19 @@ export default function SuperAdminDashboard() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: cards.length * 0.05 }}
-          className="glass rounded-2xl p-4 md:p-5 hover:border-emerald-500/40 transition-smooth flex flex-col justify-between"
+          className="glass rounded-2xl p-4 md:p-5 hover:border-purple-500/40 transition-smooth flex flex-col justify-between"
         >
           <div>
             <div className="flex items-start justify-between">
-              <div className="h-9 w-9 md:h-10 md:w-10 rounded-xl bg-gradient-premium grid place-items-center shadow-glow-emerald">
+              <div className="h-9 w-9 md:h-10 md:w-10 rounded-xl bg-gradient-premium grid place-items-center shadow-glow-purple">
                 <Server className="h-4 w-4 md:h-5 md:w-5 text-white" />
               </div>
-              <div className="flex items-center gap-1.5 bg-emerald-500/10 px-2 py-1 rounded-full border border-emerald-500/20">
+              <div className="flex items-center gap-1.5 bg-purple-500/10 px-2 py-1 rounded-full border border-purple-500/20">
                 <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span>
                 </span>
-                <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Online</span>
+                <span className="text-[9px] font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider">Online</span>
               </div>
             </div>
             <p className="mt-3 md:mt-4 text-[10px] md:text-xs uppercase tracking-wider text-slate-600 dark:text-muted-foreground line-clamp-1">Server holati</p>
@@ -262,12 +262,12 @@ export default function SuperAdminDashboard() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: (cards.length + 1) * 0.05 }}
-          className="glass rounded-2xl p-4 md:p-5 hover:border-emerald-500/40 transition-smooth flex flex-col justify-between relative overflow-hidden"
+          className="glass rounded-2xl p-4 md:p-5 hover:border-purple-500/40 transition-smooth flex flex-col justify-between relative overflow-hidden"
         >
-          <div className="absolute -right-4 -top-4 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl" />
+          <div className="absolute -right-4 -top-4 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl" />
           <div>
             <div className="flex items-start justify-between">
-              <div className="h-9 w-9 md:h-10 md:w-10 rounded-xl bg-gradient-premium grid place-items-center shadow-glow-emerald">
+              <div className="h-9 w-9 md:h-10 md:w-10 rounded-xl bg-gradient-premium grid place-items-center shadow-glow-purple">
                 <Zap className="h-4 w-4 md:h-5 md:w-5 text-white" />
               </div>
             </div>
@@ -277,7 +277,7 @@ export default function SuperAdminDashboard() {
             <Skeleton className="h-8 w-1/3 mt-1" />
           ) : (
             <div className="flex items-baseline gap-1 mt-1">
-              <p className="font-display text-2xl md:text-3xl font-bold text-emerald-500">{healthData?.activeSessions || 0}</p>
+              <p className="font-display text-2xl md:text-3xl font-bold text-purple-500">{healthData?.activeSessions || 0}</p>
               <span className="text-[10px] font-semibold text-muted-foreground">kishi</span>
             </div>
           )}
@@ -288,11 +288,11 @@ export default function SuperAdminDashboard() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: (cards.length + 2) * 0.05 }}
-          className="glass rounded-2xl p-4 md:p-5 hover:border-emerald-500/40 transition-smooth flex flex-col items-center justify-center cursor-pointer group"
+          className="glass rounded-2xl p-4 md:p-5 hover:border-purple-500/40 transition-smooth flex flex-col items-center justify-center cursor-pointer group"
           onClick={() => clearCacheMutation.mutate()}
         >
-          <div className="h-10 w-10 md:h-12 md:w-12 rounded-full bg-emerald-500/10 flex items-center justify-center group-hover:bg-emerald-500/20 transition-colors mb-2">
-            <RefreshCw className={`h-5 w-5 text-emerald-500 ${clearCacheMutation.isPending ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'}`} />
+          <div className="h-10 w-10 md:h-12 md:w-12 rounded-full bg-purple-500/10 flex items-center justify-center group-hover:bg-purple-500/20 transition-colors mb-2">
+            <RefreshCw className={`h-5 w-5 text-purple-500 ${clearCacheMutation.isPending ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'}`} />
           </div>
           <p className="text-xs md:text-sm font-bold text-center">Tizimni<br/>yangilash</p>
           <p className="text-[9px] text-muted-foreground mt-1 text-center">Keshni tozalash</p>
@@ -388,7 +388,7 @@ export default function SuperAdminDashboard() {
               <h3 className="font-display text-lg font-semibold">Top tashkilotlar</h3>
               <p className="text-xs text-muted-foreground mt-0.5">Foydalanuvchilar soni bo'yicha reyting</p>
             </div>
-            <Building2 className="h-5 w-5 text-emerald-500" />
+            <Building2 className="h-5 w-5 text-purple-500" />
           </div>
           {loading ? (
             <div className="space-y-4">
@@ -405,7 +405,7 @@ export default function SuperAdminDashboard() {
                 const max = Math.max(...topOrgs.map((o) => o.users), 1);
                 const pct = Math.round((org.users / max) * 100);
                 const colors = [
-                  "from-emerald-500 to-teal-400",
+                  "from-purple-500 to-violet-400",
                   "from-sky-500 to-blue-400",
                   "from-violet-500 to-purple-400",
                   "from-amber-500 to-yellow-400",

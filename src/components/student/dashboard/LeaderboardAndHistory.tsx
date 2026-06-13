@@ -18,7 +18,7 @@ export default function LeaderboardAndHistory({ data }: LeaderboardAndHistoryPro
         <Card className="p-5 rounded-3xl shadow-sm border-slate-100 h-full flex flex-col">
           <div className="flex justify-between items-center mb-5">
             <h3 className="font-bold text-slate-900">Peshqadamlar</h3>
-            <button className="text-[10px] text-emerald-600 font-medium flex items-center gap-1 hover:underline">
+            <button className="text-[10px] text-purple-600 font-medium flex items-center gap-1 hover:underline">
               Barchasini ko'rish <ArrowRight className="h-3 w-3" />
             </button>
           </div>
@@ -27,7 +27,7 @@ export default function LeaderboardAndHistory({ data }: LeaderboardAndHistoryPro
             {data.leaderboard.map((user) => (
               <div 
                 key={user.rank} 
-                className={`flex items-center gap-3 p-2 rounded-xl transition-colors ${user.isCurrentUser ? 'bg-emerald-50 border border-emerald-100' : 'hover:bg-slate-50'}`}
+                className={`flex items-center gap-3 p-2 rounded-xl transition-colors ${user.isCurrentUser ? 'bg-purple-50 border border-purple-100' : 'hover:bg-slate-50'}`}
               >
                 <div className="w-5 text-center shrink-0">
                   <span className={`text-xs font-bold ${user.rank <= 3 ? 'text-amber-500' : 'text-slate-400'}`}>
@@ -43,13 +43,13 @@ export default function LeaderboardAndHistory({ data }: LeaderboardAndHistoryPro
                 </Avatar>
                 
                 <div className="flex-1 min-w-0">
-                  <p className={`text-xs truncate ${user.isCurrentUser ? 'font-bold text-emerald-700' : 'font-medium text-slate-700'}`}>
+                  <p className={`text-xs truncate ${user.isCurrentUser ? 'font-bold text-purple-700' : 'font-medium text-slate-700'}`}>
                     {user.name}
                   </p>
                 </div>
                 
                 <div className="shrink-0 text-right">
-                  <p className={`text-xs font-bold ${user.isCurrentUser ? 'text-emerald-600' : 'text-slate-600'}`}>
+                  <p className={`text-xs font-bold ${user.isCurrentUser ? 'text-purple-600' : 'text-slate-600'}`}>
                     Band {user.bandScore.toFixed(1)}
                   </p>
                 </div>
@@ -64,7 +64,7 @@ export default function LeaderboardAndHistory({ data }: LeaderboardAndHistoryPro
         <Card className="p-5 rounded-3xl shadow-sm border-slate-100 h-full flex flex-col">
           <div className="flex justify-between items-center mb-5">
             <h3 className="font-bold text-slate-900">So'nggi testlar</h3>
-            <button className="text-[10px] text-emerald-600 font-medium flex items-center gap-1 hover:underline">
+            <button className="text-[10px] text-purple-600 font-medium flex items-center gap-1 hover:underline">
               Barchasini ko'rish <ArrowRight className="h-3 w-3" />
             </button>
           </div>
@@ -72,8 +72,8 @@ export default function LeaderboardAndHistory({ data }: LeaderboardAndHistoryPro
           <div className="flex-1 space-y-4">
             {data.recentTests.map((test) => (
               <div key={test.id} className="flex items-center gap-3 p-1">
-                <div className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center shrink-0">
-                  <FileText className="h-4 w-4 text-emerald-600" />
+                <div className="w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center shrink-0">
+                  <FileText className="h-4 w-4 text-purple-600" />
                 </div>
                 
                 <div className="flex-1 min-w-0">

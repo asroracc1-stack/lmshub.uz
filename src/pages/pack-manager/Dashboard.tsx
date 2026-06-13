@@ -72,7 +72,7 @@ export default function PackManagerDashboard() {
     </Card>
   );
 
-  if (loading) return <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-emerald-500" /></div>;
+  if (loading) return <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-purple-500" /></div>;
 
   return (
     <div className="space-y-6 w-full">
@@ -81,18 +81,18 @@ export default function PackManagerDashboard() {
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
         <Stat icon={Wallet} label="Jami to'lovlar" value={stats.total} color="from-blue-500/10 to-blue-500/5" />
         <Stat icon={Clock} label="Kutilayotgan" value={stats.pending} color="from-amber-500/15 to-amber-500/5" />
-        <Stat icon={CheckCircle2} label="Tasdiqlangan" value={stats.paid} color="from-emerald-500/15 to-emerald-500/5" />
+        <Stat icon={CheckCircle2} label="Tasdiqlangan" value={stats.paid} color="from-purple-500/15 to-purple-500/5" />
         <Stat icon={AlertTriangle} label="Rad etilgan" value={stats.rejected} color="from-rose-500/10 to-rose-500/5" />
         <Stat icon={Crown} label="Faol obunalar" value={stats.activeSubs} color="from-violet-500/15 to-violet-500/5" />
         <Stat icon={Clock} label="Tugagan obunalar" value={stats.expiredSubs} color="from-slate-500/10 to-slate-500/5" />
-        <Stat icon={TrendingUp} label="Bugungi" value={`${stats.todayCount} · ${stats.todayRevenue.toLocaleString()} so'm`} color="from-cyan-500/15 to-cyan-500/5" />
-        <Stat icon={TrendingUp} label="Oylik daromad" value={`${stats.monthRevenue.toLocaleString()} so'm`} color="from-emerald-500/20 to-blue-500/10" />
+        <Stat icon={TrendingUp} label="Bugungi" value={`${stats.todayCount} · ${stats.todayRevenue.toLocaleString()} so'm`} color="from-fuchsia-500/15 to-fuchsia-500/5" />
+        <Stat icon={TrendingUp} label="Oylik daromad" value={`${stats.monthRevenue.toLocaleString()} so'm`} color="from-purple-500/20 to-blue-500/10" />
       </div>
 
       <Card className="p-5">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-display font-semibold flex items-center gap-2"><Clock className="h-4 w-4 text-amber-500" /> Kutilayotgan to'lovlar</h2>
-          <Link to="/pack-manager/payments" className="text-xs text-emerald-500 hover:underline">Hammasini ko'rish →</Link>
+          <Link to="/pack-manager/payments" className="text-xs text-purple-500 hover:underline">Hammasini ko'rish →</Link>
         </div>
         {recent.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">Kutilayotgan to'lovlar yo'q ✨</p>

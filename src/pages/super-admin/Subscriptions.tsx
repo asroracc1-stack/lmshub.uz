@@ -139,9 +139,9 @@ export default function Subscriptions() {
           <div className="flex items-center gap-2 text-xs text-muted-foreground"><Users className="h-3.5 w-3.5" /> Jami</div>
           <p className="text-2xl font-display font-bold mt-1">{stats.total}</p>
         </Card>
-        <Card className="p-4 bg-gradient-to-br from-emerald-500/10 to-emerald-500/5">
+        <Card className="p-4 bg-gradient-to-br from-purple-500/10 to-purple-500/5">
           <div className="flex items-center gap-2 text-xs text-muted-foreground"><CheckCircle2 className="h-3.5 w-3.5" /> Faol</div>
-          <p className="text-2xl font-display font-bold text-emerald-600 mt-1">{stats.active}</p>
+          <p className="text-2xl font-display font-bold text-purple-600 mt-1">{stats.active}</p>
         </Card>
         <Card className="p-4 bg-gradient-to-br from-amber-500/10 to-amber-500/5">
           <div className="flex items-center gap-2 text-xs text-muted-foreground"><AlertTriangle className="h-3.5 w-3.5" /> 7 kun ichida tugaydi</div>
@@ -225,7 +225,7 @@ export default function Subscriptions() {
                         </TableCell>
                         <TableCell>
                           {s.expiring ? <Badge className="bg-amber-500 text-white">Tez tugaydi</Badge>
-                            : s.live ? <Badge className="bg-emerald-500 text-white">Active</Badge>
+                            : s.live ? <Badge className="bg-purple-500 text-white">Active</Badge>
                             : <Badge variant="destructive">Expired</Badge>}
                         </TableCell>
                       </TableRow>
@@ -294,7 +294,7 @@ export default function Subscriptions() {
                         <TableCell className="text-sm capitalize">{p.method ?? "—"}</TableCell>
                         <TableCell>
                           {p.status === "paid" || p.status === "completed"
-                            ? <Badge className="bg-emerald-500 text-white">{p.status}</Badge>
+                            ? <Badge className="bg-purple-500 text-white">{p.status}</Badge>
                             : <Badge variant="outline">{p.status}</Badge>}
                         </TableCell>
                         <TableCell className="text-sm">{format(new Date(p.created_at), "dd.MM.yyyy HH:mm")}</TableCell>

@@ -334,7 +334,7 @@ export default function SpeakingPartners() {
       <div className="flex items-end justify-between flex-wrap gap-3">
         <div>
           <Badge variant="outline" className="mb-2">Speaking</Badge>
-          <h1 className="text-3xl md:text-4xl font-display font-bold bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">Speaking Practice</h1>
+          <h1 className="text-3xl md:text-4xl font-display font-bold bg-gradient-to-r from-purple-500 to-violet-500 bg-clip-text text-transparent">Speaking Practice</h1>
           <p className="text-muted-foreground mt-1">Online partnerlar bilan jonli ovozli suhbat</p>
         </div>
       </div>
@@ -342,7 +342,7 @@ export default function SpeakingPartners() {
       {/* Stats */}
       <div className="grid sm:grid-cols-3 gap-3">
         <Card className="p-5 flex items-center gap-3">
-          <div className="h-12 w-12 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 grid place-items-center"><Mic className="h-6 w-6 text-emerald-600" /></div>
+          <div className="h-12 w-12 rounded-xl bg-purple-100 dark:bg-purple-900/30 grid place-items-center"><Mic className="h-6 w-6 text-purple-600" /></div>
           <div><p className="text-3xl font-bold">{stats.talks}</p><p className="text-xs text-muted-foreground">Talks</p></div>
         </Card>
         <Card className="p-5 flex items-center gap-3">
@@ -360,7 +360,7 @@ export default function SpeakingPartners() {
         <Card className="p-5 lg:col-span-2 space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="font-semibold flex items-center gap-2"><Users className="h-4 w-4" /> Online foydalanuvchilar</h3>
-            <Badge variant="outline" className="gap-1"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live</Badge>
+            <Badge variant="outline" className="gap-1"><span className="h-1.5 w-1.5 rounded-full bg-purple-500 animate-pulse" /> Live</Badge>
           </div>
 
           {filtered.length === 0 ? (
@@ -383,7 +383,7 @@ export default function SpeakingPartners() {
                       {u.gender && <Badge variant="outline" className="text-[10px] px-1.5 py-0 capitalize">{u.gender === "male" ? "♂" : "♀"}</Badge>}
                     </div>
                   </div>
-                  <Button size="sm" onClick={() => startCallAsCaller(u)} disabled={!!callPeer} className="bg-emerald-500 hover:bg-emerald-600">
+                  <Button size="sm" onClick={() => startCallAsCaller(u)} disabled={!!callPeer} className="bg-purple-500 hover:bg-purple-600">
                     <PhoneCall className="h-3.5 w-3.5" />
                   </Button>
                 </Card>
@@ -391,7 +391,7 @@ export default function SpeakingPartners() {
             </div>
           )}
 
-          <Button onClick={findPartner} disabled={searching || !!callPeer} className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-base py-6">
+          <Button onClick={findPartner} disabled={searching || !!callPeer} className="w-full bg-gradient-to-r from-purple-500 to-violet-500 text-white text-base py-6">
             {searching ? <Loader2 className="h-5 w-5 mr-2 animate-spin" /> : <Sparkles className="h-5 w-5 mr-2" />}
             Partner qidirish
           </Button>
@@ -432,7 +432,7 @@ export default function SpeakingPartners() {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-background/80 backdrop-blur z-50 grid place-items-center p-4">
             <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9 }}>
               <Card className="p-8 max-w-sm text-center space-y-4 shadow-elegant">
-                <Avatar className="h-20 w-20 mx-auto ring-4 ring-emerald-500/40 animate-pulse">
+                <Avatar className="h-20 w-20 mx-auto ring-4 ring-purple-500/40 animate-pulse">
                   {incoming.meta.avatar_url && <AvatarImage src={incoming.meta.avatar_url} />}
                   <AvatarFallback className="text-xl">{initials(incoming.meta.full_name)}</AvatarFallback>
                 </Avatar>
@@ -443,7 +443,7 @@ export default function SpeakingPartners() {
                 </div>
                 <div className="flex justify-center gap-3">
                   <Button onClick={() => rejectIncoming()} variant="destructive" size="lg" className="rounded-full h-14 w-14"><PhoneOff className="h-6 w-6" /></Button>
-                  <Button onClick={acceptIncoming} size="lg" className="rounded-full h-14 w-14 bg-emerald-500 hover:bg-emerald-600"><PhoneCall className="h-6 w-6" /></Button>
+                  <Button onClick={acceptIncoming} size="lg" className="rounded-full h-14 w-14 bg-purple-500 hover:bg-purple-600"><PhoneCall className="h-6 w-6" /></Button>
                 </div>
               </Card>
             </motion.div>
@@ -454,11 +454,11 @@ export default function SpeakingPartners() {
       {/* In-call dialog */}
       <AnimatePresence>
         {callPeer && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-gradient-to-br from-emerald-900 to-teal-950 z-50 grid place-items-center p-4">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-gradient-to-br from-purple-900 to-violet-950 z-50 grid place-items-center p-4">
             <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} className="text-center space-y-6 text-white">
               <Avatar className={cn("h-32 w-32 mx-auto ring-4 ring-white/30", !muted && "animate-pulse")}>
                 {callPeer.avatar_url && <AvatarImage src={callPeer.avatar_url} />}
-                <AvatarFallback className="text-3xl bg-emerald-700">{initials(callPeer.full_name)}</AvatarFallback>
+                <AvatarFallback className="text-3xl bg-purple-700">{initials(callPeer.full_name)}</AvatarFallback>
               </Avatar>
               <div>
                 <p className="text-3xl font-display font-bold">{callPeer.full_name}</p>

@@ -75,12 +75,12 @@ export default function AdminDashboard() {
 
   const statCards = useMemo(() => [
     { label: "O'qituvchilar", value: realStats?.totalTeachers ?? 0, growth: stats?.teacherGrowth ?? 0, icon: GraduationCap, color: "text-blue-500", bg: "bg-blue-500/10", to: "/admin/teachers", accent: "#3b82f6" },
-    { label: "Talabalar",     value: realStats?.totalStudents ?? 0, growth: stats?.studentGrowth  ?? 0, icon: Users,         color: "text-emerald-500", bg: "bg-emerald-500/10", to: "/admin/students",  accent: "#10b981" },
+    { label: "Talabalar",     value: realStats?.totalStudents ?? 0, growth: stats?.studentGrowth  ?? 0, icon: Users,         color: "text-purple-500", bg: "bg-purple-500/10", to: "/admin/students",  accent: "#9F86C0" },
     { label: "Ota-onalar",   value: realStats?.totalParents ?? 0, growth: 0,                          icon: Heart,         color: "text-pink-500",    bg: "bg-pink-500/10",    to: "/admin/parents",   accent: "#ec4899" },
     { label: "Administratorlar", value: realStats?.totalAdministrators ?? 0, growth: stats?.orgAdminGrowth ?? 0, icon: UserCog,   color: "text-indigo-500", bg: "bg-indigo-500/10", to: "/admin/administrators", accent: "#6366f1" },
-    { label: "Guruhlar",     value: realStats?.totalGroups ?? 0, growth: 0,                          icon: Users2,        color: "text-cyan-500",   bg: "bg-cyan-500/10",    to: "/admin/groups",         accent: "#06b6d4" },
+    { label: "Guruhlar",     value: realStats?.totalGroups ?? 0, growth: 0,                          icon: Users2,        color: "text-fuchsia-500",   bg: "bg-fuchsia-500/10",    to: "/admin/groups",         accent: "#06b6d4" },
     { label: "Tadbirlar",    value: stats?.eventsCount    ?? 0, growth: stats?.eventGrowth     ?? 0, icon: CalendarIcon,  color: "text-amber-500",  bg: "bg-amber-500/10",  to: "/admin/calendar",  accent: "#f59e0b" },
-    { label: "Fanlar",       value: realStats?.totalSubjects ?? 0, growth: 0,                          icon: BookOpen,      color: "text-teal-500",    bg: "bg-teal-500/10",    to: "/admin/subjects",  accent: "#14b8a6" },
+    { label: "Fanlar",       value: realStats?.totalSubjects ?? 0, growth: 0,                          icon: BookOpen,      color: "text-violet-500",    bg: "bg-violet-500/10",    to: "/admin/subjects",  accent: "#7C3AED" },
   ], [stats, realStats]);
 
   const isExpiring = stats?.subscriptionStatus === "EXPIRING" || overview?.subscription?.status === "EXPIRING";
@@ -361,7 +361,7 @@ export default function AdminDashboard() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.5 }}
-                  className="absolute -top-2 -right-2 bg-emerald-500 text-white p-2 rounded-full shadow-lg"
+                  className="absolute -top-2 -right-2 bg-purple-500 text-white p-2 rounded-full shadow-lg"
                 >
                   <ShieldCheck className="h-5 w-5" />
                 </motion.div>
@@ -429,7 +429,7 @@ export default function AdminDashboard() {
                   <div className={cn(
                     "flex items-center gap-1.5 text-[10px] font-bold px-2 py-1 rounded-md w-fit",
                     s.growth >= 0
-                      ? "text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10"
+                      ? "text-purple-600 bg-purple-50 dark:bg-purple-500/10"
                       : "text-red-600 bg-red-50 dark:bg-red-500/10"
                   )}>
                     <TrendingUp className={cn("h-3 w-3", s.growth < 0 && "rotate-180")} />
@@ -526,7 +526,7 @@ export default function AdminDashboard() {
                         </p>
                       </div>
                     </div>
-                    <Badge className="bg-emerald-500/10 text-emerald-600 border-none text-[9px] font-bold uppercase px-2 py-0.5 rounded-md">Kutilmoqda</Badge>
+                    <Badge className="bg-purple-500/10 text-purple-600 border-none text-[9px] font-bold uppercase px-2 py-0.5 rounded-md">Kutilmoqda</Badge>
                   </motion.div>
                 ))
               ) : (
@@ -556,7 +556,7 @@ export default function AdminDashboard() {
             <div className="grid gap-2">
               {[
                 { label: "O'qituvchi qo'shish", icon: GraduationCap, color: "bg-blue-500" },
-                { label: "Talaba qo'shish", icon: UserPlus, color: "bg-emerald-500" },
+                { label: "Talaba qo'shish", icon: UserPlus, color: "bg-purple-500" },
                 { label: "Tadbir yaratish", icon: FilePlus, color: "bg-purple-500" },
                 { label: "Hisob-faktura", icon: Send, color: "bg-amber-500" },
               ].map((q) => (

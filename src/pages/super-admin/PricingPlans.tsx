@@ -156,7 +156,7 @@ const save = async () => {
                     {p.name}
                     {p.is_popular && <Star className="h-4 w-4 text-primary fill-primary" />}
                   </span>
-                  <span className={`text-[10px] px-2 py-1 rounded-full ${p.is_active ? "bg-emerald-500/15 text-emerald-500" : "bg-muted text-muted-foreground"}`}>
+                  <span className={`text-[10px] px-2 py-1 rounded-full ${p.is_active ? "bg-purple-500/15 text-purple-500" : "bg-muted text-muted-foreground"}`}>
                     {p.is_active ? "Faol" : "Yashirin"}
                   </span>
                 </CardTitle>

@@ -97,7 +97,7 @@ export default function SubscriptionRequests() {
   const getPackBadge = (type: string) => {
     if (type === "ELITE") return "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/60";
     if (type === "PRO") return "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800/60";
-    return "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300";
+    return "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/40 dark:text-purple-300";
   };
 
   const filtered = requests.filter(r => {
@@ -167,7 +167,7 @@ export default function SubscriptionRequests() {
                 "px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 border",
                 filter === f
                   ? f === "PENDING" ? "bg-amber-500 text-white border-amber-500 shadow-lg shadow-amber-500/20"
-                    : f === "APPROVED" ? "bg-emerald-500 text-white border-emerald-500 shadow-lg shadow-emerald-500/20"
+                    : f === "APPROVED" ? "bg-purple-500 text-white border-purple-500 shadow-lg shadow-purple-500/20"
                     : f === "REJECTED" ? "bg-red-500 text-white border-red-500 shadow-lg shadow-red-500/20"
                     : "bg-primary text-white border-primary shadow-lg shadow-primary/20"
                   : "bg-white dark:bg-white/5 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-white/10 hover:border-primary/40"
@@ -185,7 +185,7 @@ export default function SubscriptionRequests() {
         {[
           { label: "Jami", val: counts.ALL, color: "from-indigo-500 to-purple-500", bg: "bg-indigo-50 dark:bg-indigo-950/30" },
           { label: "Kutilayotgan", val: counts.PENDING, color: "from-amber-500 to-orange-500", bg: "bg-amber-50 dark:bg-amber-950/30" },
-          { label: "Tasdiqlangan", val: counts.APPROVED, color: "from-emerald-500 to-teal-500", bg: "bg-emerald-50 dark:bg-emerald-950/30" },
+          { label: "Tasdiqlangan", val: counts.APPROVED, color: "from-purple-500 to-violet-500", bg: "bg-purple-50 dark:bg-purple-950/30" },
           { label: "Rad etilgan", val: counts.REJECTED, color: "from-red-500 to-rose-500", bg: "bg-red-50 dark:bg-red-950/30" },
         ].map(s => (
           <Card key={s.label} className={cn("p-5 border-none shadow-sm", s.bg)}>
@@ -211,14 +211,14 @@ export default function SubscriptionRequests() {
                   "p-6 border shadow-sm transition-all duration-300 hover:shadow-lg rounded-3xl overflow-hidden relative",
                   "bg-white dark:bg-slate-900/60 dark:backdrop-blur-xl",
                   req.status === "PENDING" ? "border-amber-200 dark:border-amber-800/40" 
-                  : req.status === "APPROVED" ? "border-emerald-200 dark:border-emerald-800/40"
+                  : req.status === "APPROVED" ? "border-purple-200 dark:border-purple-800/40"
                   : "border-red-200 dark:border-red-800/40"
                 )}>
                   {/* Status stripe */}
                   <div className={cn(
                     "absolute left-0 top-0 bottom-0 w-1 rounded-l-3xl",
                     req.status === "PENDING" ? "bg-amber-400"
-                    : req.status === "APPROVED" ? "bg-emerald-500"
+                    : req.status === "APPROVED" ? "bg-purple-500"
                     : "bg-red-400"
                   )} />
 
@@ -266,7 +266,7 @@ export default function SubscriptionRequests() {
                       <div className="space-y-1">
                         <p className="text-[9px] uppercase font-black text-slate-400 tracking-widest">Narxi</p>
                         <div className="flex items-center gap-1 font-black text-slate-900 dark:text-white text-sm">
-                          <DollarSign className="h-4 w-4 text-emerald-500" />
+                          <DollarSign className="h-4 w-4 text-purple-500" />
                           {Number(req.pack.price).toLocaleString()} UZS
                         </div>
                       </div>
@@ -295,7 +295,7 @@ export default function SubscriptionRequests() {
                       <Badge variant="outline" className={cn(
                         "font-black uppercase text-[9px] tracking-wider px-3 py-1.5 rounded-xl",
                         req.status === "PENDING" ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/60 animate-pulse"
-                        : req.status === "APPROVED" ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300"
+                        : req.status === "APPROVED" ? "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/40 dark:text-purple-300"
                         : "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/40 dark:text-red-300"
                       )}>
                         {req.status === "PENDING" ? "⏳ Kutilayotgan"
@@ -309,7 +309,7 @@ export default function SubscriptionRequests() {
                           <Button
                             onClick={() => onApprove(req.id)}
                             disabled={processingId === req.id + "-approve" || processingId === req.id + "-reject"}
-                            className="h-10 px-5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-black uppercase text-[9px] tracking-widest shadow-lg shadow-emerald-500/20 gap-2"
+                            className="h-10 px-5 bg-purple-500 hover:bg-purple-600 text-white rounded-xl font-black uppercase text-[9px] tracking-widest shadow-lg shadow-purple-500/20 gap-2"
                           >
                             {processingId === req.id + "-approve"
                               ? <Loader2 className="h-4 w-4 animate-spin" />

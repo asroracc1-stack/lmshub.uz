@@ -180,7 +180,7 @@ export default function Packages() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         <div>
-          <h1 className="font-display text-3xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
+          <h1 className="font-display text-3xl font-bold bg-gradient-to-r from-purple-600 to-purple-400 bg-clip-text text-transparent">
             Tariflar boshqaruvi
           </h1>
           <p className="text-muted-foreground text-sm">Tizimdagi narxlar va paketlarni to'liq nazorat qiling</p>
@@ -188,14 +188,14 @@ export default function Packages() {
         
         <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
           <DialogTrigger asChild>
-            <Button variant="hero" className="shadow-glow shadow-emerald-500/20" onClick={openCreate}>
+            <Button variant="hero" className="shadow-glow shadow-purple-500/20" onClick={openCreate}>
               <Plus className="h-4 w-4 mr-2" /> Yangi tarif qo'shish
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-lg max-h-[90vh] flex flex-col p-0 overflow-hidden border-emerald-500/20 bg-white dark:bg-slate-900 transition-all duration-300">
+          <DialogContent className="max-w-lg max-h-[90vh] flex flex-col p-0 overflow-hidden border-purple-500/20 bg-white dark:bg-slate-900 transition-all duration-300">
             <DialogHeader className="p-6 pb-4 shrink-0 border-b border-border/30 bg-background/50 backdrop-blur-md z-10">
               <DialogTitle className="text-xl font-display flex items-center gap-2">
-                <Package className="h-5 w-5 text-emerald-500" />
+                <Package className="h-5 w-5 text-purple-500" />
                 {editing ? "Tarifni tahrirlash" : "Yangi tarif yaratish"}
               </DialogTitle>
             </DialogHeader>
@@ -207,7 +207,7 @@ export default function Packages() {
                   value={form.name} 
                   onChange={e => setForm({...form, name: e.target.value})} 
                   placeholder="Masalan: Premium Plan"
-                  className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 transition-all duration-300"
+                  className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-500 transition-all duration-300"
                 />
               </div>
               
@@ -218,12 +218,12 @@ export default function Packages() {
                   value={form.price} 
                   onChange={e => setForm({...form, price: e.target.value})} 
                   placeholder="Masalan: 500000"
-                  className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 font-mono transition-all duration-300"
+                  className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-500 font-mono transition-all duration-300"
                 />
               </div>
 
-              <div className="grid gap-4 border border-emerald-500/10 p-4 rounded-xl bg-emerald-500/5">
-                <Label className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">Limitlar va Cheklovlar</Label>
+              <div className="grid gap-4 border border-purple-500/10 p-4 rounded-xl bg-purple-500/5">
+                <Label className="text-sm font-semibold text-purple-700 dark:text-purple-400">Limitlar va Cheklovlar</Label>
                 
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="grid gap-2">
@@ -233,7 +233,7 @@ export default function Packages() {
                       value={form.maxOrganizations} 
                       onChange={e => setForm({...form, maxOrganizations: e.target.value})} 
                       placeholder="Cheksiz"
-                      className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 h-9 transition-all duration-300"
+                      className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-500 h-9 transition-all duration-300"
                     />
                   </div>
                   <div className="grid gap-2">
@@ -243,7 +243,7 @@ export default function Packages() {
                       value={form.maxStudents} 
                       onChange={e => setForm({...form, maxStudents: e.target.value})} 
                       placeholder="Cheksiz"
-                      className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 h-9 transition-all duration-300"
+                      className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-500 h-9 transition-all duration-300"
                     />
                   </div>
                   <div className="grid gap-2">
@@ -253,7 +253,7 @@ export default function Packages() {
                       value={form.maxTeachers} 
                       onChange={e => setForm({...form, maxTeachers: e.target.value})} 
                       placeholder="Cheksiz"
-                      className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 h-9 transition-all duration-300"
+                      className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-500 h-9 transition-all duration-300"
                     />
                   </div>
                 </div>
@@ -265,7 +265,7 @@ export default function Packages() {
                   value={form.description} 
                   onChange={e => setForm({...form, description: e.target.value})} 
                   placeholder="Tarif haqida qo'shimcha ma'lumotlar"
-                  className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 resize-none transition-all duration-300"
+                  className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-500 resize-none transition-all duration-300"
                   rows={3}
                 />
               </div>
@@ -285,7 +285,7 @@ export default function Packages() {
       <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-2 border border-slate-200 dark:border-slate-800 transition-all duration-500">
         {isLoading ? (
           <div className="py-20 flex justify-center items-center">
-            <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
+            <Loader2 className="h-8 w-8 animate-spin text-purple-500" />
           </div>
         ) : (
           <Table>
@@ -311,7 +311,7 @@ export default function Packages() {
                   <TableRow key={pkg.id} className="group transition-colors">
                     <TableCell className="font-medium text-slate-900 dark:text-slate-100">
                       <div className="flex items-center gap-2">
-                        <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-600">
+                        <div className="p-2 bg-purple-500/10 rounded-lg text-purple-600">
                           <Package className="h-4 w-4" />
                         </div>
                         {pkg.name}

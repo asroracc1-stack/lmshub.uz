@@ -726,7 +726,7 @@ export default function Finance() {
                 </div>
               </div>
               <div className="flex items-center gap-3 rounded-3xl border border-border p-4 bg-muted/80">
-                <TrendingUp className="h-5 w-5 text-emerald-600" />
+                <TrendingUp className="h-5 w-5 text-purple-600" />
                 <div className="w-full">
                   <p className="text-sm text-muted-foreground">Aktiv statuslar</p>
                   {dashboardQuery.isLoading ? (

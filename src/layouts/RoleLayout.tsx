@@ -133,9 +133,9 @@ export default function RoleLayout({
           <>
             <div className="flex items-center gap-2 overflow-hidden flex-1 opacity-100">
               <Logo
-                size={44}
+                size={54}
                 showText={true}
-                variant={theme === "dark" ? "light" : "dark"}
+                variant={theme === "dark" ? "dark" : "light"}
               />
             </div>
             {!isMobile && (
@@ -164,7 +164,7 @@ export default function RoleLayout({
             <Logo
               size={36}
               showText={false}
-              variant={theme === "dark" ? "light" : "dark"}
+              variant={theme === "dark" ? "dark" : "light"}
             />
           </div>
         )}
@@ -203,7 +203,7 @@ export default function RoleLayout({
                       "shrink-0 transition-colors",
                       isExpanded || hasActiveChild
                         ? "text-primary"
-                        : "text-slate-400 group-hover:text-emerald-500"
+                        : "text-slate-400 group-hover:text-purple-500"
                     )}
                   />
                   {!mini && (
@@ -240,7 +240,7 @@ export default function RoleLayout({
                               cn(
                                 "relative flex items-center gap-2.5 pl-5 pr-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200",
                                 isActive
-                                  ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold"
+                                  ? "bg-primary/10 text-primary font-semibold"
                                   : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/5"
                               )
                             }
@@ -250,12 +250,12 @@ export default function RoleLayout({
                                 {isActive && (
                                   <motion.div
                                     layoutId={`active-child-dot-${item.label}`}
-                                    className="absolute left-[10px] w-1.5 h-1.5 rounded-full bg-emerald-500"
+                                    className="absolute left-[10px] w-1.5 h-1.5 rounded-full bg-primary"
                                   />
                                 )}
                                 <child.icon
                                   size={15}
-                                  className={cn(isActive ? "text-emerald-500" : "text-slate-400")}
+                                  className={cn(isActive ? "text-primary" : "text-slate-400")}
                                 />
                                 <span className="truncate">{child.label}</span>
                               </>
@@ -284,7 +284,7 @@ export default function RoleLayout({
                   "group flex items-center gap-3 rounded-xl text-sm font-semibold transition-all duration-200",
                   mini ? "justify-center h-11 w-11 mx-auto px-0" : "px-3 py-2.5",
                   isActive
-                    ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/25"
+                    ? "bg-primary text-white shadow-glow-purple"
                     : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white"
                 )
               }
@@ -297,7 +297,7 @@ export default function RoleLayout({
                       "shrink-0 transition-colors",
                       isActive
                         ? "text-white"
-                        : "text-slate-400 group-hover:text-emerald-500 dark:group-hover:text-emerald-400"
+                        : "text-slate-400 group-hover:text-primary dark:group-hover:text-primary-glow"
                     )}
                   />
                   {!mini && (
@@ -358,7 +358,7 @@ export default function RoleLayout({
     location.pathname.includes("/exam") || location.pathname.includes("/take");
   if (isExamPage) {
     return (
-      <div className="w-full min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 overflow-x-hidden">
+      <div className="w-full min-h-screen bg-[#FCFAFF] dark:bg-[#0B0714] text-slate-900 dark:text-slate-100 overflow-x-hidden">
         <Outlet />
       </div>
     );
@@ -371,7 +371,7 @@ export default function RoleLayout({
     <div
       className={cn(
         "h-screen flex w-full overflow-hidden transition-colors duration-500",
-        theme === "dark" ? "bg-[#020617] text-slate-100" : "bg-slate-50 text-slate-900"
+        theme === "dark" ? "bg-[#0B0714] text-slate-100" : "bg-[#FCFAFF] text-slate-900"
       )}
     >
       <TigerLoader isLoading={authLoading} />
@@ -384,8 +384,8 @@ export default function RoleLayout({
         className={cn(
           "hidden md:flex shrink-0 border-r flex-col h-full z-50 overflow-hidden",
           theme === "dark"
-            ? "bg-slate-950 border-white/5 shadow-2xl"
-            : "bg-white border-slate-200 shadow-xl shadow-slate-200/40"
+            ? "bg-[#140D23] border-[#2E1E52] shadow-2xl"
+            : "bg-white border-[#E8DDFB] shadow-xl shadow-purple-100/40"
         )}
       >
         {renderSidebarContent(collapsed, false)}
@@ -407,8 +407,8 @@ export default function RoleLayout({
           className={cn(
             "shrink-0 h-16 border-b sticky top-0 z-30 transition-all w-full flex justify-center",
             theme === "dark"
-              ? "bg-slate-950/60 backdrop-blur-xl border-white/5"
-              : "bg-white/80 backdrop-blur-md border-slate-200 shadow-sm"
+              ? "bg-[#140D23]/60 backdrop-blur-xl border-[#2E1E52]"
+              : "bg-white/80 backdrop-blur-md border-[#E8DDFB] shadow-sm"
           )}
         >
           <div className="w-full px-4 flex items-center justify-between h-full">
@@ -448,7 +448,7 @@ export default function RoleLayout({
                 {/* Referral button */}
                 <button
                   onClick={() => navigate(`${basePath}/referral`)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500 text-white hover:bg-emerald-600 transition-colors text-xs font-semibold shadow-sm shadow-emerald-500/30"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-purple-500 text-white hover:bg-purple-600 transition-colors text-xs font-semibold shadow-sm shadow-purple-500/30"
                   title={t("nav.referral")}
                 >
                   <Gift className="h-3.5 w-3.5" />

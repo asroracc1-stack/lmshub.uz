@@ -73,7 +73,7 @@ const Forbidden = () => {
               variant="outline" 
               size="lg" 
               onClick={handleBack} 
-              className="glass border-white/20 text-white hover:bg-emerald-500/20 hover:border-emerald-500/50 hover:shadow-[0_0_20px_rgb(16,185,129,0.3)] transition-all duration-300 rounded-xl h-12 px-6"
+              className="glass border-white/20 text-white hover:bg-purple-500/20 hover:border-purple-500/50 hover:shadow-[0_0_20px_rgb(16,185,129,0.3)] transition-all duration-300 rounded-xl h-12 px-6"
             >
               <ArrowLeft className="h-4 w-4 mr-2" /> Orqaga
             </Button>

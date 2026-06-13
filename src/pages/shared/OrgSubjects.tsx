@@ -77,11 +77,11 @@ const CARD_DESIGNS = [
     radius: "rounded-2xl",
   },
   { // 1 — Emerald gradient
-    card: "bg-gradient-to-br from-emerald-50 via-white to-teal-100/60 dark:from-emerald-950/60 dark:via-slate-900 dark:to-teal-900/30 border-emerald-200/70 dark:border-emerald-800/40 hover:shadow-emerald-200/60 dark:hover:shadow-emerald-900/40",
-    icon: "bg-emerald-100 dark:bg-emerald-900/50 border-emerald-200 dark:border-emerald-700 text-emerald-600 dark:text-emerald-400",
-    badge: "bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300",
-    accent: "from-emerald-400 to-teal-500",
-    deco: "bg-emerald-400/10",
+    card: "bg-gradient-to-br from-purple-50 via-white to-violet-100/60 dark:from-purple-950/60 dark:via-slate-900 dark:to-violet-900/30 border-purple-200/70 dark:border-purple-800/40 hover:shadow-purple-200/60 dark:hover:shadow-purple-900/40",
+    icon: "bg-purple-100 dark:bg-purple-900/50 border-purple-200 dark:border-purple-700 text-purple-600 dark:text-purple-400",
+    badge: "bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300",
+    accent: "from-purple-400 to-violet-500",
+    deco: "bg-purple-400/10",
     radius: "rounded-3xl",
   },
   { // 2 — Rose gradient
@@ -101,11 +101,11 @@ const CARD_DESIGNS = [
     radius: "rounded-2xl",
   },
   { // 4 — Cyan gradient
-    card: "bg-gradient-to-br from-cyan-50 via-white to-sky-100/60 dark:from-cyan-950/60 dark:via-slate-900 dark:to-sky-900/30 border-cyan-200/70 dark:border-cyan-800/40 hover:shadow-cyan-200/60 dark:hover:shadow-cyan-900/40",
-    icon: "bg-cyan-100 dark:bg-cyan-900/50 border-cyan-200 dark:border-cyan-700 text-cyan-600 dark:text-cyan-400",
-    badge: "bg-cyan-100 dark:bg-cyan-900/60 text-cyan-700 dark:text-cyan-300",
-    accent: "from-cyan-400 to-sky-500",
-    deco: "bg-cyan-400/10",
+    card: "bg-gradient-to-br from-fuchsia-50 via-white to-sky-100/60 dark:from-fuchsia-950/60 dark:via-slate-900 dark:to-sky-900/30 border-fuchsia-200/70 dark:border-fuchsia-800/40 hover:shadow-fuchsia-200/60 dark:hover:shadow-fuchsia-900/40",
+    icon: "bg-fuchsia-100 dark:bg-fuchsia-900/50 border-fuchsia-200 dark:border-fuchsia-700 text-fuchsia-600 dark:text-fuchsia-400",
+    badge: "bg-fuchsia-100 dark:bg-fuchsia-900/60 text-fuchsia-700 dark:text-fuchsia-300",
+    accent: "from-fuchsia-400 to-sky-500",
+    deco: "bg-fuchsia-400/10",
     radius: "rounded-3xl",
   },
   { // 5 — Purple gradient
@@ -153,9 +153,9 @@ const getColorClasses = (color: string) => {
     case "secondary":
       return "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20 group-hover:border-purple-500/40 hover:shadow-purple-500/5";
     case "accent":
-      return "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20 group-hover:border-cyan-500/40 hover:shadow-cyan-500/5";
+      return "bg-fuchsia-500/10 text-fuchsia-600 dark:text-fuchsia-400 border-fuchsia-500/20 group-hover:border-fuchsia-500/40 hover:shadow-fuchsia-500/5";
     case "success":
-      return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 group-hover:border-emerald-500/40 hover:shadow-emerald-500/5";
+      return "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20 group-hover:border-purple-500/40 hover:shadow-purple-500/5";
     case "warning":
       return "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 group-hover:border-amber-500/40 hover:shadow-amber-500/5";
     case "destructive":
@@ -325,7 +325,7 @@ export default function OrgSubjects() {
           <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) reset(); }}>
             <DialogTrigger asChild>
               <Button 
-                className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600 text-white font-semibold px-5 h-11 rounded-xl shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 shrink-0 border-none"
+                className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600 text-white font-semibold px-5 h-11 rounded-xl shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 shrink-0 border-none"
               >
                 <Plus className="h-4 w-4" />
                 <span>Yangi fan qo'shish</span>
@@ -444,7 +444,7 @@ export default function OrgSubjects() {
                               c === "primary" ? "#6366f1" :
                               c === "secondary" ? "#a855f7" :
                               c === "accent" ? "#06b6d4" :
-                              c === "success" ? "#10b981" :
+                              c === "success" ? "#9F86C0" :
                               c === "warning" ? "#f59e0b" : "#ef4444"
                           }}
                         />
@@ -517,7 +517,7 @@ export default function OrgSubjects() {
                 <Button
                   onClick={submit}
                   disabled={mutation.isPending || aiLoading}
-                  className="h-11 px-8 rounded-xl bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600 text-white border-none shadow-md font-semibold"
+                  className="h-11 px-8 rounded-xl bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600 text-white border-none shadow-md font-semibold"
                 >
                   {mutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
                   Saqlash

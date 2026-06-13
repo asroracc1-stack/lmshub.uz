@@ -206,13 +206,13 @@ function ReactBitsLoader() {
       <motion.div
         animate={{ rotate: 360 }}
         transition={{ repeat: Infinity, duration: 8, ease: "linear" }}
-        className="absolute w-40 h-40 rounded-full border-4 border-dashed border-emerald-500/20"
+        className="absolute w-40 h-40 rounded-full border-4 border-dashed border-purple-500/20"
       />
       {/* Middle rotating ring */}
       <motion.div
         animate={{ rotate: -360 }}
         transition={{ repeat: Infinity, duration: 3.5, ease: "linear" }}
-        className="absolute w-32 h-32 rounded-full border-4 border-t-teal-500 border-r-transparent border-b-emerald-450 border-l-transparent filter drop-shadow-[0_0_8px_rgba(20,184,166,0.6)]"
+        className="absolute w-32 h-32 rounded-full border-4 border-t-violet-500 border-r-transparent border-b-purple-450 border-l-transparent filter drop-shadow-[0_0_8px_rgba(20,184,166,0.6)]"
       />
       {/* Inner fast rotating ring */}
       <motion.div
@@ -223,9 +223,9 @@ function ReactBitsLoader() {
       <motion.div
         animate={{ scale: [1, 1.12, 1] }}
         transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-        className="absolute w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/50 flex items-center justify-center"
+        className="absolute w-12 h-12 rounded-full bg-purple-500/10 border border-purple-500/50 flex items-center justify-center"
       >
-        <Sparkles className="h-5 w-5 text-emerald-400 animate-pulse" />
+        <Sparkles className="h-5 w-5 text-purple-400 animate-pulse" />
       </motion.div>
     </div>
   );
@@ -278,12 +278,12 @@ export default function StartupPitch(): React.ReactElement {
     .animate-float-reverse {
       animation: float-reverse 4.5s ease-in-out infinite;
     }
-    @keyframes pulse-emerald {
+    @keyframes pulse-purple {
       0%, 100% { transform: scale(1); box-shadow: 0 0 25px rgba(16, 185, 129, 0.4); }
       50% { transform: scale(1.06); box-shadow: 0 0 50px rgba(16, 185, 129, 0.7); }
     }
-    .animate-pulse-emerald {
-      animation: pulse-emerald 3s ease-in-out infinite;
+    .animate-pulse-purple {
+      animation: pulse-purple 3s ease-in-out infinite;
     }
     @keyframes rotate-clockwise {
       from { transform: rotate(0deg); }
@@ -322,7 +322,7 @@ export default function StartupPitch(): React.ReactElement {
       50% { border-color: transparent; }
     }
     .animate-cursor {
-      border-right: 2px solid #10b981;
+      border-right: 2px solid #9F86C0;
       animation: text-cursor 0.8s step-end infinite;
     }
   `;
@@ -440,8 +440,8 @@ export default function StartupPitch(): React.ReactElement {
 
   const roles: RoleData[] = [
     { name: "Super Admin", desc: "Tizim ekotizimini va barcha tashkilotlarni to'liq nazorat qilish 👑", icon: "👑", color: "from-purple-500 to-indigo-500" },
-    { name: "Admin", desc: "Tashkilotning boshqaruvchisi, o'qituvchilar va guruhlar arxitektori 🏛️", icon: "🏛️", color: "from-blue-500 to-cyan-500" },
-    { name: "Administrator", desc: "Filial va kundalik operatsiyalar, to'lovlar va davomat nazoratchisi 📋", icon: "📋", color: "from-teal-500 to-emerald-500" },
+    { name: "Admin", desc: "Tashkilotning boshqaruvchisi, o'qituvchilar va guruhlar arxitektori 🏛️", icon: "🏛️", color: "from-blue-500 to-fuchsia-500" },
+    { name: "Administrator", desc: "Filial va kundalik operatsiyalar, to'lovlar va davomat nazoratchisi 📋", icon: "📋", color: "from-violet-500 to-purple-500" },
     { name: "Teacher", desc: "Dars jadvallari, o'quvchilar baholari, vazifalar va chat boshqaruvi 🎓", icon: "🎓", color: "from-yellow-500 to-amber-500" },
     { name: "Student", desc: "Darslar, natijalar, virtual tangalar, IELTS/SAT test topshirish 📚", icon: "📚", color: "from-pink-500 to-rose-500" },
     { name: "Parent", desc: "Farzandining davomati, to'lovlari, reytingi va xabarlaridan tezkor xabardorlik 👨‍👩‍👦", icon: "👨‍👩‍👦", color: "from-orange-500 to-red-500" },
@@ -566,8 +566,8 @@ export default function StartupPitch(): React.ReactElement {
       <ParticlesBackground />
 
       {/* Dynamic Glow Elements */}
-      <div className="absolute -top-40 -left-40 w-96 h-96 bg-emerald-500/10 dark:bg-emerald-500/5 rounded-full blur-[120px] animate-float-breathing" />
-      <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-teal-500/10 dark:bg-teal-500/5 rounded-full blur-[120px] animate-float-reverse" />
+      <div className="absolute -top-40 -left-40 w-96 h-96 bg-purple-500/10 dark:bg-purple-500/5 rounded-full blur-[120px] animate-float-breathing" />
+      <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-violet-500/10 dark:bg-violet-500/5 rounded-full blur-[120px] animate-float-reverse" />
       
       {/* Grid overlay adapting to light/dark */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(16,185,129,0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgba(16,185,129,0.04)_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,rgba(16,185,129,0.07)_1px,transparent_1px),linear-gradient(to_bottom,rgba(16,185,129,0.07)_1px,transparent_1px)] bg-[size:3.5rem_3.5rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_80%,transparent_100%)] opacity-70" />
@@ -583,8 +583,8 @@ export default function StartupPitch(): React.ReactElement {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-sm">
           <div>
             <h1 className="font-display text-3xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-              <Layers className="h-7 w-7 text-emerald-500 animate-pulse" />
-              LMSHub Loyiha Taqdimoti <span className="text-xs bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold px-2.5 py-1 rounded-full uppercase">10 Slayd</span>
+              <Layers className="h-7 w-7 text-purple-500 animate-pulse" />
+              LMSHub Loyiha Taqdimoti <span className="text-xs bg-purple-500/10 text-purple-600 dark:text-purple-400 font-bold px-2.5 py-1 rounded-full uppercase">10 Slayd</span>
             </h1>
             <p className="text-slate-500 dark:text-slate-400 mt-1">Siz izlagan super interaktiv animatsiyali premium taqdimot.</p>
           </div>
@@ -596,7 +596,7 @@ export default function StartupPitch(): React.ReactElement {
               <select 
                 value={transitionType} 
                 onChange={(e) => setTransitionType(e.target.value as any)} 
-                className="mt-1 text-xs font-black bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+                className="mt-1 text-xs font-black bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-purple-500 cursor-pointer"
               >
                 <option value="cube">📦 3D Kub aylanma</option>
                 <option value="airplane">✈️ Qog'oz Samolyot</option>
@@ -607,7 +607,7 @@ export default function StartupPitch(): React.ReactElement {
             
             <Button 
               onClick={toggleFullscreen} 
-              className="h-12 px-6 rounded-2xl bg-gradient-premium text-white font-bold shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/35 hover:scale-[1.02] active:scale-98 transition-all flex items-center gap-2 shrink-0"
+              className="h-12 px-6 rounded-2xl bg-gradient-premium text-white font-bold shadow-lg shadow-purple-500/20 hover:shadow-purple-500/35 hover:scale-[1.02] active:scale-98 transition-all flex items-center gap-2 shrink-0"
             >
               <Play className="h-5 w-5 fill-current" /> Boshlash
             </Button>
@@ -631,7 +631,7 @@ export default function StartupPitch(): React.ReactElement {
           <div className="flex items-center gap-3">
             <Logo size={36} variant="dark" />
             <div>
-              <p className="text-[10px] tracking-widest font-black uppercase text-emerald-600 dark:text-emerald-500">LMSHub Ekotizimi</p>
+              <p className="text-[10px] tracking-widest font-black uppercase text-purple-600 dark:text-purple-500">LMSHub Ekotizimi</p>
               <p className="text-sm font-bold text-slate-800 dark:text-slate-200">Startup Pitch Presentation</p>
             </div>
           </div>
@@ -644,7 +644,7 @@ export default function StartupPitch(): React.ReactElement {
                   key={i} 
                   onClick={() => { setDirection(i > currentSlide ? 1 : -1); setCurrentSlide(i); }}
                   className={`h-2 rounded-full cursor-pointer transition-all duration-300 ${
-                    i === currentSlide ? "w-6 bg-emerald-500" : "w-2 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400 dark:hover:bg-slate-500"
+                    i === currentSlide ? "w-6 bg-purple-500" : "w-2 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400 dark:hover:bg-slate-500"
                   }`} 
                 />
               ))}
@@ -704,8 +704,8 @@ export default function StartupPitch(): React.ReactElement {
               {currentSlide === 0 && (
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center w-full text-left">
                   <div className="lg:col-span-6 space-y-6">
-                    <div className="inline-flex items-center gap-2 bg-emerald-55/10 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-500/20 px-4 py-2 rounded-full text-xs font-black tracking-wide uppercase">
-                      <Sparkles className="h-3.5 w-3.5 text-emerald-500 animate-pulse" /> LMSHub Startup Pitch
+                    <div className="inline-flex items-center gap-2 bg-purple-55/10 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-100 dark:border-purple-500/20 px-4 py-2 rounded-full text-xs font-black tracking-wide uppercase">
+                      <Sparkles className="h-3.5 w-3.5 text-purple-500 animate-pulse" /> LMSHub Startup Pitch
                     </div>
                     
                     <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight leading-[1.1] text-slate-900 dark:text-white">
@@ -724,7 +724,7 @@ export default function StartupPitch(): React.ReactElement {
                         👋
                       </span>
                       <div>
-                        <p className="text-sm font-black uppercase text-emerald-600 dark:text-emerald-500 tracking-wider">Hakamlarga ehtiromlar!</p>
+                        <p className="text-sm font-black uppercase text-purple-600 dark:text-purple-500 tracking-wider">Hakamlarga ehtiromlar!</p>
                         <p className="text-xs text-slate-500 font-bold">LMSHub bilan bozorni yondirishga tayyormisiz?</p>
                       </div>
                     </div>
@@ -814,7 +814,7 @@ export default function StartupPitch(): React.ReactElement {
                             transition={{ repeat: Infinity, duration: 8, ease: "easeInOut" }}
                             className="absolute pointer-events-none z-10 opacity-90"
                           >
-                            <div className="w-16 h-16 rounded-full border-4 border-slate-700 bg-emerald-500/10 backdrop-blur-[2px] flex items-center justify-center shadow-lg relative">
+                            <div className="w-16 h-16 rounded-full border-4 border-slate-700 bg-purple-500/10 backdrop-blur-[2px] flex items-center justify-center shadow-lg relative">
                               <div className="absolute w-12 h-1 bg-slate-700 origin-right rotate-45 translate-x-7 translate-y-7 rounded-full" />
                               <span className="text-xl">🕵️‍♂️</span>
                             </div>
@@ -835,7 +835,7 @@ export default function StartupPitch(): React.ReactElement {
               {currentSlide === 2 && (
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center w-full text-left">
                   <div className="lg:col-span-6 space-y-6">
-                    <div className="inline-flex items-center gap-2 bg-emerald-55/10 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-500/20 px-4 py-1.5 rounded-full text-xs font-black uppercase">
+                    <div className="inline-flex items-center gap-2 bg-purple-55/10 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-100 dark:border-purple-500/20 px-4 py-1.5 rounded-full text-xs font-black uppercase">
                       <CheckCircle2 className="h-3.5 w-3.5" /> Bizning Yechim
                     </div>
                     <h2 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white leading-none">
@@ -853,7 +853,7 @@ export default function StartupPitch(): React.ReactElement {
                   <div className="lg:col-span-6 flex items-center justify-center">
                     <TiltedCard>
                       <div className="relative w-full h-[360px] flex items-center justify-center bg-slate-100/50 dark:bg-slate-900/20 rounded-2xl border border-slate-200 dark:border-slate-800/65 overflow-hidden">
-                        <div className="absolute w-24 h-24 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-slate-950 font-black text-base shadow-lg shadow-emerald-500/20 animate-pulse z-10">
+                        <div className="absolute w-24 h-24 rounded-full bg-gradient-to-br from-purple-400 to-violet-500 flex items-center justify-center text-slate-950 font-black text-base shadow-lg shadow-purple-500/20 animate-pulse z-10">
                           LMSHub
                         </div>
                         
@@ -872,7 +872,7 @@ export default function StartupPitch(): React.ReactElement {
                                 y1="50%" 
                                 x2={`${x}%`} 
                                 y2={`${y}%`} 
-                                stroke={activeOrbitNode === i ? "#10b981" : "rgba(16, 185, 129, 0.4)"} 
+                                stroke={activeOrbitNode === i ? "#9F86C0" : "rgba(16, 185, 129, 0.4)"} 
                                 strokeWidth={activeOrbitNode === i ? "3" : "1"} 
                                 strokeDasharray={activeOrbitNode === i ? "none" : "3 3"}
                                 className="transition-all duration-300" 
@@ -882,7 +882,7 @@ export default function StartupPitch(): React.ReactElement {
                         </svg>
                         
                         {/* Rotating orbit */}
-                        <div className="absolute w-72 h-72 rounded-full border border-emerald-500/20 dark:border-emerald-500/10 flex items-center justify-center animate-rotate-clockwise" style={{ animationDuration: "35s" }}>
+                        <div className="absolute w-72 h-72 rounded-full border border-purple-500/20 dark:border-purple-500/10 flex items-center justify-center animate-rotate-clockwise" style={{ animationDuration: "35s" }}>
                           {roles.map((role, idx) => {
                             const angle = (idx * 360) / roles.length;
                             const rad = (angle * Math.PI) / 180;
@@ -897,7 +897,7 @@ export default function StartupPitch(): React.ReactElement {
                                 onMouseLeave={() => setActiveOrbitNode(null)}
                                 className={`absolute h-9 w-9 rounded-full bg-white dark:bg-slate-900 border flex items-center justify-center text-sm shadow-md transition-all duration-300 transform -translate-x-1/2 -translate-y-1/2 hover:scale-125 ${
                                   activeOrbitNode === idx 
-                                    ? "border-emerald-500 shadow-emerald-500/30 scale-110" 
+                                    ? "border-purple-500 shadow-purple-500/30 scale-110" 
                                     : "border-slate-200 dark:border-slate-800"
                                 }`}
                               >
@@ -916,7 +916,7 @@ export default function StartupPitch(): React.ReactElement {
               {currentSlide === 3 && (
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center w-full text-left">
                   <div className="lg:col-span-5 space-y-4">
-                    <div className="inline-flex items-center gap-2 bg-emerald-55/10 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-500/20 px-4 py-1.5 rounded-full text-xs font-black uppercase">
+                    <div className="inline-flex items-center gap-2 bg-purple-55/10 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-100 dark:border-purple-500/20 px-4 py-1.5 rounded-full text-xs font-black uppercase">
                       <UserCheck className="h-3.5 w-3.5" /> Rol Sozlamalari
                     </div>
                     <h2 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white leading-none">
@@ -934,7 +934,7 @@ export default function StartupPitch(): React.ReactElement {
                           onClick={() => setSelectedRoleIdx(idx)}
                           className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold border transition-all duration-200 flex items-center justify-between ${
                             selectedRoleIdx === idx 
-                              ? "bg-emerald-500/10 border-emerald-500 text-emerald-600 dark:text-emerald-450" 
+                              ? "bg-purple-500/10 border-purple-500 text-purple-600 dark:text-purple-450" 
                               : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-55 dark:hover:bg-slate-850"
                           }`}
                         >
@@ -959,7 +959,7 @@ export default function StartupPitch(): React.ReactElement {
                           <div>
                             <h3 className="text-lg font-black text-slate-800 dark:text-white flex items-center gap-2">
                               {roles[selectedRoleIdx].name}
-                              <span className="text-[9px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-extrabold px-2 py-0.5 rounded-full uppercase">
+                              <span className="text-[9px] bg-purple-500/10 text-purple-600 dark:text-purple-400 font-extrabold px-2 py-0.5 rounded-full uppercase">
                                 Active
                               </span>
                             </h3>
@@ -972,25 +972,25 @@ export default function StartupPitch(): React.ReactElement {
                           <div className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">Ruxsatlar va Huquqlar</div>
                           <div className="flex items-center justify-between text-xs text-slate-700 dark:text-slate-300">
                             <span>Tizim sozlamalari</span>
-                            <span className="h-4.5 w-8 bg-emerald-500 rounded-full flex items-center pl-4 transition-all"><span className="h-3.5 w-3.5 bg-white rounded-full" /></span>
+                            <span className="h-4.5 w-8 bg-purple-500 rounded-full flex items-center pl-4 transition-all"><span className="h-3.5 w-3.5 bg-white rounded-full" /></span>
                           </div>
                           <div className="flex items-center justify-between text-xs text-slate-700 dark:text-slate-300">
                             <span>Moliyaviy hisobotlar</span>
                             <span className={`h-4.5 w-8 rounded-full flex items-center transition-all ${
-                              ["Super Admin", "Admin", "Pack Manager"].includes(roles[selectedRoleIdx].name) ? "bg-emerald-500 pl-4" : "bg-slate-200 dark:bg-slate-800 pl-0.5"
+                              ["Super Admin", "Admin", "Pack Manager"].includes(roles[selectedRoleIdx].name) ? "bg-purple-500 pl-4" : "bg-slate-200 dark:bg-slate-800 pl-0.5"
                             }`}><span className="h-3.5 w-3.5 bg-white rounded-full" /></span>
                           </div>
                           <div className="flex items-center justify-between text-xs text-slate-700 dark:text-slate-300">
                             <span>Guruhlarni tahrirlash</span>
                             <span className={`h-4.5 w-8 rounded-full flex items-center transition-all ${
-                              ["Super Admin", "Admin", "Administrator", "Teacher"].includes(roles[selectedRoleIdx].name) ? "bg-emerald-500 pl-4" : "bg-slate-200 dark:bg-slate-800 pl-0.5"
+                              ["Super Admin", "Admin", "Administrator", "Teacher"].includes(roles[selectedRoleIdx].name) ? "bg-purple-500 pl-4" : "bg-slate-200 dark:bg-slate-800 pl-0.5"
                             }`}><span className="h-3.5 w-3.5 bg-white rounded-full" /></span>
                           </div>
                         </div>
                         
                         <div className="flex justify-between items-center text-[10px] text-slate-400 pt-3 border-t border-slate-200 dark:border-slate-800/80">
                           <span>Tizim darajasi:</span>
-                          <span className="font-mono font-black text-emerald-500">LEVEL 0{selectedRoleIdx + 1}</span>
+                          <span className="font-mono font-black text-purple-500">LEVEL 0{selectedRoleIdx + 1}</span>
                         </div>
                       </div>
                     </TiltedCard>
@@ -1002,8 +1002,8 @@ export default function StartupPitch(): React.ReactElement {
               {currentSlide === 4 && (
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center w-full text-left">
                   <div className="lg:col-span-6 space-y-6">
-                    <div className="inline-flex items-center gap-2 bg-emerald-55/10 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-500/20 px-4 py-1.5 rounded-full text-xs font-black uppercase">
-                      <Cpu className="h-3.5 w-3.5 text-emerald-500" /> Gemini AI Magic ✨
+                    <div className="inline-flex items-center gap-2 bg-purple-55/10 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-100 dark:border-purple-500/20 px-4 py-1.5 rounded-full text-xs font-black uppercase">
+                      <Cpu className="h-3.5 w-3.5 text-purple-500" /> Gemini AI Magic ✨
                     </div>
                     <h2 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white leading-none">
                       Gemini AI:<br />
@@ -1019,13 +1019,13 @@ export default function StartupPitch(): React.ReactElement {
                   {/* Terminal Box wrapped in TiltedCard */}
                   <div className="lg:col-span-6">
                     <TiltedCard>
-                      <div className="relative w-full h-[360px] bg-slate-900/90 text-emerald-400 p-5 rounded-2xl border border-slate-800 font-mono flex flex-col justify-between overflow-hidden shadow-xl">
+                      <div className="relative w-full h-[360px] bg-slate-900/90 text-purple-400 p-5 rounded-2xl border border-slate-800 font-mono flex flex-col justify-between overflow-hidden shadow-xl">
                         <div className="flex items-center justify-between border-b border-slate-800 pb-2">
                           <div className="flex items-center gap-2 text-slate-300 text-xs font-bold">
-                            <Sparkles className="h-4 w-4 text-emerald-400 animate-pulse" />
+                            <Sparkles className="h-4 w-4 text-purple-400 animate-pulse" />
                             <span>Gemini AI Engine v3.5</span>
                           </div>
-                          <span className="text-[9px] bg-emerald-500/10 text-emerald-400 font-bold px-2 py-0.5 rounded border border-emerald-500/20">READY</span>
+                          <span className="text-[9px] bg-purple-500/10 text-purple-400 font-bold px-2 py-0.5 rounded border border-purple-500/20">READY</span>
                         </div>
                         
                         <div className="flex-1 mt-4 space-y-3 text-[11px] overflow-y-auto pr-1">
@@ -1035,7 +1035,7 @@ export default function StartupPitch(): React.ReactElement {
                           </div>
                           
                           {aiTypingPhase === 1 && (
-                            <div className="flex items-center gap-2 text-emerald-400 font-bold text-[10px] animate-pulse">
+                            <div className="flex items-center gap-2 text-purple-400 font-bold text-[10px] animate-pulse">
                               <Cpu className="h-4 w-4 animate-spin" />
                               <span>Gemini AI dars rejasini tuzmoqda...</span>
                             </div>
@@ -1048,13 +1048,13 @@ export default function StartupPitch(): React.ReactElement {
                                   key={i} 
                                   initial={{ opacity: 0, x: -10 }} 
                                   animate={{ opacity: 1, x: 0 }}
-                                  className="text-[11px] text-emerald-400 font-semibold"
+                                  className="text-[11px] text-purple-400 font-semibold"
                                 >
                                   {log}
                                 </motion.div>
                               ))}
                               {aiTypingPhase === 1 && (
-                                <span className="inline-block h-3.5 w-2 bg-emerald-500 ml-1 animate-cursor" />
+                                <span className="inline-block h-3.5 w-2 bg-purple-500 ml-1 animate-cursor" />
                               )}
                             </div>
                           )}
@@ -1062,7 +1062,7 @@ export default function StartupPitch(): React.ReactElement {
                         
                         <div className="border-t border-slate-800 pt-3 flex items-center justify-between text-[10px] text-slate-500">
                           <span>AI Model:</span>
-                          <span className="text-emerald-400 font-bold">Gemini 3.5 Flash 🚀</span>
+                          <span className="text-purple-400 font-bold">Gemini 3.5 Flash 🚀</span>
                         </div>
                       </div>
                     </TiltedCard>
@@ -1074,8 +1074,8 @@ export default function StartupPitch(): React.ReactElement {
               {currentSlide === 5 && (
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center w-full text-left">
                   <div className="lg:col-span-6 space-y-6">
-                    <div className="inline-flex items-center gap-2 bg-emerald-55/10 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-500/20 px-4 py-1.5 rounded-full text-xs font-black uppercase">
-                      <Search className="h-3.5 w-3.5 text-emerald-500" /> Global Qidiruv
+                    <div className="inline-flex items-center gap-2 bg-purple-55/10 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-100 dark:border-purple-500/20 px-4 py-1.5 rounded-full text-xs font-black uppercase">
+                      <Search className="h-3.5 w-3.5 text-purple-500" /> Global Qidiruv
                     </div>
                     <h2 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white leading-none">
                       Cmd + K:<br />
@@ -1095,7 +1095,7 @@ export default function StartupPitch(): React.ReactElement {
                         <div className="flex-1 flex flex-col justify-center items-center gap-6">
                           <div className="flex gap-3">
                             <motion.kbd 
-                              animate={cmdKActive ? { scale: [1, 0.9, 1], backgroundColor: ["#ffffff", "#10b981", "#ffffff"], color: ["#475569", "#ffffff", "#475569"] } : {}}
+                              animate={cmdKActive ? { scale: [1, 0.9, 1], backgroundColor: ["#ffffff", "#9F86C0", "#ffffff"], color: ["#475569", "#ffffff", "#475569"] } : {}}
                               transition={{ repeat: Infinity, repeatDelay: 3.5, duration: 0.5 }}
                               className="px-4 py-2 border border-slate-300 dark:border-slate-800 rounded-xl text-sm font-bold bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-350 shadow-sm"
                             >
@@ -1103,7 +1103,7 @@ export default function StartupPitch(): React.ReactElement {
                             </motion.kbd>
                             <span className="text-slate-400 font-bold self-center text-lg">+</span>
                             <motion.kbd 
-                              animate={cmdKActive ? { scale: [1, 0.9, 1], backgroundColor: ["#ffffff", "#10b981", "#ffffff"], color: ["#475569", "#ffffff", "#475569"] } : {}}
+                              animate={cmdKActive ? { scale: [1, 0.9, 1], backgroundColor: ["#ffffff", "#9F86C0", "#ffffff"], color: ["#475569", "#ffffff", "#475569"] } : {}}
                               transition={{ repeat: Infinity, repeatDelay: 3.5, duration: 0.5, delay: 0.3 }}
                               className="px-4 py-2 border border-slate-300 dark:border-slate-800 rounded-xl text-sm font-bold bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-355 shadow-sm"
                             >
@@ -1120,12 +1120,12 @@ export default function StartupPitch(): React.ReactElement {
                                 className="w-full max-w-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-lg text-left"
                               >
                                 <div className="flex items-center gap-2 text-slate-400 border-b border-slate-100 dark:border-slate-800/80 pb-2 mb-2">
-                                  <Search className="h-4 w-4 text-emerald-500" />
+                                  <Search className="h-4 w-4 text-purple-500" />
                                   <span className="text-xs font-bold text-slate-700 dark:text-slate-200">{activeSearchQuery}</span>
-                                  <span className="inline-block h-3.5 w-0.5 bg-emerald-500 animate-cursor" />
+                                  <span className="inline-block h-3.5 w-0.5 bg-purple-500 animate-cursor" />
                                 </div>
                                 <div className="space-y-1">
-                                  <div className="flex items-center justify-between text-[11px] p-2 bg-emerald-55/10 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 rounded-lg text-emerald-600 dark:text-emerald-400 font-bold">
+                                  <div className="flex items-center justify-between text-[11px] p-2 bg-purple-55/10 dark:bg-purple-500/10 border border-purple-100 dark:border-purple-500/20 rounded-lg text-purple-600 dark:text-purple-400 font-bold">
                                     <span>🔍 Backend Bootcamp 4.0</span>
                                     <span className="text-[9px] text-slate-400 font-medium">Guruhlar</span>
                                   </div>
@@ -1141,7 +1141,7 @@ export default function StartupPitch(): React.ReactElement {
                         
                         <div className="border-t border-slate-200 dark:border-slate-800/80 pt-2 flex items-center justify-between text-[10px] text-slate-400">
                           <span>Qidiruv tezligi:</span>
-                          <span className="text-emerald-500 font-bold">0ms / Instant ⚡</span>
+                          <span className="text-purple-500 font-bold">0ms / Instant ⚡</span>
                         </div>
                       </div>
                     </TiltedCard>
@@ -1153,8 +1153,8 @@ export default function StartupPitch(): React.ReactElement {
               {currentSlide === 6 && (
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center w-full text-left">
                   <div className="lg:col-span-6 space-y-6">
-                    <div className="inline-flex items-center gap-2 bg-emerald-55/10 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-500/20 px-4 py-1.5 rounded-full text-xs font-black uppercase">
-                      <Zap className="h-3.5 w-3.5 text-emerald-500" /> Ajoyib Tezlik
+                    <div className="inline-flex items-center gap-2 bg-purple-55/10 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-100 dark:border-purple-500/20 px-4 py-1.5 rounded-full text-xs font-black uppercase">
+                      <Zap className="h-3.5 w-3.5 text-purple-500" /> Ajoyib Tezlik
                     </div>
                     <h2 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white leading-none">
                       Millisekundlar<br />
@@ -1176,14 +1176,14 @@ export default function StartupPitch(): React.ReactElement {
                           <ReactBitsLoader />
                           
                           <div className="text-center">
-                            <h4 className="text-2xl font-black text-emerald-500">12ms</h4>
+                            <h4 className="text-2xl font-black text-purple-500">12ms</h4>
                             <p className="text-[10px] text-slate-500 dark:text-slate-400 font-extrabold uppercase tracking-widest mt-1">O'rtacha javob vaqti ⚡</p>
                           </div>
                         </div>
                         
                         <div className="border-t border-slate-200 dark:border-slate-800 w-full pt-2 flex items-center justify-between text-[10px] text-slate-400">
                           <span>Ishlash darajasi:</span>
-                          <span className="text-emerald-500 font-bold">A+ Excellent 🏅</span>
+                          <span className="text-purple-500 font-bold">A+ Excellent 🏅</span>
                         </div>
                       </div>
                     </TiltedCard>
@@ -1195,8 +1195,8 @@ export default function StartupPitch(): React.ReactElement {
               {currentSlide === 7 && (
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center w-full text-left">
                   <div className="lg:col-span-6 space-y-6">
-                    <div className="inline-flex items-center gap-2 bg-emerald-55/10 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-500/20 px-4 py-1.5 rounded-full text-xs font-black uppercase">
-                      <TrendingUp className="h-3.5 w-3.5 text-emerald-500" /> Moliya va Gamification
+                    <div className="inline-flex items-center gap-2 bg-purple-55/10 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-100 dark:border-purple-500/20 px-4 py-1.5 rounded-full text-xs font-black uppercase">
+                      <TrendingUp className="h-3.5 w-3.5 text-purple-500" /> Moliya va Gamification
                     </div>
                     <h2 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white leading-none">
                       Moliyaviy O'sish &<br />
@@ -1218,7 +1218,7 @@ export default function StartupPitch(): React.ReactElement {
                             <Coins className="h-4 w-4 text-amber-500" />
                             <span className="text-xs font-bold text-slate-700 dark:text-slate-200">LMS Coins O'sish Indeksi</span>
                           </div>
-                          <span className="text-[9px] text-emerald-650 dark:text-emerald-450 font-bold bg-emerald-500/10 px-2 py-0.5 rounded">UPTREND</span>
+                          <span className="text-[9px] text-purple-650 dark:text-purple-450 font-bold bg-purple-500/10 px-2 py-0.5 rounded">UPTREND</span>
                         </div>
                         
                         {/* SVG Line Chart */}
@@ -1226,8 +1226,8 @@ export default function StartupPitch(): React.ReactElement {
                           <svg className="w-full h-32 overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none">
                             <defs>
                               <linearGradient id="chartGradArea" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor="#10b981" stopOpacity="0.4" />
-                                <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
+                                <stop offset="0%" stopColor="#9F86C0" stopOpacity="0.4" />
+                                <stop offset="100%" stopColor="#9F86C0" stopOpacity="0" />
                               </linearGradient>
                             </defs>
                             
@@ -1247,7 +1247,7 @@ export default function StartupPitch(): React.ReactElement {
                               transition={{ duration: 1.5, ease: "easeOut" }}
                               d="M 0 85 L 20 70 L 40 75 L 60 50 L 80 40 L 100 20"
                               fill="none" 
-                              stroke="#10b981" 
+                              stroke="#9F86C0" 
                               strokeWidth="3.5"
                               strokeLinecap="round"
                             />
@@ -1263,7 +1263,7 @@ export default function StartupPitch(): React.ReactElement {
                         
                         <div className="border-t border-slate-200 dark:border-slate-800 pt-2 flex items-center justify-between text-[10px] text-slate-400">
                           <span>Rag'batlantirish effekti:</span>
-                          <span className="text-emerald-500 font-bold">+142% faollashish 🚀</span>
+                          <span className="text-purple-500 font-bold">+142% faollashish 🚀</span>
                         </div>
                       </div>
                     </TiltedCard>
@@ -1275,8 +1275,8 @@ export default function StartupPitch(): React.ReactElement {
               {currentSlide === 8 && (
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center w-full text-left">
                   <div className="lg:col-span-6 space-y-6">
-                    <div className="inline-flex items-center gap-2 bg-emerald-55/10 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-500/20 px-4 py-1.5 rounded-full text-xs font-black uppercase">
-                      <Layers className="h-3.5 w-3.5 text-emerald-500" /> Texnologik Stack
+                    <div className="inline-flex items-center gap-2 bg-purple-55/10 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-100 dark:border-purple-500/20 px-4 py-1.5 rounded-full text-xs font-black uppercase">
+                      <Layers className="h-3.5 w-3.5 text-purple-500" /> Texnologik Stack
                     </div>
                     <h2 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white leading-none">
                       Zamonaviy va <span className="text-gradient">
@@ -1296,7 +1296,7 @@ export default function StartupPitch(): React.ReactElement {
                           whileHover={{ scale: 1.04, rotateY: 8, rotateX: -4 }}
                           className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 flex flex-col items-center justify-center text-center cursor-pointer shadow-sm"
                         >
-                          <svg className="h-10 w-10 animate-spin text-cyan-400" style={{ animationDuration: "10s" }} viewBox="0 0 100 100" fill="none">
+                          <svg className="h-10 w-10 animate-spin text-fuchsia-400" style={{ animationDuration: "10s" }} viewBox="0 0 100 100" fill="none">
                             <ellipse cx="50" cy="50" rx="8" ry="20" transform="rotate(0 50 50)" stroke="currentColor" strokeWidth="2.5" />
                             <ellipse cx="50" cy="50" rx="8" ry="20" transform="rotate(60 50 50)" stroke="currentColor" strokeWidth="2.5" />
                             <ellipse cx="50" cy="50" rx="8" ry="20" transform="rotate(120 50 50)" stroke="currentColor" strokeWidth="2.5" />
@@ -1322,7 +1322,7 @@ export default function StartupPitch(): React.ReactElement {
                           whileHover={{ scale: 1.04, rotateY: 8, rotateX: 4 }}
                           className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 flex flex-col items-center justify-center text-center cursor-pointer shadow-sm"
                         >
-                          <svg className="h-10 w-10 text-emerald-500" viewBox="0 0 100 100" fill="none">
+                          <svg className="h-10 w-10 text-purple-500" viewBox="0 0 100 100" fill="none">
                             <rect x="15" y="15" width="70" height="70" rx="16" fill="currentColor" opacity="0.15" stroke="currentColor" strokeWidth="2.5" />
                             <path d="M50 25C40 35 40 45 42 62C47 64 57 64 65 52C70 45 70 35 50 25Z" fill="currentColor" />
                           </svg>
@@ -1350,8 +1350,8 @@ export default function StartupPitch(): React.ReactElement {
               {currentSlide === 9 && (
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center w-full text-left">
                   <div className="lg:col-span-6 space-y-6">
-                    <div className="inline-flex items-center gap-2 bg-emerald-55/10 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-500/20 px-5 py-2 rounded-full text-xs font-black uppercase">
-                      <HelpCircle className="h-4 w-4 text-emerald-500" /> Savol-Javoblar (Q&A)
+                    <div className="inline-flex items-center gap-2 bg-purple-55/10 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-100 dark:border-purple-500/20 px-5 py-2 rounded-full text-xs font-black uppercase">
+                      <HelpCircle className="h-4 w-4 text-purple-500" /> Savol-Javoblar (Q&A)
                     </div>
                     
                     <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-none text-slate-900 dark:text-white animate-shiny-sweep">
@@ -1364,12 +1364,12 @@ export default function StartupPitch(): React.ReactElement {
                     
                     <div className="grid grid-cols-2 gap-4">
                       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl shadow-sm">
-                        <p className="text-[9px] text-emerald-600 font-black uppercase tracking-wider">Aloqa</p>
+                        <p className="text-[9px] text-purple-600 font-black uppercase tracking-wider">Aloqa</p>
                         <p className="text-sm font-black text-slate-800 dark:text-white mt-1">LMSHub.uz</p>
                         <p className="text-[10px] text-slate-450 font-medium mt-0.5">info@lmshub.uz</p>
                       </div>
                       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl shadow-sm">
-                        <p className="text-[9px] text-emerald-600 font-black uppercase tracking-wider">Sloqan</p>
+                        <p className="text-[9px] text-purple-600 font-black uppercase tracking-wider">Sloqan</p>
                         <p className="text-xs font-black text-slate-800 dark:text-white mt-1">"Bozorni birgalikda yondiramiz! 🚀"</p>
                       </div>
                     </div>
@@ -1419,7 +1419,7 @@ export default function StartupPitch(): React.ReactElement {
                         
                         <div className="border-t border-slate-200 dark:border-slate-800 w-full pt-2 flex items-center justify-between text-[10px] text-slate-400">
                           <span>Parvoz holati:</span>
-                          <span className="text-emerald-500 font-bold">{rocketLaunched ? "LAUNCHED 🛰️" : "READY FOR TAKEOFF"}</span>
+                          <span className="text-purple-500 font-bold">{rocketLaunched ? "LAUNCHED 🛰️" : "READY FOR TAKEOFF"}</span>
                         </div>
                       </div>
                     </TiltedCard>
@@ -1441,7 +1441,7 @@ export default function StartupPitch(): React.ReactElement {
               }}
               className={`flex-none w-28 p-2 rounded-lg border text-left transition-all relative overflow-hidden ${
                 i === currentSlide 
-                  ? "bg-emerald-55/10 dark:bg-emerald-500/10 border-emerald-500" 
+                  ? "bg-purple-55/10 dark:bg-purple-500/10 border-purple-500" 
                   : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-350 dark:hover:border-slate-700"
               }`}
             >
@@ -1459,7 +1459,7 @@ export default function StartupPitch(): React.ReactElement {
                 {i === 9 && "Yakuniy Q&A"}
               </div>
               {i === currentSlide && (
-                <div className="absolute bottom-0 left-0 right-0 h-1 bg-emerald-500" />
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-purple-500" />
               )}
             </button>
           ))}
@@ -1489,7 +1489,7 @@ export default function StartupPitch(): React.ReactElement {
           </div>
 
           <div className="text-sm font-bold text-slate-650 dark:text-slate-400 bg-white/80 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-900 px-4 py-2 rounded-xl">
-            Slayd <span className="text-emerald-550 dark:text-emerald-400 font-black">{currentSlide + 1}</span> / {totalSlides}
+            Slayd <span className="text-purple-550 dark:text-purple-400 font-black">{currentSlide + 1}</span> / {totalSlides}
           </div>
 
           <div className="text-xs font-bold text-slate-400 dark:text-slate-500 hidden sm:block">

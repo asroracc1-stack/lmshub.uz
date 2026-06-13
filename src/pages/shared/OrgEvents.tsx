@@ -62,7 +62,7 @@ const COLORS = [
   { id: "primary", cls: "bg-primary text-primary-foreground" },
   { id: "accent", cls: "bg-accent text-accent-foreground" },
   { id: "secondary", cls: "bg-secondary text-secondary-foreground" },
-  { id: "emerald", cls: "bg-emerald-500 text-white" },
+  { id: "purple", cls: "bg-purple-500 text-white" },
   { id: "amber", cls: "bg-amber-500 text-white" },
   { id: "rose", cls: "bg-rose-500 text-white" },
 ];

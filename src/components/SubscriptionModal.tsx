@@ -82,7 +82,7 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
                   transition={{ delay: i * 0.05 }}
                   className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/5 transition-colors"
                 >
-                  <ShieldCheck className="h-4 w-4 text-emerald-500 shrink-0" />
+                  <ShieldCheck className="h-4 w-4 text-purple-500 shrink-0" />
                   <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">{f}</span>
                 </motion.div>
               ))}

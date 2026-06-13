@@ -588,8 +588,8 @@ export default function MembersList({ role, title, description, canManage }: Pro
 
                         <TableCell>
                           {m.is_active !== false ? (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
-                              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping-slow mr-1" />
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-purple-500/10 text-purple-600 border border-purple-500/20">
+                              <span className="h-1.5 w-1.5 rounded-full bg-purple-500 animate-ping-slow mr-1" />
                               Faol
                             </span>
                           ) : (
@@ -638,7 +638,7 @@ export default function MembersList({ role, title, description, canManage }: Pro
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className={m.is_active !== false ? "h-8 w-8 rounded-lg text-amber-600 hover:text-amber-700 hover:bg-amber-500/15" : "h-8 w-8 rounded-lg text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/15"}
+                                  className={m.is_active !== false ? "h-8 w-8 rounded-lg text-amber-600 hover:text-amber-700 hover:bg-amber-500/15" : "h-8 w-8 rounded-lg text-purple-600 hover:text-purple-700 hover:bg-purple-500/15"}
                                   onClick={() => toggleActive(m)}
                                   title={m.is_active !== false ? "Bloklash" : "Faollashtirish"}
                                 >

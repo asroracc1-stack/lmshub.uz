@@ -55,7 +55,7 @@ export default function HeroPreview() {
                 </div>
               </div>
               <div className="flex gap-1">
-                <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                <span className="h-2 w-2 rounded-full bg-purple-500" />
                 <span className="h-2 w-2 rounded-full bg-amber-400" />
                 <span className="h-2 w-2 rounded-full bg-rose-500" />
               </div>
@@ -67,7 +67,7 @@ export default function HeroPreview() {
               <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Overall band</p>
               <div className="flex items-end gap-2 mt-1">
                 <span className="font-display text-5xl font-bold neon-text leading-none">7.5</span>
-                <span className="text-[11px] text-emerald-400 mb-1.5 inline-flex items-center gap-1">
+                <span className="text-[11px] text-purple-400 mb-1.5 inline-flex items-center gap-1">
                   <TrendingUp className="h-3 w-3" /> +0.5
                 </span>
               </div>
@@ -79,7 +79,7 @@ export default function HeroPreview() {
                 { icon: Headphones, label: "Listening", v: 8.0, c: "primary" },
                 { icon: BookOpen, label: "Reading", v: 7.5, c: "secondary" },
                 { icon: PenLine, label: "Writing", v: 7.0, c: "accent" },
-                { icon: Mic, label: "Speaking", v: 7.5, c: "emerald" },
+                { icon: Mic, label: "Speaking", v: 7.5, c: "purple" },
               ].map((m) => (
                 <div
                   key={m.label}
@@ -93,7 +93,7 @@ export default function HeroPreview() {
                           ? "text-secondary"
                           : m.c === "accent"
                             ? "text-accent"
-                            : "text-emerald-400"
+                            : "text-purple-400"
                     }`}
                   />
                   <p className="text-[9px] text-muted-foreground truncate">{m.label}</p>
@@ -106,7 +106,7 @@ export default function HeroPreview() {
             <div className="mt-3 rounded-xl bg-muted/20 border border-border/40 p-3">
               <div className="flex items-center justify-between mb-1">
                 <p className="text-[10px] text-muted-foreground">Progress · 30 kun</p>
-                <span className="text-[10px] text-emerald-400 inline-flex items-center gap-0.5">
+                <span className="text-[10px] text-purple-400 inline-flex items-center gap-0.5">
                   <Activity className="h-2.5 w-2.5" /> +18%
                 </span>
               </div>
@@ -143,15 +143,15 @@ export default function HeroPreview() {
         <motion.div
           animate={{ y: [0, 12, 0] }}
           transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut" }}
-          className="w-[210px] rounded-2xl p-[1px] bg-gradient-to-br from-emerald-500/60 via-primary/40 to-secondary/60 shadow-glow"
+          className="w-[210px] rounded-2xl p-[1px] bg-gradient-to-br from-purple-500/60 via-primary/40 to-secondary/60 shadow-glow"
         >
           <div className="rounded-2xl glass p-3 backdrop-blur-xl">
             <div className="flex items-center gap-2 mb-2">
               <div className="relative">
-                <div className="h-9 w-9 rounded-xl bg-emerald-500/20 grid place-items-center">
-                  <Mic className="h-4 w-4 text-emerald-400" />
+                <div className="h-9 w-9 rounded-xl bg-purple-500/20 grid place-items-center">
+                  <Mic className="h-4 w-4 text-purple-400" />
                 </div>
-                <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-background animate-glow-pulse" />
+                <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-purple-500 ring-2 ring-background animate-glow-pulse" />
               </div>
               <div className="min-w-0">
                 <p className="text-[11px] font-semibold truncate">AI Speaking · Live</p>
@@ -164,13 +164,13 @@ export default function HeroPreview() {
                   key={i}
                   animate={{ height: [`${h * 80}%`, `${(1 - h) * 60 + 25}%`, `${h * 80}%`] }}
                   transition={{ duration: 1.1, repeat: Infinity, delay: i * 0.06 }}
-                  className="w-[3px] rounded-full bg-gradient-to-t from-emerald-500 to-primary"
+                  className="w-[3px] rounded-full bg-gradient-to-t from-purple-500 to-primary"
                 />
               ))}
             </div>
             <div className="flex items-center justify-between text-[9px]">
               <span className="text-muted-foreground">Fluency</span>
-              <span className="font-semibold text-emerald-400">Band 7.5</span>
+              <span className="font-semibold text-purple-400">Band 7.5</span>
             </div>
           </div>
         </motion.div>
@@ -199,7 +199,7 @@ export default function HeroPreview() {
             {[
               { name: "IELTS Premium", price: "499K", c: "from-primary to-secondary" },
               { name: "SAT Pack", price: "799K", c: "from-secondary to-accent" },
-              { name: "National Cert.", price: "299K", c: "from-emerald-500 to-primary" },
+              { name: "National Cert.", price: "299K", c: "from-purple-500 to-primary" },
             ].map((p) => (
               <div key={p.name} className="flex items-center justify-between py-1.5 border-b border-border/30 last:border-0">
                 <div className="flex items-center gap-2">
@@ -231,7 +231,7 @@ export default function HeroPreview() {
                 <Users className="h-3.5 w-3.5 text-primary" />
                 <p className="text-[11px] font-semibold">Active Students</p>
               </div>
-              <TrendingUp className="h-3 w-3 text-emerald-400" />
+              <TrendingUp className="h-3 w-3 text-purple-400" />
             </div>
             <p className="font-display text-2xl font-bold neon-text leading-none">2,847</p>
             <p className="text-[9px] text-muted-foreground mt-0.5">+12.4% bu hafta</p>
@@ -298,9 +298,9 @@ export default function HeroPreview() {
         <motion.div
           animate={{ y: [0, -8, 0] }}
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-          className="rounded-full glass border border-emerald-500/40 px-3 py-1.5 flex items-center gap-1.5 shadow-glow"
+          className="rounded-full glass border border-purple-500/40 px-3 py-1.5 flex items-center gap-1.5 shadow-glow"
         >
-          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+          <CheckCircle2 className="h-3.5 w-3.5 text-purple-400" />
           <span className="text-[10px] font-semibold">Attendance · 96%</span>
         </motion.div>
       </motion.div>

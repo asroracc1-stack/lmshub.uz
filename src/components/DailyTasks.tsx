@@ -35,7 +35,7 @@ export default function DailyTasks() {
             particleCount: 150,
             spread: 70,
             origin: { y: 0.6 },
-            colors: ["#10b981", "#34d399", "#059669"]
+            colors: ["#9F86C0", "#E7C6FF", "#240046"]
           });
         }
       } catch (e) {
@@ -68,7 +68,7 @@ export default function DailyTasks() {
     )}>
       <div className={cn(
         "absolute -right-10 -top-10 h-32 w-32 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700",
-        isDark ? "bg-emerald-500/5" : "bg-emerald-500/10"
+        isDark ? "bg-purple-500/5" : "bg-purple-500/10"
       )} />
       
       <div className="relative z-10 flex flex-col h-full">
@@ -77,7 +77,7 @@ export default function DailyTasks() {
             {t("userDashboard.dailyTasks.title")}
           </h3>
           {allCompleted && (
-            <span className="inline-flex items-center text-[10px] font-black uppercase tracking-widest px-3 py-1 bg-emerald-500 text-white rounded-full animate-bounce shadow-lg shadow-emerald-500/20">
+            <span className="inline-flex items-center text-[10px] font-black uppercase tracking-widest px-3 py-1 bg-purple-500 text-white rounded-full animate-bounce shadow-lg shadow-purple-500/20">
               {t("userDashboard.dailyTasks.superResult")}
             </span>
           )}
@@ -97,7 +97,7 @@ export default function DailyTasks() {
                   <div className={cn(
                     "h-6 w-6 rounded-full flex items-center justify-center transition-colors",
                     task.isCompleted 
-                      ? "bg-emerald-500/10 text-emerald-500" 
+                      ? "bg-purple-500/10 text-purple-500" 
                       : isDark ? "bg-white/5 text-slate-700" : "bg-slate-100 text-slate-400"
                   )}>
                     {task.isCompleted ? <CheckCircle2 className="h-4 w-4" /> : <Circle className="h-4 w-4" />}
@@ -105,7 +105,7 @@ export default function DailyTasks() {
                   <span className={cn(
                     "font-bold transition-colors",
                     task.isCompleted 
-                      ? (isDark ? "text-emerald-400" : "text-emerald-600")
+                      ? (isDark ? "text-purple-400" : "text-purple-600")
                       : (isDark ? "text-slate-400" : "text-slate-600")
                   )}>
                     {task.title}
@@ -126,7 +126,7 @@ export default function DailyTasks() {
                    className={cn(
                      "h-full rounded-full transition-all duration-700 shadow-lg",
                      task.isCompleted 
-                       ? "bg-gradient-to-r from-emerald-500 to-teal-400 shadow-emerald-500/30" 
+                       ? "bg-gradient-to-r from-purple-500 to-violet-400 shadow-purple-500/30" 
                        : isDark ? "bg-slate-800" : "bg-slate-300"
                    )}
                 />
@@ -142,14 +142,14 @@ export default function DailyTasks() {
               animate={{ opacity: 1, y: 0 }}
               className={cn(
                 "mt-8 p-5 rounded-2xl border text-center transition-all duration-500",
-                isDark ? "bg-emerald-500/10 border-emerald-500/20" : "bg-emerald-50 border-emerald-100"
+                isDark ? "bg-purple-500/10 border-purple-500/20" : "bg-purple-50 border-purple-100"
               )}
             >
-              <div className={cn("flex items-center justify-center gap-2 font-black text-xs uppercase tracking-widest mb-2", isDark ? "text-emerald-400" : "text-emerald-600")}>
+              <div className={cn("flex items-center justify-center gap-2 font-black text-xs uppercase tracking-widest mb-2", isDark ? "text-purple-400" : "text-purple-600")}>
                 <Trophy size={16} />
                 <span>{t("userDashboard.dailyTasks.allDoneTitle")}</span>
               </div>
-              <p className={cn("text-[11px] font-bold leading-relaxed", isDark ? "text-emerald-50/50" : "text-emerald-900/60")}>
+              <p className={cn("text-[11px] font-bold leading-relaxed", isDark ? "text-purple-50/50" : "text-purple-900/60")}>
                 {t("userDashboard.dailyTasks.allDoneDesc")}
               </p>
             </motion.div>

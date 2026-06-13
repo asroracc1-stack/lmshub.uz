@@ -45,7 +45,7 @@ export default function MessageBubble({ msg, isMine, isGroup, onReply, onForward
     >
       <div className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm shadow-sm space-y-1 relative ${
         isMine 
-          ? "bg-gradient-to-br from-emerald-500/90 to-teal-500/90 text-white rounded-br-sm" 
+          ? "bg-gradient-to-br from-purple-500/90 to-violet-500/90 text-white rounded-br-sm" 
           : "bg-muted/80 text-foreground rounded-bl-sm border border-border/30 backdrop-blur-sm"
       }`}>
         
@@ -82,7 +82,7 @@ export default function MessageBubble({ msg, isMine, isGroup, onReply, onForward
 
         {/* Reply Context */}
         {msg.replyToId && (
-          <div className={`text-[10px] pl-2 border-l-2 mb-1 ${isMine ? 'border-emerald-200 text-emerald-100 bg-black/10' : 'border-primary/50 text-muted-foreground bg-primary/5'} py-1 px-2 rounded-r-md cursor-pointer truncate max-w-full`}>
+          <div className={`text-[10px] pl-2 border-l-2 mb-1 ${isMine ? 'border-purple-200 text-purple-100 bg-black/10' : 'border-primary/50 text-muted-foreground bg-primary/5'} py-1 px-2 rounded-r-md cursor-pointer truncate max-w-full`}>
             O'z javobi (qidirilmoqda...)
           </div>
         )}
@@ -124,13 +124,13 @@ export default function MessageBubble({ msg, isMine, isGroup, onReply, onForward
           </p>
         )}
 
-        <div className={`flex items-center justify-end gap-1 text-[9px] mt-1 ${isMine ? "text-emerald-50" : "text-muted-foreground"}`}>
+        <div className={`flex items-center justify-end gap-1 text-[9px] mt-1 ${isMine ? "text-purple-50" : "text-muted-foreground"}`}>
           {msg.isPinned && <Pin className="h-2.5 w-2.5 mr-1" />}
           <span>
             {new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
           </span>
           {isMine && (
-            isSeen ? <CheckCheck className="h-3 w-3 text-emerald-200" /> : <Check className="h-3 w-3 opacity-70" />
+            isSeen ? <CheckCheck className="h-3 w-3 text-purple-200" /> : <Check className="h-3 w-3 opacity-70" />
           )}
         </div>
       </div>

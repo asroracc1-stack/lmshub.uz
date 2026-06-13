@@ -300,14 +300,14 @@ export default function Organizations() {
                 </div>
               </div>
               <div className="grid gap-4 border border-border p-4 rounded-xl bg-muted/5">
-                <Label className="text-base font-semibold text-emerald-700">Tashkilot manzili</Label>
+                <Label className="text-base font-semibold text-purple-700">Tashkilot manzili</Label>
                 <div className="grid gap-2">
                   <Label>Viloyat / Hudud *</Label>
                   <Select
                     value={form.address.region}
                     onValueChange={(v) => setForm(f => ({ ...f, address: { ...f.address, region: v } }))}
                   >
-                    <SelectTrigger className="focus:ring-emerald-500 rounded-xl h-11">
+                    <SelectTrigger className="focus:ring-purple-500 rounded-xl h-11">
                       <SelectValue placeholder="Viloyatni tanlang" />
                     </SelectTrigger>
                     <SelectContent>
@@ -324,7 +324,7 @@ export default function Organizations() {
                       value={form.address.district}
                       onChange={(e) => setForm(f => ({ ...f, address: { ...f.address, district: e.target.value } }))}
                       placeholder="Masalan: Chilonzor tumani yoki Qo'qon shahar"
-                      className="focus:ring-emerald-500 focus:border-emerald-500 rounded-xl h-11"
+                      className="focus:ring-purple-500 focus:border-purple-500 rounded-xl h-11"
                     />
                   </div>
                   <div className="grid gap-2">
@@ -333,7 +333,7 @@ export default function Organizations() {
                       value={form.address.streetAddress}
                       onChange={(e) => setForm(f => ({ ...f, address: { ...f.address, streetAddress: e.target.value } }))}
                       placeholder="Masalan: Bog'ishamol ko'chasi, 12-uy"
-                      className="focus:ring-emerald-500 focus:border-emerald-500 rounded-xl h-11"
+                      className="focus:ring-purple-500 focus:border-purple-500 rounded-xl h-11"
                     />
                   </div>
                 </div>

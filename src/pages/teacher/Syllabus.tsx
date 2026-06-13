@@ -705,18 +705,18 @@ export default function Syllabus() {
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.93 }}
                       transition={{ duration: 0.3 }}
-                      className="bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-transparent border border-emerald-500/20 shadow-lg shadow-emerald-500/5 rounded-3xl p-5 text-foreground min-h-[290px] flex flex-col justify-between relative overflow-hidden"
+                      className="bg-gradient-to-br from-purple-500/10 via-violet-500/5 to-transparent border border-purple-500/20 shadow-lg shadow-purple-500/5 rounded-3xl p-5 text-foreground min-h-[290px] flex flex-col justify-between relative overflow-hidden"
                     >
                       {/* Decorative Background Circles */}
-                      <div className="absolute -top-12 -right-12 h-32 w-32 rounded-full bg-emerald-500/10 blur-2xl pointer-events-none" />
-                      <div className="absolute -bottom-12 -left-12 h-32 w-32 rounded-full bg-teal-500/10 blur-2xl pointer-events-none" />
+                      <div className="absolute -top-12 -right-12 h-32 w-32 rounded-full bg-purple-500/10 blur-2xl pointer-events-none" />
+                      <div className="absolute -bottom-12 -left-12 h-32 w-32 rounded-full bg-violet-500/10 blur-2xl pointer-events-none" />
 
                       <div>
                         <div className="flex items-center justify-between">
-                          <div className="h-8 w-8 rounded-lg bg-emerald-500/10 grid place-items-center shadow-sm">
-                            <BookOpen className="h-4.5 w-4.5 text-emerald-600 dark:text-emerald-400" />
+                          <div className="h-8 w-8 rounded-lg bg-purple-500/10 grid place-items-center shadow-sm">
+                            <BookOpen className="h-4.5 w-4.5 text-purple-600 dark:text-purple-400" />
                           </div>
-                          <Badge variant="outline" className="bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-[9px] uppercase tracking-wider font-semibold rounded-md">
+                          <Badge variant="outline" className="bg-purple-500/5 text-purple-600 dark:text-purple-400 border-purple-500/20 text-[9px] uppercase tracking-wider font-semibold rounded-md">
                             {selectedSubjectName}
                           </Badge>
                         </div>
@@ -732,7 +732,7 @@ export default function Syllabus() {
                           {/* Event specifics */}
                           <div className="space-y-1.5 pt-3">
                             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                              <Calendar className="h-3.5 w-3.5 text-emerald-500" />
+                              <Calendar className="h-3.5 w-3.5 text-purple-500" />
                               <span>
                                 {watchedStartsAt 
                                   ? new Date(watchedStartsAt).toLocaleString("uz-UZ", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })
@@ -741,7 +741,7 @@ export default function Syllabus() {
                             </div>
                             {watchedRoom && (
                               <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                <MapPin className="h-3.5 w-3.5 text-teal-500" />
+                                <MapPin className="h-3.5 w-3.5 text-violet-500" />
                                 <span>Xona: <strong className="font-bold text-foreground">{watchedRoom}</strong></span>
                               </div>
                             )}
@@ -752,7 +752,7 @@ export default function Syllabus() {
                       {/* Attached PDF/PPTX representation */}
                       <div className="pt-4 border-t border-border/40 text-xs text-muted-foreground truncate">
                         {watchedLink ? (
-                          <span className="text-emerald-600 dark:text-emerald-400 font-medium underline flex items-center gap-1.5">
+                          <span className="text-purple-600 dark:text-purple-400 font-medium underline flex items-center gap-1.5">
                             <LinkIcon className="h-3.5 w-3.5" /> Havola: {watchedLink}
                           </span>
                         ) : (
@@ -779,7 +779,7 @@ export default function Syllabus() {
                 <Button 
                   onClick={form.handleSubmit(onSubmit)} 
                   disabled={saveLessonMutation.isPending}
-                  className="bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 h-11 px-5 flex items-center gap-1.5"
+                  className="bg-gradient-to-r from-purple-500 via-violet-500 to-purple-600 hover:from-purple-600 hover:to-violet-700 text-white font-bold rounded-xl shadow-lg shadow-purple-500/20 h-11 px-5 flex items-center gap-1.5"
                 >
                   {saveLessonMutation.isPending ? (
                     <Loader2 className="h-4 w-4 animate-spin" />

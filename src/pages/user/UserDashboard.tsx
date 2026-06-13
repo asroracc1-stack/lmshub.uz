@@ -62,7 +62,7 @@ interface FreeExam {
 }
 
 const DIFFICULTY_META: Record<string, { labelKey: string; cls: string; icon: any }> = {
-  easy:   { labelKey: "mockCategory.difficulty.easy",   cls: "bg-emerald-500/15 text-emerald-700 border-emerald-500/30", icon: Leaf },
+  easy:   { labelKey: "mockCategory.difficulty.easy",   cls: "bg-purple-500/15 text-purple-700 border-purple-500/30", icon: Leaf },
   medium: { labelKey: "mockCategory.difficulty.medium", cls: "bg-amber-500/15 text-amber-700 border-amber-500/30",      icon: Sparkles },
   hard:   { labelKey: "mockCategory.difficulty.hard",   cls: "bg-rose-500/15 text-rose-700 border-rose-500/30",          icon: FileText },
 };
@@ -186,7 +186,7 @@ export default function UserDashboard() {
       label: t("userDashboard.stats.dailyStreak"),
       value: stats?.streak ?? 0,
       icon: Flame,
-      color: isDark ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-emerald-50 text-emerald-600 border-emerald-100",
+      color: isDark ? "bg-purple-500/10 text-purple-400 border-purple-500/20" : "bg-purple-50 text-purple-600 border-purple-100",
     },
   ];
 
@@ -312,7 +312,7 @@ export default function UserDashboard() {
                 {stats?.weeklyData?.map((d) => (
                   <span
                     key={d.day}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold ${d.minutes > 0 ? "bg-emerald-500 text-white" : isDark ? "bg-white/5 text-slate-500" : "bg-slate-100 text-slate-400"}`}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold ${d.minutes > 0 ? "bg-purple-500 text-white" : isDark ? "bg-white/5 text-slate-500" : "bg-slate-100 text-slate-400"}`}
                   >
                     {d.day}
                   </span>
@@ -367,13 +367,13 @@ export default function UserDashboard() {
         <div className="flex items-center justify-between">
           <div>
             <h3 className="font-display font-black text-2xl text-slate-800 dark:text-white flex items-center gap-2">
-              {t("userDashboard.freeMocks.title")} <Gift className="h-6 w-6 text-emerald-500 animate-pulse" />
+              {t("userDashboard.freeMocks.title")} <Gift className="h-6 w-6 text-purple-500 animate-pulse" />
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
               {t("userDashboard.freeMocks.subtitle")}
             </p>
           </div>
-          <Badge className="bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 px-3.5 py-1.5 rounded-full font-black text-[10px] uppercase">
+          <Badge className="bg-purple-500/10 text-purple-500 border border-purple-500/20 px-3.5 py-1.5 rounded-full font-black text-[10px] uppercase">
             Free Tier Mocks
           </Badge>
         </div>
@@ -406,7 +406,7 @@ export default function UserDashboard() {
                   <Card className="w-full p-6 bg-white/60 dark:bg-slate-900/60 border border-slate-100 dark:border-white/5 backdrop-blur-xl rounded-[2rem] shadow-lg flex flex-col justify-between group">
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <Badge className="bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 uppercase text-[9px] font-bold tracking-wider rounded-full">
+                        <Badge className="bg-purple-500/10 text-purple-500 border border-purple-500/20 uppercase text-[9px] font-bold tracking-wider rounded-full">
                           Diagnostic Free
                         </Badge>
                         <Badge variant="outline" className={`rounded-full ${diff.cls} text-[9px] px-2 py-0.5`}>
@@ -489,7 +489,7 @@ export default function UserDashboard() {
             <h3 className={cn("font-display font-black text-2xl", isDark ? "text-white" : "text-slate-900")}>{t("userDashboard.chart.title")}</h3>
             <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mt-1">{t("userDashboard.chart.subtitle")}</p>
           </div>
-          <Badge className="bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 px-4 py-1.5 rounded-full font-black text-xs">
+          <Badge className="bg-purple-500/10 text-purple-500 border border-purple-500/20 px-4 py-1.5 rounded-full font-black text-xs">
             {t("userDashboard.chart.totalMinutes", { count: (stats?.totalMinutes || 0).toFixed(1) })}
           </Badge>
         </div>
@@ -503,7 +503,7 @@ export default function UserDashboard() {
                     initial={{ height: 0 }}
                     animate={{ height: `${Math.max(8, h)}%` }}
                     transition={{ duration: 1, delay: i * 0.1, ease: "circOut" }}
-                    className="w-full max-w-[40px] bg-gradient-to-t from-emerald-600 to-teal-400 rounded-2xl min-h-[8px] relative shadow-lg shadow-emerald-500/20 group-hover:shadow-emerald-500/40 transition-all"
+                    className="w-full max-w-[40px] bg-gradient-to-t from-purple-600 to-violet-400 rounded-2xl min-h-[8px] relative shadow-lg shadow-purple-500/20 group-hover:shadow-purple-500/40 transition-all"
                   >
                      <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-2 py-1 rounded font-bold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
                         {d.minutes}m

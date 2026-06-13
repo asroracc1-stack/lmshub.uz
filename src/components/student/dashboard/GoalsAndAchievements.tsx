@@ -11,7 +11,7 @@ export default function GoalsAndAchievements({ data }: GoalsAndAchievementsProps
   
   const getGoalIcon = (type: string) => {
     switch(type) {
-      case "test": return <BookOpen className="h-4 w-4 text-emerald-500" />;
+      case "test": return <BookOpen className="h-4 w-4 text-purple-500" />;
       case "practice": return <Mic className="h-4 w-4 text-blue-500" />;
       case "vocabulary": return <Flame className="h-4 w-4 text-orange-500" />;
       case "writing": return <PenTool className="h-4 w-4 text-purple-500" />;
@@ -22,7 +22,7 @@ export default function GoalsAndAchievements({ data }: GoalsAndAchievementsProps
 
   const getAchievementIcon = (type: string) => {
     switch(type) {
-      case "streak": return <Flame className="h-5 w-5 text-emerald-500" />;
+      case "streak": return <Flame className="h-5 w-5 text-purple-500" />;
       case "star": return <Star className="h-5 w-5 text-purple-500" />;
       case "top10": return <Crown className="h-5 w-5 text-amber-500" />;
       default: return <Star className="h-5 w-5 text-slate-500" />;
@@ -31,7 +31,7 @@ export default function GoalsAndAchievements({ data }: GoalsAndAchievementsProps
 
   const getAchievementBg = (type: string) => {
     switch(type) {
-      case "streak": return "bg-emerald-100";
+      case "streak": return "bg-purple-100";
       case "star": return "bg-purple-100";
       case "top10": return "bg-amber-100";
       default: return "bg-slate-100";
@@ -52,7 +52,7 @@ export default function GoalsAndAchievements({ data }: GoalsAndAchievementsProps
           <div className="flex-1 space-y-4">
             {data.todayGoals.map((goal) => (
               <div key={goal.id} className="flex items-center gap-3">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-slate-50 border ${goal.isCompleted ? 'border-emerald-200' : 'border-slate-200'}`}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-slate-50 border ${goal.isCompleted ? 'border-purple-200' : 'border-slate-200'}`}>
                   {getGoalIcon(goal.type)}
                 </div>
                 
@@ -65,7 +65,7 @@ export default function GoalsAndAchievements({ data }: GoalsAndAchievementsProps
                 
                 <div className="shrink-0 flex items-center">
                   {goal.isCompleted ? (
-                    <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-white">
+                    <div className="w-6 h-6 rounded-full bg-purple-500 flex items-center justify-center text-white">
                       <CheckCircle2 className="h-4 w-4" />
                     </div>
                   ) : goal.progress !== null ? (
@@ -91,7 +91,7 @@ export default function GoalsAndAchievements({ data }: GoalsAndAchievementsProps
         <Card className="p-5 rounded-3xl shadow-sm border-slate-100 h-full flex flex-col">
           <div className="flex justify-between items-center mb-5">
             <h3 className="font-bold text-slate-900">Yutuqlar</h3>
-            <button className="text-[10px] text-emerald-600 font-medium flex items-center gap-1 hover:underline">
+            <button className="text-[10px] text-purple-600 font-medium flex items-center gap-1 hover:underline">
               Barchasini ko'rish <ArrowRight className="h-3 w-3" />
             </button>
           </div>

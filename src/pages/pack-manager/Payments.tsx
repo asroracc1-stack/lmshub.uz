@@ -109,7 +109,7 @@ export default function PackManagerPayments({ initialFilter = "pending" as Filte
   };
 
   const StatusBadge = ({ s }: { s: string }) => {
-    if (s === "paid" || s === "completed") return <Badge className="bg-emerald-500 text-white">Approved</Badge>;
+    if (s === "paid" || s === "completed") return <Badge className="bg-purple-500 text-white">Approved</Badge>;
     if (s === "rejected") return <Badge variant="destructive">Rejected</Badge>;
     return <Badge className="bg-amber-500 text-white">Pending</Badge>;
   };
@@ -118,7 +118,7 @@ export default function PackManagerPayments({ initialFilter = "pending" as Filte
     <div className="space-y-5 w-full">
       <div>
         <h1 className="text-2xl md:text-3xl font-display font-bold flex items-center gap-2">
-          <Wallet className="h-6 w-6 text-emerald-500" /> Payment Requests
+          <Wallet className="h-6 w-6 text-purple-500" /> Payment Requests
         </h1>
         <p className="text-sm text-muted-foreground mt-1">Tasdiqlash, rad etish va tarix</p>
       </div>
@@ -188,7 +188,7 @@ export default function PackManagerPayments({ initialFilter = "pending" as Filte
                         )}
                         {p.status === "pending" && (
                           <>
-                            <Button size="sm" className="bg-emerald-500 hover:bg-emerald-600 text-white"
+                            <Button size="sm" className="bg-purple-500 hover:bg-purple-600 text-white"
                                     disabled={busyId === p.id} onClick={() => approve(p.id)}>
                               {busyId === p.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <><CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Approve</>}
                             </Button>

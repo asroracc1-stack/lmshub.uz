@@ -31,7 +31,7 @@ export default function Navbar({ isCollapsed, setIsCollapsed, setIsMenuOpen }: N
               setIsMenuOpen(true);
             }
           }}
-          className="p-2.5 rounded-xl text-slate-500 hover:bg-emerald-50 hover:text-emerald-600 transition-all border border-slate-100 shadow-sm active:scale-95 group bg-white"
+          className="p-2.5 rounded-xl text-slate-500 hover:bg-purple-50 hover:text-purple-600 transition-all border border-slate-100 shadow-sm active:scale-95 group bg-white"
           aria-label="Toggle Sidebar"
         >
           {isCollapsed ? <PanelLeftOpen size={20} className="md:block hidden" /> : <PanelLeftClose size={20} className="md:block hidden" />}
@@ -48,7 +48,7 @@ export default function Navbar({ isCollapsed, setIsCollapsed, setIsMenuOpen }: N
         {/* Referral Button */}
         <button
           onClick={() => go(`${basePath}/referral`)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-purple-100 text-purple-700 hover:bg-purple-200 transition-colors"
           title={t("nav.referral")}
         >
           <Gift className="h-4 w-4" />

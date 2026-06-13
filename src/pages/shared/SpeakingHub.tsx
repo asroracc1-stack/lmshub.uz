@@ -22,9 +22,9 @@ const CARDS = [
     desc: "Real foydalanuvchilar bilan juftlashib, jonli speaking mashq qiling",
     badge: "Jonli suhbat",
     icon: Mic,
-    grad: "from-emerald-500/15 via-teal-500/10 to-cyan-500/15",
+    grad: "from-purple-500/15 via-violet-500/10 to-fuchsia-500/15",
     btn: "Suhbatni boshlash",
-    btnClass: "bg-gradient-to-r from-emerald-500 to-teal-500 text-white",
+    btnClass: "bg-gradient-to-r from-purple-500 to-violet-500 text-white",
     isNew: false,
   },
 ];
@@ -34,7 +34,7 @@ export default function SpeakingHub({ basePath = "/user" }: { basePath?: string 
     <div className="space-y-8">
       <div>
         <Badge variant="outline" className="mb-2 px-3 py-1">Speaking</Badge>
-        <h1 className="text-3xl md:text-4xl font-display font-bold bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">
+        <h1 className="text-3xl md:text-4xl font-display font-bold bg-gradient-to-r from-purple-500 to-violet-500 bg-clip-text text-transparent">
           Speaking Practice
         </h1>
         <p className="text-muted-foreground mt-1">Mavzularni tanlang, AI bilan mashq qiling yoki real partner bilan gaplashing</p>
@@ -49,7 +49,7 @@ export default function SpeakingHub({ basePath = "/user" }: { basePath?: string 
                 <Card className={`relative overflow-hidden p-6 h-full bg-gradient-to-br ${c.grad} border-border/50 hover:shadow-elegant hover:-translate-y-0.5 transition-smooth`}>
                   <div className="flex items-start justify-between">
                     <Badge variant="secondary" className="bg-background/70">{c.badge}</Badge>
-                    {c.isNew && <Badge className="bg-emerald-500 text-white">NEW</Badge>}
+                    {c.isNew && <Badge className="bg-purple-500 text-white">NEW</Badge>}
                   </div>
                   <div className="mt-4 flex items-center gap-3">
                     <div className="p-3 rounded-xl bg-background/70 backdrop-blur"><Icon className="h-6 w-6 text-primary" /></div>

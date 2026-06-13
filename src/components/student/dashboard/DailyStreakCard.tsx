@@ -29,7 +29,7 @@ export default function DailyStreakCard({ data }: DailyStreakCardProps) {
                   <div 
                     className={`w-6 h-6 rounded-full flex items-center justify-center ${
                       isChecked 
-                        ? "bg-emerald-500 text-white" 
+                        ? "bg-purple-500 text-white" 
                         : "border-2 border-slate-200 text-transparent"
                     }`}
                   >
@@ -41,12 +41,12 @@ export default function DailyStreakCard({ data }: DailyStreakCardProps) {
           </div>
         </div>
 
-        <div className="mt-5 bg-emerald-50 rounded-2xl p-3 flex items-center justify-between">
+        <div className="mt-5 bg-purple-50 rounded-2xl p-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center shadow-sm">
+            <div className="w-8 h-8 rounded-full bg-purple-500 flex items-center justify-center shadow-sm">
               <Trophy className="h-4 w-4 text-white" />
             </div>
-            <span className="text-xs font-semibold text-emerald-800">Eng uzun streak</span>
+            <span className="text-xs font-semibold text-purple-800">Eng uzun streak</span>
           </div>
           <div className="text-right">
             <p className="text-sm font-bold text-slate-900">{data.longestStreak} kun</p>

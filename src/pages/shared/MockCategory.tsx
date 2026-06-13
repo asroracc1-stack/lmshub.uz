@@ -29,7 +29,7 @@ import { toast } from "sonner";
 type Kind = "listening" | "reading" | "writing" | "speaking" | "sat" | "national_cert";
 
 const META: Record<Kind, { icon: any; label: string; color: string; group: string }> = {
-  listening:     { icon: Headphones, label: "Listening",         color: "text-emerald-600", group: "IELTS" },
+  listening:     { icon: Headphones, label: "Listening",         color: "text-purple-600", group: "IELTS" },
   reading:       { icon: BookOpen,   label: "Reading",           color: "text-blue-600",    group: "IELTS" },
   writing:       { icon: PenLine,    label: "Writing",           color: "text-orange-600",  group: "IELTS" },
   speaking:      { icon: Mic,        label: "Speaking",          color: "text-pink-600",    group: "IELTS" },
@@ -38,7 +38,7 @@ const META: Record<Kind, { icon: any; label: string; color: string; group: strin
 };
 
 const DIFFICULTY_META: Record<string, { labelKey: string; cls: string; icon: any }> = {
-  easy:   { labelKey: "mockCategory.difficulty.easy",   cls: "bg-emerald-500/15 text-emerald-700 border-emerald-500/30 dark:text-emerald-400", icon: Leaf },
+  easy:   { labelKey: "mockCategory.difficulty.easy",   cls: "bg-purple-500/15 text-purple-700 border-purple-500/30 dark:text-purple-400", icon: Leaf },
   medium: { labelKey: "mockCategory.difficulty.medium", cls: "bg-amber-500/15 text-amber-700 border-amber-500/30 dark:text-amber-400",        icon: Sparkles },
   hard:   { labelKey: "mockCategory.difficulty.hard",   cls: "bg-rose-500/15 text-rose-700 border-rose-500/30 dark:text-rose-400",            icon: FileText },
 };
@@ -46,14 +46,14 @@ const DIFFICULTY_META: Record<string, { labelKey: string; cls: string; icon: any
 // Card theme per pack type
 const PACK_THEME = {
   free: {
-    card: "bg-white dark:bg-slate-900 border border-emerald-100 dark:border-emerald-900/40 hover:border-emerald-300 dark:hover:border-emerald-700/60 hover:shadow-lg hover:shadow-emerald-500/5",
-    badge: "bg-emerald-500 text-white border-0 shadow-sm",
+    card: "bg-white dark:bg-slate-900 border border-purple-100 dark:border-purple-900/40 hover:border-purple-300 dark:hover:border-purple-700/60 hover:shadow-lg hover:shadow-purple-500/5",
+    badge: "bg-purple-500 text-white border-0 shadow-sm",
     badgeLabelKey: "mockCategory.filter.free",
     badgeIcon: null,
-    button: "bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40",
+    button: "bg-purple-500 hover:bg-purple-600 text-white shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40",
     buttonLabelKey: "mockCategory.startBtn",
     buttonIcon: ArrowRight,
-    titleBar: "from-emerald-500/8 to-transparent",
+    titleBar: "from-purple-500/8 to-transparent",
   },
   pro: {
     card: "bg-gradient-to-br from-indigo-50/80 via-violet-50/50 to-purple-50/80 dark:from-indigo-950/40 dark:via-violet-950/30 dark:to-purple-950/40 border border-indigo-200/70 dark:border-indigo-800/50 hover:border-indigo-400/80 dark:hover:border-indigo-600/60 hover:shadow-lg hover:shadow-indigo-500/10",
@@ -179,7 +179,7 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
           {/* Access filter pills */}
           {([
             { v: "all", l: t("mockCategory.filter.all"), cnt: tests.length, cls: "border-slate-200 dark:border-white/10" },
-            { v: "free", l: t("mockCategory.filter.free"), cnt: freeCnt,  cls: "border-emerald-200 text-emerald-700 dark:border-emerald-800/60 dark:text-emerald-400" },
+            { v: "free", l: t("mockCategory.filter.free"), cnt: freeCnt,  cls: "border-purple-200 text-purple-700 dark:border-purple-800/60 dark:text-purple-400" },
             { v: "pack", l: t("mockCategory.filter.pack"),  cnt: proCnt + eliteCnt, cls: "border-indigo-200 text-indigo-700 dark:border-indigo-800/60 dark:text-indigo-400" },
           ] as const).map((a) => (
             <button
@@ -188,7 +188,7 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
               className={cn(
                 "px-4 py-1.5 rounded-full text-sm font-bold border transition-all duration-200",
                 access === a.v
-                  ? a.v === "free" ? "bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/20"
+                  ? a.v === "free" ? "bg-purple-500 text-white border-purple-500 shadow-md shadow-purple-500/20"
                     : a.v === "pack" ? "bg-indigo-500 text-white border-indigo-500 shadow-md shadow-indigo-500/20"
                     : "bg-slate-800 text-white border-slate-800 dark:bg-white dark:text-slate-900"
                   : cn("bg-transparent hover:bg-slate-50 dark:hover:bg-white/5", a.cls)
@@ -405,7 +405,7 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
           {/* Pack type mini stats */}
           <div className="grid grid-cols-3 gap-2">
             {[
-              { label: t("mockCategory.filter.free"), cnt: freeCnt, cls: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40" },
+              { label: t("mockCategory.filter.free"), cnt: freeCnt, cls: "bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-400 border border-purple-200 dark:border-purple-800/40" },
               { label: "Pro",   cnt: proCnt,  cls: "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/40" },
               { label: "Elite", cnt: eliteCnt,cls: "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200 dark:border-amber-800/40" },
             ].map(s => (

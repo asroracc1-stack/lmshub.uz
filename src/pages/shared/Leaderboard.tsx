@@ -219,7 +219,7 @@ function RankRow({ row, index, isCurrentUser }: { row: Row; index: number; isCur
 
   const medal = medalConfig[row.rank];
   const rankColors: Record<number, string> = {
-    4: "text-[#fbbf24]", 5: "text-[#f59e0b]", 6: "text-[#34d399]",
+    4: "text-[#fbbf24]", 5: "text-[#f59e0b]", 6: "text-[#E7C6FF]",
     7: "text-[#60b8f0]", 8: "text-[#a78bfa]", 9: "text-[#f472b6]", 10: "text-[#4ade80]",
   };
   const rankColor = medal?.rankColor ?? rankColors[row.rank] ?? "text-slate-400 dark:text-slate-500";
@@ -234,7 +234,7 @@ function RankRow({ row, index, isCurrentUser }: { row: Row; index: number; isCur
         "border-slate-100 dark:border-white/5",
         medal && !isCurrentUser ? medal.rowBg : "",
         isCurrentUser
-          ? "bg-emerald-50/80 dark:bg-emerald-900/15"
+          ? "bg-purple-50/80 dark:bg-purple-900/15"
           : !medal ? "hover:bg-slate-50/60 dark:hover:bg-white/[0.03]" : ""
       )}
     >
@@ -279,7 +279,7 @@ function RankRow({ row, index, isCurrentUser }: { row: Row; index: number; isCur
         )}>
           {getDisplayName(row)}
           {isCurrentUser && (
-            <span className="inline-flex items-center rounded-full bg-emerald-100 dark:bg-emerald-900/40 px-2 py-0.5 text-[9px] font-black text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
+            <span className="inline-flex items-center rounded-full bg-purple-100 dark:bg-purple-900/40 px-2 py-0.5 text-[9px] font-black text-purple-700 dark:text-purple-400 uppercase tracking-wider">
               Siz
             </span>
           )}
@@ -486,13 +486,13 @@ export default function Leaderboard({ defaultRole = "student", isGlobal = false 
             exit={{ opacity: 0 }}
             className="mt-3 mx-0"
           >
-            <div className="flex items-center gap-3 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 border border-emerald-200 dark:border-emerald-800/40 px-4 py-3 shadow-sm">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-black text-sm">
+            <div className="flex items-center gap-3 rounded-2xl bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-900/20 dark:to-violet-900/20 border border-purple-200 dark:border-purple-800/40 px-4 py-3 shadow-sm">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-purple-500/15 text-purple-600 dark:text-purple-400 font-black text-sm">
                 #{currentUser.rank}
               </div>
-              <Avatar className="h-9 w-9 shrink-0 border-2 border-emerald-300 dark:border-emerald-700">
+              <Avatar className="h-9 w-9 shrink-0 border-2 border-purple-300 dark:border-purple-700">
                 {currentUser.avatarUrl && <AvatarImage src={currentUser.avatarUrl} />}
-                <AvatarFallback className="text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/50">
+                <AvatarFallback className="text-xs font-bold text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-900/50">
                   {getInitials(currentUser)}
                 </AvatarFallback>
               </Avatar>
@@ -500,7 +500,7 @@ export default function Leaderboard({ defaultRole = "student", isGlobal = false 
                 <p className="truncate text-sm font-bold text-slate-800 dark:text-white">
                   {getDisplayName(currentUser)}
                 </p>
-                <p className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                <p className="text-[11px] font-semibold text-purple-600 dark:text-purple-400">
                   Sizning o'rningiz
                 </p>
               </div>

@@ -97,7 +97,7 @@ export default function SmartClock() {
       localStorage.setItem("smart-clock-settings", JSON.stringify(settings));
       window.dispatchEvent(new Event("storage"));
       toast.success("Soat ko'rsatildi", {
-        className: "mt-20 bg-emerald-500/20 backdrop-blur-md border-emerald-500/30 text-emerald-700 dark:text-emerald-300 font-bold",
+        className: "mt-20 bg-purple-500/20 backdrop-blur-md border-purple-500/30 text-purple-700 dark:text-purple-300 font-bold",
       });
     }
   };

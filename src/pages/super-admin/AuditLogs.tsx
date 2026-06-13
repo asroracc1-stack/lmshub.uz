@@ -36,7 +36,7 @@ interface AuditLogsResponse {
 }
 
 const actionMeta: Record<string, { icon: typeof Plus; color: string; label: string; bgColor: string }> = {
-  CREATE: { icon: Plus, color: "text-emerald-500", label: "CREATE", bgColor: "bg-emerald-500/15" },
+  CREATE: { icon: Plus, color: "text-purple-500", label: "CREATE", bgColor: "bg-purple-500/15" },
   UPDATE: { icon: Pencil, color: "text-amber-500", label: "UPDATE", bgColor: "bg-amber-500/15" },
   DELETE: { icon: Trash2, color: "text-rose-500", label: "DELETE", bgColor: "bg-rose-500/15" },
   LOGIN: { icon: KeyRound, color: "text-violet-500", label: "LOGIN", bgColor: "bg-violet-500/15" },

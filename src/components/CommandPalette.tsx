@@ -147,7 +147,7 @@ export default function CommandPalette() {
       case 'admin': return 'bg-purple-500/10 text-purple-500 border-purple-500/20';
       case 'administrator': return 'bg-purple-500/10 text-purple-500 border-purple-500/20';
       case 'teacher': return 'bg-pink-500/10 text-pink-500 border-pink-500/20';
-      case 'student': return 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
+      case 'student': return 'bg-purple-500/10 text-purple-500 border-purple-500/20';
       default: return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
     }
   };

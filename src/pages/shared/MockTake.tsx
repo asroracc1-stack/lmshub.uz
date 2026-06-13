@@ -714,7 +714,7 @@ export default function MockTake() {
     if (numBand >= 8.0) {
       motivationTitle = "Ajoyib Natija! 🌟";
       motivationMessage = "Siz yuqori professional tayyorgarlik darajasini ko'rsatdingiz. C1/C2 darajasidagi mukammal bilimingiz bilan IELTSda eng yuqori natijalarni zabt eta olasiz!";
-      motivationColor = "text-emerald-650 dark:text-emerald-450 border-emerald-500/20 bg-emerald-500/5";
+      motivationColor = "text-purple-650 dark:text-purple-450 border-purple-500/20 bg-purple-500/5";
     } else if (numBand >= 6.5) {
       motivationTitle = "Juda yaxshi ko'rsatkich! 🚀";
       motivationMessage = "Siz IELTS imtihonini muvaffaqiyatli topshirishga to'liq tayyorsiz. Yo'l qo'yilgan kichik xatolar ustida biroz ishlab, balingizni yanada maksimal darajaga ko'tarishingiz mumkin.";
@@ -750,12 +750,12 @@ export default function MockTake() {
     return (
       <div className="w-full max-w-[1200px] mx-auto space-y-8 pb-20 px-4 md:px-8">
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-          <Card className="p-8 text-center bg-gradient-to-br from-slate-900/5 via-violet-500/5 to-emerald-500/5 dark:from-slate-950/40 dark:via-violet-500/5 dark:to-emerald-500/10 border-slate-200 dark:border-white/5 relative overflow-hidden rounded-2xl shadow-xl">
+          <Card className="p-8 text-center bg-gradient-to-br from-slate-900/5 via-violet-500/5 to-purple-500/5 dark:from-slate-950/40 dark:via-violet-500/5 dark:to-purple-500/10 border-slate-200 dark:border-white/5 relative overflow-hidden rounded-2xl shadow-xl">
             <div className="absolute -top-12 -right-12 w-48 h-48 bg-primary/10 rounded-full blur-3xl" />
             <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-violet-500/10 rounded-full blur-3xl" />
             
             <div className="relative z-10">
-              <CheckCircle2 className="h-14 w-14 text-emerald-500 mx-auto mb-4" />
+              <CheckCircle2 className="h-14 w-14 text-purple-500 mx-auto mb-4" />
               <h2 className="text-3xl font-display font-extrabold text-slate-950 dark:text-white mb-2">Test Yakunlandi!</h2>
               <p className="text-slate-500 dark:text-slate-400 text-sm max-w-md mx-auto">Siz topshiriqlarni yakunladingiz. Quyida natijangiz tahlili va shaxsiy tavsiyalar bilan tanishing.</p>
             </div>
@@ -797,7 +797,7 @@ export default function MockTake() {
                       strokeDasharray={477}
                       strokeDashoffset={477 - (477 * (Number(band) || 0)) / 9}
                       strokeLinecap="round"
-                      className="text-emerald-500 dark:text-emerald-400 transition-all duration-1000 ease-out"
+                      className="text-purple-500 dark:text-purple-400 transition-all duration-1000 ease-out"
                     />
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -826,7 +826,7 @@ export default function MockTake() {
                   <div className="grid grid-cols-3 gap-3 mt-6 pt-4 border-t border-slate-100 dark:border-white/5">
                     <div className="text-center">
                       <p className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">To'g'ri</p>
-                      <p className="text-xl font-black text-emerald-500 mt-0.5">{correctCount}</p>
+                      <p className="text-xl font-black text-purple-500 mt-0.5">{correctCount}</p>
                     </div>
                     <div className="text-center">
                       <p className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">Noto'g'ri</p>
@@ -878,8 +878,8 @@ export default function MockTake() {
               </Card>
             ) : incorrectDetails.length === 0 ? (
               <Card className="p-8 text-center border-slate-200 dark:border-white/5 bg-white dark:bg-slate-900/40 shadow-md rounded-2xl py-12">
-                <ThumbsUp className="h-12 w-12 text-emerald-500 mx-auto mb-3 animate-bounce" />
-                <h3 className="text-xl font-bold text-emerald-500 mb-1">Ajoyib! Hech qanday xato topilmadi!</h3>
+                <ThumbsUp className="h-12 w-12 text-purple-500 mx-auto mb-3 animate-bounce" />
+                <h3 className="text-xl font-bold text-purple-500 mb-1">Ajoyib! Hech qanday xato topilmadi!</h3>
                 <p className="text-slate-500 dark:text-slate-400 text-sm">Siz barcha savollarga to'g'ri javob berdingiz. Mukammal natija! 🎉</p>
               </Card>
             ) : (
@@ -910,8 +910,8 @@ export default function MockTake() {
 
                 {reviewDetails.length === 0 && !showAllInReview ? (
                   <Card className="p-8 text-center border-slate-200 dark:border-white/5 bg-white dark:bg-slate-900/40 shadow-md rounded-2xl py-12">
-                    <ThumbsUp className="h-12 w-12 text-emerald-500 mx-auto mb-3 animate-bounce" />
-                    <h3 className="text-xl font-bold text-emerald-500 mb-1">Ajoyib! Hech qanday xato topilmadi!</h3>
+                    <ThumbsUp className="h-12 w-12 text-purple-500 mx-auto mb-3 animate-bounce" />
+                    <h3 className="text-xl font-bold text-purple-500 mb-1">Ajoyib! Hech qanday xato topilmadi!</h3>
                     <p className="text-slate-500 dark:text-slate-400 text-sm">Siz barcha savollarga to'g'ri javob berdingiz. Mukammal natija! 🎉</p>
                   </Card>
                 ) : (
@@ -928,7 +928,7 @@ export default function MockTake() {
                             <span className={cn(
                               "h-7 w-7 rounded-lg flex items-center justify-center text-xs font-black",
                               isCorrect 
-                                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-450" 
+                                ? "bg-purple-500/10 text-purple-600 dark:text-purple-450" 
                                 : "bg-rose-500/10 text-rose-600 dark:text-rose-450"
                             )}>
                               {q.position}
@@ -938,7 +938,7 @@ export default function MockTake() {
                             </Badge>
                             <Badge className={cn(
                               "text-[10px] font-extrabold px-2.5 py-0.5",
-                              isCorrect ? "bg-emerald-500 hover:bg-emerald-600 text-white" : "bg-rose-500 hover:bg-rose-600 text-white"
+                              isCorrect ? "bg-purple-500 hover:bg-purple-600 text-white" : "bg-rose-500 hover:bg-rose-600 text-white"
                             )}>
                               {isCorrect ? "To'g'ri" : "Noto'g'ri"}
                             </Badge>
@@ -957,22 +957,22 @@ export default function MockTake() {
                           <div className={cn(
                             "p-3.5 rounded-xl border flex items-center gap-2",
                             isCorrect 
-                              ? "border-emerald-500/25 bg-emerald-500/5" 
+                              ? "border-purple-500/25 bg-purple-500/5" 
                               : "border-rose-500/20 bg-rose-500/5"
                           )}>
                             <span className={cn(
                               "text-[10px] uppercase font-bold px-1.5 py-0.5 rounded",
-                              isCorrect ? "bg-emerald-500/10 text-emerald-500 dark:text-emerald-400" : "bg-rose-500/10 text-rose-500 dark:text-rose-400"
+                              isCorrect ? "bg-purple-500/10 text-purple-500 dark:text-purple-400" : "bg-rose-500/10 text-rose-500 dark:text-rose-400"
                             )}>Sizning javobingiz</span>
                             <span className={cn(
                               "font-bold text-xs truncate",
-                              isCorrect ? "text-emerald-700 dark:text-emerald-400" : "text-rose-700 dark:text-rose-400"
+                              isCorrect ? "text-purple-700 dark:text-purple-400" : "text-rose-700 dark:text-rose-400"
                             )}>{detail.userAns || "(javob berilmagan)"}</span>
                           </div>
                           {!isCorrect && (
-                            <div className="p-3.5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 flex items-center gap-2">
-                              <span className="text-[10px] uppercase font-bold text-emerald-500 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">To'g'ri javob</span>
-                              <span className="font-bold text-xs text-emerald-700 dark:text-emerald-400 truncate">{detail.correctAns}</span>
+                            <div className="p-3.5 rounded-xl border border-purple-500/20 bg-purple-500/5 flex items-center gap-2">
+                              <span className="text-[10px] uppercase font-bold text-purple-500 dark:text-purple-400 bg-purple-500/10 px-1.5 py-0.5 rounded">To'g'ri javob</span>
+                              <span className="font-bold text-xs text-purple-700 dark:text-purple-400 truncate">{detail.correctAns}</span>
                             </div>
                           )}
                         </div>
@@ -1046,7 +1046,7 @@ export default function MockTake() {
           <Button onClick={() => nav(-1)} variant="outline" size="lg" className="flex-1 rounded-xl font-bold h-12 shadow-sm">
             Chiqish
           </Button>
-          <Button onClick={() => window.location.reload()} size="lg" className="flex-1 rounded-xl font-bold h-12 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-655 text-white shadow-md shadow-emerald-500/10">
+          <Button onClick={() => window.location.reload()} size="lg" className="flex-1 rounded-xl font-bold h-12 bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-655 text-white shadow-md shadow-purple-500/10">
             Qaytadan topshirish
           </Button>
         </div>
@@ -1060,7 +1060,7 @@ export default function MockTake() {
         <div className="w-full max-w-2xl">
           <Card className="p-8 space-y-5 shadow-xl border border-slate-200/50 dark:border-white/5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md">
             <div className="flex items-center gap-3">
-              {kind === "reading" ? <BookOpen className="h-8 w-8 text-violet-500" /> : kind === "listening" ? <Headphones className="h-8 w-8 text-amber-500" /> : <Sparkles className="h-8 w-8 text-emerald-500" />}
+              {kind === "reading" ? <BookOpen className="h-8 w-8 text-violet-500" /> : kind === "listening" ? <Headphones className="h-8 w-8 text-amber-500" /> : <Sparkles className="h-8 w-8 text-purple-500" />}
               <div>
                 <Badge variant="outline">{exam.type}</Badge>
                 <h1 className="text-2xl md:text-3xl font-display font-bold">{exam.title}</h1>
@@ -1080,7 +1080,7 @@ export default function MockTake() {
               <Card className="p-3 text-center"><Flag className="h-5 w-5 mx-auto mb-1 text-primary" /><p className="text-xs text-muted-foreground">Savollar</p><p className="font-bold">{questions.length}</p></Card>
               <Card className="p-3 text-center"><Sparkles className="h-5 w-5 mx-auto mb-1 text-primary" /><p className="text-xs text-muted-foreground">Qiyinlik</p><p className="font-bold capitalize">{exam.difficulty ?? "—"}</p></Card>
             </div>
-            <Button size="lg" className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold transition-all duration-300 shadow-md shadow-emerald-500/10" onClick={() => { setStarted(true); startedAt.current = Date.now(); }}>
+            <Button size="lg" className="w-full bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 text-white font-bold transition-all duration-300 shadow-md shadow-purple-500/10" onClick={() => { setStarted(true); startedAt.current = Date.now(); }}>
               Boshlash
             </Button>
           </Card>
@@ -1146,16 +1146,16 @@ export default function MockTake() {
         {/* Left Side: Brand & Title (Hidden on Mobile) */}
         <div className="hidden md:flex items-center gap-4 min-w-0">
           <div className="flex items-center gap-2.5 shrink-0">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-white font-bold shadow-md shadow-emerald-500/20">
+            <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-purple-500 to-violet-400 flex items-center justify-center text-white font-bold shadow-md shadow-purple-500/20">
               L
             </div>
             <span className="font-display font-extrabold text-base tracking-tight hidden sm:block">
-              LMS<span className="text-emerald-500">Hub</span>
+              LMS<span className="text-purple-500">Hub</span>
             </span>
           </div>
           <div className="h-5 w-px bg-slate-200 dark:bg-white/10 shrink-0" />
           <div className="flex items-center gap-2 min-w-0">
-            <Badge variant="outline" className="capitalize text-[10px] font-extrabold border-emerald-500/30 text-emerald-600 bg-emerald-500/5 px-2.5 py-0.5 shrink-0">
+            <Badge variant="outline" className="capitalize text-[10px] font-extrabold border-purple-500/30 text-purple-600 bg-purple-500/5 px-2.5 py-0.5 shrink-0">
               IELTS {exam.type}
             </Badge>
             <h1 className="font-bold text-sm truncate opacity-90 hidden md:block max-w-[240px] xl:max-w-[400px]" title={exam.title}>
@@ -1170,9 +1170,9 @@ export default function MockTake() {
             "flex items-center gap-2.5 px-4 md:px-5 py-2 md:py-2.5 rounded-2xl font-mono font-black text-xs md:text-sm transition-all duration-500 shadow-sm",
             lowTime
               ? "bg-rose-500 text-white animate-pulse shadow-rose-500/20 border border-rose-400/20"
-              : "bg-slate-100 dark:bg-white/5 text-slate-800 dark:text-emerald-400 border border-slate-200/50 dark:border-white/5"
+              : "bg-slate-100 dark:bg-white/5 text-slate-800 dark:text-purple-400 border border-slate-200/50 dark:border-white/5"
           )}>
-            <Clock className={cn("h-4 w-4", lowTime ? "animate-spin" : "text-emerald-500")} />
+            <Clock className={cn("h-4 w-4", lowTime ? "animate-spin" : "text-purple-500")} />
             <span className="tracking-widest">{fmt(timeLeft)}</span>
           </div>
         </div>
@@ -1198,7 +1198,7 @@ export default function MockTake() {
             onClick={() => setShowCalculator(!showCalculator)}
             className={cn(
               "h-10 w-10 rounded-xl transition-all shrink-0 hidden sm:inline-flex",
-              showCalculator ? "bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20" : "bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300"
+              showCalculator ? "bg-purple-500/10 text-purple-500 hover:bg-purple-500/20" : "bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300"
             )}
             title="Desmos kalkulyator"
           >
@@ -1227,7 +1227,7 @@ export default function MockTake() {
             className="h-10 w-10 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300 transition-all shrink-0"
             title={isPaused ? "Davom ettirish" : "Vaqtincha to'xtatish"}
           >
-            {isPaused ? <Play className="h-4.5 w-4.5 fill-current text-emerald-500" /> : <Pause className="h-4.5 w-4.5 fill-current" />}
+            {isPaused ? <Play className="h-4.5 w-4.5 fill-current text-purple-500" /> : <Pause className="h-4.5 w-4.5 fill-current" />}
           </Button>
 
           {/* Theme Toggle Button */}
@@ -1257,7 +1257,7 @@ export default function MockTake() {
             size="sm"
             onClick={() => submit()}
             disabled={submitting}
-            className="bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-extrabold px-4 md:px-5 py-2 md:py-2.5 rounded-xl transition-all shadow-md shadow-emerald-500/10 shrink-0 text-[11px] md:text-xs tracking-tight"
+            className="bg-purple-500 hover:bg-purple-600 active:scale-95 text-white font-extrabold px-4 md:px-5 py-2 md:py-2.5 rounded-xl transition-all shadow-md shadow-purple-500/10 shrink-0 text-[11px] md:text-xs tracking-tight"
           >
             {submitting ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : null}
             Yakunlash
@@ -1292,7 +1292,7 @@ export default function MockTake() {
             <Button
               size="lg"
               onClick={() => setIsPaused(false)}
-              className="bg-emerald-500 hover:bg-emerald-600 text-white px-10 py-6 rounded-full font-black text-base transition-all shadow-lg shadow-emerald-500/20 active:scale-95"
+              className="bg-purple-500 hover:bg-purple-600 text-white px-10 py-6 rounded-full font-black text-base transition-all shadow-lg shadow-purple-500/20 active:scale-95"
             >
               <Play className="h-5 w-5 mr-2 fill-current" /> Davom ettirish
             </Button>
@@ -1339,7 +1339,7 @@ export default function MockTake() {
                       <img src={getFullImageUrl(currentSection.imageUrl)} alt="Map/Diagram" className="max-w-full h-auto mx-auto rounded-lg" />
                     </div>
                   )}
-                  <div className="prose prose-slate dark:prose-invert max-w-none text-slate-750 dark:text-slate-350 text-sm md:text-base leading-relaxed font-normal whitespace-pre-wrap select-text selection:bg-emerald-500/20 selection:text-emerald-500">
+                  <div className="prose prose-slate dark:prose-invert max-w-none text-slate-750 dark:text-slate-350 text-sm md:text-base leading-relaxed font-normal whitespace-pre-wrap select-text selection:bg-purple-500/20 selection:text-purple-500">
                     {currentSection.passage}
                   </div>
                 </div>
@@ -1356,7 +1356,7 @@ export default function MockTake() {
               <span className="text-xs font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                 Savollar va Topshiriqlar
               </span>
-              <span className="text-xs font-black text-emerald-500">
+              <span className="text-xs font-black text-purple-500">
                 {sectionQs.length} ta savol
               </span>
             </div>
@@ -1393,7 +1393,7 @@ export default function MockTake() {
                           isFlagged
                             ? "bg-amber-500/5 border-amber-500/20 shadow-sm shadow-amber-500/5"
                             : hasAnswer
-                              ? "bg-emerald-500/5 border-emerald-500/20 shadow-sm shadow-emerald-500/5"
+                              ? "bg-purple-500/5 border-purple-500/20 shadow-sm shadow-purple-500/5"
                               : "bg-slate-50/50 dark:bg-white/[0.01] border-slate-200/60 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10"
                         )}
                       >
@@ -1404,7 +1404,7 @@ export default function MockTake() {
                             isFlagged
                               ? "bg-amber-500 text-white shadow-amber-500/10"
                               : hasAnswer
-                                ? "bg-emerald-500 text-white shadow-emerald-500/10"
+                                ? "bg-purple-500 text-white shadow-purple-500/10"
                                 : "bg-white dark:bg-slate-950 border border-slate-200 dark:border-white/5 text-slate-700 dark:text-slate-350"
                           )}>
                             {q.position}
@@ -1450,14 +1450,14 @@ export default function MockTake() {
                                           className={cn(
                                             "w-full flex items-center gap-3.5 px-5 py-4 rounded-xl border text-xs md:text-sm text-left transition-all duration-200",
                                             selected
-                                              ? "bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/20 font-bold"
+                                              ? "bg-purple-500 text-white border-purple-500 shadow-md shadow-purple-500/20 font-bold"
                                               : "bg-white dark:bg-slate-950 hover:bg-slate-100/50 dark:hover:bg-white/[0.03] border-slate-200 dark:border-white/5 text-slate-700 dark:text-slate-300"
                                           )}
                                         >
                                           <span className={cn(
                                             "flex-none w-6 h-6 rounded-lg border flex items-center justify-center text-[10px] font-black tracking-wider transition-all",
                                             selected
-                                              ? "bg-white text-emerald-500 border-white shadow-inner"
+                                              ? "bg-white text-purple-500 border-white shadow-inner"
                                               : "border-slate-300 dark:border-white/10 bg-slate-50 dark:bg-slate-900 text-slate-500"
                                           )}>
                                             {letter}
@@ -1493,7 +1493,7 @@ export default function MockTake() {
                                           className={cn(
                                             "py-3 rounded-xl text-[10px] md:text-xs font-black tracking-wider border transition-all duration-200 active:scale-95",
                                             selected
-                                              ? "bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/10"
+                                              ? "bg-purple-500 text-white border-purple-500 shadow-md shadow-purple-500/10"
                                               : "bg-white dark:bg-slate-950 hover:bg-slate-50 dark:hover:bg-white/[0.02] border-slate-200 dark:border-white/5 text-slate-500 dark:text-slate-400"
                                           )}
                                         >
@@ -1507,7 +1507,7 @@ export default function MockTake() {
                                 {/* Matching / Headings Dropdown */}
                                 {(q.qtype === "matching" || q.qtype === "headings") && Array.isArray(q.options) && (
                                   <select
-                                    className="w-full h-11 px-3.5 rounded-xl border border-slate-200 dark:border-white/5 bg-white dark:bg-slate-950 text-xs md:text-sm font-semibold text-slate-700 dark:text-slate-350 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-all outline-none"
+                                    className="w-full h-11 px-3.5 rounded-xl border border-slate-200 dark:border-white/5 bg-white dark:bg-slate-950 text-xs md:text-sm font-semibold text-slate-700 dark:text-slate-350 focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/20 transition-all outline-none"
                                     value={answers[q.id] ?? ""}
                                     onChange={(e) => onAnswer(q.id, e.target.value)}
                                   >
@@ -1580,7 +1580,7 @@ export default function MockTake() {
                     className={cn(
                       "px-4 py-2 rounded-xl text-xs font-black whitespace-nowrap transition-all duration-300 border active:scale-95",
                       isActive
-                        ? "bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/20"
+                        ? "bg-purple-500 text-white border-purple-500 shadow-md shadow-purple-500/20"
                         : "bg-slate-100 dark:bg-white/5 text-slate-500 border-transparent hover:bg-slate-200/60 dark:hover:bg-white/10 hover:text-slate-800 dark:hover:text-white"
                     )}
                   >
@@ -1602,10 +1602,10 @@ export default function MockTake() {
                             className={cn(
                               "h-8 w-8 rounded-xl text-[10px] font-black border transition-all shrink-0 hover:scale-105 active:scale-90",
                               hasAns
-                                ? "bg-emerald-500 text-white border-emerald-500 shadow-sm shadow-emerald-500/10"
+                                ? "bg-purple-500 text-white border-purple-500 shadow-sm shadow-purple-500/10"
                                 : isFlg
                                   ? "bg-amber-500 text-white border-amber-500 shadow-sm shadow-amber-500/10"
-                                  : "bg-white dark:bg-slate-900 border-slate-200 dark:border-white/5 hover:border-emerald-500/40 text-slate-600 dark:text-slate-400"
+                                  : "bg-white dark:bg-slate-900 border-slate-200 dark:border-white/5 hover:border-purple-500/40 text-slate-600 dark:text-slate-400"
                             )}
                           >
                             {q.position}
@@ -1683,7 +1683,7 @@ export default function MockTake() {
             className="fixed bottom-24 right-4 md:right-8 w-[90vw] md:w-[600px] h-[600px] max-h-[70vh] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-white/10 z-50 overflow-hidden flex flex-col"
           >
             <div className="flex items-center justify-between p-3 border-b border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-slate-950 shrink-0 cursor-move">
-              <span className="font-bold text-sm flex items-center gap-2 text-slate-700 dark:text-slate-300"><Calculator className="h-4 w-4 text-emerald-500" /> Desmos Graphing Calculator</span>
+              <span className="font-bold text-sm flex items-center gap-2 text-slate-700 dark:text-slate-300"><Calculator className="h-4 w-4 text-purple-500" /> Desmos Graphing Calculator</span>
               <Button size="icon" variant="ghost" className="h-6 w-6 rounded-full hover:bg-slate-200 dark:hover:bg-white/10" onClick={() => setShowCalculator(false)}><X className="h-4 w-4 text-slate-500" /></Button>
             </div>
             <div className="flex-1 w-full bg-white relative">

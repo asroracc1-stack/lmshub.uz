@@ -40,7 +40,7 @@ export default function ChatHeader({
               <span className="text-[10px] text-primary animate-pulse font-medium">Yozmoqda...</span>
             ) : (
               <>
-                <span className={`h-1.5 w-1.5 rounded-full ${chatPartner && onlineStatus[chatPartner.id]?.online ? "bg-emerald-500 animate-pulse" : "bg-muted-foreground"}`} />
+                <span className={`h-1.5 w-1.5 rounded-full ${chatPartner && onlineStatus[chatPartner.id]?.online ? "bg-purple-500 animate-pulse" : "bg-muted-foreground"}`} />
                 <span className="text-[10px] text-muted-foreground">
                   {chatPartner && onlineStatus[chatPartner.id]?.online ? "onlayn" : 
                    chatPartner && onlineStatus[chatPartner.id]?.lastSeen ? `oxirgi faollik: ${new Date(onlineStatus[chatPartner.id]!.lastSeen).toLocaleTimeString()}` : "oflayn"}

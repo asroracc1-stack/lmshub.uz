@@ -1,0 +1,116 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0B0714"/>
+      <stop offset="100%" stop-color="#1B1230"/>
+    </linearGradient>
+    <linearGradient id="orbGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#9F86C0"/>
+      <stop offset="100%" stop-color="#240046"/>
+    </linearGradient>
+    <linearGradient id="glowGrad" x1="600" y1="100" x2="600" y2="630" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#9F86C0" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#240046" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="centerGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#9F86C0" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#240046" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="softBlur">
+      <feGaussianBlur stdDeviation="18"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bgGrad)"/>
+
+  <!-- Grid pattern -->
+  <g opacity="0.08">
+    <line x1="0" y1="70" x2="1200" y2="70" stroke="#9F86C0" stroke-width="1"/>
+    <line x1="0" y1="140" x2="1200" y2="140" stroke="#9F86C0" stroke-width="1"/>
+    <line x1="0" y1="210" x2="1200" y2="210" stroke="#9F86C0" stroke-width="1"/>
+    <line x1="0" y1="280" x2="1200" y2="280" stroke="#9F86C0" stroke-width="1"/>
+    <line x1="0" y1="350" x2="1200" y2="350" stroke="#9F86C0" stroke-width="1"/>
+    <line x1="0" y1="420" x2="1200" y2="420" stroke="#9F86C0" stroke-width="1"/>
+    <line x1="0" y1="490" x2="1200" y2="490" stroke="#9F86C0" stroke-width="1"/>
+    <line x1="0" y1="560" x2="1200" y2="560" stroke="#9F86C0" stroke-width="1"/>
+    <line x1="120" y1="0" x2="120" y2="630" stroke="#9F86C0" stroke-width="1"/>
+    <line x1="240" y1="0" x2="240" y2="630" stroke="#9F86C0" stroke-width="1"/>
+    <line x1="360" y1="0" x2="360" y2="630" stroke="#9F86C0" stroke-width="1"/>
+    <line x1="480" y1="0" x2="480" y2="630" stroke="#9F86C0" stroke-width="1"/>
+    <line x1="600" y1="0" x2="600" y2="630" stroke="#9F86C0" stroke-width="1"/>
+    <line x1="720" y1="0" x2="720" y2="630" stroke="#9F86C0" stroke-width="1"/>
+    <line x1="840" y1="0" x2="840" y2="630" stroke="#9F86C0" stroke-width="1"/>
+    <line x1="960" y1="0" x2="960" y2="630" stroke="#9F86C0" stroke-width="1"/>
+    <line x1="1080" y1="0" x2="1080" y2="630" stroke="#9F86C0" stroke-width="1"/>
+  </g>
+
+  <!-- Center glow blob -->
+  <ellipse cx="900" cy="315" rx="280" ry="280" fill="#9F86C0" opacity="0.07" filter="url(#softBlur)"/>
+  <ellipse cx="900" cy="315" rx="180" ry="180" fill="#9F86C0" opacity="0.1" filter="url(#softBlur)"/>
+
+  <!-- LOGO MARK (right side) -->
+  <g transform="translate(830, 175)">
+    <!-- Outer orbit ellipse -->
+    <ellipse cx="80" cy="80" rx="75" ry="26"
+      fill="none" stroke="#9F86C0" stroke-width="5"
+      transform="rotate(-35 80 80)" opacity="0.85"/>
+
+    <!-- Main orbit circle -->
+    <circle cx="80" cy="80" r="68" fill="none" stroke="#9F86C0" stroke-width="7"/>
+
+    <!-- Inner orbit circle -->
+    <circle cx="80" cy="80" r="46" fill="none" stroke="#9F86C0" stroke-width="4" opacity="0.5"/>
+
+    <!-- Filled center -->
+    <circle cx="80" cy="80" r="32" fill="url(#orbGrad)"/>
+
+    <!-- Center white dot -->
+    <circle cx="80" cy="80" r="11" fill="white" opacity="0.9"/>
+
+    <!-- LMS text in circle -->
+    <text x="80" y="85" font-family="Arial Black, Arial, sans-serif" font-size="14" font-weight="900" fill="white" text-anchor="middle" letter-spacing="0.5">LMS</text>
+
+    <!-- Orbit accent dot -->
+    <circle cx="38" cy="23" r="7" fill="#9F86C0"/>
+    <circle cx="38" cy="23" r="4" fill="#E7C6FF"/>
+
+    <!-- Bottom accent dot -->
+    <circle cx="128" cy="138" r="5" fill="#9F86C0" opacity="0.7"/>
+  </g>
+
+  <!-- BRAND NAME (left side) -->
+  <!-- LMS text -->
+  <text x="90" y="268" font-family="Arial Black, Arial, sans-serif" font-size="130" font-weight="900" fill="white" letter-spacing="-2" opacity="0.95">LMS</text>
+
+  <!-- Hub text in purple -->
+  <text x="462" y="268" font-family="Arial Black, Arial, sans-serif" font-size="130" font-weight="900" fill="#9F86C0" letter-spacing="-2">Hub</text>
+
+  <!-- Underline accent -->
+  <rect x="462" y="282" width="270" height="4" rx="2" fill="#9F86C0" opacity="0.6"/>
+  <circle cx="738" cy="284" r="5" fill="#9F86C0"/>
+
+  <!-- Divider line -->
+  <line x1="88" y1="315" x2="740" y2="315" stroke="#2E1E52" stroke-width="1.5"/>
+
+  <!-- Tagline -->
+  <text x="90" y="370" font-family="Arial, Helvetica, sans-serif" font-size="32" font-weight="400" fill="#B8A8D6" letter-spacing="0.5">AI-Powered Education Platform</text>
+
+  <!-- Tag pills -->
+  <rect x="90" y="415" width="130" height="40" rx="20" fill="#9F86C0" opacity="0.15" stroke="#9F86C0" stroke-width="1" stroke-opacity="0.4"/>
+  <text x="155" y="441" font-family="Arial, sans-serif" font-size="16" font-weight="700" fill="#9F86C0" text-anchor="middle" letter-spacing="1">IELTS</text>
+
+  <rect x="235" y="415" width="100" height="40" rx="20" fill="#9F86C0" opacity="0.15" stroke="#9F86C0" stroke-width="1" stroke-opacity="0.4"/>
+  <text x="285" y="441" font-family="Arial, sans-serif" font-size="16" font-weight="700" fill="#9F86C0" text-anchor="middle" letter-spacing="1">SAT</text>
+
+  <rect x="350" y="415" width="200" height="40" rx="20" fill="#9F86C0" opacity="0.15" stroke="#9F86C0" stroke-width="1" stroke-opacity="0.4"/>
+  <text x="450" y="441" font-family="Arial, sans-serif" font-size="16" font-weight="700" fill="#9F86C0" text-anchor="middle" letter-spacing="1">AI Speaking</text>
+
+  <!-- URL bottom -->
+  <text x="90" y="580" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="400" fill="#2E1E52" letter-spacing="1">lmshub.uz</text>
+
+  <!-- Bottom gradient bar -->
+  <rect x="0" y="614" width="1200" height="16" rx="0" fill="url(#glowGrad)" opacity="0.6"/>
+  <rect x="0" y="620" width="500" height="8" fill="#9F86C0" opacity="0.4"/>
+  <circle cx="500" cy="624" r="5" fill="#9F86C0"/>
+</svg>

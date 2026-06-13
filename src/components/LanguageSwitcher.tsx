@@ -99,9 +99,9 @@ export default function LanguageSwitcher() {
       <button
         className={cn(
           "flex items-center gap-1.5 sm:gap-2.5 px-2 sm:px-3 py-1.5 rounded-full transition-all duration-300 border",
-          "bg-white/80 backdrop-blur-md border-slate-200/50 hover:bg-white hover:border-emerald-200 shadow-sm",
-          "dark:bg-slate-900/50 dark:border-slate-800 dark:hover:border-emerald-500/50",
-          isOpen && "ring-2 ring-emerald-500/20 border-emerald-500/50"
+          "bg-white/80 backdrop-blur-md border-slate-200/50 hover:bg-white hover:border-purple-200 shadow-sm",
+          "dark:bg-slate-900/50 dark:border-slate-800 dark:hover:border-purple-500/50",
+          isOpen && "ring-2 ring-purple-500/20 border-purple-500/50"
         )}
       >
         <div className="w-5 h-5 rounded-full overflow-hidden border border-slate-200 shadow-sm shrink-0">
@@ -110,7 +110,7 @@ export default function LanguageSwitcher() {
         <span className="text-[12px] font-black tracking-wider text-slate-700 dark:text-slate-200 uppercase hidden sm:block">
           {currentLang.short}
         </span>
-        <ChevronDown className={cn("w-3.5 h-3.5 text-slate-400 transition-transform duration-500 hidden xs:block", isOpen && "rotate-180 text-emerald-500")} />
+        <ChevronDown className={cn("w-3.5 h-3.5 text-slate-400 transition-transform duration-500 hidden xs:block", isOpen && "rotate-180 text-purple-500")} />
       </button>
 
       <AnimatePresence>
@@ -130,7 +130,7 @@ export default function LanguageSwitcher() {
                   className={cn(
                     "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group relative overflow-hidden",
                     i18n.language.startsWith(lang.code)
-                      ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400" 
+                      ? "bg-purple-50 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400" 
                       : "text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-900"
                   )}
                 >
@@ -145,7 +145,7 @@ export default function LanguageSwitcher() {
                   {i18n.language.startsWith(lang.code) && (
                     <motion.div 
                       layoutId="active-indicator"
-                      className="absolute right-3 w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"
+                      className="absolute right-3 w-1.5 h-1.5 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"
                     />
                   )}
                 </button>

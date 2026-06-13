@@ -840,7 +840,7 @@ export default function UsersManager({ filterRole, title, description }: Props) 
                       case 'admin': return 'bg-purple-500/15 text-purple-600 border-purple-500/30';
                       case 'teacher': return 'bg-pink-500/15 text-pink-600 border-pink-500/30';
                       case 'user': return 'bg-blue-500/15 text-blue-600 border-blue-500/30';
-                      case 'student': return 'bg-emerald-500/15 text-emerald-600 border-emerald-500/30';
+                      case 'student': return 'bg-purple-500/15 text-purple-600 border-purple-500/30';
                       default: return 'bg-primary/15 text-primary border-primary/30';
                     }
                   };
@@ -865,12 +865,12 @@ export default function UsersManager({ filterRole, title, description }: Props) 
                       </TableCell>
                       <TableCell>
                         {u.active !== false ? (
-                          <div className="flex items-center gap-1.5 bg-emerald-500/10 w-fit px-2 py-1 rounded-full border border-emerald-500/20">
+                          <div className="flex items-center gap-1.5 bg-purple-500/10 w-fit px-2 py-1 rounded-full border border-purple-500/20">
                             <span className="relative flex h-2 w-2">
-                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span>
                             </span>
-                            <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Faol</span>
+                            <span className="text-[10px] font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider">Faol</span>
                           </div>
                         ) : (
                           <div className="flex items-center gap-1.5 bg-destructive/10 w-fit px-2 py-1 rounded-full border border-destructive/20">
@@ -936,7 +936,7 @@ export default function UsersManager({ filterRole, title, description }: Props) 
                           <Button 
                             size="icon" 
                             variant="ghost" 
-                            className={u.active !== false ? "text-amber-600" : "text-emerald-600"}
+                            className={u.active !== false ? "text-amber-600" : "text-purple-600"}
                             onClick={() => toggleActiveMutation.mutate({ id: u.id, active: u.active === false })}
                             title={u.active !== false ? "Bloklash" : "Faollashtirish"}
                           >
@@ -1126,7 +1126,7 @@ export default function UsersManager({ filterRole, title, description }: Props) 
                       <div className="space-y-2">
                         <div className="flex items-center justify-between border-b pb-2">
                           <Badge variant="outline" className="text-xs font-bold uppercase">{s.topic}</Badge>
-                          <Badge className="bg-emerald-500 text-white font-extrabold text-xs">Band {s.overall_band?.toFixed(1) || "N/A"}</Badge>
+                          <Badge className="bg-purple-500 text-white font-extrabold text-xs">Band {s.overall_band?.toFixed(1) || "N/A"}</Badge>
                         </div>
                         
                         <div className="grid grid-cols-2 gap-1.5 text-[11px] font-semibold text-muted-foreground py-1">
@@ -1164,7 +1164,7 @@ export default function UsersManager({ filterRole, title, description }: Props) 
                   <p className="text-[10px] font-extrabold uppercase text-muted-foreground tracking-widest border-b pb-1.5">Mashq yakuniy ballari</p>
                   
                   <div className="flex flex-col items-center justify-center py-4 bg-background border rounded-xl shadow-sm">
-                    <div className="h-16 w-16 rounded-full bg-emerald-500 text-white flex flex-col items-center justify-center font-extrabold text-xl shadow-sm">
+                    <div className="h-16 w-16 rounded-full bg-purple-500 text-white flex flex-col items-center justify-center font-extrabold text-xl shadow-sm">
                       <span className="text-[8px] uppercase tracking-wider opacity-85">IELTS</span>
                       <span>{selectedSession.overall_band?.toFixed(1) || "N/A"}</span>
                     </div>

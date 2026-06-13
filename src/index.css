@@ -6,75 +6,91 @@
 
 @layer base {
   :root {
-    /* Backgrounds & Surfaces — Light Mode (Apple-style Slate 50) */
-    --background: 210 40% 98%; /* slate-50 */
-    --foreground: 222 47% 11%; /* slate-900 */
+    /* Backgrounds & Surfaces — Light Mode */
+    --background: 260 100% 99%; /* #FCFAFF */
+    --foreground: 263 45% 11%; /* #1A102A Text */
     
-    --card: 0 0% 100%; /* white */
-    --card-foreground: 222 47% 11%;
+    --card: 0 0% 100%; /* #FFFFFF */
+    --card-foreground: 263 45% 11%;
     
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 263 45% 11%;
 
-    /* Brand — Mint Green Aesthetic (Emerald 500) */
-    --primary: 142 71% 45%; /* emerald-500 */
-    --primary-foreground: 142 80% 2%;
-    --primary-glow: 142 71% 55%;
+    /* Brand — Premium Purple Aesthetic */
+    --primary: 266 31% 64%; /* #9F86C0 */
+    --primary-foreground: 0 0% 100%; /* #FFFFFF */
+    --primary-glow: 275 100% 89%; /* #E7C6FF */
 
-    --secondary: 173 80% 40%; /* teal-500 */
+    --secondary: 271 100% 14%; /* #240046 */
     --secondary-foreground: 0 0% 100%;
 
-    --accent: 142 71% 45%;
-    --accent-foreground: 142 80% 2%;
+    --accent: 271 100% 14%; /* #240046 */
+    --accent-foreground: 0 0% 100%;
 
-    --muted: 210 40% 94%;
-    --muted-foreground: 215 16% 47%;
+    --muted: 263 15% 90%;
+    --muted-foreground: 261 31% 75%; /* #B8A8D6 */
 
-    --destructive: 0 84% 60%;
+    --destructive: 0 84% 60%; /* #EF4444 */
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 142 71% 45%;
+    --border: 261 68% 92%; /* #E8DDFB */
+    --input: 261 68% 92%;
+    --ring: 266 31% 64%;
 
     --radius: 12px;
 
     /* Sidebar - Light */
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 215 25% 27%; /* Darker for better visibility */
-    --sidebar-primary: 142 71% 45%;
-    --sidebar-accent: 210 40% 96.1%;
-    --sidebar-border: 220 13% 91%;
+    --sidebar-foreground: 263 45% 11%;
+    --sidebar-primary: 266 31% 64%;
+    --sidebar-accent: 263 15% 95%;
+    --sidebar-border: 261 68% 92%;
+
+    /* Role Colors - Base */
+    --role-superadmin: 271 100% 14%; /* #240046 */
+    --role-admin: 270 73% 35%; /* #5A189A */
+    --role-payment: 272 63% 46%; /* #7B2CBF */
+    --role-teacher: 266 31% 64%; /* #9F86C0 */
+    --role-student: 213 97% 53%; /* #60A5FA */
+    --role-moderator: 38 92% 50%; /* #F59E0B */
+    --role-support: 142 71% 45%; /* #22C55E */
+    --role-content: 0 84% 60%; /* #EF4444 */
 
     --transition-smooth: cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .dark {
-    /* Backgrounds & Surfaces — Dark Mode (Slate 950) */
-    --background: 222 47% 5%; /* slate-950 */
-    --foreground: 210 40% 98%; /* slate-100 */
+    /* Backgrounds & Surfaces — Dark Mode */
+    --background: 261 48% 6%; /* #0B0714 */
+    --foreground: 0 0% 100%; /* #FFFFFF Text */
     
-    --card: 222 47% 7%; /* slate-900 at 0.7 */
-    --card-foreground: 210 40% 98%;
+    --card: 260 45% 13%; /* #1B1230 */
+    --card-foreground: 0 0% 100%;
     
-    --popover: 222 47% 7%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 260 45% 13%;
+    --popover-foreground: 0 0% 100%;
 
-    --primary: 142 71% 45%; /* Keep emerald primary */
-    --primary-foreground: 142 80% 2%;
+    --primary: 266 31% 64%; /* #9F86C0 */
+    --primary-foreground: 0 0% 100%;
     
-    --secondary: 173 80% 40%;
-    --muted: 217 33% 13%;
-    --muted-foreground: 215 20% 65%;
+    --secondary: 275 100% 89%; /* #E7C6FF */
+    --secondary-foreground: 271 100% 14%;
+
+    --accent: 275 100% 89%; /* #E7C6FF */
+    --accent-foreground: 271 100% 14%;
+
+    --muted: 261 31% 75%; /* #B8A8D6 */
+    --muted-foreground: 261 31% 75%;
     
-    --border: 217 33% 13%;
-    --input: 217 33% 13%;
+    --border: 258 46% 22%; /* #2E1E52 */
+    --input: 258 46% 22%; /* #2E1E52 */
     
-    --sidebar-background: 222 47% 4%;
-    --sidebar-foreground: 215 20% 65%;
-    --sidebar-primary: 142 71% 45%;
-    --sidebar-accent: 217 33% 12%;
-    --sidebar-border: 217 33% 13%;
+    /* Sidebar - Dark */
+    --sidebar-background: 260 48% 8%; /* #120B20 */
+    --sidebar-foreground: 261 31% 75%;
+    --sidebar-primary: 266 31% 64%;
+    --sidebar-accent: 260 45% 13%;
+    --sidebar-border: 258 46% 22%;
   }
 }
 
@@ -95,21 +111,22 @@
 @layer components {
   /* Premium Glassmorphism */
   .glass-premium, .glass {
-    @apply backdrop-blur-xl border transition-all duration-300;
-    background: hsla(var(--card) / 0.8); /* More opaque for light mode visibility */
+    @apply backdrop-blur-2xl border transition-all duration-300;
+    background: hsla(var(--card) / 0.85);
     border-color: hsla(var(--border) / 0.8);
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+    box-shadow: 0 8px 32px 0 rgba(36, 0, 70, 0.05), inset 0 0 0 1px hsla(var(--border) / 0.5);
   }
   
   .dark .glass-premium, .dark .glass {
     background: hsla(var(--card) / 0.4);
     border-color: hsla(var(--border) / 0.3);
-    box-shadow: none;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37), inset 0 0 0 1px hsla(var(--border) / 0.2);
   }
 
   .glass-premium:hover, .glass:hover {
-    @apply border-primary/40 shadow-xl shadow-primary/5;
+    @apply border-primary/50 shadow-2xl;
     background: hsla(var(--card) / 0.95);
+    box-shadow: 0 12px 40px 0 rgba(159, 134, 192, 0.15), inset 0 0 0 1px hsla(var(--primary) / 0.3);
   }
 
   /* Standard Button Animations */
@@ -119,20 +136,20 @@
 }
 
 @layer utilities {
-  .shadow-glow-emerald {
-    box-shadow: 0 0 20px -5px hsla(var(--primary) / 0.3);
+  .shadow-glow-purple {
+    box-shadow: 0 0 25px -5px hsla(var(--primary) / 0.4);
   }
   
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-br from-emerald-500 to-teal-500;
+    @apply bg-clip-text text-transparent bg-gradient-to-br from-[#E7C6FF] to-[#9F86C0];
   }
 
   .bg-gradient-premium {
-    @apply bg-gradient-to-br from-emerald-500 to-teal-600;
+    @apply bg-gradient-to-r from-[#240046] to-[#9F86C0];
   }
 
   .bg-gradient-primary {
-    @apply bg-gradient-to-br from-emerald-500 to-teal-600;
+    @apply bg-gradient-to-r from-[#240046] to-[#9F86C0];
   }
 }
 

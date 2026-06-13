@@ -80,6 +80,16 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        role: {
+          superadmin: "hsl(var(--role-superadmin))",
+          admin: "hsl(var(--role-admin))",
+          payment: "hsl(var(--role-payment))",
+          teacher: "hsl(var(--role-teacher))",
+          student: "hsl(var(--role-student))",
+          moderator: "hsl(var(--role-moderator))",
+          support: "hsl(var(--role-support))",
+          content: "hsl(var(--role-content))",
+        }
       },
       borderRadius: {
         lg: "var(--radius)",

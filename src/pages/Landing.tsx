@@ -88,10 +88,10 @@ export default function Landing() {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#f8fafc] dark:bg-[#0b0f1a] text-slate-900 dark:text-slate-100 font-sans overflow-x-hidden flex flex-col selection:bg-emerald-100 selection:text-emerald-900 dark:selection:bg-emerald-900/30 dark:selection:text-emerald-100">
+    <div className="relative min-h-screen bg-[#FCFAFF] dark:bg-[#0B0714] text-slate-900 dark:text-slate-100 font-sans overflow-x-hidden flex flex-col selection:bg-purple-100 selection:text-purple-900 dark:selection:bg-purple-900/30 dark:selection:text-purple-100">
       <SplashCursor
         RAINBOW_MODE={false}
-        COLOR="#10b981"
+        COLOR="#9F86C0"
         SPLAT_RADIUS={0.25}
         DENSITY_DISSIPATION={3.5}
       />
@@ -110,7 +110,7 @@ export default function Landing() {
             y: [0, -20, 0]
           }}
           transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-[-10%] right-[-5%] w-[60vw] h-[60vw] rounded-full bg-emerald-100/40 dark:bg-emerald-900/20 blur-[120px]"
+          className="absolute top-[-10%] right-[-5%] w-[60vw] h-[60vw] rounded-full bg-purple-100/40 dark:bg-purple-900/20 blur-[120px]"
         />
         <motion.div
           animate={{
@@ -136,11 +136,11 @@ export default function Landing() {
           <nav className={cn(
             "flex items-center justify-between px-3 sm:px-6 py-1.5 sm:py-2.5 rounded-2xl transition-all duration-500 border",
             scrolled
-              ? "bg-white/90 dark:bg-[#0f172a]/90 backdrop-blur-xl border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/20 dark:shadow-slate-900/40"
-              : "bg-white/50 dark:bg-[#0f172a]/50 backdrop-blur-md border-white/40 dark:border-slate-700/40 shadow-sm"
+              ? "bg-[#FCFAFF]/90 dark:bg-[#140D23]/90 backdrop-blur-xl border-[#E8DDFB] dark:border-[#2E1E52] shadow-xl shadow-slate-200/20 dark:shadow-slate-900/40"
+              : "bg-[#FCFAFF]/50 dark:bg-[#140D23]/50 backdrop-blur-md border-[#E8DDFB]/40 dark:border-[#2E1E52]/40 shadow-sm"
           )}>
             <div className="cursor-pointer group flex items-center gap-2" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-              <Logo size={42} showText variant={theme === "dark" ? "light" : "dark"} />
+              <Logo size={52} showText variant={theme === "dark" ? "dark" : "light"} />
             </div>
 
             <div className="hidden lg:flex items-center gap-10">
@@ -148,10 +148,10 @@ export default function Landing() {
                 <a
                   key={item}
                   href={`#${item.toLowerCase()}`}
-                  className="text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors relative group"
+                  className="text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors relative group"
                 >
                   {t(`navbar.${item.toLowerCase()}`)}
-                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-emerald-500 transition-all group-hover:w-full" />
+                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-purple-500 transition-all group-hover:w-full" />
                 </a>
               ))}
             </div>
@@ -172,7 +172,7 @@ export default function Landing() {
                       <Button
                         variant="ghost"
                         onClick={() => navigate("/signin")}
-                        className="text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 font-bold hover:bg-emerald-50/50 dark:hover:bg-emerald-900/30"
+                        className="text-slate-600 dark:text-slate-300 hover:text-purple-600 dark:hover:text-purple-400 font-bold hover:bg-purple-50/50 dark:hover:bg-purple-900/30"
                       >
                         {t("navbar.signIn")}
                       </Button>
@@ -187,7 +187,7 @@ export default function Landing() {
                     >
                       <Button
                         onClick={handleAuthClick}
-                        className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl px-4 sm:px-8 h-9 sm:h-10 text-xs sm:text-sm shadow-lg shadow-emerald-600/20 transition-all hover:shadow-emerald-600/40 hover:-translate-y-0.5 font-bold border-none"
+                        className="bg-purple-600 hover:bg-purple-500 text-white rounded-xl px-4 sm:px-8 h-9 sm:h-10 text-xs sm:text-sm shadow-lg shadow-purple-600/20 transition-all hover:shadow-purple-600/40 hover:-translate-y-0.5 font-bold border-none"
                       >
                         {t("navbar.signUp")}
                       </Button>
@@ -205,7 +205,7 @@ export default function Landing() {
         <div className="absolute inset-0 pointer-events-none opacity-30 mix-blend-screen">
           <LightRays
             raysOrigin="top-center"
-            raysColor="#197c17ff"
+            raysColor="#9F86C0ff"
             raysSpeed={1.5}
             lightSpread={0.8}
             rayLength={1.2}
@@ -227,7 +227,7 @@ export default function Landing() {
           >
             {/* Subtle HUD Accent */}
             <div className="hidden md:flex items-center gap-2 mb-6 opacity-40">
-              <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+              <div className="w-1.5 h-1.5 bg-purple-500 rounded-full animate-pulse" />
               <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-slate-500">System Online // AI Core Active</span>
             </div>
 
@@ -244,7 +244,7 @@ export default function Landing() {
                   {headlines[headlineIndex].split(' ').map((word, i) => (
                     <span key={i} className={cn(
                       word.includes("IELTS") || word.includes("Band") || word.includes("Real") || word.includes("Future") || word.includes("Haqiqiy") || word.includes("Mashq")
-                        ? "text-emerald-600 drop-shadow-[0_0_15px_rgba(16,185,129,0.15)]"
+                        ? "text-purple-600 drop-shadow-[0_0_15px_rgba(159,134,192,0.25)]"
                         : ""
                     )}>
                       {word}{" "}
@@ -278,7 +278,7 @@ export default function Landing() {
               >
                 <Button
                   onClick={handleAuthClick}
-                  className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl px-6 sm:px-10 h-14 sm:h-16 xl:h-20 text-base sm:text-lg xl:text-xl font-bold shadow-2xl shadow-emerald-600/20 transition-all hover:-translate-y-1 group w-full sm:w-auto"
+                  className="bg-purple-600 hover:bg-purple-500 text-white rounded-2xl px-6 sm:px-10 h-14 sm:h-16 xl:h-20 text-base sm:text-lg xl:text-xl font-bold shadow-2xl shadow-purple-600/20 transition-all hover:-translate-y-1 group w-full sm:w-auto"
                 >
                   {t("hero.startBtn")}
                   <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -286,7 +286,7 @@ export default function Landing() {
                 <Button
                   onClick={handleAuthClick}
                   variant="outline"
-                  className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-emerald-100 dark:border-emerald-900/30 hover:border-emerald-200 dark:hover:border-emerald-800 hover:bg-emerald-50/30 dark:hover:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 rounded-2xl px-6 sm:px-10 h-14 sm:h-16 xl:h-20 text-base sm:text-lg xl:text-xl font-bold transition-all hover:-translate-y-1 shadow-sm w-full sm:w-auto"
+                  className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-purple-100 dark:border-purple-900/30 hover:border-purple-200 dark:hover:border-purple-800 hover:bg-purple-50/30 dark:hover:bg-purple-900/20 text-purple-700 dark:text-purple-400 rounded-2xl px-6 sm:px-10 h-14 sm:h-16 xl:h-20 text-base sm:text-lg xl:text-xl font-bold transition-all hover:-translate-y-1 shadow-sm w-full sm:w-auto"
                 >
                   {t("hero.trialBtn")}
                 </Button>
@@ -303,13 +303,13 @@ export default function Landing() {
           >
             <div className="relative w-full max-w-[580px] aspect-square flex items-center justify-center group">
               {/* Central Glow */}
-              <div className="absolute inset-0 bg-emerald-500/5 rounded-full blur-[80px] group-hover:bg-emerald-500/10 transition-colors duration-1000" />
+              <div className="absolute inset-0 bg-purple-500/5 rounded-full blur-[80px] group-hover:bg-purple-500/10 transition-colors duration-1000" />
 
               {/* Lottie Animation Container with Glass Frame */}
               <div className="relative z-10 w-full h-full flex items-center justify-center p-8">
-                <div className="absolute inset-0 border border-emerald-500/10 rounded-[3rem] [mask-image:radial-gradient(circle_at_center,#000_60%,transparent_100%)] opacity-20" />
+                <div className="absolute inset-0 border border-purple-500/10 rounded-[3rem] [mask-image:radial-gradient(circle_at_center,#000_60%,transparent_100%)] opacity-20" />
                 <DotLottieReact
-                  src="https://lottie.host/a355b6f6-e610-4325-93f9-fbd488a15bc7/6ueVPok8v6.lottie"
+                  src="https://lottie.host/5cac198d-102b-4824-af4c-62c8cfdd4418/V3GyV38qyt.lottie"
                   loop
                   autoplay
                   className="w-full h-full object-contain drop-shadow-2xl"
@@ -339,7 +339,7 @@ function TechOrnaments() {
       </svg>
 
       {/* Top Right Corner */}
-      <svg className="absolute top-0 right-0 w-64 h-64 opacity-30 dark:opacity-20 stroke-emerald-300 dark:stroke-emerald-700 hidden md:block" viewBox="0 0 200 200" fill="none">
+      <svg className="absolute top-0 right-0 w-64 h-64 opacity-30 dark:opacity-20 stroke-purple-300 dark:stroke-purple-700 hidden md:block" viewBox="0 0 200 200" fill="none">
         <path d="M180 20H140M180 20V60" strokeWidth="1.5" strokeLinecap="round" />
         <path d="M180 80V120" strokeWidth="1" strokeDasharray="4 4" />
         <rect x="170" y="15" width="20" height="10" rx="2" strokeWidth="1" />
@@ -353,7 +353,7 @@ function TechOrnaments() {
       </svg>
 
       {/* Bottom Right Corner */}
-      <svg className="absolute bottom-0 right-0 w-64 h-64 opacity-40 dark:opacity-20 stroke-emerald-400 dark:stroke-emerald-700 hidden md:block" viewBox="0 0 200 200" fill="none">
+      <svg className="absolute bottom-0 right-0 w-64 h-64 opacity-40 dark:opacity-20 stroke-purple-400 dark:stroke-purple-700 hidden md:block" viewBox="0 0 200 200" fill="none">
         <path d="M180 180H140M180 180V140" strokeWidth="1.5" strokeLinecap="round" />
         <path d="M150 180L130 160" strokeWidth="2" strokeLinecap="round" />
         <circle cx="180" cy="180" r="4" strokeWidth="1" />
@@ -363,7 +363,7 @@ function TechOrnaments() {
       <motion.div
         animate={{ y: [0, -40, 0], opacity: [0.1, 0.2, 0.1] }}
         transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-1/4 left-1/4 w-[2px] h-32 bg-gradient-to-b from-transparent via-emerald-500/20 to-transparent hidden xl:block"
+        className="absolute top-1/4 left-1/4 w-[2px] h-32 bg-gradient-to-b from-transparent via-purple-500/20 to-transparent hidden xl:block"
       />
       <motion.div
         animate={{ y: [0, 50, 0], opacity: [0.1, 0.15, 0.1] }}
@@ -388,7 +388,7 @@ function FloatingBadge({ icon: Icon, title, className }: { icon: any, title: str
       }}
       className={cn("absolute z-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-4 rounded-2xl shadow-2xl shadow-slate-200/50 dark:shadow-black/50 border border-white dark:border-slate-800 items-center gap-3", className)}
     >
-      <div className="h-10 w-10 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl flex items-center justify-center shrink-0">
+      <div className="h-10 w-10 bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded-xl flex items-center justify-center shrink-0">
         <Icon className="h-5 w-5" />
       </div>
       <p className="font-bold text-slate-800 dark:text-slate-200 text-sm whitespace-nowrap tracking-tight">{title}</p>

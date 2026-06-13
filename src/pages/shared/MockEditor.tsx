@@ -684,7 +684,7 @@ export default function MockEditor({ basePath = "/super-admin" }: { basePath?: s
                     <div className="pl-8 space-y-2 mt-2">
                        {(q.options || []).map((opt, oi) => (
                           <div key={oi} className="flex items-start gap-2">
-                             <Button size="icon" variant={opt.isCorrect ? "default" : "outline"} className={`h-8 w-8 shrink-0 ${opt.isCorrect ? "bg-emerald-500 hover:bg-emerald-600" : ""}`} onClick={() => {
+                             <Button size="icon" variant={opt.isCorrect ? "default" : "outline"} className={`h-8 w-8 shrink-0 ${opt.isCorrect ? "bg-purple-500 hover:bg-purple-600" : ""}`} onClick={() => {
                                  const newOpts = [...q.options];
                                  if (q.qtype === "mcq") {
                                      newOpts.forEach((o, i) => newOpts[i] = { ...o, isCorrect: false });

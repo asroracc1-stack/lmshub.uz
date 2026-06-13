@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { api } from "@/lib/axios";
 import { roleHomePath, AppRole } from "@/lib/auth";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import Logo from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -53,6 +54,7 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
   const { user, role, loading, setAuth } = useAuth();
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const { theme } = useTheme();
 
   const [isSignIn, setIsSignIn] = useState(defaultMode === "signin");
   const [submitting, setSubmitting] = useState(false);
@@ -251,11 +253,11 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
 
   if (successMode) {
     return (
-      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-[#030712]">
+      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-slate-50 dark:bg-[#030712]">
         <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-center">
           <DotLottieReact src="https://lottie.host/05a8da46-bffb-4416-a160-0b16adbce445/CxzFkSjThh.lottie" loop autoplay className="w-[300px] h-[300px]" />
-          <h2 className="text-3xl font-bold text-white mt-6 tracking-tight">Muvaffaqiyatli!</h2>
-          <p className="text-emerald-500 mt-3 font-medium">
+          <h2 className="text-3xl font-bold text-slate-900 dark:text-white mt-6 tracking-tight">Muvaffaqiyatli!</h2>
+          <p className="text-purple-600 dark:text-purple-500 mt-3 font-medium">
             {isGoogleSuccess ? "Google orqali muvaffaqiyatli kirdingiz! Dashboardga yo'naltirilmoqdasiz..." : "Dashboardga yo'naltirilmoqdasiz..."}
           </p>
         </motion.div>
@@ -264,19 +266,34 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
   }
 
   return (
-    <div className="h-screen w-full grid grid-cols-1 lg:grid-cols-2 bg-white dark:bg-[#030712] selection:bg-emerald-500/30 selection:text-emerald-900 dark:selection:text-emerald-200 overflow-hidden">
+    <div className="h-screen w-full grid grid-cols-1 lg:grid-cols-2 bg-[#FCFAFF] dark:bg-[#030712] text-slate-900 dark:text-white selection:bg-purple-500/30 selection:text-purple-900 dark:selection:text-purple-200 overflow-hidden relative">
       
+      {/* Background decoration glows */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <motion.div
+          animate={{ scale: [1, 1.1, 1], opacity: [0.4, 0.6, 0.4] }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute -top-40 -left-40 h-[600px] w-[600px] rounded-full bg-purple-100/50 dark:bg-purple-900/10 blur-[130px]"
+        />
+        <motion.div
+          animate={{ scale: [1.1, 1, 1.1], opacity: [0.3, 0.5, 0.3] }}
+          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute -bottom-40 -right-40 h-[650px] w-[650px] rounded-full bg-[#E7C6FF]/30 dark:bg-[#240046]/10 blur-[140px]"
+        />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-[0.35] dark:opacity-[0.1]" />
+      </div>
+
       {/* LEFT COLUMN: Auth Forms */}
       <div className="relative flex flex-col items-center justify-center p-4 sm:p-8 md:p-12 pt-24 lg:pt-12 z-10 h-full overflow-hidden">
         
-        {/* Top Controls: Back Button centered on mobile, top-left on large screens */}
+        {/* Top Controls: Back Button */}
         <div className="absolute top-6 left-1/2 -translate-x-1/2 lg:top-10 lg:left-10 lg:translate-x-0 z-20">
           <Link 
             to="/"
             className={cn(
-              "flex items-center gap-1.5 px-3 py-1 rounded-[8px] text-[10px] font-bold transition-all duration-300 shadow-md",
-              "bg-emerald-50 border border-emerald-100 text-emerald-700 hover:bg-emerald-100 hover:border-emerald-200",
-              "dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400 dark:hover:bg-emerald-500/20"
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] text-[10px] font-bold transition-all duration-300 shadow-md",
+              "bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 hover:border-primary/30",
+              "dark:bg-primary/10 dark:border-primary/20 dark:text-primary dark:hover:bg-primary/20"
             )}
           >
             <ArrowLeft className="w-3 h-3" />
@@ -284,7 +301,7 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
           </Link>
         </div>
 
-        <div className="w-full max-w-md mx-auto flex flex-col justify-center h-full max-h-screen py-2 sm:py-6">
+        <div className="w-full max-w-md mx-auto flex flex-col justify-center h-full max-h-screen py-2 sm:py-6 relative z-10">
           <AnimatePresence mode="wait">
             <motion.div
               key={isSignIn ? "signin" : "signup"}
@@ -296,7 +313,7 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
             >
               <div className="text-center">
                 <div className="flex justify-center mb-6">
-                  <Logo size={64} showText variant="dark" />
+                  <Logo size={64} showText variant={theme === "dark" ? "dark" : "light"} />
                 </div>
               </div>
 
@@ -315,7 +332,7 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
                           onChange={(e) => setFullName(e.target.value)} 
                           placeholder={t("auth.fullName")} 
                           required 
-                          className="h-12 sm:h-14 rounded-xl bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:border-emerald-500 focus-visible:ring-0"
+                          className="h-12 sm:h-14 rounded-xl bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:border-primary focus-visible:ring-0"
                         />
                         <div className="relative">
                           <PhoneInput
@@ -323,7 +340,7 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
                             value={phone}
                             onChange={val => setPhone(val)}
                             containerClass="w-full"
-                            inputClass={`!w-full !h-12 sm:!h-14 !rounded-xl !bg-slate-50 dark:!bg-slate-900/50 !border-slate-200 dark:!border-slate-800 !text-slate-900 dark:!text-white focus:!border-emerald-500 !shadow-none`}
+                            inputClass="!w-full !h-12 sm:!h-14 !rounded-xl !bg-slate-50 dark:!bg-slate-900/50 !border-slate-200 dark:!border-slate-800 !text-slate-900 dark:!text-white focus:!border-primary !shadow-none"
                             buttonClass="!bg-transparent !border-none !rounded-l-xl !pl-3"
                             dropdownClass="!bg-white dark:!bg-slate-900 !text-slate-900 dark:!text-white !border-slate-200 dark:!border-slate-800"
                           />
@@ -335,34 +352,34 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
                         placeholder={t("auth.email")} 
                         type="email"
                         required 
-                        className="h-12 sm:h-14 rounded-xl bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:border-emerald-500 focus-visible:ring-0"
+                        className="h-12 sm:h-14 rounded-xl bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:border-primary focus-visible:ring-0"
                       />
                     </motion.div>
                   )}
                 </AnimatePresence>
 
                 <div className="relative group">
-                  <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
+                  <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-primary transition-colors" />
                   <Input 
                     value={username} 
                     onChange={(e) => setUsername(e.target.value)} 
                     placeholder={t("auth.username")} 
                     required 
-                    className="pl-12 h-12 sm:h-14 rounded-xl bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:border-emerald-500 focus-visible:ring-0 transition-all"
+                    className="pl-12 h-12 sm:h-14 rounded-xl bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:border-primary focus-visible:ring-0 transition-all"
                   />
                 </div>
 
                 <div className="relative group">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-primary transition-colors" />
                   <Input 
                     type={showPwd ? "text" : "password"} 
                     value={password} 
                     onChange={(e) => setPassword(e.target.value)} 
                     placeholder={t("auth.password")} 
                     required 
-                    className="pl-12 pr-12 h-12 sm:h-14 rounded-xl bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:border-emerald-500 focus-visible:ring-0 transition-all"
+                    className="pl-12 pr-12 h-12 sm:h-14 rounded-xl bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:border-primary focus-visible:ring-0 transition-all"
                   />
-                  <button type="button" onClick={() => setShowPwd(!showPwd)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-emerald-600 dark:hover:text-white transition-colors">
+                  <button type="button" onClick={() => setShowPwd(!showPwd)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary dark:hover:text-white transition-colors">
                     {showPwd ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
@@ -370,7 +387,7 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
                 <Button 
                   type="submit" 
                   disabled={submitting} 
-                  className="w-full h-12 sm:h-14 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-lg rounded-xl shadow-lg shadow-emerald-600/20 transition-all duration-300"
+                  className="w-full h-12 sm:h-14 bg-gradient-premium hover:shadow-glow-purple text-white font-bold text-lg rounded-xl shadow-lg transition-all duration-300 border-none"
                 >
                   {submitting ? <Loader2 className="animate-spin h-6 w-6" /> : (isSignIn ? t("auth.signIn") : t("auth.signUp"))}
                 </Button>
@@ -404,7 +421,7 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
               <div className="mt-4 sm:mt-6 text-center">
                 <p className="text-slate-500 dark:text-slate-400 font-medium text-sm sm:text-base">
                   {isSignIn ? t("auth.noAccount") : t("auth.haveAccount")}
-                  <button onClick={toggleMode} className="ml-2 text-emerald-600 dark:text-emerald-500 font-bold hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors">
+                  <button onClick={toggleMode} className="ml-2 text-primary font-bold hover:text-primary transition-colors">
                     {isSignIn ? t("auth.signUp") : t("auth.signIn")}
                   </button>
                 </p>
@@ -415,11 +432,11 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
       </div>
 
       {/* RIGHT COLUMN: Illustration & Branding */}
-      <div className="hidden lg:flex relative bg-white dark:bg-slate-900/40 items-center justify-center overflow-hidden border-l border-slate-100 dark:border-slate-800 h-full">
+      <div className="hidden lg:flex relative bg-slate-50/50 dark:bg-slate-900/10 items-center justify-center overflow-hidden border-l border-slate-100 dark:border-slate-800/40 h-full z-10">
         
-        {/* Premium Glow Effects - "Oychi" (Moon) aesthetic */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[550px] bg-emerald-100 dark:bg-emerald-500/10 blur-[130px] rounded-full z-0 animate-pulse" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] bg-emerald-200/60 dark:bg-emerald-500/20 blur-[90px] rounded-full z-0" />
+        {/* Premium Glow Effects */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[550px] bg-primary/5 dark:bg-primary/5 blur-[120px] rounded-full z-0 animate-pulse" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] bg-[#E7C6FF]/10 dark:bg-[#E7C6FF]/5 blur-[90px] rounded-full z-0" />
 
         <div className="relative z-10 w-full max-w-lg px-10 flex flex-col items-center">
           <AnimatePresence mode="wait">
@@ -432,20 +449,17 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
               className="flex flex-col items-center text-center"
             >
               <DotLottieReact 
-                src={isSignIn 
-                  ? "https://lottie.host/a3366e14-1d32-4a7b-8a52-1c9be2a09e50/EkKAp2D7Rn.lottie" 
-                  : "https://lottie.host/cce3255b-22d3-4c52-859f-bf0f9dccbda6/sXaP26Fbhu.lottie"
-                }
+                src="https://lottie.host/5cac198d-102b-4824-af4c-62c8cfdd4418/V3GyV38qyt.lottie"
                 loop 
                 autoplay 
-                className="w-[450px] h-[450px] mix-blend-multiply" 
+                className="w-[450px] h-[450px]" 
               />
             </motion.div>
           </AnimatePresence>
         </div>
 
         {/* Decorative Grid Overlay */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-[0.2]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f0_0.8px,transparent_0.8px),linear-gradient(to_bottom,#e2e8f0_0.8px,transparent_0.8px)] dark:bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-[0.25]" />
       </div>
 
     </div>

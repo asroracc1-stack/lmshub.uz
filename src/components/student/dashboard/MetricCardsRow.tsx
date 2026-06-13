@@ -60,16 +60,16 @@ export default function MetricCardsRow({ data }: MetricCardsRowProps) {
           animate={{ opacity: 1, y: 0 }} 
           transition={{ delay: 0.1 + idx * 0.05 }}
         >
-          <Card className="p-4 rounded-2xl shadow-sm border-slate-100 flex items-center gap-4 hover:shadow-md transition-shadow">
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${card.iconBg}`}>
+          <Card className="p-4 rounded-2xl border-primary/10 dark:border-primary/10 bg-white/60 dark:bg-[#1B1230]/60 backdrop-blur-md flex items-center gap-4 hover:shadow-glow-purple hover:border-primary/30 transition-all duration-300">
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${card.iconBg} dark:bg-primary/10`}>
               {card.icon}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[11px] text-slate-500 font-medium truncate mb-0.5">{card.title}</p>
-              <p className="text-xl font-bold text-slate-900 truncate leading-none">{card.value}</p>
+              <p className="text-[11px] text-slate-500 dark:text-muted-foreground font-medium truncate mb-0.5">{card.title}</p>
+              <p className="text-xl font-bold text-slate-900 dark:text-white truncate leading-none">{card.value}</p>
               {card.trend && (
                 <p className={`text-[10px] mt-1.5 truncate ${
-                  card.trendUp === true ? "text-emerald-500 font-medium" : 
+                  card.trendUp === true ? "text-primary font-medium" : 
                   card.trendUp === false ? "text-rose-500 font-medium" : 
                   "text-slate-400"
                 }`}>

@@ -31,7 +31,7 @@ const typeColor: Record<string, string> = {
   error: "text-destructive",
   INFO: "text-primary",
   ALERT: "text-warning",
-  NEW_MESSAGE: "text-emerald-500",
+  NEW_MESSAGE: "text-purple-500",
   ACADEMIC: "text-blue-500",
   FINANCE: "text-green-500"
 };

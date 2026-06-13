@@ -39,7 +39,7 @@ const statusMeta = (s: string) => {
     case "approved":
     case "completed":
     case "paid":
-      return { label: "Tasdiqlandi", icon: CheckCircle2, className: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" };
+      return { label: "Tasdiqlandi", icon: CheckCircle2, className: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20" };
     case "rejected":
     case "failed":
       return { label: "Rad etildi", icon: XCircle, className: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20" };
@@ -196,17 +196,17 @@ export default function OrgPayments() {
           <div className="absolute inset-x-0 bottom-0 h-1 bg-amber-500/40" />
         </Card>
 
-        <Card className="p-6 border border-emerald-500/10 hover:border-emerald-500/30 glass relative overflow-hidden group transition-all duration-300">
+        <Card className="p-6 border border-purple-500/10 hover:border-purple-500/30 glass relative overflow-hidden group transition-all duration-300">
           <div className="flex justify-between items-center">
             <div>
               <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Tasdiqlangan</p>
               <p className="font-display text-3xl font-extrabold text-slate-800 dark:text-white mt-1">{stats.paid}</p>
             </div>
-            <div className="h-12 w-12 rounded-xl bg-emerald-500/10 grid place-items-center text-emerald-500 group-hover:scale-110 transition-transform">
+            <div className="h-12 w-12 rounded-xl bg-purple-500/10 grid place-items-center text-purple-500 group-hover:scale-110 transition-transform">
               <CheckCircle2 className="h-6 w-6" />
             </div>
           </div>
-          <div className="absolute inset-x-0 bottom-0 h-1 bg-emerald-500/40" />
+          <div className="absolute inset-x-0 bottom-0 h-1 bg-purple-500/40" />
         </Card>
 
         <Card className="p-6 border border-indigo-500/10 hover:border-indigo-500/30 glass relative overflow-hidden group transition-all duration-300">
@@ -337,7 +337,7 @@ export default function OrgPayments() {
                             size="sm"
                             onClick={() => approveMutation.mutate(p.id)}
                             disabled={isMutationPending}
-                            className="rounded-xl px-3 bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20 border-none h-9 transition-all"
+                            className="rounded-xl px-3 bg-purple-600 hover:bg-purple-700 text-white shadow-md shadow-purple-600/20 border-none h-9 transition-all"
                             title="Tasdiqlash"
                           >
                             {approveMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
@@ -440,7 +440,7 @@ export default function OrgPayments() {
                   <Button 
                     onClick={() => approveMutation.mutate(selected.id)} 
                     disabled={isMutationPending}
-                    className="rounded-xl px-5 h-11 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs flex items-center justify-center shadow-lg shadow-emerald-600/25 border-none transition-all duration-200"
+                    className="rounded-xl px-5 h-11 bg-purple-600 hover:bg-purple-700 active:scale-95 text-white font-bold text-xs flex items-center justify-center shadow-lg shadow-purple-600/25 border-none transition-all duration-200"
                   >
                     {approveMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
                     To'lovni tasdiqlash

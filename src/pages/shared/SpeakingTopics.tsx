@@ -7,7 +7,7 @@ import { TOPICS } from "./speakingTopicsData";
 
 const DIFF_LABEL = { easy: "Oson", medium: "O'rta", hard: "Qiyin" } as const;
 const DIFF_COLOR = {
-  easy: "text-emerald-600 bg-emerald-100 dark:bg-emerald-900/30",
+  easy: "text-purple-600 bg-purple-100 dark:bg-purple-900/30",
   medium: "text-amber-700 bg-amber-100 dark:bg-amber-900/30",
   hard: "text-rose-600 bg-rose-100 dark:bg-rose-900/30",
 };
@@ -31,7 +31,7 @@ export default function SpeakingTopics({ basePath = "/user" }: { basePath?: stri
                 <div className={`w-14 h-14 rounded-xl ${t.bg} grid place-items-center text-3xl`}>{t.emoji}</div>
                 <h3 className="font-display font-bold text-lg leading-tight">{t.title}</h3>
                 <div className="flex flex-wrap gap-1.5">
-                  <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300">FREE</Badge>
+                  <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-100 dark:bg-purple-900/30 dark:text-purple-300">FREE</Badge>
                   <Badge variant="outline" className={`gap-1 ${DIFF_COLOR[t.difficulty]} border-transparent`}>
                     <TrendingUp className="h-3 w-3" /> {DIFF_LABEL[t.difficulty]}
                   </Badge>

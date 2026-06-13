@@ -53,7 +53,7 @@ interface Teacher {
 }
 
 const COLORS = [
-  { name: "Smaragd", value: "#10b981" },
+  { name: "Smaragd", value: "#9F86C0" },
   { name: "Moviy", value: "#3b82f6" },
   { name: "Binafsha", value: "#8b5cf6" },
   { name: "Oltin", value: "#f59e0b" },
@@ -87,7 +87,7 @@ export default function OrgGroups() {
     direction: "",
     teacher_id: "",
     organization_id: "",
-    color: "#10b981",
+    color: "#9F86C0",
   });
 
   const load = async () => {
@@ -123,7 +123,7 @@ export default function OrgGroups() {
       direction: "",
       teacher_id: "",
       organization_id: "",
-      color: "#10b981",
+      color: "#9F86C0",
     });
   };
 
@@ -135,7 +135,7 @@ export default function OrgGroups() {
       direction: g.direction || "",
       teacher_id: g.teacher_id || "",
       organization_id: g.organization_id || "",
-      color: g.color || "#10b981",
+      color: g.color || "#9F86C0",
     });
     setOpen(true);
   };
@@ -213,7 +213,7 @@ export default function OrgGroups() {
         {canManage && (
           <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
             <DialogTrigger asChild>
-              <Button variant="hero" className="shadow-lg shadow-emerald-500/20">
+              <Button variant="hero" className="shadow-lg shadow-purple-500/20">
                 <Plus className="h-4 w-4 mr-2" /> Yangi Guruh
               </Button>
             </DialogTrigger>
@@ -375,15 +375,15 @@ export default function OrgGroups() {
               <Card className="group relative overflow-hidden border-none shadow-sm hover:shadow-xl transition-all duration-300 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm">
                 <div 
                   className="absolute left-0 top-0 bottom-0 w-1.5"
-                  style={{ backgroundColor: g.color || "#10b981" }}
+                  style={{ backgroundColor: g.color || "#9F86C0" }}
                 />
                 <div className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-6">
                   <div className="flex items-center gap-5">
                     <div 
                       className="h-14 w-14 rounded-2xl flex items-center justify-center shadow-inner"
-                      style={{ backgroundColor: `${g.color || "#10b981"}15` }}
+                      style={{ backgroundColor: `${g.color || "#9F86C0"}15` }}
                     >
-                      <Users2 className="h-7 w-7" style={{ color: g.color || "#10b981" }} />
+                      <Users2 className="h-7 w-7" style={{ color: g.color || "#9F86C0" }} />
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
@@ -397,7 +397,7 @@ export default function OrgGroups() {
                         <span className="flex items-center gap-1.5">
                           <GraduationCap className="h-3.5 w-3.5" /> {getTeacherName(g)}
                         </span>
-                        <span className="flex items-center gap-1.5 font-medium text-emerald-600 dark:text-emerald-400">
+                        <span className="flex items-center gap-1.5 font-medium text-purple-600 dark:text-purple-400">
                           <Users className="h-3.5 w-3.5" /> {g.student_count || 0} ta o'quvchi
                         </span>
                       </div>

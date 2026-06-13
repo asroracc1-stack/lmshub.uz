@@ -29,7 +29,7 @@ export default function PMSubscriptions() {
   return (
     <div className="space-y-5 w-full">
       <h1 className="text-2xl md:text-3xl font-display font-bold flex items-center gap-2">
-        <Crown className="h-6 w-6 text-emerald-500" /> Obunalar
+        <Crown className="h-6 w-6 text-purple-500" /> Obunalar
       </h1>
       <Card className="overflow-hidden">
         {loading ? <div className="p-12 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" /></div> :
@@ -49,7 +49,7 @@ export default function PMSubscriptions() {
                       <TableCell><Badge variant="outline">{s.subscription_packs?.name || s.subscription_packs?.code}</Badge></TableCell>
                       <TableCell className="text-xs">{format(new Date(s.starts_at), "dd.MM.yyyy")}</TableCell>
                       <TableCell className="text-xs">{format(new Date(s.expires_at), "dd.MM.yyyy")}</TableCell>
-                      <TableCell>{live ? <Badge className="bg-emerald-500 text-white">Active</Badge> : <Badge variant="destructive">Expired</Badge>}</TableCell>
+                      <TableCell>{live ? <Badge className="bg-purple-500 text-white">Active</Badge> : <Badge variant="destructive">Expired</Badge>}</TableCell>
                     </TableRow>
                   );
                 })}

@@ -97,24 +97,24 @@ export default function ProfileMenu({ role, basePath }: ProfileMenuProps) {
     super_admin: "bg-amber-500/15 text-amber-600 dark:text-amber-400",
     admin: "bg-blue-500/15 text-blue-600 dark:text-blue-400",
     administrator: "bg-violet-500/15 text-violet-600 dark:text-violet-400",
-    teacher: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
+    teacher: "bg-purple-500/15 text-purple-600 dark:text-purple-400",
     student: "bg-sky-500/15 text-sky-600 dark:text-sky-400",
     user: "bg-rose-500/15 text-rose-600 dark:text-rose-400",
-    parent: "bg-cyan-500/15 text-cyan-600 dark:text-cyan-400",
-    payment_manager: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
+    parent: "bg-fuchsia-500/15 text-fuchsia-600 dark:text-fuchsia-400",
+    payment_manager: "bg-purple-500/15 text-purple-600 dark:text-purple-400",
   };
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="relative flex items-center gap-2 rounded-full p-0.5 hover:ring-2 hover:ring-emerald-500/30 transition-all outline-none">
-          <Avatar className="h-9 w-9 border border-emerald-500/30 shadow-glow-emerald">
+        <button className="relative flex items-center gap-2 rounded-full p-0.5 hover:ring-2 hover:ring-purple-500/30 transition-all outline-none">
+          <Avatar className="h-9 w-9 border border-purple-500/30 shadow-glow-purple">
             <AvatarImage src={avatarUrl} alt={displayName} className="object-cover" />
             <AvatarFallback className="bg-gradient-premium text-white text-xs font-bold">
               {initials}
             </AvatarFallback>
           </Avatar>
-          <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 border-2 border-background" />
+          <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-purple-500 border-2 border-background" />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
@@ -123,16 +123,16 @@ export default function ProfileMenu({ role, basePath }: ProfileMenuProps) {
         className="w-[90vw] sm:w-80 max-w-[320px] p-0 overflow-hidden border-border/40 bg-card/95 backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.4)] rounded-2xl animate-in fade-in-0 zoom-in-95"
       >
         {/* Header - Real-time Data */}
-        <div className="p-5 border-b border-border/40 bg-gradient-to-br from-emerald-500/5 via-transparent to-teal-500/5">
+        <div className="p-5 border-b border-border/40 bg-gradient-to-br from-purple-500/5 via-transparent to-violet-500/5">
           <div className="flex items-center gap-4">
             <div className="relative">
-              <Avatar className="h-14 w-14 border-2 border-emerald-500/20 shadow-glow-emerald">
+              <Avatar className="h-14 w-14 border-2 border-purple-500/20 shadow-glow-purple">
                 <AvatarImage src={avatarUrl} alt={displayName} className="object-cover" />
                 <AvatarFallback className="bg-gradient-premium text-white font-bold text-lg">
                   {initials}
                 </AvatarFallback>
               </Avatar>
-              <span className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full bg-emerald-500 border-2 border-card" />
+              <span className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full bg-purple-500 border-2 border-card" />
             </div>
             <div className="min-w-0 flex-1">
               <p className="font-display font-bold truncate text-base leading-tight">
@@ -148,46 +148,46 @@ export default function ProfileMenu({ role, basePath }: ProfileMenuProps) {
 
         <div className="p-2 space-y-0.5">
           {/* Profile */}
-          <DropdownMenuItem onClick={() => go(`${basePath}/profile`)} className="rounded-xl gap-3 cursor-pointer py-3 focus:bg-emerald-500/10 focus:text-emerald-600 dark:focus:text-emerald-400 group">
-            <UserIcon className="h-4.5 w-4.5 text-muted-foreground group-focus:text-emerald-500 transition-colors" />
+          <DropdownMenuItem onClick={() => go(`${basePath}/profile`)} className="rounded-xl gap-3 cursor-pointer py-3 focus:bg-purple-500/10 focus:text-purple-600 dark:focus:text-purple-400 group">
+            <UserIcon className="h-4.5 w-4.5 text-muted-foreground group-focus:text-purple-500 transition-colors" />
             <span className="text-sm font-medium">{t("common.profile")}</span>
           </DropdownMenuItem>
 
           {/* Referral */}
-          <DropdownMenuItem onClick={() => go(`${basePath}/referral`)} className="rounded-xl gap-3 cursor-pointer py-3 focus:bg-emerald-500/10 focus:text-emerald-600 dark:focus:text-emerald-400 group">
-            <Gift className="h-4.5 w-4.5 text-muted-foreground group-focus:text-emerald-500 transition-colors" />
+          <DropdownMenuItem onClick={() => go(`${basePath}/referral`)} className="rounded-xl gap-3 cursor-pointer py-3 focus:bg-purple-500/10 focus:text-purple-600 dark:focus:text-purple-400 group">
+            <Gift className="h-4.5 w-4.5 text-muted-foreground group-focus:text-purple-500 transition-colors" />
             <span className="text-sm font-medium">{t("nav.referral")}</span>
-            <span className="ml-auto text-[10px] font-bold text-emerald-500 uppercase tracking-widest">+10 🪙</span>
+            <span className="ml-auto text-[10px] font-bold text-purple-500 uppercase tracking-widest">+10 🪙</span>
           </DropdownMenuItem>
 
           {role === "super_admin" && (
             <>
-              <DropdownMenuItem onClick={() => go(`${basePath}/subscriptions`)} className="rounded-xl gap-3 cursor-pointer py-3 focus:bg-emerald-500/10 focus:text-emerald-600 dark:focus:text-emerald-400 group">
-                <Wallet className="h-4.5 w-4.5 text-muted-foreground group-focus:text-emerald-500 transition-colors" />
+              <DropdownMenuItem onClick={() => go(`${basePath}/subscriptions`)} className="rounded-xl gap-3 cursor-pointer py-3 focus:bg-purple-500/10 focus:text-purple-600 dark:focus:text-purple-400 group">
+                <Wallet className="h-4.5 w-4.5 text-muted-foreground group-focus:text-purple-500 transition-colors" />
                 <span className="text-sm font-medium">{t("nav.subscriptionManagement")}</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => go(`${basePath}/admins`)} className="rounded-xl gap-3 cursor-pointer py-3 focus:bg-emerald-500/10 focus:text-emerald-600 dark:focus:text-emerald-400 group">
-                <Users className="h-4.5 w-4.5 text-muted-foreground group-focus:text-emerald-500 transition-colors" />
+              <DropdownMenuItem onClick={() => go(`${basePath}/admins`)} className="rounded-xl gap-3 cursor-pointer py-3 focus:bg-purple-500/10 focus:text-purple-600 dark:focus:text-purple-400 group">
+                <Users className="h-4.5 w-4.5 text-muted-foreground group-focus:text-purple-500 transition-colors" />
                 <span className="text-sm font-medium">{t("nav.packManagers")}</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => go(`${basePath}/activity`)} className="rounded-xl gap-3 cursor-pointer py-3 focus:bg-emerald-500/10 focus:text-emerald-600 dark:focus:text-emerald-400 group">
-                <ShieldCheck className="h-4.5 w-4.5 text-muted-foreground group-focus:text-emerald-500 transition-colors" />
+              <DropdownMenuItem onClick={() => go(`${basePath}/activity`)} className="rounded-xl gap-3 cursor-pointer py-3 focus:bg-purple-500/10 focus:text-purple-600 dark:focus:text-purple-400 group">
+                <ShieldCheck className="h-4.5 w-4.5 text-muted-foreground group-focus:text-purple-500 transition-colors" />
                 <span className="text-sm font-medium">{t("nav.securityCenter")}</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => { prefetchRouteData(`${basePath}/activity`); go(`${basePath}/activity`); }} className="rounded-xl gap-3 cursor-pointer py-3 focus:bg-emerald-500/10 focus:text-emerald-600 dark:focus:text-emerald-400 group">
-                <Activity className="h-4.5 w-4.5 text-muted-foreground group-focus:text-emerald-500 transition-colors" />
+              <DropdownMenuItem onClick={() => { prefetchRouteData(`${basePath}/activity`); go(`${basePath}/activity`); }} className="rounded-xl gap-3 cursor-pointer py-3 focus:bg-purple-500/10 focus:text-purple-600 dark:focus:text-purple-400 group">
+                <Activity className="h-4.5 w-4.5 text-muted-foreground group-focus:text-purple-500 transition-colors" />
                 <span className="text-sm font-medium">{t("nav.systemLogs")}</span>
               </DropdownMenuItem>
             </>
           )}
 
-          <DropdownMenuItem onClick={() => go(`${basePath}/settings`)} className="rounded-xl gap-3 cursor-pointer py-3 focus:bg-emerald-500/10 focus:text-emerald-600 dark:focus:text-emerald-400 group">
-            <Settings className="h-4.5 w-4.5 text-muted-foreground group-focus:text-emerald-500 transition-colors" />
+          <DropdownMenuItem onClick={() => go(`${basePath}/settings`)} className="rounded-xl gap-3 cursor-pointer py-3 focus:bg-purple-500/10 focus:text-purple-600 dark:focus:text-purple-400 group">
+            <Settings className="h-4.5 w-4.5 text-muted-foreground group-focus:text-purple-500 transition-colors" />
             <span className="text-sm font-medium">{t("nav.settings")}</span>
           </DropdownMenuItem>
 
-          <DropdownMenuItem onClick={() => go(`${basePath}/notifications`)} className="rounded-xl gap-3 cursor-pointer py-3 focus:bg-emerald-500/10 focus:text-emerald-600 dark:focus:text-emerald-400 group">
-            <Bell className="h-4.5 w-4.5 text-muted-foreground group-focus:text-emerald-500 transition-colors" />
+          <DropdownMenuItem onClick={() => go(`${basePath}/notifications`)} className="rounded-xl gap-3 cursor-pointer py-3 focus:bg-purple-500/10 focus:text-purple-600 dark:focus:text-purple-400 group">
+            <Bell className="h-4.5 w-4.5 text-muted-foreground group-focus:text-purple-500 transition-colors" />
             <span className="text-sm font-medium">{t("nav.notifications")}</span>
           </DropdownMenuItem>
 
@@ -197,9 +197,9 @@ export default function ProfileMenu({ role, basePath }: ProfileMenuProps) {
               e.preventDefault();
               setTheme(theme === "dark" ? "light" : "dark");
             }} 
-            className="rounded-xl gap-3 cursor-pointer py-3 focus:bg-emerald-500/10 focus:text-emerald-600 dark:focus:text-emerald-400 group"
+            className="rounded-xl gap-3 cursor-pointer py-3 focus:bg-purple-500/10 focus:text-purple-600 dark:focus:text-purple-400 group"
           >
-            {theme === "dark" ? <Sun className="h-4.5 w-4.5 text-muted-foreground group-focus:text-emerald-500 transition-colors" /> : <Moon className="h-4.5 w-4.5 text-muted-foreground group-focus:text-emerald-500 transition-colors" />}
+            {theme === "dark" ? <Sun className="h-4.5 w-4.5 text-muted-foreground group-focus:text-purple-500 transition-colors" /> : <Moon className="h-4.5 w-4.5 text-muted-foreground group-focus:text-purple-500 transition-colors" />}
             <span className="text-sm font-medium">{theme === "dark" ? t("settings.themeLight", "Kunduzgi mavzu") : t("settings.themeDark", "Tungi mavzu")}</span>
             <div className="ml-auto w-8 h-4.5 rounded-full bg-slate-200 dark:bg-slate-700 relative flex items-center px-0.5">
                <div className={`w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-all ${theme === "dark" ? 'ml-auto' : ''}`} />
@@ -216,7 +216,7 @@ export default function ProfileMenu({ role, basePath }: ProfileMenuProps) {
                 key={l.code}
                 onClick={() => i18n.changeLanguage(l.code)}
                 className={`flex flex-col items-center justify-center gap-1 py-2 rounded-xl cursor-pointer ${
-                  i18n.language === l.code ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold ring-1 ring-emerald-500/20" : ""
+                  i18n.language === l.code ? "bg-purple-500/10 text-purple-600 dark:text-purple-400 font-bold ring-1 ring-purple-500/20" : ""
                 }`}
               >
                 <span className="text-xl leading-none">{l.flag}</span>

@@ -123,8 +123,8 @@ export default function UserAchievements() {
         description: t("achievements.practiceMasterDesc"),
         type: "core",
         icon: Target,
-        iconBg: "from-emerald-500/20 to-teal-500/25 border-emerald-500/30 dark:border-emerald-500/30",
-        iconColor: "text-emerald-600 dark:text-emerald-400",
+        iconBg: "from-purple-500/20 to-violet-500/25 border-purple-500/30 dark:border-purple-500/30",
+        iconColor: "text-purple-600 dark:text-purple-400",
         xpReward: 700,
         levelText: coins >= 300 ? "Level 4 / 5" : coins >= 100 ? "Level 2 / 5" : "Level 1 / 5",
         progressMax: coins >= 300 ? 100 : coins >= 100 ? 30 : 10,
@@ -151,8 +151,8 @@ export default function UserAchievements() {
         description: t("achievements.communityBuilderDesc"),
         type: "core",
         icon: Users,
-        iconBg: "from-cyan-500/20 to-blue-500/25 border-cyan-500/30 dark:border-cyan-500/30",
-        iconColor: "text-cyan-600 dark:text-cyan-400",
+        iconBg: "from-fuchsia-500/20 to-blue-500/25 border-fuchsia-500/30 dark:border-fuchsia-500/30",
+        iconColor: "text-fuchsia-600 dark:text-fuchsia-400",
         xpReward: 400,
         levelText: "Level 1 / 5",
         progressMax: 1,
@@ -248,14 +248,14 @@ export default function UserAchievements() {
       { name: "Flame", gradient: "from-orange-500 to-red-500", unlocked: true },
       { name: "Time", gradient: "from-blue-400 to-indigo-600", unlocked: true },
       { name: "Trophy", gradient: "from-yellow-400 to-amber-600", unlocked: coins >= 50 },
-      { name: "Target", gradient: "from-emerald-400 to-teal-600", unlocked: coins >= 100 },
+      { name: "Target", gradient: "from-purple-400 to-violet-600", unlocked: coins >= 100 },
       { name: "Book", gradient: "from-purple-500 to-pink-500", unlocked: coins >= 150 },
-      { name: "Users", gradient: "from-cyan-400 to-blue-500", unlocked: coins >= 200 },
+      { name: "Users", gradient: "from-fuchsia-400 to-blue-500", unlocked: coins >= 200 },
       { name: "Level", gradient: "from-violet-500 to-purple-800", unlocked: level >= 2 },
       { name: "Crown", gradient: "from-amber-500 to-orange-600", unlocked: level >= 3 },
       { name: "Centurion", gradient: "from-red-500 to-rose-700", unlocked: coins >= 500 },
       { name: "Star", gradient: "from-yellow-300 to-yellow-500", unlocked: coins >= 300 },
-      { name: "Shield", gradient: "from-teal-400 to-emerald-600", unlocked: coins >= 150 },
+      { name: "Shield", gradient: "from-violet-400 to-purple-600", unlocked: coins >= 150 },
       { name: "Lock", gradient: "from-slate-700 to-slate-800", unlocked: false }
     ];
   }, [coins, level]);
@@ -316,7 +316,7 @@ export default function UserAchievements() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <Card className="lg:col-span-2 relative overflow-hidden p-6 bg-white dark:bg-[#0f172a]/70 border-slate-200 dark:border-slate-800/60 backdrop-blur-md rounded-2xl flex flex-col md:flex-row items-center gap-8 shadow-md dark:shadow-xl">
             {/* Glowing background highlights (Dark mode only or subtle in light mode) */}
-            <div className="absolute -top-32 -right-32 w-64 h-64 bg-emerald-500/5 dark:bg-emerald-500/10 rounded-full blur-[90px] pointer-events-none" />
+            <div className="absolute -top-32 -right-32 w-64 h-64 bg-purple-500/5 dark:bg-purple-500/10 rounded-full blur-[90px] pointer-events-none" />
             <div className="absolute -bottom-32 -left-32 w-64 h-64 bg-blue-500/5 dark:bg-blue-500/10 rounded-full blur-[90px] pointer-events-none" />
             
             {/* Left Big Trophy */}
@@ -334,7 +334,7 @@ export default function UserAchievements() {
             {/* Middle Level and Progress */}
             <div className="flex-1 w-full space-y-4 text-center md:text-left">
               <div className="space-y-1">
-                <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 tracking-wider uppercase flex items-center justify-center md:justify-start gap-1.5">
+                <span className="text-xs font-semibold text-purple-600 dark:text-purple-400 tracking-wider uppercase flex items-center justify-center md:justify-start gap-1.5">
                   <Sparkles className="h-3.5 w-3.5" /> {t("achievements.title")}
                 </span>
                 <div className="flex items-baseline justify-center md:justify-start gap-2">
@@ -346,7 +346,7 @@ export default function UserAchievements() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs font-medium">
                   <span className="text-slate-500 dark:text-slate-400">{coins} {t("achievements.coinsEarned")}</span>
-                  <span className="text-emerald-600 dark:text-emerald-400 font-bold">{levelProgressPercent}%</span>
+                  <span className="text-purple-600 dark:text-purple-400 font-bold">{levelProgressPercent}%</span>
                 </div>
                 <Progress value={levelProgressPercent} className="h-2.5 bg-slate-200 dark:bg-slate-900 border border-slate-300/65 dark:border-slate-800/40 rounded-full overflow-hidden" />
                 <p className="text-[11px] text-slate-500 dark:text-slate-400">
@@ -368,12 +368,12 @@ export default function UserAchievements() {
 
           {/* Right Info Circle Card */}
           <Card className="relative overflow-hidden p-6 bg-white dark:bg-[#0f172a]/70 border-slate-200 dark:border-slate-800/60 backdrop-blur-md rounded-2xl flex flex-col justify-between shadow-md dark:shadow-xl">
-            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-transparent pointer-events-none" />
             <div className="flex items-center justify-between">
-              <div className="h-10 w-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-                <Star className="h-5 w-5 fill-emerald-500/25 dark:fill-emerald-400/25" />
+              <div className="h-10 w-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-600 dark:text-purple-400">
+                <Star className="h-5 w-5 fill-purple-500/25 dark:fill-purple-400/25" />
               </div>
-              <Badge className="bg-emerald-500/10 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 dark:border-emerald-500/30 text-[10px]">Leaderboard</Badge>
+              <Badge className="bg-purple-500/10 dark:bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/25 dark:border-purple-500/30 text-[10px]">Leaderboard</Badge>
             </div>
             
             <div className="space-y-2 pt-6">
@@ -391,7 +391,7 @@ export default function UserAchievements() {
             { label: t("dashboard.metric_streak", "Ketma-ket faollik"), value: t("achievements.streakDaysVal", "{{count}} Kun", { count: streakDays }), desc: t("achievements.streakDaysDesc", "Joriy streak muddati"), icon: Flame, color: "text-orange-600 dark:text-orange-400 bg-orange-500/10 border-orange-500/20" },
             { label: t("achievements.totalXpLabel", "Jami to'plangan XP"), value: t("achievements.xpValue", "{{count}} Ball", { count: xp }), desc: t("achievements.xpDesc", "{{count}} ta coinga asosan", { count: coins }), icon: Trophy, color: "text-yellow-600 dark:text-yellow-400 bg-yellow-500/10 border-yellow-500/20" },
             { label: t("achievements.badgesUnlockedCount", "Ochilgan nishonlar"), value: t("achievements.badgesCountVal", "{{count}} ta", { count: completedCount }), desc: t("achievements.badgesDesc", "Nishonlar va medallar"), icon: Shield, color: "text-purple-600 dark:text-purple-400 bg-purple-500/10 border-purple-500/20" },
-            { label: t("achievements.completedMocksLabel", "Tugatilgan mocklar"), value: t("achievements.mocksCountVal", "{{count}} ta", { count: testsCompleted }), desc: t("achievements.mocksDesc", "Mock testlar topshiriqlari"), icon: Target, color: "text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 border-cyan-500/20" }
+            { label: t("achievements.completedMocksLabel", "Tugatilgan mocklar"), value: t("achievements.mocksCountVal", "{{count}} ta", { count: testsCompleted }), desc: t("achievements.mocksDesc", "Mock testlar topshiriqlari"), icon: Target, color: "text-fuchsia-600 dark:text-fuchsia-400 bg-fuchsia-500/10 border-fuchsia-500/20" }
           ].map((item, i) => (
             <Card key={i} className="p-4 bg-white dark:bg-[#0f172a]/50 border-slate-200 dark:border-slate-800/50 backdrop-blur-sm rounded-xl space-y-3 shadow-sm">
               <div className="flex items-center justify-between">
@@ -460,7 +460,7 @@ export default function UserAchievements() {
                     >
                       <Card className={`p-4 h-full flex flex-col justify-between bg-white dark:bg-[#0f172a]/55 border-slate-200 dark:border-slate-800/60 backdrop-blur-sm rounded-2xl transition-all shadow-sm ${
                         ach.isCompleted 
-                          ? "border-emerald-500/20 dark:border-emerald-500/20 hover:border-emerald-500/40 dark:hover:border-emerald-500/30" 
+                          ? "border-purple-500/20 dark:border-purple-500/20 hover:border-purple-500/40 dark:hover:border-purple-500/30" 
                           : "hover:border-slate-300 dark:hover:border-slate-700/60"
                       }`}>
                         
@@ -481,7 +481,7 @@ export default function UserAchievements() {
                                   {isLocked ? "???" : ach.name}
                                 </h4>
                                 {ach.isCompleted && (
-                                  <CheckCircle2 className="h-4 w-4 text-emerald-500 dark:text-emerald-400 flex-shrink-0 fill-emerald-500/10" />
+                                  <CheckCircle2 className="h-4 w-4 text-purple-500 dark:text-purple-400 flex-shrink-0 fill-purple-500/10" />
                                 )}
                               </div>
                               <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
@@ -491,7 +491,7 @@ export default function UserAchievements() {
 
                             <Badge className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                               ach.isCompleted 
-                                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25"
+                                ? "bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/25"
                                 : "bg-primary/10 text-primary border border-primary/20"
                             }`}>
                               +{ach.xpReward} XP
@@ -569,13 +569,13 @@ export default function UserAchievements() {
             {/* RECENT ACTIVITY LOG */}
             <Card className="p-5 bg-white dark:bg-[#0f172a]/70 border-slate-200 dark:border-slate-800/60 backdrop-blur-md rounded-2xl shadow-md dark:shadow-xl space-y-4">
               <h3 className="font-display font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
-                <Activity className="h-4.5 w-4.5 text-emerald-600 dark:text-emerald-400" /> {t("achievements.recent")}
+                <Activity className="h-4.5 w-4.5 text-purple-600 dark:text-purple-400" /> {t("achievements.recent")}
               </h3>
 
               <div className="space-y-3.5">
                 {recentActivities.map((act) => (
                   <div key={act.id} className="flex items-start gap-3 text-xs leading-relaxed">
-                    <div className="h-2 w-2 mt-1.5 rounded-full bg-emerald-500" />
+                    <div className="h-2 w-2 mt-1.5 rounded-full bg-purple-500" />
                     <div className="flex-1 min-w-0">
                       <p className="text-slate-700 dark:text-slate-200 font-medium">{act.text}</p>
                       <span className="text-[9px] text-slate-400 dark:text-slate-500">{act.time}</span>

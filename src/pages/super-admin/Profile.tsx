@@ -238,7 +238,7 @@ export default function Profile() {
           className="text-center space-y-2 transition-all duration-500"
         >
           <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight text-slate-900 dark:text-white">
-            Profil <span className="text-emerald-500">sozlamalari</span>
+            Profil <span className="text-purple-500">sozlamalari</span>
           </h1>
           <p className="text-slate-500 dark:text-slate-400 text-sm md:text-base font-medium">
             Shaxsiy ma'lumotlar va xavfsizlik parametrlarini boshqaring
@@ -256,7 +256,7 @@ export default function Profile() {
             <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
               {/* Simplified Avatar with single elegant glow */}
               <div className="relative group">
-                <div className="absolute -inset-2 rounded-full bg-emerald-500/20 blur-xl opacity-0 group-hover:opacity-100 transition-smooth" />
+                <div className="absolute -inset-2 rounded-full bg-purple-500/20 blur-xl opacity-0 group-hover:opacity-100 transition-smooth" />
                 <AvatarUpload
                   userId={profile.id}
                   currentUrl={profile.avatar_url}
@@ -264,7 +264,7 @@ export default function Profile() {
                   onUploaded={() => refresh()}
                   size="lg"
                 />
-                <span className="absolute bottom-2 right-2 h-4 w-4 rounded-full bg-emerald-500 ring-4 ring-white dark:ring-slate-900 shadow-lg" />
+                <span className="absolute bottom-2 right-2 h-4 w-4 rounded-full bg-purple-500 ring-4 ring-white dark:ring-slate-900 shadow-lg" />
               </div>
 
               {/* Identity Section */}
@@ -274,7 +274,7 @@ export default function Profile() {
                     {profile.full_name || profile.username}
                   </h2>
                   <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-3 py-1 text-xs font-bold border border-emerald-500/20">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 px-3 py-1 text-xs font-bold border border-purple-500/20">
                       <Shield className="h-3.5 w-3.5" /> Super Admin
                     </span>
                   </div>
@@ -282,11 +282,11 @@ export default function Profile() {
 
                 <div className="mt-4 grid sm:grid-cols-2 gap-2 max-w-md mx-auto md:mx-0">
                   <div className="flex items-center gap-2 rounded-xl border border-border/50 bg-muted/30 px-3 py-2 text-xs">
-                    <Mail className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                    <Mail className="h-3.5 w-3.5 text-purple-500 shrink-0" />
                     <span className="truncate text-slate-700 dark:text-slate-200 font-semibold">{profile.email || "—"}</span>
                   </div>
                   <div className="flex items-center gap-2 rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-white/5 px-3 py-2 text-xs">
-                    <Phone className="h-3.5 w-3.5 text-teal-500 shrink-0" />
+                    <Phone className="h-3.5 w-3.5 text-violet-500 shrink-0" />
                     <span className="truncate text-slate-700 dark:text-slate-200 font-semibold">{profile.phone || "—"}</span>
                   </div>
                 </div>
@@ -452,7 +452,7 @@ export default function Profile() {
                   <span
                     className={
                       row.tone === "ok"
-                        ? "text-emerald-500 font-medium"
+                        ? "text-purple-500 font-medium"
                         : row.tone === "action"
                         ? "text-primary font-bold hover:underline"
                         : "text-foreground/70"

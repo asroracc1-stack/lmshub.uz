@@ -22,7 +22,7 @@ const colorMap: Record<NonNullable<StatCard["color"]>, string> = {
   primary: "from-primary/20 to-primary/5 text-primary",
   secondary: "from-secondary/20 to-secondary/5 text-secondary",
   accent: "from-accent/20 to-accent/5 text-accent",
-  success: "from-emerald-500/20 to-emerald-500/5 text-emerald-500",
+  success: "from-purple-500/20 to-purple-500/5 text-purple-500",
   warning: "from-amber-500/20 to-amber-500/5 text-amber-500",
 };
 
@@ -51,10 +51,10 @@ export default function RoleDashboard({ title, description, stats, children }: R
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.05 }}
             >
-              <Card className="flex flex-col justify-between p-5 min-h-[145px] bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 relative overflow-hidden">
+              <Card className="glass flex flex-col justify-between p-5 min-h-[145px] bg-white/40 dark:bg-[#1B1230]/40 rounded-2xl border border-primary/20 dark:border-primary/10 relative overflow-hidden backdrop-blur-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-glow-purple">
                 <div
                   className={cn(
-                    "absolute inset-0 bg-gradient-to-br opacity-50 pointer-events-none",
+                    "absolute inset-0 bg-gradient-to-br opacity-20 pointer-events-none",
                     cls,
                   )}
                 />

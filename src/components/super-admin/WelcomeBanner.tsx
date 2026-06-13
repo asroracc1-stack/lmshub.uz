@@ -64,7 +64,7 @@ export default function WelcomeBanner() {
       initial={{ opacity: 0, y: -16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.55, ease: "easeOut" }}
-      className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 shadow-2xl shadow-emerald-500/30"
+      className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-purple-500 via-violet-500 to-fuchsia-500 shadow-2xl shadow-purple-500/30"
     >
       {/* Subtle inner glow ring */}
       <div className="absolute inset-0 rounded-3xl ring-1 ring-inset ring-white/20 pointer-events-none" />

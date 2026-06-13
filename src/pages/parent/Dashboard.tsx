@@ -67,13 +67,13 @@ interface PaymentTransactionDto {
 const GRADIENT_BY_IDX = [
   "from-rose-500 to-pink-600",
   "from-violet-500 to-purple-600",
-  "from-emerald-500 to-teal-600",
+  "from-purple-500 to-violet-600",
   "from-amber-500 to-orange-600",
 ];
 
 const STATUS_COLORS: Record<string, string> = {
   PENDING: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
-  APPROVED: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+  APPROVED: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20",
   REJECTED: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20",
 };
 
@@ -193,7 +193,7 @@ export default function ParentDashboard() {
     : null;
 
   const pieData = [
-    { name: "Keldi", value: totalPresent, color: "#10b981" },
+    { name: "Keldi", value: totalPresent, color: "#9F86C0" },
     { name: "Kech qoldi", value: totalLate, color: "#f59e0b" },
     { name: "Kelmadi", value: totalAbsent, color: "#ef4444" },
   ].filter(d => d.value > 0);
@@ -352,9 +352,9 @@ export default function ParentDashboard() {
                 </div>
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-muted-foreground font-medium flex items-center gap-1.5">
-                    <CalendarCheck2 className="h-4 w-4 text-emerald-500" /> Davomat:
+                    <CalendarCheck2 className="h-4 w-4 text-purple-500" /> Davomat:
                   </span>
-                  <span className="font-extrabold text-emerald-500">
+                  <span className="font-extrabold text-purple-500">
                     {attendanceRate !== null ? `${attendanceRate}%` : "—"}
                   </span>
                 </div>
@@ -439,13 +439,13 @@ export default function ParentDashboard() {
                             </PieChart>
                           </ResponsiveContainer>
                           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                            <span className="text-lg font-black text-emerald-500">{attendanceRate}%</span>
+                            <span className="text-lg font-black text-purple-500">{attendanceRate}%</span>
                             <span className="text-[9px] text-muted-foreground uppercase font-bold">Kelgan</span>
                           </div>
                         </div>
                       )}
                       <div className="flex justify-around text-[10px] font-bold text-muted-foreground border-t border-border pt-3 mt-1">
-                        <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-emerald-500" /> Keldi ({totalPresent})</span>
+                        <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-purple-500" /> Keldi ({totalPresent})</span>
                         <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-amber-500" /> Kech ({totalLate})</span>
                         <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-rose-500" /> Kelmadi ({totalAbsent})</span>
                       </div>
@@ -467,7 +467,7 @@ export default function ParentDashboard() {
                         <div className="space-y-4 max-h-[170px] overflow-y-auto pr-1">
                           {grades.slice(0, 5).map((g, idx) => {
                             const pct = Math.round((g.score / Math.max(1, g.maxScore)) * 100);
-                            const color = pct >= 80 ? "bg-emerald-500" : pct >= 60 ? "bg-amber-500" : "bg-rose-500";
+                            const color = pct >= 80 ? "bg-purple-500" : pct >= 60 ? "bg-amber-500" : "bg-rose-500";
                             return (
                               <div key={idx} className="space-y-1">
                                 <div className="flex justify-between text-xs font-bold text-slate-800 dark:text-slate-200">
@@ -540,7 +540,7 @@ export default function ParentDashboard() {
                                     <td className="px-4 py-3 text-center text-muted-foreground">{g.maxScore}</td>
                                     <td className="px-4 py-3 text-center">
                                       <Badge variant="outline" className={`font-bold ${
-                                        pct >= 80 ? "text-emerald-500 border-emerald-500/20 bg-emerald-500/5" :
+                                        pct >= 80 ? "text-purple-500 border-purple-500/20 bg-purple-500/5" :
                                         pct >= 60 ? "text-amber-500 border-amber-500/20 bg-amber-500/5" :
                                         "text-rose-500 border-rose-500/20 bg-rose-500/5"
                                       }`}>

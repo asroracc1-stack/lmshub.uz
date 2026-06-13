@@ -29,16 +29,16 @@ export default function DonationCard() {
     )}>
       <div className={cn(
         "absolute -right-20 -top-20 h-64 w-64 rounded-full blur-3xl",
-        isDark ? "bg-emerald-500/5" : "bg-emerald-500/10"
+        isDark ? "bg-purple-500/5" : "bg-purple-500/10"
       )} />
       
       <div className="relative z-10">
         <div className="flex items-center gap-4 mb-3">
           <div className={cn(
             "h-10 w-10 rounded-xl flex items-center justify-center border",
-            isDark ? "bg-emerald-500/10 border-emerald-500/20" : "bg-emerald-50 border-emerald-100"
+            isDark ? "bg-purple-500/10 border-purple-500/20" : "bg-purple-50 border-purple-100"
           )}>
-            <Heart className={cn("h-5 w-5", isDark ? "text-emerald-400 fill-emerald-400/10" : "text-emerald-600 fill-emerald-600/10")} />
+            <Heart className={cn("h-5 w-5", isDark ? "text-purple-400 fill-purple-400/10" : "text-purple-600 fill-purple-600/10")} />
           </div>
           <h3 className={cn("font-display font-black text-lg md:text-xl tracking-tight", isDark ? "text-white" : "text-slate-900")}>
             {t("userDashboard.donation.title")}
@@ -69,7 +69,7 @@ export default function DonationCard() {
                 "h-8 w-8 rounded-lg flex items-center justify-center transition-colors",
                 isDark ? "bg-white/5 group-hover/card:bg-white/10" : "bg-white group-hover/card:bg-slate-100 shadow-sm"
               )}>
-                <Copy className={cn("h-4 w-4", isDark ? "text-slate-500 group-hover/card:text-emerald-400" : "text-slate-400 group-hover/card:text-emerald-600")} />
+                <Copy className={cn("h-4 w-4", isDark ? "text-slate-500 group-hover/card:text-purple-400" : "text-slate-400 group-hover/card:text-purple-600")} />
               </div>
             </div>
           </div>

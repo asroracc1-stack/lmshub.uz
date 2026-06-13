@@ -32,7 +32,7 @@ export default function AddMemberModal({ type, isOpen, onClose, onSubmit }: AddM
 
   const title = type === "teacher" ? "Yangi O'qituvchi Qo'shish" : type === "student" ? "Yangi Talaba Qo'shish" : "Yangi Admin Qo'shish";
   const Icon = type === "teacher" ? GraduationCap : type === "student" ? UserPlus : Shield;
-  const color = type === "teacher" ? "text-blue-500" : type === "student" ? "text-emerald-500" : "text-purple-500";
+  const color = type === "teacher" ? "text-blue-500" : type === "student" ? "text-purple-500" : "text-purple-500";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,7 +54,7 @@ export default function AddMemberModal({ type, isOpen, onClose, onSubmit }: AddM
         <div className="relative p-8 space-y-6">
           {/* Background Glow */}
           <div className={cn("absolute -top-24 -right-24 w-48 h-48 blur-[80px] rounded-full opacity-10", 
-            type === "teacher" ? "bg-blue-500" : type === "student" ? "bg-emerald-500" : "bg-purple-500"
+            type === "teacher" ? "bg-blue-500" : type === "student" ? "bg-purple-500" : "bg-purple-500"
           )} />
           
           <DialogHeader className="relative z-10 text-left">

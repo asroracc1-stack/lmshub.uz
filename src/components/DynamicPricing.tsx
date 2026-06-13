@@ -82,7 +82,7 @@ export default function DynamicPricing() {
             >
               {opt === "monthly" ? "Oylik" : "Yillik"}
               {opt === "yearly" && (
-                <span className="ml-2 inline-flex items-center rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
+                <span className="ml-2 inline-flex items-center rounded-full bg-purple-500/20 px-2 py-0.5 text-[10px] font-semibold text-purple-400">
                   -17%
                 </span>
               )}

@@ -14,7 +14,7 @@ import { useTranslation } from "react-i18next";
 type Kind = "listening" | "reading" | "writing" | "speaking" | "sat" | "national_cert";
 
 const KIND_META: Record<Kind, { icon: any; emoji: string; gradient: string; group: "IELTS" | "SAT" | "Milliy" }> = {
-  listening: { icon: Headphones, emoji: "🎧", gradient: "from-emerald-500/15 via-teal-500/10 to-cyan-500/15", group: "IELTS" },
+  listening: { icon: Headphones, emoji: "🎧", gradient: "from-purple-500/15 via-violet-500/10 to-fuchsia-500/15", group: "IELTS" },
   reading:   { icon: BookOpen,   emoji: "📖", gradient: "from-blue-500/15 via-sky-500/10 to-indigo-500/15", group: "IELTS" },
   writing:   { icon: PenLine,    emoji: "✍️", gradient: "from-orange-500/15 via-amber-500/10 to-yellow-500/15", group: "IELTS" },
   speaking:  { icon: Mic,        emoji: "🗣️", gradient: "from-fuchsia-500/15 via-pink-500/10 to-rose-500/15", group: "IELTS" },

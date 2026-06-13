@@ -23,9 +23,9 @@ export default function AdministratorDashboard() {
 
   const statCards = useMemo(() => [
     { label: "O'qituvchilar", value: realStats?.totalTeachers ?? 0, growth: stats?.teacherGrowth ?? 0, icon: GraduationCap, color: "text-blue-500", bg: "bg-blue-500/10", to: "/administrator/teachers", accent: "#3b82f6" },
-    { label: "Talabalar",     value: realStats?.totalStudents ?? 0, growth: stats?.studentGrowth  ?? 0, icon: Users,         color: "text-emerald-500", bg: "bg-emerald-500/10", to: "/administrator/students",  accent: "#10b981" },
+    { label: "Talabalar",     value: realStats?.totalStudents ?? 0, growth: stats?.studentGrowth  ?? 0, icon: Users,         color: "text-purple-500", bg: "bg-purple-500/10", to: "/administrator/students",  accent: "#9F86C0" },
     { label: "Ota-onalar",   value: realStats?.totalParents ?? 0, growth: 0,                          icon: Heart,         color: "text-pink-500",    bg: "bg-pink-500/10",    to: "/administrator/parents",   accent: "#ec4899" },
-    { label: "Guruhlar",     value: realStats?.totalGroups ?? 0, growth: 0,                          icon: Users2,        color: "text-cyan-500",    bg: "bg-cyan-500/10",    to: "/administrator/groups",    accent: "#06b6d4" },
+    { label: "Guruhlar",     value: realStats?.totalGroups ?? 0, growth: 0,                          icon: Users2,        color: "text-fuchsia-500",    bg: "bg-fuchsia-500/10",    to: "/administrator/groups",    accent: "#06b6d4" },
     { label: "Tadbirlar",    value: stats?.eventsCount    ?? 0, growth: stats?.eventGrowth     ?? 0, icon: CalendarIcon,  color: "text-amber-500",  bg: "bg-amber-500/10",  to: "/administrator/calendar",  accent: "#f59e0b" },
     { label: "Kurslar",      value: realStats?.totalSubjects ?? 0, growth: 0,                          icon: BookOpen,      color: "text-indigo-500", bg: "bg-indigo-500/10", to: "/administrator/subjects",  accent: "#6366f1" },
   ], [stats, realStats]);
@@ -88,7 +88,7 @@ export default function AdministratorDashboard() {
                   <div className={cn(
                     "flex items-center gap-1.5 text-[10px] font-bold px-2 py-1 rounded-md w-fit",
                     s.growth >= 0
-                      ? "text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10"
+                      ? "text-purple-600 bg-purple-50 dark:bg-purple-500/10"
                       : "text-red-600 bg-red-50 dark:bg-red-500/10"
                   )}>
                     <TrendingUp className={cn("h-3 w-3", s.growth < 0 && "rotate-180")} />

@@ -578,8 +578,8 @@ export default function SmartDashboard() {
                                   className={cn(
                                     "p-1.5 rounded-lg transition-all",
                                     status === "PRESENT"
-                                      ? "bg-emerald-500 text-white shadow-sm scale-105"
-                                      : "text-muted-foreground/50 hover:text-emerald-500 hover:bg-emerald-500/10"
+                                      ? "bg-purple-500 text-white shadow-sm scale-105"
+                                      : "text-muted-foreground/50 hover:text-purple-500 hover:bg-purple-500/10"
                                   )}
                                   title="Bor (Present)"
                                 >
@@ -710,7 +710,7 @@ export default function SmartDashboard() {
                 size="sm"
                 onClick={() => saveAllDashboardDataMutation.mutate()}
                 disabled={saveAllDashboardDataMutation.isPending}
-                className="gap-1.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-md hover:shadow-lg transition-all duration-300 transform active:scale-95"
+                className="gap-1.5 bg-gradient-to-r from-purple-500 to-violet-600 hover:from-purple-600 hover:to-violet-700 text-white shadow-md hover:shadow-lg transition-all duration-300 transform active:scale-95"
               >
                 {saveAllDashboardDataMutation.isPending ? (
                   <Loader2 className="h-4 w-4 animate-spin" />

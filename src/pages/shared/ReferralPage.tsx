@@ -95,7 +95,7 @@ export default function ReferralPage() {
         animate={{ opacity: 1, y: 0 }}
         className="text-center"
       >
-        <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary via-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+        <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary via-purple-400 to-fuchsia-400 bg-clip-text text-transparent">
           Do'stlaringizni taklif qiling! 🎉
         </h1>
         <p className="text-muted-foreground mt-2 text-sm md:text-base">
@@ -124,10 +124,10 @@ export default function ReferralPage() {
           transition={{ delay: 0.2 }}
           className="rounded-2xl border border-border/50 bg-card/80 backdrop-blur-lg py-10 px-6 text-center shadow-lg"
         >
-          <div className="mx-auto w-12 h-12 rounded-full bg-emerald-500/15 flex items-center justify-center mb-3">
-            <Users className="w-6 h-6 text-emerald-500" />
+          <div className="mx-auto w-12 h-12 rounded-full bg-purple-500/15 flex items-center justify-center mb-3">
+            <Users className="w-6 h-6 text-purple-500" />
           </div>
-          <p className="text-3xl font-bold text-emerald-500">{info?.inviteCount ?? 0}</p>
+          <p className="text-3xl font-bold text-purple-500">{info?.inviteCount ?? 0}</p>
           <p className="text-sm text-muted-foreground mt-1">Taklif qilganlarim</p>
         </motion.div>
 
@@ -160,7 +160,7 @@ export default function ReferralPage() {
           Do'stingiz havola orqali ro'yxatdan o'tib, kamida bitta test yoki vocabulary mashqini bajarsa, ikkalangiz ham <strong className="text-yellow-500">10 coin</strong> olasiz. Coinlar orqali yangi featurelarni ochishingiz mumkin.
         </p>
 
-        <div className="mb-2 text-xs font-semibold text-emerald-500">Invite link</div>
+        <div className="mb-2 text-xs font-semibold text-purple-500">Invite link</div>
         <div className="flex items-center gap-2">
           <div className="flex-1 rounded-xl border border-border bg-muted/50 px-4 py-3 text-sm font-mono truncate select-all">
             {inviteLink}
@@ -169,7 +169,7 @@ export default function ReferralPage() {
             onClick={handleCopy}
             className="shrink-0 w-10 h-10 rounded-xl border border-border bg-muted/50 flex items-center justify-center hover:bg-primary/20 transition-colors"
           >
-            {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+            {copied ? <Check className="w-4 h-4 text-purple-500" /> : <Copy className="w-4 h-4" />}
           </button>
         </div>
       </motion.div>

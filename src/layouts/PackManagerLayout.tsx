@@ -66,7 +66,7 @@ export default function PackManagerLayout() {
         <div className={cn("flex items-center gap-2 min-w-0", mini ? "justify-center w-full flex-col" : "flex-col items-start")}>
           <BrandLogo size={mini ? 36 : 56} />
           {!mini && (
-            <p className="text-[11px] uppercase tracking-wider text-emerald-500 font-semibold">Pack Manager</p>
+            <p className="text-[11px] uppercase tracking-wider text-purple-500 font-semibold">Pack Manager</p>
           )}
         </div>
         {!mini && (
@@ -93,16 +93,16 @@ export default function PackManagerLayout() {
                 "group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-smooth",
                 mini && "justify-center px-2",
                 isActive
-                  ? "bg-gradient-to-r from-emerald-500/20 to-blue-500/10 text-emerald-600 dark:text-emerald-400 shadow-glow"
+                  ? "bg-gradient-to-r from-purple-500/20 to-blue-500/10 text-purple-600 dark:text-purple-400 shadow-glow"
                   : "text-sidebar-foreground hover:bg-sidebar-accent/60",
               )
             }
           >
             {({ isActive }) => (
               <>
-                <item.icon className={cn("h-4 w-4 shrink-0", isActive && "text-emerald-500")} />
+                <item.icon className={cn("h-4 w-4 shrink-0", isActive && "text-purple-500")} />
                 {!mini && <span className="flex-1">{item.label}</span>}
-                {!mini && isActive && <ChevronRight className="h-3.5 w-3.5 text-emerald-500" />}
+                {!mini && isActive && <ChevronRight className="h-3.5 w-3.5 text-purple-500" />}
               </>
             )}
           </NavLink>
@@ -151,7 +151,7 @@ export default function PackManagerLayout() {
               </Button>
             )}
             <div className="hidden sm:block">
-              <p className="text-xs uppercase tracking-wider text-emerald-500 font-semibold">Pack Manager Panel</p>
+              <p className="text-xs uppercase tracking-wider text-purple-500 font-semibold">Pack Manager Panel</p>
               <p className="font-display font-semibold text-sm">
                 Salom, {profile?.full_name || profile?.username || "Manager"} 💚
               </p>

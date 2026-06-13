@@ -169,10 +169,10 @@ export default function ParentsPage() {
       if (pwd) {
         toast.success(
           <div className="flex flex-col gap-1 text-slate-800 dark:text-slate-200">
-            <span className="font-bold text-emerald-600 dark:text-emerald-400">Ota-ona muvaffaqiyatli qo'shildi!</span>
+            <span className="font-bold text-purple-600 dark:text-purple-400">Ota-ona muvaffaqiyatli qo'shildi!</span>
             <div className="text-xs space-y-0.5 mt-1">
               <p>Login: <code className="bg-slate-100 dark:bg-white/10 px-1 py-0.5 rounded font-mono font-bold text-primary select-all">@{createdParent.username}</code></p>
-              <p>Parol: <code className="bg-emerald-50 dark:bg-emerald-950/20 px-1 py-0.5 rounded font-mono font-bold text-emerald-600 dark:text-emerald-400 select-all">{pwd}</code></p>
+              <p>Parol: <code className="bg-purple-50 dark:bg-purple-950/20 px-1 py-0.5 rounded font-mono font-bold text-purple-600 dark:text-purple-400 select-all">{pwd}</code></p>
             </div>
           </div>,
           { duration: 15000 }
@@ -422,7 +422,7 @@ export default function ParentsPage() {
                         <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
                           <span className="text-xs text-slate-500 dark:text-slate-400 font-mono select-all font-medium">@{p.username}</span>
                           {p.children && p.children.length > 0 && (
-                            <span className="text-[10px] bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 px-1 py-0.2 rounded font-mono select-all font-semibold">
+                            <span className="text-[10px] bg-purple-500/10 text-purple-700 dark:text-purple-400 border border-purple-500/20 px-1 py-0.2 rounded font-mono select-all font-semibold">
                               Parol: {p.children[0].id.substring(0, 8)}
                             </span>
                           )}
@@ -435,7 +435,7 @@ export default function ParentsPage() {
                       {((p.childrenNames || p.children_names)?.length || 0) > 0
                         ? (p.childrenNames || p.children_names)!.map((name, idx) => (
                           <Badge key={idx} variant="secondary"
-                            className="text-xs bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20">
+                            className="text-xs bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/20">
                             {name}
                           </Badge>
                         ))
@@ -459,8 +459,8 @@ export default function ParentsPage() {
                   <TableCell>
                     {p.active ? (
                       <div className="flex items-center gap-1.5">
-                        <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                        <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">Faol</span>
+                        <CheckCircle2 className="h-4 w-4 text-purple-500" />
+                        <span className="text-xs font-medium text-purple-600 dark:text-purple-400">Faol</span>
                       </div>
                     ) : (
                       <div className="flex items-center gap-1.5">
@@ -476,7 +476,7 @@ export default function ParentsPage() {
                     <div className="flex items-center justify-end gap-1">
                       <Button
                         variant="ghost" size="icon"
-                        className={p.active ? "h-8 w-8 text-amber-500" : "h-8 w-8 text-emerald-500"}
+                        className={p.active ? "h-8 w-8 text-amber-500" : "h-8 w-8 text-purple-500"}
                         onClick={() => toggleActiveMutation.mutate({ id: p.id, active: !p.active })}
                         disabled={toggleActiveMutation.isPending}
                       >

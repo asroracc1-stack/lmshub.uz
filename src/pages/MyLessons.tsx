@@ -202,7 +202,7 @@ const MyLessons = () => {
             </SelectContent>
           </Select>
           
-          <Button onClick={() => setActiveModal('create')} className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl gap-2 shadow-lg shadow-emerald-600/20 w-full md:w-auto">
+          <Button onClick={() => setActiveModal('create')} className="bg-purple-600 hover:bg-purple-700 text-white rounded-xl gap-2 shadow-lg shadow-purple-600/20 w-full md:w-auto">
             <Plus size={18} /> Yangi Mavzu
           </Button>
         </div>
@@ -222,22 +222,22 @@ const MyLessons = () => {
                   </Button>
                 </div>
                 <div className="mt-2 flex items-center gap-2">
-                  <span className="bg-emerald-50 text-emerald-600 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-100 uppercase">
+                  <span className="bg-purple-50 text-purple-600 text-[10px] font-bold px-2 py-0.5 rounded-full border border-purple-100 uppercase">
                     {lesson.subject_name || "Mavzu"}
                   </span>
                 </div>
               </CardHeader>
               <CardContent className="pt-4 space-y-4">
                 <div className="space-y-2.5 text-sm text-slate-500">
-                  <div className="flex items-center gap-2.5"><Clock size={16} className="text-emerald-500"/> {new Date(lesson.starts_at).toLocaleString('uz-UZ')}</div>
-                  <div className="flex items-center gap-2.5"><MapPin size={16} className="text-emerald-500"/> {lesson.room || "Xona belgilanmagan"}</div>
+                  <div className="flex items-center gap-2.5"><Clock size={16} className="text-purple-500"/> {new Date(lesson.starts_at).toLocaleString('uz-UZ')}</div>
+                  <div className="flex items-center gap-2.5"><MapPin size={16} className="text-purple-500"/> {lesson.room || "Xona belgilanmagan"}</div>
                 </div>
                 
                 <div className="flex gap-2 pt-2">
                   <Button variant="outline" size="sm" className="flex-1 rounded-xl h-9 hover:bg-slate-50" onClick={() => { setCurrentLesson(lesson); setActiveModal('details'); }}>
                     <BookOpen size={16} className="mr-2 text-slate-400"/> Tafsilot
                   </Button>
-                  <Button size="sm" className="flex-1 rounded-xl h-9 bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-600/10" onClick={() => openAttendance(lesson)}>
+                  <Button size="sm" className="flex-1 rounded-xl h-9 bg-purple-600 hover:bg-purple-700 shadow-md shadow-purple-600/10" onClick={() => openAttendance(lesson)}>
                     <UserCheck size={16} className="mr-2"/> Yo'qlama
                   </Button>
                 </div>
@@ -307,7 +307,7 @@ const MyLessons = () => {
               </CardContent>
               <div className="p-6 border-t flex gap-3">
                 <Button type="button" variant="outline" className="flex-1 rounded-xl h-11" onClick={() => setActiveModal(null)}>Bekor qilish</Button>
-                <Button type="submit" className="flex-1 rounded-xl h-11 bg-emerald-600 hover:bg-emerald-700">Mavzuni yaratish</Button>
+                <Button type="submit" className="flex-1 rounded-xl h-11 bg-purple-600 hover:bg-purple-700">Mavzuni yaratish</Button>
               </div>
             </form>
           </Card>
@@ -333,16 +333,16 @@ const MyLessons = () => {
               </div>
               {currentLesson.attachment_url && (
                 <div className="pt-2">
-                  <a href={currentLesson.attachment_url} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-emerald-600 font-bold hover:underline">
+                  <a href={currentLesson.attachment_url} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-purple-600 font-bold hover:underline">
                     <ExternalLink size={18} /> O'quv materialini ko'rish
                   </a>
                 </div>
               )}
-              <div className="p-4 bg-emerald-50/50 rounded-2xl border border-emerald-100 flex items-center gap-3">
-                <div className="h-10 w-10 bg-emerald-600 rounded-xl flex items-center justify-center text-white shrink-0">
+              <div className="p-4 bg-purple-50/50 rounded-2xl border border-purple-100 flex items-center gap-3">
+                <div className="h-10 w-10 bg-purple-600 rounded-xl flex items-center justify-center text-white shrink-0">
                   <Info size={20} />
                 </div>
-                <p className="text-emerald-800 text-xs font-medium leading-normal">
+                <p className="text-purple-800 text-xs font-medium leading-normal">
                   Ushbu ma'lumotlar o'quvchi dashboardida dars mazmuni sifatida ko'rsatiladi.
                 </p>
               </div>
@@ -390,7 +390,7 @@ const MyLessons = () => {
                                   onClick={() => updateStudentData(student.id, 'status', status)}
                                   className={`px-4 py-1.5 rounded-xl text-[10px] font-bold transition-all border ${
                                     student.status === status 
-                                      ? 'bg-emerald-600 text-white border-emerald-600 shadow-lg shadow-emerald-600/20' 
+                                      ? 'bg-purple-600 text-white border-purple-600 shadow-lg shadow-purple-600/20' 
                                       : 'bg-white text-slate-400 border-slate-200 hover:border-slate-300'
                                   }`}
                                 >

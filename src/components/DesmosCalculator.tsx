@@ -41,7 +41,7 @@ export default function DesmosCalculator({ isOpen, onClose }: { isOpen: boolean;
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-200 dark:border-white/5 bg-slate-50/60 dark:bg-slate-950/60 shrink-0">
             <span className="font-bold text-sm flex items-center gap-2 text-slate-700 dark:text-slate-300">
-              <Calculator className="h-4 w-4 text-emerald-500" /> Desmos Kalkulyator
+              <Calculator className="h-4 w-4 text-purple-500" /> Desmos Kalkulyator
             </span>
             <div className="flex items-center gap-1.5">
               <Button size="icon" variant="ghost" className="h-7 w-7 rounded-full hover:bg-slate-200 dark:hover:bg-white/10" onClick={onClose} title="Yopish">
@@ -66,7 +66,7 @@ export default function DesmosCalculator({ isOpen, onClose }: { isOpen: boolean;
             className="absolute bottom-0 right-0 w-8 h-8 cursor-nwse-resize flex items-end justify-end pb-1.5 pr-1.5 group z-10"
             title="Kengaytirish"
           >
-            <GripHorizontal className="h-4 w-4 text-slate-300 dark:text-slate-600 rotate-45 group-hover:text-emerald-500 transition-colors" />
+            <GripHorizontal className="h-4 w-4 text-slate-300 dark:text-slate-600 rotate-45 group-hover:text-purple-500 transition-colors" />
           </div>
         </motion.div>
       )}

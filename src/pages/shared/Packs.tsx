@@ -552,7 +552,7 @@ export default function Packs() {
                 <h3 className="text-lg font-black tracking-tight text-slate-800 dark:text-white uppercase">
                   Boshqaruv Paneli (Paketlar Ro'yxati)
                 </h3>
-                <Badge variant="outline" className="text-emerald-500 border-emerald-500/20">
+                <Badge variant="outline" className="text-purple-500 border-purple-500/20">
                   Manager Mode
                 </Badge>
               </div>
@@ -579,7 +579,7 @@ export default function Packs() {
                           <Badge variant="outline" className={cn(
                             p.type === "ELITE" && "text-amber-500 border-amber-500/20 bg-amber-500/5",
                             p.type === "PRO" && "text-primary border-primary/20 bg-primary/5",
-                            p.type === "FREE" && "text-emerald-500 border-emerald-500/20 bg-emerald-500/5"
+                            p.type === "FREE" && "text-purple-500 border-purple-500/20 bg-purple-500/5"
                           )}>
                             {p.type}
                           </Badge>
@@ -591,7 +591,7 @@ export default function Packs() {
                           {p.duration === -1 ? "Cheksiz" : `${p.duration} oy`}
                         </td>
                         <td className="py-4">
-                          <Badge className={p.status === "ACTIVE" ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" : "bg-slate-500/10 text-slate-500"}>
+                          <Badge className={p.status === "ACTIVE" ? "bg-purple-500/10 text-purple-500 border-purple-500/20" : "bg-slate-500/10 text-slate-500"}>
                             {p.status === "ACTIVE" ? "Faol" : "Draft"}
                           </Badge>
                         </td>
@@ -697,13 +697,13 @@ export default function Packs() {
                   <div className={cn(
                     "absolute inset-0 rounded-[2.5rem] blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500 pointer-events-none",
                     isFree && "bg-slate-400/20",
-                    isElite && "bg-emerald-500/40",
+                    isElite && "bg-purple-500/40",
                     isPro && "bg-indigo-500/40"
                   )} />
 
                   {/* Elite "MOST POPULAR" centered badge */}
                   {isElite && (
-                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#10b981] text-white text-[9px] font-black tracking-widest uppercase py-1.5 px-4 rounded-full shadow-lg z-10 flex items-center gap-1 border border-emerald-450/20">
+                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#9F86C0] text-white text-[9px] font-black tracking-widest uppercase py-1.5 px-4 rounded-full shadow-lg z-10 flex items-center gap-1 border border-purple-450/20">
                       <Star className="h-3 w-3 fill-white text-white" /> MOST POPULAR
                     </div>
                   )}
@@ -711,14 +711,14 @@ export default function Packs() {
                   <div className={cn(
                     "w-full rounded-[2.5rem] border flex flex-col justify-between overflow-hidden relative transition-all duration-500 shadow-2xl bg-white dark:bg-slate-900/60",
                     isFree && "border-slate-200 dark:border-slate-800",
-                    isElite && "border-2 border-[#10b981] dark:border-emerald-500/50 shadow-emerald-500/5",
+                    isElite && "border-2 border-[#9F86C0] dark:border-purple-500/50 shadow-purple-500/5",
                     isPro && "border-2 border-[#6366f1] dark:border-indigo-500/50 shadow-indigo-500/5"
                   )}>
                     {/* Top half wrapper */}
                     <div className={cn(
                       "p-8 pb-6 relative flex flex-col gap-4",
                       isFree && "bg-slate-50/50 dark:bg-slate-950/20 border-b border-slate-100 dark:border-slate-800/50",
-                      isElite && "bg-gradient-to-b from-[#10b981] to-[#059669] text-white",
+                      isElite && "bg-gradient-to-b from-[#9F86C0] to-[#240046] text-white",
                       isPro && "bg-gradient-to-b from-[#4f46e5] to-[#6366f1] text-white"
                     )}>
                       {/* Circle icon container */}
@@ -744,8 +744,8 @@ export default function Packs() {
                             <Badge className={cn(
                               "px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border",
                               isFree 
-                                ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" 
-                                : "bg-white text-emerald-600 border-white/20 shadow-sm"
+                                ? "bg-purple-500/10 text-purple-500 border-purple-500/20" 
+                                : "bg-white text-purple-600 border-white/20 shadow-sm"
                             )}>
                               Joriy Obuna
                             </Badge>
@@ -797,7 +797,7 @@ export default function Packs() {
                               f.active 
                                 ? (isPro 
                                     ? "bg-indigo-500/10 text-indigo-500 dark:text-indigo-400"
-                                    : "bg-emerald-500/10 text-emerald-500 dark:text-emerald-400")
+                                    : "bg-purple-500/10 text-purple-500 dark:text-purple-400")
                                 : "bg-slate-100 dark:bg-slate-800 text-slate-300 dark:text-slate-650"
                             )}>
                               {f.active ? (
@@ -822,7 +822,7 @@ export default function Packs() {
                       <div className="flex flex-col items-center gap-2.5 pt-2">
                         {isFree ? (
                           <>
-                            <Button className="w-full bg-transparent border border-[#10b981] hover:bg-emerald-500/5 text-[#10b981] h-12 rounded-xl font-bold uppercase text-[10px] tracking-widest transition-transform duration-300 hover:scale-[1.02] shadow-none">
+                            <Button className="w-full bg-transparent border border-[#9F86C0] hover:bg-purple-500/5 text-[#9F86C0] h-12 rounded-xl font-bold uppercase text-[10px] tracking-widest transition-transform duration-300 hover:scale-[1.02] shadow-none">
                               Boshlash
                             </Button>
                             <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 tracking-wider">Doimiy bepul</span>
@@ -834,7 +834,7 @@ export default function Packs() {
                               className={cn(
                                 "w-full h-12 rounded-xl font-bold uppercase text-[10px] tracking-widest shadow-lg transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] text-white border-none",
                                 isElite 
-                                  ? "bg-gradient-to-r from-emerald-500 to-teal-500 shadow-emerald-500/20 hover:shadow-emerald-500/40" 
+                                  ? "bg-gradient-to-r from-purple-500 to-violet-500 shadow-purple-500/20 hover:shadow-purple-500/40" 
                                   : "bg-gradient-to-r from-indigo-500 to-purple-600 shadow-indigo-500/20 hover:shadow-indigo-500/40"
                               )}
                             >
@@ -842,7 +842,7 @@ export default function Packs() {
                             </Button>
                             <span className={cn(
                               "text-[9px] font-bold tracking-wider flex items-center gap-1",
-                              isElite ? "text-[#10b981]" : "text-[#6366f1]"
+                              isElite ? "text-[#9F86C0]" : "text-[#6366f1]"
                             )}>
                               <Check className="h-3 w-3" strokeWidth={3} /> 7 kunlik bepul sinov
                             </span>
@@ -863,8 +863,8 @@ export default function Packs() {
         <DialogContent className="max-w-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl rounded-[3rem] border-none shadow-2xl p-8 overflow-hidden flex flex-col max-h-[90vh]">
           <DialogHeader className="relative pb-4 border-b border-slate-100 dark:border-white/5">
             <DialogTitle className="text-2xl font-black tracking-tight flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                <CreditCard className="h-5 w-5 text-emerald-500 animate-pulse" />
+              <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center">
+                <CreditCard className="h-5 w-5 text-purple-500 animate-pulse" />
               </div>
               Tarifni Sotib Olish
             </DialogTitle>
@@ -874,14 +874,14 @@ export default function Packs() {
           {checkoutPack && (
             <div className="space-y-6 overflow-y-auto pr-2 custom-scrollbar flex-1 py-4">
               {/* Pack details preview */}
-              <div className="p-5 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 dark:from-emerald-500/5 dark:to-teal-500/5 rounded-2xl border border-emerald-500/20 flex items-center justify-between">
+              <div className="p-5 bg-gradient-to-r from-purple-500/10 to-violet-500/10 dark:from-purple-500/5 dark:to-violet-500/5 rounded-2xl border border-purple-500/20 flex items-center justify-between">
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500 dark:text-emerald-400">Tanlangan tarif</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-purple-500 dark:text-purple-400">Tanlangan tarif</p>
                   <p className="text-xl font-black text-slate-800 dark:text-white">{checkoutPack.name}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Narxi</p>
-                  <p className="text-xl font-black text-emerald-500">{checkoutPack.price.toLocaleString()} UZS</p>
+                  <p className="text-xl font-black text-purple-500">{checkoutPack.price.toLocaleString()} UZS</p>
                 </div>
               </div>
 
@@ -925,15 +925,15 @@ export default function Packs() {
               {/* Payment card */}
               <div className="space-y-3">
                 <h4 className="text-[11px] font-black uppercase tracking-widest text-slate-400">To'lov uchun karta ma'lumotlari</h4>
-                <div className="relative h-40 w-full rounded-2xl bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-900 p-6 text-white shadow-xl overflow-hidden flex flex-col justify-between group border border-emerald-500/20">
-                  <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-emerald-500/5 blur-xl pointer-events-none group-hover:scale-150 transition-transform duration-700" />
+                <div className="relative h-40 w-full rounded-2xl bg-gradient-to-br from-slate-900 via-purple-950 to-slate-900 p-6 text-white shadow-xl overflow-hidden flex flex-col justify-between group border border-purple-500/20">
+                  <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-purple-500/5 blur-xl pointer-events-none group-hover:scale-150 transition-transform duration-700" />
                   
                   <div className="flex justify-between items-start">
                     <div className="space-y-1">
-                      <p className="text-[9px] uppercase tracking-widest font-bold text-emerald-400/80">Karta egasi (Ahror Fayzullayev)</p>
+                      <p className="text-[9px] uppercase tracking-widest font-bold text-purple-400/80">Karta egasi (Ahror Fayzullayev)</p>
                       <p className="font-bold text-sm tracking-tight text-slate-200">Ahror Fayzullayev</p>
                     </div>
-                    <CreditCard className="h-5 w-5 text-emerald-500" />
+                    <CreditCard className="h-5 w-5 text-purple-500" />
                   </div>
 
                   <div className="flex justify-between items-center bg-white/5 p-3 rounded-xl border border-white/5 backdrop-blur-md">
@@ -945,7 +945,7 @@ export default function Packs() {
                       size="icon"
                       variant="ghost"
                       onClick={() => copyCard("9860170105907738")}
-                      className="h-8 w-8 hover:bg-white/10 text-emerald-400 rounded-lg border-none"
+                      className="h-8 w-8 hover:bg-white/10 text-purple-400 rounded-lg border-none"
                     >
                       <Copy className="h-4 w-4" />
                     </Button>
@@ -953,7 +953,7 @@ export default function Packs() {
 
                   <div className="flex justify-between items-end text-xs">
                     <span className="text-[8px] uppercase tracking-wider font-bold text-slate-400">To'lov tizimi</span>
-                    <Badge variant="outline" className="text-emerald-400 border-emerald-500/30 text-[9px] uppercase font-bold tracking-wider">
+                    <Badge variant="outline" className="text-purple-400 border-purple-500/30 text-[9px] uppercase font-bold tracking-wider">
                       HUMO
                     </Badge>
                   </div>
@@ -986,8 +986,8 @@ export default function Packs() {
                     className={cn(
                       "border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all duration-200 flex flex-col items-center justify-center gap-2",
                       dragActive
-                        ? "border-emerald-500 bg-emerald-500/10"
-                        : "border-slate-200 dark:border-white/15 hover:border-emerald-500/50 hover:bg-slate-50/50 dark:hover:bg-white/5"
+                        ? "border-purple-500 bg-purple-500/10"
+                        : "border-slate-200 dark:border-white/15 hover:border-purple-500/50 hover:bg-slate-50/50 dark:hover:bg-white/5"
                     )}
                   >
                     <input
@@ -1013,7 +1013,7 @@ export default function Packs() {
                 <Button 
                   onClick={handleTelegramSubmit}
                   disabled={uploadingReceipt} 
-                  className="w-full bg-emerald-500 hover:bg-emerald-600 text-white h-13 rounded-xl font-bold uppercase tracking-wider text-xs shadow-lg flex items-center justify-center gap-2 transition-all duration-300"
+                  className="w-full bg-purple-500 hover:bg-purple-600 text-white h-13 rounded-xl font-bold uppercase tracking-wider text-xs shadow-lg flex items-center justify-center gap-2 transition-all duration-300"
                 >
                   {uploadingReceipt ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                   Telegram Orqali Yuborish
@@ -1037,14 +1037,14 @@ export default function Packs() {
       {/* Success Sent Modal */}
       <Dialog open={!!requestSent} onOpenChange={(v) => !v && setRequestSent(null)}>
         <DialogContent className="max-w-md bg-white dark:bg-slate-950 rounded-[3rem] border-none shadow-2xl p-8 text-center">
-          <div className="h-20 w-20 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center mx-auto mb-6 border border-emerald-500/20">
+          <div className="h-20 w-20 rounded-full bg-purple-500/10 text-purple-500 flex items-center justify-center mx-auto mb-6 border border-purple-500/20">
             <CheckCircle2 className="h-10 w-10 animate-bounce" />
           </div>
           <h3 className="text-2xl font-black tracking-tight text-slate-800 dark:text-white">To'lov yuborildi! 🎉</h3>
           <p className="text-sm text-slate-400 font-medium mt-3 leading-relaxed">
             Tez orada mas'ul adminlar to'lovingizni tekshirib <b>{requestSent?.name}</b> paketingizni faollashtiradi va profilingiz avtomatik ravishda <b>STUDENT</b> roliga ko'tariladi. Telegram orqali xabar yuborildi!
           </p>
-          <Button onClick={() => setRequestSent(null)} className="w-full mt-8 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl h-14 font-black uppercase text-xs tracking-widest shadow-lg shadow-emerald-500/20">
+          <Button onClick={() => setRequestSent(null)} className="w-full mt-8 bg-purple-500 hover:bg-purple-600 text-white rounded-2xl h-14 font-black uppercase text-xs tracking-widest shadow-lg shadow-purple-500/20">
             Tushunarli
           </Button>
         </DialogContent>

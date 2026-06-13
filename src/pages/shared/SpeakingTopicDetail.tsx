@@ -386,7 +386,7 @@ export default function SpeakingTopicDetail({ basePath = "/user" }: { basePath?:
             </button>
             <h1 className="text-2xl md:text-4xl font-display font-bold leading-tight tracking-tight">{topic.title}</h1>
             <div className="flex flex-wrap gap-2 mt-3">
-              <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 font-semibold px-2.5 py-0.5 text-xs">BEPUL MASHQ</Badge>
+              <Badge className="bg-purple-100 text-purple-700 dark:bg-purple-950/40 dark:text-purple-400 font-semibold px-2.5 py-0.5 text-xs">BEPUL MASHQ</Badge>
               <Badge variant="outline" className="text-xs font-medium"><BookOpen className="h-3.5 w-3.5 mr-1" /> {topic.part1.length + 1 + topic.part3.length} ta savol</Badge>
               <Badge variant="outline" className="text-xs font-medium">{topic.category}</Badge>
             </div>
@@ -507,7 +507,7 @@ export default function SpeakingTopicDetail({ basePath = "/user" }: { basePath?:
               {transcript && (
                 <Card className="p-4 bg-muted/40 border border-border/60 rounded-xl space-y-1.5 shadow-inner">
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
-                    <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" /> Real-vaqt transkripti:
+                    <span className="h-2 w-2 rounded-full bg-purple-500 animate-ping" /> Real-vaqt transkripti:
                   </p>
                   <p className="text-sm font-medium leading-relaxed italic text-foreground/90">"{transcript}"</p>
                 </Card>
@@ -541,11 +541,11 @@ export default function SpeakingTopicDetail({ basePath = "/user" }: { basePath?:
                       
                       {/* Overall Band circle */}
                       <div className="flex flex-col items-center justify-center text-center p-3 border-r md:border-r border-border/50 col-span-1">
-                        <div className="relative h-24 w-24 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-500 flex flex-col items-center justify-center text-white shadow-elegant scale-102">
+                        <div className="relative h-24 w-24 rounded-full bg-gradient-to-tr from-purple-500 to-violet-500 flex flex-col items-center justify-center text-white shadow-elegant scale-102">
                           <span className="text-[10px] uppercase font-bold tracking-wider opacity-85">IELTS Band</span>
                           <span className="text-3xl font-extrabold leading-none">{feedback.band !== undefined ? feedback.band.toFixed(1) : "N/A"}</span>
                         </div>
-                        <p className="text-xs font-bold mt-2 text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Umumiy Ball</p>
+                        <p className="text-xs font-bold mt-2 text-purple-600 dark:text-purple-400 uppercase tracking-widest">Umumiy Ball</p>
                       </div>
 
                       {/* Criteria Visual Bar charts */}
@@ -595,8 +595,8 @@ export default function SpeakingTopicDetail({ basePath = "/user" }: { basePath?:
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* Strengths card */}
                       {feedback.strengths && feedback.strengths.length > 0 && (
-                        <Card className="p-4 bg-emerald-500/5 border-emerald-500/10 rounded-xl space-y-2">
-                          <p className="font-bold text-sm text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
+                        <Card className="p-4 bg-purple-500/5 border-purple-500/10 rounded-xl space-y-2">
+                          <p className="font-bold text-sm text-purple-700 dark:text-purple-400 flex items-center gap-1.5">
                             <CheckCircle2 className="h-4.5 w-4.5" /> 🌟 Kuchli jihatlar (Strengths)
                           </p>
                           <ul className="text-xs list-disc pl-4 space-y-1 text-muted-foreground font-medium leading-relaxed">
@@ -750,7 +750,7 @@ export default function SpeakingTopicDetail({ basePath = "/user" }: { basePath?:
               <Button 
                 onClick={grade} 
                 disabled={submitting || (!transcript.trim() && !audioBlob)} 
-                className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold h-12 rounded-xl shadow-md transition-all duration-300"
+                className="w-full bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 text-white font-bold h-12 rounded-xl shadow-md transition-all duration-300"
               >
                 {submitting ? (
                   <>
@@ -886,9 +886,9 @@ export default function SpeakingTopicDetail({ basePath = "/user" }: { basePath?:
                             className={cn(
                               "text-white font-extrabold text-[10px] uppercase px-2.5 py-0.5",
                               a.band >= 8
-                                ? "bg-emerald-500 hover:bg-emerald-500"
+                                ? "bg-purple-500 hover:bg-purple-500"
                                 : a.band >= 7
-                                  ? "bg-teal-500 hover:bg-teal-500"
+                                  ? "bg-violet-500 hover:bg-violet-500"
                                   : a.band >= 6
                                     ? "bg-amber-500 hover:bg-amber-500"
                                     : "bg-rose-500 hover:bg-rose-500",

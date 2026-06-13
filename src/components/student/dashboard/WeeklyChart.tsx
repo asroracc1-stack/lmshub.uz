@@ -52,7 +52,7 @@ export default function WeeklyChart({ data }: WeeklyChartProps) {
                 iconType="circle" 
                 wrapperStyle={{ fontSize: '10px', paddingTop: '10px' }} 
               />
-              <Line type="monotone" name="Reading" dataKey="reading" stroke="#10b981" strokeWidth={2} dot={{ r: 3, strokeWidth: 2 }} activeDot={{ r: 5 }} />
+              <Line type="monotone" name="Reading" dataKey="reading" stroke="#9F86C0" strokeWidth={2} dot={{ r: 3, strokeWidth: 2 }} activeDot={{ r: 5 }} />
               <Line type="monotone" name="Listening" dataKey="listening" stroke="#3b82f6" strokeWidth={2} dot={{ r: 3, strokeWidth: 2 }} activeDot={{ r: 5 }} />
               <Line type="monotone" name="Writing" dataKey="writing" stroke="#a855f7" strokeWidth={2} dot={{ r: 3, strokeWidth: 2 }} activeDot={{ r: 5 }} />
               <Line type="monotone" name="Speaking" dataKey="speaking" stroke="#f59e0b" strokeWidth={2} dot={{ r: 3, strokeWidth: 2 }} activeDot={{ r: 5 }} />
@@ -63,7 +63,7 @@ export default function WeeklyChart({ data }: WeeklyChartProps) {
         <div className="grid grid-cols-3 gap-4 pt-4 mt-2 border-t border-slate-100">
           <div>
             <p className="text-[10px] text-slate-500 mb-1">Eng yaxshi kun</p>
-            <p className="text-sm font-bold text-emerald-500">Juma</p>
+            <p className="text-sm font-bold text-purple-500">Juma</p>
           </div>
           <div>
             <p className="text-[10px] text-slate-500 mb-1">O'rtacha natija</p>
