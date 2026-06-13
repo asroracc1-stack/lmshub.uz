@@ -145,7 +145,8 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
         if (isSuperAdmin) {
           targetPath = "/super-admin/dashboard";
         } else {
-          targetPath = "/dashboard";
+          // Default for Google users or unknown roles → user dashboard
+          targetPath = "/user/dashboard";
         }
     }
 
