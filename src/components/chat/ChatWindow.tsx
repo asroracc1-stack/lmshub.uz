@@ -313,7 +313,7 @@ export default function ChatWindow() {
   const chatPartner = useMemo(() => activeConversation?.participants.find(p => p.userId !== user?.id)?.user || null, [activeConversation, user?.id]);
 
   return (
-    <div className="flex flex-col md:flex-row gap-5 h-[calc(100vh-160px)] min-h-[500px]">
+    <div className="flex flex-col md:flex-row gap-5 h-[calc(100vh-160px)] min-h-[500px] w-full max-w-full overflow-hidden">
       {/* 1. Conversations Sidebar */}
       <Card className={`w-full md:w-[320px] flex flex-col rounded-2xl border border-border/40 bg-card/75 backdrop-blur-sm overflow-hidden shadow-xl ${activeConversation ? 'hidden md:flex' : 'flex'}`}>
         <div className="p-4 border-b border-border/40 space-y-3">
@@ -368,7 +368,7 @@ export default function ChatWindow() {
             getRoleBadge={getRoleBadge} 
           />
 
-          <div className="flex-1 bg-background/20 relative">
+          <div className="flex-1 bg-background/20 relative overflow-hidden">
             {messages.length === 0 && !loadingMessages ? (
                <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground space-y-2">
                  <MessageSquare className="h-10 w-10 opacity-30" />
@@ -376,13 +376,13 @@ export default function ChatWindow() {
                </div>
             ) : (
               <Virtuoso
-                style={{ height: '100%', padding: '16px 16px' }}
+                style={{ height: '100%', overflowY: 'auto', overflowX: 'hidden', padding: '16px 16px' }}
                 data={messages}
                 startReached={loadMoreMessages}
                 initialTopMostItemIndex={messages.length - 1}
                 followOutput="smooth"
                 itemContent={(index, msg) => (
-                  <div className="py-1">
+                  <div className="py-[6px] px-1 w-full overflow-hidden">
                     <MessageBubble 
                       msg={msg} 
                       isMine={msg.senderId === user?.id} 

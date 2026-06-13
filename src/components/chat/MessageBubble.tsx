@@ -43,13 +43,16 @@ export default function MessageBubble({ msg, isMine, isGroup, onReply, onForward
     <motion.div
       initial={{ opacity: 0, y: 5 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`flex ${isMine ? "justify-end" : "justify-start"} group relative`}
+      className={`flex ${isMine ? "justify-end" : "justify-start"} group relative w-full overflow-hidden`}
     >
-      <div className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm shadow-sm space-y-1 relative ${
-        isMine 
-          ? "bg-gradient-to-br from-purple-500/90 to-violet-500/90 text-white rounded-br-sm" 
-          : "bg-muted/80 text-foreground rounded-bl-sm border border-border/30 backdrop-blur-sm"
-      }`}>
+      <div 
+        style={{ wordBreak: "break-word", overflowWrap: "break-word" }}
+        className={`max-w-[70%] rounded-2xl px-3.5 py-2 text-[13px] shadow-sm space-y-1 relative ${
+          isMine 
+            ? "bg-gradient-to-br from-purple-600 to-indigo-600 text-white rounded-br-sm" 
+            : "bg-[#F3F4F6] text-[#1A102A] rounded-bl-sm border border-slate-200/80 dark:bg-slate-850 dark:text-slate-100 dark:border-slate-800/80"
+        }`}
+      >
         
         {/* Context Menu Trigger */}
         <div className={`absolute top-1 ${isMine ? "-left-8" : "-right-8"} opacity-0 group-hover:opacity-100 transition-opacity`}>
@@ -124,13 +127,13 @@ export default function MessageBubble({ msg, isMine, isGroup, onReply, onForward
           </p>
         )}
 
-        <div className={`flex items-center justify-end gap-1 text-[9px] mt-1 ${isMine ? "text-purple-50" : "text-muted-foreground"}`}>
+        <div className={`flex items-center justify-end gap-1 text-[9px] mt-1 ${isMine ? "text-purple-200/80" : "text-slate-400 dark:text-slate-500"}`}>
           {msg.isPinned && <Pin className="h-2.5 w-2.5 mr-1" />}
           <span>
             {new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
           </span>
           {isMine && (
-            isSeen ? <CheckCheck className="h-3 w-3 text-purple-200" /> : <Check className="h-3 w-3 opacity-70" />
+            isSeen ? <CheckCheck className="h-3 w-3 text-purple-200" /> : <Check className="h-3 w-3 text-purple-200/60" />
           )}
         </div>
       </div>
