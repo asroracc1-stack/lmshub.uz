@@ -85,9 +85,13 @@ interface ExamData {
   difficulty?: string;
   audio_url?: string;
   audioUrl?: string;
+  pdfUrl?: string;
+  pdf_url?: string;
   duration_minutes?: number;
   durationMinutes?: number;
-  passages: Passage[];
+  passages: Passage[];        // backend primary field
+  sections?: Passage[];       // fallback if backend sends 'sections'
+  questions?: Q[];            // fallback: flat questions at root level
 }
 
 // MockTake ichki state uchun normallashtirish
@@ -120,12 +124,58 @@ function mapQtype(raw: string | null | undefined): string {
 function normalize(exam: ExamData): { sections: { title: string; passage: string; imageUrl: string }[]; questions: NormalQ[] } {
   const sections: { title: string; passage: string; imageUrl: string }[] = [];
   const questions: NormalQ[] = [];
-  (exam.passages ?? []).forEach((p, sIdx) => {
-    sections.push({ title: p.title ?? "", passage: p.content ?? "", imageUrl: p.imageUrl ?? p.image_url ?? "" });
-    (p.questions ?? []).forEach((q) => {
+
+  // Support both 'passages' and 'sections' field names from backend
+  const rawPassages = (exam.passages && exam.passages.length > 0)
+    ? exam.passages
+    : (exam.sections && exam.sections.length > 0)
+      ? exam.sections
+      : [];
+
+  console.log("[MockTake] normalize — exam raw:", JSON.stringify({
+    id: exam.id,
+    type: exam.type,
+    passagesCount: exam.passages?.length ?? 0,
+    sectionsCount: (exam as any).sections?.length ?? 0,
+    rootQuestionsCount: (exam as any).questions?.length ?? 0,
+  }));
+
+  if (rawPassages.length > 0) {
+    rawPassages.forEach((p, sIdx) => {
+      sections.push({ title: p.title ?? "", passage: p.content ?? "", imageUrl: p.imageUrl ?? p.image_url ?? "" });
+      (p.questions ?? []).forEach((q) => {
+        const qtype = mapQtype(q.questionType ?? q.question_type);
+        const rawOpts = q.options && q.options.length > 0
+          ? q.options.map(o => ({
+              id: o.id,
+              text: o.text,
+              isCorrect: o.isCorrect ?? o.is_correct ?? false,
+              positionOrder: o.positionOrder ?? o.position_order ?? 0,
+              imageUrl: o.imageUrl ?? o.image_url,
+              imagePosition: o.imagePosition ?? o.image_position ?? "left"
+            })).sort((a, b) => a.positionOrder - b.positionOrder)
+          : null;
+        questions.push({
+          id: q.id,
+          position: questions.length + 1,
+          section_index: sIdx,
+          prompt: q.text ?? q.prompt ?? "",
+          qtype,
+          options: rawOpts,
+          correct_answer: q.correctAnswer ?? q.correct_answer ?? null,
+          points: q.points ?? 1,
+          imageUrl: q.imageUrl ?? q.image_url,
+          imagePosition: q.imagePosition ?? q.image_position,
+          explanation: q.explanation ?? "",
+        });
+      });
+    });
+  } else if ((exam as any).questions && (exam as any).questions.length > 0) {
+    // Flat questions at root level (some backends return this)
+    sections.push({ title: exam.title ?? "Section 1", passage: "", imageUrl: "" });
+    ((exam as any).questions as Q[]).forEach((q) => {
       const qtype = mapQtype(q.questionType ?? q.question_type);
-      
-      const rawOpts = q.options && q.options.length > 0 
+      const rawOpts = q.options && q.options.length > 0
         ? q.options.map(o => ({
             id: o.id,
             text: o.text,
@@ -133,14 +183,13 @@ function normalize(exam: ExamData): { sections: { title: string; passage: string
             positionOrder: o.positionOrder ?? o.position_order ?? 0,
             imageUrl: o.imageUrl ?? o.image_url,
             imagePosition: o.imagePosition ?? o.image_position ?? "left"
-          })).sort((a, b) => a.positionOrder - b.positionOrder) 
+          })).sort((a, b) => a.positionOrder - b.positionOrder)
         : null;
-
       questions.push({
         id: q.id,
-        position: questions.length + 1, // Global question number
-        section_index: sIdx,
-        prompt: q.text ?? "",
+        position: questions.length + 1,
+        section_index: 0,
+        prompt: q.text ?? q.prompt ?? "",
         qtype,
         options: rawOpts,
         correct_answer: q.correctAnswer ?? q.correct_answer ?? null,
@@ -150,7 +199,9 @@ function normalize(exam: ExamData): { sections: { title: string; passage: string
         explanation: q.explanation ?? "",
       });
     });
-  });
+  }
+
+  console.log(`[MockTake] normalize done — ${sections.length} sections, ${questions.length} questions`);
   return { sections, questions };
 }
 
