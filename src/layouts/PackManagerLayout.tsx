@@ -127,7 +127,7 @@ export default function PackManagerLayout() {
   );
 
   return (
-    <div className="min-h-screen flex w-full bg-background">
+    <div className="min-h-screen flex w-full bg-background overflow-x-hidden">
       <aside
         className={cn(
           "hidden md:flex shrink-0 border-r border-sidebar-border bg-sidebar flex-col h-screen sticky top-0 transition-all duration-300",

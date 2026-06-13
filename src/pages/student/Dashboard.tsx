@@ -35,12 +35,12 @@ export default function StudentDashboard() {
 
       <DashboardBanner data={data} />
       
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="md:col-span-1">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 min-w-0">
+        <div className="md:col-span-1 min-w-0">
           <DailyStreakCard data={data} />
         </div>
-        <div className="md:col-span-3">
-          <div className="space-y-6">
+        <div className="md:col-span-3 min-w-0">
+          <div className="space-y-6 min-w-0">
             <MetricCardsRow data={data} />
             <WeeklyChart data={data} />
           </div>

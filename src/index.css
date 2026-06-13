@@ -95,6 +95,9 @@
 }
 
 @layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
   * { 
     @apply border-border; 
     transition: background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1), 
@@ -102,9 +105,22 @@
                 border-color 0.5s cubic-bezier(0.4, 0, 0.2, 1), 
                 box-shadow 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   }
+  html, body, #root {
+    overflow-x: hidden;
+    max-width: 100%;
+    width: 100%;
+  }
   body { 
     @apply bg-background text-foreground antialiased selection:bg-primary/20;
     font-feature-settings: "ss01", "cv11", "rsjt";
+  }
+  h1, h2, h3, h4, h5, h6, p, span, a, button {
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+  img, svg, canvas, iframe, video, audio {
+    max-width: 100%;
+    height: auto;
   }
 }
 

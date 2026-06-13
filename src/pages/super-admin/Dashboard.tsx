@@ -303,8 +303,8 @@ export default function SuperAdminDashboard() {
       </div>
 
       {/* Charts */}
-      <div className="grid lg:grid-cols-3 gap-6">
-        <div className="glass rounded-2xl p-6 lg:col-span-2">
+      <div className="grid lg:grid-cols-3 gap-6 min-w-0">
+        <div className="glass rounded-2xl p-6 lg:col-span-2 min-w-0">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="font-display text-lg font-semibold">{t("dynamic.dashboard.o_sish_dinamikasi")}</h3>
@@ -347,7 +347,7 @@ export default function SuperAdminDashboard() {
           )}
         </div>
 
-        <div className="glass rounded-2xl p-6">
+        <div className="glass rounded-2xl p-6 min-w-0">
           <h3 className="font-display text-lg font-semibold mb-4">{t("dynamic.dashboard.rollar_taqsimoti")}</h3>
           {loading ? (
             <Skeleton className="h-[280px] w-full" />
@@ -383,8 +383,8 @@ export default function SuperAdminDashboard() {
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6">
-        <div className="glass rounded-2xl p-6 lg:col-span-2">
+      <div className="grid lg:grid-cols-3 gap-6 min-w-0">
+        <div className="glass rounded-2xl p-6 lg:col-span-2 min-w-0">
           <div className="flex items-center justify-between mb-5">
             <div>
               <h3 className="font-display text-lg font-semibold">{t("dynamic.dashboard.top_tashkilotlar")}</h3>
@@ -449,7 +449,7 @@ export default function SuperAdminDashboard() {
           )}
         </div>
 
-        <div className="glass rounded-2xl p-6">
+        <div className="glass rounded-2xl p-6 min-w-0">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="font-display text-lg font-semibold">{t("dynamic.dashboard.so_nggi_faollik")}</h3>

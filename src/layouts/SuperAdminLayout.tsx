@@ -204,7 +204,7 @@ export default function SuperAdminLayout() {
   );
 
   return (
-    <div className="min-h-screen flex w-full bg-slate-50 dark:bg-slate-950 transition-colors duration-500">
+    <div className="min-h-screen flex w-full bg-slate-50 dark:bg-slate-950 transition-colors duration-500 overflow-x-hidden">
       <CommandPalette />
 
       {/* Desktop Sidebar */}

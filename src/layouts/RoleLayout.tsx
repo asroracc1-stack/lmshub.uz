@@ -403,7 +403,7 @@ export default function RoleLayout({
       {/* ── Main content ────────────────────────────── */}
       <div 
         className={cn(
-          "flex-1 flex flex-col min-w-0 h-full overflow-y-auto relative thin-scrollbar rounded-[16px] border",
+          "flex-1 flex flex-col min-w-0 h-full overflow-y-auto overflow-x-hidden relative thin-scrollbar rounded-[16px] border",
           theme === "dark"
             ? "bg-[#140D23] border-[#2E1E52] shadow-2xl"
             : "bg-white border-[#E8DDFB] shadow-xl shadow-purple-100/40"

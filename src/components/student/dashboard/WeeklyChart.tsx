@@ -12,8 +12,8 @@ interface WeeklyChartProps {
 export default function WeeklyChart({ data }: WeeklyChartProps) {
   const { t } = useTranslation();
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-      <Card className="p-5 rounded-3xl border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800/50 shadow-sm hover:shadow-md transition-all duration-300 h-full flex flex-col">
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="min-w-0">
+      <Card className="p-5 rounded-3xl border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800/50 shadow-sm hover:shadow-md transition-all duration-300 h-full flex flex-col min-w-0">
         <div className="flex justify-between items-center mb-6">
           <h3 className="font-bold text-slate-900 dark:text-white">{t("dynamic.weeklychart.haftalik_natija")}</h3>
           <Select defaultValue="7">
