@@ -91,7 +91,7 @@ export default function MockEditor({ basePath = "/super-admin" }: { basePath?: s
       formData.append("file", file);
       const res = await api.post("/admin/exams/analyze-pdf", formData, {
         headers: { "Content-Type": "multipart/form-data" },
-        timeout: 120000, // 2 minutes for large PDFs
+        timeout: 240000, // 4 minutes for large PDFs (Railway backend needs more time)
       });
 
       // Server returned plain text error (e.g. "AI xizmati sozlanmagan...")
