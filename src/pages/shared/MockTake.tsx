@@ -1301,23 +1301,23 @@ export default function MockTake() {
       </AnimatePresence>
 
       {/* 📝 EXAM WORKSPACE */}
-      <main className="flex-1 w-full max-w-[1600px] mx-auto px-4 md:px-8 py-4 min-h-0 flex flex-col">
+      <main className="flex-1 w-full max-w-[1600px] mx-auto px-4 md:px-8 py-4" style={{ height: 'calc(100vh - 64px)' }}>
         <div className={cn(
-          "grid gap-8 xl:gap-12 flex-1 min-h-0",
+          "grid gap-8 xl:gap-12 h-full",
           (exam.pdfUrl || (kind === "reading" && (currentSection?.passage || currentSection?.imageUrl))) ? "lg:grid-cols-2" : "grid-cols-1"
         )}>
           {/* LEFT PANEL: PDF VIEWER OR PASSAGE */}
           {exam.pdfUrl ? (
-            <Card className="flex flex-col min-h-[85vh] w-full max-w-6xl mx-auto border-slate-200/50 dark:border-white/5 shadow-xl shadow-slate-100/50 dark:shadow-none bg-white dark:bg-slate-900/40 backdrop-blur-md rounded-2xl overflow-hidden">
+          <Card className="flex flex-col h-full w-full max-w-6xl mx-auto border-slate-200/50 dark:border-white/5 shadow-xl shadow-slate-100/50 dark:shadow-none bg-white dark:bg-slate-900/40 backdrop-blur-md rounded-2xl overflow-hidden sticky top-4">
               <div className="px-6 py-4 border-b border-slate-100 dark:border-white/5 flex items-center justify-between shrink-0 bg-slate-50/50 dark:bg-slate-950/20">
                 <h2 className="font-display font-extrabold text-base tracking-tight text-slate-800 dark:text-white">
                   Imtihon Savollari (PDF)
                 </h2>
               </div>
-              <div className="flex-1 w-full h-full relative">
+              <div className="flex-1 w-full overflow-y-auto">
                 <iframe 
                   src={getFullImageUrl(exam.pdfUrl)} 
-                  className="w-full h-full min-h-[75vh]" 
+                  className="w-full h-full min-h-[70vh]" 
                   style={{ border: 0 }} 
                   title="Imtihon PDF"
                 />
@@ -1325,7 +1325,7 @@ export default function MockTake() {
             </Card>
           ) : (
             kind === "reading" && (currentSection?.passage || currentSection?.imageUrl) && (
-              <Card className="flex flex-col min-h-[85vh] w-full max-w-6xl mx-auto border-slate-200/50 dark:border-white/5 shadow-xl shadow-slate-100/50 dark:shadow-none bg-white dark:bg-slate-900/40 backdrop-blur-md rounded-2xl overflow-hidden">
+              <Card className="flex flex-col h-full w-full max-w-6xl mx-auto border-slate-200/50 dark:border-white/5 shadow-xl shadow-slate-100/50 dark:shadow-none bg-white dark:bg-slate-900/40 backdrop-blur-md rounded-2xl overflow-hidden sticky top-4">
                 {currentSection.title && (
                   <div className="px-6 py-4 border-b border-slate-100 dark:border-white/5 flex items-center justify-between shrink-0 bg-slate-50/50 dark:bg-slate-950/20">
                     <h2 className="font-display font-extrabold text-base tracking-tight text-slate-800 dark:text-white">
@@ -1349,7 +1349,7 @@ export default function MockTake() {
 
           {/* RIGHT PANEL: QUESTIONS */}
           <Card className={cn(
-            "flex flex-col min-h-[85vh] w-full mx-auto border-slate-200/50 dark:border-white/5 shadow-xl shadow-slate-100/50 dark:shadow-none bg-white dark:bg-slate-900/40 backdrop-blur-md rounded-2xl overflow-hidden",
+            "flex flex-col h-full w-full mx-auto border-slate-200/50 dark:border-white/5 shadow-xl shadow-slate-100/50 dark:shadow-none bg-white dark:bg-slate-900/40 backdrop-blur-md rounded-2xl overflow-hidden",
             kind === "reading" && (currentSection?.passage || currentSection?.imageUrl) ? "max-w-6xl" : "max-w-full"
           )}>
             <div className="px-6 py-4 border-b border-slate-100 dark:border-white/5 flex items-center justify-between shrink-0 bg-slate-50/50 dark:bg-slate-950/20">
