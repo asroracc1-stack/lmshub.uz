@@ -1,14 +1,10 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-
-// Remove lovable import and use supabase for Google OAuth
-// Note: Keep existing props and loading state
-
-// Inside onClick, replace lovable.auth.signInWithOAuth with supabase.auth.signInWithOAuth
-// Also handle redirected state if needed.
-
+import { useGoogleLogin } from "@react-oauth/google";
+import { api } from "@/lib/axios";
+import { useAuth } from "@/contexts/AuthContext";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface Props {
   label?: string;
@@ -17,24 +13,47 @@ interface Props {
 
 export default function GoogleSignInButton({ label = "Google orqali kirish", className = "" }: Props) {
   const [loading, setLoading] = useState(false);
+  const { setAuth } = useAuth();
+  const queryClient = useQueryClient();
 
-  const onClick = async () => {
-    setLoading(true);
-    try {
-      const result = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: { redirectTo: `${window.location.origin}/user/dashboard` },
-      });
-      if (result.error) {
-        toast.error(result.error.message ?? "Google kirishda xatolik");
+  const handleAuthSuccess = (data: any) => {
+    const { access_token, user: userData } = data;
+    if (!access_token) throw new Error("Token topilmadi");
+
+    localStorage.setItem("access_token", access_token);
+    localStorage.setItem("user", JSON.stringify(userData));
+    setAuth(access_token, userData);
+
+    window.location.href = "/user/dashboard";
+  };
+
+  const login = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        queryClient.clear();
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("user");
+        localStorage.removeItem("profile");
+        localStorage.removeItem("organizationId");
+        localStorage.removeItem("organization_id");
+        sessionStorage.clear();
+
+        const res = await api.post("/auth/google", { token: tokenResponse.access_token });
+        toast.success("Google orqali muvaffaqiyatli kirdingiz!");
+        handleAuthSuccess(res.data);
+      } catch (err: any) {
+        const errorMsg = err.response?.data?.message || err.message || "Google auth failed";
+        toast.error(errorMsg);
+      } finally {
         setLoading(false);
-        return;
       }
-      // If redirected, browser navigates away. Otherwise AuthContext will route on session.
-    } catch (e: any) {
-      toast.error(e?.message ?? "Xatolik");
-      setLoading(false);
-    }
+    },
+    onError: () => setLoading(false),
+  });
+
+  const onClick = () => {
+    setLoading(true);
+    login();
   };
 
   return (

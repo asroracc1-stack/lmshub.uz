@@ -163,6 +163,7 @@ public class AuthService {
 
             user.setLastLoginAt(LocalDateTime.now());
             user.setIsGoogleUser(true);
+            user.setRole(AppRole.USER);
             if (finalPicture != null) user.setAvatarUrl(finalPicture);
             // Save User first
             final User finalSavedUser = userRepository.save(user);

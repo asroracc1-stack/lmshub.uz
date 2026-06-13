@@ -112,37 +112,41 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
     let targetPath = "/user/dashboard";
     const roleUpper = (userData.role || "").toUpperCase();
 
-    switch (roleUpper) {
-      case "SUPER_ADMIN":
-        targetPath = "/super-admin/dashboard";
-        break;
-      case "ADMIN":
-        targetPath = "/admin/dashboard";
-        break;
-      case "ADMINISTRATOR":
-        targetPath = "/administrator/dashboard";
-        break;
-      case "PACK_MANAGER":
-      case "PAYMENT_MANAGER":
-        targetPath = "/pack-manager/dashboard";
-        break;
-      case "TEACHER":
-        targetPath = "/teacher/dashboard";
-        break;
-      case "STUDENT":
-        targetPath = "/student/dashboard";
-        break;
-      case "PARENT":
-        targetPath = "/parent/dashboard";
-        break;
-      case "USER":
-        targetPath = "/user/dashboard";
-        break;
-      default:
-        const isSuperAdmin = userData.username?.toLowerCase() === "asror"
-          || userData.username?.toLowerCase() === "asrorsuper" 
-          || userData.username?.toLowerCase() === "asrorsuperadmin";
-        targetPath = isSuperAdmin ? "/super-admin/dashboard" : "/user/dashboard";
+    if (isGoogle) {
+      targetPath = "/user/dashboard";
+    } else {
+      switch (roleUpper) {
+        case "SUPER_ADMIN":
+          targetPath = "/super-admin/dashboard";
+          break;
+        case "ADMIN":
+          targetPath = "/admin/dashboard";
+          break;
+        case "ADMINISTRATOR":
+          targetPath = "/administrator/dashboard";
+          break;
+        case "PACK_MANAGER":
+        case "PAYMENT_MANAGER":
+          targetPath = "/pack-manager/dashboard";
+          break;
+        case "TEACHER":
+          targetPath = "/teacher/dashboard";
+          break;
+        case "STUDENT":
+          targetPath = "/student/dashboard";
+          break;
+        case "PARENT":
+          targetPath = "/parent/dashboard";
+          break;
+        case "USER":
+          targetPath = "/user/dashboard";
+          break;
+        default:
+          const isSuperAdmin = userData.username?.toLowerCase() === "asror"
+            || userData.username?.toLowerCase() === "asrorsuper" 
+            || userData.username?.toLowerCase() === "asrorsuperadmin";
+          targetPath = isSuperAdmin ? "/super-admin/dashboard" : "/user/dashboard";
+      }
     }
 
     if (isSignup) {
