@@ -130,8 +130,7 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
         targetPath = "/teacher/dashboard";
         break;
       case "STUDENT":
-        // Google orqali kirganda STUDENT rol bo'lsa → user panelga
-        targetPath = isGoogle ? "/user/dashboard" : "/student/dashboard";
+        targetPath = "/student/dashboard";
         break;
       case "PARENT":
         targetPath = "/parent/dashboard";

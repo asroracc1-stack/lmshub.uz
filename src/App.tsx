@@ -440,6 +440,7 @@ const AppRoutes = () => {
         </Route>
 
         <Route path="/403" element={<Forbidden />} />
+        <Route path="/unauthorized" element={<Forbidden />} />
         <Route path="*" element={<NotFound />} />
       </Route>
     )
