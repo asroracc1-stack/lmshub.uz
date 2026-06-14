@@ -109,6 +109,7 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
     localStorage.setItem("access_token", access_token);
     localStorage.setItem("user", JSON.stringify(userData));
     setAuth(access_token, userData);
+    sessionStorage.setItem("loginToast", isGoogle ? "google" : "normal");
 
     let targetPath = "/user/dashboard";
     const roleUpper = (userData.role || "").toUpperCase();

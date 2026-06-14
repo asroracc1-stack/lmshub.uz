@@ -85,6 +85,18 @@ export default function RoleLayout({
   }, [initialNav, role, t, packAccess]);
 
   useEffect(() => {
+    const loginToast = sessionStorage.getItem("loginToast");
+    if (loginToast) {
+      sessionStorage.removeItem("loginToast");
+      if (loginToast === "google") {
+        toast.success("Google orqali muvaffaqiyatli kirdingiz");
+      } else {
+        toast.success("Muvaffaqiyatli kirdingiz");
+      }
+    }
+  }, []);
+
+  useEffect(() => {
     const updatedToggles: Record<string, boolean> = {};
     finalNav.forEach((item) => {
       if (item.children) {
