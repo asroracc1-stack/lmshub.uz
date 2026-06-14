@@ -24,7 +24,8 @@ import {
   Activity,
   Send,
   Presentation,
-  Gift
+  Gift,
+  Compass
 } from "lucide-react";
 import { TFunction } from "i18next";
 
@@ -60,6 +61,7 @@ export const getSidebarRoutes = (role: string, t: TFunction, options: { ielts?: 
         { to: "/admin/messages", label: t("nav.messages"), icon: MessagesSquare },
         { to: "/admin/leaderboard", label: t("nav.leaderboard"), icon: Trophy },
         // { to: "/admin/packs", label: t("nav.packs"), icon: Package },
+        { to: "/admin/gamification", label: "Gamification", icon: Compass },
         { to: "/admin/referral", label: t("nav.referral"), icon: Gift },
       ];
     case "administrator":
@@ -113,6 +115,7 @@ export const getSidebarRoutes = (role: string, t: TFunction, options: { ielts?: 
       { to: "/student/achievements", label: t("nav.achievements"), icon: Award },
       { to: "/student/leaderboard", label: t("nav.leaderboard"), icon: Trophy },
       // { to: "/student/packs", label: t("nav.packs"), icon: Package },
+      { to: "/student/map", label: "Sarguzasht xaritasi", icon: Compass },
       { to: "/student/account", label: t("nav.account"), icon: User },
       { to: "/student/settings", label: t("nav.settings"), icon: Settings },
       { to: "/student/referral", label: t("nav.referral"), icon: Gift },
@@ -126,6 +129,7 @@ export const getSidebarRoutes = (role: string, t: TFunction, options: { ielts?: 
         { to: "/user/subscriptions", label: t("nav.subscriptions"), icon: Package },
         { to: "/user/achievements", label: t("nav.achievements"), icon: Award },
         { to: "/user/leaderboard", label: t("nav.leaderboard"), icon: Trophy },
+        { to: "/user/map", label: "Sarguzasht xaritasi", icon: Compass },
         { to: "/user/messages", label: t("nav.messages"), icon: MessagesSquare },
         { to: "/user/settings", label: t("nav.settings"), icon: Settings },
         { to: "/user/referral", label: t("nav.referral"), icon: Gift },
@@ -186,6 +190,7 @@ export const getSidebarRoutes = (role: string, t: TFunction, options: { ielts?: 
         { to: "/super-admin/packages", label: t("nav.pricingPlans"), icon: Package },
         { to: "/super-admin/telegram", label: t("common.telegramBot"), icon: Send },
         { to: "/super-admin/pitch", label: t("nav.pitchPresentation"), icon: Presentation },
+        { to: "/super-admin/gamification", label: "Gamification", icon: Compass },
         { to: "/super-admin/activity", label: t("nav.activityLogs"), icon: Activity },
         { to: "/super-admin/referral", label: t("nav.referral"), icon: Gift },
       ];

@@ -86,6 +86,10 @@ public class User implements UserDetails {
     @Builder.Default
     private Long coins = 0L;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private Long xp = 0L;
+
     @Column(name = "referral_code", unique = true)
     private String referralCode;
 

@@ -39,6 +39,8 @@ import DonationCard from "@/components/DonationCard";
 import DailyTasks from "@/components/DailyTasks";
 import { useTheme } from "@/contexts/ThemeContext";
 import WelcomeBanner from "@/components/shared/WelcomeBanner";
+import { AdventureMap } from "@/components/gamification/AdventureMap";
+
 
 interface DailyData {
   day: string;
@@ -81,6 +83,25 @@ export default function UserDashboard() {
   const [openKey, setOpenKey] = useState<string | null>(null);
   const [examDate, setExamDate] = useState<string>("");
   const [savingExam, setSavingExam] = useState(false);
+
+  const [mapProgress, setMapProgress] = useState<any>(null);
+  const [loadingMap, setLoadingMap] = useState(true);
+
+  const fetchMapProgress = async () => {
+    try {
+      const res = await api.get("/user/gamification/progress");
+      setMapProgress(res.data);
+    } catch (e) {
+      console.error("Failed to load map progress", e);
+    } finally {
+      setLoadingMap(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMapProgress();
+  }, []);
+
 
   // Free Tier Diagnostic exams state
   const [freeExams, setFreeExams] = useState<FreeExam[]>([]);
@@ -334,6 +355,32 @@ export default function UserDashboard() {
 
       {/* Premium Welcome Banner */}
       <WelcomeBanner />
+
+      {/* Adventure Map Premium Section */}
+      {mapProgress && (
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="relative"
+        >
+          <AdventureMap
+            progressData={mapProgress}
+            compact={true}
+            onRefresh={fetchMapProgress}
+          />
+          <div className="absolute top-5 right-6 z-10">
+            <Link
+              to="/user/map"
+              className="px-4 py-1.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 text-xs font-black rounded-xl hover:from-amber-600 hover:to-yellow-500 transition shadow-lg flex items-center gap-1"
+            >
+              To'liq xarita
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        </motion.div>
+      )}
+
 
       {/* ========================================================
        * SECTION: Onboarding Portal Banner — temporarily hidden

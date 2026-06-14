@@ -1,0 +1,135 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0039-1
+      author: antigravity
+      changes:
+        - addColumn:
+            tableName: users
+            columns:
+              - column:
+                  name: xp
+                  type: bigint
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+        - createTable:
+            tableName: gamification_settings
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: practice_multiplier
+                  type: double precision
+                  defaultValueNumeric: 50.0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: quiz_multiplier
+                  type: double precision
+                  defaultValueNumeric: 100.0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: lesson_multiplier
+                  type: double precision
+                  defaultValueNumeric: 150.0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: mock_multiplier
+                  type: double precision
+                  defaultValueNumeric: 500.0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: coin_multiplier
+                  type: double precision
+                  defaultValueNumeric: 10.0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: streak_multiplier
+                  type: double precision
+                  defaultValueNumeric: 200.0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: now()
+              - column:
+                  name: updated_at
+                  type: timestamp
+                  defaultValueComputed: now()
+        - createTable:
+            tableName: gamification_checkpoints
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: target_distance
+                  type: double precision
+                  constraints:
+                    nullable: false
+              - column:
+                  name: reward_type
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: reward_value
+                  type: varchar(255)
+              - column:
+                  name: active
+                  type: boolean
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: now()
+        - createTable:
+            tableName: user_gamification_progress
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    unique: true
+                    foreignKeyName: fk_user_gamification_progress_user
+                    references: users(id)
+              - column:
+                  name: total_distance
+                  type: double precision
+                  defaultValueNumeric: 0.0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: claimed_checkpoint_ids
+                  type: text
+                  defaultValue: ""
+              - column:
+                  name: updated_at
+                  type: timestamp
+                  defaultValueComputed: now()

@@ -175,6 +175,8 @@ const UserAchievements = lazy(() => import("./pages/user/Achievements"));
 const UserLeaderboard = lazy(() => import("./pages/user/UserLeaderboard"));
 const TelegramLinksPage = lazy(() => import("./pages/super-admin/TelegramLinks"));
 const PMGrantCoins = lazy(() => import("./pages/pack-manager/GrantCoins"));
+const AdventureMapFull = lazy(() => import("./pages/user/AdventureMapFull"));
+const GamificationAdmin = lazy(() => import("./pages/admin/GamificationAdmin"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -250,6 +252,7 @@ const AppRoutes = () => {
           <Route path="grant-coins" element={<PMGrantCoins />} />
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="referral" element={<ReferralPage />} />
+          <Route path="gamification" element={<GamificationAdmin />} />
         </Route>
 
         {/* Admin */}
@@ -281,6 +284,7 @@ const AppRoutes = () => {
           <Route path="settings" element={<SettingsPage />} />
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="referral" element={<ReferralPage />} />
+          <Route path="gamification" element={<GamificationAdmin />} />
         </Route>
 
         {/* Administrator */}
@@ -372,6 +376,7 @@ const AppRoutes = () => {
           <Route path="settings" element={<SettingsPage />} />
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="referral" element={<ReferralPage />} />
+          <Route path="map" element={<AdventureMapFull />} />
         </Route>
 
         {/* Regular User Role */}
@@ -392,6 +397,7 @@ const AppRoutes = () => {
           <Route path="settings" element={<SettingsPage />} />
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="referral" element={<ReferralPage />} />
+          <Route path="map" element={<AdventureMapFull />} />
         </Route>
 
         {/* Parent */}

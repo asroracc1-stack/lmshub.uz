@@ -75,3 +75,6 @@ databaseChangeLog:
       file: db/changelog/changes/v0037_user_last_active.yaml
   - include:
       file: db/changelog/changes/v0038_chat_delete_and_file_storage.yaml
+  - include:
+      file: db/changelog/changes/v0039_gamification.yaml
+
