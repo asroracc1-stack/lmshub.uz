@@ -70,7 +70,7 @@ export default function StudentDashboard() {
               to="/student/map"
               className="px-4 py-1.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 text-xs font-black rounded-xl hover:from-amber-600 hover:to-yellow-500 transition shadow-lg flex items-center gap-1"
             >
-              To'liq xarita
+              {t("learningWorld.openFullMap")}
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>

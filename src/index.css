@@ -207,3 +207,50 @@
 .dark .thin-scrollbar:hover::-webkit-scrollbar-thumb {
   background: hsla(var(--foreground) / 0.4);
 }
+
+/* Gamified Adventure Map Animations */
+@keyframes dash {
+  to {
+    stroke-dashoffset: -100;
+  }
+}
+.animate-dash {
+  animation: dash 8s linear infinite;
+}
+
+@keyframes rain {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 40px 80px;
+  }
+}
+.animate-rain {
+  animation: rain 1s linear infinite;
+}
+
+@keyframes snow {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 60px 120px;
+  }
+}
+.animate-snow {
+  animation: snow 4s linear infinite;
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+.animate-spin-slow {
+  animation: spin-slow 12s linear infinite;
+}
+

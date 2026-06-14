@@ -1,8 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Gift, Lock, Check, Compass, Star, Trophy, Award, MapPin } from "lucide-react";
+import { Gift, Lock, Check, Compass, Star, Trophy, Award, MapPin, Sun, Moon, CloudRain, CloudSnow } from "lucide-react";
 import { toast } from "sonner";
-import { api } from "@/lib/axios"; // Correct import path
+import { api } from "@/lib/axios";
+import confetti from "canvas-confetti";
+import { useTheme } from "@/contexts/ThemeContext";
+import { useTranslation } from "react-i18next";
 
 interface Checkpoint {
   id: string;
@@ -23,44 +26,74 @@ interface AdventureMapProps {
     streak: number;
     checkpoints: Checkpoint[];
     progress_percentage: number;
+    avatar_position?: number;
   };
   compact?: boolean;
   onRefresh?: () => void;
+  forcedWeather?: string;
 }
 
-export const AdventureMap: React.FC<AdventureMapProps> = ({ progressData, compact = false, onRefresh }) => {
+export const AdventureMap: React.FC<AdventureMapProps> = ({ progressData, compact = false, onRefresh, forcedWeather }) => {
   const { total_distance, current_region, xp, coins, streak, checkpoints, progress_percentage } = progressData;
+  const { theme } = useTheme();
+  const { t } = useTranslation();
+  const isDark = theme === "dark";
+
   const [selectedCheckpoint, setSelectedCheckpoint] = useState<Checkpoint | null>(null);
   const [claiming, setClaiming] = useState(false);
 
+  // Weather system
+  const [weather, setWeather] = useState<"sunny" | "night" | "rain" | "snow">("sunny");
+  useEffect(() => {
+    if (forcedWeather) {
+      setWeather(forcedWeather as any);
+      return;
+    }
+    const min = new Date().getMinutes();
+    const weatherIndex = min % 4;
+    const weatherTypes: ("sunny" | "night" | "rain" | "snow")[] = ["sunny", "night", "rain", "snow"];
+    setWeather(weatherTypes[weatherIndex]);
+  }, [forcedWeather]);
+
   // SVG dimensions
-  const viewWidth = 1000;
-  const viewHeight = compact ? 220 : 600;
+  const viewWidth = 1200;
+  const viewHeight = compact ? 260 : 700;
 
-  // Curving path coordinates mapping the 500km journey across 8 zones.
-  // 500km is mapped linearly.
-  // We'll define a smooth cubic bezier/quadratic bezier path from left to right, winding down.
-  const pathD = compact 
-    ? "M 40 110 C 200 30, 350 190, 500 110 C 650 30, 800 190, 960 110" // Simple winding line for compact view
-    : "M 100 100 C 350 40, 400 220, 200 280 C 50 320, 250 480, 500 400 C 750 320, 950 480, 800 520 C 700 540, 900 150, 920 80"; // Winding path for full view
+  const pathD = compact
+    ? "M 50 130 Q 300 20, 600 130 T 1150 130"
+    : "M 100 120 C 350 40, 450 240, 250 320 C 50 380, 200 560, 550 480 C 850 400, 1050 560, 950 600 C 850 630, 950 250, 1050 120";
 
-  // Regions placement along path coordinates
+  // Translate Region names dynamically
   const regions = [
-    { name: "Start Village", x: compact ? 40 : 100, y: compact ? 110 : 100, color: "from-blue-400 to-indigo-600", desc: "🏠 Boshlanish Qishlog'i (0km - 50km)", icon: "🏠" },
-    { name: "Reading Forest", x: compact ? 170 : 250, y: compact ? 80 : 110, color: "from-emerald-400 to-green-600", desc: "📚 Reading O'rmoni (50km - 120km)", icon: "📚" },
-    { name: "Listening Ocean", x: compact ? 310 : 340, y: compact ? 130 : 230, color: "from-cyan-400 to-blue-600", desc: "🎧 Listening Okeani (120km - 200km)", icon: "🎧" },
-    { name: "Writing City", x: compact ? 450 : 200, y: compact ? 110 : 320, color: "from-amber-400 to-orange-600", desc: "✍️ Writing Shahri (200km - 280km)", icon: "✍️" },
-    { name: "Speaking Arena", x: compact ? 590 : 390, y: compact ? 80 : 420, color: "from-rose-400 to-red-600", desc: "🎤 Speaking Arenasi (280km - 350km)", icon: "🎤" },
-    { name: "National Certificate Kingdom", x: compact ? 720 : 620, y: compact ? 130 : 405, color: "from-purple-400 to-indigo-700", desc: "🎓 Milliy Sertifikat Qirolligi (350km - 420km)", icon: "🎓" },
-    { name: "SAT Space Academy", x: compact ? 850 : 810, y: compact ? 90 : 470, color: "from-violet-500 to-fuchsia-700", desc: "🚀 SAT Kosmik Akademiyasi (420km - 480km)", icon: "🚀" },
-    { name: "LMSHub Master Castle", x: compact ? 960 : 920, y: compact ? 110 : 80, color: "from-yellow-400 to-amber-600", desc: "👑 LMSHub Master Qal'asi (480km - 500km+)", icon: "👑" },
+    { name: t("learningWorld.regions.startVillage"), keyName: "Start Village", x: compact ? 50 : 100, y: compact ? 130 : 120, minDistance: 0, icon: "🏠", color: "from-amber-400 to-orange-500" },
+    { name: t("learningWorld.regions.readingForest"), keyName: "Reading Forest", x: compact ? 220 : 280, y: compact ? 90 : 140, minDistance: 50000, icon: "📚", color: "from-emerald-400 to-green-600" },
+    { name: t("learningWorld.regions.listeningOcean"), keyName: "Listening Ocean", x: compact ? 380 : 360, y: compact ? 110 : 250, minDistance: 120000, icon: "🎧", color: "from-blue-400 to-cyan-500" },
+    { name: t("learningWorld.regions.writingCity"), keyName: "Writing City", x: compact ? 540 : 190, y: compact ? 130 : 380, minDistance: 200000, icon: "✍️", color: "from-indigo-400 to-purple-600" },
+    { name: t("learningWorld.regions.speakingArena"), keyName: "Speaking Arena", x: compact ? 700 : 390, y: compact ? 110 : 490, minDistance: 280000, icon: "🎤", color: "from-rose-400 to-pink-600" },
+    { name: t("learningWorld.regions.nationalCertKingdom"), keyName: "National Certificate Kingdom", x: compact ? 860 : 680, y: compact ? 90 : 450, minDistance: 350000, icon: "🎓", color: "from-purple-500 to-indigo-700" },
+    { name: t("learningWorld.regions.satSpaceAcademy"), keyName: "SAT Space Academy", x: compact ? 1020 : 930, y: compact ? 130 : 540, minDistance: 420000, icon: "🚀", color: "from-violet-500 to-fuchsia-700" },
+    { name: t("learningWorld.regions.masterCastle"), keyName: "LMSHub Master Castle", x: compact ? 1150 : 1050, y: compact ? 130 : 120, minDistance: 480000, icon: "👑", color: "from-yellow-400 to-amber-600" },
   ];
 
-  // Helper to approximate point along path based on percentage (using SVG path properties)
-  const svgRef = React.useRef<SVGSVGElement | null>(null);
+  // Helper to translate current region name
+  const getLocalizedCurrentRegion = (regKey: string) => {
+    if (!regKey) return "";
+    const lowerKey = regKey.toLowerCase();
+    if (lowerKey.includes("village") || lowerKey.includes("boshlanish")) return t("learningWorld.regions.startVillage");
+    if (lowerKey.includes("forest") || lowerKey.includes("o'rmon") || lowerKey.includes("ormon")) return t("learningWorld.regions.readingForest");
+    if (lowerKey.includes("ocean") || lowerKey.includes("okean")) return t("learningWorld.regions.listeningOcean");
+    if (lowerKey.includes("city") || lowerKey.includes("shahar")) return t("learningWorld.regions.writingCity");
+    if (lowerKey.includes("arena") || lowerKey.includes("arena")) return t("learningWorld.regions.speakingArena");
+    if (lowerKey.includes("kingdom") || lowerKey.includes("qirollik")) return t("learningWorld.regions.nationalCertKingdom");
+    if (lowerKey.includes("space") || lowerKey.includes("kosmik")) return t("learningWorld.regions.satSpaceAcademy");
+    if (lowerKey.includes("castle") || lowerKey.includes("qal'a") || lowerKey.includes("qala")) return t("learningWorld.regions.masterCastle");
+    return regKey;
+  };
+
+  const svgRef = useRef<SVGSVGElement | null>(null);
   const [avatarPos, setAvatarPos] = useState({ x: regions[0].x, y: regions[0].y });
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (svgRef.current) {
       const pathEl = svgRef.current.querySelector("path.main-track-path") as SVGPathElement | null;
       if (pathEl) {
@@ -69,200 +102,319 @@ export const AdventureMap: React.FC<AdventureMapProps> = ({ progressData, compac
           const point = pathEl.getPointAtLength(pathLength * (progress_percentage / 100));
           setAvatarPos({ x: point.x, y: point.y });
         } catch (e) {
-          // Fallback to region center based on distance
-          const regIndex = Math.min(
-            regions.length - 1,
-            Math.floor((progress_percentage / 100) * regions.length)
-          );
-          setAvatarPos({ x: regions[regIndex].x, y: regions[regIndex].y });
+          const currentIdx = regions.findIndex(r => total_distance < r.minDistance);
+          const activeIdx = currentIdx === -1 ? regions.length - 1 : Math.max(0, currentIdx - 1);
+          setAvatarPos({ x: regions[activeIdx].x, y: regions[activeIdx].y });
         }
       }
     }
-  }, [progress_percentage, compact]);
+  }, [progress_percentage, compact, total_distance]);
 
-  // Handle claiming checkpoint reward
+  const getChestRarity = (targetDistance: number) => {
+    if (targetDistance <= 120000) return { name: t("learningWorld.chests.common"), color: "#10B981", bg: "bg-emerald-500/10 border-emerald-500/30", iconColor: "text-emerald-400" };
+    if (targetDistance <= 280000) return { name: t("learningWorld.chests.rare"), color: "#3B82F6", bg: "bg-blue-500/10 border-blue-500/30", iconColor: "text-blue-400" };
+    if (targetDistance <= 420000) return { name: t("learningWorld.chests.epic"), color: "#8B5CF6", bg: "bg-purple-500/10 border-purple-500/30", iconColor: "text-purple-400" };
+    return { name: t("learningWorld.chests.legendary"), color: "#F59E0B", bg: "bg-amber-500/10 border-amber-500/30", iconColor: "text-amber-400" };
+  };
+
   const handleClaim = async () => {
     if (!selectedCheckpoint) return;
     setClaiming(true);
     try {
       const response = await api.post(`/user/gamification/claim/${selectedCheckpoint.id}`);
       if (response.data?.success) {
-        toast.success(response.data.message || "Sovg'a muvaffaqiyatli qabul qilindi!");
+        confetti({
+          particleCount: 150,
+          spread: 80,
+          origin: { y: 0.6 },
+          colors: ["#F59E0B", "#10B981", "#3B82F6", "#8B5CF6"]
+        });
+        toast.success(t("learningWorld.successClaim"));
         setSelectedCheckpoint(null);
         if (onRefresh) onRefresh();
       } else {
-        toast.error(response.data?.message || "Xatolik yuz berdi");
+        toast.error(response.data?.message || t("learningWorld.errorClaim"));
       }
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Sovg'ani olishda xatolik yuz berdi.");
+      toast.error(error.response?.data?.message || t("learningWorld.errorClaim"));
     } finally {
       setClaiming(false);
     }
   };
 
   return (
-    <div className="relative w-full overflow-hidden bg-slate-950/80 rounded-3xl border border-slate-800 p-6 shadow-2xl backdrop-blur-md">
-      {/* Top dashboard / stats banner */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-5 mb-5">
+    <div className={`relative w-full overflow-hidden rounded-3xl border transition-colors duration-1000 p-6 shadow-2xl backdrop-blur-md ${
+      isDark 
+        ? "bg-slate-950/90 border-slate-800/80 shadow-slate-950/50" 
+        : "bg-sky-50/70 border-sky-100/80 shadow-sky-100/30"
+    }`}>
+      
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b pb-5 mb-5 border-slate-800/20 dark:border-slate-800/60">
         <div className="flex items-center gap-4">
-          <div className="p-3 bg-gradient-to-tr from-amber-500 to-yellow-300 rounded-2xl shadow-lg shadow-amber-500/20 text-slate-950">
-            <Compass className="w-6 h-6 animate-spin-slow" />
+          <div className="p-3 bg-gradient-to-tr from-amber-500 to-yellow-300 rounded-2xl shadow-lg text-slate-950 animate-spin-slow">
+            <Compass className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="text-xl font-bold bg-gradient-to-r from-amber-300 to-yellow-100 bg-clip-text text-transparent">
-              Sarguzasht Xaritasi (Learning World)
+            <h3 className={`text-xl font-black ${isDark ? "text-slate-100" : "text-slate-900"}`}>
+              {t("learningWorld.title")}
             </h3>
-            <p className="text-sm text-slate-400 flex items-center gap-1.5 mt-0.5">
-              <MapPin className="w-4 h-4 text-emerald-400" />
-              Joriy hudud: <span className="font-semibold text-slate-200">{current_region}</span>
+            <p className="text-xs text-slate-500 flex items-center gap-1.5 mt-0.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+              {t("learningWorld.currentRegion")}: <span className="font-bold text-slate-700 dark:text-slate-200">{getLocalizedCurrentRegion(current_region)}</span>
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="px-4 py-2 bg-slate-900/60 rounded-xl border border-slate-800 flex items-center gap-2">
-            <Trophy className="w-4 h-4 text-amber-400" />
-            <span className="text-sm font-medium text-slate-300">{Math.round(total_distance / 1000)} km yurildi</span>
+          <div className="p-2.5 bg-slate-100 dark:bg-slate-900 rounded-xl border border-slate-200/55 dark:border-slate-800 text-slate-600 dark:text-slate-400 flex items-center gap-2">
+            {weather === "sunny" && <Sun className="w-4 h-4 text-amber-500 animate-pulse" />}
+            {weather === "night" && <Moon className="w-4 h-4 text-indigo-400" />}
+            {weather === "rain" && <CloudRain className="w-4 h-4 text-blue-400 animate-bounce" />}
+            {weather === "snow" && <CloudSnow className="w-4 h-4 text-sky-200" />}
+            <span className="text-[10px] font-bold uppercase tracking-wider">{weather}</span>
           </div>
-          <div className="px-4 py-2 bg-slate-900/60 rounded-xl border border-slate-800 flex items-center gap-2">
-            <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-            <span className="text-sm font-medium text-slate-300">{xp} XP</span>
+
+          <div className="px-4 py-2 bg-slate-100 dark:bg-slate-900 rounded-xl border border-slate-200/55 dark:border-slate-800 text-slate-600 dark:text-slate-300 flex items-center gap-2">
+            <Trophy className="w-4 h-4 text-amber-500" />
+            <span className="text-xs font-bold">{Math.round(total_distance / 1000)} km</span>
           </div>
-          <div className="px-4 py-2 bg-slate-900/60 rounded-xl border border-slate-800 flex items-center gap-2">
-            <Award className="w-4 h-4 text-emerald-400" />
-            <span className="text-sm font-medium text-slate-300">{streak} Kunlik Streak</span>
+          <div className="px-4 py-2 bg-slate-100 dark:bg-slate-900 rounded-xl border border-slate-200/55 dark:border-slate-800 text-slate-600 dark:text-slate-300 flex items-center gap-2">
+            <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+            <span className="text-xs font-bold">{xp} {t("learningWorld.xp")}</span>
           </div>
         </div>
       </div>
 
-      {/* SVG Map Canvas */}
       <div className="relative w-full overflow-x-auto scrollbar-thin scrollbar-thumb-slate-800 scrollbar-track-transparent">
-        <div style={{ minWidth: "900px" }} className="mx-auto">
+        <div style={{ minWidth: "1100px" }} className="mx-auto">
           <svg
             ref={svgRef}
             width="100%"
             viewBox={`0 0 ${viewWidth} ${viewHeight}`}
-            className="w-full h-auto overflow-visible select-none"
+            className="w-full h-auto overflow-visible select-none transition-all duration-1000"
           >
             <defs>
-              {/* Path glow filter */}
-              <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-                <feGaussianBlur stdDeviation="6" result="blur" />
+              <filter id="roadGlow" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="8" result="blur" />
                 <feComposite in="SourceGraphic" in2="blur" operator="over" />
               </filter>
-              {/* Gold gradient */}
-              <linearGradient id="activeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#10B981" />
-                <stop offset="50%" stopColor="#F59E0B" />
-                <stop offset="100%" stopColor="#D97706" />
-              </linearGradient>
+              
+              <pattern id="rainPattern" width="40" height="40" patternUnits="userSpaceOnUse">
+                <line x1="10" y1="0" x2="5" y2="20" stroke="rgba(156, 163, 175, 0.4)" strokeWidth="1.5" />
+                <line x1="30" y1="10" x2="25" y2="30" stroke="rgba(156, 163, 175, 0.4)" strokeWidth="1.5" />
+              </pattern>
+
+              <pattern id="snowPattern" width="60" height="60" patternUnits="userSpaceOnUse">
+                <circle cx="15" cy="15" r="2" fill="rgba(255, 255, 255, 0.8)" />
+                <circle cx="45" cy="35" r="3.5" fill="rgba(255, 255, 255, 0.8)" />
+              </pattern>
             </defs>
 
-            {/* Backgound Map Elements (mountains, trees, water decoration) */}
             {!compact && (
-              <g className="opacity-15 pointer-events-none">
-                {/* Forest icons near Reading Forest */}
-                <text x="210" y="80" className="text-3xl">🌲</text>
-                <text x="280" y="140" className="text-3xl">🌲</text>
-                {/* Water ripples near Listening Ocean */}
-                <text x="350" y="270" className="text-3xl">🌊</text>
-                <text x="420" y="210" className="text-3xl">🌊</text>
-                {/* Castle peaks near Castle */}
-                <text x="890" y="110" className="text-4xl">🏰</text>
-                {/* Space icons near SAT space academy */}
-                <text x="790" y="520" className="text-3xl">🛸</text>
-                <text x="840" y="440" className="text-3xl">🚀</text>
+              <g className="landscapes">
+                <path
+                  d="M 300 0 C 350 200, 150 400, 400 700"
+                  fill="none"
+                  stroke={isDark ? "#1E293B" : "#93C5FD"}
+                  strokeWidth="20"
+                  className="opacity-70"
+                />
+                <path
+                  d="M 300 0 C 350 200, 150 400, 400 700"
+                  fill="none"
+                  stroke={isDark ? "#38BDF8" : "#60A5FA"}
+                  strokeWidth="8"
+                  className="opacity-90 animate-pulse"
+                />
+
+                <g transform="translate(290, 185) rotate(-35)">
+                  <rect x="-30" y="-12" width="60" height="24" rx="4" fill="#475569" stroke="#1E293B" strokeWidth="2" />
+                  <line x1="-20" y1="-12" x2="-20" y2="12" stroke="#64748B" strokeWidth="2" />
+                  <line x1="20" y1="-12" x2="20" y2="12" stroke="#64748B" strokeWidth="2" />
+                </g>
+                <g transform="translate(200, 345) rotate(35)">
+                  <rect x="-35" y="-12" width="70" height="24" rx="4" fill="#475569" stroke="#1E293B" strokeWidth="2" />
+                  <line x1="-25" y1="-12" x2="-25" y2="12" stroke="#64748B" strokeWidth="2" />
+                  <line x1="25" y1="-12" x2="25" y2="12" stroke="#64748B" strokeWidth="2" />
+                </g>
+
+                <g className="mountains opacity-50 dark:opacity-20" transform="translate(0, -20)">
+                  <polygon points="500,280 570,400 430,400" fill="#64748B" />
+                  <polygon points="500,280 520,314 480,314" fill="#F8FAFC" />
+                  <polygon points="750,380 840,520 660,520" fill="#475569" />
+                  <polygon points="750,380 775,420 725,420" fill="#F8FAFC" />
+                </g>
+
+                {weather === "rain" && (
+                  <rect width={viewWidth} height={viewHeight} fill="url(#rainPattern)" pointerEvents="none" className="animate-rain" />
+                )}
+                {weather === "snow" && (
+                  <rect width={viewWidth} height={viewHeight} fill="url(#snowPattern)" pointerEvents="none" className="animate-snow" />
+                )}
+                {weather === "sunny" && !isDark && (
+                  <g className="sunrays opacity-25 pointer-events-none">
+                    <line x1="0" y1="0" x2="300" y2="700" stroke="#FBBF24" strokeWidth="150" strokeDasharray="30 30" />
+                  </g>
+                )}
               </g>
             )}
 
-            {/* Untraveled Locked Road Path */}
             <path
               d={pathD}
               fill="none"
-              stroke="#1E293B"
-              strokeWidth={compact ? 8 : 12}
+              stroke={isDark ? "#1E1B4B" : "#CBD5E1"}
+              strokeWidth={compact ? 12 : 24}
               strokeLinecap="round"
             />
             <path
               d={pathD}
               fill="none"
-              stroke="#334155"
-              strokeWidth={compact ? 2 : 4}
-              strokeDasharray="8 8"
+              stroke={isDark ? "#312E81" : "#E2E8F0"}
+              strokeWidth={compact ? 8 : 16}
               strokeLinecap="round"
             />
 
-            {/* Traveled Animated Highlighted Road Path */}
             <path
               className="main-track-path"
               d={pathD}
               fill="none"
-              stroke="url(#activeGradient)"
-              strokeWidth={compact ? 8 : 12}
+              stroke={isDark ? "#818CF8" : "#60A5FA"}
+              strokeWidth={compact ? 8 : 16}
               strokeLinecap="round"
-              strokeDasharray="1000"
-              strokeDashoffset={1000 - (1000 * (progress_percentage / 100))}
-              style={{ transition: "stroke-dashoffset 1.5s ease-in-out" }}
+              strokeDasharray="1500"
+              strokeDashoffset={1500 - (1500 * (progress_percentage / 100))}
+              style={{ transition: "stroke-dashoffset 2s ease-in-out" }}
             />
-            {/* Inner neon glow dashed path */}
             <path
               d={pathD}
               fill="none"
-              stroke="#FFF"
-              strokeWidth={2}
-              strokeDasharray="12 12"
+              stroke="#FBBF24"
+              strokeWidth={3}
+              strokeDasharray="15 15"
               strokeLinecap="round"
-              strokeDashoffset={-10}
               className="animate-dash"
-              opacity={0.8}
+              style={{ filter: isDark ? "url(#roadGlow)" : "none" }}
             />
 
-            {/* Regions / Milestones Pins */}
-            {regions.map((reg, idx) => (
-              <g key={idx} transform={`translate(${reg.x}, ${reg.y})`} className="cursor-pointer">
-                {/* Glowing beacon ring */}
-                <circle
-                  r={compact ? 12 : 20}
-                  fill="currentColor"
-                  className={`text-slate-900 border border-slate-700`}
-                />
-                <circle
-                  r={compact ? 12 : 20}
-                  fill="none"
-                  stroke={total_distance >= (idx * 62500) ? "#F59E0B" : "#475569"}
-                  strokeWidth={2}
-                />
-                <text
-                  textAnchor="middle"
-                  dy={compact ? "4" : "6"}
-                  fontSize={compact ? "12" : "18"}
-                  className="pointer-events-none select-none"
-                >
-                  {reg.icon}
-                </text>
-                {/* Region Text Labels */}
-                {!compact && (
-                  <text
-                    y={32}
-                    textAnchor="middle"
-                    fill="#94A3B8"
-                    fontSize="11"
-                    fontWeight="bold"
-                    className="bg-slate-900 px-1 py-0.5 rounded"
-                  >
-                    {reg.name}
-                  </text>
-                )}
-              </g>
-            ))}
+            {regions.map((reg, idx) => {
+              const isUnlocked = total_distance >= reg.minDistance;
+              const isMasterCastle = reg.keyName === "LMSHub Master Castle";
+              const shouldHide = isMasterCastle && total_distance < 420000;
 
-            {/* Checkpoint Reward Chests */}
-            {checkpoints && checkpoints.map((cp, idx) => {
-              // Interpolate chest position along path
-              // For simplicity, space chests visually along the path based on distance ratio
+              if (shouldHide) return null;
+
+              return (
+                <g key={idx} transform={`translate(${reg.x}, ${reg.y})`} className="transition-all duration-500">
+                  {!isUnlocked && (
+                    <circle
+                      r={compact ? 24 : 45}
+                      fill={isDark ? "#0F172A" : "#E2E8F0"}
+                      className="opacity-75"
+                      style={{ filter: "blur(8px)" }}
+                    />
+                  )}
+
+                  <ellipse
+                    rx={compact ? 18 : 32}
+                    ry={compact ? 10 : 16}
+                    fill={isUnlocked ? "url(#activeGradient)" : "#475569"}
+                    opacity={isUnlocked ? 0.35 : 0.6}
+                  />
+
+                  <g transform={`translate(0, ${compact ? -10 : -18})`}>
+                    {reg.keyName === "Start Village" && (
+                      <g className="scale-75 md:scale-100">
+                        <polygon points="0,-16 -12,0 12,0" fill="#B45309" />
+                        <rect x="-8" y="0" width="16" height="12" fill="#F59E0B" />
+                        <circle cx="0" cy="4" r="2.5" fill="#FEF08A" className="animate-pulse" />
+                      </g>
+                    )}
+
+                    {reg.keyName === "Reading Forest" && (
+                      <g className="scale-75 md:scale-100">
+                        <rect x="-3" y="-12" width="6" height="18" fill="#78350F" />
+                        <path d="M 0 -24 C -15 -18, -10 0, 0 6 C 10 0, 15 -18, 0 -24" fill="#047857" />
+                        <path d="M -8 -12 L 8 -12" stroke="#FFF" strokeWidth="1.5" />
+                      </g>
+                    )}
+
+                    {reg.keyName === "Listening Ocean" && (
+                      <g className="scale-75 md:scale-100">
+                        <circle r="12" fill="#0284C7" />
+                        <circle r="8" fill="#38BDF8" className="animate-ping" opacity="0.4" />
+                        <text y="4" textAnchor="middle" fontSize="12">🏝️</text>
+                      </g>
+                    )}
+
+                    {reg.keyName === "Writing City" && (
+                      <g className="scale-75 md:scale-100">
+                        <rect x="-8" y="-18" width="16" height="24" fill="#475569" rx="2" />
+                        <polygon points="0,-28 -8,-18 8,-18" fill="#E2E8F0" />
+                        <line x1="0" y1="-28" x2="0" y2="-12" stroke="#000" strokeWidth="1.5" />
+                      </g>
+                    )}
+
+                    {reg.keyName === "Speaking Arena" && (
+                      <g className="scale-75 md:scale-100">
+                        <ellipse rx="16" ry="10" fill="#9F1239" />
+                        <line x1="-12" y1="-16" x2="-12" y2="4" stroke="#FDA4AF" strokeWidth="1.5" className="animate-pulse" />
+                        <line x1="12" y1="-16" x2="12" y2="4" stroke="#FDA4AF" strokeWidth="1.5" className="animate-pulse" />
+                      </g>
+                    )}
+
+                    {reg.keyName === "National Certificate Kingdom" && (
+                      <g className="scale-75 md:scale-100">
+                        <rect x="-14" y="-14" width="28" height="20" fill="#1E3A8A" rx="3" />
+                        <polygon points="-14,-14 0,-26 14,-14" fill="#1D4ED8" />
+                        <rect x="-4" y="-2" width="8" height="8" fill="#FEF08A" />
+                      </g>
+                    )}
+
+                    {reg.keyName === "SAT Space Academy" && (
+                      <g className="scale-75 md:scale-100">
+                        <path d="M 0 -22 C -6 -10, -8 0, 0 4 C 8 0, 6 -10, 0 -22" fill="#E2E8F0" />
+                        <polygon points="-4,2 0,-8 4,2" fill="#EF4444" />
+                      </g>
+                    )}
+
+                    {reg.keyName === "LMSHub Master Castle" && (
+                      <g className="scale-75 md:scale-100">
+                        <rect x="-18" y="-20" width="36" height="26" fill="#D97706" rx="4" />
+                        <polygon points="-18,-20 -9,-32 0,-20 9,-32 18,-20" fill="#F59E0B" />
+                        <circle cx="0" cy="-6" r="5" fill="#FEF08A" className="animate-pulse" />
+                      </g>
+                    )}
+                  </g>
+
+                  {!isUnlocked && (
+                    <g transform={`translate(0, ${compact ? 8 : 14})`}>
+                      <circle r="9" fill="#0F172A" stroke="#475569" strokeWidth="1.5" />
+                      <g transform="translate(-5, -5)">
+                        <Lock className="w-2.5 h-2.5 text-slate-400" />
+                      </g>
+                    </g>
+                  )}
+
+                  {!compact && (
+                    <text
+                      y="32"
+                      textAnchor="middle"
+                      fill={isUnlocked ? (isDark ? "#F1F5F9" : "#1E293B") : "#94A3B8"}
+                      fontSize="10"
+                      fontWeight="bold"
+                    >
+                      {reg.name}
+                    </text>
+                  )}
+                </g>
+              );
+            })}
+
+            {checkpoints && checkpoints.map((cp) => {
               const ratio = Math.min(1.0, cp.target_distance / 500000.0);
               let cpX = 500;
               let cpY = 300;
+              
               if (svgRef.current) {
                 const pathEl = svgRef.current.querySelector("path.main-track-path") as SVGPathElement | null;
                 if (pathEl) {
@@ -274,34 +426,34 @@ export const AdventureMap: React.FC<AdventureMapProps> = ({ progressData, compac
                 }
               }
 
+              const rarity = getChestRarity(cp.target_distance);
+
               return (
                 <g
                   key={cp.id}
-                  transform={`translate(${cpX}, ${cpY - (compact ? 16 : 24)})`}
+                  transform={`translate(${cpX}, ${cpY - (compact ? 16 : 28)})`}
                   className="cursor-pointer"
                   onClick={() => setSelectedCheckpoint(cp)}
                 >
-                  {/* Glowing background for claimable chests */}
                   {cp.unlocked && !cp.claimed && (
                     <motion.circle
                       r={compact ? 16 : 24}
-                      fill="#F59E0B"
-                      opacity={0.3}
-                      animate={{ scale: [1, 1.3, 1] }}
-                      transition={{ repeat: Infinity, duration: 1.5 }}
+                      fill={rarity.color}
+                      opacity={0.35}
+                      animate={{ scale: [1, 1.35, 1], opacity: [0.35, 0.6, 0.35] }}
+                      transition={{ repeat: Infinity, duration: 2 }}
                     />
                   )}
 
                   <circle
-                    r={compact ? 12 : 18}
-                    fill={cp.claimed ? "#1E293B" : cp.unlocked ? "#D97706" : "#0F172A"}
-                    stroke={cp.unlocked ? "#F59E0B" : "#334155"}
+                    r={compact ? 13 : 19}
+                    fill={cp.claimed ? "#1E293B" : cp.unlocked ? rarity.color : "#0F172A"}
+                    stroke={cp.unlocked ? "#FFF" : "#475569"}
                     strokeWidth={2}
-                    className="shadow-lg"
+                    className="shadow-xl"
                   />
 
-                  {/* Icon */}
-                  <g transform={`translate(-8, -8) scale(${compact ? 0.8 : 1})`}>
+                  <g transform={`translate(-8, -8) scale(${compact ? 0.85 : 1.05})`}>
                     {cp.claimed ? (
                       <Check className="w-4 h-4 text-emerald-400" />
                     ) : cp.unlocked ? (
@@ -311,14 +463,13 @@ export const AdventureMap: React.FC<AdventureMapProps> = ({ progressData, compac
                     )}
                   </g>
 
-                  {/* Tooltip on hover/click */}
                   {!compact && (
                     <text
-                      y={-24}
+                      y="-24"
                       textAnchor="middle"
-                      fill="#FBBF24"
+                      fill={rarity.color}
                       fontSize="9"
-                      fontWeight="bold"
+                      fontWeight="black"
                     >
                       {Math.round(cp.target_distance / 1000)}km
                     </text>
@@ -327,23 +478,28 @@ export const AdventureMap: React.FC<AdventureMapProps> = ({ progressData, compac
               );
             })}
 
-            {/* Avatar Marker representing user current spot */}
             <g transform={`translate(${avatarPos.x}, ${avatarPos.y})`} className="pointer-events-none">
-              {/* Outer pulsing ring */}
               <motion.circle
-                r={compact ? 18 : 28}
+                r={compact ? 18 : 26}
                 fill="none"
-                stroke="#F59E0B"
+                stroke="#FBBF24"
                 strokeWidth={3}
-                animate={{ scale: [1, 1.25, 1], opacity: [0.9, 0.4, 0.9] }}
-                transition={{ repeat: Infinity, duration: 2 }}
+                animate={{ scale: [1, 1.25, 1], opacity: [0.9, 0.3, 0.9] }}
+                transition={{ repeat: Infinity, duration: 1.5 }}
               />
               <circle
-                r={compact ? 12 : 18}
+                r={compact ? 13 : 18}
                 fill="#FBBF24"
-                className="shadow-xl shadow-amber-500/50"
+                className="shadow-2xl"
               />
-              {/* Avatar face/initials or Pin icon */}
+              
+              <g transform={`translate(0, ${compact ? -20 : -28})`}>
+                <rect x="-16" y="-7" width="32" height="14" rx="4" fill="#0F172A" stroke="#FBBF24" strokeWidth="1" />
+                <text textAnchor="middle" y="3.5" fontSize="8" fontWeight="bold" fill="#FBBF24">
+                  {t("learningWorld.level").toUpperCase()} {Math.max(1, Math.floor(xp / 1000) + 1)}
+                </text>
+              </g>
+
               <g transform="translate(-10, -10)">
                 <MapPin className="w-5 h-5 text-slate-950 fill-slate-900" />
               </g>
@@ -352,7 +508,6 @@ export const AdventureMap: React.FC<AdventureMapProps> = ({ progressData, compac
         </div>
       </div>
 
-      {/* Checkpoint Reward Modal / Bottom Sheet Drawer */}
       <AnimatePresence>
         {selectedCheckpoint && (
           <motion.div
@@ -365,37 +520,47 @@ export const AdventureMap: React.FC<AdventureMapProps> = ({ progressData, compac
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
-              className="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl relative"
+              className="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl relative overflow-hidden"
             >
-              {/* Decorative light rays */}
-              <div className="absolute inset-0 bg-gradient-to-b from-amber-500/10 to-transparent rounded-3xl pointer-events-none" />
+              <div
+                className="absolute top-0 left-0 right-0 h-2"
+                style={{ backgroundColor: getChestRarity(selectedCheckpoint.target_distance).color }}
+              />
 
               <div className="text-center relative">
-                <div className="mx-auto w-20 h-20 bg-gradient-to-tr from-amber-500 to-yellow-300 rounded-3xl flex items-center justify-center shadow-xl shadow-amber-500/20 mb-4 animate-pulse">
-                  {selectedCheckpoint.claimed ? (
-                    <Check className="w-10 h-10 text-slate-950" />
-                  ) : (
-                    <Gift className="w-10 h-10 text-slate-950" />
-                  )}
+                <div
+                  className="mx-auto w-20 h-20 rounded-3xl flex items-center justify-center shadow-xl mb-4 animate-pulse"
+                  style={{ backgroundColor: `${getChestRarity(selectedCheckpoint.target_distance).color}20` }}
+                >
+                  <Gift className="w-10 h-10" style={{ color: getChestRarity(selectedCheckpoint.target_distance).color }} />
                 </div>
 
-                <h4 className="text-2xl font-black text-slate-100">{selectedCheckpoint.name}</h4>
-                <p className="text-sm text-slate-400 mt-1">
-                  Miyos masofasi: <span className="text-amber-400 font-bold">{Math.round(selectedCheckpoint.target_distance / 1000)} km</span>
+                <h4 className="text-2xl font-black text-slate-100">
+                  {selectedCheckpoint.name === "Start Village Chest" ? `${t("learningWorld.regions.startVillage")} ${t("learningWorld.rewardChest")}`
+                   : selectedCheckpoint.name === "Reading Forest Chest" ? `${t("learningWorld.regions.readingForest")} ${t("learningWorld.rewardChest")}`
+                   : selectedCheckpoint.name === "Listening Ocean Chest" ? `${t("learningWorld.regions.listeningOcean")} ${t("learningWorld.rewardChest")}`
+                   : selectedCheckpoint.name === "Writing City Chest" ? `${t("learningWorld.regions.writingCity")} ${t("learningWorld.rewardChest")}`
+                   : selectedCheckpoint.name === "Speaking Arena Chest" ? `${t("learningWorld.regions.speakingArena")} ${t("learningWorld.rewardChest")}`
+                   : selectedCheckpoint.name === "NC Kingdom Chest" ? `${t("learningWorld.regions.nationalCertKingdom")} ${t("learningWorld.rewardChest")}`
+                   : selectedCheckpoint.name === "SAT Academy Chest" ? `${t("learningWorld.regions.satSpaceAcademy")} ${t("learningWorld.rewardChest")}`
+                   : selectedCheckpoint.name === "Master Castle Chest" ? `${t("learningWorld.regions.masterCastle")} ${t("learningWorld.rewardChest")}`
+                   : selectedCheckpoint.name}
+                </h4>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-amber-500">
+                  {getChestRarity(selectedCheckpoint.target_distance).name}
+                </span>
+
+                <p className="text-xs text-slate-400 mt-2">
+                  {t("learningWorld.totalDistance")}: <span className="font-bold">{Math.round(selectedCheckpoint.target_distance / 1000)} km</span>
                 </p>
 
                 <div className="bg-slate-950/50 rounded-2xl p-4 my-5 border border-slate-800/80 text-left">
-                  <span className="text-xs uppercase text-slate-500 font-bold block mb-1">Sovg'a turi</span>
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-amber-500/10 rounded-lg text-amber-400 font-bold">
-                      {selectedCheckpoint.reward_type}
-                    </div>
-                    <span className="text-sm text-slate-300 font-semibold">
-                      {selectedCheckpoint.reward_type === "COIN_BOX" ? `${selectedCheckpoint.reward_value} Tillar` 
-                       : selectedCheckpoint.reward_type === "XP_BOOST" ? `${selectedCheckpoint.reward_value} XP ballari`
-                       : `Maxsus Mukofot`}
-                    </span>
-                  </div>
+                  <span className="text-[10px] uppercase text-slate-500 font-bold block mb-1">{t("learningWorld.rewardChest")}</span>
+                  <span className="text-sm text-slate-200 font-bold">
+                    {selectedCheckpoint.reward_type === "COIN_BOX" ? `${selectedCheckpoint.reward_value} ${t("learningWorld.coins")}`
+                     : selectedCheckpoint.reward_type === "XP_BOOST" ? `${selectedCheckpoint.reward_value} ${t("learningWorld.xp")}`
+                     : `${t("learningWorld.rewardChest")}`}
+                  </span>
                 </div>
 
                 <div className="flex gap-3 mt-6">
@@ -403,23 +568,15 @@ export const AdventureMap: React.FC<AdventureMapProps> = ({ progressData, compac
                     onClick={() => setSelectedCheckpoint(null)}
                     className="flex-1 py-3 px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-2xl transition"
                   >
-                    Yopish
+                    {t("learningWorld.close")}
                   </button>
                   {selectedCheckpoint.unlocked && !selectedCheckpoint.claimed && (
                     <button
                       onClick={handleClaim}
                       disabled={claiming}
-                      className="flex-1 py-3 px-4 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-600 hover:to-yellow-500 text-slate-950 font-black rounded-2xl shadow-lg transition disabled:opacity-50"
+                      className="flex-1 py-3 px-4 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-600 hover:to-yellow-500 text-slate-950 font-black rounded-2xl shadow-lg transition"
                     >
-                      {claiming ? "Yuklanmoqda..." : "Mukofotni Ol"}
-                    </button>
-                  )}
-                  {!selectedCheckpoint.unlocked && (
-                    <button
-                      disabled
-                      className="flex-1 py-3 px-4 bg-slate-800 text-slate-500 font-bold rounded-2xl flex items-center justify-center gap-2"
-                    >
-                      <Lock className="w-4 h-4" /> Locked
+                      {t("learningWorld.claimReward")}
                     </button>
                   )}
                 </div>

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { api } from "@/lib/axios";
 import { Settings, Plus, Trash2, Edit2, Check, X, Shield, Gift, RefreshCw, Compass } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 interface Checkpoint {
   id?: string;
@@ -22,6 +23,7 @@ interface Multipliers {
 }
 
 export const GamificationAdmin: React.FC = () => {
+  const { t } = useTranslation();
   const [multipliers, setMultipliers] = useState<Multipliers>({
     practiceMultiplier: 50,
     quizMultiplier: 100,
@@ -58,7 +60,7 @@ export const GamificationAdmin: React.FC = () => {
       }
     } catch (e) {
       console.error("Failed to load gamification settings:", e);
-      toast.error("Ma'lumotlarni yuklashda xatolik yuz berdi");
+      toast.error(t("gradesPage.loadError"));
     } finally {
       setLoading(false);
     }
@@ -74,10 +76,10 @@ export const GamificationAdmin: React.FC = () => {
     try {
       const response = await api.post("/admin/gamification/settings", multipliers);
       if (response.data) {
-        toast.success("Masofa multiplikatorlari muvaffaqiyatli saqlandi!");
+        toast.success(t("settings.saveSuccess"));
       }
     } catch (error) {
-      toast.error("Multiplikatorlarni saqlashda xatolik yuz berdi");
+      toast.error(t("settings.saveError"));
     } finally {
       setSavingMultipliers(false);
     }
@@ -86,7 +88,7 @@ export const GamificationAdmin: React.FC = () => {
   const handleCheckpointSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formName || formDistance <= 0) {
-      toast.error("Iltimos, barcha majburiy maydonlarni to'ldiring");
+      toast.error(t("gradesPage.fillRequired"));
       return;
     }
 
@@ -103,19 +105,19 @@ export const GamificationAdmin: React.FC = () => {
       if (editingCheckpoint && editingCheckpoint.id) {
         const response = await api.put(`/admin/gamification/checkpoints/${editingCheckpoint.id}`, cpData);
         if (response.data) {
-          toast.success("Checkpoint muvaffaqiyatli tahrirlandi!");
+          toast.success(t("common.saved"));
           setEditingCheckpoint(null);
         }
       } else {
         const response = await api.post("/admin/gamification/checkpoints", cpData);
         if (response.data) {
-          toast.success("Yangi Checkpoint yaratildi!");
+          toast.success(t("common.saved"));
         }
       }
       resetForm();
       fetchData();
     } catch (error) {
-      toast.error("Checkpointni saqlashda xatolik yuz berdi");
+      toast.error(t("settings.saveError"));
     } finally {
       setSubmittingCheckpoint(false);
     }
@@ -131,14 +133,14 @@ export const GamificationAdmin: React.FC = () => {
   };
 
   const handleDeleteClick = async (id?: string) => {
-    if (!id || !window.confirm("Haqiqatan ham ushbu checkpointni o'chirib tashlamoqchimisiz?")) return;
+    if (!id || !window.confirm(t("gamificationAdmin.confirmDelete"))) return;
 
     try {
       await api.delete(`/admin/gamification/checkpoints/${id}`);
-      toast.success("Checkpoint muvaffaqiyatli o'chirildi");
+      toast.success(t("gradesPage.deleted"));
       fetchData();
     } catch (e) {
-      toast.error("Checkpointni o'chirishda xatolik");
+      toast.error(t("settings.saveError"));
     }
   };
 
@@ -156,7 +158,7 @@ export const GamificationAdmin: React.FC = () => {
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <div className="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-          <p className="text-sm text-slate-400">Gamification boshqaruvi yuklanmoqda...</p>
+          <p className="text-sm text-slate-400">{t("learningWorld.loadingDesc")}</p>
         </div>
       </div>
     );
@@ -164,15 +166,14 @@ export const GamificationAdmin: React.FC = () => {
 
   return (
     <div className="space-y-8 p-1">
-      {/* Page header */}
       <div className="flex items-center justify-between gap-4 border-b border-slate-800 pb-5">
         <div className="flex items-center gap-3">
           <div className="p-2.5 bg-amber-500/10 rounded-2xl text-amber-500 border border-amber-500/20">
             <Shield className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-slate-100">Gamification & Adventure Map Boshqaruvi</h1>
-            <p className="text-xs text-slate-400">O'yin qoidalari va Checkpoint mukofotlarini sozlang</p>
+            <h1 className="text-2xl font-black text-slate-100">{t("gamificationAdmin.title")}</h1>
+            <p className="text-xs text-slate-400">{t("gamificationAdmin.subtitle")}</p>
           </div>
         </div>
 
@@ -185,17 +186,16 @@ export const GamificationAdmin: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-        {/* Multipliers column */}
         <div className="lg:col-span-1 bg-slate-900/40 border border-slate-800 rounded-3xl p-6 backdrop-blur-md space-y-6">
           <div className="flex items-center gap-2.5 text-amber-400 font-bold border-b border-slate-800 pb-3 mb-2">
             <Settings className="w-5 h-5" />
-            <h3>O'yin Multiplikatorlari</h3>
+            <h3>{t("gamificationAdmin.multipliers")}</h3>
           </div>
 
           <form onSubmit={handleSaveMultipliers} className="space-y-4">
             <div>
               <label className="text-xs font-bold text-slate-400 block mb-1.5">
-                Mashq daqiqasi multiplikatori (daqiqa * metr)
+                {t("gamificationAdmin.practiceLabel")}
               </label>
               <input
                 type="number"
@@ -207,7 +207,7 @@ export const GamificationAdmin: React.FC = () => {
 
             <div>
               <label className="text-xs font-bold text-slate-400 block mb-1.5">
-                Quiz test multiplikatori (quiz * metr)
+                {t("gamificationAdmin.quizLabel")}
               </label>
               <input
                 type="number"
@@ -219,7 +219,7 @@ export const GamificationAdmin: React.FC = () => {
 
             <div>
               <label className="text-xs font-bold text-slate-400 block mb-1.5">
-                Dars multiplikatori (lesson * metr)
+                {t("gamificationAdmin.lessonLabel")}
               </label>
               <input
                 type="number"
@@ -231,7 +231,7 @@ export const GamificationAdmin: React.FC = () => {
 
             <div>
               <label className="text-xs font-bold text-slate-400 block mb-1.5">
-                Mock imtihon multiplikatori (mock * metr)
+                {t("gamificationAdmin.mockLabel")}
               </label>
               <input
                 type="number"
@@ -243,7 +243,7 @@ export const GamificationAdmin: React.FC = () => {
 
             <div>
               <label className="text-xs font-bold text-slate-400 block mb-1.5">
-                Coin multiplikatori (coin * metr)
+                {t("gamificationAdmin.coinLabel")}
               </label>
               <input
                 type="number"
@@ -255,7 +255,7 @@ export const GamificationAdmin: React.FC = () => {
 
             <div>
               <label className="text-xs font-bold text-slate-400 block mb-1.5">
-                Streak multiplikatori (kun * metr)
+                {t("gamificationAdmin.streakLabel")}
               </label>
               <input
                 type="number"
@@ -270,30 +270,28 @@ export const GamificationAdmin: React.FC = () => {
               disabled={savingMultipliers}
               className="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-xl py-3 text-sm transition disabled:opacity-50"
             >
-              {savingMultipliers ? "Saqlanmoqda..." : "Multiplikatorlarni Saqlash"}
+              {savingMultipliers ? t("gamificationAdmin.saving") : t("gamificationAdmin.saveMultipliers")}
             </button>
           </form>
         </div>
 
-        {/* Checkpoint CRUD list */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Create / Edit Form */}
           <div className="bg-slate-900/40 border border-slate-800 rounded-3xl p-6 backdrop-blur-md">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
               <h3 className="text-base font-bold text-slate-200 flex items-center gap-2">
                 <Gift className="w-5 h-5 text-emerald-400" />
-                {editingCheckpoint ? "Checkpointni Tahrirlash" : "Yangi Checkpoint Mukofoti"}
+                {editingCheckpoint ? t("gamificationAdmin.editCheckpoint") : t("gamificationAdmin.newCheckpoint")}
               </h3>
               {editingCheckpoint && (
                 <button onClick={resetForm} className="text-xs text-slate-400 hover:text-slate-200 flex items-center gap-1">
-                  <X className="w-3.5 h-3.5" /> Bekor qilish
+                  <X className="w-3.5 h-3.5" /> {t("gamificationAdmin.cancel")}
                 </button>
               )}
             </div>
 
             <form onSubmit={handleCheckpointSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="text-xs font-bold text-slate-400 block mb-1">Checkpoint Nomi *</label>
+                <label className="text-xs font-bold text-slate-400 block mb-1">{t("gamificationAdmin.checkpointName")}</label>
                 <input
                   type="text"
                   required
@@ -305,7 +303,7 @@ export const GamificationAdmin: React.FC = () => {
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-400 block mb-1">Nishon masofasi (Metrda) *</label>
+                <label className="text-xs font-bold text-slate-400 block mb-1">{t("gamificationAdmin.targetDistance")}</label>
                 <input
                   type="number"
                   required
@@ -317,7 +315,7 @@ export const GamificationAdmin: React.FC = () => {
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-400 block mb-1">Mukofot Turi *</label>
+                <label className="text-xs font-bold text-slate-400 block mb-1">{t("gamificationAdmin.rewardType")}</label>
                 <select
                   value={formRewardType}
                   onChange={(e) => setFormRewardType(e.target.value)}
@@ -332,7 +330,7 @@ export const GamificationAdmin: React.FC = () => {
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-400 block mb-1">Mukofot Qiymati (Soni / Paket ID)</label>
+                <label className="text-xs font-bold text-slate-400 block mb-1">{t("gamificationAdmin.rewardValue")}</label>
                 <input
                   type="text"
                   value={formRewardValue}
@@ -351,7 +349,7 @@ export const GamificationAdmin: React.FC = () => {
                   className="w-4 h-4 rounded text-amber-500 bg-slate-950 border-slate-800 focus:ring-0"
                 />
                 <label htmlFor="formActive" className="text-xs font-bold text-slate-300 cursor-pointer">
-                  Faol holatda (Xaritada ko'rsatilsin)
+                  {t("gamificationAdmin.activeLabel")}
                 </label>
               </div>
 
@@ -361,28 +359,27 @@ export const GamificationAdmin: React.FC = () => {
                   disabled={submittingCheckpoint}
                   className="w-full bg-emerald-600 hover:bg-emerald-700 text-slate-100 font-bold rounded-xl py-2.5 text-sm transition disabled:opacity-50"
                 >
-                  {submittingCheckpoint ? "Saqlanmoqda..." : editingCheckpoint ? "O'zgarishlarni Saqlash" : "Yangi Checkpointni Qo'shish"}
+                  {submittingCheckpoint ? t("gamificationAdmin.saving") : editingCheckpoint ? t("gamificationAdmin.saveCheckpoint") : t("gamificationAdmin.addCheckpoint")}
                 </button>
               </div>
             </form>
           </div>
 
-          {/* List check points */}
           <div className="bg-slate-900/40 border border-slate-800 rounded-3xl p-6 backdrop-blur-md">
             <h3 className="text-base font-bold text-slate-200 border-b border-slate-800 pb-3 mb-4 flex items-center gap-2">
               <Compass className="w-5 h-5 text-indigo-400" />
-              Mavjud Checkpointlar Ro'yxati
+              {t("gamificationAdmin.listTitle")}
             </h3>
 
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse text-sm">
                 <thead>
                   <tr className="border-b border-slate-800 text-slate-400 font-bold">
-                    <th className="pb-3 pr-2">Nom</th>
-                    <th className="pb-3 pr-2">Masofa</th>
-                    <th className="pb-3 pr-2">Mukofot</th>
-                    <th className="pb-3 pr-2 text-center">Status</th>
-                    <th className="pb-3 text-right">Amallar</th>
+                    <th className="pb-3 pr-2">{t("gamificationAdmin.nameCol")}</th>
+                    <th className="pb-3 pr-2">{t("gamificationAdmin.distanceCol")}</th>
+                    <th className="pb-3 pr-2">{t("gamificationAdmin.rewardCol")}</th>
+                    <th className="pb-3 pr-2 text-center">{t("gamificationAdmin.statusCol")}</th>
+                    <th className="pb-3 text-right">{t("gamificationAdmin.actionsCol")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/60">
@@ -398,7 +395,7 @@ export const GamificationAdmin: React.FC = () => {
                       </td>
                       <td className="py-3.5 pr-2 text-center">
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${cp.active ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'}`}>
-                          {cp.active ? "Faol" : "No-faol"}
+                          {cp.active ? t("gamificationAdmin.active") : t("gamificationAdmin.inactive")}
                         </span>
                       </td>
                       <td className="py-3.5 text-right space-x-2">
@@ -420,7 +417,7 @@ export const GamificationAdmin: React.FC = () => {
                   {checkpoints.length === 0 && (
                     <tr>
                       <td colSpan={5} className="py-6 text-center text-slate-500">
-                        Hozircha hech qanday checkpoint mukofoti yaratilmagan.
+                        {t("gamificationAdmin.emptyList")}
                       </td>
                     </tr>
                   )}
