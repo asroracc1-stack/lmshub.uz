@@ -300,6 +300,14 @@
     "tryBtn": "Попробовать",
     "startBtn": "Начать",
     "viewPackBtn": "Посмотреть пакет",
+    "completedBtn": "Выполненные",
+    "completedBadge": "Выполнено - {{score}}/{{max}}",
+    "reviewBtn": "Просмотр",
+    "retakeBtn": "Заново",
+    "paginationPrev": "Назад",
+    "paginationNext": "Вперед",
+    "retakeSuccess": "Предыдущая попытка удалена. Вы можете начать заново.",
+    "retakeError": "Произошла ошибка",
     "newBtn": "Новый",
     "filter": {
       "all": "Все",
@@ -1891,5 +1899,29 @@
       "confirmDelete": "Вы уверены, что хотите удалить этот чекпоинт?",
       "saving": "Сохранение..."
     }
+  },
+  "account": {
+    "invites": "Приглашения",
+    "feedback": "Оставить отзыв",
+    "pleaseEnterText": "Пожалуйста, введите текст отзыва",
+    "feedbackSuccess": "Спасибо! Ваш отзыв был успешно принят.",
+    "phone": "Телефон",
+    "username": "Имя пользователя",
+    "myCode": "Мой инвайт-код",
+    "coins": "Монеты",
+    "totalReferral": "Всего приглашено",
+    "referredBy": "Кто пригласил",
+    "noOne": "Никто",
+    "inviteLinkTitle": "Ваша ссылка-приглашение",
+    "inviteLinkDesc": "Когда ваш друг регистрируется по вашей ссылке и выполняет хотя бы один тест или упражнение по лексике, вы оба получаете {{count}} монет.",
+    "inviteLinkLabel": "Ссылка для приглашения",
+    "myInvites": "Приглашенные мной",
+    "userCount": "Пользователей: {{count}}",
+    "noInvitesYet": "Вы еще никого не пригласили",
+    "feedbackDesc": "Оставьте предложение или сообщите о проблеме",
+    "feedbackSubject": "Тема (необязательно)",
+    "feedbackComment": "Отзыв",
+    "feedbackPlaceholder": "Напишите что-нибудь...",
+    "sendBtn": "Отправить"
   }
 }

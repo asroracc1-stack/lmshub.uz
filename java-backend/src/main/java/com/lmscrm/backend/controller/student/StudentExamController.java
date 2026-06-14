@@ -33,7 +33,7 @@ public class StudentExamController {
     private final GeminiService geminiService;
 
     @PostMapping("/grade")
-    @PreAuthorize("hasRole('STUDENT')")
+    @PreAuthorize("hasAnyRole('STUDENT', 'USER')")
     @Operation(summary = "Instant AI Grading", description = "Uses AI to immediately grade Writing or Speaking responses.")
     public ResponseEntity<String> gradeMock(@RequestBody ParseAiRequest request) {
         return ResponseEntity.ok(geminiService.analyzeIeltsWriting(request.getText(), request.getTaskType() != null ? request.getTaskType() : "IELTS Writing"));
@@ -41,7 +41,7 @@ public class StudentExamController {
 
 
     @GetMapping("/{examId}")
-    @PreAuthorize("hasRole('STUDENT')")
+    @PreAuthorize("hasAnyRole('STUDENT', 'USER')")
     @Operation(
             summary = "Get Exam Details",
             description = "Returns metadata about an exam (duration, passing score, etc.) before the student starts it."
@@ -51,7 +51,7 @@ public class StudentExamController {
     }
 
     @PostMapping("/{examId}/start")
-    @PreAuthorize("hasRole('STUDENT')")
+    @PreAuthorize("hasAnyRole('STUDENT', 'USER')")
     @Operation(
             summary = "Start Exam",
             description = "Creates a new exam attempt for the student, recording the start time. Checks if the exam is currently active."
@@ -64,7 +64,7 @@ public class StudentExamController {
     }
 
     @GetMapping("/{examId}/questions")
-    @PreAuthorize("hasRole('STUDENT')")
+    @PreAuthorize("hasAnyRole('STUDENT', 'USER')")
     @Operation(
             summary = "Get Exam Questions",
             description = "Returns the list of questions and options for an exam. IMPORTANT: Correct answers are hidden from the student."
@@ -74,7 +74,7 @@ public class StudentExamController {
     }
 
     @PostMapping("/submit")
-    @PreAuthorize("hasRole('STUDENT')")
+    @PreAuthorize("hasAnyRole('STUDENT', 'USER')")
     @Operation(
             summary = "Submit Exam",
             description = "Submits the student's selected answers, auto-grades the exam, updates their score, and applies gamification logic if passed."
@@ -86,12 +86,31 @@ public class StudentExamController {
     }
 
     @GetMapping("/attempts")
-    @PreAuthorize("hasRole('STUDENT')")
+    @PreAuthorize("hasAnyRole('STUDENT', 'USER')")
     @Operation(
             summary = "Get My Exam Attempts",
             description = "Returns the history of all exams the student has taken, along with their scores and pass/fail status."
     )
     public ResponseEntity<List<StudentAttemptDto>> getMyAttempts(@AuthenticationPrincipal User user) {
         return ResponseEntity.ok(attemptService.getMyAttempts(user.getId()));
+    }
+
+    @DeleteMapping("/{examId}/attempt")
+    @PreAuthorize("hasAnyRole('STUDENT', 'USER')")
+    @Operation(summary = "Delete My Exam Attempt (Retake)", description = "Deletes the student's attempt and answers for a specific exam to allow retaking it.")
+    public ResponseEntity<Void> deleteMyAttempt(
+            @PathVariable UUID examId,
+            @AuthenticationPrincipal User user) {
+        attemptService.deleteAttempt(examId, user);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{examId}/result")
+    @PreAuthorize("hasAnyRole('STUDENT', 'USER')")
+    @Operation(summary = "Get Completed Exam Result", description = "Retrieves the graded result details for a completed exam attempt.")
+    public ResponseEntity<com.lmscrm.backend.dto.exam.ExamResultDto> getExamResult(
+            @PathVariable UUID examId,
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(examService.getExamResult(examId, user));
     }
 }

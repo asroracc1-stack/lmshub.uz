@@ -5,6 +5,8 @@ import com.lmscrm.backend.dto.exam.ExamSubmitRequest;
 import com.lmscrm.backend.service.exam.ExamService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import com.lmscrm.backend.domain.entity.User;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -15,7 +17,9 @@ public class MockSubmissionController {
     private final ExamService examService;
 
     @PostMapping("/submit")
-    public ResponseEntity<ExamResultDto> submitExam(@RequestBody ExamSubmitRequest request) {
-        return ResponseEntity.ok(examService.submitExam(request));
+    public ResponseEntity<ExamResultDto> submitExam(
+            @RequestBody ExamSubmitRequest request,
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(examService.submitExam(request, user));
     }
 }

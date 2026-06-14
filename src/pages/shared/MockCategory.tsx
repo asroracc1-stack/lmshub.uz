@@ -17,7 +17,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   ArrowLeft, ArrowRight, BookOpen, Clock, Crown, FileText, Headphones,
   Layers, Leaf, Loader2, Mic, PenLine, Plus, Search, Sparkles, Pencil, Trash2,
-  Target, Landmark, Lock, Zap, Star,
+  Layers, Leaf, Loader2, Mic, PenLine, Plus, Search, Sparkles, Pencil, Trash2,
+  Target, Landmark, Lock, Zap, Star, CheckCircle2, ChevronLeft, ChevronRight
 } from "lucide-react";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -91,6 +92,10 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
   const [difficulty, setDifficulty] = useState<string>("all");
   const [partType, setPartType] = useState<string>("all");
   const [access, setAccess] = useState<"all" | "free" | "pack">("all");
+  const [attempts, setAttempts] = useState<any[]>([]);
+  const [showOnlyCompleted, setShowOnlyCompleted] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const loadTests = async () => {
     if (!kind) return;
@@ -111,7 +116,20 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
     setLoading(false);
   };
 
-  useEffect(() => { loadTests(); }, [kind, canManage]);
+  const loadAttempts = async () => {
+    try {
+      const { data } = await api.get("/student/exams/attempts");
+      setAttempts(data);
+    } catch (e) {
+      console.error("Failed to load attempts:", e);
+    }
+  };
+
+  useEffect(() => { loadTests(); loadAttempts(); }, [kind, canManage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, difficulty, partType, access, showOnlyCompleted]);
 
   const onDelete = async (id: string) => {
     try {
@@ -128,9 +146,17 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
       if (partType !== "all" && String(t.part_type ?? "all") !== partType) return false;
       if (access === "free" && t.required_pack && t.required_pack !== "free") return false;
       if (access === "pack" && (!t.required_pack || t.required_pack === "free")) return false;
+      if (showOnlyCompleted && !attempts.some(a => a.examId === t.id)) return false;
       return true;
     });
-  }, [tests, search, difficulty, partType, access]);
+  }, [tests, search, difficulty, partType, access, showOnlyCompleted, attempts]);
+
+  const paginatedTests = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filtered.slice(start, start + itemsPerPage);
+  }, [filtered, currentPage]);
+  
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
 
   if (!kind || !META[kind as Kind]) {
     return <div className="p-8 text-center text-muted-foreground">{t("mockCategory.unknownSection")}</div>;
@@ -197,7 +223,20 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
               {a.l}
               <span className="ml-1.5 opacity-60 text-xs">({a.cnt})</span>
             </button>
+            </button>
           ))}
+          <div className="w-px h-6 bg-slate-200 dark:bg-white/10 mx-1"></div>
+          <Button
+            variant={showOnlyCompleted ? "default" : "outline"}
+            onClick={() => setShowOnlyCompleted(!showOnlyCompleted)}
+            className={cn(
+              "rounded-full gap-2 text-sm font-bold transition-all duration-200 border-emerald-500 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/20",
+              showOnlyCompleted && "bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-500"
+            )}
+          >
+            <CheckCircle2 className="h-4 w-4" />
+            {t("mockCategory.completedBtn")} ({tests.filter(t => attempts.some(a => a.examId === t.id)).length})
+          </Button>
           {canManage && (
             <Button size="sm" asChild className="ml-2 rounded-xl">
               <Link to={`${basePath}/mocks/new`}><Plus className="h-4 w-4 mr-1" />{t("mockCategory.newBtn")}</Link>
@@ -236,18 +275,19 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
               <p className="text-sm text-muted-foreground font-medium">{t("mockCategory.loading")}</p>
             </div>
-          ) : filtered.length === 0 ? (
+          ) : paginatedTests.length === 0 ? (
             <Card className="p-12 text-center text-muted-foreground rounded-2xl border-dashed">
               {t("mockCategory.noTests")}
             </Card>
           ) : (
-            filtered.map((test, i) => {
+            paginatedTests.map((test, i) => {
               const diff = DIFFICULTY_META[test.difficulty ?? "easy"] ?? DIFFICULTY_META.easy;
               const DIcon = diff.icon;
               const packType = getPackType(test.required_pack);
               const theme = PACK_THEME[packType];
               const BtnIcon = theme.buttonIcon;
               const BadgeIconComp = theme.badgeIcon;
+              const attempt = attempts.find(a => a.examId === test.id);
 
               // Check if user can access this test based on their subscription
               const isLocked = !canAccessPack(packAccess, test.required_pack, canManage);
@@ -305,6 +345,12 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
                         </div>
 
                         <div className="flex items-center gap-2 flex-wrap">
+                          {attempt && (
+                            <Badge className="rounded-full text-[11px] font-bold bg-emerald-500/15 text-emerald-700 border-emerald-500/30 dark:text-emerald-400">
+                              <CheckCircle2 className="h-3 w-3 mr-1" />
+                              {t("mockCategory.completedBadge", { score: attempt.totalScore ?? attempt.overallBand ?? 0, max: attempt.maxScore ?? (kind === "sat" ? 800 : (kind === "national_cert" ? 100 : 9.0)) })}
+                            </Badge>
+                          )}
                           <Badge variant="outline" className="rounded-full text-[11px] font-medium bg-white/60 dark:bg-white/5">
                             <Clock className="h-3 w-3 mr-1" /> {test.duration_minutes ?? 60} {t("mockCategory.minutesShort")}
                           </Badge>
@@ -369,6 +415,34 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
                           >
                             {t("mockCategory.tryBtn")} <Lock className="h-4 w-4 ml-1.5" />
                           </Button>
+                        ) : attempt ? (
+                          <>
+                            <Button
+                              asChild
+                              size="lg"
+                              variant="outline"
+                              className="rounded-xl h-11 px-6 font-bold text-sm transition-all duration-300 border-emerald-500 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/20"
+                            >
+                              <Link to={`${basePath}/mocks/take/${test.id}?review=true`}>
+                                {t("mockCategory.reviewBtn")}
+                              </Link>
+                            </Button>
+                            <Button
+                              size="lg"
+                              className="rounded-xl h-11 px-6 font-bold text-sm transition-all duration-300 bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/25"
+                              onClick={async () => {
+                                try {
+                                  await api.delete(`/student/exams/${test.id}/attempt`);
+                                  loadAttempts();
+                                  toast.success(t("mockCategory.retakeSuccess", { defaultValue: "Avvalgi urinish bekor qilindi. Qaytadan topshirishingiz mumkin." }));
+                                } catch (e) {
+                                  toast.error(t("mockCategory.retakeError", { defaultValue: "Xatolik yuz berdi" }));
+                                }
+                              }}
+                            >
+                              {t("mockCategory.retakeBtn")}
+                            </Button>
+                          </>
                         ) : (
                           <Button
                             asChild
@@ -394,6 +468,45 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
             })
           )}
         </div>
+
+        {totalPages > 1 && (
+          <div className="flex justify-center items-center gap-1 mt-8 pb-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
+              disabled={currentPage === 1}
+              className="rounded-xl gap-1 text-slate-500 hover:text-slate-800 dark:hover:text-white disabled:opacity-50"
+            >
+              <ChevronLeft className="h-4 w-4" /> {t("mockCategory.paginationPrev")}
+            </Button>
+            
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                onClick={() => setCurrentPage(page)}
+                className={cn(
+                  "h-8 w-8 rounded-full text-sm font-bold flex items-center justify-center transition-all",
+                  currentPage === page
+                    ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20"
+                    : "text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-white/5"
+                )}
+              >
+                {page}
+              </button>
+            ))}
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="rounded-xl gap-1 text-slate-500 hover:text-slate-800 dark:hover:text-white disabled:opacity-50"
+            >
+              {t("mockCategory.paginationNext")} <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
 
         {/* Filters sidebar */}
         <Card className="p-5 h-fit lg:sticky lg:top-4 space-y-5 rounded-2xl border shadow-sm">

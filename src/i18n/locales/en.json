@@ -300,6 +300,14 @@
     "tryBtn": "Try test",
     "startBtn": "Start",
     "viewPackBtn": "View Pack",
+    "completedBtn": "Completed",
+    "completedBadge": "Done - {{score}}/{{max}}",
+    "reviewBtn": "Review",
+    "retakeBtn": "Retake",
+    "paginationPrev": "Prev",
+    "paginationNext": "Next",
+    "retakeSuccess": "Previous attempt cleared. You can now retake the test.",
+    "retakeError": "An error occurred",
     "newBtn": "New",
     "filter": {
       "all": "All",
@@ -1891,5 +1899,29 @@
       "confirmDelete": "Are you sure you want to delete this checkpoint?",
       "saving": "Saving..."
     }
+  },
+  "account": {
+    "invites": "Invites",
+    "feedback": "Leave Feedback",
+    "pleaseEnterText": "Please enter feedback message",
+    "feedbackSuccess": "Thank you! Your feedback has been received.",
+    "phone": "Phone",
+    "username": "Username",
+    "myCode": "My Invite Code",
+    "coins": "Coins",
+    "totalReferral": "Total Referrals",
+    "referredBy": "Referred By",
+    "noOne": "No one",
+    "inviteLinkTitle": "Your Invite Link",
+    "inviteLinkDesc": "When your friend signs up via your link and completes at least one test or vocabulary exercise, you both receive {{count}} coins.",
+    "inviteLinkLabel": "Invite link",
+    "myInvites": "My Invites",
+    "userCount": "{{count}} users",
+    "noInvitesYet": "You have not invited anyone yet",
+    "feedbackDesc": "Leave a suggestion or report an issue",
+    "feedbackSubject": "Subject (optional)",
+    "feedbackComment": "Feedback",
+    "feedbackPlaceholder": "Write something...",
+    "sendBtn": "Send"
   }
 }

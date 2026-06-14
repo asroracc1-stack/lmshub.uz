@@ -152,4 +152,13 @@ public class StudentAttemptService {
                 .map(mapper::toStudentAttemptDto)
                 .collect(Collectors.toList());
     }
+
+    @Transactional
+    public void deleteAttempt(UUID examId, User student) {
+        attemptRepository.findByExamIdAndStudentId(examId, student.getId())
+                .ifPresent(attempt -> {
+                    answerRepository.deleteByAttemptId(attempt.getId());
+                    attemptRepository.delete(attempt);
+                });
+    }
 }

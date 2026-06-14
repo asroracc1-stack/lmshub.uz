@@ -26,6 +26,8 @@ public class ExamService {
     private final QuestionRepository questionRepository;
     private final QuestionOptionRepository optionRepository;
     private final OrganizationRepository organizationRepository;
+    private final StudentAttemptRepository studentAttemptRepository;
+    private final StudentAnswerRepository studentAnswerRepository;
     private final ExamMapper mapper;
 
     @Transactional(readOnly = true)
@@ -243,7 +245,7 @@ public class ExamService {
     }
 
     @Transactional
-    public ExamResultDto submitExam(ExamSubmitRequest request) {
+    public ExamResultDto submitExam(ExamSubmitRequest request, User user) {
         Exam exam = examRepository.findById(request.getExam_id())
                 .orElseThrow(() -> new ResourceNotFoundException("Exam not found: " + request.getExam_id()));
 
@@ -276,11 +278,109 @@ public class ExamService {
         String kind = exam.getType().name().toLowerCase();
         double band = IeltsGradingUtils.rawToBand(kind, correctCount, questions.size());
 
+        if (user != null) {
+            java.util.Optional<StudentAttempt> attemptOpt = studentAttemptRepository.findByExamIdAndStudentId(exam.getId(), user.getId());
+            StudentAttempt attempt;
+            if (attemptOpt.isPresent()) {
+                attempt = attemptOpt.get();
+                studentAnswerRepository.deleteByAttemptId(attempt.getId());
+            } else {
+                attempt = new StudentAttempt();
+                attempt.setExam(exam);
+                attempt.setStudent(user);
+            }
+            attempt.setStartedAt(java.time.LocalDateTime.now().minusMinutes(exam.getDurationMinutes() != null ? exam.getDurationMinutes() : 60));
+            attempt.setFinishedAt(java.time.LocalDateTime.now());
+            attempt.setTotalScore(correctCount);
+            attempt.setMaxScore(questions.size());
+            attempt.setIsPassed(correctCount >= exam.getPassingScore());
+            attempt.setOverallBand(band);
+            attempt = studentAttemptRepository.save(attempt);
+
+            for (Question q : questions) {
+                String userAns = request.getAnswers().get(q.getId().toString());
+                List<QuestionOption> options = optionRepository.findByQuestionIdOrderByPositionOrderAsc(q.getId());
+                
+                QuestionOption selectedOption = null;
+                if (userAns != null && !userAns.trim().isEmpty()) {
+                    selectedOption = options.stream()
+                            .filter(o -> o.getText().equalsIgnoreCase(userAns.trim()))
+                            .findFirst()
+                            .orElse(null);
+                }
+
+                String correctAns = options.stream()
+                        .filter(QuestionOption::getIsCorrect)
+                        .map(QuestionOption::getText)
+                        .findFirst()
+                        .orElse("");
+                boolean isCorrect = IeltsGradingUtils.checkAnswer(userAns, correctAns);
+
+                StudentAnswer answer = StudentAnswer.builder()
+                        .attempt(attempt)
+                        .question(q)
+                        .selectedOption(selectedOption)
+                        .isCorrect(isCorrect)
+                        .pointsEarned(isCorrect ? q.getPoints() : 0)
+                        .build();
+                studentAnswerRepository.save(answer);
+            }
+        }
+
         return ExamResultDto.builder()
                 .kind(kind)
                 .correct(correctCount)
                 .total(questions.size())
                 .bandScore(band)
+                .detail(details)
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public ExamResultDto getExamResult(UUID examId, User student) {
+        StudentAttempt attempt = studentAttemptRepository.findByExamIdAndStudentId(examId, student.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("No attempt found for this exam"));
+
+        List<Question> questions = questionRepository.findByExamIdOrderByPositionOrderAsc(examId);
+        List<StudentAnswer> answers = studentAnswerRepository.findByAttemptId(attempt.getId());
+        java.util.Map<UUID, StudentAnswer> answerMap = answers.stream()
+                .collect(Collectors.toMap(a -> a.getQuestion().getId(), a -> a));
+
+        List<ExamResultDto.QuestionDetail> details = new ArrayList<>();
+        int correctCount = 0;
+
+        for (Question q : questions) {
+            StudentAnswer answer = answerMap.get(q.getId());
+            String userAns = "";
+            boolean ok = false;
+            if (answer != null) {
+                userAns = answer.getSelectedOption() != null ? answer.getSelectedOption().getText() : "";
+                ok = answer.getIsCorrect() != null && answer.getIsCorrect();
+                correctCount += (answer.getPointsEarned() != null) ? answer.getPointsEarned() : 0;
+            }
+
+            List<QuestionOption> options = optionRepository.findByQuestionIdOrderByPositionOrderAsc(q.getId());
+            String correctAns = options.stream()
+                    .filter(QuestionOption::getIsCorrect)
+                    .map(QuestionOption::getText)
+                    .findFirst()
+                    .orElse("");
+
+            details.add(ExamResultDto.QuestionDetail.builder()
+                    .questionId(q.getId().toString())
+                    .userAns(userAns)
+                    .correctAns(correctAns)
+                    .ok(ok)
+                    .build());
+        }
+
+        String kind = attempt.getExam().getType().name().toLowerCase();
+        
+        return ExamResultDto.builder()
+                .kind(kind)
+                .correct(attempt.getTotalScore() != null ? attempt.getTotalScore() : correctCount)
+                .total(attempt.getMaxScore() != null ? attempt.getMaxScore() : questions.size())
+                .bandScore(attempt.getOverallBand() != null ? attempt.getOverallBand() : 0.0)
                 .detail(details)
                 .build();
     }

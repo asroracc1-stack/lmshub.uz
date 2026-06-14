@@ -48,4 +48,16 @@ public class SupportController {
             @RequestParam(required = false) String comment) {
         return ResponseEntity.ok(feedbackService.updateFeedbackStatus(id, status, comment));
     }
+
+    @PostMapping("/feedback")
+    public ResponseEntity<FeedbackDto> createFeedback(
+            @RequestBody java.util.Map<String, String> payload,
+            @AuthenticationPrincipal User user) {
+        String subject = payload.get("subject");
+        String message = payload.get("message");
+        if (message == null || message.trim().isEmpty()) {
+            throw new IllegalArgumentException("Message cannot be empty");
+        }
+        return ResponseEntity.ok(feedbackService.createFeedback(subject, message, user));
+    }
 }

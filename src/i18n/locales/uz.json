@@ -300,6 +300,14 @@
     "tryBtn": "Sinab ko'rish",
     "startBtn": "Boshlash",
     "viewPackBtn": "Packni ko'rish",
+    "completedBtn": "Bajarilganlar",
+    "completedBadge": "Bajarildi - {{score}}/{{max}}",
+    "reviewBtn": "Ko'rib chiqish",
+    "retakeBtn": "Qaytadan",
+    "paginationPrev": "Oldingi",
+    "paginationNext": "Keyingi",
+    "retakeSuccess": "Avvalgi urinish bekor qilindi. Qaytadan topshirishingiz mumkin.",
+    "retakeError": "Xatolik yuz berdi",
     "newBtn": "Yangi",
     "filter": {
       "all": "Barchasi",
@@ -1891,5 +1899,29 @@
       "confirmDelete": "Haqiqatan ham ushbu checkpointni o'chirib tashlamoqchimisiz?",
       "saving": "Saqlanmoqda..."
     }
+  },
+  "account": {
+    "invites": "Takliflar",
+    "feedback": "Izoh qoldirish",
+    "pleaseEnterText": "Matn kiriting",
+    "feedbackSuccess": "Rahmat! Izohingiz qabul qilindi.",
+    "phone": "Telefon",
+    "username": "Username",
+    "myCode": "Mening kodim",
+    "coins": "Coin",
+    "totalReferral": "Jami referral",
+    "referredBy": "Meni taklif qilgan",
+    "noOne": "Hech kim",
+    "inviteLinkTitle": "Sizning invite havolangiz",
+    "inviteLinkDesc": "Do'stingiz havola orqali ro'yxatdan o'tib, kamida bitta test yoki vocabulary mashqini bajarsa, ikkalangiz ham {{count}} coin olasiz.",
+    "inviteLinkLabel": "Invite link",
+    "myInvites": "Taklif qilganlarim",
+    "userCount": "{{count}} ta foydalanuvchi",
+    "noInvitesYet": "Hali hech kimni taklif qilmagansiz",
+    "feedbackDesc": "Taklif yoki muammo yozib qoldiring",
+    "feedbackSubject": "Mavzu (ixtiyoriy)",
+    "feedbackComment": "Izoh",
+    "feedbackPlaceholder": "Yozing...",
+    "sendBtn": "Yuborish"
   }
 }

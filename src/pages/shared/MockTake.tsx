@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useParams, useNavigate, useBlocker, useBeforeUnload } from "react-router-dom";
+import { useParams, useNavigate, useBlocker, useBeforeUnload, useSearchParams } from "react-router-dom";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -489,6 +489,8 @@ export default function MockTake() {
   const { theme, toggle } = useTheme();
   const { testId } = useParams();
   const nav = useNavigate();
+  const [searchParams] = useSearchParams();
+  const isReviewMode = searchParams.get("review") === "true";
 
   const [exam, setExam] = useState<ExamData | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -613,7 +615,17 @@ export default function MockTake() {
             setAnswers(parsed);
             toast.info("Oldingi javoblaringiz tiklandi", { duration: 3000 });
           }
-        } catch { /* ignore */ }
+        if (isReviewMode) {
+          api.get(`/student/exams/${testId}/result`)
+            .then((resResult) => {
+              setResult(resResult.data);
+              setStarted(true); // to skip the "Start" screen
+            })
+            .catch((err) => {
+              console.error("Failed to load exam result review:", err);
+              toast.error("Natijani yuklashda xatolik yuz berdi");
+            });
+        }
       })
       .catch((err) => {
         const msg = err?.response?.data?.message ?? err?.message ?? "Exam yuklanmadi";
@@ -621,7 +633,7 @@ export default function MockTake() {
         toast.error(msg);
       })
       .finally(() => setLoading(false));
-  }, [testId]);
+  }, [testId, isReviewMode]);
 
   // ⌨️ Keyboard shortcuts
   useEffect(() => {

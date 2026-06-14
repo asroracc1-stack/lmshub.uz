@@ -39,10 +39,20 @@ public class ReferralController {
 
         long inviteCount = userRepository.countByReferredBy(user.getId());
 
+        String referredByName = null;
+        if (user.getReferredBy() != null) {
+            Optional<User> referrerOpt = userRepository.findById(user.getReferredBy());
+            if (referrerOpt.isPresent()) {
+                User referrer = referrerOpt.get();
+                referredByName = referrer.getFullName() != null ? referrer.getFullName() : referrer.getUsername();
+            }
+        }
+
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("referralCode", user.getReferralCode());
         result.put("coins", user.getCoins() != null ? user.getCoins() : 0L);
         result.put("inviteCount", inviteCount);
+        result.put("referredByName", referredByName);
         return ResponseEntity.ok(result);
     }
 
