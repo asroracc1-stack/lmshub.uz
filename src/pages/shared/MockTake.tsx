@@ -615,6 +615,8 @@ export default function MockTake() {
             setAnswers(parsed);
             toast.info("Oldingi javoblaringiz tiklandi", { duration: 3000 });
           }
+        } catch { /* ignore */ }
+        
         if (isReviewMode) {
           api.get(`/student/exams/${testId}/result`)
             .then((resResult) => {

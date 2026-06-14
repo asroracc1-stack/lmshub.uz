@@ -223,7 +223,6 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
               {a.l}
               <span className="ml-1.5 opacity-60 text-xs">({a.cnt})</span>
             </button>
-            </button>
           ))}
           <div className="w-px h-6 bg-slate-200 dark:bg-white/10 mx-1"></div>
           <Button
