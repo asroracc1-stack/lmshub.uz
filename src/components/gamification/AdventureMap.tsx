@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Gift, Lock, Check, Compass, Star, Trophy, Award, MapPin, Sun, Moon, CloudRain, CloudSnow } from "lucide-react";
+import { Gift, Lock, Check, Compass, Star, Trophy, Award, MapPin, ArrowRight, Flame, ChevronRight, User } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/axios";
 import confetti from "canvas-confetti";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
+import { Link, useNavigate } from "react-router-dom";
 
 interface Checkpoint {
   id: string;
@@ -30,50 +31,17 @@ interface AdventureMapProps {
   };
   compact?: boolean;
   onRefresh?: () => void;
-  forcedWeather?: string;
 }
 
-export const AdventureMap: React.FC<AdventureMapProps> = ({ progressData, compact = false, onRefresh, forcedWeather }) => {
+export const AdventureMap: React.FC<AdventureMapProps> = ({ progressData, compact = false, onRefresh }) => {
   const { total_distance, current_region, xp, coins, streak, checkpoints, progress_percentage } = progressData;
   const { theme } = useTheme();
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const isDark = theme === "dark";
 
   const [selectedCheckpoint, setSelectedCheckpoint] = useState<Checkpoint | null>(null);
   const [claiming, setClaiming] = useState(false);
-
-  // Weather system
-  const [weather, setWeather] = useState<"sunny" | "night" | "rain" | "snow">("sunny");
-  useEffect(() => {
-    if (forcedWeather) {
-      setWeather(forcedWeather as any);
-      return;
-    }
-    const min = new Date().getMinutes();
-    const weatherIndex = min % 4;
-    const weatherTypes: ("sunny" | "night" | "rain" | "snow")[] = ["sunny", "night", "rain", "snow"];
-    setWeather(weatherTypes[weatherIndex]);
-  }, [forcedWeather]);
-
-  // SVG dimensions
-  const viewWidth = 1200;
-  const viewHeight = compact ? 260 : 700;
-
-  const pathD = compact
-    ? "M 50 130 Q 300 20, 600 130 T 1150 130"
-    : "M 100 120 C 350 40, 450 240, 250 320 C 50 380, 200 560, 550 480 C 850 400, 1050 560, 950 600 C 850 630, 950 250, 1050 120";
-
-  // Translate Region names dynamically
-  const regions = [
-    { name: t("learningWorld.regions.startVillage"), keyName: "Start Village", x: compact ? 50 : 100, y: compact ? 130 : 120, minDistance: 0, icon: "🏠", color: "from-amber-400 to-orange-500" },
-    { name: t("learningWorld.regions.readingForest"), keyName: "Reading Forest", x: compact ? 220 : 280, y: compact ? 90 : 140, minDistance: 50000, icon: "📚", color: "from-emerald-400 to-green-600" },
-    { name: t("learningWorld.regions.listeningOcean"), keyName: "Listening Ocean", x: compact ? 380 : 360, y: compact ? 110 : 250, minDistance: 120000, icon: "🎧", color: "from-blue-400 to-cyan-500" },
-    { name: t("learningWorld.regions.writingCity"), keyName: "Writing City", x: compact ? 540 : 190, y: compact ? 130 : 380, minDistance: 200000, icon: "✍️", color: "from-indigo-400 to-purple-600" },
-    { name: t("learningWorld.regions.speakingArena"), keyName: "Speaking Arena", x: compact ? 700 : 390, y: compact ? 110 : 490, minDistance: 280000, icon: "🎤", color: "from-rose-400 to-pink-600" },
-    { name: t("learningWorld.regions.nationalCertKingdom"), keyName: "National Certificate Kingdom", x: compact ? 860 : 680, y: compact ? 90 : 450, minDistance: 350000, icon: "🎓", color: "from-purple-500 to-indigo-700" },
-    { name: t("learningWorld.regions.satSpaceAcademy"), keyName: "SAT Space Academy", x: compact ? 1020 : 930, y: compact ? 130 : 540, minDistance: 420000, icon: "🚀", color: "from-violet-500 to-fuchsia-700" },
-    { name: t("learningWorld.regions.masterCastle"), keyName: "LMSHub Master Castle", x: compact ? 1150 : 1050, y: compact ? 130 : 120, minDistance: 480000, icon: "👑", color: "from-yellow-400 to-amber-600" },
-  ];
 
   // Helper to translate current region name
   const getLocalizedCurrentRegion = (regKey: string) => {
@@ -89,6 +57,150 @@ export const AdventureMap: React.FC<AdventureMapProps> = ({ progressData, compac
     if (lowerKey.includes("castle") || lowerKey.includes("qal'a") || lowerKey.includes("qala")) return t("learningWorld.regions.masterCastle");
     return regKey;
   };
+
+  // Find next reward checkpoint
+  const nextCheckpoint = checkpoints?.find(cp => !cp.claimed);
+
+  const getChestRarity = (targetDistance: number) => {
+    if (targetDistance <= 120000) return { name: t("learningWorld.chests.common"), color: "#10B981", bg: "bg-emerald-500/10 border-emerald-500/30", iconColor: "text-emerald-400" };
+    if (targetDistance <= 280000) return { name: t("learningWorld.chests.rare"), color: "#3B82F6", bg: "bg-blue-500/10 border-blue-500/30", iconColor: "text-blue-400" };
+    if (targetDistance <= 420000) return { name: t("learningWorld.chests.epic"), color: "#8B5CF6", bg: "bg-purple-500/10 border-purple-500/30", iconColor: "text-purple-400" };
+    return { name: t("learningWorld.chests.legendary"), color: "#F59E0B", bg: "bg-amber-500/10 border-amber-500/30", iconColor: "text-amber-400" };
+  };
+
+  const handleClaim = async () => {
+    if (!selectedCheckpoint) return;
+    setClaiming(true);
+    try {
+      const response = await api.post(`/user/gamification/claim/${selectedCheckpoint.id}`);
+      if (response.data?.success) {
+        confetti({
+          particleCount: 180,
+          spread: 90,
+          origin: { y: 0.6 },
+          colors: ["#F59E0B", "#10B981", "#3B82F6", "#8B5CF6"]
+        });
+        toast.success(t("learningWorld.successClaim"));
+        setSelectedCheckpoint(null);
+        if (onRefresh) onRefresh();
+      } else {
+        toast.error(response.data?.message || t("learningWorld.errorClaim"));
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || t("learningWorld.errorClaim"));
+    } finally {
+      setClaiming(false);
+    }
+  };
+
+  // ----------------------------------------------------
+  // COMPACT VERSION: Premium SaaS HUD Card, NO SVG MAP
+  // ----------------------------------------------------
+  if (compact) {
+    return (
+      <div className={`relative w-full overflow-hidden rounded-[2rem] border p-6 md:p-8 shadow-xl transition-all duration-500 ${
+        isDark 
+          ? "bg-slate-900/40 border-white/5 shadow-slate-950/50 backdrop-blur-md" 
+          : "bg-white border-slate-100 shadow-slate-200/40"
+      }`}>
+        <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-[80px] -z-10 pointer-events-none" />
+        
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-2.5">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-gradient-to-tr from-amber-500 to-yellow-400 rounded-2xl text-slate-950 shadow-md">
+                <Compass className="w-5 h-5 animate-pulse" />
+              </div>
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-widest text-amber-500 block">
+                  {t("learningWorld.title")}
+                </span>
+                <h3 className={`text-xl font-black ${isDark ? "text-white" : "text-slate-900"}`}>
+                  {getLocalizedCurrentRegion(current_region)}
+                </h3>
+              </div>
+            </div>
+            
+            <div className="flex flex-wrap items-center gap-4 text-xs font-bold text-slate-400">
+              <span className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-slate-800/60 rounded-xl">
+                <Trophy className="w-4 h-4 text-amber-400" />
+                {Math.round(total_distance / 1000)} km
+              </span>
+              <span className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-slate-800/60 rounded-xl">
+                <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                {xp} {t("learningWorld.xp")}
+              </span>
+              <span className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-slate-800/60 rounded-xl">
+                <Flame className="w-4 h-4 text-orange-500 fill-orange-500" />
+                {streak} {t("learningWorld.dailyStreak")}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-4 min-w-[280px]">
+            {nextCheckpoint && (
+              <div className={`flex-1 p-3.5 rounded-2xl border ${
+                isDark ? "bg-slate-950/60 border-slate-800/80" : "bg-slate-50 border-slate-100"
+              }`}>
+                <div className="flex justify-between items-center gap-2 mb-1">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">{t("learningWorld.nextReward")}</span>
+                  <span className="text-[9px] font-bold text-amber-400">{Math.round(nextCheckpoint.target_distance / 1000)}km</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Gift className="w-4 h-4 text-amber-500 animate-bounce" />
+                  <span className={`text-xs font-bold truncate ${isDark ? "text-slate-200" : "text-slate-700"}`}>
+                    {nextCheckpoint.reward_type === "COIN_BOX" ? `${nextCheckpoint.reward_value} ${t("learningWorld.coins")}` : `${t("learningWorld.rewardChest")}`}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            <button
+              onClick={() => navigate(total_distance >= 0 ? "/user/map" : "/student/map")}
+              className="px-6 py-4 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-600 hover:to-yellow-500 text-slate-950 text-xs font-black rounded-2xl shadow-lg transition flex items-center justify-center gap-2 group whitespace-nowrap self-stretch md:self-auto"
+            >
+              {t("learningWorld.openFullMap")}
+              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-5">
+          <div className="flex justify-between text-[10px] font-bold text-slate-400 mb-1.5">
+            <span>{t("learningWorld.progress")}</span>
+            <span>{Math.round(progress_percentage)}%</span>
+          </div>
+          <div className="w-full h-2 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-amber-500 via-orange-500 to-emerald-500 transition-all duration-1000"
+              style={{ width: `${progress_percentage}%` }}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ----------------------------------------------------
+  // FULLSCREEN ILLUSTRATED WORLD MAP ENGINE (SVG CANVAS)
+  // ----------------------------------------------------
+  const viewWidth = 1800;
+  const viewHeight = 1100;
+
+  // The winding adventure roadmap coordinates crossing the illustrated lands
+  const pathD = "M 150 780 C 180 550, 480 750, 450 480 C 420 250, 250 180, 500 150 C 700 120, 800 320, 750 450 C 700 620, 950 820, 1150 700 C 1300 600, 1100 350, 1320 280 C 1450 220, 1480 480, 1650 420";
+
+  // Coordinates of regions along the road
+  const regions = [
+    { name: t("learningWorld.regions.startVillage"), keyName: "Start Village", x: 150, y: 780, minDistance: 0, color: "from-amber-400 to-orange-500" },
+    { name: t("learningWorld.regions.readingForest"), keyName: "Reading Forest", x: 380, y: 640, minDistance: 50000, color: "from-emerald-400 to-green-600" },
+    { name: t("learningWorld.regions.listeningOcean"), keyName: "Listening Ocean", x: 440, y: 350, minDistance: 120000, color: "from-blue-400 to-cyan-500" },
+    { name: t("learningWorld.regions.writingCity"), keyName: "Writing City", x: 380, y: 160, minDistance: 200000, color: "from-indigo-400 to-purple-600" },
+    { name: t("learningWorld.regions.speakingArena"), keyName: "Speaking Arena", x: 740, y: 220, minDistance: 280000, color: "from-rose-400 to-pink-600" },
+    { name: t("learningWorld.regions.nationalCertKingdom"), keyName: "National Certificate Kingdom", x: 800, y: 550, minDistance: 350000, color: "from-purple-500 to-indigo-700" },
+    { name: t("learningWorld.regions.satSpaceAcademy"), keyName: "SAT Space Academy", x: 1200, y: 480, minDistance: 420000, color: "from-violet-500 to-fuchsia-700" },
+    { name: t("learningWorld.regions.masterCastle"), keyName: "LMSHub Master Castle", x: 1580, y: 410, minDistance: 480000, color: "from-yellow-400 to-amber-600" },
+  ];
 
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [avatarPos, setAvatarPos] = useState({ x: regions[0].x, y: regions[0].y });
@@ -108,406 +220,483 @@ export const AdventureMap: React.FC<AdventureMapProps> = ({ progressData, compac
         }
       }
     }
-  }, [progress_percentage, compact, total_distance]);
-
-  const getChestRarity = (targetDistance: number) => {
-    if (targetDistance <= 120000) return { name: t("learningWorld.chests.common"), color: "#10B981", bg: "bg-emerald-500/10 border-emerald-500/30", iconColor: "text-emerald-400" };
-    if (targetDistance <= 280000) return { name: t("learningWorld.chests.rare"), color: "#3B82F6", bg: "bg-blue-500/10 border-blue-500/30", iconColor: "text-blue-400" };
-    if (targetDistance <= 420000) return { name: t("learningWorld.chests.epic"), color: "#8B5CF6", bg: "bg-purple-500/10 border-purple-500/30", iconColor: "text-purple-400" };
-    return { name: t("learningWorld.chests.legendary"), color: "#F59E0B", bg: "bg-amber-500/10 border-amber-500/30", iconColor: "text-amber-400" };
-  };
-
-  const handleClaim = async () => {
-    if (!selectedCheckpoint) return;
-    setClaiming(true);
-    try {
-      const response = await api.post(`/user/gamification/claim/${selectedCheckpoint.id}`);
-      if (response.data?.success) {
-        confetti({
-          particleCount: 150,
-          spread: 80,
-          origin: { y: 0.6 },
-          colors: ["#F59E0B", "#10B981", "#3B82F6", "#8B5CF6"]
-        });
-        toast.success(t("learningWorld.successClaim"));
-        setSelectedCheckpoint(null);
-        if (onRefresh) onRefresh();
-      } else {
-        toast.error(response.data?.message || t("learningWorld.errorClaim"));
-      }
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || t("learningWorld.errorClaim"));
-    } finally {
-      setClaiming(false);
-    }
-  };
+  }, [progress_percentage, total_distance]);
 
   return (
-    <div className={`relative w-full overflow-hidden rounded-3xl border transition-colors duration-1000 p-6 shadow-2xl backdrop-blur-md ${
+    <div className={`relative w-full h-[780px] overflow-hidden rounded-[2.5rem] border shadow-2xl ${
       isDark 
-        ? "bg-slate-950/90 border-slate-800/80 shadow-slate-950/50" 
-        : "bg-sky-50/70 border-sky-100/80 shadow-sky-100/30"
+        ? "bg-[#0b132b] border-slate-800/80 shadow-slate-950/70" 
+        : "bg-[#e0f2fe] border-sky-100 shadow-sky-200/30"
     }`}>
       
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b pb-5 mb-5 border-slate-800/20 dark:border-slate-800/60">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-gradient-to-tr from-amber-500 to-yellow-300 rounded-2xl shadow-lg text-slate-950 animate-spin-slow">
-            <Compass className="w-6 h-6" />
-          </div>
-          <div>
-            <h3 className={`text-xl font-black ${isDark ? "text-slate-100" : "text-slate-900"}`}>
-              {t("learningWorld.title")}
-            </h3>
-            <p className="text-xs text-slate-500 flex items-center gap-1.5 mt-0.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-              {t("learningWorld.currentRegion")}: <span className="font-bold text-slate-700 dark:text-slate-200">{getLocalizedCurrentRegion(current_region)}</span>
-            </p>
-          </div>
-        </div>
+      {/* SVG Canvas rendering the fully illustrated continent */}
+      <svg
+        ref={svgRef}
+        width="100%"
+        height="100%"
+        viewBox={`0 0 ${viewWidth} ${viewHeight}`}
+        className="w-full h-full overflow-visible select-none transition-colors duration-1000"
+      >
+        <defs>
+          {/* Water patterns and linear gradients */}
+          <linearGradient id="oceanGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor={isDark ? "#090f22" : "#7dd3fc"} />
+            <stop offset="100%" stopColor={isDark ? "#060913" : "#38bdf8"} />
+          </linearGradient>
 
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-slate-100 dark:bg-slate-900 rounded-xl border border-slate-200/55 dark:border-slate-800 text-slate-600 dark:text-slate-400 flex items-center gap-2">
-            {weather === "sunny" && <Sun className="w-4 h-4 text-amber-500 animate-pulse" />}
-            {weather === "night" && <Moon className="w-4 h-4 text-indigo-400" />}
-            {weather === "rain" && <CloudRain className="w-4 h-4 text-blue-400 animate-bounce" />}
-            {weather === "snow" && <CloudSnow className="w-4 h-4 text-sky-200" />}
-            <span className="text-[10px] font-bold uppercase tracking-wider">{weather}</span>
-          </div>
+          <linearGradient id="landGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor={isDark ? "#14253d" : "#a3e635"} />
+            <stop offset="100%" stopColor={isDark ? "#0e182a" : "#65a30d"} />
+          </linearGradient>
 
-          <div className="px-4 py-2 bg-slate-100 dark:bg-slate-900 rounded-xl border border-slate-200/55 dark:border-slate-800 text-slate-600 dark:text-slate-300 flex items-center gap-2">
-            <Trophy className="w-4 h-4 text-amber-500" />
-            <span className="text-xs font-bold">{Math.round(total_distance / 1000)} km</span>
-          </div>
-          <div className="px-4 py-2 bg-slate-100 dark:bg-slate-900 rounded-xl border border-slate-200/55 dark:border-slate-800 text-slate-600 dark:text-slate-300 flex items-center gap-2">
-            <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-            <span className="text-xs font-bold">{xp} {t("learningWorld.xp")}</span>
-          </div>
-        </div>
-      </div>
+          <linearGradient id="mountainGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor={isDark ? "#1e293b" : "#94a3b8"} />
+            <stop offset="100%" stopColor={isDark ? "#0f172a" : "#475569"} />
+          </linearGradient>
 
-      <div className="relative w-full overflow-x-auto scrollbar-thin scrollbar-thumb-slate-800 scrollbar-track-transparent">
-        <div style={{ minWidth: "1100px" }} className="mx-auto">
-          <svg
-            ref={svgRef}
-            width="100%"
-            viewBox={`0 0 ${viewWidth} ${viewHeight}`}
-            className="w-full h-auto overflow-visible select-none transition-all duration-1000"
-          >
-            <defs>
-              <filter id="roadGlow" x="-20%" y="-20%" width="140%" height="140%">
-                <feGaussianBlur stdDeviation="8" result="blur" />
-                <feComposite in="SourceGraphic" in2="blur" operator="over" />
-              </filter>
-              
-              <pattern id="rainPattern" width="40" height="40" patternUnits="userSpaceOnUse">
-                <line x1="10" y1="0" x2="5" y2="20" stroke="rgba(156, 163, 175, 0.4)" strokeWidth="1.5" />
-                <line x1="30" y1="10" x2="25" y2="30" stroke="rgba(156, 163, 175, 0.4)" strokeWidth="1.5" />
-              </pattern>
+          <linearGradient id="castleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#f59e0b" />
+            <stop offset="50%" stopColor="#d97706" />
+            <stop offset="100%" stopColor="#78350f" />
+          </linearGradient>
 
-              <pattern id="snowPattern" width="60" height="60" patternUnits="userSpaceOnUse">
-                <circle cx="15" cy="15" r="2" fill="rgba(255, 255, 255, 0.8)" />
-                <circle cx="45" cy="35" r="3.5" fill="rgba(255, 255, 255, 0.8)" />
-              </pattern>
-            </defs>
+          <linearGradient id="quillGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor={isDark ? "#6366f1" : "#c084fc"} />
+            <stop offset="100%" stopColor={isDark ? "#4338ca" : "#7e22ce"} />
+          </linearGradient>
 
-            {!compact && (
-              <g className="landscapes">
-                <path
-                  d="M 300 0 C 350 200, 150 400, 400 700"
-                  fill="none"
-                  stroke={isDark ? "#1E293B" : "#93C5FD"}
-                  strokeWidth="20"
-                  className="opacity-70"
-                />
-                <path
-                  d="M 300 0 C 350 200, 150 400, 400 700"
-                  fill="none"
-                  stroke={isDark ? "#38BDF8" : "#60A5FA"}
-                  strokeWidth="8"
-                  className="opacity-90 animate-pulse"
-                />
+          <filter id="fantasyGlow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="6" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          </filter>
 
-                <g transform="translate(290, 185) rotate(-35)">
-                  <rect x="-30" y="-12" width="60" height="24" rx="4" fill="#475569" stroke="#1E293B" strokeWidth="2" />
-                  <line x1="-20" y1="-12" x2="-20" y2="12" stroke="#64748B" strokeWidth="2" />
-                  <line x1="20" y1="-12" x2="20" y2="12" stroke="#64748B" strokeWidth="2" />
-                </g>
-                <g transform="translate(200, 345) rotate(35)">
-                  <rect x="-35" y="-12" width="70" height="24" rx="4" fill="#475569" stroke="#1E293B" strokeWidth="2" />
-                  <line x1="-25" y1="-12" x2="-25" y2="12" stroke="#64748B" strokeWidth="2" />
-                  <line x1="25" y1="-12" x2="25" y2="12" stroke="#64748B" strokeWidth="2" />
-                </g>
+          <filter id="castleGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="12" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          </filter>
 
-                <g className="mountains opacity-50 dark:opacity-20" transform="translate(0, -20)">
-                  <polygon points="500,280 570,400 430,400" fill="#64748B" />
-                  <polygon points="500,280 520,314 480,314" fill="#F8FAFC" />
-                  <polygon points="750,380 840,520 660,520" fill="#475569" />
-                  <polygon points="750,380 775,420 725,420" fill="#F8FAFC" />
-                </g>
+          {/* Water reflection flow pattern */}
+          <pattern id="seaPattern" width="100" height="100" patternUnits="userSpaceOnUse">
+            <path d="M 0 50 Q 25 35, 50 50 T 100 50" fill="none" stroke={isDark ? "#1e293b" : "#bae6fd"} strokeWidth="1.5" opacity="0.3" />
+            <path d="M 0 80 Q 25 65, 50 80 T 100 80" fill="none" stroke={isDark ? "#1e293b" : "#bae6fd"} strokeWidth="1.5" opacity="0.2" />
+          </pattern>
+        </defs>
 
-                {weather === "rain" && (
-                  <rect width={viewWidth} height={viewHeight} fill="url(#rainPattern)" pointerEvents="none" className="animate-rain" />
-                )}
-                {weather === "snow" && (
-                  <rect width={viewWidth} height={viewHeight} fill="url(#snowPattern)" pointerEvents="none" className="animate-snow" />
-                )}
-                {weather === "sunny" && !isDark && (
-                  <g className="sunrays opacity-25 pointer-events-none">
-                    <line x1="0" y1="0" x2="300" y2="700" stroke="#FBBF24" strokeWidth="150" strokeDasharray="30 30" />
-                  </g>
-                )}
-              </g>
-            )}
+        {/* 1. OCEAN BACKGROUND */}
+        <rect width={viewWidth} height={viewHeight} fill="url(#oceanGrad)" />
+        <rect width={viewWidth} height={viewHeight} fill="url(#seaPattern)" />
 
-            <path
-              d={pathD}
-              fill="none"
-              stroke={isDark ? "#1E1B4B" : "#CBD5E1"}
-              strokeWidth={compact ? 12 : 24}
-              strokeLinecap="round"
-            />
-            <path
-              d={pathD}
-              fill="none"
-              stroke={isDark ? "#312E81" : "#E2E8F0"}
-              strokeWidth={compact ? 8 : 16}
-              strokeLinecap="round"
-            />
+        {/* Dynamic marine items (ships/waves) */}
+        <g className="sea-details">
+          <circle cx="850" cy="180" r="16" fill="none" stroke={isDark ? "#1e1b4b" : "#bae6fd"} strokeWidth="2" strokeDasharray="5 5" className="animate-spin-slow" />
+          {/* Sailboat in ocean */}
+          <g transform="translate(680, 290) scale(0.8)">
+            <path d="M 0 10 L 15 25 L -15 25 Z" fill={isDark ? "#0f172a" : "#fff"} />
+            <path d="M 0 10 L 0 25" stroke={isDark ? "#475569" : "#78350f"} strokeWidth="2" />
+            <path d="M -20 25 L 20 25 Q 25 35, 0 35 Q -25 35, -20 25 Z" fill={isDark ? "#334155" : "#b45309"} />
+          </g>
+          <g transform="translate(1450, 720) scale(0.65)">
+            <path d="M 0 10 L 15 25 L -15 25 Z" fill={isDark ? "#0f172a" : "#fff"} />
+            <path d="M 0 10 L 0 25" stroke={isDark ? "#475569" : "#78350f"} strokeWidth="2" />
+            <path d="M -20 25 L 20 25 Q 25 35, 0 35 Q -25 35, -20 25 Z" fill={isDark ? "#334155" : "#b45309"} />
+          </g>
+        </g>
 
-            <path
-              className="main-track-path"
-              d={pathD}
-              fill="none"
-              stroke={isDark ? "#818CF8" : "#60A5FA"}
-              strokeWidth={compact ? 8 : 16}
-              strokeLinecap="round"
-              strokeDasharray="1500"
-              strokeDashoffset={1500 - (1500 * (progress_percentage / 100))}
-              style={{ transition: "stroke-dashoffset 2s ease-in-out" }}
-            />
-            <path
-              d={pathD}
-              fill="none"
-              stroke="#FBBF24"
-              strokeWidth={3}
-              strokeDasharray="15 15"
-              strokeLinecap="round"
-              className="animate-dash"
-              style={{ filter: isDark ? "url(#roadGlow)" : "none" }}
-            />
+        {/* 2. THE CONTINENT SHORELINES & LANDMASSES (ORGANIC WORLD SHAPE) */}
+        <g className="continent-land">
+          {/* Main big continent */}
+          <path
+            d="M 50 900 Q 150 400, 300 650 T 600 200 T 950 150 T 1100 550 T 1300 200 T 1650 250 T 1750 650 T 1450 950 T 950 1050 T 550 920 Z"
+            fill="url(#landGrad)"
+            stroke={isDark ? "#38bdf8" : "#4d7c0f"}
+            strokeWidth="8"
+            style={{ filter: isDark ? "drop-shadow(0px 0px 15px rgba(56, 189, 248, 0.25))" : "none" }}
+          />
 
-            {regions.map((reg, idx) => {
-              const isUnlocked = total_distance >= reg.minDistance;
-              const isMasterCastle = reg.keyName === "LMSHub Master Castle";
-              const shouldHide = isMasterCastle && total_distance < 420000;
+          {/* Independent islands in ocean */}
+          <path
+            d="M 400 350 Q 450 280, 520 340 T 450 420 Z"
+            fill="url(#landGrad)"
+            stroke={isDark ? "#38bdf8" : "#4d7c0f"}
+            strokeWidth="4"
+          />
+          <path
+            d="M 1250 820 Q 1300 780, 1350 820 T 1300 880 Z"
+            fill="url(#landGrad)"
+            stroke={isDark ? "#38bdf8" : "#4d7c0f"}
+            strokeWidth="4"
+          />
+        </g>
 
-              if (shouldHide) return null;
+        {/* 3. PHYSICAL GEOGRAPHY: MOUNTAINS, RIVERS & WATERFALLS */}
+        <g className="geography">
+          {/* Winding purple/dark ink river */}
+          <path
+            d="M 380 0 C 390 100, 340 180, 410 280 C 440 320, 550 280, 520 400 C 490 500, 300 480, 200 600 C 100 700, 80 850, 0 920"
+            fill="none"
+            stroke={isDark ? "#6366f1" : "#1d4ed8"}
+            strokeWidth="20"
+          />
+          <path
+            d="M 380 0 C 390 100, 340 180, 410 280 C 440 320, 550 280, 520 400 C 490 500, 300 480, 200 600 C 100 700, 80 850, 0 920"
+            fill="none"
+            stroke={isDark ? "#a5b4fc" : "#60a5fa"}
+            strokeWidth="8"
+            opacity="0.8"
+          />
 
-              return (
-                <g key={idx} transform={`translate(${reg.x}, ${reg.y})`} className="transition-all duration-500">
-                  {!isUnlocked && (
-                    <circle
-                      r={compact ? 24 : 45}
-                      fill={isDark ? "#0F172A" : "#E2E8F0"}
-                      className="opacity-75"
-                      style={{ filter: "blur(8px)" }}
-                    />
-                  )}
+          {/* Waterfall at river mouth/source */}
+          <g transform="translate(380, 0)">
+            <ellipse rx="15" ry="5" fill="#fff" className="animate-pulse" />
+            <line x1="-10" y1="0" x2="-10" y2="40" stroke="#fff" strokeWidth="2" opacity="0.9" />
+            <line x1="0" y1="0" x2="0" y2="45" stroke="#fff" strokeWidth="3" opacity="0.9" />
+            <line x1="10" y1="0" x2="10" y2="40" stroke="#fff" strokeWidth="2" opacity="0.9" />
+          </g>
 
-                  <ellipse
-                    rx={compact ? 18 : 32}
-                    ry={compact ? 10 : 16}
-                    fill={isUnlocked ? "url(#activeGradient)" : "#475569"}
-                    opacity={isUnlocked ? 0.35 : 0.6}
-                  />
+          {/* Mountains separators */}
+          <g className="mountains">
+            {/* Mountain Range 1 */}
+            <polygon points="620,180 670,270 570,270" fill="url(#mountainGrad)" />
+            <polygon points="620,180 640,210 600,210" fill="#fff" />
 
-                  <g transform={`translate(0, ${compact ? -10 : -18})`}>
-                    {reg.keyName === "Start Village" && (
-                      <g className="scale-75 md:scale-100">
-                        <polygon points="0,-16 -12,0 12,0" fill="#B45309" />
-                        <rect x="-8" y="0" width="16" height="12" fill="#F59E0B" />
-                        <circle cx="0" cy="4" r="2.5" fill="#FEF08A" className="animate-pulse" />
-                      </g>
-                    )}
+            <polygon points="680,210 740,310 620,310" fill="url(#mountainGrad)" />
+            <polygon points="680,210 705,245 655,245" fill="#fff" />
 
-                    {reg.keyName === "Reading Forest" && (
-                      <g className="scale-75 md:scale-100">
-                        <rect x="-3" y="-12" width="6" height="18" fill="#78350F" />
-                        <path d="M 0 -24 C -15 -18, -10 0, 0 6 C 10 0, 15 -18, 0 -24" fill="#047857" />
-                        <path d="M -8 -12 L 8 -12" stroke="#FFF" strokeWidth="1.5" />
-                      </g>
-                    )}
+            {/* Mountain Range 2 (Near Master Castle) */}
+            <polygon points="1520,320 1600,480 1440,480" fill="url(#mountainGrad)" />
+            <polygon points="1520,320 1550,370 1490,370" fill="#fff" />
 
-                    {reg.keyName === "Listening Ocean" && (
-                      <g className="scale-75 md:scale-100">
-                        <circle r="12" fill="#0284C7" />
-                        <circle r="8" fill="#38BDF8" className="animate-ping" opacity="0.4" />
-                        <text y="4" textAnchor="middle" fontSize="12">🏝️</text>
-                      </g>
-                    )}
+            <polygon points="1600,280 1700,480 1500,480" fill="url(#mountainGrad)" />
+            <polygon points="1600,280 1635,340 1565,340" fill="#fff" />
+          </g>
 
-                    {reg.keyName === "Writing City" && (
-                      <g className="scale-75 md:scale-100">
-                        <rect x="-8" y="-18" width="16" height="24" fill="#475569" rx="2" />
-                        <polygon points="0,-28 -8,-18 8,-18" fill="#E2E8F0" />
-                        <line x1="0" y1="-28" x2="0" y2="-12" stroke="#000" strokeWidth="1.5" />
-                      </g>
-                    )}
-
-                    {reg.keyName === "Speaking Arena" && (
-                      <g className="scale-75 md:scale-100">
-                        <ellipse rx="16" ry="10" fill="#9F1239" />
-                        <line x1="-12" y1="-16" x2="-12" y2="4" stroke="#FDA4AF" strokeWidth="1.5" className="animate-pulse" />
-                        <line x1="12" y1="-16" x2="12" y2="4" stroke="#FDA4AF" strokeWidth="1.5" className="animate-pulse" />
-                      </g>
-                    )}
-
-                    {reg.keyName === "National Certificate Kingdom" && (
-                      <g className="scale-75 md:scale-100">
-                        <rect x="-14" y="-14" width="28" height="20" fill="#1E3A8A" rx="3" />
-                        <polygon points="-14,-14 0,-26 14,-14" fill="#1D4ED8" />
-                        <rect x="-4" y="-2" width="8" height="8" fill="#FEF08A" />
-                      </g>
-                    )}
-
-                    {reg.keyName === "SAT Space Academy" && (
-                      <g className="scale-75 md:scale-100">
-                        <path d="M 0 -22 C -6 -10, -8 0, 0 4 C 8 0, 6 -10, 0 -22" fill="#E2E8F0" />
-                        <polygon points="-4,2 0,-8 4,2" fill="#EF4444" />
-                      </g>
-                    )}
-
-                    {reg.keyName === "LMSHub Master Castle" && (
-                      <g className="scale-75 md:scale-100">
-                        <rect x="-18" y="-20" width="36" height="26" fill="#D97706" rx="4" />
-                        <polygon points="-18,-20 -9,-32 0,-20 9,-32 18,-20" fill="#F59E0B" />
-                        <circle cx="0" cy="-6" r="5" fill="#FEF08A" className="animate-pulse" />
-                      </g>
-                    )}
-                  </g>
-
-                  {!isUnlocked && (
-                    <g transform={`translate(0, ${compact ? 8 : 14})`}>
-                      <circle r="9" fill="#0F172A" stroke="#475569" strokeWidth="1.5" />
-                      <g transform="translate(-5, -5)">
-                        <Lock className="w-2.5 h-2.5 text-slate-400" />
-                      </g>
-                    </g>
-                  )}
-
-                  {!compact && (
-                    <text
-                      y="32"
-                      textAnchor="middle"
-                      fill={isUnlocked ? (isDark ? "#F1F5F9" : "#1E293B") : "#94A3B8"}
-                      fontSize="10"
-                      fontWeight="bold"
-                    >
-                      {reg.name}
-                    </text>
-                  )}
-                </g>
-              );
-            })}
-
-            {checkpoints && checkpoints.map((cp) => {
-              const ratio = Math.min(1.0, cp.target_distance / 500000.0);
-              let cpX = 500;
-              let cpY = 300;
-              
-              if (svgRef.current) {
-                const pathEl = svgRef.current.querySelector("path.main-track-path") as SVGPathElement | null;
-                if (pathEl) {
-                  try {
-                    const point = pathEl.getPointAtLength(pathEl.getTotalLength() * ratio);
-                    cpX = point.x;
-                    cpY = point.y;
-                  } catch (e) {}
-                }
-              }
-
-              const rarity = getChestRarity(cp.target_distance);
-
-              return (
-                <g
-                  key={cp.id}
-                  transform={`translate(${cpX}, ${cpY - (compact ? 16 : 28)})`}
-                  className="cursor-pointer"
-                  onClick={() => setSelectedCheckpoint(cp)}
-                >
-                  {cp.unlocked && !cp.claimed && (
-                    <motion.circle
-                      r={compact ? 16 : 24}
-                      fill={rarity.color}
-                      opacity={0.35}
-                      animate={{ scale: [1, 1.35, 1], opacity: [0.35, 0.6, 0.35] }}
-                      transition={{ repeat: Infinity, duration: 2 }}
-                    />
-                  )}
-
-                  <circle
-                    r={compact ? 13 : 19}
-                    fill={cp.claimed ? "#1E293B" : cp.unlocked ? rarity.color : "#0F172A"}
-                    stroke={cp.unlocked ? "#FFF" : "#475569"}
-                    strokeWidth={2}
-                    className="shadow-xl"
-                  />
-
-                  <g transform={`translate(-8, -8) scale(${compact ? 0.85 : 1.05})`}>
-                    {cp.claimed ? (
-                      <Check className="w-4 h-4 text-emerald-400" />
-                    ) : cp.unlocked ? (
-                      <Gift className="w-4 h-4 text-slate-950 animate-bounce" />
-                    ) : (
-                      <Lock className="w-4 h-4 text-slate-500" />
-                    )}
-                  </g>
-
-                  {!compact && (
-                    <text
-                      y="-24"
-                      textAnchor="middle"
-                      fill={rarity.color}
-                      fontSize="9"
-                      fontWeight="black"
-                    >
-                      {Math.round(cp.target_distance / 1000)}km
-                    </text>
-                  )}
-                </g>
-              );
-            })}
-
-            <g transform={`translate(${avatarPos.x}, ${avatarPos.y})`} className="pointer-events-none">
-              <motion.circle
-                r={compact ? 18 : 26}
-                fill="none"
-                stroke="#FBBF24"
-                strokeWidth={3}
-                animate={{ scale: [1, 1.25, 1], opacity: [0.9, 0.3, 0.9] }}
-                transition={{ repeat: Infinity, duration: 1.5 }}
-              />
-              <circle
-                r={compact ? 13 : 18}
-                fill="#FBBF24"
-                className="shadow-2xl"
-              />
-              
-              <g transform={`translate(0, ${compact ? -20 : -28})`}>
-                <rect x="-16" y="-7" width="32" height="14" rx="4" fill="#0F172A" stroke="#FBBF24" strokeWidth="1" />
-                <text textAnchor="middle" y="3.5" fontSize="8" fontWeight="bold" fill="#FBBF24">
-                  {t("learningWorld.level").toUpperCase()} {Math.max(1, Math.floor(xp / 1000) + 1)}
-                </text>
-              </g>
-
-              <g transform="translate(-10, -10)">
-                <MapPin className="w-5 h-5 text-slate-950 fill-slate-900" />
-              </g>
+          {/* Bridges crossing river */}
+          <g className="bridges">
+            {/* Bridge 1 */}
+            <g transform="translate(420, 310) rotate(-45)">
+              <rect x="-10" y="-30" width="20" height="60" rx="3" fill="#78350f" stroke="#451a03" strokeWidth="2" />
+              <line x1="-10" y1="-30" x2="-10" y2="30" stroke="#f59e0b" strokeWidth="2" />
+              <line x1="10" y1="-30" x2="10" y2="30" stroke="#f59e0b" strokeWidth="2" />
             </g>
-          </svg>
-        </div>
+          </g>
+        </g>
+
+        {/* 4. THE ROADPATH (windy cobblestones with glow) */}
+        <g className="adventure-road">
+          <path
+            d={pathD}
+            fill="none"
+            stroke={isDark ? "#111827" : "#d1d5db"}
+            strokeWidth="24"
+            strokeLinecap="round"
+          />
+          <path
+            d={pathD}
+            fill="none"
+            stroke={isDark ? "#1f2937" : "#e5e7eb"}
+            strokeWidth="16"
+            strokeLinecap="round"
+          />
+
+          {/* Completed highlighted segment */}
+          <path
+            className="main-track-path"
+            d={pathD}
+            fill="none"
+            stroke={isDark ? "#f59e0b" : "#fbbf24"}
+            strokeWidth="16"
+            strokeLinecap="round"
+            strokeDasharray="1800"
+            strokeDashoffset={1800 - (1800 * (progress_percentage / 100))}
+            style={{ transition: "stroke-dashoffset 2s ease-in-out" }}
+          />
+
+          {/* Glowing particle outline */}
+          <path
+            d={pathD}
+            fill="none"
+            stroke="#f59e0b"
+            strokeWidth="4"
+            strokeDasharray="20 15"
+            strokeLinecap="round"
+            className="animate-dash"
+            style={{ filter: "url(#fantasyGlow)" }}
+          />
+        </g>
+
+        {/* 5. REGIONAL LANDMARK ILLUSTRATIONS */}
+        <g className="landmarks">
+          {/* START VILLAGE */}
+          <g transform="translate(150, 780)">
+            <circle r="40" fill={isDark ? "rgba(15,23,42,0.6)" : "rgba(255,255,255,0.75)"} className="backdrop-blur-sm" />
+            <g transform="translate(-20, -20)">
+              {/* Cozy cottages */}
+              <rect x="-8" y="10" width="16" height="15" fill={isDark ? "#334155" : "#d97706"} rx="2" />
+              <polygon points="-12,10 0,-2 12,10" fill="#991b1b" />
+              <rect x="-3" y="17" width="6" height="8" fill="#fef08a" />
+
+              <rect x="12" y="15" width="12" height="10" fill={isDark ? "#1e293b" : "#b45309"} rx="1" />
+              <polygon points="9,15 18,7 27,15" fill="#7f1d1d" />
+
+              <circle cx="-15" cy="22" r="3" fill="#eab308" className="animate-pulse" />
+            </g>
+          </g>
+
+          {/* READING FOREST */}
+          <g transform="translate(380, 640)">
+            <circle r="42" fill={isDark ? "rgba(15,23,42,0.6)" : "rgba(255,255,255,0.75)"} />
+            <g transform="translate(0, -5)">
+              {/* Trees */}
+              <polygon points="-25,10 -15,-15 -5,10" fill="#065f46" />
+              <polygon points="-15,15 -7,-5 1,15" fill="#047857" />
+              <polygon points="12,10 22,-12 32,10" fill="#065f46" />
+
+              {/* Magical Open Book Dome */}
+              <path d="M -15 -8 L 0 -18 L 15 -8 L 15 8 L 0 -2 L -15 8 Z" fill="#fff" stroke="#1e3a8a" strokeWidth="2" />
+              <line x1="0" y1="-18" x2="0" y2="-2" stroke="#1e3a8a" strokeWidth="2" />
+              <circle cx="0" cy="-22" r="4" fill="#a7f3d0" className="animate-pulse" />
+            </g>
+          </g>
+
+          {/* LISTENING OCEAN */}
+          <g transform="translate(440, 350)">
+            <circle r="45" fill={isDark ? "rgba(15,23,42,0.6)" : "rgba(255,255,255,0.75)"} />
+            {/* Headphones stone monument */}
+            <g transform="translate(0, -5) scale(0.9)">
+              <path d="M -22 15 C -22 -15, 22 -15, 22 15" fill="none" stroke={isDark ? "#94a3b8" : "#475569"} strokeWidth="8" strokeLinecap="round" />
+              <rect x="-26" y="8" width="10" height="15" rx="3" fill={isDark ? "#cbd5e1" : "#1e293b"} />
+              <rect x="16" y="8" width="10" height="15" rx="3" fill={isDark ? "#cbd5e1" : "#1e293b"} />
+              <circle cx="0" cy="12" r="6" fill="#60a5fa" className="animate-ping" opacity="0.5" />
+              <circle cx="0" cy="12" r="4" fill="#3b82f6" />
+            </g>
+          </g>
+
+          {/* WRITING CITY */}
+          <g transform="translate(380, 160)">
+            <circle r="42" fill={isDark ? "rgba(15,23,42,0.6)" : "rgba(255,255,255,0.75)"} />
+            <g transform="translate(0, -12)">
+              {/* Quill Tower */}
+              <rect x="-8" y="10" width="16" height="25" fill="url(#quillGrad)" rx="2" />
+              <rect x="-5" y="15" width="10" height="5" fill="#fef08a" />
+              {/* Feather point */}
+              <path d="M 0 -15 L -8 10 L 8 10 Z" fill="#e2e8f0" />
+              <line x1="0" y1="-15" x2="0" y2="10" stroke="#cbd5e1" strokeWidth="1.5" />
+            </g>
+          </g>
+
+          {/* SPEAKING ARENA */}
+          <g transform="translate(740, 220)">
+            <circle r="48" fill={isDark ? "rgba(15,23,42,0.6)" : "rgba(255,255,255,0.75)"} />
+            {/* Colosseum Stadium */}
+            <g transform="translate(0, -5)">
+              <ellipse rx="30" ry="18" fill="#e2e8f0" stroke="#94a3b8" strokeWidth="2" />
+              <ellipse rx="22" ry="12" fill={isDark ? "#1e293b" : "#475569"} />
+              {/* Pillars */}
+              <line x1="-24" y1="-2" x2="-24" y2="8" stroke="#cbd5e1" strokeWidth="3" />
+              <line x1="24" y1="-2" x2="24" y2="8" stroke="#cbd5e1" strokeWidth="3" />
+              <line x1="0" y1="8" x2="0" y2="-12" stroke="#fda4af" strokeWidth="2" className="animate-pulse" />
+              <circle cx="0" cy="-14" r="3" fill="#f43f5e" />
+            </g>
+          </g>
+
+          {/* NATIONAL CERTIFICATE KINGDOM */}
+          <g transform="translate(800, 550)">
+            <circle r="46" fill={isDark ? "rgba(15,23,42,0.6)" : "rgba(255,255,255,0.75)"} />
+            <g transform="translate(0, -10)">
+              {/* Castle Fortress */}
+              <rect x="-22" y="10" width="44" height="20" fill={isDark ? "#334155" : "#475569"} rx="2" />
+              <rect x="-26" y="2" width="10" height="28" fill={isDark ? "#1e293b" : "#334155"} />
+              <polygon points="-28,2 -21,-8 -14,2" fill="#991b1b" />
+
+              <rect x="16" y="2" width="10" height="28" fill={isDark ? "#1e293b" : "#334155"} />
+              <polygon points="14,2 21,-8 28,2" fill="#991b1b" />
+
+              <rect x="-5" y="18" width="10" height="12" rx="2" fill="#f59e0b" />
+            </g>
+          </g>
+
+          {/* SAT SPACE ACADEMY */}
+          <g transform="translate(1200, 480)">
+            <circle r="48" fill={isDark ? "rgba(15,23,42,0.6)" : "rgba(255,255,255,0.75)"} />
+            <g transform="translate(0, -12)">
+              {/* Launchpad & rocket */}
+              <rect x="-15" y="24" width="30" height="8" fill="#4b5563" />
+              <path d="M 0 -18 C -6 -5, -8 15, 0 24 C 8 15, 6 -5, 0 -18" fill="#f3f4f6" stroke="#9ca3af" strokeWidth="1.5" />
+              <polygon points="-8,18 -14,24 -8,24" fill="#ef4444" />
+              <polygon points="8,18 14,24 8,24" fill="#ef4444" />
+              <circle cx="0" cy="28" r="4" fill="#f97316" className="animate-ping" />
+            </g>
+          </g>
+
+          {/* LMSHUB MASTER CASTLE */}
+          <g transform="translate(1580, 410)">
+            <circle r="55" fill={isDark ? "rgba(15,23,42,0.6)" : "rgba(255,255,255,0.75)"} style={{ filter: "url(#castleGlow)" }} />
+            <g transform="translate(0, -18)">
+              {/* Massive Golden Castle */}
+              <rect x="-25" y="15" width="50" height="30" fill="url(#castleGrad)" rx="3" />
+              {/* Central Tower */}
+              <rect x="-10" y="-10" width="20" height="40" fill="url(#castleGrad)" />
+              <polygon points="-14,-10 0,-32 14,-10" fill="#f59e0b" />
+              
+              {/* Flags */}
+              <line x1="0" y1="-32" x2="0" y2="-45" stroke="#d97706" strokeWidth="2" />
+              <polygon points="0,-45 15,-40 0,-35" fill="#ef4444" />
+
+              <rect x="-6" y="28" width="12" height="17" fill="#fef08a" rx="3" />
+            </g>
+          </g>
+        </g>
+
+        {/* Fog of war cloud overlay covering locked sections */}
+        <g className="fog-of-war" opacity="0.65">
+          {regions.map((reg, idx) => {
+            const isUnlocked = total_distance >= reg.minDistance;
+            if (isUnlocked) return null;
+
+            return (
+              <g key={idx} transform={`translate(${reg.x}, ${reg.y})`}>
+                <circle r="80" fill={isDark ? "#090d16" : "#cbd5e1"} style={{ filter: "blur(18px)" }} />
+                <path d="M-40,0 Q-20,-30 0,0 T40,0 T0,30 Z" fill={isDark ? "#1e293b" : "#94a3b8"} opacity="0.6" />
+                <g transform="translate(-10, -10)">
+                  <Lock className="w-5 h-5 text-slate-400" />
+                </g>
+              </g>
+            );
+          })}
+        </g>
+
+        {/* 6. TREASURE REWARD CHESTS (Common, Rare, Epic, Legendary) */}
+        {checkpoints && checkpoints.map((cp) => {
+          const ratio = Math.min(1.0, cp.target_distance / 500000.0);
+          let cpX = 500;
+          let cpY = 300;
+          
+          if (svgRef.current) {
+            const pathEl = svgRef.current.querySelector("path.main-track-path") as SVGPathElement | null;
+            if (pathEl) {
+              try {
+                const point = pathEl.getPointAtLength(pathEl.getTotalLength() * ratio);
+                cpX = point.x;
+                cpY = point.y;
+              } catch (e) {}
+            }
+          }
+
+          const rarity = getChestRarity(cp.target_distance);
+
+          return (
+            <g
+              key={cp.id}
+              transform={`translate(${cpX}, ${cpY - 35})`}
+              className="cursor-pointer"
+              onClick={() => setSelectedCheckpoint(cp)}
+            >
+              {cp.unlocked && !cp.claimed && (
+                <motion.circle
+                  r="28"
+                  fill={rarity.color}
+                  opacity={0.35}
+                  animate={{ scale: [1, 1.3, 1], opacity: [0.35, 0.6, 0.35] }}
+                  transition={{ repeat: Infinity, duration: 2 }}
+                />
+              )}
+
+              {/* Chest Vector Illustration */}
+              <g transform="translate(-16, -16) scale(1.1)">
+                {/* Chest Base */}
+                <rect x="2" y="14" width="28" height="14" fill="#5c3a21" rx="2" stroke={rarity.color} strokeWidth="1.5" />
+                {/* Chest Lid - Rotates slightly if claimed (open state) */}
+                <g style={{
+                  transform: cp.claimed ? "rotate(-30deg) translate(-4px, -6px)" : "none",
+                  transformOrigin: "2px 14px",
+                  transition: "transform 0.5s ease-out"
+                }}>
+                  <path d="M 2 14 C 2 6, 30 6, 30 14 Z" fill="#82522e" stroke={rarity.color} strokeWidth="1.5" />
+                  <rect x="13" y="10" width="6" height="5" fill="#f59e0b" rx="1" />
+                </g>
+                {/* Clasp / Lock Indicator */}
+                {!cp.unlocked && (
+                  <circle cx="16" cy="16" r="4" fill="#1e293b" />
+                )}
+                {cp.claimed && (
+                  <circle cx="16" cy="18" r="5" fill="#10b981" />
+                )}
+              </g>
+
+              {/* Checkpoint text */}
+              <rect x="-35" y="-35" width="70" height="16" rx="4" fill="#0f172a" opacity="0.85" />
+              <text
+                y="-23"
+                textAnchor="middle"
+                fill="#fef08a"
+                fontSize="9"
+                fontWeight="black"
+              >
+                {Math.round(cp.target_distance / 1000)} km
+              </text>
+            </g>
+          );
+        })}
+
+        {/* 7. AVATAR POSITION & TRAVELLING CHARACTER */}
+        <g transform={`translate(${avatarPos.x}, ${avatarPos.y})`} className="pointer-events-none">
+          {/* Pulsing ring */}
+          <motion.circle
+            r="32"
+            fill="none"
+            stroke="#f59e0b"
+            strokeWidth="3"
+            animate={{ scale: [1, 1.3, 1], opacity: [0.9, 0.2, 0.9] }}
+            transition={{ repeat: Infinity, duration: 1.6 }}
+          />
+
+          <circle r="20" fill="#f59e0b" className="shadow-2xl" />
+
+          {/* Level banner above character */}
+          <g transform="translate(0, -32)">
+            <rect x="-22" y="-8" width="44" height="16" rx="4" fill="#0f172a" stroke="#f59e0b" strokeWidth="1.5" />
+            <text textAnchor="middle" y="3.5" fontSize="8" fontWeight="black" fill="#f59e0b">
+              {t("learningWorld.level").toUpperCase()} {Math.max(1, Math.floor(xp / 1000) + 1)}
+            </text>
+          </g>
+
+          {/* Map marker or custom character icon */}
+          <g transform="translate(-12, -12)">
+            <MapPin className="w-6 h-6 text-slate-950 fill-amber-400" />
+          </g>
+        </g>
+      </svg>
+
+      {/* Floating Region Labels Overlay directly on the game canvas */}
+      <div className="absolute inset-0 pointer-events-none">
+        {regions.map((reg, idx) => {
+          const isUnlocked = total_distance >= reg.minDistance;
+          // Master castle remains fully hidden until 420k distance
+          if (reg.keyName === "LMSHub Master Castle" && total_distance < 420000) return null;
+
+          return (
+            <div
+              key={idx}
+              className="absolute transition-all duration-500"
+              style={{
+                left: `${(reg.x / viewWidth) * 100}%`,
+                top: `${(reg.y / viewHeight) * 100}%`,
+                transform: "translate(-50%, 25px)"
+              }}
+            >
+              <div className={`px-2.5 py-1 rounded-xl border text-[9px] font-black tracking-wide shadow-md whitespace-nowrap ${
+                isUnlocked 
+                  ? "bg-slate-900/90 border-amber-500/30 text-amber-300"
+                  : "bg-slate-950/80 border-slate-800 text-slate-500"
+              }`}>
+                {reg.name}
+              </div>
+            </div>
+          );
+        })}
       </div>
 
+      {/* Chest Details Overlay Dialog */}
       <AnimatePresence>
         {selectedCheckpoint && (
           <motion.div
