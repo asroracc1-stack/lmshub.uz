@@ -9,7 +9,7 @@ import { AdventureMap } from "@/components/gamification/AdventureMap";
 import DashboardBanner from "@/components/student/dashboard/DashboardBanner";
 import DailyStreakCard from "@/components/student/dashboard/DailyStreakCard";
 import MetricCardsRow from "@/components/student/dashboard/MetricCardsRow";
-import WeeklyChart from "@/components/student/dashboard/WeeklyChart";
+import LearningContributionGraph from "@/components/gamification/LearningContributionGraph";
 import GoalsAndAchievements from "@/components/student/dashboard/GoalsAndAchievements";
 import LeaderboardAndHistory from "@/components/student/dashboard/LeaderboardAndHistory";
 
@@ -74,7 +74,7 @@ export default function StudentDashboard() {
         <div className="md:col-span-3 min-w-0">
           <div className="space-y-6 min-w-0">
             <MetricCardsRow data={data} />
-            <WeeklyChart data={data} />
+            <LearningContributionGraph />
           </div>
         </div>
       </div>

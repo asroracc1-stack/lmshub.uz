@@ -30,4 +30,10 @@ public class UserGamificationController {
         Map<String, Object> result = gamificationService.claimCheckpointReward(currentUser, checkpointId);
         return ResponseEntity.ok(result);
     }
+
+    @GetMapping("/contributions")
+    public ResponseEntity<Map<String, Object>> getContributions(@AuthenticationPrincipal User currentUser) {
+        Map<String, Object> contributions = gamificationService.getUserContributions(currentUser);
+        return ResponseEntity.ok(contributions);
+    }
 }

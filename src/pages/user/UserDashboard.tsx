@@ -40,6 +40,7 @@ import DailyTasks from "@/components/DailyTasks";
 import { useTheme } from "@/contexts/ThemeContext";
 import WelcomeBanner from "@/components/shared/WelcomeBanner";
 import { AdventureMap } from "@/components/gamification/AdventureMap";
+import LearningContributionGraph from "@/components/gamification/LearningContributionGraph";
 
 
 interface DailyData {
@@ -434,59 +435,8 @@ export default function UserDashboard() {
             })}
       </div>
 
-      {/* Weekly chart */}
-      <Card className={cn(
-        "p-8 shadow-2xl rounded-[2rem] border",
-        isDark ? "bg-slate-900/40 backdrop-blur-md border-white/5" : "bg-white border-slate-100 shadow-slate-200/50"
-      )}>
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h3 className={cn("font-display font-black text-2xl", isDark ? "text-white" : "text-slate-900")}>{t("userDashboard.chart.title")}</h3>
-            <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mt-1">{t("userDashboard.chart.subtitle")}</p>
-          </div>
-          {loading ? (
-            <div className={cn("h-7 w-28 rounded-full animate-pulse", isDark ? "bg-white/10" : "bg-slate-100")} />
-          ) : (
-            <Badge className="bg-purple-500/10 text-purple-500 border border-purple-500/20 px-4 py-1.5 rounded-full font-black text-xs">
-              {t("userDashboard.chart.totalMinutes", { count: (stats?.totalMinutes || 0).toFixed(1) })}
-            </Badge>
-          )}
-        </div>
-        <div className="flex items-stretch justify-between gap-3 h-48 mt-12">
-          {loading
-            ? Array.from({ length: 7 }).map((_, i) => (
-                <div key={i} className="flex flex-col items-center flex-1 h-full">
-                  <div className="flex-1 w-full flex items-end justify-center px-1">
-                    <div
-                      className={cn("w-full max-w-[40px] rounded-2xl animate-pulse", isDark ? "bg-white/10" : "bg-slate-100")}
-                      style={{ height: `${30 + Math.random() * 50}%` }}
-                    />
-                  </div>
-                  <div className={cn("h-3 w-6 rounded mt-5 animate-pulse", isDark ? "bg-white/10" : "bg-slate-100")} />
-                </div>
-              ))
-            : stats?.weeklyData?.map((d, i) => {
-                const h = (d.minutes / maxMin) * 100;
-                return (
-                  <div key={i} className="flex flex-col items-center flex-1 h-full group">
-                    <div className="flex-1 w-full flex items-end justify-center px-1">
-                      <motion.div
-                        initial={{ height: 0 }}
-                        animate={{ height: `${Math.max(8, h)}%` }}
-                        transition={{ duration: 1, delay: i * 0.1, ease: "circOut" }}
-                        className="w-full max-w-[40px] bg-gradient-to-t from-purple-600 to-violet-400 rounded-2xl min-h-[8px] relative shadow-lg shadow-purple-500/20 group-hover:shadow-purple-500/40 transition-all"
-                      >
-                         <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-2 py-1 rounded font-bold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                            {d.minutes}m
-                         </div>
-                      </motion.div>
-                    </div>
-                    <span className="text-[11px] font-bold text-slate-500 mt-5 uppercase tracking-tighter">{d.day}</span>
-                  </div>
-                );
-              })}
-        </div>
-      </Card>
+      {/* Learning Contribution Graph */}
+      <LearningContributionGraph />
 
       {/* ========================================================
        * SECTION: Telegram Card + Daily Tasks — temporarily hidden

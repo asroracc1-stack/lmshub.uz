@@ -1814,6 +1814,50 @@
         "legend": { "name": "LMSHub Legend", "desc": "Conquered the final Master Castle" }
       }
     },
+    "learningGraph": {
+      "title": "Learning Activity Graph",
+      "subtitle": "Study progress and adventure metrics over the last 365 days",
+      "currentStreak": "Current Streak",
+      "longestStreak": "Longest Streak",
+      "totalStudyHours": "Total Study",
+      "totalXp": "Total XP",
+      "totalCoins": "Total Coins",
+      "xpEarned": "XP earned",
+      "coinsEarned": "Coins earned",
+      "studyMinutes": "Study minutes",
+      "lessons": "Lessons",
+      "quizzes": "Quizzes",
+      "mocks": "Mock exams",
+      "emptyStateTitle": "📚 Learning Journey Starts Here",
+      "emptyStateDesc": "You haven't started studying yet. Complete your first lesson and begin building your learning streak.",
+      "startLearningBtn": "Start Learning",
+      "days": "days",
+      "hours": "hours",
+      "less": "Less",
+      "more": "More",
+      "contribution": "contribution",
+      "contributions": "contributions",
+      "noContributions": "no contributions",
+      "weekdays": {
+        "mon": "Mon",
+        "wed": "Wed",
+        "fri": "Fri"
+      },
+      "months": {
+        "jan": "Jan",
+        "feb": "Feb",
+        "mar": "Mar",
+        "apr": "Apr",
+        "may": "May",
+        "jun": "Jun",
+        "jul": "Jul",
+        "aug": "Aug",
+        "sep": "Sep",
+        "oct": "Oct",
+        "nov": "Nov",
+        "dec": "Dec"
+      }
+    },
     "gamificationAdmin": {
       "title": "Gamification & Adventure Map Administration",
       "subtitle": "Configure gameplay rules and checkpoint rewards",

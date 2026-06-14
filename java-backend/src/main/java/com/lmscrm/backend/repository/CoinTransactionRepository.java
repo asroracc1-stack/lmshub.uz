@@ -59,6 +59,7 @@ public interface CoinTransactionRepository extends JpaRepository<CoinTransaction
     List<Object[]> getGlobalLeaderboardByRole(
             @org.springframework.data.repository.query.Param("role") com.lmscrm.backend.domain.enums.AppRole role);
 
+
     @Query("SELECT c.student, SUM(c.amount) as total FROM CoinTransaction c " +
            "WHERE c.student.role = :role " +
            "AND c.student.organizationId IS NULL " +
@@ -68,4 +69,6 @@ public interface CoinTransactionRepository extends JpaRepository<CoinTransaction
     List<Object[]> getGlobalLeaderboardByRoleAndDateAfter(
             @org.springframework.data.repository.query.Param("role") com.lmscrm.backend.domain.enums.AppRole role, 
             @org.springframework.data.repository.query.Param("startDate") java.time.LocalDateTime startDate);
+
+    List<CoinTransaction> findAllByStudentIdAndCreatedAtAfter(UUID studentId, java.time.LocalDateTime since);
 }

@@ -1814,6 +1814,50 @@
         "legend": { "name": "LMSHub Afsonasi", "desc": "Yakuniy Master Castle qal'asini zabt etdingiz" }
       }
     },
+    "learningGraph": {
+      "title": "Faollik Grafigi",
+      "subtitle": "O'tgan 365 kunlik o'quv faolligi va sarguzasht ko'rsatkichlari",
+      "currentStreak": "Joriy Streak",
+      "longestStreak": "Eng uzundan-uzun Streak",
+      "totalStudyHours": "Jami o'qish",
+      "totalXp": "Jami XP",
+      "totalCoins": "Jami Tillalar",
+      "xpEarned": "XP to'plandi",
+      "coinsEarned": "Tilla olindi",
+      "studyMinutes": "O'qish daqiqasi",
+      "lessons": "Darslar",
+      "quizzes": "Quizlar",
+      "mocks": "Mock imtihonlar",
+      "emptyStateTitle": "📚 O'quv Sarguzashti Shu Yerdan Boshlanadi",
+      "emptyStateDesc": "Siz hali o'qishni boshlamadingiz. Birinchi darsingizni yakunlang va o'quv faollik zanjirini yarating!",
+      "startLearningBtn": "O'qishni Boshlash",
+      "days": "kun",
+      "hours": "soat",
+      "less": "Kam",
+      "more": "Ko'p",
+      "contribution": "faollik",
+      "contributions": "faolliklar",
+      "noContributions": "faollik yo'q",
+      "weekdays": {
+        "mon": "Du",
+        "wed": "Ch",
+        "fri": "Ju"
+      },
+      "months": {
+        "jan": "Yan",
+        "feb": "Fev",
+        "mar": "Mar",
+        "apr": "Apr",
+        "may": "May",
+        "jun": "Iyun",
+        "jul": "Iyul",
+        "aug": "Avg",
+        "sep": "Sen",
+        "oct": "Okt",
+        "nov": "Noy",
+        "dec": "Dek"
+      }
+    },
     "gamificationAdmin": {
       "title": "Gamification & Adventure Map Boshqaruvi",
       "subtitle": "O'yin qoidalari va Checkpoint mukofotlarini sozlang",

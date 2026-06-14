@@ -353,4 +353,142 @@ public class GamificationService {
     public void deleteCheckpoint(UUID id) {
         checkpointRepository.deleteById(id);
     }
+
+    /**
+     * Get user learning contributions for the last 365 days
+     */
+    @Transactional(readOnly = true)
+    public Map<String, Object> getUserContributions(User user) {
+        User freshUser = userRepository.findById(user.getId()).orElse(user);
+        LocalDateTime since = LocalDateTime.now().minusDays(364).truncatedTo(java.time.temporal.ChronoUnit.DAYS);
+
+        // Fetch user data over the last 365 days
+        List<PracticeSession> sessions = practiceSessionRepository.findAllByUserIdAndCreatedAtAfter(freshUser.getId(), since);
+        List<StudentAttempt> attempts = studentAttemptRepository.findAllByStudentIdAndStartedAtAfter(freshUser.getId(), since);
+        List<Attendance> attendanceList = attendanceRepository.findAllByStudentIdAndCreatedAtAfter(freshUser.getId(), since);
+        List<CoinTransaction> coinTransactions = coinTransactionRepository.findAllByStudentIdAndCreatedAtAfter(freshUser.getId(), since);
+
+        // Group by LocalDate
+        Map<LocalDate, Double> dailyPracticeMins = sessions.stream()
+                .collect(Collectors.groupingBy(
+                        s -> s.getCreatedAt().toLocalDate(),
+                        Collectors.summingDouble(PracticeSession::getMinutes)
+                ));
+
+        Map<LocalDate, Long> dailyLessons = attendanceList.stream()
+                .filter(a -> a.getStatus() == AttendanceStatus.PRESENT)
+                .collect(Collectors.groupingBy(
+                        a -> a.getCreatedAt().toLocalDate(),
+                        Collectors.counting()
+                ));
+
+        Map<LocalDate, List<StudentAttempt>> dailyAttempts = attempts.stream()
+                .filter(a -> a.getFinishedAt() != null)
+                .collect(Collectors.groupingBy(
+                        a -> a.getFinishedAt().toLocalDate()
+                ));
+
+        Map<LocalDate, Long> dailyCoins = coinTransactions.stream()
+                .filter(t -> t.getAmount() > 0)
+                .collect(Collectors.groupingBy(
+                        t -> t.getCreatedAt().toLocalDate(),
+                        Collectors.summingLong(CoinTransaction::getAmount)
+                ));
+
+        // Populate the 365 days list
+        List<Map<String, Object>> dailyList = new ArrayList<>();
+        double totalStudyMinutes = 0.0;
+        Set<LocalDate> activeDates = new HashSet<>();
+
+        for (int i = 364; i >= 0; i--) {
+            LocalDate date = LocalDate.now().minusDays(i);
+            
+            double practiceMin = dailyPracticeMins.getOrDefault(date, 0.0);
+            long lessons = dailyLessons.getOrDefault(date, 0L);
+            long coins = dailyCoins.getOrDefault(date, 0L);
+
+            // Filter attempts for this day
+            List<StudentAttempt> dayAttempts = dailyAttempts.getOrDefault(date, Collections.emptyList());
+            long quizzes = 0;
+            long mocks = 0;
+            for (StudentAttempt a : dayAttempts) {
+                if (a.getExam() != null) {
+                    ExamType type = a.getExam().getType();
+                    if (type == ExamType.IELTS || type == ExamType.NATIONAL_CERT || type == ExamType.SAT) {
+                        mocks++;
+                    } else {
+                        quizzes++;
+                    }
+                }
+            }
+
+            // Study minutes calculation:
+            // - Practice sessions: actual minutes
+            // - Lessons: 45 min
+            // - Quizzes: 15 min
+            // - Mocks: 120 min
+            double dayMinutes = practiceMin + (lessons * 45) + (quizzes * 15) + (mocks * 120);
+
+            // XP calculation:
+            // - Practice: 10 XP / min
+            // - Lessons: 100 XP
+            // - Quizzes: 50 XP
+            // - Mocks: 250 XP
+            long dayXp = Math.round(practiceMin * 10) + (lessons * 100) + (quizzes * 50) + (mocks * 250);
+
+            Map<String, Object> dayMap = new HashMap<>();
+            dayMap.put("date", date.toString());
+            dayMap.put("minutes", dayMinutes);
+            dayMap.put("lessons", lessons);
+            dayMap.put("quizzes", quizzes);
+            dayMap.put("mocks", mocks);
+            dayMap.put("xp", dayXp);
+            dayMap.put("coins", coins);
+
+            dailyList.add(dayMap);
+
+            totalStudyMinutes += dayMinutes;
+            if (dayMinutes > 0) {
+                activeDates.add(date);
+            }
+        }
+
+        // Calculate current streak
+        int currentStreak = 0;
+        LocalDate today = LocalDate.now();
+        LocalDate yesterday = today.minusDays(1);
+        
+        if (activeDates.contains(today) || activeDates.contains(yesterday)) {
+            LocalDate checkDate = activeDates.contains(today) ? today : yesterday;
+            while (activeDates.contains(checkDate)) {
+                currentStreak++;
+                checkDate = checkDate.minusDays(1);
+            }
+        }
+
+        // Calculate longest streak
+        int longestStreak = 0;
+        int tempStreak = 0;
+        for (int i = 364; i >= 0; i--) {
+            LocalDate date = LocalDate.now().minusDays(i);
+            if (activeDates.contains(date)) {
+                tempStreak++;
+                if (tempStreak > longestStreak) {
+                    longestStreak = tempStreak;
+                }
+            } else {
+                tempStreak = 0;
+            }
+        }
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("current_streak", currentStreak);
+        response.put("longest_streak", longestStreak);
+        response.put("total_study_hours", totalStudyMinutes / 60.0);
+        response.put("total_xp", freshUser.getXp() != null ? freshUser.getXp() : 0L);
+        response.put("total_coins", freshUser.getCoins() != null ? freshUser.getCoins() : 0L);
+        response.put("daily_contributions", dailyList);
+
+        return response;
+    }
 }
