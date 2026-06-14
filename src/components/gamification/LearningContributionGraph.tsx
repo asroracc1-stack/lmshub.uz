@@ -159,7 +159,7 @@ export default function LearningContributionGraph() {
         case 2: return "bg-green-300 border-green-400 hover:bg-green-400";
         case 3: return "bg-green-500 border-green-600 hover:bg-green-650";
         case 4: return "bg-green-700 border-green-800 hover:bg-green-800";
-        default: return "bg-slate-100 border-slate-200 hover:bg-slate-200";
+        default: return "bg-white border-slate-200/80 hover:bg-slate-50";
       }
     }
   };
