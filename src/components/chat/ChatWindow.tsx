@@ -26,6 +26,28 @@ interface ConversationParticipant { id: string; userId: string; user: ChatUser; 
 interface Message { id: string; body: string; attachmentUrl?: string; messageType?: string; fileUrl?: string; voiceUrl?: string; stickerUrl?: string; delivered?: boolean; seen?: boolean; isPinned?: boolean; isDeleted?: boolean; replyToId?: string; senderId: string; threadId: string; createdAt: string; senderName?: string; sender?: ChatUser; }
 interface Conversation { id: string; title?: string; isGroup: boolean; createdAt: string; participants: ConversationParticipant[]; messages: Message[]; }
 
+const normalizeMessage = (m: any): Message => {
+  if (!m) return m;
+  return {
+    ...m,
+    id: m.id,
+    body: m.body,
+    attachmentUrl: m.attachment_url || m.attachmentUrl,
+    messageType: m.message_type || m.messageType || "TEXT",
+    fileUrl: m.file_url || m.fileUrl,
+    voiceUrl: m.voice_url || m.voiceUrl,
+    stickerUrl: m.sticker_url || m.stickerUrl,
+    delivered: m.delivered ?? false,
+    seen: m.seen ?? false,
+    isPinned: m.is_pinned || m.isPinned || false,
+    isDeleted: m.is_deleted || m.isDeleted || false,
+    replyToId: m.reply_to_id || m.replyToId,
+    senderId: m.sender_id || m.senderId,
+    threadId: m.thread_id || m.threadId,
+    createdAt: m.created_at || m.createdAt,
+  };
+};
+
 export default function ChatWindow() {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -79,14 +101,8 @@ export default function ChatWindow() {
       client.subscribe('/user/queue/messages', (message) => {
         if (message.body) {
           const rawMsg = JSON.parse(message.body);
-          const newMsg = {
-            ...rawMsg,
-            createdAt: rawMsg.created_at || rawMsg.createdAt,
-            senderId: rawMsg.sender_id || rawMsg.senderId,
-            threadId: rawMsg.thread_id || rawMsg.threadId,
-            messageType: rawMsg.message_type || rawMsg.messageType || "TEXT",
-            delivered: true,
-          };
+          const newMsg = normalizeMessage(rawMsg);
+          newMsg.delivered = true;
           
           if (activeConversationRef.current?.id === newMsg.threadId) {
             setMessages((prev) => {
@@ -167,12 +183,7 @@ export default function ChatWindow() {
 
     try {
       const res = await api.get(`/chat/conversations/${conversation.id}/messages?limit=30`);
-      const mappedMessages = res.data.map((m: any) => ({
-        ...m,
-        createdAt: m.created_at || m.createdAt,
-        senderId: m.sender_id || m.senderId,
-        threadId: m.thread_id || m.threadId,
-      }));
+      const mappedMessages = res.data.map(normalizeMessage);
       setMessages(mappedMessages.reverse()); // Reverse because they come DESC from backend and we want oldest at top in virtual list
       if (mappedMessages.length > 0) setCursor(mappedMessages[0].createdAt);
       if (mappedMessages.length < 30) setHasMore(false);
@@ -200,11 +211,7 @@ export default function ChatWindow() {
     setLoadingMessages(true);
     try {
       const res = await api.get(`/chat/conversations/${activeConversation.id}/messages?cursor=${encodeURIComponent(cursor)}&limit=30`);
-      const mappedMessages = res.data.map((m: any) => ({
-        ...m,
-        createdAt: m.created_at || m.createdAt,
-        senderId: m.sender_id || m.senderId,
-      })).reverse();
+      const mappedMessages = res.data.map(normalizeMessage).reverse();
       
       if (mappedMessages.length > 0) {
         setMessages(prev => [...mappedMessages, ...prev]);
@@ -229,11 +236,7 @@ export default function ChatWindow() {
         replyToId: replyToMsg?.id
       });
       const rawMsg = res.data;
-      const newMsg = {
-        ...rawMsg,
-        createdAt: rawMsg.created_at || rawMsg.createdAt,
-        senderId: rawMsg.sender_id || rawMsg.senderId,
-      };
+      const newMsg = normalizeMessage(rawMsg);
       setMessages(prev => [...prev, newMsg]);
       setConversations(prev => prev.map(c => c.id === activeConversation.id ? { ...c, messages: [newMsg] } : c));
       setReplyToMsg(null);
@@ -376,13 +379,13 @@ export default function ChatWindow() {
                </div>
             ) : (
               <Virtuoso
-                style={{ height: '100%', overflowY: 'auto', overflowX: 'hidden', padding: '16px 16px' }}
+                style={{ height: '100%', overflowY: 'auto' }}
                 data={messages}
                 startReached={loadMoreMessages}
                 initialTopMostItemIndex={messages.length - 1}
                 followOutput="smooth"
                 itemContent={(index, msg) => (
-                  <div className="py-[6px] px-1 w-full overflow-hidden">
+                  <div className="py-[4px] px-4 md:px-6 w-full">
                     <MessageBubble 
                       msg={msg} 
                       isMine={msg.senderId === user?.id} 

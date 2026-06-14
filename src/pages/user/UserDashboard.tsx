@@ -27,7 +27,10 @@ import {
   Leaf,
   FileText,
   Send,
-  Gift
+  Gift,
+  Award,
+  Mic,
+  User as UserIcon,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -332,151 +335,66 @@ export default function UserDashboard() {
       {/* Premium Welcome Banner */}
       <WelcomeBanner />
 
-      {/* Onboarding Welcome Call-to-Action Banner */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.98 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.1 }}
-      >
-        <Card className="p-6 md:p-8 bg-gradient-to-br from-purple-600/10 via-indigo-600/5 to-pink-500/10 backdrop-blur-xl border border-purple-500/20 rounded-[2.5rem] shadow-xl overflow-hidden relative group">
-          <div className="absolute -right-24 -top-24 h-48 w-48 rounded-full bg-purple-500/20 blur-2xl pointer-events-none" />
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
-            <div className="space-y-2">
-              <Badge className="bg-purple-500 text-white uppercase text-[10px] tracking-widest font-black py-1 px-3.5 rounded-full">
-                Onboarding Portal
-              </Badge>
-              <h2 className="text-xl md:text-2xl font-black text-slate-800 dark:text-white leading-tight">
-                {t("userDashboard.promo.onboardingTitle")}
-              </h2>
-              <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
-                {t("userDashboard.promo.onboardingDesc")}
-              </p>
-            </div>
-            <Button
-              onClick={() => navigate("/user/subscriptions")}
-              className="bg-gradient-primary hover:opacity-90 text-white px-8 h-14 rounded-2xl font-black uppercase text-xs tracking-widest shadow-lg shadow-primary/20 shrink-0 flex items-center gap-2 group/btn"
-            >
-              {t("userDashboard.promo.choosePlansBtn")} <ChevronRight className="h-4 w-4 group-hover/btn:translate-x-1 transition-transform" />
-            </Button>
-          </div>
-        </Card>
+      {/* ========================================================
+       * SECTION: Onboarding Portal Banner — temporarily hidden
+       * Uncomment to restore: Ta'limni boshlash CTA baneri
+       * ========================================================
+      <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}>
+        <Card className="p-6 md:p-8 bg-gradient-to-br from-purple-600/10 via-indigo-600/5 to-pink-500/10 ..."> ... </Card>
       </motion.div>
+       * ======================================================== */}
 
-      {/* Free Tier Diagnostic Tests Section */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="font-display font-black text-2xl text-slate-800 dark:text-white flex items-center gap-2">
-              {t("userDashboard.freeMocks.title")} <Gift className="h-6 w-6 text-purple-500 animate-pulse" />
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-              {t("userDashboard.freeMocks.subtitle")}
-            </p>
-          </div>
-          <Badge className="bg-purple-500/10 text-purple-500 border border-purple-500/20 px-3.5 py-1.5 rounded-full font-black text-[10px] uppercase">
-            Free Tier Mocks
-          </Badge>
-        </div>
-
-        {loadingExams ? (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3].map((n) => (
-              <div key={n} className="h-40 rounded-3xl bg-slate-100 dark:bg-white/5 animate-pulse" />
-            ))}
-          </div>
-        ) : freeExams.length === 0 ? (
-          <Card className="p-8 text-center bg-white/40 dark:bg-slate-900/40 border border-slate-100 dark:border-white/5 rounded-3xl">
-            <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">{t("userDashboard.freeMocks.emptyState")}</p>
-          </Card>
-        ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {freeExams.map((e, i) => {
-              const diff = DIFFICULTY_META[e.difficulty] || DIFFICULTY_META.easy;
-              const DIcon = diff.icon;
-
-              return (
-                <motion.div
-                  key={e.id}
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                  whileHover={{ y: -4 }}
-                  className="flex"
-                >
-                  <Card className="w-full p-6 bg-white/60 dark:bg-slate-900/60 border border-slate-100 dark:border-white/5 backdrop-blur-xl rounded-[2rem] shadow-lg flex flex-col justify-between group">
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <Badge className="bg-purple-500/10 text-purple-500 border border-purple-500/20 uppercase text-[9px] font-bold tracking-wider rounded-full">
-                          Diagnostic Free
-                        </Badge>
-                        <Badge variant="outline" className={`rounded-full ${diff.cls} text-[9px] px-2 py-0.5`}>
-                          <DIcon className="h-3 w-3 mr-1" /> {t(diff.labelKey)}
-                        </Badge>
-                      </div>
-
-                      <div>
-                        <h4 className="font-bold text-base text-slate-800 dark:text-white line-clamp-1 group-hover:text-primary transition-colors">
-                          {e.title}
-                        </h4>
-                        {e.description && (
-                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed">
-                            {e.description}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-3 text-[11px] font-bold text-slate-500">
-                        <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> {e.durationMinutes} {t("mockCategory.minutesShort")}</span>
-                        <span className="flex items-center gap-1"><Layers className="h-3.5 w-3.5" /> {e.type}</span>
-                      </div>
-                    </div>
-
-                    <div className="pt-5 mt-4 border-t border-slate-100 dark:border-white/5">
-                      <Button
-                        onClick={() => navigate(`/user/mocks/take/${e.id}`)}
-                        className="w-full h-11 bg-slate-100 dark:bg-white/5 hover:bg-primary hover:text-white text-slate-700 dark:text-slate-200 rounded-xl font-black uppercase text-[10px] tracking-wider transition-all"
-                      >
-                        {t("mockCategory.startBtn")} <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
-                      </Button>
-                    </div>
-                  </Card>
-                </motion.div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+      {/* ========================================================
+       * SECTION: Free Tier Mocks — temporarily hidden
+       * Uncomment to restore: Bepul diagnostic testlar ro'yxati
+       * ======================================================== */}
 
       {/* Stat tiles */}
       <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-        {statCards.map((s, i) => {
-          const Icon = s.icon;
-          return (
-            <motion.button
-              type="button"
-              onClick={() => setOpenKey(s.key)}
-              key={s.label}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: i * 0.05 }}
-              whileHover={{ y: -5, scale: 1.02 }}
-              className="text-left group"
-            >
-              <Card className={cn(
-                "p-6 h-full transition-all duration-300 cursor-pointer border rounded-3xl",
-                isDark 
-                  ? "bg-slate-900/40 backdrop-blur-md border-white/5 shadow-xl group-hover:bg-slate-900/60 group-hover:border-white/10" 
-                  : "bg-white border-slate-100 shadow-xl shadow-slate-200/40 group-hover:shadow-2xl group-hover:border-slate-200"
-              )}>
-                <div className={cn("h-12 w-12 rounded-2xl flex items-center justify-center mb-5 border transition-transform group-hover:rotate-6 shadow-sm", s.color)}>
-                  <Icon className="h-6 w-6" />
-                </div>
-                <p className={cn("font-display text-3xl font-black tracking-tight leading-none", isDark ? "text-white" : "text-slate-900")}>{s.value}</p>
-                <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mt-2">{s.label}</p>
-              </Card>
-            </motion.button>
-          );
-        })}
+        {loading
+          ? Array.from({ length: 5 }).map((_, i) => (
+              <div
+                key={i}
+                className={cn(
+                  "p-6 rounded-3xl border animate-pulse",
+                  isDark
+                    ? "bg-slate-900/40 border-white/5"
+                    : "bg-white border-slate-100"
+                )}
+              >
+                <div className={cn("h-12 w-12 rounded-2xl mb-5", isDark ? "bg-white/10" : "bg-slate-100")} />
+                <div className={cn("h-8 w-20 rounded-lg mb-2", isDark ? "bg-white/10" : "bg-slate-100")} />
+                <div className={cn("h-3 w-24 rounded", isDark ? "bg-white/5" : "bg-slate-100")} />
+              </div>
+            ))
+          : statCards.map((s, i) => {
+              const Icon = s.icon;
+              return (
+                <motion.button
+                  type="button"
+                  onClick={() => setOpenKey(s.key)}
+                  key={s.label}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: i * 0.05 }}
+                  whileHover={{ y: -5, scale: 1.02 }}
+                  className="text-left group"
+                >
+                  <Card className={cn(
+                    "p-6 h-full transition-all duration-300 cursor-pointer border rounded-3xl",
+                    isDark 
+                      ? "bg-slate-900/40 backdrop-blur-md border-white/5 shadow-xl group-hover:bg-slate-900/60 group-hover:border-white/10" 
+                      : "bg-white border-slate-100 shadow-xl shadow-slate-200/40 group-hover:shadow-2xl group-hover:border-slate-200"
+                  )}>
+                    <div className={cn("h-12 w-12 rounded-2xl flex items-center justify-center mb-5 border transition-transform group-hover:rotate-6 shadow-sm", s.color)}>
+                      <Icon className="h-6 w-6" />
+                    </div>
+                    <p className={cn("font-display text-3xl font-black tracking-tight leading-none", isDark ? "text-white" : "text-slate-900")}>{s.value}</p>
+                    <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mt-2">{s.label}</p>
+                  </Card>
+                </motion.button>
+              );
+            })}
       </div>
 
       {/* Weekly chart */}
@@ -489,93 +407,181 @@ export default function UserDashboard() {
             <h3 className={cn("font-display font-black text-2xl", isDark ? "text-white" : "text-slate-900")}>{t("userDashboard.chart.title")}</h3>
             <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mt-1">{t("userDashboard.chart.subtitle")}</p>
           </div>
-          <Badge className="bg-purple-500/10 text-purple-500 border border-purple-500/20 px-4 py-1.5 rounded-full font-black text-xs">
-            {t("userDashboard.chart.totalMinutes", { count: (stats?.totalMinutes || 0).toFixed(1) })}
-          </Badge>
+          {loading ? (
+            <div className={cn("h-7 w-28 rounded-full animate-pulse", isDark ? "bg-white/10" : "bg-slate-100")} />
+          ) : (
+            <Badge className="bg-purple-500/10 text-purple-500 border border-purple-500/20 px-4 py-1.5 rounded-full font-black text-xs">
+              {t("userDashboard.chart.totalMinutes", { count: (stats?.totalMinutes || 0).toFixed(1) })}
+            </Badge>
+          )}
         </div>
         <div className="flex items-stretch justify-between gap-3 h-48 mt-12">
-          {stats?.weeklyData?.map((d, i) => {
-            const h = (d.minutes / maxMin) * 100;
-            return (
-              <div key={i} className="flex flex-col items-center flex-1 h-full group">
-                <div className="flex-1 w-full flex items-end justify-center px-1">
-                  <motion.div
-                    initial={{ height: 0 }}
-                    animate={{ height: `${Math.max(8, h)}%` }}
-                    transition={{ duration: 1, delay: i * 0.1, ease: "circOut" }}
-                    className="w-full max-w-[40px] bg-gradient-to-t from-purple-600 to-violet-400 rounded-2xl min-h-[8px] relative shadow-lg shadow-purple-500/20 group-hover:shadow-purple-500/40 transition-all"
-                  >
-                     <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-2 py-1 rounded font-bold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                        {d.minutes}m
-                     </div>
-                  </motion.div>
+          {loading
+            ? Array.from({ length: 7 }).map((_, i) => (
+                <div key={i} className="flex flex-col items-center flex-1 h-full">
+                  <div className="flex-1 w-full flex items-end justify-center px-1">
+                    <div
+                      className={cn("w-full max-w-[40px] rounded-2xl animate-pulse", isDark ? "bg-white/10" : "bg-slate-100")}
+                      style={{ height: `${30 + Math.random() * 50}%` }}
+                    />
+                  </div>
+                  <div className={cn("h-3 w-6 rounded mt-5 animate-pulse", isDark ? "bg-white/10" : "bg-slate-100")} />
                 </div>
-                <span className="text-[11px] font-bold text-slate-500 mt-5 uppercase tracking-tighter">{d.day}</span>
-              </div>
-            );
-          })}
+              ))
+            : stats?.weeklyData?.map((d, i) => {
+                const h = (d.minutes / maxMin) * 100;
+                return (
+                  <div key={i} className="flex flex-col items-center flex-1 h-full group">
+                    <div className="flex-1 w-full flex items-end justify-center px-1">
+                      <motion.div
+                        initial={{ height: 0 }}
+                        animate={{ height: `${Math.max(8, h)}%` }}
+                        transition={{ duration: 1, delay: i * 0.1, ease: "circOut" }}
+                        className="w-full max-w-[40px] bg-gradient-to-t from-purple-600 to-violet-400 rounded-2xl min-h-[8px] relative shadow-lg shadow-purple-500/20 group-hover:shadow-purple-500/40 transition-all"
+                      >
+                         <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-2 py-1 rounded font-bold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                            {d.minutes}m
+                         </div>
+                      </motion.div>
+                    </div>
+                    <span className="text-[11px] font-bold text-slate-500 mt-5 uppercase tracking-tighter">{d.day}</span>
+                  </div>
+                );
+              })}
         </div>
       </Card>
 
-      {/* Right Column Widgets */}
+      {/* ========================================================
+       * SECTION: Telegram Card + Daily Tasks — temporarily hidden
+       * Uncomment to restore: Telegram va kunlik vazifalar widget
+       * ========================================================
       <div className="grid lg:grid-cols-2 gap-6">
-        {/* Telegram Card */}
-        <Card className={cn(
-          "p-8 shadow-2xl rounded-[2rem] group overflow-hidden relative border",
-          isDark ? "bg-slate-900/40 backdrop-blur-md border-white/5" : "bg-white border-slate-100 shadow-slate-200/50"
-        )}>
-          <div className={cn("absolute -right-4 -top-4 h-32 w-32 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700", isDark ? "bg-blue-500/10" : "bg-blue-50")} />
-          <div className="relative z-10">
-            <div className={cn("h-14 w-14 rounded-2xl flex items-center justify-center mb-6 border transition-all", isDark ? "bg-blue-500/10 text-blue-400 border-blue-500/20" : "bg-blue-50 text-blue-600 border-blue-100")}>
-              <Send size={28} />
-            </div>
-            <h4 className={cn("font-display font-black text-2xl mb-3 tracking-tight", isDark ? "text-white" : "text-slate-900")}>{t("userDashboard.telegram.title")}</h4>
-            <p className="text-slate-500 text-base font-medium leading-relaxed mb-8">
-              {t("userDashboard.telegram.desc")}
-            </p>
-            <a
-              href="https://t.me/LMSHub_uz"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-3 text-blue-600 font-black text-sm uppercase tracking-widest group/link hover:text-blue-500 transition-colors"
-            >
-              {t("userDashboard.telegram.subscribeBtn")} <ChevronRight size={18} className="group-hover/link:translate-x-2 transition-transform" />
-            </a>
-          </div>
-        </Card>
-
-        {/* Daily Tasks Widget */}
+        <TelegramCard />
         <DailyTasks />
       </div>
+       * ======================================================== */}
 
-      {/* Donation card */}
-      <DonationCard />
+      {/* ========================================================
+       * SECTION: Donation Card — temporarily hidden
+       * Uncomment to restore: <DonationCard />
+       * ======================================================== */}
 
-      {/* Quick links */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {[
-          { to: "/user/leaderboard", label: t("nav.leaderboard"), emoji: "🏆", color: "from-amber-400 to-orange-500", shadow: "shadow-amber-500/10" },
-          { to: "/user/achievements", label: t("nav.achievements"), emoji: "🎖️", color: "from-blue-400 to-indigo-500", shadow: "shadow-blue-500/10" },
-          { to: "/user/profile", label: t("nav.account"), emoji: "👤", color: "from-slate-400 to-slate-600", shadow: "shadow-slate-500/10" },
-        ].map((q) => (
-          <Link key={q.to} to={q.to}>
-             <Card className={cn(
-               "p-6 flex items-center justify-between hover:shadow-2xl transition-all duration-300 rounded-[1.5rem] border group relative overflow-hidden",
-               isDark ? "bg-slate-900/40 border-white/5" : "bg-white border-slate-100 shadow-slate-200/30",
-               q.shadow
-             )}>
-               <div className={`absolute left-0 top-0 w-1.5 h-full bg-gradient-to-b ${q.color}`} />
-              <div className="flex items-center gap-5">
-                <span className="text-4xl transform group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">{q.emoji}</span>
-                <p className={cn("font-black uppercase tracking-wider text-sm", isDark ? "text-white" : "text-slate-700")}>{q.label}</p>
-              </div>
-              <div className={cn("h-10 w-10 rounded-full flex items-center justify-center transition-all shadow-inner", isDark ? "bg-white/5 group-hover:bg-white group-hover:text-slate-900" : "bg-slate-50 group-hover:bg-slate-900 group-hover:text-white")}>
-                <ArrowRight size={20} />
-              </div>
-             </Card>
-          </Link>
-        ))}
+      {/* Professional Quick Navigation */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className={cn("font-display font-bold text-lg", isDark ? "text-white" : "text-slate-900")}>
+            Tezkor harakatlar
+          </h3>
+          <div className={cn("h-px flex-1 ml-4", isDark ? "bg-white/5" : "bg-slate-100")} />
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          {[
+            {
+              to: "/user/mocks",
+              label: "Mock testlar",
+              icon: Target,
+              gradient: "from-violet-500 to-purple-600",
+              glow: "shadow-violet-500/20",
+              lightBg: "bg-violet-50",
+              lightText: "text-violet-700",
+              darkBg: "bg-violet-500/10",
+              darkText: "text-violet-300",
+            },
+            {
+              to: "/user/leaderboard",
+              label: t("nav.leaderboard"),
+              icon: Crown,
+              gradient: "from-amber-500 to-orange-500",
+              glow: "shadow-amber-500/20",
+              lightBg: "bg-amber-50",
+              lightText: "text-amber-700",
+              darkBg: "bg-amber-500/10",
+              darkText: "text-amber-300",
+            },
+            {
+              to: "/user/achievements",
+              label: t("nav.achievements"),
+              icon: Award,
+              gradient: "from-blue-500 to-indigo-500",
+              glow: "shadow-blue-500/20",
+              lightBg: "bg-blue-50",
+              lightText: "text-blue-700",
+              darkBg: "bg-blue-500/10",
+              darkText: "text-blue-300",
+            },
+            {
+              to: "/user/speaking",
+              label: "Speaking",
+              icon: Mic,
+              gradient: "from-emerald-500 to-teal-500",
+              glow: "shadow-emerald-500/20",
+              lightBg: "bg-emerald-50",
+              lightText: "text-emerald-700",
+              darkBg: "bg-emerald-500/10",
+              darkText: "text-emerald-300",
+            },
+            {
+              to: "/user/subscriptions",
+              label: "Paketlar",
+              icon: Layers,
+              gradient: "from-pink-500 to-rose-500",
+              glow: "shadow-pink-500/20",
+              lightBg: "bg-pink-50",
+              lightText: "text-pink-700",
+              darkBg: "bg-pink-500/10",
+              darkText: "text-pink-300",
+            },
+            {
+              to: "/user/profile",
+              label: t("nav.account"),
+              icon: UserIcon,
+              gradient: "from-slate-500 to-slate-600",
+              glow: "shadow-slate-500/20",
+              lightBg: "bg-slate-50",
+              lightText: "text-slate-700",
+              darkBg: "bg-slate-500/10",
+              darkText: "text-slate-300",
+            },
+          ].map((item, i) => {
+            const Icon = item.icon;
+            return (
+              <Link key={item.to} to={item.to}>
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                  whileHover={{ y: -4, scale: 1.02 }}
+                  className={cn(
+                    "flex flex-col items-center gap-3 p-5 rounded-2xl border cursor-pointer transition-all duration-300 group",
+                    isDark
+                      ? "bg-slate-900/40 border-white/5 hover:bg-slate-900/70 hover:border-white/10"
+                      : "bg-white border-slate-100 hover:shadow-xl hover:border-slate-200 shadow-sm"
+                  )}
+                >
+                  <div
+                    className={cn(
+                      "h-12 w-12 rounded-xl flex items-center justify-center shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:rotate-3",
+                      `bg-gradient-to-br ${item.gradient} ${item.glow} shadow-md`
+                    )}
+                  >
+                    <Icon className="h-5 w-5 text-white" />
+                  </div>
+                  <span
+                    className={cn(
+                      "text-xs font-bold tracking-wide text-center leading-tight",
+                      isDark ? "text-slate-300" : "text-slate-600"
+                    )}
+                  >
+                    {item.label}
+                  </span>
+                </motion.div>
+              </Link>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
 }
+

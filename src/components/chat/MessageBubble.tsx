@@ -43,14 +43,14 @@ export default function MessageBubble({ msg, isMine, isGroup, onReply, onForward
     <motion.div
       initial={{ opacity: 0, y: 5 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`flex ${isMine ? "justify-end" : "justify-start"} group relative w-full overflow-hidden`}
+      className={`flex ${isMine ? "justify-end" : "justify-start"} group relative w-full`}
     >
       <div 
         style={{ wordBreak: "break-word", overflowWrap: "break-word" }}
-        className={`max-w-[70%] rounded-2xl px-3.5 py-2 text-[13px] shadow-sm space-y-1 relative ${
+        className={`max-w-[70%] rounded-2xl px-3.5 py-2 text-[13px] shadow-md space-y-1 relative ${
           isMine 
-            ? "bg-gradient-to-br from-purple-600 to-indigo-600 text-white rounded-br-sm" 
-            : "bg-[#F3F4F6] text-[#1A102A] rounded-bl-sm border border-slate-200/80 dark:bg-slate-850 dark:text-slate-100 dark:border-slate-800/80"
+            ? "bg-gradient-to-br from-purple-600 to-indigo-650 text-white rounded-br-sm shadow-purple-500/10 border border-purple-500/10" 
+            : "bg-[#F3F4F6] text-[#1A102A] rounded-bl-sm border border-slate-200/80 dark:bg-[#1E192B] dark:text-[#E2DEED] dark:border-violet-950/40 shadow-sm"
         }`}
       >
         
@@ -96,28 +96,28 @@ export default function MessageBubble({ msg, isMine, isGroup, onReply, onForward
         )}
         
         {msg.messageType === "FILE" && msg.attachmentUrl && (
-          <div className={`mb-1 p-2 rounded-lg border ${isMine ? "border-white/20 bg-black/10 text-white" : "border-border/40 bg-background"} flex items-center gap-2`}>
+          <div className={`mb-1 p-2 rounded-lg border ${isMine ? "border-white/20 bg-black/20 text-white" : "border-border/40 bg-background dark:bg-black/20"} flex items-center gap-2`}>
             <Paperclip className="h-4 w-4 shrink-0" />
             <a 
               href={msg.attachmentUrl} 
               target="_blank" 
               rel="noreferrer" 
-              className="text-xs font-medium truncate max-w-[180px]"
+              className="text-xs font-medium truncate max-w-[180px] hover:underline"
             >
               Fayl biriktirmasi
             </a>
           </div>
         )}
 
-        {msg.messageType === "IMAGE" && msg.fileUrl && (
-          <div className="mb-1 rounded-lg overflow-hidden max-w-[200px] cursor-pointer">
-             <img src={msg.fileUrl} alt="Image" className="w-full h-auto object-cover" />
+        {msg.messageType === "IMAGE" && (msg.fileUrl || msg.attachmentUrl) && (
+          <div className="mb-1 rounded-xl overflow-hidden max-w-[260px] cursor-pointer shadow-sm hover:opacity-95 transition-opacity border border-black/10 dark:border-white/10">
+             <img src={msg.fileUrl || msg.attachmentUrl} alt="Image" className="w-full h-auto max-h-[300px] object-cover" />
           </div>
         )}
 
-        {msg.messageType === "VOICE" && msg.voiceUrl && (
-          <div className={`mb-1 p-2 rounded-lg flex items-center gap-2 ${isMine ? 'bg-black/10' : 'bg-background'}`}>
-             <audio controls src={msg.voiceUrl} className="h-8 w-[200px]" />
+        {msg.messageType === "VOICE" && (msg.voiceUrl || msg.attachmentUrl) && (
+          <div className={`mb-1 p-2 rounded-xl flex items-center gap-2 ${isMine ? 'bg-black/20 text-white' : 'bg-background/80 dark:bg-black/20 text-foreground'} border border-black/5 dark:border-white/5 shadow-inner`}>
+             <audio controls src={msg.voiceUrl || msg.attachmentUrl} className="h-8 w-[220px] max-w-full accent-primary" />
           </div>
         )}
 

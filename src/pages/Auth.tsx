@@ -62,6 +62,7 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
   const [isGoogleSuccess, setIsGoogleSuccess] = useState(false);
   const [showPwd, setShowPwd] = useState(false);
   const [successMode, setSuccessMode] = useState(false);
+  const [successIsSignIn, setSuccessIsSignIn] = useState(false);
   const [phoneError, setPhoneError] = useState(false);
   const { prefetchRouteData } = usePrefetchHelper();
 
@@ -150,12 +151,18 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
     }
 
     if (isSignup) {
+      setSuccessIsSignIn(false);
+      setSuccessMode(true);
+      setTimeout(() => {
+        window.location.href = targetPath;
+      }, 1800);
+    } else {
+      // Show success animation for login too
+      setSuccessIsSignIn(true);
       setSuccessMode(true);
       setTimeout(() => {
         window.location.href = targetPath;
       }, 1500);
-    } else {
-      window.location.href = targetPath;
     }
   };
 
@@ -216,7 +223,10 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
         toast.error(apiErr.response?.data?.message || apiErr.message || (isSignIn ? "Login yoki parol noto'g'ri. Iltimos tekshirib qayta kiriting!" : "Xatolik yuz berdi"));
       }
     } finally {
-      if (!successMode) setSubmitting(false);
+      // Only clear submitting if we are NOT transitioning to success animation
+      setTimeout(() => {
+        if (!successMode) setSubmitting(false);
+      }, 50);
     }
   };
 
@@ -252,14 +262,55 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
   };
 
   if (successMode) {
+    const successMsg = isGoogleSuccess
+      ? "Google orqali muvaffaqiyatli kirdingiz! Dashboardga yo'naltirilmoqdasiz..."
+      : successIsSignIn
+      ? "Muvaffaqiyatli kirdingiz! Dashboardga yo'naltirilmoqdasiz..."
+      : "Ro'yxatdan o'tish muvaffaqiyatli yakunlandi! Dashboardga yo'naltirilmoqdasiz...";
+
     return (
-      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-slate-50 dark:bg-[#030712]">
-        <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-center">
-          <DotLottieReact src="https://lottie.host/05a8da46-bffb-4416-a160-0b16adbce445/CxzFkSjThh.lottie" loop autoplay className="w-[300px] h-[300px]" />
-          <h2 className="text-3xl font-bold text-slate-900 dark:text-white mt-6 tracking-tight">{t("dynamic.dashboard.muvaffaqiyatli")}</h2>
-          <p className="text-purple-600 dark:text-purple-500 mt-3 font-medium">
-            {isGoogleSuccess ? "Google orqali muvaffaqiyatli kirdingiz! Dashboardga yo'naltirilmoqdasiz..." : "Dashboardga yo'naltirilmoqdasiz..."}
-          </p>
+      <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#FCFAFF] dark:bg-[#030712]">
+        {/* Background glow */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-purple-400/10 dark:bg-purple-800/10 blur-[120px]" />
+        </div>
+        <motion.div
+          initial={{ scale: 0.85, opacity: 0, y: 20 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          className="text-center relative z-10 flex flex-col items-center"
+        >
+          <DotLottieReact
+            src="https://lottie.host/05a8da46-bffb-4416-a160-0b16adbce445/CxzFkSjThh.lottie"
+            loop
+            autoplay
+            className="w-[280px] h-[280px]"
+          />
+          <motion.h2
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="text-3xl font-bold text-slate-900 dark:text-white mt-2 tracking-tight"
+          >
+            {t("dynamic.dashboard.muvaffaqiyatli")} 🎉
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.45 }}
+            className="text-purple-600 dark:text-purple-400 mt-3 font-medium text-base max-w-xs"
+          >
+            {successMsg}
+          </motion.p>
+          {/* Animated progress bar */}
+          <motion.div className="mt-8 w-48 h-1 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
+            <motion.div
+              className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full"
+              initial={{ width: "0%" }}
+              animate={{ width: "100%" }}
+              transition={{ duration: successIsSignIn ? 1.4 : 1.7, ease: "easeInOut" }}
+            />
+          </motion.div>
         </motion.div>
       </div>
     );
