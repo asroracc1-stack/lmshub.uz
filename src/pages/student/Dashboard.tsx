@@ -1,20 +1,37 @@
 import { useTranslation } from "react-i18next";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { useStudentDashboard } from "@/hooks/useOptimizedQueries";
+import { api } from "@/lib/axios";
+import { motion } from "framer-motion";
 
 import DashboardBanner from "@/components/student/dashboard/DashboardBanner";
-import DailyStreakCard from "@/components/student/dashboard/DailyStreakCard";
-import MetricCardsRow from "@/components/student/dashboard/MetricCardsRow";
-import WeeklyChart from "@/components/student/dashboard/WeeklyChart";
-import GoalsAndAchievements from "@/components/student/dashboard/GoalsAndAchievements";
+import { AdventureMap } from "@/components/gamification/AdventureMap";
+import LearningContributionGraph from "@/components/gamification/LearningContributionGraph";
 import LeaderboardAndHistory from "@/components/student/dashboard/LeaderboardAndHistory";
 
 export default function StudentDashboard() {
   const { t } = useTranslation();
   const { data, isLoading, error } = useStudentDashboard();
+  const [mapProgress, setMapProgress] = useState<any>(null);
+  const [loadingMap, setLoadingMap] = useState(true);
 
-  if (isLoading) {
+  const fetchMapProgress = async () => {
+    try {
+      const res = await api.get("/user/gamification/progress");
+      setMapProgress(res.data);
+    } catch (e) {
+      console.error("Failed to load map progress", e);
+    } finally {
+      setLoadingMap(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMapProgress();
+  }, []);
+
+  if (isLoading || loadingMap) {
     return (
       <div className="h-full flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-violet-600" />
@@ -36,21 +53,26 @@ export default function StudentDashboard() {
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 dark:bg-primary/10 rounded-full blur-[120px] -z-10 pointer-events-none" />
 
       <DashboardBanner data={data} />
-      
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="md:col-span-1">
-          <DailyStreakCard data={data} />
-        </div>
-        <div className="md:col-span-3">
-          <div className="space-y-6">
-            <MetricCardsRow data={data} />
-            <WeeklyChart data={data} />
-          </div>
-        </div>
-      </div>
 
-      <GoalsAndAchievements data={data} />
+      {/* Adventure Map Premium Section */}
+      {mapProgress && (
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+        >
+          <AdventureMap
+            progressData={mapProgress}
+            compact={true}
+            onRefresh={fetchMapProgress}
+          />
+        </motion.div>
+      )}
       
+      {/* GitHub-like Learning Activity heatmap */}
+      <LearningContributionGraph />
+      
+      {/* Premium 3-column stats, plan, and payment cards */}
       <LeaderboardAndHistory data={data} />
     </div>
   );
