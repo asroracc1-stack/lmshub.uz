@@ -14,6 +14,8 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Gift,
+  Star,
+  CircleDollarSign,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -453,6 +455,27 @@ export default function RoleLayout({
 
             <div className="flex items-center gap-2 md:gap-4 h-full py-2">
               <SmartClock />
+
+              {/* Gamification Stats */}
+              <div className="hidden sm:flex items-center gap-2 px-1">
+                <div 
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border/60 bg-white/50 dark:bg-slate-900/50 shadow-sm cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                  onClick={() => navigate(`${basePath}/achievements`)}
+                  title="Sizning tangalaringiz"
+                >
+                  <CircleDollarSign className="w-4 h-4 text-emerald-500" />
+                  <span className="text-[13px] font-bold text-slate-800 dark:text-slate-200">{profile?.coins || 0}</span>
+                </div>
+                <div 
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border/60 bg-white/50 dark:bg-slate-900/50 shadow-sm cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                  onClick={() => navigate(`${basePath}/achievements`)}
+                  title="Yutuqlar"
+                >
+                  <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+                  <span className="text-[13px] font-bold text-slate-800 dark:text-slate-200">0</span>
+                </div>
+              </div>
+
               <button
                 onClick={() => window.dispatchEvent(new Event("open-global-search"))}
                 className="hidden lg:flex items-center gap-2 px-3 h-9 rounded-lg border border-border bg-muted/30 text-xs text-muted-foreground hover:bg-muted/50 hover:border-primary/30 transition-all cursor-pointer"
