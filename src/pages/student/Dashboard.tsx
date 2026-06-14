@@ -59,22 +59,11 @@ export default function StudentDashboard() {
 
       {/* Adventure Map Premium Section */}
       {mapProgress && (
-        <div className="relative">
-          <AdventureMap
-            progressData={mapProgress}
-            compact={true}
-            onRefresh={fetchMapProgress}
-          />
-          <div className="absolute top-5 right-6 z-10">
-            <Link
-              to="/student/map"
-              className="px-4 py-1.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 text-xs font-black rounded-xl hover:from-amber-600 hover:to-yellow-500 transition shadow-lg flex items-center gap-1"
-            >
-              {t("learningWorld.openFullMap")}
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-        </div>
+        <AdventureMap
+          progressData={mapProgress}
+          compact={true}
+          onRefresh={fetchMapProgress}
+        />
       )}
 
       

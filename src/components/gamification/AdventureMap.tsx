@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Gift, Lock, Check, Compass, Star, Trophy, Award, MapPin, ArrowRight, Flame, ChevronRight, User } from "lucide-react";
+import { Gift, Lock, Compass, Star, Trophy, MapPin, ArrowRight, Flame } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/axios";
 import confetti from "canvas-confetti";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 interface Checkpoint {
   id: string;
@@ -47,14 +47,14 @@ export const AdventureMap: React.FC<AdventureMapProps> = ({ progressData, compac
   const getLocalizedCurrentRegion = (regKey: string) => {
     if (!regKey) return "";
     const lowerKey = regKey.toLowerCase();
-    if (lowerKey.includes("village") || lowerKey.includes("boshlanish")) return t("learningWorld.regions.startVillage");
-    if (lowerKey.includes("forest") || lowerKey.includes("o'rmon") || lowerKey.includes("ormon")) return t("learningWorld.regions.readingForest");
-    if (lowerKey.includes("ocean") || lowerKey.includes("okean")) return t("learningWorld.regions.listeningOcean");
-    if (lowerKey.includes("city") || lowerKey.includes("shahar")) return t("learningWorld.regions.writingCity");
-    if (lowerKey.includes("arena") || lowerKey.includes("arena")) return t("learningWorld.regions.speakingArena");
-    if (lowerKey.includes("kingdom") || lowerKey.includes("qirollik")) return t("learningWorld.regions.nationalCertKingdom");
-    if (lowerKey.includes("space") || lowerKey.includes("kosmik")) return t("learningWorld.regions.satSpaceAcademy");
-    if (lowerKey.includes("castle") || lowerKey.includes("qal'a") || lowerKey.includes("qala")) return t("learningWorld.regions.masterCastle");
+    if (lowerKey.includes("village") || lowerKey.includes("boshlanish")) return t("dynamic.learningWorld.regions.startVillage");
+    if (lowerKey.includes("forest") || lowerKey.includes("o'rmon") || lowerKey.includes("ormon")) return t("dynamic.learningWorld.regions.readingForest");
+    if (lowerKey.includes("ocean") || lowerKey.includes("okean")) return t("dynamic.learningWorld.regions.listeningOcean");
+    if (lowerKey.includes("city") || lowerKey.includes("shahar")) return t("dynamic.learningWorld.regions.writingCity");
+    if (lowerKey.includes("arena") || lowerKey.includes("arena")) return t("dynamic.learningWorld.regions.speakingArena");
+    if (lowerKey.includes("kingdom") || lowerKey.includes("qirollik")) return t("dynamic.learningWorld.regions.nationalCertKingdom");
+    if (lowerKey.includes("space") || lowerKey.includes("kosmik")) return t("dynamic.learningWorld.regions.satSpaceAcademy");
+    if (lowerKey.includes("castle") || lowerKey.includes("qal'a") || lowerKey.includes("qala")) return t("dynamic.learningWorld.regions.masterCastle");
     return regKey;
   };
 
@@ -62,10 +62,10 @@ export const AdventureMap: React.FC<AdventureMapProps> = ({ progressData, compac
   const nextCheckpoint = checkpoints?.find(cp => !cp.claimed);
 
   const getChestRarity = (targetDistance: number) => {
-    if (targetDistance <= 120000) return { name: t("learningWorld.chests.common"), color: "#10B981", bg: "bg-emerald-500/10 border-emerald-500/30", iconColor: "text-emerald-400" };
-    if (targetDistance <= 280000) return { name: t("learningWorld.chests.rare"), color: "#3B82F6", bg: "bg-blue-500/10 border-blue-500/30", iconColor: "text-blue-400" };
-    if (targetDistance <= 420000) return { name: t("learningWorld.chests.epic"), color: "#8B5CF6", bg: "bg-purple-500/10 border-purple-500/30", iconColor: "text-purple-400" };
-    return { name: t("learningWorld.chests.legendary"), color: "#F59E0B", bg: "bg-amber-500/10 border-amber-500/30", iconColor: "text-amber-400" };
+    if (targetDistance <= 120000) return { name: t("dynamic.learningWorld.chests.common"), color: "#10B981", bg: "bg-emerald-500/10 border-emerald-500/30", iconColor: "text-emerald-400" };
+    if (targetDistance <= 280000) return { name: t("dynamic.learningWorld.chests.rare"), color: "#3B82F6", bg: "bg-blue-500/10 border-blue-500/30", iconColor: "text-blue-400" };
+    if (targetDistance <= 420000) return { name: t("dynamic.learningWorld.chests.epic"), color: "#8B5CF6", bg: "bg-purple-500/10 border-purple-500/30", iconColor: "text-purple-400" };
+    return { name: t("dynamic.learningWorld.chests.legendary"), color: "#F59E0B", bg: "bg-amber-500/10 border-amber-500/30", iconColor: "text-amber-400" };
   };
 
   const handleClaim = async () => {
@@ -80,40 +80,47 @@ export const AdventureMap: React.FC<AdventureMapProps> = ({ progressData, compac
           origin: { y: 0.6 },
           colors: ["#F59E0B", "#10B981", "#3B82F6", "#8B5CF6"]
         });
-        toast.success(t("learningWorld.successClaim"));
+        toast.success(t("dynamic.learningWorld.successClaim"));
         setSelectedCheckpoint(null);
         if (onRefresh) onRefresh();
       } else {
-        toast.error(response.data?.message || t("learningWorld.errorClaim"));
+        toast.error(response.data?.message || t("dynamic.learningWorld.errorClaim"));
       }
     } catch (error: any) {
-      toast.error(error.response?.data?.message || t("learningWorld.errorClaim"));
+      toast.error(error.response?.data?.message || t("dynamic.learningWorld.errorClaim"));
     } finally {
       setClaiming(false);
     }
   };
 
   // ----------------------------------------------------
-  // COMPACT VERSION: Premium SaaS HUD Card, NO SVG MAP
+  // COMPACT VERSION: Premium Illustrated Game Scroll HUD
   // ----------------------------------------------------
   if (compact) {
     return (
-      <div className={`relative w-full overflow-hidden rounded-[2rem] border p-6 md:p-8 shadow-xl transition-all duration-500 ${
+      <div className={`relative w-full overflow-hidden rounded-[2.5rem] border p-6 md:p-8 shadow-2xl transition-all duration-500 ${
         isDark 
-          ? "bg-slate-900/40 border-white/5 shadow-slate-950/50 backdrop-blur-md" 
-          : "bg-white border-slate-100 shadow-slate-200/40"
+          ? "bg-gradient-to-br from-[#0c152b] via-[#090e1a] to-[#050810] border-slate-800/80 shadow-slate-950/60" 
+          : "bg-gradient-to-br from-amber-50/60 via-orange-50/20 to-sky-100/50 border-orange-100 shadow-orange-100/40"
       }`}>
-        <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-[80px] -z-10 pointer-events-none" />
-        
+        {/* Beautiful adventure themed vector background */}
+        <div className="absolute right-0 top-0 bottom-0 w-1/3 opacity-15 pointer-events-none -z-10">
+          <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <path d="M0,50 Q25,35 50,50 T100,50" fill="none" stroke={isDark ? "#38bdf8" : "#f59e0b"} strokeWidth="1.5" />
+            <path d="M0,70 Q25,55 50,70 T100,70" fill="none" stroke={isDark ? "#38bdf8" : "#f59e0b"} strokeWidth="1" />
+            <circle cx="80" cy="40" r="15" fill="none" stroke={isDark ? "#38bdf8" : "#f59e0b"} strokeWidth="1.5" strokeDasharray="3 3" />
+          </svg>
+        </div>
+
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-2.5">
+          <div className="space-y-3">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-gradient-to-tr from-amber-500 to-yellow-400 rounded-2xl text-slate-950 shadow-md">
-                <Compass className="w-5 h-5 animate-pulse" />
+              <div className="p-3 bg-gradient-to-tr from-amber-500 to-yellow-400 rounded-2xl text-slate-950 shadow-lg shadow-orange-500/20">
+                <Compass className="w-5 h-5 animate-spin-slow" />
               </div>
               <div>
                 <span className="text-[10px] font-black uppercase tracking-widest text-amber-500 block">
-                  {t("learningWorld.title")}
+                  {t("dynamic.learningWorld.title")}
                 </span>
                 <h3 className={`text-xl font-black ${isDark ? "text-white" : "text-slate-900"}`}>
                   {getLocalizedCurrentRegion(current_region)}
@@ -121,18 +128,24 @@ export const AdventureMap: React.FC<AdventureMapProps> = ({ progressData, compac
               </div>
             </div>
             
-            <div className="flex flex-wrap items-center gap-4 text-xs font-bold text-slate-400">
-              <span className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-slate-800/60 rounded-xl">
-                <Trophy className="w-4 h-4 text-amber-400" />
+            <div className="flex flex-wrap items-center gap-3 text-xs font-bold">
+              <span className={`flex items-center gap-1.5 px-3 py-1.5 border rounded-xl shadow-sm ${
+                isDark ? "bg-slate-900/60 border-slate-800 text-amber-300" : "bg-white border-orange-100 text-orange-700"
+              }`}>
+                <Trophy className="w-4 h-4 text-amber-500" />
                 {Math.round(total_distance / 1000)} km
               </span>
-              <span className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-slate-800/60 rounded-xl">
+              <span className={`flex items-center gap-1.5 px-3 py-1.5 border rounded-xl shadow-sm ${
+                isDark ? "bg-slate-900/60 border-slate-800 text-yellow-300" : "bg-white border-orange-100 text-orange-600"
+              }`}>
                 <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                {xp} {t("learningWorld.xp")}
+                {xp} {t("dynamic.learningWorld.xp")}
               </span>
-              <span className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-slate-800/60 rounded-xl">
+              <span className={`flex items-center gap-1.5 px-3 py-1.5 border rounded-xl shadow-sm ${
+                isDark ? "bg-slate-900/60 border-slate-800 text-orange-300" : "bg-white border-orange-100 text-orange-600"
+              }`}>
                 <Flame className="w-4 h-4 text-orange-500 fill-orange-500" />
-                {streak} {t("learningWorld.dailyStreak")}
+                {streak} {t("dynamic.learningWorld.dailyStreak")}
               </span>
             </div>
           </div>
@@ -140,16 +153,16 @@ export const AdventureMap: React.FC<AdventureMapProps> = ({ progressData, compac
           <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-4 min-w-[280px]">
             {nextCheckpoint && (
               <div className={`flex-1 p-3.5 rounded-2xl border ${
-                isDark ? "bg-slate-950/60 border-slate-800/80" : "bg-slate-50 border-slate-100"
+                isDark ? "bg-slate-950/60 border-slate-800/80" : "bg-white border-orange-100 shadow-sm"
               }`}>
                 <div className="flex justify-between items-center gap-2 mb-1">
-                  <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">{t("learningWorld.nextReward")}</span>
-                  <span className="text-[9px] font-bold text-amber-400">{Math.round(nextCheckpoint.target_distance / 1000)}km</span>
+                  <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">{t("dynamic.learningWorld.nextReward")}</span>
+                  <span className="text-[9px] font-bold text-amber-500">{Math.round(nextCheckpoint.target_distance / 1000)}km</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Gift className="w-4 h-4 text-amber-500 animate-bounce" />
                   <span className={`text-xs font-bold truncate ${isDark ? "text-slate-200" : "text-slate-700"}`}>
-                    {nextCheckpoint.reward_type === "COIN_BOX" ? `${nextCheckpoint.reward_value} ${t("learningWorld.coins")}` : `${t("learningWorld.rewardChest")}`}
+                    {nextCheckpoint.reward_type === "COIN_BOX" ? `${nextCheckpoint.reward_value} ${t("dynamic.learningWorld.coins")}` : `${t("dynamic.learningWorld.rewardChest")}`}
                   </span>
                 </div>
               </div>
@@ -157,9 +170,9 @@ export const AdventureMap: React.FC<AdventureMapProps> = ({ progressData, compac
 
             <button
               onClick={() => navigate(total_distance >= 0 ? "/user/map" : "/student/map")}
-              className="px-6 py-4 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-600 hover:to-yellow-500 text-slate-950 text-xs font-black rounded-2xl shadow-lg transition flex items-center justify-center gap-2 group whitespace-nowrap self-stretch md:self-auto"
+              className="px-6 py-4 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-600 hover:to-yellow-500 text-slate-950 text-xs font-black rounded-2xl shadow-lg shadow-orange-500/20 transition flex items-center justify-center gap-2 group whitespace-nowrap self-stretch md:self-auto"
             >
-              {t("learningWorld.openFullMap")}
+              {t("dynamic.learningWorld.openFullMap")}
               <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
             </button>
           </div>
@@ -167,7 +180,7 @@ export const AdventureMap: React.FC<AdventureMapProps> = ({ progressData, compac
 
         <div className="mt-5">
           <div className="flex justify-between text-[10px] font-bold text-slate-400 mb-1.5">
-            <span>{t("learningWorld.progress")}</span>
+            <span>{t("dynamic.learningWorld.progress")}</span>
             <span>{Math.round(progress_percentage)}%</span>
           </div>
           <div className="w-full h-2 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
@@ -192,14 +205,14 @@ export const AdventureMap: React.FC<AdventureMapProps> = ({ progressData, compac
 
   // Coordinates of regions along the road
   const regions = [
-    { name: t("learningWorld.regions.startVillage"), keyName: "Start Village", x: 150, y: 780, minDistance: 0, color: "from-amber-400 to-orange-500" },
-    { name: t("learningWorld.regions.readingForest"), keyName: "Reading Forest", x: 380, y: 640, minDistance: 50000, color: "from-emerald-400 to-green-600" },
-    { name: t("learningWorld.regions.listeningOcean"), keyName: "Listening Ocean", x: 440, y: 350, minDistance: 120000, color: "from-blue-400 to-cyan-500" },
-    { name: t("learningWorld.regions.writingCity"), keyName: "Writing City", x: 380, y: 160, minDistance: 200000, color: "from-indigo-400 to-purple-600" },
-    { name: t("learningWorld.regions.speakingArena"), keyName: "Speaking Arena", x: 740, y: 220, minDistance: 280000, color: "from-rose-400 to-pink-600" },
-    { name: t("learningWorld.regions.nationalCertKingdom"), keyName: "National Certificate Kingdom", x: 800, y: 550, minDistance: 350000, color: "from-purple-500 to-indigo-700" },
-    { name: t("learningWorld.regions.satSpaceAcademy"), keyName: "SAT Space Academy", x: 1200, y: 480, minDistance: 420000, color: "from-violet-500 to-fuchsia-700" },
-    { name: t("learningWorld.regions.masterCastle"), keyName: "LMSHub Master Castle", x: 1580, y: 410, minDistance: 480000, color: "from-yellow-400 to-amber-600" },
+    { name: t("dynamic.learningWorld.regions.startVillage"), keyName: "Start Village", x: 150, y: 780, minDistance: 0, color: "from-amber-400 to-orange-500" },
+    { name: t("dynamic.learningWorld.regions.readingForest"), keyName: "Reading Forest", x: 380, y: 640, minDistance: 50000, color: "from-emerald-400 to-green-600" },
+    { name: t("dynamic.learningWorld.regions.listeningOcean"), keyName: "Listening Ocean", x: 440, y: 350, minDistance: 120000, color: "from-blue-400 to-cyan-500" },
+    { name: t("dynamic.learningWorld.regions.writingCity"), keyName: "Writing City", x: 380, y: 160, minDistance: 200000, color: "from-indigo-400 to-purple-600" },
+    { name: t("dynamic.learningWorld.regions.speakingArena"), keyName: "Speaking Arena", x: 740, y: 220, minDistance: 280000, color: "from-rose-400 to-pink-600" },
+    { name: t("dynamic.learningWorld.regions.nationalCertKingdom"), keyName: "National Certificate Kingdom", x: 800, y: 550, minDistance: 350000, color: "from-purple-500 to-indigo-700" },
+    { name: t("dynamic.learningWorld.regions.satSpaceAcademy"), keyName: "SAT Space Academy", x: 1200, y: 480, minDistance: 420000, color: "from-violet-500 to-fuchsia-700" },
+    { name: t("dynamic.learningWorld.regions.masterCastle"), keyName: "LMSHub Master Castle", x: 1580, y: 410, minDistance: 480000, color: "from-yellow-400 to-amber-600" },
   ];
 
   const svgRef = useRef<SVGSVGElement | null>(null);
@@ -656,7 +669,7 @@ export const AdventureMap: React.FC<AdventureMapProps> = ({ progressData, compac
           <g transform="translate(0, -32)">
             <rect x="-22" y="-8" width="44" height="16" rx="4" fill="#0f172a" stroke="#f59e0b" strokeWidth="1.5" />
             <text textAnchor="middle" y="3.5" fontSize="8" fontWeight="black" fill="#f59e0b">
-              {t("learningWorld.level").toUpperCase()} {Math.max(1, Math.floor(xp / 1000) + 1)}
+              {t("dynamic.learningWorld.level").toUpperCase()} {Math.max(1, Math.floor(xp / 1000) + 1)}
             </text>
           </g>
 
@@ -725,14 +738,14 @@ export const AdventureMap: React.FC<AdventureMapProps> = ({ progressData, compac
                 </div>
 
                 <h4 className="text-2xl font-black text-slate-100">
-                  {selectedCheckpoint.name === "Start Village Chest" ? `${t("learningWorld.regions.startVillage")} ${t("learningWorld.rewardChest")}`
-                   : selectedCheckpoint.name === "Reading Forest Chest" ? `${t("learningWorld.regions.readingForest")} ${t("learningWorld.rewardChest")}`
-                   : selectedCheckpoint.name === "Listening Ocean Chest" ? `${t("learningWorld.regions.listeningOcean")} ${t("learningWorld.rewardChest")}`
-                   : selectedCheckpoint.name === "Writing City Chest" ? `${t("learningWorld.regions.writingCity")} ${t("learningWorld.rewardChest")}`
-                   : selectedCheckpoint.name === "Speaking Arena Chest" ? `${t("learningWorld.regions.speakingArena")} ${t("learningWorld.rewardChest")}`
-                   : selectedCheckpoint.name === "NC Kingdom Chest" ? `${t("learningWorld.regions.nationalCertKingdom")} ${t("learningWorld.rewardChest")}`
-                   : selectedCheckpoint.name === "SAT Academy Chest" ? `${t("learningWorld.regions.satSpaceAcademy")} ${t("learningWorld.rewardChest")}`
-                   : selectedCheckpoint.name === "Master Castle Chest" ? `${t("learningWorld.regions.masterCastle")} ${t("learningWorld.rewardChest")}`
+                  {selectedCheckpoint.name === "Start Village Chest" ? `${t("dynamic.learningWorld.regions.startVillage")} ${t("dynamic.learningWorld.rewardChest")}`
+                   : selectedCheckpoint.name === "Reading Forest Chest" ? `${t("dynamic.learningWorld.regions.readingForest")} ${t("dynamic.learningWorld.rewardChest")}`
+                   : selectedCheckpoint.name === "Listening Ocean Chest" ? `${t("dynamic.learningWorld.regions.listeningOcean")} ${t("dynamic.learningWorld.rewardChest")}`
+                   : selectedCheckpoint.name === "Writing City Chest" ? `${t("dynamic.learningWorld.regions.writingCity")} ${t("dynamic.learningWorld.rewardChest")}`
+                   : selectedCheckpoint.name === "Speaking Arena Chest" ? `${t("dynamic.learningWorld.regions.speakingArena")} ${t("dynamic.learningWorld.rewardChest")}`
+                   : selectedCheckpoint.name === "NC Kingdom Chest" ? `${t("dynamic.learningWorld.regions.nationalCertKingdom")} ${t("dynamic.learningWorld.rewardChest")}`
+                   : selectedCheckpoint.name === "SAT Academy Chest" ? `${t("dynamic.learningWorld.regions.satSpaceAcademy")} ${t("dynamic.learningWorld.rewardChest")}`
+                   : selectedCheckpoint.name === "Master Castle Chest" ? `${t("dynamic.learningWorld.regions.masterCastle")} ${t("dynamic.learningWorld.rewardChest")}`
                    : selectedCheckpoint.name}
                 </h4>
                 <span className="text-[11px] font-bold uppercase tracking-wider text-amber-500">
@@ -740,15 +753,15 @@ export const AdventureMap: React.FC<AdventureMapProps> = ({ progressData, compac
                 </span>
 
                 <p className="text-xs text-slate-400 mt-2">
-                  {t("learningWorld.totalDistance")}: <span className="font-bold">{Math.round(selectedCheckpoint.target_distance / 1000)} km</span>
+                  {t("dynamic.learningWorld.totalDistance")}: <span className="font-bold">{Math.round(selectedCheckpoint.target_distance / 1000)} km</span>
                 </p>
 
                 <div className="bg-slate-950/50 rounded-2xl p-4 my-5 border border-slate-800/80 text-left">
-                  <span className="text-[10px] uppercase text-slate-500 font-bold block mb-1">{t("learningWorld.rewardChest")}</span>
+                  <span className="text-[10px] uppercase text-slate-500 font-bold block mb-1">{t("dynamic.learningWorld.rewardChest")}</span>
                   <span className="text-sm text-slate-200 font-bold">
-                    {selectedCheckpoint.reward_type === "COIN_BOX" ? `${selectedCheckpoint.reward_value} ${t("learningWorld.coins")}`
-                     : selectedCheckpoint.reward_type === "XP_BOOST" ? `${selectedCheckpoint.reward_value} ${t("learningWorld.xp")}`
-                     : `${t("learningWorld.rewardChest")}`}
+                    {selectedCheckpoint.reward_type === "COIN_BOX" ? `${selectedCheckpoint.reward_value} ${t("dynamic.learningWorld.coins")}`
+                     : selectedCheckpoint.reward_type === "XP_BOOST" ? `${selectedCheckpoint.reward_value} ${t("dynamic.learningWorld.xp")}`
+                     : `${t("dynamic.learningWorld.rewardChest")}`}
                   </span>
                 </div>
 
@@ -757,7 +770,7 @@ export const AdventureMap: React.FC<AdventureMapProps> = ({ progressData, compac
                     onClick={() => setSelectedCheckpoint(null)}
                     className="flex-1 py-3 px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-2xl transition"
                   >
-                    {t("learningWorld.close")}
+                    {t("dynamic.learningWorld.close")}
                   </button>
                   {selectedCheckpoint.unlocked && !selectedCheckpoint.claimed && (
                     <button
@@ -765,7 +778,7 @@ export const AdventureMap: React.FC<AdventureMapProps> = ({ progressData, compac
                       disabled={claiming}
                       className="flex-1 py-3 px-4 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-600 hover:to-yellow-500 text-slate-950 font-black rounded-2xl shadow-lg transition"
                     >
-                      {t("learningWorld.claimReward")}
+                      {t("dynamic.learningWorld.claimReward")}
                     </button>
                   )}
                 </div>

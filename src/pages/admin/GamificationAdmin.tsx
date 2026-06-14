@@ -49,18 +49,16 @@ export const GamificationAdmin: React.FC = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const settingsRes = await api.get("/admin/gamification/settings");
-      if (settingsRes.data) {
-        setMultipliers(settingsRes.data);
+      const multRes = await api.get("/admin/gamification/multipliers");
+      if (multRes.data) {
+        setMultipliers(multRes.data);
       }
-
-      const checkpointsRes = await api.get("/admin/gamification/checkpoints");
-      if (checkpointsRes.data) {
-        setCheckpoints(checkpointsRes.data);
+      const cpRes = await api.get("/admin/gamification/checkpoints");
+      if (cpRes.data) {
+        setCheckpoints(cpRes.data);
       }
     } catch (e) {
-      console.error("Failed to load gamification settings:", e);
-      toast.error(t("gradesPage.loadError"));
+      console.error("Failed to load gamification admin data:", e);
     } finally {
       setLoading(false);
     }
@@ -74,11 +72,9 @@ export const GamificationAdmin: React.FC = () => {
     e.preventDefault();
     setSavingMultipliers(true);
     try {
-      const response = await api.post("/admin/gamification/settings", multipliers);
-      if (response.data) {
-        toast.success(t("settings.saveSuccess"));
-      }
-    } catch (error) {
+      await api.post("/admin/gamification/multipliers", multipliers);
+      toast.success(t("gradesPage.savedSuccessfully"));
+    } catch (e) {
       toast.error(t("settings.saveError"));
     } finally {
       setSavingMultipliers(false);
@@ -87,13 +83,8 @@ export const GamificationAdmin: React.FC = () => {
 
   const handleCheckpointSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formName || formDistance <= 0) {
-      toast.error(t("gradesPage.fillRequired"));
-      return;
-    }
-
     setSubmittingCheckpoint(true);
-    const cpData: Checkpoint = {
+    const payload = {
       name: formName,
       targetDistance: formDistance,
       rewardType: formRewardType,
@@ -102,21 +93,16 @@ export const GamificationAdmin: React.FC = () => {
     };
 
     try {
-      if (editingCheckpoint && editingCheckpoint.id) {
-        const response = await api.put(`/admin/gamification/checkpoints/${editingCheckpoint.id}`, cpData);
-        if (response.data) {
-          toast.success(t("common.saved"));
-          setEditingCheckpoint(null);
-        }
+      if (editingCheckpoint?.id) {
+        await api.put(`/admin/gamification/checkpoints/${editingCheckpoint.id}`, payload);
+        toast.success(t("gradesPage.savedSuccessfully"));
       } else {
-        const response = await api.post("/admin/gamification/checkpoints", cpData);
-        if (response.data) {
-          toast.success(t("common.saved"));
-        }
+        await api.post("/admin/gamification/checkpoints", payload);
+        toast.success(t("gradesPage.savedSuccessfully"));
       }
       resetForm();
       fetchData();
-    } catch (error) {
+    } catch (e) {
       toast.error(t("settings.saveError"));
     } finally {
       setSubmittingCheckpoint(false);
@@ -133,7 +119,7 @@ export const GamificationAdmin: React.FC = () => {
   };
 
   const handleDeleteClick = async (id?: string) => {
-    if (!id || !window.confirm(t("gamificationAdmin.confirmDelete"))) return;
+    if (!id || !window.confirm(t("dynamic.gamificationAdmin.confirmDelete"))) return;
 
     try {
       await api.delete(`/admin/gamification/checkpoints/${id}`);
@@ -158,7 +144,7 @@ export const GamificationAdmin: React.FC = () => {
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <div className="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-          <p className="text-sm text-slate-400">{t("learningWorld.loadingDesc")}</p>
+          <p className="text-sm text-slate-400">{t("dynamic.learningWorld.loadingDesc")}</p>
         </div>
       </div>
     );
@@ -172,8 +158,8 @@ export const GamificationAdmin: React.FC = () => {
             <Shield className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-slate-100">{t("gamificationAdmin.title")}</h1>
-            <p className="text-xs text-slate-400">{t("gamificationAdmin.subtitle")}</p>
+            <h1 className="text-2xl font-black text-slate-100">{t("dynamic.gamificationAdmin.title")}</h1>
+            <p className="text-xs text-slate-400">{t("dynamic.gamificationAdmin.subtitle")}</p>
           </div>
         </div>
 
@@ -189,13 +175,13 @@ export const GamificationAdmin: React.FC = () => {
         <div className="lg:col-span-1 bg-slate-900/40 border border-slate-800 rounded-3xl p-6 backdrop-blur-md space-y-6">
           <div className="flex items-center gap-2.5 text-amber-400 font-bold border-b border-slate-800 pb-3 mb-2">
             <Settings className="w-5 h-5" />
-            <h3>{t("gamificationAdmin.multipliers")}</h3>
+            <h3>{t("dynamic.gamificationAdmin.multipliers")}</h3>
           </div>
 
           <form onSubmit={handleSaveMultipliers} className="space-y-4">
             <div>
               <label className="text-xs font-bold text-slate-400 block mb-1.5">
-                {t("gamificationAdmin.practiceLabel")}
+                {t("dynamic.gamificationAdmin.practiceLabel")}
               </label>
               <input
                 type="number"
@@ -207,7 +193,7 @@ export const GamificationAdmin: React.FC = () => {
 
             <div>
               <label className="text-xs font-bold text-slate-400 block mb-1.5">
-                {t("gamificationAdmin.quizLabel")}
+                {t("dynamic.gamificationAdmin.quizLabel")}
               </label>
               <input
                 type="number"
@@ -219,7 +205,7 @@ export const GamificationAdmin: React.FC = () => {
 
             <div>
               <label className="text-xs font-bold text-slate-400 block mb-1.5">
-                {t("gamificationAdmin.lessonLabel")}
+                {t("dynamic.gamificationAdmin.lessonLabel")}
               </label>
               <input
                 type="number"
@@ -231,7 +217,7 @@ export const GamificationAdmin: React.FC = () => {
 
             <div>
               <label className="text-xs font-bold text-slate-400 block mb-1.5">
-                {t("gamificationAdmin.mockLabel")}
+                {t("dynamic.gamificationAdmin.mockLabel")}
               </label>
               <input
                 type="number"
@@ -243,7 +229,7 @@ export const GamificationAdmin: React.FC = () => {
 
             <div>
               <label className="text-xs font-bold text-slate-400 block mb-1.5">
-                {t("gamificationAdmin.coinLabel")}
+                {t("dynamic.gamificationAdmin.coinLabel")}
               </label>
               <input
                 type="number"
@@ -255,7 +241,7 @@ export const GamificationAdmin: React.FC = () => {
 
             <div>
               <label className="text-xs font-bold text-slate-400 block mb-1.5">
-                {t("gamificationAdmin.streakLabel")}
+                {t("dynamic.gamificationAdmin.streakLabel")}
               </label>
               <input
                 type="number"
@@ -270,7 +256,7 @@ export const GamificationAdmin: React.FC = () => {
               disabled={savingMultipliers}
               className="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-xl py-3 text-sm transition disabled:opacity-50"
             >
-              {savingMultipliers ? t("gamificationAdmin.saving") : t("gamificationAdmin.saveMultipliers")}
+              {savingMultipliers ? t("dynamic.gamificationAdmin.saving") : t("dynamic.gamificationAdmin.saveMultipliers")}
             </button>
           </form>
         </div>
@@ -280,18 +266,18 @@ export const GamificationAdmin: React.FC = () => {
             <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
               <h3 className="text-base font-bold text-slate-200 flex items-center gap-2">
                 <Gift className="w-5 h-5 text-emerald-400" />
-                {editingCheckpoint ? t("gamificationAdmin.editCheckpoint") : t("gamificationAdmin.newCheckpoint")}
+                {editingCheckpoint ? t("dynamic.gamificationAdmin.editCheckpoint") : t("dynamic.gamificationAdmin.newCheckpoint")}
               </h3>
               {editingCheckpoint && (
                 <button onClick={resetForm} className="text-xs text-slate-400 hover:text-slate-200 flex items-center gap-1">
-                  <X className="w-3.5 h-3.5" /> {t("gamificationAdmin.cancel")}
+                  <X className="w-3.5 h-3.5" /> {t("dynamic.gamificationAdmin.cancel")}
                 </button>
               )}
             </div>
 
             <form onSubmit={handleCheckpointSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="text-xs font-bold text-slate-400 block mb-1">{t("gamificationAdmin.checkpointName")}</label>
+                <label className="text-xs font-bold text-slate-400 block mb-1">{t("dynamic.gamificationAdmin.checkpointName")}</label>
                 <input
                   type="text"
                   required
@@ -303,7 +289,7 @@ export const GamificationAdmin: React.FC = () => {
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-400 block mb-1">{t("gamificationAdmin.targetDistance")}</label>
+                <label className="text-xs font-bold text-slate-400 block mb-1">{t("dynamic.gamificationAdmin.targetDistance")}</label>
                 <input
                   type="number"
                   required
@@ -315,7 +301,7 @@ export const GamificationAdmin: React.FC = () => {
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-400 block mb-1">{t("gamificationAdmin.rewardType")}</label>
+                <label className="text-xs font-bold text-slate-400 block mb-1">{t("dynamic.gamificationAdmin.rewardType")}</label>
                 <select
                   value={formRewardType}
                   onChange={(e) => setFormRewardType(e.target.value)}
@@ -330,7 +316,7 @@ export const GamificationAdmin: React.FC = () => {
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-400 block mb-1">{t("gamificationAdmin.rewardValue")}</label>
+                <label className="text-xs font-bold text-slate-400 block mb-1">{t("dynamic.gamificationAdmin.rewardValue")}</label>
                 <input
                   type="text"
                   value={formRewardValue}
@@ -349,7 +335,7 @@ export const GamificationAdmin: React.FC = () => {
                   className="w-4 h-4 rounded text-amber-500 bg-slate-950 border-slate-800 focus:ring-0"
                 />
                 <label htmlFor="formActive" className="text-xs font-bold text-slate-300 cursor-pointer">
-                  {t("gamificationAdmin.activeLabel")}
+                  {t("dynamic.gamificationAdmin.activeLabel")}
                 </label>
               </div>
 
@@ -359,7 +345,7 @@ export const GamificationAdmin: React.FC = () => {
                   disabled={submittingCheckpoint}
                   className="w-full bg-emerald-600 hover:bg-emerald-700 text-slate-100 font-bold rounded-xl py-2.5 text-sm transition disabled:opacity-50"
                 >
-                  {submittingCheckpoint ? t("gamificationAdmin.saving") : editingCheckpoint ? t("gamificationAdmin.saveCheckpoint") : t("gamificationAdmin.addCheckpoint")}
+                  {submittingCheckpoint ? t("dynamic.gamificationAdmin.saving") : editingCheckpoint ? t("dynamic.gamificationAdmin.saveCheckpoint") : t("dynamic.gamificationAdmin.addCheckpoint")}
                 </button>
               </div>
             </form>
@@ -368,18 +354,18 @@ export const GamificationAdmin: React.FC = () => {
           <div className="bg-slate-900/40 border border-slate-800 rounded-3xl p-6 backdrop-blur-md">
             <h3 className="text-base font-bold text-slate-200 border-b border-slate-800 pb-3 mb-4 flex items-center gap-2">
               <Compass className="w-5 h-5 text-indigo-400" />
-              {t("gamificationAdmin.listTitle")}
+              {t("dynamic.gamificationAdmin.listTitle")}
             </h3>
 
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse text-sm">
                 <thead>
                   <tr className="border-b border-slate-800 text-slate-400 font-bold">
-                    <th className="pb-3 pr-2">{t("gamificationAdmin.nameCol")}</th>
-                    <th className="pb-3 pr-2">{t("gamificationAdmin.distanceCol")}</th>
-                    <th className="pb-3 pr-2">{t("gamificationAdmin.rewardCol")}</th>
-                    <th className="pb-3 pr-2 text-center">{t("gamificationAdmin.statusCol")}</th>
-                    <th className="pb-3 text-right">{t("gamificationAdmin.actionsCol")}</th>
+                    <th className="pb-3 pr-2">{t("dynamic.gamificationAdmin.nameCol")}</th>
+                    <th className="pb-3 pr-2">{t("dynamic.gamificationAdmin.distanceCol")}</th>
+                    <th className="pb-3 pr-2">{t("dynamic.gamificationAdmin.rewardCol")}</th>
+                    <th className="pb-3 pr-2 text-center">{t("dynamic.gamificationAdmin.statusCol")}</th>
+                    <th className="pb-3 text-right">{t("dynamic.gamificationAdmin.actionsCol")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/60">
@@ -395,7 +381,7 @@ export const GamificationAdmin: React.FC = () => {
                       </td>
                       <td className="py-3.5 pr-2 text-center">
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${cp.active ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'}`}>
-                          {cp.active ? t("gamificationAdmin.active") : t("gamificationAdmin.inactive")}
+                          {cp.active ? t("dynamic.gamificationAdmin.active") : t("dynamic.gamificationAdmin.inactive")}
                         </span>
                       </td>
                       <td className="py-3.5 text-right space-x-2">
@@ -417,7 +403,7 @@ export const GamificationAdmin: React.FC = () => {
                   {checkpoints.length === 0 && (
                     <tr>
                       <td colSpan={5} className="py-6 text-center text-slate-500">
-                        {t("gamificationAdmin.emptyList")}
+                        {t("dynamic.gamificationAdmin.emptyList")}
                       </td>
                     </tr>
                   )}
