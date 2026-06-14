@@ -6,10 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Copy, Loader2, Send, Coins } from "lucide-react";
+import { Copy, Loader2, Send, Coins, Globe, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import { REFERRAL_BONUS } from "@/lib/branding";
+import { REFERRAL_BONUS, inviteLink } from "@/lib/branding";
 import DonationCard from "@/components/DonationCard";
 import AvatarUpload from "@/components/AvatarUpload";
 import { api } from "@/lib/axios";
@@ -66,7 +66,8 @@ export default function UserAccount() {
     })();
   }, [user?.id]);
 
-  const link = referralCode !== "—" ? `https://t.me/LMSHub_bot?start=${referralCode}` : "";
+  const tgLink = referralCode !== "—" ? `https://t.me/LMSHub_bot?start=${referralCode}` : "";
+  const webLink = referralCode !== "—" ? inviteLink(referralCode) : "";
 
   const copy = (txt: string) => {
     navigator.clipboard.writeText(txt);
@@ -114,10 +115,10 @@ export default function UserAccount() {
       <h1 className="font-display text-2xl md:text-3xl font-bold">{t("nav.account")}</h1>
 
       <Tabs defaultValue="profile">
-        <TabsList className="grid grid-cols-3 w-full max-w-xl">
-          <TabsTrigger value="profile">{t("common.profile")}</TabsTrigger>
-          <TabsTrigger value="invites">{t("account.invites", "Takliflar")}</TabsTrigger>
-          <TabsTrigger value="feedback">{t("account.feedback", "Izoh qoldirish")}</TabsTrigger>
+        <TabsList className="grid grid-cols-3 w-full max-w-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-white/10">
+          <TabsTrigger value="profile" className="text-slate-700 dark:text-slate-200 data-[state=active]:bg-white data-[state=active]:dark:bg-slate-700 data-[state=active]:text-slate-900 data-[state=active]:dark:text-white">{t("common.profile")}</TabsTrigger>
+          <TabsTrigger value="invites" className="text-slate-700 dark:text-slate-200 data-[state=active]:bg-white data-[state=active]:dark:bg-slate-700 data-[state=active]:text-slate-900 data-[state=active]:dark:text-white">{t("account.invites", "Takliflar")}</TabsTrigger>
+          <TabsTrigger value="feedback" className="text-slate-700 dark:text-slate-200 data-[state=active]:bg-white data-[state=active]:dark:bg-slate-700 data-[state=active]:text-slate-900 data-[state=active]:dark:text-white">{t("account.feedback", "Izoh qoldirish")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile" className="mt-6 space-y-4">
@@ -198,21 +199,55 @@ export default function UserAccount() {
             <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
               {t("account.inviteLinkDesc", { count: REFERRAL_BONUS })}
             </p>
-            <Label className="mt-4 block text-slate-700 dark:text-slate-200 font-semibold mb-1.5">{t("account.inviteLinkLabel", "Invite link")}</Label>
-            <div className="flex gap-2 mt-1">
-              <Input 
-                value={link} 
-                readOnly 
-                className="text-slate-900 dark:text-slate-100 bg-slate-50 dark:bg-slate-900/40 border-slate-200 dark:border-white/10 font-mono text-sm rounded-xl"
-              />
-              <Button 
-                variant="outline" 
-                size="icon" 
-                onClick={() => copy(link)}
-                className="border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-slate-800"
-              >
-                <Copy className="h-4 w-4 text-slate-700 dark:text-slate-300" />
-              </Button>
+
+            {/* Website invite link */}
+            <div className="mt-4 p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/40">
+              <div className="flex items-center gap-2 mb-2">
+                <Globe className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                <Label className="text-emerald-700 dark:text-emerald-400 font-semibold text-sm">
+                  {t("account.webLinkLabel", "Sayt havolasi (lmshub.uz)")}
+                </Label>
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  value={webLink}
+                  readOnly
+                  className="text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-900/40 border-slate-200 dark:border-white/10 font-mono text-xs rounded-xl"
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => copy(webLink)}
+                  className="shrink-0 border-emerald-300 dark:border-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-900/30"
+                >
+                  <Copy className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                </Button>
+              </div>
+            </div>
+
+            {/* Telegram bot invite link */}
+            <div className="mt-3 p-4 rounded-xl bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800/40">
+              <div className="flex items-center gap-2 mb-2">
+                <MessageCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                <Label className="text-blue-700 dark:text-blue-400 font-semibold text-sm">
+                  {t("account.tgLinkLabel", "Telegram bot havolasi")}
+                </Label>
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  value={tgLink}
+                  readOnly
+                  className="text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-900/40 border-slate-200 dark:border-white/10 font-mono text-xs rounded-xl"
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => copy(tgLink)}
+                  className="shrink-0 border-blue-300 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/30"
+                >
+                  <Copy className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                </Button>
+              </div>
             </div>
           </Card>
 

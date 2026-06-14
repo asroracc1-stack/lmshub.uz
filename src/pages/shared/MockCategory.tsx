@@ -17,7 +17,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   ArrowLeft, ArrowRight, BookOpen, Clock, Crown, FileText, Headphones,
   Layers, Leaf, Loader2, Mic, PenLine, Plus, Search, Sparkles, Pencil, Trash2,
-  Layers, Leaf, Loader2, Mic, PenLine, Plus, Search, Sparkles, Pencil, Trash2,
   Target, Landmark, Lock, Zap, Star, CheckCircle2, ChevronLeft, ChevronRight
 } from "lucide-react";
 import {
@@ -119,9 +118,14 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
   const loadAttempts = async () => {
     try {
       const { data } = await api.get("/student/exams/attempts");
-      setAttempts(data);
-    } catch (e) {
-      console.error("Failed to load attempts:", e);
+      // Normalize: ensure examId is always a string for comparison
+      const normalized = (Array.isArray(data) ? data : []).map((a: any) => ({
+        ...a,
+        examId: String(a.examId ?? a.exam_id ?? ""),
+      }));
+      setAttempts(normalized);
+    } catch (e: any) {
+      console.warn("Attempts load failed (may not be logged in as student):", e?.response?.status, e?.message);
     }
   };
 
@@ -146,7 +150,7 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
       if (partType !== "all" && String(t.part_type ?? "all") !== partType) return false;
       if (access === "free" && t.required_pack && t.required_pack !== "free") return false;
       if (access === "pack" && (!t.required_pack || t.required_pack === "free")) return false;
-      if (showOnlyCompleted && !attempts.some(a => a.examId === t.id)) return false;
+      if (showOnlyCompleted && !attempts.some(a => String(a.examId) === String(t.id))) return false;
       return true;
     });
   }, [tests, search, difficulty, partType, access, showOnlyCompleted, attempts]);
@@ -234,7 +238,7 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
             )}
           >
             <CheckCircle2 className="h-4 w-4" />
-            {t("mockCategory.completedBtn")} ({tests.filter(t => attempts.some(a => a.examId === t.id)).length})
+            {t("mockCategory.completedBtn")} ({tests.filter(tst => attempts.some(a => String(a.examId) === String(tst.id))).length})
           </Button>
           {canManage && (
             <Button size="sm" asChild className="ml-2 rounded-xl">
@@ -286,7 +290,7 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
               const theme = PACK_THEME[packType];
               const BtnIcon = theme.buttonIcon;
               const BadgeIconComp = theme.badgeIcon;
-              const attempt = attempts.find(a => a.examId === test.id);
+              const attempt = attempts.find(a => String(a.examId) === String(test.id));
 
               // Check if user can access this test based on their subscription
               const isLocked = !canAccessPack(packAccess, test.required_pack, canManage);

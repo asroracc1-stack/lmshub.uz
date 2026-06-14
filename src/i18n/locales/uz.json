@@ -1915,6 +1915,8 @@
     "inviteLinkTitle": "Sizning invite havolangiz",
     "inviteLinkDesc": "Do'stingiz havola orqali ro'yxatdan o'tib, kamida bitta test yoki vocabulary mashqini bajarsa, ikkalangiz ham {{count}} coin olasiz.",
     "inviteLinkLabel": "Invite link",
+    "webLinkLabel": "🌐 Sayt havolasi (lmshub.uz)",
+    "tgLinkLabel": "✈️ Telegram bot havolasi",
     "myInvites": "Taklif qilganlarim",
     "userCount": "{{count}} ta foydalanuvchi",
     "noInvitesYet": "Hali hech kimni taklif qilmagansiz",
