@@ -2,6 +2,14 @@ databaseChangeLog:
   - changeSet:
       id: v0039-1
       author: antigravity
+      validCheckSum:
+        - ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - columnExists:
+                tableName: users
+                columnName: xp
       changes:
         - addColumn:
             tableName: users
@@ -12,6 +20,18 @@ databaseChangeLog:
                   defaultValueNumeric: 0
                   constraints:
                     nullable: false
+
+  - changeSet:
+      id: v0039-2
+      author: antigravity
+      validCheckSum:
+        - ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: gamification_settings
+      changes:
         - createTable:
             tableName: gamification_settings
             columns:
@@ -65,6 +85,18 @@ databaseChangeLog:
                   name: updated_at
                   type: timestamp
                   defaultValueComputed: now()
+
+  - changeSet:
+      id: v0039-3
+      author: antigravity
+      validCheckSum:
+        - ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: gamification_checkpoints
+      changes:
         - createTable:
             tableName: gamification_checkpoints
             columns:
@@ -102,6 +134,18 @@ databaseChangeLog:
                   name: created_at
                   type: timestamp
                   defaultValueComputed: now()
+
+  - changeSet:
+      id: v0039-4
+      author: antigravity
+      validCheckSum:
+        - ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: user_gamification_progress
+      changes:
         - createTable:
             tableName: user_gamification_progress
             columns:
