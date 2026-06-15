@@ -160,13 +160,13 @@ export const MapCanvas: React.FC = () => {
                   <Geography
                     key={geo.rsmKey}
                     geography={geo}
-                    fill={isUnlocked ? defaultFill : "#E2E8F0"}
+                    fill={defaultFill}
                     stroke="#CE1126" 
                     strokeWidth={isUnlocked ? 1.5 : 1}
                     style={{
-                      default: { outline: 'none' },
-                      hover: { fill: isUnlocked ? defaultFill : '#CBD5E1', outline: 'none', filter: 'brightness(0.9)', transition: 'all 0.3s' },
-                      pressed: { outline: 'none' }
+                      default: { outline: 'none', cursor: 'pointer' },
+                      hover: { fill: defaultFill, outline: 'none', filter: 'brightness(0.85)', transition: 'all 0.3s', cursor: 'pointer' },
+                      pressed: { outline: 'none', cursor: 'pointer' }
                     }}
                     className={`transition-colors duration-500 drop-shadow-[0_4px_6px_rgba(0,0,0,0.1)] ${isUnlocked ? 'dark:drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]' : ''}`}
                   />

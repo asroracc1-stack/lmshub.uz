@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/axios';
 import { useAdventureStore } from '@/store/useAdventureStore';
@@ -38,9 +39,17 @@ export const useAdventure = () => {
   });
 
   // Sync with store
-  if (stateData) setAdventureState(stateData);
-  if (mapData?.regions) setRegions(mapData.regions);
-  if (leaderboardData) setLeaderboard(leaderboardData);
+  useEffect(() => {
+    if (stateData) setAdventureState(stateData);
+  }, [stateData, setAdventureState]);
+
+  useEffect(() => {
+    if (mapData?.regions) setRegions(mapData.regions);
+  }, [mapData, setRegions]);
+
+  useEffect(() => {
+    if (leaderboardData) setLeaderboard(leaderboardData);
+  }, [leaderboardData, setLeaderboard]);
 
   const calculateMutation = useMutation({
     mutationFn: async (data: { testsSolved: number; correctAnswers: number; streakDays: number; achievementsEarned: number; newCoins: number }) => {

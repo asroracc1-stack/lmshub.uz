@@ -35,10 +35,11 @@ public class AdventureController {
         UserTravelState state = travelStateRepository.findByUserId(user.getId())
                 .orElseGet(() -> {
                     UserTravelState s = new UserTravelState();
+                    s.setUser(user);
                     s.setTotalTravelPoints(0L);
                     s.setAvatarLevel(1);
                     s.setAvatarTitle("Beginner Traveler");
-                    return s;
+                    return travelStateRepository.save(s);
                 });
 
         return ResponseEntity.ok(Map.of(
@@ -68,9 +69,9 @@ public class AdventureController {
 
     @GetMapping("/leaderboard")
     public ResponseEntity<?> getLeaderboard() {
-        // Top 20 users by total travel points
+        // Top 5 users by total travel points
         List<UserTravelState> topTravelers = travelStateRepository.findAll(
-                PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "totalTravelPoints"))
+                PageRequest.of(0, 5, Sort.by(Sort.Direction.DESC, "totalTravelPoints"))
         ).getContent();
 
         List<Map<String, Object>> leaderboard = topTravelers.stream().map(s -> Map.<String, Object>of(

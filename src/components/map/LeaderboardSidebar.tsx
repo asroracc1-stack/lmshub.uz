@@ -8,7 +8,7 @@ export const LeaderboardSidebar: React.FC = () => {
   const { t } = useTranslation();
 
   return (
-    <div className="w-full h-full bg-white/90 backdrop-blur-xl border-l border-slate-200 dark:border-white/10 p-6 flex flex-col shadow-[-10px_0_30px_-15px_rgba(0,0,0,0.1)] dark:shadow-[-10px_0_30px_-15px_rgba(0,0,0,0.5)] dark:bg-slate-900/90 z-50">
+    <div className="w-full h-full bg-white/90 backdrop-blur-xl border-l border-slate-200 dark:border-white/10 p-6 flex flex-col shadow-[-10px_0_30px_-15px_rgba(0,0,0,0.1)] dark:shadow-[-10px_0_30px_-15px_rgba(0,0,0,0.5)] dark:bg-slate-900/90 z-50 overflow-hidden">
       <div className="flex items-center gap-3 mb-4 shrink-0">
         <Trophy className="w-6 h-6 text-yellow-500" />
         <h2 className="text-xl font-bold text-slate-800 dark:text-white">{t('gamification.globalTravelers', 'Global Sayohatchilar')}</h2>

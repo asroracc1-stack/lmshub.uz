@@ -56,7 +56,7 @@ const AdvancedAdventureMap: React.FC = () => {
       {/* Leaderboard Sidebar - Responsive */}
       <div className={`
         fixed inset-y-0 right-0 z-40 transform transition-transform duration-300 ease-in-out
-        md:relative md:translate-x-0 w-80 max-w-[85vw]
+        md:relative md:translate-x-0 w-80 max-w-[85vw] h-full overflow-hidden flex flex-col
         ${sidebarOpen ? 'translate-x-0' : 'translate-x-full'}
       `}>
         <LeaderboardSidebar />
