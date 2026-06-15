@@ -4,7 +4,7 @@ import { ComposableMap, Geographies, Geography, Marker, Line } from 'react-simpl
 import { useAdventureStore } from '@/store/useAdventureStore';
 import { AvatarEngine } from './AvatarEngine';
 
-const UZ_TOPOJSON_URL = "/uzbekistan.json";
+const UZ_TOPOJSON_URL = "/world.json";
 
 // Accurate [longitude, latitude] coordinates for Uzbekistan regions
 const CITY_COORDS: Record<string, [number, number]> = {
@@ -27,7 +27,7 @@ const CITY_COORDS: Record<string, [number, number]> = {
 const mapConfig = {
   projectionConfig: {
     scale: 3500,
-    center: [64.5, 41.5] as [number, number]
+    center: [65.5, 41.5] as [number, number]
   }
 };
 
@@ -49,21 +49,26 @@ export const MapCanvas: React.FC = () => {
       >
         <Geographies geography={UZ_TOPOJSON_URL}>
           {({ geographies }) =>
-            geographies.map((geo) => (
-              <Geography
-                key={geo.rsmKey}
-                geography={geo}
-                fill="#FDE68A" // Sandy gold color like the user's reference
-                stroke="#B45309"
-                strokeWidth={1}
-                style={{
-                  default: { outline: 'none' },
-                  hover: { fill: '#FCD34D', outline: 'none', transition: 'all 0.3s' },
-                  pressed: { outline: 'none' }
-                }}
-                className="dark:fill-slate-700 dark:stroke-slate-900"
-              />
-            ))
+            geographies.map((geo) => {
+              // ISO-3166-1 numeric code for Uzbekistan is "860"
+              if (geo.id !== "860") return null;
+
+              return (
+                <Geography
+                  key={geo.rsmKey}
+                  geography={geo}
+                  fill="#FDE68A" // Sandy gold color like the user's reference
+                  stroke="#B45309"
+                  strokeWidth={1}
+                  style={{
+                    default: { outline: 'none' },
+                    hover: { fill: '#FCD34D', outline: 'none', transition: 'all 0.3s' },
+                    pressed: { outline: 'none' }
+                  }}
+                  className="dark:fill-slate-700 dark:stroke-slate-900 drop-shadow-xl"
+                />
+              );
+            })
           }
         </Geographies>
 
