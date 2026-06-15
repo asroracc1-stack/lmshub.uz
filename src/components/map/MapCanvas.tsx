@@ -6,21 +6,21 @@ import { ZoomIn, ZoomOut, Maximize } from 'lucide-react';
 
 const UZ_TOPOJSON_URL = "/uzbekistan-provinces.json";
 
-// Accurate [longitude, latitude] coordinates for Uzbekistan regions
+// Accurate coordinates extracted from the map's TopoJSON for perfect alignment
 const CITY_COORDS: Record<string, [number, number]> = {
-  'Nukus': [59.6143, 42.4619],
-  'Xorazm': [60.6316, 41.5500],
-  'Buxoro': [64.4286, 39.7747],
-  'Navoiy': [65.3792, 40.0844],
-  'Qashqadaryo': [65.7950, 38.8615], // Qarshi
-  'Surxondaryo': [67.2771, 37.2246], // Termez
-  'Samarqand': [66.9597, 39.6270],
-  'Jizzax': [67.8280, 40.1158],
-  'Sirdaryo': [68.7816, 40.4915],
-  'Toshkent': [69.2401, 41.2995],
-  'Namangan': [71.6726, 41.0010],
-  'Farg\'ona': [71.7828, 40.3842],
-  'Andijon': [72.3594, 40.7829],
+  'Nukus': [59.161, 43.538],
+  'Xorazm': [60.484, 41.519],
+  'Buxoro': [63.643, 40.219],
+  'Navoiy': [64.259, 41.943],
+  'Qashqadaryo': [66.012, 38.782],
+  'Surxondaryo': [67.369, 37.866],
+  'Samarqand': [66.537, 39.951],
+  'Jizzax': [67.564, 40.401],
+  'Sirdaryo': [68.700, 40.479],
+  'Toshkent': [69.697, 41.153],
+  'Namangan': [71.224, 40.986],
+  'Farg\'ona': [71.184, 40.504],
+  'Andijon': [72.319, 40.739],
 };
 
 const TOPO_TO_UZBEK: Record<string, string> = {
