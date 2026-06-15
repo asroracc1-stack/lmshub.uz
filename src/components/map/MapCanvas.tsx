@@ -4,7 +4,7 @@ import { ComposableMap, Geographies, Geography, Marker, Line } from 'react-simpl
 import { useAdventureStore } from '@/store/useAdventureStore';
 import { AvatarEngine } from './AvatarEngine';
 
-const UZ_TOPOJSON_URL = "https://raw.githubusercontent.com/deldersveld/topojson/master/countries/uzbekistan/uz-provinces.json";
+const UZ_TOPOJSON_URL = "/uzbekistan.json";
 
 // Accurate [longitude, latitude] coordinates for Uzbekistan regions
 const CITY_COORDS: Record<string, [number, number]> = {
