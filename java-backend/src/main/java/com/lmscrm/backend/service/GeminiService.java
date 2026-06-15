@@ -266,6 +266,33 @@ public class GeminiService {
         return executeWithRotation(prompt, 3);
     }
 
+    public String generateExamReview(String examDataJson) {
+        if (apiKeysList.isEmpty()) {
+            throw new RuntimeException("AI tizimi sozlanmagan (kalit yo'q).");
+        }
+        String prompt = "You are an expert AI Tutor and Exam Examiner. Analyze the student's exam submission.\n" +
+                "I will provide a JSON containing the exam questions, the correct answers, and the student's answers (along with time spent).\n" +
+                "You need to evaluate their performance, provide coaching feedback, and write a step-by-step explanation for EACH question (especially if they got it wrong, explain why the correct answer is right and their answer is wrong; if they got it right, briefly reinforce the concept).\n" +
+                "IMPORTANT: Format any math formulas in the explanation using standard LaTeX with $...$ or $$...$$.\n" +
+                "Output ONLY a raw JSON object (no markdown formatting blocks) with the following exact structure:\n" +
+                "{\n" +
+                "  \"coachFeedback\": {\n" +
+                "    \"strengths\": [\"Strength 1\", \"Strength 2\"],\n" +
+                "    \"weaknesses\": [\"Weakness 1\", \"Weakness 2\"],\n" +
+                "    \"recommendedTopics\": [\"Topic 1\", \"Topic 2\"],\n" +
+                "    \"studyPlan\": \"A short paragraph of encouraging study plan\"\n" +
+                "  },\n" +
+                "  \"predictedScore\": \"e.g. 1200 / 1600 or 6.5 Band or 85/100\",\n" +
+                "  \"explanations\": {\n" +
+                "    \"QUESTION_ID_UUID_HERE\": \"Detailed step-by-step explanation...\",\n" +
+                "    \"ANOTHER_UUID\": \"...\"\n" +
+                "  }\n" +
+                "}\n" +
+                "\nExam Data:\n" + examDataJson;
+        
+        return executeWithRotation(prompt, 3);
+    }
+
     private String cleanHtml(String html) {
         if (html == null) return "";
         return html.replaceAll("<[^>]*>", " ").replaceAll("\\s+", " ").trim();

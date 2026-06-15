@@ -5,8 +5,11 @@ import com.lmscrm.backend.domain.enums.ExamType;
 import com.lmscrm.backend.dto.exam.*;
 import com.lmscrm.backend.exception.ResourceNotFoundException;
 import com.lmscrm.backend.mapper.ExamMapper;
+import com.lmscrm.backend.service.GeminiService;
 import com.lmscrm.backend.repository.*;
 import com.lmscrm.backend.util.IeltsGradingUtils;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.cache.annotation.Cacheable;
@@ -29,6 +32,8 @@ public class ExamService {
     private final StudentAttemptRepository studentAttemptRepository;
     private final StudentAnswerRepository studentAnswerRepository;
     private final ExamMapper mapper;
+    private final GeminiService geminiService;
+    private final ObjectMapper objectMapper;
 
     @Transactional(readOnly = true)
     @Cacheable(cacheNames = "examDetails", key = "#examId")
@@ -252,9 +257,15 @@ public class ExamService {
         List<Question> questions = questionRepository.findByExamIdOrderByPositionOrderAsc(exam.getId());
         List<ExamResultDto.QuestionDetail> details = new ArrayList<>();
         int correctCount = 0;
+        
+        long totalTimeSpent = 0;
+        if (request.getTime_spent() != null) {
+            totalTimeSpent = request.getTime_spent().values().stream().mapToLong(Long::longValue).sum();
+        }
 
         for (Question q : questions) {
             String userAns = request.getAnswers().get(q.getId().toString());
+            Long timeSpent = request.getTime_spent() != null ? request.getTime_spent().getOrDefault(q.getId().toString(), 0L) : 0L;
             
             // Get correct answer from options
             List<QuestionOption> options = optionRepository.findByQuestionIdOrderByPositionOrderAsc(q.getId());
@@ -272,11 +283,59 @@ public class ExamService {
                     .userAns(userAns != null ? userAns : "")
                     .correctAns(correctAns)
                     .ok(ok)
+                    .timeSpentSeconds(timeSpent.intValue())
                     .build());
         }
 
         String kind = exam.getType().name().toLowerCase();
         double band = IeltsGradingUtils.rawToBand(kind, correctCount, questions.size());
+        
+        String aiCoachFeedback = null;
+        String predictedScore = null;
+        JsonNode explanationsNode = null;
+        
+        try {
+            // Build JSON for Gemini
+            java.util.Map<String, Object> examDataMap = new java.util.HashMap<>();
+            examDataMap.put("examTitle", exam.getTitle());
+            examDataMap.put("examType", kind);
+            List<java.util.Map<String, Object>> qDataList = new java.util.ArrayList<>();
+            for(ExamResultDto.QuestionDetail d : details) {
+                java.util.Map<String, Object> qm = new java.util.HashMap<>();
+                qm.put("questionId", d.getQuestionId());
+                Question qEntity = questions.stream().filter(x -> x.getId().toString().equals(d.getQuestionId())).findFirst().orElse(null);
+                qm.put("prompt", qEntity != null ? qEntity.getText() : "");
+                qm.put("userAnswer", d.getUserAns());
+                qm.put("correctAnswer", d.getCorrectAns());
+                qm.put("isCorrect", d.isOk());
+                qDataList.add(qm);
+            }
+            examDataMap.put("questions", qDataList);
+            
+            String examDataJson = objectMapper.writeValueAsString(examDataMap);
+            String reviewResult = geminiService.generateExamReview(examDataJson);
+            
+            if (reviewResult != null) {
+                JsonNode root = objectMapper.readTree(reviewResult);
+                if (root.has("coachFeedback")) {
+                    aiCoachFeedback = objectMapper.writeValueAsString(root.get("coachFeedback"));
+                }
+                if (root.has("predictedScore")) {
+                    predictedScore = root.get("predictedScore").asText();
+                }
+                if (root.has("explanations")) {
+                    explanationsNode = root.get("explanations");
+                    // populate details with explanations
+                    for (ExamResultDto.QuestionDetail d : details) {
+                        if (explanationsNode.has(d.getQuestionId())) {
+                            d.setAiExplanation(explanationsNode.get(d.getQuestionId()).asText());
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            org.slf4j.LoggerFactory.getLogger(ExamService.class).error("Failed to generate AI review: ", e);
+        }
 
         if (user != null) {
             java.util.Optional<StudentAttempt> attemptOpt = studentAttemptRepository.findByExamIdAndStudentId(exam.getId(), user.getId());
@@ -295,11 +354,16 @@ public class ExamService {
             attempt.setMaxScore(questions.size());
             attempt.setIsPassed(correctCount >= exam.getPassingScore());
             attempt.setOverallBand(band);
+            attempt.setTimeUsedSeconds((int) totalTimeSpent);
+            attempt.setAiCoachFeedback(aiCoachFeedback);
+            attempt.setPredictedScore(predictedScore);
             attempt = studentAttemptRepository.save(attempt);
 
             for (Question q : questions) {
                 String userAns = request.getAnswers().get(q.getId().toString());
                 List<QuestionOption> options = optionRepository.findByQuestionIdOrderByPositionOrderAsc(q.getId());
+                Long timeSpent = request.getTime_spent() != null ? request.getTime_spent().getOrDefault(q.getId().toString(), 0L) : 0L;
+                String aiExpl = explanationsNode != null && explanationsNode.has(q.getId().toString()) ? explanationsNode.get(q.getId().toString()).asText() : null;
                 
                 QuestionOption selectedOption = null;
                 if (userAns != null && !userAns.trim().isEmpty()) {
@@ -320,8 +384,11 @@ public class ExamService {
                         .attempt(attempt)
                         .question(q)
                         .selectedOption(selectedOption)
+                        .userAnswerText(userAns)
                         .isCorrect(isCorrect)
                         .pointsEarned(isCorrect ? q.getPoints() : 0)
+                        .timeSpentSeconds(timeSpent.intValue())
+                        .aiExplanation(aiExpl)
                         .build();
                 studentAnswerRepository.save(answer);
             }
@@ -333,6 +400,9 @@ public class ExamService {
                 .total(questions.size())
                 .bandScore(band)
                 .detail(details)
+                .timeUsedSeconds((int)totalTimeSpent)
+                .aiCoachFeedback(aiCoachFeedback)
+                .predictedScore(predictedScore)
                 .build();
     }
 
@@ -353,10 +423,14 @@ public class ExamService {
             StudentAnswer answer = answerMap.get(q.getId());
             String userAns = "";
             boolean ok = false;
+            Integer timeSpent = 0;
+            String aiExpl = null;
             if (answer != null) {
-                userAns = answer.getSelectedOption() != null ? answer.getSelectedOption().getText() : "";
+                userAns = answer.getUserAnswerText() != null ? answer.getUserAnswerText() : (answer.getSelectedOption() != null ? answer.getSelectedOption().getText() : "");
                 ok = answer.getIsCorrect() != null && answer.getIsCorrect();
                 correctCount += (answer.getPointsEarned() != null) ? answer.getPointsEarned() : 0;
+                timeSpent = answer.getTimeSpentSeconds() != null ? answer.getTimeSpentSeconds() : 0;
+                aiExpl = answer.getAiExplanation();
             }
 
             List<QuestionOption> options = optionRepository.findByQuestionIdOrderByPositionOrderAsc(q.getId());
@@ -371,6 +445,8 @@ public class ExamService {
                     .userAns(userAns)
                     .correctAns(correctAns)
                     .ok(ok)
+                    .timeSpentSeconds(timeSpent)
+                    .aiExplanation(aiExpl)
                     .build());
         }
 
@@ -382,6 +458,9 @@ public class ExamService {
                 .total(attempt.getMaxScore() != null ? attempt.getMaxScore() : questions.size())
                 .bandScore(attempt.getOverallBand() != null ? attempt.getOverallBand() : 0.0)
                 .detail(details)
+                .timeUsedSeconds(attempt.getTimeUsedSeconds() != null ? attempt.getTimeUsedSeconds() : 0)
+                .aiCoachFeedback(attempt.getAiCoachFeedback())
+                .predictedScore(attempt.getPredictedScore())
                 .build();
     }
 }

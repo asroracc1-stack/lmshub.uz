@@ -38,4 +38,14 @@ public class StudentAnswer {
     @Column(name = "points_earned", nullable = false)
     @Builder.Default
     private Integer pointsEarned = 0;
+
+    @Column(name = "user_answer_text", columnDefinition = "TEXT")
+    private String userAnswerText;
+
+    @Column(name = "time_spent_seconds")
+    @Builder.Default
+    private Integer timeSpentSeconds = 0;
+
+    @Column(name = "ai_explanation", columnDefinition = "TEXT")
+    private String aiExplanation;
 }

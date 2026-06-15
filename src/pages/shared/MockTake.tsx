@@ -14,6 +14,8 @@ import {
 import { api } from "@/lib/axios";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { ExamResultDashboard } from "@/components/exam/ExamResultDashboard";
+import confetti from "canvas-confetti";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -21,7 +23,8 @@ import {
   Loader2, Sparkles, CheckCircle2, Clock, AlertCircle, Headphones,
   BookOpen, ChevronLeft, ChevronRight, Flag, Play, Pause,
   Volume2, VolumeX, Maximize2, Minimize2, Mic, Calculator, X, PenLine,
-  Award, Target, ThumbsUp, Lightbulb, BookMarked, Sun, Moon
+  Award, Target, ThumbsUp, Lightbulb, BookMarked, Sun, Moon,
+  Shield, Grid, CheckSquare, Menu, ArrowRight, ArrowLeft
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
@@ -529,6 +532,8 @@ export default function MockTake() {
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [sectionIdx, setSectionIdx] = useState(0);
+  const [activeQuestionIndex, setActiveQuestionIndex] = useState(0);
+  const [showReviewScreen, setShowReviewScreen] = useState(false);
   const [timeLeft, setTimeLeft] = useState(0);
   const [started, setStarted] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -639,24 +644,22 @@ export default function MockTake() {
 
   // ⌨️ Keyboard shortcuts
   useEffect(() => {
-    if (!started || result) return;
+    if (!started || result || showReviewScreen) return;
     const handler = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement)?.tagName;
       if (tag === "INPUT" || tag === "TEXTAREA") return;
       if (e.key === "ArrowRight" || e.key === "PageDown") {
-        setSectionIdx(i => Math.min(i + 1, sections.length - 1));
+        setActiveQuestionIndex(i => Math.min(i + 1, questions.length - 1));
       } else if (e.key === "ArrowLeft" || e.key === "PageUp") {
-        setSectionIdx(i => Math.max(i - 1, 0));
+        setActiveQuestionIndex(i => Math.max(i - 1, 0));
       } else if (e.key === "f" || e.key === "F") {
-        const curQ = questions.filter(q => q.section_index === sectionIdx)[0];
+        const curQ = questions[activeQuestionIndex];
         if (curQ) toggleFlag(curQ.id);
-      } else if (e.key === "Escape") {
-        setShowSubmitDialog(true);
       }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [started, result, sectionIdx, sections.length, questions]);
+  }, [started, result, activeQuestionIndex, questions.length, questions, showReviewScreen]);
 
 
   useEffect(() => {
@@ -1250,33 +1253,75 @@ export default function MockTake() {
 
   if (!started) {
     return (
-      <div className="min-h-[85vh] w-full flex flex-col items-center justify-center p-4">
-        <div className="w-full max-w-2xl">
-          <Card className="p-8 space-y-5 shadow-xl border border-slate-200/50 dark:border-white/5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md">
-            <div className="flex items-center gap-3">
-              {kind === "reading" ? <BookOpen className="h-8 w-8 text-violet-500" /> : kind === "listening" ? <Headphones className="h-8 w-8 text-amber-500" /> : <Sparkles className="h-8 w-8 text-purple-500" />}
-              <div>
-                <Badge variant="outline">{exam.type}</Badge>
-                <h1 className="text-2xl md:text-3xl font-display font-bold">{exam.title}</h1>
+      <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 bg-slate-100 dark:bg-[#070b19]">
+        <div className="w-full max-w-3xl">
+          <Card className="p-0 shadow-2xl border-slate-200/50 dark:border-white/10 bg-white dark:bg-slate-900 rounded-xl overflow-hidden">
+            <div className="bg-slate-900 dark:bg-slate-950 p-6 flex items-center justify-between border-b border-white/10">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded bg-white/10 flex items-center justify-center">
+                  <Shield className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold text-white tracking-tight">Official Test Environment</h1>
+                  <p className="text-slate-400 text-sm">LMSHub Certification Platform</p>
+                </div>
               </div>
+              <Badge variant="outline" className="bg-slate-800 text-slate-300 border-slate-700">{exam.type}</Badge>
             </div>
-            {exam.description && <p className="text-muted-foreground">{exam.description}</p>}
+            
+            <div className="p-8 space-y-6">
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white">{exam.title}</h2>
+              {exam.description && <p className="text-slate-600 dark:text-slate-400">{exam.description}</p>}
 
-            {(kind === "listening" || exam.title.toLowerCase().includes("listening")) && (
-              <div className="py-2">
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2 ml-1">{t("dynamic.mocktake.sound_check")}</p>
-                <CustomAudioPlayer src={exam.audio_url || (exam as any).audioUrl} />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 flex flex-col gap-1">
+                  <span className="text-xs uppercase font-bold text-slate-500">Duration</span>
+                  <span className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <Clock className="h-5 w-5 text-blue-500" /> {exam.duration_minutes} minutes
+                  </span>
+                </div>
+                <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 flex flex-col gap-1">
+                  <span className="text-xs uppercase font-bold text-slate-500">Questions</span>
+                  <span className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <Flag className="h-5 w-5 text-blue-500" /> {questions.length} items
+                  </span>
+                </div>
+                <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 flex flex-col gap-1">
+                  <span className="text-xs uppercase font-bold text-slate-500">Format</span>
+                  <span className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <Target className="h-5 w-5 text-blue-500" /> CBT / Linear
+                  </span>
+                </div>
               </div>
-            )}
 
-            <div className="grid grid-cols-3 gap-3">
-              <Card className="p-3 text-center"><Clock className="h-5 w-5 mx-auto mb-1 text-primary" /><p className="text-xs text-muted-foreground">{t("dynamic.auditlogs.vaqt")}</p><p className="font-bold">{exam.duration_minutes} daq</p></Card>
-              <Card className="p-3 text-center"><Flag className="h-5 w-5 mx-auto mb-1 text-primary" /><p className="text-xs text-muted-foreground">{t("dynamic.mocktake.savollar")}</p><p className="font-bold">{questions.length}</p></Card>
-              <Card className="p-3 text-center"><Sparkles className="h-5 w-5 mx-auto mb-1 text-primary" /><p className="text-xs text-muted-foreground">{t("dynamic.mocktake.qiyinlik")}</p><p className="font-bold capitalize">{exam.difficulty ?? "—"}</p></Card>
+              <div className="p-5 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/30 text-sm text-blue-800 dark:text-blue-300 space-y-3">
+                <h3 className="font-bold flex items-center gap-2"><AlertCircle className="h-4 w-4" /> Exam Rules & Instructions</h3>
+                <ul className="list-disc pl-5 space-y-1.5 opacity-90">
+                  <li>Do not switch tabs or minimize the browser window during the exam.</li>
+                  <li>Ensure your internet connection is stable.</li>
+                  <li>You may mark questions for review and return to them later.</li>
+                  <li>The exam will auto-submit when the timer reaches zero.</li>
+                </ul>
+              </div>
+
+              {(kind === "listening" || exam.title.toLowerCase().includes("listening")) && (
+                <div className="py-2">
+                  <p className="text-xs font-bold text-slate-500 uppercase mb-2">Sound Check</p>
+                  <CustomAudioPlayer src={exam.audio_url || (exam as any).audioUrl} />
+                </div>
+              )}
+
             </div>
-            <Button size="lg" className="w-full bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 text-white font-bold transition-all duration-300 shadow-md shadow-purple-500/10" onClick={() => { setStarted(true); startedAt.current = Date.now(); }}>
-              Boshlash
-            </Button>
+            
+            <div className="bg-slate-50 dark:bg-slate-900 p-6 border-t border-slate-200 dark:border-white/10 flex justify-end">
+              <Button 
+                size="lg" 
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 shadow-lg shadow-blue-500/20" 
+                onClick={() => { setStarted(true); startedAt.current = Date.now(); }}
+              >
+                Start Exam <ChevronRight className="h-5 w-5 ml-2" />
+              </Button>
+            </div>
           </Card>
         </div>
       </div>
@@ -1328,601 +1373,386 @@ export default function MockTake() {
     );
   };
 
-  return (
-    <div className="w-full min-h-screen bg-slate-50 dark:bg-[#070b19] text-slate-900 dark:text-slate-100 flex flex-col select-none overflow-x-hidden font-sans">
-      {/* 🚀 PREMIUM HUD HEADER */}
-      <header className={cn(
-        "h-16 shrink-0 border-b flex items-center justify-between px-4 md:px-8 sticky top-0 z-40 backdrop-blur-xl transition-all duration-300",
-        theme === "dark"
-          ? "bg-slate-950/80 border-white/5 shadow-lg shadow-black/20"
-          : "bg-white/80 border-slate-200/80 shadow-sm"
-      )}>
-        {/* Left Side: Brand & Title (Hidden on Mobile) */}
-        <div className="hidden md:flex items-center gap-4 min-w-0">
-          <div className="flex items-center gap-2.5 shrink-0">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-purple-500 to-violet-400 flex items-center justify-center text-white font-bold shadow-md shadow-purple-500/20">
-              L
+  const currentQuestion = questions[activeQuestionIndex];
+  const currentSection = sections[currentQuestion?.section_index || 0];
+  const isReading = kind === "reading";
+  const showPassage = isReading && (currentSection?.passage || currentSection?.imageUrl);
+  const flaggedCount = flagged.size;
+
+  if (showReviewScreen) {
+    return (
+      <div className="min-h-screen w-full bg-slate-100 dark:bg-[#070b19] flex flex-col p-4 md:p-8">
+        <Card className="w-full max-w-5xl mx-auto p-6 md:p-10 shadow-2xl border-slate-200/50 dark:border-white/10 bg-white dark:bg-slate-900 rounded-2xl">
+          <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-6 mb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Exam Review</h2>
+              <p className="text-slate-500 text-sm mt-1">Review your answers before final submission.</p>
             </div>
-            <span className="font-display font-extrabold text-base tracking-tight hidden sm:block">{t("dynamic.logo.lms")}<span className="text-purple-500">{t("dynamic.mocktake.hub")}</span>
-            </span>
+            <div className="flex items-center gap-4">
+               <div className="text-center px-4 py-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                 <span className="block text-xl font-bold text-slate-900 dark:text-white">{answeredCount}</span>
+                 <span className="text-[10px] uppercase font-bold text-slate-500">Answered</span>
+               </div>
+               <div className="text-center px-4 py-2 bg-amber-50 dark:bg-amber-500/10 rounded-lg">
+                 <span className="block text-xl font-bold text-amber-600 dark:text-amber-400">{flaggedCount}</span>
+                 <span className="text-[10px] uppercase font-bold text-amber-600/70">Flagged</span>
+               </div>
+            </div>
           </div>
-          <div className="h-5 w-px bg-slate-200 dark:bg-white/10 shrink-0" />
-          <div className="flex items-center gap-2 min-w-0">
-            <Badge variant="outline" className="capitalize text-[10px] font-extrabold border-purple-500/30 text-purple-600 bg-purple-500/5 px-2.5 py-0.5 shrink-0">
-              IELTS {exam.type}
-            </Badge>
-            <h1 className="font-bold text-sm truncate opacity-90 hidden md:block max-w-[240px] xl:max-w-[400px]" title={exam.title}>
-              {exam.title}
-            </h1>
+          
+          <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 gap-3 mb-8">
+            {questions.map((q, idx) => {
+              const hasAns = !!answers[q.id];
+              const isFlg = flagged.has(q.id);
+              return (
+                <button
+                  key={q.id}
+                  onClick={() => {
+                    setActiveQuestionIndex(idx);
+                    setShowReviewScreen(false);
+                  }}
+                  className={cn(
+                    "aspect-square rounded-xl flex items-center justify-center text-sm font-black border-2 transition-all hover:scale-105",
+                    hasAns 
+                      ? "bg-emerald-500 border-emerald-500 text-white shadow-md shadow-emerald-500/20" 
+                      : isFlg 
+                        ? "bg-amber-500 border-amber-500 text-white shadow-md shadow-amber-500/20"
+                        : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-blue-500"
+                  )}
+                >
+                  {q.position}
+                </button>
+              );
+            })}
           </div>
+
+          <div className="flex justify-between items-center bg-slate-50 dark:bg-slate-950 p-6 rounded-xl border border-slate-200 dark:border-white/10">
+            <Button variant="outline" size="lg" onClick={() => setShowReviewScreen(false)}>
+              <ChevronLeft className="w-5 h-5 mr-2" /> Return to Exam
+            </Button>
+            <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8" onClick={() => handleSubmitRequest()}>
+              Submit Exam
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full min-h-screen bg-slate-100 dark:bg-[#070b19] text-slate-900 dark:text-slate-100 flex flex-col select-none overflow-x-hidden font-sans">
+      {/* 🚀 OFFICIAL COMMAND CENTER HEADER */}
+      <header className={cn(
+        "h-[72px] shrink-0 border-b flex items-center justify-between px-6 sticky top-0 z-40 transition-all duration-300",
+        theme === "dark" ? "bg-slate-900 border-slate-800 shadow-md" : "bg-white border-slate-200 shadow-sm"
+      )}>
+        <div className="flex items-center gap-4">
+           <div className="h-10 w-10 bg-blue-600 rounded flex items-center justify-center shadow-lg shadow-blue-500/20">
+             <Shield className="h-6 w-6 text-white" />
+           </div>
+           <div>
+             <h1 className="font-bold text-sm md:text-base leading-tight max-w-[200px] md:max-w-[400px] truncate">{exam.title}</h1>
+             <p className="text-[10px] md:text-xs font-semibold text-slate-500 uppercase tracking-wider">{exam.type}</p>
+           </div>
         </div>
 
-        {/* Center: Glowing Pulse Timer (Absolute on Desktop, Normal flow on Mobile) */}
-        <div className="md:absolute md:left-1/2 md:-translate-x-1/2 flex items-center gap-3">
+        {/* Dynamic Timer */}
+        <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center">
           <div className={cn(
-            "flex items-center gap-2.5 px-4 md:px-5 py-2 md:py-2.5 rounded-2xl font-mono font-black text-xs md:text-sm transition-all duration-500 shadow-sm",
-            lowTime
-              ? "bg-rose-500 text-white animate-pulse shadow-rose-500/20 border border-rose-400/20"
-              : "bg-slate-100 dark:bg-white/5 text-slate-800 dark:text-purple-400 border border-slate-200/50 dark:border-white/5"
+            "flex items-center gap-2 px-6 py-2 rounded-full font-mono text-lg md:text-xl font-black tracking-widest transition-colors border",
+            timeLeft < 60 
+              ? "bg-rose-500 text-white border-rose-600 animate-pulse" 
+              : timeLeft < 300 
+                ? "bg-amber-500 text-white border-amber-600"
+                : timeLeft < 900
+                  ? "bg-yellow-100 dark:bg-yellow-500/10 text-yellow-700 dark:text-yellow-500 border-yellow-200 dark:border-yellow-500/20"
+                  : "bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700"
           )}>
-            <Clock className={cn("h-4 w-4", lowTime ? "animate-spin" : "text-purple-500")} />
-            <span className="tracking-widest">{fmt(timeLeft)}</span>
+            <Clock className={cn("h-5 w-5", timeLeft < 60 && "animate-spin")} />
+            {fmt(timeLeft)}
           </div>
         </div>
 
-        {/* Right Side: Stats & Utility Controls */}
-        <div className="flex items-center gap-2 md:gap-4 ml-auto md:ml-0">
-          {/* Progress Tracker */}
-          <div className="hidden lg:flex flex-col items-end text-xs shrink-0">
-            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-              Topshirildi
-            </span>
-            <span className="font-black text-slate-700 dark:text-slate-300">
-              {answeredCount} / {questions.length} savol
-            </span>
-          </div>
-
-          <div className="h-5 w-px bg-slate-200 dark:bg-white/10 shrink-0 hidden lg:block" />
-
-          {/* Calculator Button */}
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={() => setShowCalculator(!showCalculator)}
-            className={cn(
-              "h-10 w-10 rounded-xl transition-all shrink-0 hidden sm:inline-flex",
-              showCalculator ? "bg-purple-500/10 text-purple-500 hover:bg-purple-500/20" : "bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300"
-            )}
-            title="Desmos kalkulyator"
-          >
-            <Calculator className="h-4.5 w-4.5" />
-          </Button>
-
-          {/* Scratchpad Button */}
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={() => setShowScratchpad(!showScratchpad)}
-            className={cn(
-              "h-10 w-10 rounded-xl transition-all shrink-0 hidden sm:inline-flex",
-              showScratchpad ? "bg-violet-500/10 text-violet-500 hover:bg-violet-500/20" : "bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300"
-            )}
-            title="Qoralama daftari"
-          >
-            <PenLine className="h-4.5 w-4.5" />
-          </Button>
-
-          {/* Pause Button */}
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={() => setIsPaused(!isPaused)}
-            className="h-10 w-10 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300 transition-all shrink-0"
-            title={isPaused ? "Davom ettirish" : "Vaqtincha to'xtatish"}
-          >
-            {isPaused ? <Play className="h-4.5 w-4.5 fill-current text-purple-500" /> : <Pause className="h-4.5 w-4.5 fill-current" />}
-          </Button>
-
-          {/* Theme Toggle Button */}
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={toggle}
-            className="h-10 w-10 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300 transition-all shrink-0"
-            title={theme === "dark" ? "Kunduzgi rejim" : "Tungi rejim"}
-          >
-            {theme === "dark" ? <Sun className="h-4.5 w-4.5 text-amber-500" /> : <Moon className="h-4.5 w-4.5 text-indigo-500" />}
-          </Button>
-
-          {/* Fullscreen Button (Hidden on Mobile) */}
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={toggleFullscreen}
-            className="h-10 w-10 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300 transition-all shrink-0 hidden sm:inline-flex"
-            title="To'liq ekran rejimi"
-          >
-            {isFullscreen ? <Minimize2 className="h-4.5 w-4.5" /> : <Maximize2 className="h-4.5 w-4.5" />}
-          </Button>
-
-          {/* Direct Submit Button */}
-          <Button
-            size="sm"
-            onClick={() => handleSubmitRequest()}
-            disabled={submitting}
-            className="bg-purple-500 hover:bg-purple-600 active:scale-95 text-white font-extrabold px-4 md:px-5 py-2 md:py-2.5 rounded-xl transition-all shadow-md shadow-purple-500/10 shrink-0 text-[11px] md:text-xs tracking-tight"
-          >
-            {submitting ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : null}
-            Yakunlash
-          </Button>
+        <div className="flex items-center gap-4">
+           <Button variant="ghost" size="icon" onClick={() => setShowCalculator(!showCalculator)} className="hidden md:flex"><Calculator className="h-5 w-5" /></Button>
+           <Button variant="ghost" size="icon" onClick={() => setShowScratchpad(!showScratchpad)} className="hidden md:flex"><PenLine className="h-5 w-5" /></Button>
+           <Button variant="ghost" size="icon" onClick={() => setIsPaused(!isPaused)}><Pause className="h-5 w-5" /></Button>
+           <Button variant="ghost" size="icon" onClick={toggle}>{theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}</Button>
+           
+           <div className="w-px h-8 bg-slate-200 dark:bg-slate-700 mx-2 hidden sm:block" />
+           <Button variant="outline" className="hidden sm:flex font-bold" onClick={() => setShowReviewScreen(true)}>
+             Review
+           </Button>
+           <Button className="bg-blue-600 hover:bg-blue-700 text-white font-bold" onClick={() => handleSubmitRequest()}>
+             Finish
+           </Button>
         </div>
       </header>
 
-      {/* 🎧 LISTENING COMPACT PLAYER */}
       {(kind === "listening" || exam.title.toLowerCase().includes("listening")) && (
-        <div className="shrink-0 w-full max-w-[1600px] mx-auto px-4 md:px-8 py-3 bg-transparent z-30">
-          <CustomAudioPlayer
-            src={exam.audio_url || (exam as any).audioUrl}
-            isExternalPaused={isPaused}
-          />
+        <div className="w-full bg-slate-900 border-b border-slate-800 py-2 px-6 flex justify-center">
+          <div className="w-full max-w-3xl">
+             <CustomAudioPlayer src={exam.audio_url || (exam as any).audioUrl} isExternalPaused={isPaused} />
+          </div>
         </div>
       )}
 
-      {/* ⏸️ PAUSE OVERLAY */}
+      {/* PAUSE OVERLAY */}
       <AnimatePresence>
         {isPaused && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-slate-950/95 backdrop-blur-xl flex flex-col items-center justify-center p-6 text-center"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-slate-900/95 backdrop-blur-md flex flex-col items-center justify-center text-center"
           >
-            <div className="h-48 w-48 mb-6">
-              <TigerPlayer />
-            </div>
-            <h2 className="text-3xl font-display font-black text-white mb-2 tracking-tight">{t("dynamic.mocktake.test_to_xtatildi")}</h2>
-            <p className="text-slate-400 max-w-md mb-8 text-sm">{t("dynamic.mocktake.hozir_dam_olib_oling_taymer_siz_davom_et")}</p>
-            <Button
-              size="lg"
-              onClick={() => setIsPaused(false)}
-              className="bg-purple-500 hover:bg-purple-600 text-white px-10 py-6 rounded-full font-black text-base transition-all shadow-lg shadow-purple-500/20 active:scale-95"
-            >
-              <Play className="h-5 w-5 mr-2 fill-current" /> Davom ettirish
+            <Shield className="h-24 w-24 text-blue-500 mb-6 opacity-50" />
+            <h2 className="text-4xl font-bold text-white mb-4 tracking-tight">Exam Paused</h2>
+            <p className="text-slate-400 mb-8 max-w-md">Your timer is stopped. Note that in official exams, pauses may not be allowed. Return when you are ready.</p>
+            <Button size="lg" onClick={() => setIsPaused(false)} className="bg-blue-600 hover:bg-blue-700 text-white px-12 py-6 rounded-full text-lg font-bold shadow-2xl shadow-blue-500/20">
+              <Play className="h-6 w-6 mr-2 fill-current" /> Resume Exam
             </Button>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* 📝 EXAM WORKSPACE */}
-      <main className="flex-1 w-full max-w-[1600px] mx-auto px-4 md:px-8 py-4" style={{ height: 'calc(100vh - 64px)' }}>
-        <div className={cn(
-          "grid gap-8 xl:gap-12 h-full",
-          (exam.pdfUrl || (kind === "reading" && (currentSection?.passage || currentSection?.imageUrl))) ? "lg:grid-cols-2" : "grid-cols-1"
-        )}>
-          {/* LEFT PANEL: PDF VIEWER OR PASSAGE */}
-          {exam.pdfUrl ? (
-          <Card className="flex flex-col h-full w-full max-w-6xl mx-auto border-slate-200/50 dark:border-white/5 shadow-xl shadow-slate-100/50 dark:shadow-none bg-white dark:bg-slate-900/40 backdrop-blur-md rounded-2xl overflow-hidden sticky top-4">
-              <div className="px-6 py-4 border-b border-slate-100 dark:border-white/5 flex items-center justify-between shrink-0 bg-slate-50/50 dark:bg-slate-950/20">
-                <h2 className="font-display font-extrabold text-base tracking-tight text-slate-800 dark:text-white">
-                  Imtihon Savollari (PDF)
-                </h2>
-              </div>
-              <div className="flex-1 w-full overflow-y-auto">
-                <iframe 
-                  src={getFullImageUrl(exam.pdfUrl)} 
-                  className="w-full h-full min-h-[70vh]" 
-                  style={{ border: 0 }} 
-                  title="Imtihon PDF"
-                />
-              </div>
-            </Card>
-          ) : (
-            kind === "reading" && (currentSection?.passage || currentSection?.imageUrl) && (
-              <Card className="flex flex-col h-full w-full max-w-6xl mx-auto border-slate-200/50 dark:border-white/5 shadow-xl shadow-slate-100/50 dark:shadow-none bg-white dark:bg-slate-900/40 backdrop-blur-md rounded-2xl overflow-hidden sticky top-4">
-                {currentSection.title && (
-                  <div className="px-6 py-4 border-b border-slate-100 dark:border-white/5 flex items-center justify-between shrink-0 bg-slate-50/50 dark:bg-slate-950/20">
-                    <h2 className="font-display font-extrabold text-base tracking-tight text-slate-800 dark:text-white">
-                      {currentSection.title}
-                    </h2>
-                  </div>
-                )}
-                <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar space-y-6">
-                  {currentSection.imageUrl && (
-                    <div className="rounded-xl overflow-hidden border border-slate-200/60 dark:border-white/5 bg-slate-50 dark:bg-slate-950 p-3 shadow-inner">
-                      <img src={getFullImageUrl(currentSection.imageUrl)} alt="Map/Diagram" className="max-w-full h-auto mx-auto rounded-lg" />
-                    </div>
-                  )}
-                  <div className="prose prose-slate dark:prose-invert max-w-none text-slate-750 dark:text-slate-350 text-sm md:text-base leading-relaxed font-normal whitespace-pre-wrap select-text selection:bg-purple-500/20 selection:text-purple-500">
-                    {currentSection.passage}
-                  </div>
-                </div>
-              </Card>
-            )
-          )}
-
-          {/* RIGHT PANEL: QUESTIONS */}
-          <Card className={cn(
-            "flex flex-col h-full w-full mx-auto border-slate-200/50 dark:border-white/5 shadow-xl shadow-slate-100/50 dark:shadow-none bg-white dark:bg-slate-900/40 backdrop-blur-md rounded-2xl overflow-hidden",
-            kind === "reading" && (currentSection?.passage || currentSection?.imageUrl) ? "max-w-6xl" : "max-w-full"
-          )}>
-            <div className="px-6 py-4 border-b border-slate-100 dark:border-white/5 flex items-center justify-between shrink-0 bg-slate-50/50 dark:bg-slate-950/20">
-              <span className="text-xs font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                Savollar va Topshiriqlar
-              </span>
-              <span className="text-xs font-black text-purple-500">
-                {sectionQs.length} ta savol
-              </span>
+      {/* EXAM WORKSPACE */}
+      <main className="flex-1 w-full flex flex-col xl:flex-row h-[calc(100vh-72px)] overflow-hidden relative">
+        
+        {/* PASSAGE PANEL (For Reading/PDF) */}
+        {showPassage && (
+          <div className="w-full xl:w-5/12 h-[40vh] xl:h-full border-b xl:border-b-0 xl:border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0b1021] flex flex-col">
+            <div className="bg-slate-50 dark:bg-slate-900/50 p-3 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center shrink-0">
+               <span className="font-bold text-sm uppercase tracking-wider text-slate-500">Passage Material</span>
             </div>
-
-            <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar space-y-6">
-              {/* Listening Visual Reference */}
-              {kind === "listening" && currentSection?.imageUrl && (
-                <div className="mb-6 rounded-2xl overflow-hidden border border-slate-200/60 dark:border-white/5 bg-slate-50 dark:bg-slate-950 p-3 shadow-inner">
-                  <img src={getFullImageUrl(currentSection.imageUrl)} alt="Map/Diagram" className="max-w-full h-auto mx-auto rounded-lg" />
-                  <p className="text-[10px] text-center text-slate-400 dark:text-slate-500 mt-2 uppercase tracking-widest font-black">{t("dynamic.mocktake.visual_reference")}</p>
+            <div className="flex-1 overflow-y-auto p-6 md:p-10 custom-scrollbar">
+              {currentSection.imageUrl && (
+                <img src={getFullImageUrl(currentSection.imageUrl)} alt="Reference" className="max-w-full rounded-xl border border-slate-200 dark:border-slate-700 mb-6" />
+              )}
+              {currentSection.passage && (
+                <div className="prose prose-slate dark:prose-invert max-w-none text-slate-800 dark:text-slate-300 text-base md:text-lg leading-loose whitespace-pre-wrap font-medium">
+                  {currentSection.passage}
                 </div>
               )}
+            </div>
+          </div>
+        )}
 
-              {sectionQs.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 text-center gap-3">
-                  <AlertCircle className="h-10 w-10 text-slate-300 dark:text-slate-700 animate-pulse" />
-                  <p className="text-slate-400 dark:text-slate-500 text-sm font-semibold">{t("dynamic.mocktake.bu_bo_limda_hech_qanday_savollar_kiritil")}</p>
-                </div>
-              ) : (
-                <div className="space-y-8">
-                  {sectionQs.map((q) => {
-                    // isInline only if fill/short AND no options exist
-                    const isInline = (q.qtype === "fill" || q.qtype === "short") && (!q.options || q.options.length === 0);
-                    const LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H"];
-                    const hasAnswer = !!answers[q.id];
-                    const isFlagged = flagged.has(q.id);
+        {/* QUESTION PANEL */}
+        <div className={cn(
+          "flex flex-col h-full overflow-hidden bg-slate-50 dark:bg-[#070b19]",
+          showPassage ? "w-full xl:flex-1" : "w-full xl:flex-1 max-w-5xl mx-auto"
+        )}>
+          {currentQuestion ? (
+            <div className="flex-1 overflow-y-auto p-6 md:p-12 custom-scrollbar flex flex-col">
+              
+              <div className="flex items-center justify-between mb-8">
+                 <div className="flex items-center gap-3">
+                   <div className="h-10 w-10 bg-blue-600 text-white font-black text-lg flex items-center justify-center rounded-lg shadow-md">
+                     {currentQuestion.position}
+                   </div>
+                   <span className="font-bold text-slate-400 uppercase tracking-widest text-xs">Question {currentQuestion.position} of {questions.length}</span>
+                 </div>
+                 <Button 
+                   variant="outline" 
+                   className={cn("h-10 gap-2 font-bold transition-colors", flagged.has(currentQuestion.id) ? "bg-amber-50 text-amber-600 border-amber-300 dark:bg-amber-500/10 dark:border-amber-500/30" : "")}
+                   onClick={() => toggleFlag(currentQuestion.id)}
+                 >
+                   <Flag className={cn("h-4 w-4", flagged.has(currentQuestion.id) && "fill-current")} /> 
+                   Mark for Review
+                 </Button>
+              </div>
 
+              {/* Question Content */}
+              <div className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white leading-relaxed mb-8">
+                {currentQuestion.imageUrl && (currentQuestion.imagePosition === "top" || !currentQuestion.imagePosition) && (
+                  <img src={getFullImageUrl(currentQuestion.imageUrl)} className="mb-6 rounded-xl border border-slate-200 dark:border-slate-700 max-h-64 object-contain" />
+                )}
+                {currentQuestion.imageUrl && currentQuestion.imagePosition === "left" && (
+                  <img src={getFullImageUrl(currentQuestion.imageUrl)} className="float-left mr-6 mb-4 rounded-xl border border-slate-200 dark:border-slate-700 max-h-48 object-contain" />
+                )}
+                
+                {/* Using renderInlinePrompt for inline blanks */}
+                {renderInlinePrompt(currentQuestion)}
+
+                {currentQuestion.imageUrl && currentQuestion.imagePosition === "right" && (
+                  <img src={getFullImageUrl(currentQuestion.imageUrl)} className="float-right ml-6 mb-4 rounded-xl border border-slate-200 dark:border-slate-700 max-h-48 object-contain" />
+                )}
+                {currentQuestion.imageUrl && currentQuestion.imagePosition === "bottom" && (
+                  <img src={getFullImageUrl(currentQuestion.imageUrl)} className="mt-6 rounded-xl border border-slate-200 dark:border-slate-700 max-h-64 object-contain" />
+                )}
+              </div>
+
+              {/* Options for MCQ */}
+              {Array.isArray(currentQuestion.options) && currentQuestion.options.length > 0 && currentQuestion.qtype !== "matching" && currentQuestion.qtype !== "headings" && (
+                <div className="space-y-3 mt-auto">
+                  {currentQuestion.options.map((optObj, idx) => {
+                    const letter = ["A", "B", "C", "D", "E", "F", "G", "H"][idx] ?? String(idx + 1);
+                    const isSelected = answers[currentQuestion.id] === optObj.text;
                     return (
-                      <div
-                        key={q.id}
-                        id={`q-${q.id}`}
+                      <button
+                        key={optObj.id || idx}
+                        onClick={() => onAnswer(currentQuestion.id, optObj.text)}
                         className={cn(
-                          "group rounded-2xl p-6 md:p-8 border transition-all duration-300",
-                          isFlagged
-                            ? "bg-amber-500/5 border-amber-500/20 shadow-sm shadow-amber-500/5"
-                            : hasAnswer
-                              ? "bg-purple-500/5 border-purple-500/20 shadow-sm shadow-purple-500/5"
-                              : "bg-slate-50/50 dark:bg-white/[0.01] border-slate-200/60 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10"
+                          "w-full text-left p-4 rounded-xl border-2 flex items-center gap-4 transition-all hover:scale-[1.01] active:scale-[0.99]",
+                          isSelected 
+                            ? "border-blue-600 bg-blue-50 dark:bg-blue-600/10 shadow-md shadow-blue-500/10"
+                            : "border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-500/50 bg-white dark:bg-slate-800"
                         )}
                       >
-                        <div className="flex items-start gap-4">
-                          {/* Question Number Badge */}
-                          <span className={cn(
-                            "flex-none h-8 w-8 rounded-xl flex items-center justify-center text-xs font-black shadow-sm transition-all duration-300",
-                            isFlagged
-                              ? "bg-amber-500 text-white shadow-amber-500/10"
-                              : hasAnswer
-                                ? "bg-purple-500 text-white shadow-purple-500/10"
-                                : "bg-white dark:bg-slate-950 border border-slate-200 dark:border-white/5 text-slate-700 dark:text-slate-350"
-                          )}>
-                            {q.position}
-                          </span>
-
-                          {/* Question Content */}
-                          <div className="flex-1 min-w-0">
-                            {isInline ? (
-                              <div className="text-slate-800 dark:text-slate-200 font-medium space-y-2">
-                                {/* Show image even for inline/short answer questions */}
-                                {q.imageUrl && (
-                                  <div className="mb-3">
-                                    {(q.imagePosition === "top" || !q.imagePosition) && <img src={getFullImageUrl(q.imageUrl)} alt="Question" className="max-h-64 md:max-h-80 w-auto rounded-xl object-contain border border-slate-200 dark:border-white/10 shadow-sm" />}
-                                    {q.imagePosition === "left" && <img src={getFullImageUrl(q.imageUrl)} alt="Question" className="float-left mr-3 max-h-40 rounded-xl object-contain border border-slate-200 dark:border-white/10" />}
-                                    {q.imagePosition === "right" && <img src={getFullImageUrl(q.imageUrl)} alt="Question" className="float-right ml-3 max-h-40 rounded-xl object-contain border border-slate-200 dark:border-white/10" />}
-                                    {q.imagePosition === "bottom" && <img src={getFullImageUrl(q.imageUrl)} alt="Question" className="max-h-64 md:max-h-80 w-auto rounded-xl object-contain border border-slate-200 dark:border-white/10 shadow-sm" />}
-                                  </div>
-                                )}
-                                {renderInlinePrompt(q)}
-                              </div>
-                            ) : (
-                              <div className="space-y-4">
-                                <div className="text-slate-800 dark:text-slate-200 font-bold text-sm md:text-base leading-snug">
-                                  {(q.imagePosition === "top" || !q.imagePosition) && q.imageUrl && <img src={getFullImageUrl(q.imageUrl)} alt="Question" className="mb-3 max-h-64 md:max-h-80 w-auto rounded-xl object-contain border border-slate-200/60 dark:border-white/10 shadow-sm" />}
-                                  {q.imagePosition === "left" && q.imageUrl && <img src={getFullImageUrl(q.imageUrl)} alt="Question" className="float-left mr-4 max-h-48 rounded-xl object-contain border border-slate-200/60 dark:border-white/10" />}
-                                  <div className="inline">{q.prompt}</div>
-                                  {q.imagePosition === "right" && q.imageUrl && <img src={getFullImageUrl(q.imageUrl)} alt="Question" className="float-right ml-4 max-h-48 rounded-xl object-contain border border-slate-200/60 dark:border-white/10" />}
-                                  {q.imagePosition === "bottom" && q.imageUrl && <img src={getFullImageUrl(q.imageUrl)} alt="Question" className="mt-3 max-h-64 md:max-h-80 w-auto rounded-xl object-contain border border-slate-200/60 dark:border-white/10 shadow-sm" />}
-                                </div>
-
-                                {/* Multiple Choice options */}
-                                {Array.isArray(q.options) && q.options.length > 0 && q.qtype !== "matching" && q.qtype !== "headings" ? (
-                                  <div className="grid gap-4 mt-3">
-                                    {q.options.map((optObj, idx) => {
-                                      const opt = optObj.text;
-                                      const letter = LETTERS[idx] ?? String(idx + 1);
-                                      const selected = answers[q.id] === opt;
-                                      return (
-                                        <button
-                                          key={optObj.id || idx}
-                                          type="button"
-                                          onClick={() => onAnswer(q.id, opt)}
-                                          className={cn(
-                                            "w-full flex items-center gap-3.5 px-5 py-4 rounded-xl border text-xs md:text-sm text-left transition-all duration-200",
-                                            selected
-                                              ? "bg-purple-500 text-white border-purple-500 shadow-md shadow-purple-500/20 font-bold"
-                                              : "bg-white dark:bg-slate-950 hover:bg-slate-100/50 dark:hover:bg-white/[0.03] border-slate-200 dark:border-white/5 text-slate-700 dark:text-slate-300"
-                                          )}
-                                        >
-                                          <span className={cn(
-                                            "flex-none w-6 h-6 rounded-lg border flex items-center justify-center text-[10px] font-black tracking-wider transition-all",
-                                            selected
-                                              ? "bg-white text-purple-500 border-white shadow-inner"
-                                              : "border-slate-300 dark:border-white/10 bg-slate-50 dark:bg-slate-900 text-slate-500"
-                                          )}>
-                                            {letter}
-                                          </span>
-                                          <span className="flex-1 leading-snug flex items-center gap-3">
-                                            {optObj.imagePosition === 'left' && optObj.imageUrl && <img src={getFullImageUrl(optObj.imageUrl)} alt="Option" className="max-h-16 rounded border bg-white object-contain" />}
-                                            <span className="flex-1">
-                                              {optObj.imagePosition === 'top' && optObj.imageUrl && <img src={getFullImageUrl(optObj.imageUrl)} alt="Option" className="max-h-16 rounded border bg-white object-contain mb-2" />}
-                                              {opt}
-                                              {optObj.imagePosition === 'bottom' && optObj.imageUrl && <img src={getFullImageUrl(optObj.imageUrl)} alt="Option" className="max-h-16 rounded border bg-white object-contain mt-2" />}
-                                            </span>
-                                            {optObj.imagePosition === 'right' && optObj.imageUrl && <img src={getFullImageUrl(optObj.imageUrl)} alt="Option" className="max-h-16 rounded border bg-white object-contain" />}
-                                          </span>
-                                        </button>
-                                      );
-                                    })}
-                                  </div>
-                                ) : (q.qtype === "mcq" || q.qtype === "short" || q.qtype === "fill") ? (
-                                  <div className="mt-2">
-                                    {renderInlineInput(q)}
-                                  </div>
-                                ) : null}
-
-                                {/* TFNG / YNNG Buttons */}
-                                {(q.qtype === "tfng" || q.qtype === "ynng") && (
-                                  <div className="grid grid-cols-3 gap-2 mt-3">
-                                    {(q.qtype === "tfng" ? ["TRUE", "FALSE", "NOT GIVEN"] : ["YES", "NO", "NOT GIVEN"]).map((v) => {
-                                      const selected = answers[q.id] === v;
-                                      return (
-                                        <button
-                                          key={v}
-                                          onClick={() => onAnswer(q.id, v)}
-                                          className={cn(
-                                            "py-3 rounded-xl text-[10px] md:text-xs font-black tracking-wider border transition-all duration-200 active:scale-95",
-                                            selected
-                                              ? "bg-purple-500 text-white border-purple-500 shadow-md shadow-purple-500/10"
-                                              : "bg-white dark:bg-slate-950 hover:bg-slate-50 dark:hover:bg-white/[0.02] border-slate-200 dark:border-white/5 text-slate-500 dark:text-slate-400"
-                                          )}
-                                        >
-                                          {v}
-                                        </button>
-                                      );
-                                    })}
-                                  </div>
-                                )}
-
-                                {/* Matching / Headings Dropdown */}
-                                {(q.qtype === "matching" || q.qtype === "headings") && Array.isArray(q.options) && (
-                                  <select
-                                    className="w-full h-11 px-3.5 rounded-xl border border-slate-200 dark:border-white/5 bg-white dark:bg-slate-950 text-xs md:text-sm font-semibold text-slate-700 dark:text-slate-350 focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/20 transition-all outline-none"
-                                    value={answers[q.id] ?? ""}
-                                    onChange={(e) => onAnswer(q.id, e.target.value)}
-                                  >
-                                    <option value="">— Variantni tanlang —</option>
-                                    {q.options.map((o) => <option key={o.id || o.text} value={o.text}>{o.text}</option>)}
-                                  </select>
-                                )}
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Flag/Bookmark Button */}
-                          <button
-                            onClick={() => toggleFlag(q.id)}
-                            className={cn(
-                              "p-2 rounded-xl border transition-all shrink-0 hover:scale-105 active:scale-95",
-                              isFlagged
-                                ? "text-amber-500 bg-amber-500/10 border-amber-500/20 opacity-100"
-                                : "text-slate-300 dark:text-slate-600 hover:text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5 border-transparent"
-                            )}
-                            title="Keyinchalik qaytish uchun belgilash"
-                          >
-                            <Flag className={cn("h-4 w-4", isFlagged && "fill-current")} />
-                          </button>
+                        <div className={cn(
+                          "h-8 w-8 rounded-lg flex items-center justify-center font-bold text-sm shrink-0 transition-colors",
+                          isSelected ? "bg-blue-600 text-white" : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400"
+                        )}>
+                          {letter}
                         </div>
-                      </div>
+                        <span className={cn("text-base md:text-lg font-medium", isSelected ? "text-blue-900 dark:text-blue-100" : "text-slate-700 dark:text-slate-300")}>
+                          {optObj.text}
+                        </span>
+                      </button>
                     );
                   })}
                 </div>
               )}
 
-              {/* In-Panel Next/Prev Buttons */}
-              <div className="flex justify-between pt-6 border-t border-slate-100 dark:border-white/5 shrink-0">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSectionIdx((i) => Math.max(0, i - 1))}
-                  disabled={sectionIdx === 0}
-                  className="rounded-xl border-slate-200 dark:border-white/5 px-4 h-10 font-bold hover:bg-slate-50 dark:hover:bg-white/5"
-                >
-                  <ChevronLeft className="h-4 w-4 mr-1.5" /> Oldingi Passage
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSectionIdx((i) => Math.min(sections.length - 1, i + 1))}
-                  disabled={sectionIdx === sections.length - 1}
-                  className="rounded-xl border-slate-200 dark:border-white/5 px-4 h-10 font-bold hover:bg-slate-50 dark:hover:bg-white/5"
-                >
-                  Keyingi Passage <ChevronRight className="h-4 w-4 ml-1.5" />
-                </Button>
+              {/* TFNG / YNNG Options */}
+              {(currentQuestion.qtype === "tfng" || currentQuestion.qtype === "ynng") && (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-auto">
+                  {(currentQuestion.qtype === "tfng" ? ["TRUE", "FALSE", "NOT GIVEN"] : ["YES", "NO", "NOT GIVEN"]).map((v) => {
+                    const isSelected = answers[currentQuestion.id] === v;
+                    return (
+                      <button
+                        key={v}
+                        onClick={() => onAnswer(currentQuestion.id, v)}
+                        className={cn(
+                          "p-6 rounded-xl border-2 font-black tracking-widest text-sm transition-all active:scale-95",
+                          isSelected
+                            ? "border-blue-600 bg-blue-600 text-white shadow-lg shadow-blue-600/20"
+                            : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 hover:border-blue-300"
+                        )}
+                      >
+                        {v}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Matching Dropdown */}
+              {(currentQuestion.qtype === "matching" || currentQuestion.qtype === "headings") && Array.isArray(currentQuestion.options) && (
+                <div className="mt-auto">
+                  <select
+                    className="w-full p-4 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-lg font-bold focus:border-blue-500 focus:ring-0 outline-none"
+                    value={answers[currentQuestion.id] ?? ""}
+                    onChange={(e) => onAnswer(currentQuestion.id, e.target.value)}
+                  >
+                    <option value="">— Select an Option —</option>
+                    {currentQuestion.options.map((o) => <option key={o.id || o.text} value={o.text}>{o.text}</option>)}
+                  </select>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex-1 flex items-center justify-center text-slate-400">Loading question...</div>
+          )}
+
+          {/* BOTTOM NAVIGATION BAR */}
+          <div className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 p-4 md:p-6 shrink-0 flex items-center justify-between">
+            <Button 
+              size="lg" 
+              variant="outline" 
+              className="h-12 px-6 font-bold"
+              disabled={activeQuestionIndex === 0}
+              onClick={() => setActiveQuestionIndex(i => i - 1)}
+            >
+              <ArrowLeft className="w-5 h-5 mr-2" /> Previous
+            </Button>
+            
+            <div className="hidden md:flex xl:hidden items-center gap-1 overflow-x-auto max-w-[40%] no-scrollbar px-4">
+               {questions.map((q, idx) => {
+                 const isActive = activeQuestionIndex === idx;
+                 const hasAns = !!answers[q.id];
+                 const isFlg = flagged.has(q.id);
+                 return (
+                   <button
+                     key={q.id}
+                     onClick={() => setActiveQuestionIndex(idx)}
+                     className={cn(
+                       "h-8 w-8 rounded flex items-center justify-center text-[10px] font-black shrink-0 transition-all",
+                       isActive ? "border-2 border-blue-600 bg-blue-50 dark:bg-blue-600/20 text-blue-700 dark:text-blue-400 scale-110" 
+                         : hasAns ? "bg-emerald-500 text-white" 
+                         : isFlg ? "bg-amber-500 text-white" 
+                         : "bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200"
+                     )}
+                   >
+                     {q.position}
+                   </button>
+                 );
+               })}
+            </div>
+
+            {activeQuestionIndex === questions.length - 1 ? (
+              <Button size="lg" className="h-12 px-8 font-bold bg-blue-600 hover:bg-blue-700 text-white" onClick={() => setShowReviewScreen(true)}>
+                Review <Grid className="w-5 h-5 ml-2" />
+              </Button>
+            ) : (
+              <Button size="lg" className="h-12 px-6 font-bold bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100" onClick={() => setActiveQuestionIndex(i => i + 1)}>
+                Next <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* STATUS SIDEBAR (Desktop) */}
+        <div className="hidden xl:flex flex-col w-[320px] shrink-0 border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 h-full p-6">
+            <h3 className="font-bold text-slate-800 dark:text-white mb-6 uppercase tracking-widest text-xs flex items-center gap-2"><Target className="w-4 h-4 text-blue-600" /> Exam Status</h3>
+            
+            <div className="space-y-4 mb-8">
+              <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
+                <span className="text-sm font-semibold text-slate-600 dark:text-slate-400">Answered</span>
+                <span className="font-bold text-emerald-600 dark:text-emerald-400">{answeredCount}</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
+                <span className="text-sm font-semibold text-slate-600 dark:text-slate-400">Remaining</span>
+                <span className="font-bold text-slate-900 dark:text-white">{questions.length - answeredCount}</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
+                <span className="text-sm font-semibold text-slate-600 dark:text-slate-400">Flagged</span>
+                <span className="font-bold text-amber-500">{flaggedCount}</span>
+              </div>
+              
+              <div className="pt-2">
+                 <div className="flex justify-between text-xs font-bold mb-2">
+                   <span className="text-slate-500">Completion</span>
+                   <span className="text-blue-600">{Math.round((answeredCount/questions.length)*100)}%</span>
+                 </div>
+                 <Progress value={(answeredCount/questions.length)*100} className="h-2 bg-slate-100 dark:bg-slate-800" />
               </div>
             </div>
-          </Card>
+
+            <div className="flex-1 overflow-y-auto custom-scrollbar -mr-2 pr-2">
+               <div className="grid grid-cols-5 gap-2">
+                 {questions.map((q, idx) => {
+                   const isActive = activeQuestionIndex === idx;
+                   const hasAns = !!answers[q.id];
+                   const isFlg = flagged.has(q.id);
+                   return (
+                     <button
+                       key={q.id}
+                       onClick={() => setActiveQuestionIndex(idx)}
+                       className={cn(
+                         "aspect-square rounded flex items-center justify-center text-xs font-black transition-all border",
+                         isActive ? "border-blue-600 bg-blue-50 dark:bg-blue-600/20 text-blue-700 dark:text-blue-400 scale-110 shadow-md" 
+                           : hasAns ? "bg-emerald-500 border-emerald-500 text-white" 
+                           : isFlg ? "bg-amber-500 border-amber-500 text-white" 
+                           : "bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 hover:border-blue-300"
+                       )}
+                     >
+                       {q.position}
+                     </button>
+                   );
+                 })}
+               </div>
+            </div>
         </div>
       </main>
 
-      {/* 🎛️ FLOATING GLASSMORPHIC BOTTOM BAR */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-slate-200/50 dark:border-white/5 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl shadow-[0_-12px_40px_rgba(0,0,0,0.1)] pb-safe shrink-0">
-        <div className="max-w-[1440px] mx-auto px-4 md:px-8 py-3.5 flex items-center gap-4 justify-between overflow-x-auto scroll-smooth no-scrollbar select-none">
-          <div className="flex items-center gap-3 shrink-0 flex-nowrap">
-            {sections.map((s, i) => {
-              const sQs = questions.filter((q) => q.section_index === i);
-              const isActive = sectionIdx === i;
-              const partLabel = kind === "reading" ? `Passage ${i + 1}` : `Part ${i + 1}`;
-              return (
-                <div key={i} className="flex items-center gap-2 shrink-0">
-                  <button
-                    onClick={() => setSectionIdx(i)}
-                    className={cn(
-                      "px-4 py-2 rounded-xl text-xs font-black whitespace-nowrap transition-all duration-300 border active:scale-95",
-                      isActive
-                        ? "bg-purple-500 text-white border-purple-500 shadow-md shadow-purple-500/20"
-                        : "bg-slate-100 dark:bg-white/5 text-slate-500 border-transparent hover:bg-slate-200/60 dark:hover:bg-white/10 hover:text-slate-800 dark:hover:text-white"
-                    )}
-                  >
-                    {partLabel}
-                  </button>
-
-                  {isActive ? (
-                    <div className="flex items-center gap-1.5 flex-nowrap">
-                      {sQs.map((q) => {
-                        const hasAns = !!answers[q.id];
-                        const isFlg = flagged.has(q.id);
-                        return (
-                          <button
-                            key={q.id}
-                            onClick={() => {
-                              const el = document.getElementById(`q-${q.id}`);
-                              el?.scrollIntoView({ behavior: "smooth", block: "center" });
-                            }}
-                            className={cn(
-                              "h-8 w-8 rounded-xl text-[10px] font-black border transition-all shrink-0 hover:scale-105 active:scale-90",
-                              hasAns
-                                ? "bg-purple-500 text-white border-purple-500 shadow-sm shadow-purple-500/10"
-                                : isFlg
-                                  ? "bg-amber-500 text-white border-amber-500 shadow-sm shadow-amber-500/10"
-                                  : "bg-white dark:bg-slate-900 border-slate-200 dark:border-white/5 hover:border-purple-500/40 text-slate-600 dark:text-slate-400"
-                            )}
-                          >
-                            {q.position}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 whitespace-nowrap px-1.5 bg-slate-100 dark:bg-white/5 py-1.5 rounded-lg border border-slate-200/50 dark:border-transparent">
-                      {sQs.filter((q) => answers[q.id]).length} / {sQs.length}
-                    </span>
-                  )}
-                  {i < sections.length - 1 && <div className="w-[1px] h-6 bg-slate-200 dark:bg-white/10 mx-1 shrink-0" />}
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="flex-none w-px h-6 bg-slate-200 dark:bg-white/10 shrink-0 mx-2 hidden sm:block" />
-
-          <Button
-            size="default"
-            onClick={() => handleSubmitRequest()}
-            disabled={submitting}
-            className="shrink-0 bg-slate-900 dark:bg-white text-white dark:text-slate-950 font-black rounded-xl hover:scale-105 active:scale-95 transition-all shadow-md px-6 h-10 text-xs tracking-tight"
-          >
-            {submitting && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />}
-            Testni tugatish
-          </Button>
-        </div>
-        <Progress value={(answeredCount / Math.max(questions.length, 1)) * 100} className="h-1 bg-slate-100 dark:bg-white/5" />
-      </div>
-
       {/* ⚠️ NAVIGATION GUARD ALERT */}
-      <AlertDialog open={blocker.state === "blocked"}>
-        <AlertDialogContent className="max-w-[400px] border-slate-200 dark:border-white/5 dark:bg-[#090d1f] shadow-2xl rounded-2xl">
-          <AlertDialogHeader>
-            <div className="flex justify-center mb-4">
-              <div className="p-3 bg-rose-500/10 rounded-full">
-                <AlertCircle className="h-10 w-10 text-rose-500 animate-pulse" />
-              </div>
-            </div>
-            <AlertDialogTitle className="text-center text-xl font-bold">{t("dynamic.mocktake.diqqat_test_davom_etmoqda")}</AlertDialogTitle>
-            <AlertDialogDescription className="text-center text-base text-slate-500 dark:text-slate-400 leading-relaxed mt-2">
-              Agar sahifadan hozir chiqsangiz, barcha belgilangan javoblaringiz va mehnatotingiz saqlanmasligi mumkin.
-              <br /><br />
-              Chindan ham chiqmoqchimisiz?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="flex-col sm:flex-row gap-2 mt-4">
-            <AlertDialogCancel
-              onClick={() => blocker.reset?.()}
-              className="flex-1 border-slate-200 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-white/5 font-bold h-11 rounded-xl"
-            >
-              Testda qolish
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                blocker.proceed?.();
-              }}
-              className="flex-1 bg-rose-500 hover:bg-rose-600 text-white font-bold h-11 rounded-xl shadow-md shadow-rose-500/10"
-            >
-              Testni yakunlash va chiqish
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-      {/* 🧮 FLOATING DESMOS CALCULATOR */}
-      <AnimatePresence>
-        {showCalculator && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="fixed bottom-24 right-4 md:right-8 w-[90vw] md:w-[600px] h-[600px] max-h-[70vh] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-white/10 z-50 overflow-hidden flex flex-col"
-          >
-            <div className="flex items-center justify-between p-3 border-b border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-slate-950 shrink-0 cursor-move">
-              <span className="font-bold text-sm flex items-center gap-2 text-slate-700 dark:text-slate-300"><Calculator className="h-4 w-4 text-purple-500" />{t("dynamic.mocktake.desmos_graphing_calculator")}</span>
-              <Button size="icon" variant="ghost" className="h-6 w-6 rounded-full hover:bg-slate-200 dark:hover:bg-white/10" onClick={() => setShowCalculator(false)}><X className="h-4 w-4 text-slate-500" /></Button>
-            </div>
-            <div className="flex-1 w-full bg-white relative">
-              {/* Note: Desmos doesn't support embedding calculator.js without an API key easily in React without the script, so we use their standard embed iframe */}
-              <iframe src="https://www.desmos.com/calculator" width="100%" height="100%" style={{ border: 0 }}></iframe>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* 📝 FLOATING SCRATCHPAD (DRAWING BOARD) */}
-      <Scratchpad isOpen={showScratchpad} onClose={() => setShowScratchpad(false)} />
-
-      {/* ✅ SUBMIT CONFIRMATION DIALOG */}
-      <AlertDialog open={showSubmitDialog} onOpenChange={setShowSubmitDialog}>
-        <AlertDialogContent className="rounded-2xl border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 shadow-2xl max-w-md">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-xl font-display font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-              <CheckCircle2 className="h-6 w-6 text-purple-500" />
-              Testni topshirmoqchimisiz?
-            </AlertDialogTitle>
-            <AlertDialogDescription className="text-slate-500 dark:text-slate-400 text-sm mt-2 space-y-1">
-              <span className="block">{t("dynamic.mocktake.javob_berilgan_savollar")}<strong className="text-slate-700 dark:text-slate-200">{Object.keys(answers).length}</strong> / {questions.length}</span>
-              {questions.length - Object.keys(answers).length > 0 && (
-                <span className="block text-amber-600 dark:text-amber-400 font-semibold">
-                  ⚠️ {questions.length - Object.keys(answers).length} ta savol javobsiz qolmoqda
-                </span>
-              )}
-              <span className="block pt-1">{t("dynamic.mocktake.testni_topshirgandan_keyin_javoblarni_o_")}</span>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="gap-2 mt-2">
-            <AlertDialogCancel className="rounded-xl font-bold">{t("dynamic.pricingplans.bekor_qilish")}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => submit(false)}
-              disabled={submitting}
-              className="bg-purple-600 hover:bg-purple-700 text-white font-extrabold rounded-xl px-6"
-            >
-              {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2 inline" /> : null}
-              Topshirish ✓
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-    </div>
-  );
-}
-

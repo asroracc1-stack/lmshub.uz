@@ -47,6 +47,15 @@ public class StudentAttempt {
     @Column(name = "overall_band")
     private Double overallBand;
 
+    @Column(name = "ai_coach_feedback", columnDefinition = "TEXT")
+    private String aiCoachFeedback;
+
+    @Column(name = "predicted_score")
+    private String predictedScore;
+
+    @Column(name = "time_used_seconds")
+    private Integer timeUsedSeconds;
+
     @PrePersist
     protected void onCreate() {
         if (startedAt == null) {

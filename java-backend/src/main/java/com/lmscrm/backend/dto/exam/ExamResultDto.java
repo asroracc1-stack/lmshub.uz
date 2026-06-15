@@ -13,6 +13,9 @@ public class ExamResultDto {
     private String kind;
     private List<QuestionDetail> detail;
     private String feedback; // For Writing/Speaking
+    private Integer timeUsedSeconds;
+    private String aiCoachFeedback;
+    private String predictedScore;
 
     @Data
     @Builder
@@ -21,5 +24,7 @@ public class ExamResultDto {
         private String userAns;
         private String correctAns;
         private boolean ok;
+        private Integer timeSpentSeconds;
+        private String aiExplanation;
     }
 }
