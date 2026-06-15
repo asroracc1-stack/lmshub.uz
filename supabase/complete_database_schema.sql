@@ -980,7 +980,11 @@ BEGIN
   IF _ref IS NULL THEN RETURN false; END IF;
   UPDATE public.profiles SET referred_by = _ref
    WHERE id = _uid AND referred_by IS NULL;
-  RETURN FOUND;
+  IF FOUND THEN
+    PERFORM public.maybe_pay_referral_bonus(_uid);
+    RETURN true;
+  END IF;
+  RETURN false;
 END;
 $$;
 
@@ -991,8 +995,8 @@ DECLARE _ref UUID; _paid BOOLEAN;
 BEGIN
   SELECT referred_by, referral_bonus_paid INTO _ref, _paid FROM public.profiles WHERE id = _user_id;
   IF _ref IS NULL OR _paid THEN RETURN; END IF;
-  PERFORM public.award_coins(_user_id, 5, 'Taklif bonusi 🎉', 'referral', jsonb_build_object('referrer', _ref));
-  PERFORM public.award_coins(_ref, 5, 'Do''stingiz qo''shildi 🎉', 'referral', jsonb_build_object('invitee', _user_id));
+  PERFORM public.award_coins(_user_id, 10, 'Taklif bonusi 🎉', 'referral', jsonb_build_object('referrer', _ref));
+  PERFORM public.award_coins(_ref, 10, 'Do''stingiz qo''shildi 🎉', 'referral', jsonb_build_object('invitee', _user_id));
   UPDATE public.profiles SET referral_bonus_paid = true WHERE id = _user_id;
 END;
 $$;
