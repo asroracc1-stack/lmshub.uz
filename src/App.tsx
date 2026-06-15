@@ -175,7 +175,7 @@ const UserAchievements = lazy(() => import("./pages/user/Achievements"));
 const UserLeaderboard = lazy(() => import("./pages/user/UserLeaderboard"));
 const TelegramLinksPage = lazy(() => import("./pages/super-admin/TelegramLinks"));
 const PMGrantCoins = lazy(() => import("./pages/pack-manager/GrantCoins"));
-const AdventureMapFull = lazy(() => import("./pages/user/AdventureMapFull"));
+const AdventureMapFull = lazy(() => import("./pages/student/Map/AdvancedAdventureMap"));
 const GamificationAdmin = lazy(() => import("./pages/admin/GamificationAdmin"));
 
 const queryClient = new QueryClient({

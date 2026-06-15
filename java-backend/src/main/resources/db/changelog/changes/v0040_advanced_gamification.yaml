@@ -1,0 +1,275 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0040-1
+      author: antigravity
+      validCheckSum:
+        - ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: journey_region
+      changes:
+        - createTable:
+            tableName: journey_region
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: theme
+                  type: varchar(255)
+              - column:
+                  name: description
+                  type: text
+              - column:
+                  name: svg_path
+                  type: text
+              - column:
+                  name: required_points
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: order_index
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: now()
+
+  - changeSet:
+      id: v0040-2
+      author: antigravity
+      validCheckSum:
+        - ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: user_travel_state
+      changes:
+        - createTable:
+            tableName: user_travel_state
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    unique: true
+                    foreignKeyName: fk_user_travel_state_user
+                    references: users(id)
+              - column:
+                  name: total_travel_points
+                  type: bigint
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: current_region_id
+                  type: uuid
+                  constraints:
+                    foreignKeyName: fk_travel_state_region
+                    references: journey_region(id)
+              - column:
+                  name: avatar_level
+                  type: int
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false
+              - column:
+                  name: avatar_title
+                  type: varchar(255)
+                  defaultValue: "Beginner Traveler"
+              - column:
+                  name: updated_at
+                  type: timestamp
+                  defaultValueComputed: now()
+
+  - changeSet:
+      id: v0040-3
+      author: antigravity
+      validCheckSum:
+        - ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: travel_reward
+      changes:
+        - createTable:
+            tableName: travel_reward
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: region_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_reward_region
+                    references: journey_region(id)
+              - column:
+                  name: coin_amount
+                  type: int
+                  defaultValueNumeric: 0
+              - column:
+                  name: xp_amount
+                  type: int
+                  defaultValueNumeric: 0
+              - column:
+                  name: badge_name
+                  type: varchar(255)
+              - column:
+                  name: is_grand_prize
+                  type: boolean
+                  defaultValueBoolean: false
+
+  - changeSet:
+      id: v0040-4
+      author: antigravity
+      validCheckSum:
+        - ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: gamification_config
+      changes:
+        - createTable:
+            tableName: gamification_config
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: test_solved_multiplier
+                  type: double precision
+                  defaultValueNumeric: 5.0
+              - column:
+                  name: correct_answer_multiplier
+                  type: double precision
+                  defaultValueNumeric: 2.0
+              - column:
+                  name: streak_days_multiplier
+                  type: double precision
+                  defaultValueNumeric: 20.0
+              - column:
+                  name: achievements_multiplier
+                  type: double precision
+                  defaultValueNumeric: 50.0
+              - column:
+                  name: coins_divider
+                  type: double precision
+                  defaultValueNumeric: 10.0
+              - column:
+                  name: active
+                  type: boolean
+                  defaultValueBoolean: true
+              - column:
+                  name: updated_at
+                  type: timestamp
+                  defaultValueComputed: now()
+
+  - changeSet:
+      id: v0040-5
+      author: antigravity
+      validCheckSum:
+        - ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: travel_mission
+      changes:
+        - createTable:
+            tableName: travel_mission
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: title
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: required_action
+                  type: varchar(255)
+              - column:
+                  name: target_count
+                  type: int
+              - column:
+                  name: reward_points
+                  type: bigint
+              - column:
+                  name: active
+                  type: boolean
+                  defaultValueBoolean: true
+
+  - changeSet:
+      id: v0040-6
+      author: antigravity
+      validCheckSum:
+        - ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: seasonal_event
+      changes:
+        - createTable:
+            tableName: seasonal_event
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: start_date
+                  type: timestamp
+              - column:
+                  name: end_date
+                  type: timestamp
+              - column:
+                  name: point_multiplier
+                  type: double precision
+                  defaultValueNumeric: 1.5
+              - column:
+                  name: active
+                  type: boolean
+                  defaultValueBoolean: false
