@@ -1756,3 +1756,59 @@ export default function MockTake() {
       </main>
 
       {/* ⚠️ NAVIGATION GUARD ALERT */}
+      <AlertDialog open={showSubmitDialog} onOpenChange={setShowSubmitDialog}>
+        <AlertDialogContent className="rounded-2xl border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 shadow-2xl max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-display font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+              <CheckCircle2 className="h-6 w-6 text-purple-500" />
+              {t("dynamic.mocktake.testni_topshirmoqchimisiz")}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-500 dark:text-slate-400 text-sm mt-2 space-y-1">
+              <span className="block">{t("dynamic.mocktake.javob_berilgan_savollar")}<strong className="text-slate-700 dark:text-slate-200">{Object.keys(answers).length}</strong> / {questions.length}</span>
+              {questions.length - Object.keys(answers).length > 0 && (
+                <span className="block text-amber-600 dark:text-amber-400 font-semibold">
+                  ⚠️ {questions.length - Object.keys(answers).length} ta savol javobsiz qolmoqda
+                </span>
+              )}
+              <span className="block pt-1">{t("dynamic.mocktake.testni_topshirgandan_keyin_javoblarni_o_")}</span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 mt-2">
+            <AlertDialogCancel className="rounded-xl font-bold">{t("dynamic.pricingplans.bekor_qilish")}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => submit(false)}
+              disabled={submitting}
+              className="bg-purple-600 hover:bg-purple-700 text-white font-extrabold rounded-xl px-6"
+            >
+              {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2 inline" /> : null}
+              {t("dynamic.mocktake.topshirish")} ✓
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* 🧮 FLOATING DESMOS CALCULATOR */}
+      <AnimatePresence>
+        {showCalculator && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            className="fixed bottom-24 right-4 md:right-8 w-[90vw] md:w-[600px] h-[600px] max-h-[70vh] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-white/10 z-50 overflow-hidden flex flex-col"
+          >
+            <div className="flex items-center justify-between p-3 border-b border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-slate-950 shrink-0 cursor-move">
+              <span className="font-bold text-sm flex items-center gap-2 text-slate-700 dark:text-slate-300"><Calculator className="h-4 w-4 text-purple-500" />{t("dynamic.mocktake.desmos_graphing_calculator")}</span>
+              <Button size="icon" variant="ghost" className="h-6 w-6 rounded-full hover:bg-slate-200 dark:hover:bg-white/10" onClick={() => setShowCalculator(false)}><X className="h-4 w-4 text-slate-500" /></Button>
+            </div>
+            <div className="flex-1 w-full bg-white relative">
+              <iframe src="https://www.desmos.com/calculator" width="100%" height="100%" style={{ border: 0 }}></iframe>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <Scratchpad isOpen={showScratchpad} onClose={() => setShowScratchpad(false)} />
+
+    </div>
+  );
+}
