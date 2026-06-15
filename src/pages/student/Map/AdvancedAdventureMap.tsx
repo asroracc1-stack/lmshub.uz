@@ -20,7 +20,7 @@ const AdvancedAdventureMap: React.FC = () => {
   }
 
   return (
-    <div className="relative w-full h-[100dvh] flex flex-col md:flex-row overflow-hidden bg-slate-50 dark:bg-slate-900">
+    <div className="relative w-full h-[calc(100vh-8.5rem)] min-h-[500px] rounded-[16px] flex flex-col md:flex-row overflow-hidden bg-slate-50 dark:bg-[#140D23]">
       
       {/* Mobile Header / Top Bar */}
       <div className="absolute top-4 left-4 right-4 md:top-6 md:left-6 z-10 flex justify-between gap-2 md:gap-4 pointer-events-none">

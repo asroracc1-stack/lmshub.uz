@@ -112,7 +112,7 @@ export const MapCanvas: React.FC = () => {
   }
 
   return (
-    <div className="relative w-full h-full bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-slate-900 dark:to-slate-950 overflow-hidden flex items-center justify-center">
+    <div className="relative w-full h-full bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-[#140D23] dark:to-[#080410] overflow-hidden flex items-center justify-center">
       
       {/* Zoom / Pan Controls */}
       <div className="absolute bottom-6 left-6 flex flex-col gap-2 z-20">
