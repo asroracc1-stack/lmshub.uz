@@ -1,11 +1,10 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ComposableMap, Geographies, Geography, Marker, Line, ZoomableGroup } from 'react-simple-maps';
 import { useAdventureStore } from '@/store/useAdventureStore';
-import { AvatarEngine } from './AvatarEngine';
 import { ZoomIn, ZoomOut, Maximize } from 'lucide-react';
 
-const UZ_TOPOJSON_URL = "/world.json";
+const UZ_TOPOJSON_URL = "/uzbekistan-provinces.json";
 
 // Accurate [longitude, latitude] coordinates for Uzbekistan regions
 const CITY_COORDS: Record<string, [number, number]> = {
@@ -22,6 +21,38 @@ const CITY_COORDS: Record<string, [number, number]> = {
   'Namangan': [71.6726, 41.0010],
   'Farg\'ona': [71.7828, 40.3842],
   'Andijon': [72.3594, 40.7829],
+};
+
+const TOPO_TO_UZBEK: Record<string, string> = {
+  'Karakalpakstan': 'Nukus',
+  'Khorezm': 'Xorazm',
+  'Navoi': 'Navoiy',
+  'Bukhoro': 'Buxoro',
+  'Samarkand': 'Samarqand',
+  'Kashkadarya': 'Qashqadaryo',
+  'Surkhandarya': 'Surxondaryo',
+  'Jizzakh': 'Jizzax',
+  'Sirdaryo': 'Sirdaryo',
+  'Tashkent': 'Toshkent',
+  'Namangan': 'Namangan',
+  'Ferghana': 'Farg\'ona',
+  'Andijon': 'Andijon'
+};
+
+const REGION_COLORS: Record<string, string> = {
+  'Karakalpakstan': '#0099B5', // Blue
+  'Khorezm': '#0099B5',        // Blue
+  'Navoi': '#F8FAFC',          // White
+  'Bukhoro': '#F8FAFC',        // White
+  'Jizzakh': '#F8FAFC',        // White
+  'Sirdaryo': '#F8FAFC',       // White
+  'Tashkent': '#F8FAFC',       // White
+  'Samarkand': '#1EB53A',      // Green
+  'Kashkadarya': '#1EB53A',    // Green
+  'Surkhandarya': '#1EB53A',   // Green
+  'Namangan': '#1EB53A',       // Green
+  'Ferghana': '#1EB53A',       // Green
+  'Andijon': '#1EB53A',        // Green
 };
 
 const FALLBACK_REGIONS = [
@@ -42,7 +73,17 @@ const FALLBACK_REGIONS = [
 
 export const MapCanvas: React.FC = () => {
   const { regions: storeRegions, currentRegionName, avatarLevel, setSelectedRegion, totalPoints } = useAdventureStore();
-  const [position, setPosition] = React.useState({ coordinates: [64.5, 41.5] as [number, number], zoom: 1 });
+  const [position, setPosition] = React.useState({ coordinates: [65.0, 41.5] as [number, number], zoom: 1 });
+
+  useEffect(() => {
+    if (!document.getElementById('dotlottie-script')) {
+      const script = document.createElement('script');
+      script.id = 'dotlottie-script';
+      script.src = "https://unpkg.com/@lottiefiles/dotlottie-wc@0.9.14/dist/dotlottie-wc.js";
+      script.type = "module";
+      document.body.appendChild(script);
+    }
+  }, []);
 
   const regions = storeRegions && storeRegions.length > 0 ? storeRegions : FALLBACK_REGIONS;
   
@@ -63,7 +104,7 @@ export const MapCanvas: React.FC = () => {
   }
 
   function handleReset() {
-    setPosition({ coordinates: [64.5, 41.5], zoom: 1 });
+    setPosition({ coordinates: [65.0, 41.5], zoom: 1 });
   }
 
   function handleMoveEnd(position: any) {
@@ -88,7 +129,7 @@ export const MapCanvas: React.FC = () => {
 
       <ComposableMap
         projection="geoMercator"
-        projectionConfig={{ scale: 3500 }}
+        projectionConfig={{ scale: 2800 }}
         className="w-full h-full outline-none"
       >
         <ZoomableGroup
@@ -106,21 +147,28 @@ export const MapCanvas: React.FC = () => {
           <Geographies geography={UZ_TOPOJSON_URL}>
             {({ geographies }) =>
               geographies.map((geo) => {
-                if (geo.id !== "860") return null;
+                const regionNameEn = geo.properties.name;
+                const regionNameUz = TOPO_TO_UZBEK[regionNameEn];
+                
+                // Is this region unlocked?
+                const regionObj = regions.find(r => r.name === regionNameUz);
+                const isUnlocked = regionObj ? totalPoints >= regionObj.requiredPoints : false;
+                
+                const defaultFill = REGION_COLORS[regionNameEn] || "#FDE047";
 
                 return (
                   <Geography
                     key={geo.rsmKey}
                     geography={geo}
-                    fill="#FDE047" // Beautiful gold map
-                    stroke="#D97706"
-                    strokeWidth={0.5}
+                    fill={isUnlocked ? defaultFill : "#E2E8F0"}
+                    stroke="#CE1126" 
+                    strokeWidth={isUnlocked ? 1.5 : 1}
                     style={{
                       default: { outline: 'none' },
-                      hover: { fill: '#FCD34D', outline: 'none', transition: 'all 0.3s' },
+                      hover: { fill: isUnlocked ? defaultFill : '#CBD5E1', outline: 'none', filter: 'brightness(0.9)', transition: 'all 0.3s' },
                       pressed: { outline: 'none' }
                     }}
-                    className="dark:fill-slate-800 dark:stroke-indigo-500/50 drop-shadow-[0_10px_15px_rgba(0,0,0,0.1)] dark:drop-shadow-[0_0_20px_rgba(79,70,229,0.3)]"
+                    className={`transition-colors duration-500 drop-shadow-[0_4px_6px_rgba(0,0,0,0.1)] ${isUnlocked ? 'dark:drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]' : ''}`}
                   />
                 );
               })
@@ -200,8 +248,16 @@ export const MapCanvas: React.FC = () => {
 
           {/* Animated Avatar */}
           <Marker coordinates={currentRegionCoords}>
-            <g transform="translate(-15, -35) scale(0.7)">
-              <AvatarEngine level={avatarLevel} isMoving={true} />
+            <g transform="translate(-40, -80)">
+              <foreignObject width={80} height={80}>
+                {/* @ts-ignore */}
+                <dotlottie-wc 
+                  src="https://lottie.host/71dc29fa-7aa3-4b00-9b35-f6c86c999222/beB5zGBdIY.lottie" 
+                  style={{ width: '80px', height: '80px' }} 
+                  autoplay 
+                  loop
+                ></dotlottie-wc>
+              </foreignObject>
             </g>
           </Marker>
 

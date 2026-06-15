@@ -8,13 +8,20 @@ export const LeaderboardSidebar: React.FC = () => {
   const { t } = useTranslation();
 
   return (
-    <div className="w-full h-full bg-white/10 backdrop-blur-xl border-l border-white/20 p-6 flex flex-col shadow-2xl dark:bg-slate-900/50">
-      <div className="flex items-center gap-3 mb-6">
-        <Trophy className="w-6 h-6 text-yellow-400" />
+    <div className="w-full h-full bg-white/90 backdrop-blur-xl border-l border-slate-200 dark:border-white/10 p-6 flex flex-col shadow-[-10px_0_30px_-15px_rgba(0,0,0,0.1)] dark:shadow-[-10px_0_30px_-15px_rgba(0,0,0,0.5)] dark:bg-slate-900/90 z-50">
+      <div className="flex items-center gap-3 mb-6 shrink-0">
+        <Trophy className="w-6 h-6 text-yellow-500" />
         <h2 className="text-xl font-bold text-slate-800 dark:text-white">{t('gamification.globalTravelers', 'Global Sayohatchilar')}</h2>
       </div>
 
-      <div className="flex-1 overflow-y-auto pr-2 space-y-4">
+      <div className="flex-1 overflow-y-auto pr-2 space-y-3 custom-scrollbar pb-10">
+        {leaderboard.length === 0 && (
+          <div className="text-center py-10 text-slate-500 dark:text-slate-400">
+            <Medal className="w-12 h-12 mx-auto mb-3 opacity-20" />
+            <p className="text-sm">Hozircha sayohatchilar yo'q.</p>
+          </div>
+        )}
+        
         {leaderboard.map((user, idx) => (
           <div 
             key={user.userId || idx} 
