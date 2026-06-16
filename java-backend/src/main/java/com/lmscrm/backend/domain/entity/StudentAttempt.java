@@ -5,6 +5,8 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
+import java.util.List;
+import java.util.ArrayList;
 
 @Entity
 @Table(name = "student_attempts", schema = "public", uniqueConstraints = {
@@ -55,6 +57,12 @@ public class StudentAttempt {
 
     @Column(name = "time_used_seconds")
     private Integer timeUsedSeconds;
+
+    @Column(name = "auto_submitted")
+    private Boolean autoSubmitted;
+
+    @OneToMany(mappedBy = "attempt", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ExamViolation> violations = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {

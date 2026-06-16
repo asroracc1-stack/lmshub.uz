@@ -16,6 +16,8 @@ public class ExamResultDto {
     private Integer timeUsedSeconds;
     private String aiCoachFeedback;
     private String predictedScore;
+    private List<ExamViolationDto> violations;
+    private Boolean autoSubmitted;
 
     @Data
     @Builder

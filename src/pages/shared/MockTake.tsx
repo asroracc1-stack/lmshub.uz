@@ -22,9 +22,9 @@ import { Progress } from "@/components/ui/progress";
 import {
   Loader2, Sparkles, CheckCircle2, Clock, AlertCircle, Headphones,
   BookOpen, ChevronLeft, ChevronRight, Flag, Play, Pause,
-  Volume2, VolumeX, Maximize2, Minimize2, Mic, Calculator, X, PenLine,
+  Volume2, VolumeX, Maximize2, Minimize2, Mic, Calculator, X, PenLine, XCircle,
   Award, Target, ThumbsUp, Lightbulb, BookMarked, Sun, Moon,
-  Shield, Grid, CheckSquare, Menu, ArrowRight, ArrowLeft
+  Shield, Grid, CheckSquare, Menu, ArrowRight, ArrowLeft, Bookmark
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";

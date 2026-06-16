@@ -357,7 +357,21 @@ public class ExamService {
             attempt.setTimeUsedSeconds((int) totalTimeSpent);
             attempt.setAiCoachFeedback(aiCoachFeedback);
             attempt.setPredictedScore(predictedScore);
+            attempt.setAutoSubmitted(request.getAuto_submitted() != null ? request.getAuto_submitted() : false);
             attempt = studentAttemptRepository.save(attempt);
+
+            if (request.getViolations() != null && !request.getViolations().isEmpty()) {
+                for (ExamViolationDto vDto : request.getViolations()) {
+                    ExamViolation v = ExamViolation.builder()
+                            .attempt(attempt)
+                            .violationType(vDto.getViolationType())
+                            .timestamp(vDto.getTimestamp() != null ? java.time.LocalDateTime.parse(vDto.getTimestamp()) : java.time.LocalDateTime.now())
+                            .details(vDto.getDetails())
+                            .build();
+                    attempt.getViolations().add(v);
+                }
+                studentAttemptRepository.save(attempt);
+            }
 
             for (Question q : questions) {
                 String userAns = request.getAnswers().get(q.getId().toString());
@@ -403,6 +417,8 @@ public class ExamService {
                 .timeUsedSeconds((int)totalTimeSpent)
                 .aiCoachFeedback(aiCoachFeedback)
                 .predictedScore(predictedScore)
+                .autoSubmitted(request.getAuto_submitted())
+                .violations(request.getViolations())
                 .build();
     }
 
@@ -461,6 +477,12 @@ public class ExamService {
                 .timeUsedSeconds(attempt.getTimeUsedSeconds() != null ? attempt.getTimeUsedSeconds() : 0)
                 .aiCoachFeedback(attempt.getAiCoachFeedback())
                 .predictedScore(attempt.getPredictedScore())
+                .autoSubmitted(attempt.getAutoSubmitted() != null ? attempt.getAutoSubmitted() : false)
+                .violations(attempt.getViolations().stream().map(v -> ExamViolationDto.builder()
+                        .violationType(v.getViolationType())
+                        .timestamp(v.getTimestamp().toString())
+                        .details(v.getDetails())
+                        .build()).collect(Collectors.toList()))
                 .build();
     }
 }
