@@ -34,6 +34,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Scratchpad from "@/components/Scratchpad";
 import TigerPlayer from "@/components/TigerPlayer";
 import { useTheme } from "@/contexts/ThemeContext";
+import { DotLottiePlayer } from "@dotlottie/react-player";
 // Icons are already imported above
 
 // Java API dan keluvchi tuzilma
@@ -860,26 +861,84 @@ export default function MockTake() {
 
   if (showSuccessAnimation) {
     return (
-      <div className="fixed inset-0 z-[9999] bg-[#FCFAFF] dark:bg-[#0B0714] flex flex-col items-center justify-center overflow-hidden">
-        <div className="relative">
-          <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full animate-pulse" />
-          <TigerPlayer text="Exam data is being processed..." size={280} />
-        </div>
-        <div className="mt-8 flex flex-col items-center gap-2">
-          <p className="text-sm font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
-            Do not close this window
-          </p>
-          <div className="flex gap-1.5 mt-2">
-            {[0, 1, 2].map((i) => (
-              <motion.div
-                key={i}
-                animate={{ scale: [1, 1.5, 1], opacity: [0.3, 1, 0.3] }}
-                transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
-                className="h-2.5 w-2.5 rounded-full bg-primary"
+      <div className="fixed inset-0 z-[9999] bg-[#080410] flex items-center justify-center p-4 overflow-hidden">
+        {/* Glow Backgrounds */}
+        <div className="absolute top-1/4 left-1/4 h-[350px] w-[350px] rounded-full bg-blue-600/10 blur-[100px] animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 h-[350px] w-[350px] rounded-full bg-purple-600/10 blur-[100px] animate-pulse" />
+
+        <motion.div
+          initial={{ scale: 0.9, y: 20, opacity: 0 }}
+          animate={{ scale: 1, y: 0, opacity: 1 }}
+          transition={{ type: "spring", duration: 0.6 }}
+          className="relative w-full max-w-md overflow-hidden rounded-[32px] border border-white/10 bg-white/5 dark:bg-[#140D23]/60 backdrop-blur-2xl p-10 text-center shadow-2xl shadow-purple-950/20"
+        >
+          {/* Top light beam */}
+          <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-[200px] h-[100px] bg-gradient-to-b from-blue-500/20 to-transparent blur-xl" />
+
+          {/* Lottie Animation Container */}
+          <div className="relative mx-auto mb-8 flex h-44 w-44 items-center justify-center rounded-full bg-gradient-to-br from-blue-500/5 to-purple-500/5 border border-white/5 shadow-inner">
+            {/* Glow ring */}
+            <div className="absolute inset-2 rounded-full bg-gradient-to-br from-blue-500/10 to-purple-500/10 blur-md animate-pulse" />
+            <motion.div
+              animate={{ 
+                scale: [1, 1.05, 1],
+              }}
+              transition={{ 
+                repeat: Infinity, 
+                duration: 4,
+                ease: "easeInOut"
+              }}
+              className="z-10 w-36 h-36"
+            >
+              <DotLottiePlayer
+                src="https://lottie.host/05a8da46-bffb-4416-a160-0b16adbce445/CxzFkSjThh.lottie"
+                autoplay
+                loop
+                className="w-full h-full"
               />
-            ))}
+            </motion.div>
           </div>
-        </div>
+
+          {/* Status Text */}
+          <motion.h3 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="font-display text-2xl font-black tracking-tight text-white mb-3"
+          >
+            Imtihon yakunlandi! 🎉
+          </motion.h3>
+
+          <motion.p 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="text-sm text-slate-300 leading-relaxed max-w-[280px] mx-auto mb-8 font-medium"
+          >
+            Javoblaringiz muvaffaqiyatli qabul qilindi. Natijalar tahlil qilinmoqda, iltimos oynani yopmang...
+          </motion.p>
+
+          {/* Premium Progress / Loader Dots */}
+          <div className="flex flex-col items-center gap-3">
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-400 animate-pulse">
+              Javoblar yuborilmoqda
+            </span>
+            <div className="flex gap-2 justify-center">
+              {[0, 1, 2].map((i) => (
+                <motion.div
+                  key={i}
+                  animate={{ 
+                    scale: [1, 1.4, 1], 
+                    opacity: [0.4, 1, 0.4],
+                    backgroundColor: ["#3b82f6", "#a855f7", "#3b82f6"]
+                  }}
+                  transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2, ease: "easeInOut" }}
+                  className="h-2 w-2 rounded-full"
+                />
+              ))}
+            </div>
+          </div>
+        </motion.div>
       </div>
     );
   }
@@ -890,31 +949,42 @@ export default function MockTake() {
 
   if (!started) {
     return (
-      <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 bg-[#f4f4f4] font-sans selection:bg-blue-200">
-        <div className="w-full max-w-4xl bg-white border border-slate-300 shadow-xl rounded-none">
-          <div className="bg-[#0f2c59] p-6 flex items-center justify-between">
+      <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 bg-[#f4f4f4] dark:bg-[#0c0817] font-sans selection:bg-blue-200 transition-colors">
+        <div className="w-full max-w-4xl bg-white dark:bg-[#140D23] border border-slate-300 dark:border-slate-800 shadow-xl rounded-none transition-colors">
+          <div className="bg-[#0f2c59] dark:bg-[#0b1e3b] p-6 flex items-center justify-between">
             <h1 className="text-xl font-bold text-white tracking-widest uppercase">Official Examination Portal</h1>
-            <Badge variant="outline" className="bg-transparent text-white border-white/30 rounded-none uppercase text-[10px] tracking-widest">{exam.type}</Badge>
+            <div className="flex items-center gap-4">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="text-white hover:bg-white/10 rounded-none h-9 w-9" 
+                onClick={toggle}
+                title={theme === "dark" ? "Light Mode" : "Dark Mode"}
+              >
+                {theme === "dark" ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-slate-300" />}
+              </Button>
+              <Badge variant="outline" className="bg-transparent text-white border-white/30 rounded-none uppercase text-[10px] tracking-widest">{exam.type}</Badge>
+            </div>
           </div>
           <div className="p-10 space-y-8">
-            <div className="border-b-2 border-slate-200 pb-4">
-              <h2 className="text-3xl font-bold text-slate-900 tracking-tight">{exam.title}</h2>
-              {exam.description && <p className="text-slate-600 mt-2">{exam.description}</p>}
+            <div className="border-b-2 border-slate-200 dark:border-slate-800 pb-4">
+              <h2 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">{exam.title}</h2>
+              {exam.description && <p className="text-slate-600 dark:text-slate-400 mt-2">{exam.description}</p>}
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border border-slate-300">
-              <div className="p-6 bg-slate-50 border-r border-slate-300 flex flex-col gap-1">
-                <span className="text-xs uppercase font-bold text-slate-500 tracking-widest">Time Allotted</span>
-                <span className="text-2xl font-bold text-slate-900">{exam.duration_minutes} minutes</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border border-slate-300 dark:border-slate-800">
+              <div className="p-6 bg-slate-50 dark:bg-slate-900/10 border-r border-slate-300 dark:border-slate-800 flex flex-col gap-1">
+                <span className="text-xs uppercase font-bold text-slate-500 dark:text-slate-400 tracking-widest">Time Allotted</span>
+                <span className="text-2xl font-bold text-slate-900 dark:text-white">{exam.duration_minutes} minutes</span>
               </div>
-              <div className="p-6 bg-slate-50 flex flex-col gap-1">
-                <span className="text-xs uppercase font-bold text-slate-500 tracking-widest">Total Items</span>
-                <span className="text-2xl font-bold text-slate-900">{questions.length}</span>
+              <div className="p-6 bg-slate-50 dark:bg-slate-900/10 flex flex-col gap-1">
+                <span className="text-xs uppercase font-bold text-slate-500 dark:text-slate-400 tracking-widest">Total Items</span>
+                <span className="text-2xl font-bold text-slate-900 dark:text-white">{questions.length}</span>
               </div>
             </div>
             
-            <div className="p-6 border-l-4 border-[#0f2c59] bg-[#f8fafc] text-sm text-slate-800 space-y-4 font-medium">
-              <h3 className="font-bold uppercase tracking-widest text-xs flex items-center gap-2"><AlertCircle className="h-4 w-4" /> Non-Disclosure Agreement & Rules</h3>
+            <div className="p-6 border-l-4 border-[#0f2c59] dark:border-blue-500 bg-[#f8fafc] dark:bg-slate-900/40 text-sm text-slate-800 dark:text-slate-200 space-y-4 font-medium">
+              <h3 className="font-bold uppercase tracking-widest text-xs flex items-center gap-2 text-slate-950 dark:text-white"><AlertCircle className="h-4 w-4" /> Non-Disclosure Agreement & Rules</h3>
               <ul className="list-disc pl-5 space-y-2">
                 <li>By starting this exam, you agree to maintaining strict confidentiality of all test materials.</li>
                 <li>No external aids, materials, or devices are permitted.</li>
@@ -923,8 +993,8 @@ export default function MockTake() {
               </ul>
             </div>
           </div>
-          <div className="bg-slate-100 p-6 border-t border-slate-300 flex justify-end">
-            <Button size="lg" className="bg-[#0f2c59] hover:bg-[#1a365d] text-white font-bold px-10 rounded-none h-12 uppercase tracking-widest text-sm" onClick={() => { setStarted(true); startedAt.current = Date.now(); }}>
+          <div className="bg-slate-100 dark:bg-[#0c0817]/60 p-6 border-t border-slate-300 dark:border-slate-800 flex justify-center">
+            <Button size="lg" className="bg-[#0f2c59] dark:bg-blue-600 hover:bg-[#1a365d] dark:hover:bg-blue-700 text-white font-bold px-10 rounded-none h-12 uppercase tracking-widest text-sm" onClick={() => { setStarted(true); startedAt.current = Date.now(); }}>
               Acknowledge & Start
             </Button>
           </div>
@@ -943,28 +1013,28 @@ export default function MockTake() {
   // REVIEW SCREEN - Clinical
   if (showReviewScreen) {
     return (
-      <div className="min-h-screen w-full bg-[#f4f4f4] flex flex-col items-center justify-center p-4 md:p-8 font-sans selection:bg-blue-200">
-        <div className="w-full max-w-5xl bg-white border border-slate-300 shadow-xl rounded-none">
-          <div className="bg-[#0f2c59] p-6 text-white flex justify-between items-center">
+      <div className="min-h-screen w-full bg-[#f4f4f4] dark:bg-[#0c0817] flex flex-col items-center justify-center p-4 md:p-8 font-sans selection:bg-blue-200 transition-colors">
+        <div className="w-full max-w-5xl bg-white dark:bg-[#140D23] border border-slate-300 dark:border-slate-800 shadow-xl rounded-none transition-colors">
+          <div className="bg-[#0f2c59] dark:bg-[#0b1e3b] p-6 text-white flex justify-between items-center">
             <h2 className="text-xl font-bold uppercase tracking-widest">Section Review</h2>
-            <div className="font-mono text-xl font-bold tracking-widest bg-white/10 px-4 py-1 border border-white/20">
+            <div className="font-mono text-xl font-bold tracking-widest bg-white/10 dark:bg-white/5 px-4 py-1 border border-white/20 dark:border-white/10">
               {fmt(timeLeft)}
             </div>
           </div>
           
           <div className="p-8">
-            <div className="flex items-center gap-8 mb-8 border-b-2 border-slate-200 pb-6">
+            <div className="flex items-center gap-8 mb-8 border-b-2 border-slate-200 dark:border-slate-800 pb-6">
               <div className="text-center">
-                <span className="block text-3xl font-bold text-[#166534]">{answeredCount}</span>
-                <span className="text-[10px] uppercase font-bold text-slate-500 tracking-widest">Answered</span>
+                <span className="block text-3xl font-bold text-[#166534] dark:text-[#22c55e]">{answeredCount}</span>
+                <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-widest">Answered</span>
               </div>
               <div className="text-center">
-                <span className="block text-3xl font-bold text-[#ca8a04]">{flaggedCount}</span>
-                <span className="text-[10px] uppercase font-bold text-slate-500 tracking-widest">Marked</span>
+                <span className="block text-3xl font-bold text-[#ca8a04] dark:text-[#eab308]">{flaggedCount}</span>
+                <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-widest">Marked</span>
               </div>
               <div className="text-center">
-                <span className="block text-3xl font-bold text-[#991b1b]">{questions.length - answeredCount}</span>
-                <span className="text-[10px] uppercase font-bold text-slate-500 tracking-widest">Incomplete</span>
+                <span className="block text-3xl font-bold text-[#991b1b] dark:text-[#ef4444]">{questions.length - answeredCount}</span>
+                <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-widest">Incomplete</span>
               </div>
             </div>
             
@@ -981,9 +1051,9 @@ export default function MockTake() {
                     }}
                     className={cn(
                       "aspect-square flex items-center justify-center text-sm font-bold border rounded-none transition-colors",
-                      hasAns && !isFlg ? "bg-white border-[#166534] text-[#166534] border-2" 
-                      : isFlg ? "bg-white border-[#ca8a04] text-[#ca8a04] border-2"
-                      : "bg-[#f8fafc] border-slate-300 text-slate-500"
+                      hasAns && !isFlg ? "bg-white dark:bg-[#0f2c59]/20 border-[#166534] dark:border-[#22c55e] text-[#166534] dark:text-[#22c55e] border-2" 
+                      : isFlg ? "bg-white dark:bg-[#ca8a04]/20 border-[#ca8a04] dark:border-[#eab308] text-[#ca8a04] dark:text-[#eab308] border-2"
+                      : "bg-[#f8fafc] dark:bg-slate-900/50 border-slate-300 dark:border-slate-800 text-slate-500 dark:text-slate-400"
                     )}
                   >
                     {q.position}
@@ -993,11 +1063,11 @@ export default function MockTake() {
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-0 justify-between items-stretch sm:items-center bg-slate-100 p-4 sm:p-6 border-t border-slate-300">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-0 justify-between items-stretch sm:items-center bg-slate-100 dark:bg-[#140D23]/60 p-4 sm:p-6 border-t border-slate-300 dark:border-slate-800">
             <Button 
               variant="outline" 
               size="lg" 
-              className="rounded-none border-2 border-slate-800 font-bold uppercase tracking-widest text-xs w-full sm:w-auto justify-center" 
+              className="rounded-none border-2 border-slate-800 dark:border-slate-700 font-bold uppercase tracking-widest text-xs w-full sm:w-auto justify-center text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-900" 
               onClick={() => setShowReviewScreen(false)}
             >
               <ChevronLeft className="w-4 h-4 mr-2" /> Return
@@ -1016,10 +1086,10 @@ export default function MockTake() {
   }
 
   return (
-    <div className="w-full min-h-screen bg-white text-slate-900 flex flex-col font-sans selection:bg-blue-200">
+    <div className="w-full min-h-screen bg-white dark:bg-[#080410] text-slate-900 dark:text-slate-100 flex flex-col font-sans selection:bg-blue-200 transition-colors">
       
       {/* EXAM COMMAND CENTER HEADER - Official Blue Bar */}
-      <header className="h-[60px] shrink-0 bg-[#0f2c59] text-white flex items-center justify-between px-6 z-40 border-b border-[#0f2c59]">
+      <header className="h-[60px] shrink-0 bg-[#0f2c59] dark:bg-[#0b1e3b] text-white flex items-center justify-between px-6 z-40 border-b border-[#0f2c59] dark:border-[#0b1e3b] transition-colors">
         <div className="flex items-center gap-4 min-w-0">
            <h1 className="font-bold text-sm uppercase tracking-widest truncate max-w-[150px] sm:max-w-none">{exam.title}</h1>
            <span className="text-[10px] bg-white/10 px-2 py-0.5 border border-white/20 uppercase tracking-widest shrink-0">{exam.type}</span>
@@ -1039,6 +1109,15 @@ export default function MockTake() {
         </div>
 
         <div className="flex items-center gap-4">
+           <Button 
+             variant="ghost" 
+             size="icon" 
+             className="rounded-none hover:bg-white/10" 
+             onClick={toggle}
+             title={theme === "dark" ? "Light Mode" : "Dark Mode"}
+           >
+             {theme === "dark" ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-slate-300" />}
+           </Button>
            <Button variant="ghost" size="icon" className="rounded-none hover:bg-white/10" onClick={toggleFullscreen}>
              {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
            </Button>
@@ -1049,39 +1128,39 @@ export default function MockTake() {
       </header>
 
       {/* QUESTION AREA */}
-      <main className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden bg-[#f4f4f4]">
+      <main className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden bg-[#f4f4f4] dark:bg-[#0c0817] transition-colors">
         {isReading && sections[currentQuestion?.section_index] && (sections[currentQuestion?.section_index].passage || sections[currentQuestion?.section_index].imageUrl) && (
-          <div className="w-full md:w-1/2 h-1/2 md:h-full overflow-y-auto border-b md:border-b-0 md:border-r border-slate-300 p-6 md:p-8 xl:p-12 bg-white">
-            <h2 className="text-xl font-bold mb-6 text-slate-900 uppercase tracking-widest border-b-2 border-slate-800 pb-2">{sections[currentQuestion.section_index].title}</h2>
+          <div className="w-full md:w-1/2 h-1/2 md:h-full overflow-y-auto border-b md:border-b-0 md:border-r border-slate-300 dark:border-slate-800 p-6 md:p-8 xl:p-12 bg-white dark:bg-[#140D23] transition-colors">
+            <h2 className="text-xl font-bold mb-6 text-slate-900 dark:text-white uppercase tracking-widest border-b-2 border-slate-800 dark:border-slate-700 pb-2">{sections[currentQuestion.section_index].title}</h2>
             {sections[currentQuestion.section_index].imageUrl && (
-              <img src={getFullImageUrl(sections[currentQuestion.section_index].imageUrl)} className="max-w-full border border-slate-300 mb-6" />
+              <img src={getFullImageUrl(sections[currentQuestion.section_index].imageUrl)} className="max-w-full border border-slate-300 dark:border-slate-800 mb-6" />
             )}
-            <div className="prose prose-slate max-w-none text-slate-800 font-serif leading-loose text-lg whitespace-pre-wrap">
+            <div className="prose prose-slate dark:prose-invert max-w-none text-slate-800 dark:text-slate-200 font-serif leading-loose text-lg whitespace-pre-wrap">
               {sections[currentQuestion.section_index].passage}
             </div>
           </div>
         )}
 
-        <div className={cn("overflow-y-auto flex flex-col p-6 md:p-8 xl:p-12 bg-white", isReading ? "w-full md:w-1/2 h-1/2 md:h-full" : "w-full h-full max-w-5xl mx-auto border-x border-slate-300")}>
+        <div className={cn("overflow-y-auto flex flex-col p-6 md:p-8 xl:p-12 bg-white dark:bg-[#140D23] transition-colors", isReading ? "w-full md:w-1/2 h-1/2 md:h-full" : "w-full h-full max-w-5xl mx-auto border-x border-slate-300 dark:border-slate-800")}>
           
           <div className="w-full flex-1 flex flex-col">
             {currentQuestion && (
               <div key={currentQuestion.id} className="w-full">
                 
                 {/* QUESTION HEADER */}
-                <div className="flex items-center justify-between border-b-2 border-[#0f2c59] pb-4 mb-8">
+                <div className="flex items-center justify-between border-b-2 border-[#0f2c59] dark:border-blue-500 pb-4 mb-8">
                   <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 bg-[#0f2c59] text-white flex items-center justify-center text-sm font-bold">
+                    <div className="h-8 w-8 bg-[#0f2c59] dark:bg-blue-600 text-white flex items-center justify-center text-sm font-bold">
                       {currentQuestion.position}
                     </div>
-                    <span className="text-xs font-bold uppercase tracking-widest text-[#0f2c59]">
+                    <span className="text-xs font-bold uppercase tracking-widest text-[#0f2c59] dark:text-blue-400">
                       Item {currentQuestion.position} of {questions.length}
                     </span>
                   </div>
                   <button 
                     className={cn(
                       "flex items-center text-xs font-bold uppercase tracking-widest px-3 py-1.5 border-2 transition-colors", 
-                      flagged.has(currentQuestion.id) ? "border-[#ca8a04] text-[#ca8a04]" : "border-slate-300 text-slate-500 hover:border-slate-500 hover:text-slate-700"
+                      flagged.has(currentQuestion.id) ? "border-[#ca8a04] text-[#ca8a04]" : "border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-500 dark:hover:border-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
                     )}
                     onClick={() => toggleFlag(currentQuestion.id)}
                   >
@@ -1091,13 +1170,13 @@ export default function MockTake() {
                 </div>
 
                 {/* PROMPT */}
-                <div className="text-xl md:text-2xl font-serif leading-relaxed text-slate-900 mb-8">
+                <div className="text-xl md:text-2xl font-serif leading-relaxed text-slate-900 dark:text-white mb-8">
                   {currentQuestion.prompt}
                 </div>
 
                 {/* MEDIA */}
                 {currentQuestion.imageUrl && (
-                  <img src={getFullImageUrl(currentQuestion.imageUrl)} className="max-w-full border border-slate-300 mb-8" />
+                  <img src={getFullImageUrl(currentQuestion.imageUrl)} className="max-w-full border border-slate-300 dark:border-slate-800 mb-8" />
                 )}
 
                 {/* OPTIONS */}
@@ -1113,21 +1192,21 @@ export default function MockTake() {
                           className={cn(
                             "w-full text-left p-4 border-2 transition-none flex items-center gap-4 group rounded-none",
                             isSelected 
-                              ? "border-[#0f2c59] bg-[#f0f4f8]" 
-                              : "border-slate-300 bg-white hover:border-[#0f2c59]"
+                              ? "border-[#0f2c59] dark:border-blue-500 bg-[#f0f4f8] dark:bg-blue-950/20" 
+                              : "border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900/50 hover:border-[#0f2c59] dark:hover:border-blue-500"
                           )}
                         >
                           <div className={cn(
                             "h-6 w-6 border-2 flex items-center justify-center font-bold text-xs shrink-0 rounded-full",
                             isSelected 
-                              ? "border-[#0f2c59] bg-[#0f2c59] text-white" 
-                              : "border-slate-400 text-slate-600 group-hover:border-[#0f2c59] group-hover:text-[#0f2c59]"
+                              ? "border-[#0f2c59] dark:border-blue-500 bg-[#0f2c59] dark:bg-blue-500 text-white" 
+                              : "border-slate-400 dark:border-slate-600 text-slate-600 dark:text-slate-400 group-hover:border-[#0f2c59] dark:group-hover:border-blue-500 group-hover:text-[#0f2c59] dark:group-hover:text-blue-400"
                           )}>
                             {labels[oIdx]}
                           </div>
                           <div className="flex-1">
-                            {opt.imageUrl && <img src={getFullImageUrl(opt.imageUrl)} className="h-16 object-contain mb-2 border border-slate-200" />}
-                            <span className="text-lg font-serif text-slate-800">
+                            {opt.imageUrl && <img src={getFullImageUrl(opt.imageUrl)} className="h-16 object-contain mb-2 border border-slate-200 dark:border-slate-800" />}
+                            <span className="text-lg font-serif text-slate-800 dark:text-slate-200">
                               {opt.text}
                             </span>
                           </div>
@@ -1139,7 +1218,7 @@ export default function MockTake() {
                   <div className="w-full">
                     <Textarea 
                       rows={6} 
-                      className="w-full p-4 text-lg font-serif rounded-none border-2 border-slate-300 focus:border-[#0f2c59] resize-none bg-white"
+                      className="w-full p-4 text-lg font-serif rounded-none border-2 border-slate-300 dark:border-slate-800 focus:border-[#0f2c59] dark:focus:border-blue-500 resize-none bg-white dark:bg-slate-900/50 text-slate-900 dark:text-white"
                       placeholder="Type your response here..."
                       value={answers[currentQuestion.id] || ""}
                       onChange={(e) => onAnswer(currentQuestion.id, e.target.value)}
@@ -1153,7 +1232,7 @@ export default function MockTake() {
       </main>
 
       {/* EXAM NAVIGATOR - Formal Status Bar */}
-      <footer className="h-[70px] bg-slate-100 border-t border-slate-300 flex items-center justify-between px-4 sm:px-6 z-40">
+      <footer className="h-[70px] bg-slate-100 dark:bg-[#140D23] border-t border-slate-300 dark:border-slate-800 flex items-center justify-between px-4 sm:px-6 z-40 transition-colors">
         
         <div className="flex items-center gap-2 sm:gap-4 w-1/2 sm:w-1/4">
           <Button 
@@ -1161,16 +1240,16 @@ export default function MockTake() {
             variant="outline" 
             onClick={() => setActiveQuestionIndex(Math.max(0, activeQuestionIndex - 1))}
             disabled={activeQuestionIndex === 0}
-            className="rounded-none border-2 border-slate-400 font-bold text-xs uppercase tracking-widest text-slate-700 bg-white"
+            className="rounded-none border-2 border-slate-400 dark:border-slate-700 font-bold text-xs uppercase tracking-widest text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900"
           >
             <ChevronLeft className="w-4 h-4 mr-1 sm:mr-2" /> Back
           </Button>
         </div>
 
-        <div className="hidden md:flex flex-1 justify-center items-center gap-8 text-xs font-bold uppercase tracking-widest text-slate-500">
-          <span className="text-[#166534]">Answered: {answeredCount}</span>
-          <span className="text-[#ca8a04]">Marked: {flaggedCount}</span>
-          <span className="text-slate-800">Unanswered: {questions.length - answeredCount}</span>
+        <div className="hidden md:flex flex-1 justify-center items-center gap-8 text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+          <span className="text-[#166534] dark:text-[#22c55e]">Answered: {answeredCount}</span>
+          <span className="text-[#ca8a04] dark:text-[#eab308]">Marked: {flaggedCount}</span>
+          <span className="text-slate-800 dark:text-slate-300">Unanswered: {questions.length - answeredCount}</span>
         </div>
 
         <div className="flex items-center justify-end gap-2 sm:gap-4 w-1/2 sm:w-1/4">
@@ -1183,7 +1262,7 @@ export default function MockTake() {
                 setActiveQuestionIndex(Math.min(questions.length - 1, activeQuestionIndex + 1));
               }
             }}
-            className="rounded-none font-bold text-xs uppercase tracking-widest bg-[#0f2c59] hover:bg-[#1a365d] text-white border-2 border-[#0f2c59]"
+            className="rounded-none font-bold text-xs uppercase tracking-widest bg-[#0f2c59] dark:bg-blue-600 hover:bg-[#1a365d] dark:hover:bg-blue-700 text-white border-2 border-[#0f2c59] dark:border-blue-600"
           >
             {activeQuestionIndex === questions.length - 1 ? "End Section" : "Next"} <ChevronRight className="w-4 h-4 ml-2" />
           </Button>
