@@ -31,6 +31,51 @@ function processLaTeX(text: string) {
   });
 }
 
+const UZ_DICTIONARY: Record<string, string> = {
+  // Topics/skills translation
+  "Reading speed": "Matn o'qish tezligi",
+  "Algebra II": "Algebra II (Murakkab algebra)",
+  "Advanced Vocabulary": "Kengaytirilgan lug'at boyligi",
+  "Time Management": "Vaqtni rejalashtirish",
+  "Answering core questions": "Asosiy savollarga javob berish",
+  "Complex word problems": "Murakkab matnli masalalar",
+  "Geometry": "Geometriya",
+  "Trigonometry": "Trigonometriya",
+  "Data Analysis": "Ma'lumotlar tahlili",
+  "Grammar rules": "Grammatika qoidalari",
+  "Listening comprehension": "Eshitib tushunish",
+  "Reading comprehension": "O'qib tushunish",
+  "Math calculations": "Matematik hisob-kitoblar",
+
+  // Generic fallback sentences
+  "Great job completing the exam! You demonstrated a solid foundation. Focus your next 3 study sessions on the recommended topics to push your score even higher.":
+    "Imtihonni muvaffaqiyatli yakunlaganingiz bilan tabriklaymiz! Siz mustahkam bilim poydevorini namoyish etdingiz. Keyingi 3 ta o'quv mashg'ulotingizni ko'rsatilgan tavsiyaviy mavzularga yo'naltirsangiz, natijangiz yanada yuqori bo'ladi.",
+  "You did well on": "Siz ushbu mavzularda yaxshi natija ko'rsatdingiz:",
+  "Focus on improving": "Quyidagi kamchiliklarni yaxshilash ustida ishlang:",
+  "Try to practice": "Ko'proq quyidagi mavzularda mashq qiling:"
+};
+
+function translateFeedbackToUz(text: string): string {
+  if (!text) return "";
+  let res = text;
+  Object.entries(UZ_DICTIONARY).forEach(([en, uz]) => {
+    const escaped = en.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const regex = new RegExp(escaped, "gi");
+    res = res.replace(regex, uz);
+  });
+  return res;
+}
+
+function translateArrayToUz(arr: any[] | null | undefined): string[] {
+  if (!arr) return [];
+  return arr.map(item => {
+    if (typeof item === 'string') {
+      return translateFeedbackToUz(item);
+    }
+    return String(item);
+  });
+}
+
 export function ExamResultDashboard({ result, questions, exam }: { result: any, questions: any[], exam: any }) {
   const [expandedQ, setExpandedQ] = useState<string | null>(null);
   const nav = useNavigate();
@@ -115,6 +160,11 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
 
   const getExplanation = (qtype: string, correct: string, user: string) => {
     const c = `"${correct}"`;
+    if (isMilliy) {
+      if (qtype === "mcq") return `Ko'p variantli savol. To'g'ri javob: ${c}.`;
+      if (qtype === "fill") return `Bo'sh joyni to'ldirish savoli. Matn yoki hisob-kitob bo'yicha to'g'ri qiymat: ${c}.`;
+      return `To'g'ri javob rasmiy ravishda ${c} deb belgilangan.`;
+    }
     if (qtype === "tfng") return `True/False/Not Given format: If the text agrees, it is True. If it contradicts, it is False. If there is no information, it is Not Given. The correct answer based on the text is ${c}.`;
     if (qtype === "ynng") return `Yes/No/Not Given format: Identifies writer's claims. Correct answer is ${c}.`;
     if (qtype === "mcq") return `Multiple Choice Questions require identifying paraphrased information. The correct option is ${c}.`;
@@ -123,60 +173,103 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
   };
 
   const finalScore = isSat ? satPts : isMilliy ? milliyPts : isIelts ? (band || "0.0") : `${accuracy}%`;
-  const scoreType = isSat ? "Total Score" : isMilliy ? "Total Ball" : isIelts ? "Band Score" : "Accuracy";
+  const scoreType = isSat ? "Total Score" : isMilliy ? "Umumiy ball" : isIelts ? "Band Score" : "Accuracy";
+
+  // Uzbek Localization strings
+  const tOfficialReport = isMilliy ? "Rasmiy Natija Hisoboti" : "Official Score Report";
+  const tTestDate = isMilliy ? "Imtihon topshirilgan sana" : "Test Date";
+  const tCandidateId = isMilliy ? "Talaba ID" : "Candidate ID";
+  const tPredictedScore = isMilliy ? "Taxminiy Natija" : "Predicted Result";
+  
+  const tTotalQuestions = isMilliy ? "Jami Savollar" : "Total Questions";
+  const tCorrect = isMilliy ? "To'g'ri" : "Correct";
+  const tIncorrect = isMilliy ? "Noto'g'ri" : "Incorrect";
+  const tOmitted = isMilliy ? "Belgilanmagan" : "Omitted";
+  const tTotalTimeUsed = isMilliy ? "Sarflangan umumiy vaqt" : "Total Time Used";
+  const tAccuracy = isMilliy ? "To'g'rilik foizi" : "Accuracy";
+
+  const tCoachTitle = isMilliy ? "Sun'iy Intellekt Tahlili" : "AI Performance Coach";
+  const tCoachLoadingDesc = isMilliy ? "Sun'iy intellekt xatolaringiz va ko'rsatkichlaringizni tahlil qilib, tavsiyalar tayyorlamoqda..." : "AI is analyzing your exam details to generate personalized feedback...";
+  const tCoachLoadingMetrics = isMilliy ? "Ko'rsatkichlar tahlil qilinmoqda..." : "Gathering test metrics...";
+  const tCoachLoadedDesc = isMilliy ? "Imtihon natijalaringiz asosida tayyorlangan tahliliy hisobot" : "Personalized feedback based on your exam data";
+
+  const tStrengths = isMilliy ? "Asosiy Kuchli Tomonlaringiz" : "Core Strengths";
+  const tWeaknesses = isMilliy ? "Kamchiliklar va xato ustida ishlash" : "Areas for Improvement";
+  const tStudyPlan = isMilliy ? "Tavsiya etilgan o'quv rejasi" : "Study Plan";
+  const tFocusTopics = isMilliy ? "E'tibor qaratilishi lozim bo'lgan mavzular" : "Focus Topics";
+  const tNoStrengths = isMilliy ? "Kuchli tomonlar topilmadi." : "No strengths recorded.";
+  const tNoWeaknesses = isMilliy ? "Kamchiliklar aniqlanmadi." : "No weaknesses recorded.";
+
+  const tDomainPerformance = isMilliy ? "Mavzular bo'yicha samaradorlik" : "Domain Performance";
+  const tTimingAnalytics = isMilliy ? "Vaqt sarfi tahlili" : "Timing Analytics";
+  const tAvgPace = isMilliy ? "O'rtacha tezlik" : "Average Pace";
+  const tFastest = isMilliy ? "Eng tezkor javob" : "Fastest Response";
+  const tSlowest = isMilliy ? "Eng sekin javob" : "Slowest Response";
+  const tPaceUnit = isMilliy ? "soniya/savol" : "sec/item";
+  const tSecUnit = isMilliy ? "soniya" : "sec";
+
+  const tDetailedAnalysis = isMilliy ? "Savollar bo'yicha batafsil tahlil" : "Detailed Item Analysis";
+  const tCandidateResponse = isMilliy ? "Sizning javobingiz" : "Candidate Response";
+  const tDesignatedCorrect = isMilliy ? "To'g'ri javob" : "Designated Correct Answer";
+  const tRationaleTitle = isMilliy ? "Savolning to'liq yechimi va tushuntirishi" : "Item Rationale & Analysis";
+  const tRationaleGenerating = isMilliy ? "Tushuntirish shakllantirilmoqda..." : "AI explanation is generating...";
+
+  const tEndReport = isMilliy ? "Rasmiy natija hisoboti yakuni" : "End of Official Score Report";
+  const tValidationCode = isMilliy ? "Xavfsizlik tekshiruv kodi" : "Secure validation code";
+  const tReturnButton = isMilliy ? "Platformaga qaytish" : "Return to Platform";
+
   return (
     <div className="min-h-screen bg-[#e5e7eb] dark:bg-[#0c0817] py-8 font-serif text-slate-900 dark:text-slate-100 selection:bg-blue-200 transition-colors">
-      <div className="max-w-[900px] mx-auto bg-white dark:bg-[#140D23] shadow-2xl border border-slate-300 dark:border-slate-800 transition-colors">
+      <div className="max-w-[900px] mx-auto bg-white dark:bg-[#140D23] shadow-2xl border border-slate-300 dark:border-slate-800 transition-colors rounded-2xl overflow-hidden">
         
         {/* OFFICIAL SCORE REPORT HEADER */}
-        <div className="border-b-[4px] border-[#0f2c59] dark:border-blue-500 p-8 bg-white dark:bg-[#140D23] flex justify-between items-start transition-colors">
+        <div className={cn("border-b-[4px] p-8 bg-white dark:bg-[#140D23] flex justify-between items-start transition-colors", isMilliy ? "border-[#0d9488]" : "border-[#0f2c59] dark:border-blue-500")}>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-[#0f2c59] dark:text-blue-400 uppercase mb-1">Official Score Report</h1>
+            <h1 className={cn("text-3xl font-bold tracking-tight uppercase mb-1", isMilliy ? "text-[#0d9488]" : "text-[#0f2c59] dark:text-blue-400")}>{tOfficialReport}</h1>
             <p className="text-sm font-sans text-slate-500 dark:text-slate-400 uppercase tracking-widest">{exam?.title || "Standardized Examination"}</p>
           </div>
           <div className="text-right">
             <img src="/logo.png" alt="LMSHub Official" className="h-10 mb-2 opacity-80 grayscale ml-auto" onError={(e) => e.currentTarget.style.display = 'none'} />
-            <p className="text-xs font-sans text-slate-500 dark:text-slate-400 uppercase tracking-widest">Test Date: {new Date().toLocaleDateString()}</p>
-            <p className="text-xs font-sans text-slate-500 dark:text-slate-400 uppercase tracking-widest">Candidate ID: {Math.floor(Math.random()*100000000)}</p>
+            <p className="text-xs font-sans text-slate-500 dark:text-slate-400 uppercase tracking-widest">{tTestDate}: {new Date().toLocaleDateString()}</p>
+            <p className="text-xs font-sans text-slate-500 dark:text-slate-400 uppercase tracking-widest">{tCandidateId}: {Math.floor(Math.random()*100000000)}</p>
           </div>
         </div>
 
         {/* HERO SCORES - Document Style */}
         <div className="p-8 border-b border-slate-300 dark:border-slate-800 bg-[#f8fafc] dark:bg-[#0c0817]/40 flex flex-col md:flex-row gap-8 transition-colors">
-          <div className="w-full md:w-1/3 bg-white dark:bg-[#140D23]/60 border border-slate-300 dark:border-slate-800 p-6 flex flex-col items-center justify-center shadow-sm transition-colors">
+          <div className="w-full md:w-1/3 bg-white dark:bg-[#140D23]/60 border border-slate-300 dark:border-slate-800 p-6 flex flex-col items-center justify-center shadow-sm transition-colors rounded-xl">
             <h2 className="text-xs font-sans font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2 text-center">{scoreType}</h2>
-            <div className="text-6xl font-bold text-[#0f2c59] dark:text-blue-400 tracking-tighter mb-2">{finalScore}</div>
-            <p className="text-[10px] font-sans text-slate-400 uppercase text-center border-t border-slate-200 dark:border-slate-800 pt-2 w-full">Predicted Result</p>
+            <div className={cn("text-6xl font-bold tracking-tighter mb-2", isMilliy ? "text-[#0d9488]" : "text-[#0f2c59] dark:text-blue-400")}>{finalScore}</div>
+            <p className="text-[10px] font-sans text-slate-400 uppercase text-center border-t border-slate-200 dark:border-slate-800 pt-2 w-full">{tPredictedScore}</p>
           </div>
           <div className="w-full md:w-2/3 grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#140D23]/60 p-4 flex flex-col justify-between transition-colors">
-              <span className="text-[10px] font-sans font-bold text-slate-500 dark:text-slate-400 uppercase">Total Questions</span>
+            <div className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#140D23]/60 p-4 flex flex-col justify-between transition-colors rounded-xl">
+              <span className="text-[10px] font-sans font-bold text-slate-500 dark:text-slate-400 uppercase">{tTotalQuestions}</span>
               <span className="text-2xl font-bold text-slate-800 dark:text-slate-200">{totalCount}</span>
             </div>
-            <div className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#140D23]/60 p-4 flex flex-col justify-between transition-colors">
-              <span className="text-[10px] font-sans font-bold text-[#166534] dark:text-[#22c55e] uppercase">Correct</span>
+            <div className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#140D23]/60 p-4 flex flex-col justify-between transition-colors rounded-xl">
+              <span className="text-[10px] font-sans font-bold text-[#166534] dark:text-[#22c55e] uppercase">{tCorrect}</span>
               <span className="text-2xl font-bold text-[#166534] dark:text-[#22c55e]">{correctCount}</span>
             </div>
-            <div className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#140D23]/60 p-4 flex flex-col justify-between transition-colors">
-              <span className="text-[10px] font-sans font-bold text-[#991b1b] dark:text-[#ef4444] uppercase">Incorrect</span>
+            <div className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#140D23]/60 p-4 flex flex-col justify-between transition-colors rounded-xl">
+              <span className="text-[10px] font-sans font-bold text-[#991b1b] dark:text-[#ef4444] uppercase">{tIncorrect}</span>
               <span className="text-2xl font-bold text-[#991b1b] dark:text-[#ef4444]">{wrongCount}</span>
             </div>
-            <div className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#140D23]/60 p-4 flex flex-col justify-between transition-colors">
-              <span className="text-[10px] font-sans font-bold text-slate-500 dark:text-slate-400 uppercase">Omitted</span>
+            <div className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#140D23]/60 p-4 flex flex-col justify-between transition-colors rounded-xl">
+              <span className="text-[10px] font-sans font-bold text-slate-500 dark:text-slate-400 uppercase">{tOmitted}</span>
               <span className="text-2xl font-bold text-slate-800 dark:text-slate-200">{skippedCount}</span>
             </div>
-            <div className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#140D23]/60 p-4 flex flex-col justify-between col-span-2 transition-colors">
-              <span className="text-[10px] font-sans font-bold text-slate-500 dark:text-slate-400 uppercase">Total Time Used</span>
+            <div className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#140D23]/60 p-4 flex flex-col justify-between col-span-2 transition-colors rounded-xl">
+              <span className="text-[10px] font-sans font-bold text-slate-500 dark:text-slate-400 uppercase">{tTotalTimeUsed}</span>
               <span className="text-xl font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2"><Clock className="w-4 h-4 text-slate-400 dark:text-slate-400"/> {timeStr}</span>
             </div>
-            <div className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#140D23]/60 p-4 flex flex-col justify-between col-span-2 transition-colors">
-              <span className="text-[10px] font-sans font-bold text-[#0f2c59] dark:text-blue-400 uppercase">Accuracy</span>
-              <span className="text-xl font-bold text-[#0f2c59] dark:text-blue-400 flex items-center gap-2"><Target className="w-4 h-4"/> {accuracy}%</span>
+            <div className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#140D23]/60 p-4 flex flex-col justify-between col-span-2 transition-colors rounded-xl">
+              <span className="text-[10px] font-sans font-bold text-[#0f2c59] dark:text-teal-500 dark:text-blue-400 uppercase">{tAccuracy}</span>
+              <span className={cn("text-xl font-bold flex items-center gap-2", isMilliy ? "text-[#0d9488]" : "text-[#0f2c59] dark:text-blue-400")}><Target className="w-4 h-4"/> {accuracy}%</span>
             </div>
           </div>
         </div>
 
-        {/* AI PERFORMANCE COACH - Dynamic Diagnostic Report */}
         {/* AI PERFORMANCE COACH - Dynamic Diagnostic Report */}
         <div className="p-8 border-b border-slate-300 dark:border-slate-800 transition-colors">
           {!currentResult?.aiCoachFeedback ? (
@@ -188,12 +281,12 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                 </div>
                 <div>
                   <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                    AI Performance Coach 
+                    {tCoachTitle}
                     <span className="text-[10px] tracking-wider uppercase bg-indigo-600 dark:bg-indigo-500/20 text-white dark:text-indigo-300 px-2 py-0.5 rounded font-sans font-extrabold animate-pulse">
-                      Analyzing...
+                      {isMilliy ? "Tahlil qilinmoqda..." : "Analyzing..."}
                     </span>
                   </h2>
-                  <p className="text-sm text-slate-600 dark:text-slate-300 font-medium">AI is analyzing your exam details to generate personalized feedback...</p>
+                  <p className="text-sm text-slate-600 dark:text-slate-300 font-medium">{tCoachLoadingDesc}</p>
                 </div>
               </div>
               <div className="space-y-4">
@@ -202,7 +295,7 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                 <div className="h-4 bg-gradient-to-r from-slate-200/80 via-indigo-100/30 to-slate-200/80 dark:from-slate-800/80 dark:via-indigo-950/20 dark:to-slate-800/80 rounded w-5/6 animate-pulse"></div>
                 <div className="h-20 bg-slate-100/60 dark:bg-[#0c0817]/40 border border-slate-200/40 dark:border-slate-800/40 rounded-xl mt-6 animate-pulse flex items-center justify-center">
                   <div className="flex items-center gap-2 text-indigo-500 dark:text-indigo-400 text-xs font-semibold uppercase tracking-wider">
-                    <Loader2 className="w-4 h-4 animate-spin" /> Gathering test metrics...
+                    <Loader2 className="w-4 h-4 animate-spin" /> {tCoachLoadingMetrics}
                   </div>
                 </div>
               </div>
@@ -218,52 +311,59 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                 } catch (e) {
                   console.error("Coach feedback parsing failed", e);
                 }
+
+                // Translate contents if isMilliy
+                const finalStrengths = isMilliy ? translateArrayToUz(coachFeedback?.strengths) : (coachFeedback?.strengths || []);
+                const finalWeaknesses = isMilliy ? translateArrayToUz(coachFeedback?.weaknesses) : (coachFeedback?.weaknesses || []);
+                const finalRecommended = isMilliy ? translateArrayToUz(coachFeedback?.recommendedTopics) : (coachFeedback?.recommendedTopics || []);
+                const finalStudyPlan = isMilliy ? translateFeedbackToUz(coachFeedback?.studyPlan) : (coachFeedback?.studyPlan || "");
+
                 return (
                   <div className="bg-gradient-to-br from-white to-slate-50/50 dark:from-[#140D23]/60 dark:to-[#1a122e]/40 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 md:p-8 shadow-sm space-y-6 transition-all duration-300">
                     <div className="flex items-center gap-3 mb-2">
-                       <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center shadow-inner">
-                         <BrainCircuit className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                       <div className={cn("w-10 h-10 rounded-full flex items-center justify-center shadow-inner", isMilliy ? "bg-teal-100 dark:bg-teal-950" : "bg-indigo-100 dark:bg-indigo-500/20")}>
+                         <BrainCircuit className={cn("w-5 h-5", isMilliy ? "text-teal-600 dark:text-teal-400" : "text-indigo-600 dark:text-indigo-400")} />
                        </div>
                        <div>
-                         <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">AI Performance Coach</h2>
-                         <p className="text-sm text-slate-600 dark:text-slate-400 font-medium">Personalized feedback based on your exam data</p>
+                         <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">{tCoachTitle}</h2>
+                         <p className="text-sm text-slate-600 dark:text-slate-400 font-medium">{tCoachLoadedDesc}</p>
                        </div>
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                        <div className="bg-gradient-to-br from-emerald-50/60 to-teal-50/40 dark:from-emerald-950/10 dark:to-teal-950/10 border border-emerald-100/50 dark:border-emerald-900/30 rounded-xl p-4 shadow-sm transition-all duration-300">
-                         <h3 className="font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider text-xs mb-3 flex items-center gap-2 font-sans"><Target className="w-4 h-4" /> Core Strengths</h3>
+                         <h3 className="font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider text-xs mb-3 flex items-center gap-2 font-sans"><Target className="w-4 h-4" /> {tStrengths}</h3>
                          <ul className="space-y-2.5">
-                           {coachFeedback?.strengths?.map((s: string, i: number) => (
+                           {finalStrengths.map((s: string, i: number) => (
                              <li key={i} className="flex items-start gap-2.5">
                                <CheckCircle2 className="w-4 h-4 text-emerald-500 dark:text-emerald-400 shrink-0 mt-0.5" />
                                <span className="text-emerald-900 dark:text-emerald-200 text-xs font-semibold leading-relaxed">{s}</span>
                              </li>
-                           )) || <li className="text-xs text-slate-400">No strengths recorded.</li>}
+                           )) || <li className="text-xs text-slate-450">{tNoStrengths}</li>}
                          </ul>
                        </div>
                        <div className="bg-gradient-to-br from-rose-50/60 to-orange-50/40 dark:from-rose-950/10 dark:to-orange-950/10 border border-rose-100/50 dark:border-rose-900/30 rounded-xl p-4 shadow-sm transition-all duration-300">
-                         <h3 className="font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider text-xs mb-3 flex items-center gap-2 font-sans"><AlertCircle className="w-4 h-4" /> Areas for Improvement</h3>
+                         <h3 className="font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider text-xs mb-3 flex items-center gap-2 font-sans"><AlertCircle className="w-4 h-4" /> {tWeaknesses}</h3>
                          <ul className="space-y-2.5">
-                           {coachFeedback?.weaknesses?.map((s: string, i: number) => (
+                           {finalWeaknesses.map((s: string, i: number) => (
                              <li key={i} className="flex items-start gap-2.5">
                                <XCircle className="w-4 h-4 text-rose-500 dark:text-rose-400 shrink-0 mt-0.5" />
                                <span className="text-rose-900 dark:text-rose-200 text-xs font-semibold leading-relaxed">{s}</span>
                              </li>
-                           )) || <li className="text-xs text-slate-400">No weaknesses recorded.</li>}
+                           )) || <li className="text-xs text-slate-450">{tNoWeaknesses}</li>}
                          </ul>
                        </div>
                     </div>
  
                     <div className="p-6 bg-indigo-50/30 dark:bg-[#0c0817]/40 border border-indigo-100/50 dark:border-indigo-950/40 rounded-xl transition-all duration-300">
-                       <h3 className="font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider text-xs mb-2 font-sans">Study Plan</h3>
+                       <h3 className="font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider text-xs mb-2 font-sans">{tStudyPlan}</h3>
                        <p className="text-slate-800 dark:text-slate-300 leading-relaxed text-sm font-medium">
-                         {coachFeedback?.studyPlan}
+                         {finalStudyPlan}
                        </p>
-                       {coachFeedback?.recommendedTopics && coachFeedback.recommendedTopics.length > 0 && (
+                       {finalRecommended && finalRecommended.length > 0 && (
                          <div className="mt-4 flex flex-wrap gap-2 items-center border-t border-slate-200/40 dark:border-slate-800/40 pt-4">
-                           <span className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase mr-2 font-sans">Focus Topics:</span>
-                           {coachFeedback.recommendedTopics.map((t: string, i: number) => (
+                           <span className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase mr-2 font-sans">{tFocusTopics}:</span>
+                           {finalRecommended.map((t: string, i: number) => (
                              <span key={i} className="px-3 py-1 bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-200/50 dark:border-indigo-500/30 rounded-full text-xs font-bold font-sans tracking-wide">{t}</span>
                            ))}
                          </div>
@@ -281,7 +381,7 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
           <div className="w-full md:w-1/2">
             <div className="flex items-center gap-2 mb-6 border-b-2 border-slate-800 dark:border-slate-700 pb-2">
               <BarChart3 className="w-5 h-5 text-slate-800 dark:text-slate-200" />
-              <h3 className="text-sm font-bold uppercase tracking-widest text-slate-800 dark:text-slate-200 font-sans">Domain Performance</h3>
+              <h3 className="text-sm font-bold uppercase tracking-widest text-slate-800 dark:text-slate-200 font-sans">{tDomainPerformance}</h3>
             </div>
             <div className="space-y-4">
               {Object.entries(topicStats).map(([topic, stat]) => {
@@ -290,7 +390,9 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                 return (
                   <div key={topic} className="font-sans">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">{topic}</span>
+                      <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
+                        {isMilliy ? translateFeedbackToUz(topic) : topic}
+                      </span>
                       <span className="text-xs font-bold text-slate-900 dark:text-slate-100">{stat.correct}/{stat.total} ({pct}%)</span>
                     </div>
                     <div className="h-2 w-full bg-slate-200 dark:bg-slate-800 overflow-hidden rounded-full">
@@ -305,21 +407,21 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
           <div className="w-full md:w-1/2">
             <div className="flex items-center gap-2 mb-6 border-b-2 border-slate-800 dark:border-slate-700 pb-2">
               <Timer className="w-5 h-5 text-slate-800 dark:text-slate-200" />
-              <h3 className="text-sm font-bold uppercase tracking-widest text-slate-800 dark:text-slate-200 font-sans">Timing Analytics</h3>
+              <h3 className="text-sm font-bold uppercase tracking-widest text-slate-800 dark:text-slate-200 font-sans">{tTimingAnalytics}</h3>
             </div>
             <table className="w-full text-sm font-sans border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden">
               <tbody>
                 <tr className="border-b border-slate-200 dark:border-slate-800 hover:bg-slate-100/50 dark:hover:bg-slate-900/20 transition-colors">
-                  <td className="p-3 bg-slate-50 dark:bg-slate-900/60 text-slate-600 dark:text-slate-400 font-bold uppercase text-xs border-r border-slate-200 dark:border-slate-800">Average Pace</td>
-                  <td className="p-3 text-right font-bold text-slate-900 dark:text-slate-100">{avgTimePerQuestion} sec/item</td>
+                  <td className="p-3 bg-slate-50 dark:bg-slate-900/60 text-slate-600 dark:text-slate-400 font-bold uppercase text-xs border-r border-slate-200 dark:border-slate-800">{tAvgPace}</td>
+                  <td className="p-3 text-right font-bold text-slate-900 dark:text-slate-100">{avgTimePerQuestion} {tPaceUnit}</td>
                 </tr>
                 <tr className="border-b border-slate-200 dark:border-slate-800 hover:bg-slate-100/50 dark:hover:bg-slate-900/20 transition-colors">
-                  <td className="p-3 bg-slate-50 dark:bg-slate-900/60 text-slate-600 dark:text-slate-400 font-bold uppercase text-xs border-r border-slate-200 dark:border-slate-800">Fastest Response</td>
-                  <td className="p-3 text-right font-bold text-slate-900 dark:text-slate-100">{fastest} sec</td>
+                  <td className="p-3 bg-slate-50 dark:bg-slate-900/60 text-slate-600 dark:text-slate-400 font-bold uppercase text-xs border-r border-slate-200 dark:border-slate-800">{tFastest}</td>
+                  <td className="p-3 text-right font-bold text-slate-900 dark:text-slate-100">{fastest} {tSecUnit}</td>
                 </tr>
                 <tr className="hover:bg-slate-100/50 dark:hover:bg-slate-900/20 transition-colors">
-                  <td className="p-3 bg-slate-50 dark:bg-slate-900/60 text-slate-600 dark:text-slate-400 font-bold uppercase text-xs border-r border-slate-200 dark:border-slate-800">Slowest Response</td>
-                  <td className="p-3 text-right font-bold text-slate-900 dark:text-slate-100">{slowest} sec</td>
+                  <td className="p-3 bg-slate-50 dark:bg-slate-900/60 text-slate-600 dark:text-slate-400 font-bold uppercase text-xs border-r border-slate-200 dark:border-slate-800">{tSlowest}</td>
+                  <td className="p-3 text-right font-bold text-slate-900 dark:text-slate-100">{slowest} {tSecUnit}</td>
                 </tr>
               </tbody>
             </table>
@@ -330,7 +432,7 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
         <div className="p-8 border-b border-slate-200 dark:border-slate-800">
           <div className="flex items-center gap-2 mb-6 border-b-2 border-slate-800 dark:border-slate-700 pb-2">
             <BarChart3 className="w-5 h-5 text-slate-800 dark:text-slate-200" />
-            <h3 className="text-lg font-bold uppercase tracking-widest text-slate-800 dark:text-slate-200 font-sans">Detailed Item Analysis</h3>
+            <h3 className="text-lg font-bold uppercase tracking-widest text-slate-800 dark:text-slate-200 font-sans">{tDetailedAnalysis}</h3>
           </div>
 
           <div className="space-y-3 font-sans">
@@ -359,7 +461,7 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                         {q.position}
                       </div>
                       <div className={cn("px-2.5 py-0.5 text-[10px] font-bold uppercase border rounded-md shrink-0", statusColor)}>
-                        {isCorrect ? "Correct" : isSkipped ? "Omitted" : "Incorrect"}
+                        {isCorrect ? tCorrectTag : isSkipped ? tOmittedTag : tIncorrectTag}
                       </div>
                       <span className="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500 w-16 shrink-0">{q.qtype}</span>
                       <span className="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500 w-16 shrink-0"><Clock className="inline w-3 h-3 mr-1"/>{timeSpentMap[q.id] || 0}s</span>
@@ -375,7 +477,9 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                   {isExpanded && (
                     <div className="border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-[#0c0817]/40 p-6 font-serif">
                       <div className="mb-6">
-                        <p className="text-xs font-sans font-bold uppercase text-slate-500 dark:text-slate-400 mb-2 border-b border-slate-200 dark:border-slate-800 pb-1">Question Item {q.position}</p>
+                        <p className="text-xs font-sans font-bold uppercase text-slate-500 dark:text-slate-400 mb-2 border-b border-slate-200 dark:border-slate-800 pb-1">
+                          {isMilliy ? `${q.position}-savol` : `Question Item ${q.position}`}
+                        </p>
                         <p className="text-base text-slate-900 dark:text-slate-100 leading-relaxed font-sans">{q.prompt}</p>
                       </div>
 
@@ -383,17 +487,17 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                         <table className="w-full text-sm font-sans border-collapse">
                           <thead>
                             <tr>
-                              <th className="border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900/80 p-2 text-left w-1/2 uppercase text-xs text-slate-600 dark:text-slate-400 font-bold">Candidate Response</th>
-                              <th className="border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900/80 p-2 text-left w-1/2 uppercase text-xs text-slate-600 dark:text-slate-400 font-bold">Designated Correct Answer</th>
+                              <th className="border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900/80 p-2 text-left w-1/2 uppercase text-xs text-slate-600 dark:text-slate-400 font-bold">{tCandidateResponse}</th>
+                              <th className="border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900/80 p-2 text-left w-1/2 uppercase text-xs text-slate-600 dark:text-slate-400 font-bold">{tDesignatedCorrect}</th>
                             </tr>
                           </thead>
                           <tbody>
                             <tr>
                               <td className={cn("border border-slate-200 dark:border-slate-800 p-3 font-bold", isCorrect ? "text-[#166534] dark:text-[#22c55e]" : isSkipped ? "text-slate-500 dark:text-slate-400" : "text-[#991b1b] dark:text-[#f43f5e]")}>
-                                {detail.userAns || "OMITTED"}
+                                {detail.userAns ? translateFeedbackToUz(detail.userAns) : (isMilliy ? "BELGILANMAGAN" : "OMITTED")}
                               </td>
                               <td className="border border-slate-200 dark:border-slate-800 p-3 font-bold text-slate-800 dark:text-slate-200">
-                                {detail.correctAns}
+                                {translateFeedbackToUz(detail.correctAns)}
                               </td>
                             </tr>
                           </tbody>
@@ -402,16 +506,16 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
 
                       <div className="bg-white dark:bg-[#140D23]/60 border border-slate-200 dark:border-slate-800 p-5 rounded-xl shadow-sm">
                         <p className="text-xs font-sans font-bold uppercase text-[#0f2c59] dark:text-blue-400 mb-3 flex items-center gap-2">
-                          <BrainCircuit className="w-4 h-4 text-indigo-500" /> Item Rationale & Analysis
+                          <BrainCircuit className="w-4 h-4 text-indigo-500" /> {tRationaleTitle}
                         </p>
                         <div className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-sans whitespace-pre-wrap">
                           {detail.aiExplanation ? (
-                            processLaTeX(detail.aiExplanation)
+                            processLaTeX(isMilliy ? translateFeedbackToUz(detail.aiExplanation) : detail.aiExplanation)
                           ) : currentResult?.aiCoachFeedback ? (
                             q.explanation || getExplanation(q.qtype, detail.correctAns, detail.userAns)
                           ) : (
                             <div className="flex items-center gap-2 text-indigo-500 animate-pulse font-medium">
-                              <Loader2 className="h-4 w-4 animate-spin" /> AI explanation is generating...
+                              <Loader2 className="h-4 w-4 animate-spin" /> {tRationaleGenerating}
                             </div>
                           )}
                         </div>
@@ -425,10 +529,14 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
         </div>
 
         <div className="p-8 border-t border-slate-200 dark:border-slate-800 text-center font-sans bg-white dark:bg-[#140D23]">
-          <p className="text-xs text-slate-400 uppercase tracking-widest mb-1">End of Official Score Report</p>
-          <p className="text-[10px] text-slate-400 mb-8">Secure validation code: {Math.random().toString(36).substring(2, 15).toUpperCase()}</p>
-          <Button size="lg" className="bg-[#0f2c59] hover:bg-[#1a365d] dark:bg-indigo-600 dark:hover:bg-indigo-500 text-white font-bold px-10 rounded-xl h-12 uppercase tracking-widest text-sm w-full md:w-auto transition-all duration-200" onClick={() => nav(`/${role || 'student'}`)}>
-            Return to Platform
+          <p className="text-xs text-slate-400 uppercase tracking-widest mb-1">{tEndReport}</p>
+          <p className="text-[10px] text-slate-400 mb-8">{tValidationCode}: {Math.random().toString(36).substring(2, 15).toUpperCase()}</p>
+          <Button size="lg" className={cn("text-white font-bold px-10 rounded-xl h-12 uppercase tracking-widest text-sm w-full md:w-auto transition-all duration-200", isMilliy ? "bg-teal-600 hover:bg-teal-700" : "bg-[#0f2c59] hover:bg-[#1a365d] dark:bg-indigo-600 dark:hover:bg-indigo-500")} onClick={() => {
+            const r = (role || 'student').toLowerCase();
+            const path = r === 'super_admin' ? 'super-admin' : r === 'payment_manager' ? 'pack-manager' : r;
+            nav(`/${path}`);
+          }}>
+            {tReturnButton}
           </Button>
         </div>
       </div>

@@ -13,10 +13,14 @@ interface NavbarProps {
 }
 
 export default function Navbar({
-  const { t } = useTranslation(); isCollapsed, setIsCollapsed, setIsMenuOpen }: NavbarProps) {
+  isCollapsed,
+  setIsCollapsed,
+  setIsMenuOpen,
+}: NavbarProps) {
   const { role } = useAuth();
   const navigate = useNavigate();
-  const basePath = `/${role}`;
+  const r = (role || 'student').toLowerCase();
+  const basePath = r === 'super_admin' ? '/super-admin' : r === 'payment_manager' ? '/pack-manager' : `/${r}`;
   const go = (path: string) => navigate(path);
   const { t } = useTranslation();
 

@@ -52,7 +52,9 @@ export const AdventureMapFull: React.FC = () => {
   }, []);
 
   const handleBack = () => {
-    navigate(`/${role}/dashboard`);
+    const r = (role || 'student').toLowerCase();
+    const path = r === 'super_admin' ? 'super-admin' : r === 'payment_manager' ? 'pack-manager' : r;
+    navigate(`/${path}/dashboard`);
   };
 
   const zoomIn = () => setZoom(prev => Math.min(2.5, prev + 0.25));

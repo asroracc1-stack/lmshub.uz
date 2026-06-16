@@ -587,6 +587,8 @@ export default function MockTake() {
   const isReviewMode = searchParams.get("review") === "true";
 
   const [exam, setExam] = useState<ExamData | null>(null);
+  const isMilliy = exam?.type ? (exam.type.toLowerCase() === "national_cert" || exam.type.toLowerCase() === "milliy") : false;
+  const isSat = exam?.type ? (exam.type.toLowerCase() === "sat") : false;
   const [isFullscreen, setIsFullscreen] = useState(false);
   
   const [sections, setSections] = useState<{ title: string; passage: string; imageUrl: string }[]>([]);
@@ -800,10 +802,51 @@ export default function MockTake() {
     setShowSuccessAnimation(true);
     window.scrollTo(0,0);
 
+    const isMilliyVal = exam?.type ? (exam.type.toLowerCase() === "national_cert" || exam.type.toLowerCase() === "milliy") : false;
+
+    // Play Uzbek congratulations or English congratulations voice and celebratory chime
     try {
-      const utterance = new SpeechSynthesisUtterance("Your test has been successfully completed.");
-      utterance.lang = "en-US";
-      window.speechSynthesis.speak(utterance);
+      if (isMilliyVal) {
+        // Web Audio arpeggio chord chime
+        const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const playTone = (freq: number, startTime: number, duration: number) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(freq, startTime);
+          gain.gain.setValueAtTime(0, startTime);
+          gain.gain.linearRampToValueAtTime(0.25, startTime + 0.05);
+          gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(startTime);
+          osc.stop(startTime + duration);
+        };
+        const now = audioCtx.currentTime;
+        playTone(523.25, now, 0.45); // C5
+        playTone(659.25, now + 0.12, 0.45); // E5
+        playTone(783.99, now + 0.24, 0.45); // G5
+        playTone(1046.50, now + 0.36, 1.2); // C6
+
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+          const utterance = new SpeechSynthesisUtterance("Tabriklaymiz! Siz testni muvaffaqiyatli topshirdingiz. Natijalaringiz tahlil qilinmoqda. Iltimos kuting.");
+          utterance.lang = "uz-UZ";
+          utterance.rate = 0.9;
+          utterance.pitch = 1.05;
+          const voices = window.speechSynthesis.getVoices();
+          const uzVoice = voices.find(v => v.lang.startsWith("uz") || v.lang.startsWith("tr"));
+          if (uzVoice) utterance.voice = uzVoice;
+          window.speechSynthesis.speak(utterance);
+        }
+      } else {
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+          const utterance = new SpeechSynthesisUtterance("Your test has been successfully completed.");
+          utterance.lang = "en-US";
+          window.speechSynthesis.speak(utterance);
+        }
+      }
     } catch (e) {
       console.error("SpeechSynthesis error:", e);
     }
@@ -949,53 +992,77 @@ export default function MockTake() {
 
   if (!started) {
     return (
-      <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 bg-[#f4f4f4] dark:bg-[#0c0817] font-sans selection:bg-blue-200 transition-colors">
-        <div className="w-full max-w-4xl bg-white dark:bg-[#140D23] border border-slate-300 dark:border-slate-800 shadow-xl rounded-none transition-colors">
-          <div className="bg-[#0f2c59] dark:bg-[#0b1e3b] p-6 flex items-center justify-between">
-            <h1 className="text-xl font-bold text-white tracking-widest uppercase">Official Examination Portal</h1>
+      <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 bg-[#f4f4f4] dark:bg-[#0c0817] font-sans selection:bg-teal-200 transition-colors">
+        <div className="w-full max-w-4xl bg-white dark:bg-[#140D23] border border-slate-300 dark:border-slate-800 shadow-xl rounded-2xl overflow-hidden transition-colors">
+          <div className={cn("p-6 flex items-center justify-between transition-colors", isMilliy ? "bg-[#0d9488] dark:bg-[#064e3b]" : "bg-[#0f2c59] dark:bg-[#0b1e3b]")}>
+            <h1 className="text-sm md:text-base font-bold text-white tracking-widest uppercase">
+              {isMilliy ? "BILIM VA MALAKALARNI BAHOLASH AGENTLIGI — IMTIHON PORTALI" : "Official Examination Portal"}
+            </h1>
             <div className="flex items-center gap-4">
               <Button 
                 variant="ghost" 
                 size="icon" 
                 className="text-white hover:bg-white/10 rounded-none h-9 w-9" 
                 onClick={toggle}
-                title={theme === "dark" ? "Light Mode" : "Dark Mode"}
+                title={theme === "dark" ? (isMilliy ? "Yorug' rejim" : "Light Mode") : (isMilliy ? "Qorong'u rejim" : "Dark Mode")}
               >
                 {theme === "dark" ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-slate-300" />}
               </Button>
               <Badge variant="outline" className="bg-transparent text-white border-white/30 rounded-none uppercase text-[10px] tracking-widest">{exam.type}</Badge>
             </div>
           </div>
-          <div className="p-10 space-y-8">
+          <div className="p-8 md:p-10 space-y-8 bg-white dark:bg-[#140D23]">
             <div className="border-b-2 border-slate-200 dark:border-slate-800 pb-4">
-              <h2 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">{exam.title}</h2>
+              <h2 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">{exam.title}</h2>
               {exam.description && <p className="text-slate-600 dark:text-slate-400 mt-2">{exam.description}</p>}
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border border-slate-300 dark:border-slate-800">
-              <div className="p-6 bg-slate-50 dark:bg-slate-900/10 border-r border-slate-300 dark:border-slate-800 flex flex-col gap-1">
-                <span className="text-xs uppercase font-bold text-slate-500 dark:text-slate-400 tracking-widest">Time Allotted</span>
-                <span className="text-2xl font-bold text-slate-900 dark:text-white">{exam.duration_minutes} minutes</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
+              <div className="p-6 bg-slate-50 dark:bg-slate-900/10 border-r border-slate-200 dark:border-slate-800 flex flex-col gap-1">
+                <span className="text-xs uppercase font-bold text-slate-500 dark:text-slate-400 tracking-widest">
+                  {isMilliy ? "Berilgan vaqt" : "Time Allotted"}
+                </span>
+                <span className="text-2xl font-bold text-slate-900 dark:text-white">
+                  {exam.duration_minutes} {isMilliy ? "daqiqa" : "minutes"}
+                </span>
               </div>
               <div className="p-6 bg-slate-50 dark:bg-slate-900/10 flex flex-col gap-1">
-                <span className="text-xs uppercase font-bold text-slate-500 dark:text-slate-400 tracking-widest">Total Items</span>
+                <span className="text-xs uppercase font-bold text-slate-500 dark:text-slate-400 tracking-widest">
+                  {isMilliy ? "Jami savollar" : "Total Items"}
+                </span>
                 <span className="text-2xl font-bold text-slate-900 dark:text-white">{questions.length}</span>
               </div>
             </div>
             
-            <div className="p-6 border-l-4 border-[#0f2c59] dark:border-blue-500 bg-[#f8fafc] dark:bg-slate-900/40 text-sm text-slate-800 dark:text-slate-200 space-y-4 font-medium">
-              <h3 className="font-bold uppercase tracking-widest text-xs flex items-center gap-2 text-slate-950 dark:text-white"><AlertCircle className="h-4 w-4" /> Non-Disclosure Agreement & Rules</h3>
-              <ul className="list-disc pl-5 space-y-2">
-                <li>By starting this exam, you agree to maintaining strict confidentiality of all test materials.</li>
-                <li>No external aids, materials, or devices are permitted.</li>
-                <li>Your session is actively monitored. Navigating away from this window may result in score invalidation.</li>
-                <li>Use standard keyboard keys (A, B, C, D) for answering. Left/Right arrows for navigation.</li>
-              </ul>
+            <div className={cn("p-6 border-l-4 bg-[#f8fafc] dark:bg-slate-900/40 text-sm text-slate-800 dark:text-slate-200 space-y-4 font-medium", isMilliy ? "border-teal-500" : "border-[#0f2c59] dark:border-blue-500")}>
+              <h3 className="font-bold uppercase tracking-widest text-xs flex items-center gap-2 text-slate-950 dark:text-white">
+                <AlertCircle className="h-4 w-4 text-amber-500" /> 
+                {isMilliy ? "Imtihon qoidalari va o'tish shartlari" : "Non-Disclosure Agreement & Rules"}
+              </h3>
+              {isMilliy ? (
+                <ul className="list-disc pl-5 space-y-2 text-slate-700 dark:text-slate-300">
+                  <li>Ushbu imtihonni boshlash orqali siz test materiallarining maxfiyligini saqlashga rozilik bildirasiz.</li>
+                  <li>Har qanday yordamchi ma'lumotlar, taqiqlangan kalkulyatorlar yoki boshqa elektron qurilmalardan foydalanish qat'iyan man etiladi.</li>
+                  <li>Sessiyangiz to'liq nazorat qilinadi. Brauzer oynasini tark etish yoki boshqa sahifaga o'tish test natijalarining bekor bo'lishiga olib kelishi mumkin.</li>
+                  <li>Javob berish uchun kerakli variantni bosing yoki yozma javoblar maydoniga javobni kiriting. Navigatsiya uchun navigatsiya panelidan foydalaning.</li>
+                </ul>
+              ) : (
+                <ul className="list-disc pl-5 space-y-2">
+                  <li>By starting this exam, you agree to maintaining strict confidentiality of all test materials.</li>
+                  <li>No external aids, materials, or devices are permitted.</li>
+                  <li>Your session is actively monitored. Navigating away from this window may result in score invalidation.</li>
+                  <li>Use standard keyboard keys (A, B, C, D) for answering. Left/Right arrows for navigation.</li>
+                </ul>
+              )}
             </div>
           </div>
-          <div className="bg-slate-100 dark:bg-[#0c0817]/60 p-6 border-t border-slate-300 dark:border-slate-800 flex justify-center">
-            <Button size="lg" className="bg-[#0f2c59] dark:bg-blue-600 hover:bg-[#1a365d] dark:hover:bg-blue-700 text-white font-bold px-10 rounded-none h-12 uppercase tracking-widest text-sm" onClick={() => { setStarted(true); startedAt.current = Date.now(); }}>
-              Acknowledge & Start
+          <div className="bg-slate-50 dark:bg-[#0c0817]/60 p-6 border-t border-slate-200 dark:border-slate-800 flex justify-center">
+            <Button 
+              size="lg" 
+              className={cn("text-white font-bold px-10 rounded-xl h-12 uppercase tracking-widest text-sm transition-all duration-300", isMilliy ? "bg-teal-600 hover:bg-teal-700 shadow-md shadow-teal-600/10" : "bg-[#0f2c59] dark:bg-blue-600 hover:bg-[#1a365d] dark:hover:bg-blue-700")} 
+              onClick={() => { setStarted(true); startedAt.current = Date.now(); }}
+            >
+              {isMilliy ? "Qoidalarni qabul qilaman va testni boshlayman" : "Acknowledge & Start"}
             </Button>
           </div>
         </div>
@@ -1014,9 +1081,11 @@ export default function MockTake() {
   if (showReviewScreen) {
     return (
       <div className="min-h-screen w-full bg-[#f4f4f4] dark:bg-[#0c0817] flex flex-col items-center justify-center p-4 md:p-8 font-sans selection:bg-blue-200 transition-colors">
-        <div className="w-full max-w-5xl bg-white dark:bg-[#140D23] border border-slate-300 dark:border-slate-800 shadow-xl rounded-none transition-colors">
-          <div className="bg-[#0f2c59] dark:bg-[#0b1e3b] p-6 text-white flex justify-between items-center">
-            <h2 className="text-xl font-bold uppercase tracking-widest">Section Review</h2>
+        <div className="w-full max-w-5xl bg-white dark:bg-[#140D23] border border-slate-300 dark:border-slate-800 shadow-xl rounded-2xl overflow-hidden transition-colors">
+          <div className={cn("p-6 text-white flex justify-between items-center", isMilliy ? "bg-[#0d9488] dark:bg-[#064e3b]" : "bg-[#0f2c59] dark:bg-[#0b1e3b]")}>
+            <h2 className="text-xl font-bold uppercase tracking-widest">
+              {isMilliy ? "Bo'lim tahlili va testni yakunlash" : "Section Review"}
+            </h2>
             <div className="font-mono text-xl font-bold tracking-widest bg-white/10 dark:bg-white/5 px-4 py-1 border border-white/20 dark:border-white/10">
               {fmt(timeLeft)}
             </div>
@@ -1026,15 +1095,21 @@ export default function MockTake() {
             <div className="flex items-center gap-8 mb-8 border-b-2 border-slate-200 dark:border-slate-800 pb-6">
               <div className="text-center">
                 <span className="block text-3xl font-bold text-[#166534] dark:text-[#22c55e]">{answeredCount}</span>
-                <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-widest">Answered</span>
+                <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-widest">
+                  {isMilliy ? "Javob berildi" : "Answered"}
+                </span>
               </div>
               <div className="text-center">
                 <span className="block text-3xl font-bold text-[#ca8a04] dark:text-[#eab308]">{flaggedCount}</span>
-                <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-widest">Marked</span>
+                <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-widest">
+                  {isMilliy ? "Belgilandi" : "Marked"}
+                </span>
               </div>
               <div className="text-center">
                 <span className="block text-3xl font-bold text-[#991b1b] dark:text-[#ef4444]">{questions.length - answeredCount}</span>
-                <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-widest">Incomplete</span>
+                <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-widest">
+                  {isMilliy ? "Javobsiz" : "Incomplete"}
+                </span>
               </div>
             </div>
             
@@ -1070,33 +1145,35 @@ export default function MockTake() {
               className="rounded-none border-2 border-slate-800 dark:border-slate-700 font-bold uppercase tracking-widest text-xs w-full sm:w-auto justify-center text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-900" 
               onClick={() => setShowReviewScreen(false)}
             >
-              <ChevronLeft className="w-4 h-4 mr-2" /> Return
+              <ChevronLeft className="w-4 h-4 mr-2" /> {isMilliy ? "Orqaga qaytish" : "Return"}
             </Button>
             <Button 
               size="lg" 
-              className="bg-[#0f2c59] hover:bg-[#1a365d] text-white font-bold px-4 sm:px-10 rounded-none text-xs uppercase tracking-widest w-full sm:w-auto justify-center" 
+              className={cn("text-white font-bold px-4 sm:px-10 rounded-none text-xs uppercase tracking-widest w-full sm:w-auto justify-center", isMilliy ? "bg-teal-600 hover:bg-teal-700 border-none shadow-lg shadow-teal-600/10" : "bg-[#0f2c59] hover:bg-[#1a365d]")} 
               onClick={() => submit(false)}
             >
-              Submit Final Responses
+              {isMilliy ? "Testni yakunlash va topshirish" : "Submit Final Responses"}
             </Button>
           </div>
         </div>
       </div>
-    );
-  }
-
   return (
-    <div className="w-full min-h-screen bg-white dark:bg-[#080410] text-slate-900 dark:text-slate-100 flex flex-col font-sans selection:bg-blue-200 transition-colors">
+    <div className={cn("w-full min-h-screen bg-white dark:bg-[#080410] text-slate-900 dark:text-slate-100 flex flex-col font-sans selection:bg-blue-200 transition-colors", isMilliy ? "selection:bg-teal-200" : "")}>
       
-      {/* EXAM COMMAND CENTER HEADER - Official Blue Bar */}
-      <header className="h-[60px] shrink-0 bg-[#0f2c59] dark:bg-[#0b1e3b] text-white flex items-center justify-between px-6 z-40 border-b border-[#0f2c59] dark:border-[#0b1e3b] transition-colors">
+      {/* EXAM COMMAND CENTER HEADER - Official Blue/Teal Bar */}
+      <header className={cn("h-[60px] shrink-0 text-white flex items-center justify-between px-6 z-40 border-b transition-colors", isMilliy ? "bg-[#0d9488] dark:bg-[#064e3b] border-[#0d9488] dark:border-[#064e3b]" : "bg-[#0f2c59] dark:bg-[#0b1e3b] border-[#0f2c59] dark:border-[#0b1e3b]")}>
         <div className="flex items-center gap-4 min-w-0">
-           <h1 className="font-bold text-sm uppercase tracking-widest truncate max-w-[150px] sm:max-w-none">{exam.title}</h1>
+           <h1 className="font-bold text-sm uppercase tracking-widest truncate max-w-[150px] sm:max-w-none">
+             {isMilliy ? "BILIM VA MALAKALARNI BAHOLASH AGENTLIGI" : exam.title}
+           </h1>
            <span className="text-[10px] bg-white/10 px-2 py-0.5 border border-white/20 uppercase tracking-widest shrink-0">{exam.type}</span>
         </div>
 
         {/* TIMER */}
         <div className="flex items-center">
+          {isMilliy && (
+            <span className="text-xs uppercase font-bold text-teal-200 tracking-wider mr-2 hidden sm:inline">Qolgan vaqt:</span>
+          )}
           <div className={cn(
             "flex items-center justify-center px-6 py-1.5 font-mono text-xl font-bold tracking-[0.1em] border-2",
             timeLeft < 60 ? "bg-[#991b1b] border-[#ef4444] animate-pulse" :
@@ -1114,16 +1191,28 @@ export default function MockTake() {
              size="icon" 
              className="rounded-none hover:bg-white/10" 
              onClick={toggle}
-             title={theme === "dark" ? "Light Mode" : "Dark Mode"}
+             title={theme === "dark" ? (isMilliy ? "Yorug' rejim" : "Light Mode") : (isMilliy ? "Qorong'u rejim" : "Dark Mode")}
            >
              {theme === "dark" ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-slate-300" />}
            </Button>
            <Button variant="ghost" size="icon" className="rounded-none hover:bg-white/10" onClick={toggleFullscreen}>
              {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
            </Button>
-           <Button variant="ghost" size="icon" className="rounded-none hover:bg-white/10" onClick={() => setShowCalculator(!showCalculator)}>
-             <Calculator className="h-4 w-4" />
-           </Button>
+           {isMilliy ? (
+             <Button 
+               variant="ghost" 
+               size="icon" 
+               className="rounded-none hover:bg-white/10 text-teal-300 hover:text-teal-200" 
+               onClick={() => setShowScratchpad(!showScratchpad)}
+               title="Qoralama daftari (Doska)"
+             >
+               <PenLine className="h-4 w-4" />
+             </Button>
+           ) : (
+             <Button variant="ghost" size="icon" className="rounded-none hover:bg-white/10" onClick={() => setShowCalculator(!showCalculator)}>
+               <Calculator className="h-4 w-4" />
+             </Button>
+           )}
         </div>
       </header>
 
@@ -1148,13 +1237,13 @@ export default function MockTake() {
               <div key={currentQuestion.id} className="w-full">
                 
                 {/* QUESTION HEADER */}
-                <div className="flex items-center justify-between border-b-2 border-[#0f2c59] dark:border-blue-500 pb-4 mb-8">
+                <div className={cn("flex items-center justify-between border-b-2 pb-4 mb-8", isMilliy ? "border-[#0d9488]" : "border-[#0f2c59] dark:border-blue-500")}>
                   <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 bg-[#0f2c59] dark:bg-blue-600 text-white flex items-center justify-center text-sm font-bold">
+                    <div className={cn("h-8 w-8 text-white flex items-center justify-center text-sm font-bold", isMilliy ? "bg-[#0d9488]" : "bg-[#0f2c59] dark:bg-blue-600")}>
                       {currentQuestion.position}
                     </div>
-                    <span className="text-xs font-bold uppercase tracking-widest text-[#0f2c59] dark:text-blue-400">
-                      Item {currentQuestion.position} of {questions.length}
+                    <span className={cn("text-xs font-bold uppercase tracking-widest", isMilliy ? "text-[#0d9488]" : "text-[#0f2c59] dark:text-blue-400")}>
+                      {isMilliy ? `${currentQuestion.position} - savol (jami ${questions.length} ta)` : `Item ${currentQuestion.position} of ${questions.length}`}
                     </span>
                   </div>
                   <button 
@@ -1165,7 +1254,7 @@ export default function MockTake() {
                     onClick={() => toggleFlag(currentQuestion.id)}
                   >
                     <Bookmark className={cn("w-3 h-3 mr-2", flagged.has(currentQuestion.id) ? "fill-current" : "")} /> 
-                    {flagged.has(currentQuestion.id) ? "Marked" : "Mark"}
+                    {isMilliy ? (flagged.has(currentQuestion.id) ? "Belgilandi" : "Belgilash") : (flagged.has(currentQuestion.id) ? "Marked" : "Mark")}
                   </button>
                 </div>
 
@@ -1192,14 +1281,14 @@ export default function MockTake() {
                           className={cn(
                             "w-full text-left p-4 border-2 transition-none flex items-center gap-4 group rounded-none",
                             isSelected 
-                              ? "border-[#0f2c59] dark:border-blue-500 bg-[#f0f4f8] dark:bg-blue-950/20" 
+                              ? (isMilliy ? "border-[#0d9488] bg-[#f0f9f8] dark:bg-teal-950/20" : "border-[#0f2c59] dark:border-blue-500 bg-[#f0f4f8] dark:bg-blue-950/20")
                               : "border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900/50 hover:border-[#0f2c59] dark:hover:border-blue-500"
                           )}
                         >
                           <div className={cn(
                             "h-6 w-6 border-2 flex items-center justify-center font-bold text-xs shrink-0 rounded-full",
                             isSelected 
-                              ? "border-[#0f2c59] dark:border-blue-500 bg-[#0f2c59] dark:bg-blue-500 text-white" 
+                              ? (isMilliy ? "border-[#0d9488] bg-[#0d9488] text-white" : "border-[#0f2c59] dark:border-blue-500 bg-[#0f2c59] dark:bg-blue-500 text-white")
                               : "border-slate-400 dark:border-slate-600 text-slate-600 dark:text-slate-400 group-hover:border-[#0f2c59] dark:group-hover:border-blue-500 group-hover:text-[#0f2c59] dark:group-hover:text-blue-400"
                           )}>
                             {labels[oIdx]}
@@ -1218,8 +1307,8 @@ export default function MockTake() {
                   <div className="w-full">
                     <Textarea 
                       rows={6} 
-                      className="w-full p-4 text-lg font-serif rounded-none border-2 border-slate-300 dark:border-slate-800 focus:border-[#0f2c59] dark:focus:border-blue-500 resize-none bg-white dark:bg-slate-900/50 text-slate-900 dark:text-white"
-                      placeholder="Type your response here..."
+                      className={cn("w-full p-4 text-lg font-serif rounded-none border-2 border-slate-300 dark:border-slate-800 resize-none bg-white dark:bg-slate-900/50 text-slate-900 dark:text-white", isMilliy ? "focus:border-[#0d9488]" : "focus:border-[#0f2c59] dark:focus:border-blue-500")}
+                      placeholder={isMilliy ? "Javobingizni shu yerga kiriting..." : "Type your response here..."}
                       value={answers[currentQuestion.id] || ""}
                       onChange={(e) => onAnswer(currentQuestion.id, e.target.value)}
                     />
@@ -1242,14 +1331,20 @@ export default function MockTake() {
             disabled={activeQuestionIndex === 0}
             className="rounded-none border-2 border-slate-400 dark:border-slate-700 font-bold text-xs uppercase tracking-widest text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900"
           >
-            <ChevronLeft className="w-4 h-4 mr-1 sm:mr-2" /> Back
+            <ChevronLeft className="w-4 h-4 mr-1 sm:mr-2" /> {isMilliy ? "Orqaga" : "Back"}
           </Button>
         </div>
 
-        <div className="hidden md:flex flex-1 justify-center items-center gap-8 text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
-          <span className="text-[#166534] dark:text-[#22c55e]">Answered: {answeredCount}</span>
-          <span className="text-[#ca8a04] dark:text-[#eab308]">Marked: {flaggedCount}</span>
-          <span className="text-slate-800 dark:text-slate-300">Unanswered: {questions.length - answeredCount}</span>
+        <div className="hidden md:flex flex-1 justify-center items-center gap-8 text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 font-sans">
+          <span className="text-[#166534] dark:text-[#22c55e]">
+            {isMilliy ? `Javob berildi: ${answeredCount}` : `Answered: ${answeredCount}`}
+          </span>
+          <span className="text-[#ca8a04] dark:text-[#eab308]">
+            {isMilliy ? `Belgilandi: ${flaggedCount}` : `Marked: ${flaggedCount}`}
+          </span>
+          <span className="text-slate-800 dark:text-slate-300">
+            {isMilliy ? `Javobsiz: ${questions.length - answeredCount}` : `Unanswered: ${questions.length - answeredCount}`}
+          </span>
         </div>
 
         <div className="flex items-center justify-end gap-2 sm:gap-4 w-1/2 sm:w-1/4">
@@ -1262,15 +1357,15 @@ export default function MockTake() {
                 setActiveQuestionIndex(Math.min(questions.length - 1, activeQuestionIndex + 1));
               }
             }}
-            className="rounded-none font-bold text-xs uppercase tracking-widest bg-[#0f2c59] dark:bg-blue-600 hover:bg-[#1a365d] dark:hover:bg-blue-700 text-white border-2 border-[#0f2c59] dark:border-blue-600"
+            className={cn("rounded-none font-bold text-xs uppercase tracking-widest text-white border-2", isMilliy ? "bg-[#0d9488] hover:bg-[#0b7a6f] border-[#0d9488]" : "bg-[#0f2c59] dark:bg-blue-600 hover:bg-[#1a365d] dark:hover:bg-blue-700 border-[#0f2c59] dark:border-blue-600")}
           >
-            {activeQuestionIndex === questions.length - 1 ? "End Section" : "Next"} <ChevronRight className="w-4 h-4 ml-2" />
+            {activeQuestionIndex === questions.length - 1 ? (isMilliy ? "Testni yakunlash" : "End Section") : (isMilliy ? "Keyingi" : "Next")} <ChevronRight className="w-4 h-4 ml-2" />
           </Button>
         </div>
 
       </footer>
 
-      {showScratchpad && <Scratchpad onClose={() => setShowScratchpad(false)} />}
+      {showScratchpad && <Scratchpad isOpen={showScratchpad} onClose={() => setShowScratchpad(false)} />}
       <DesmosCalculator isOpen={showCalculator} onClose={() => setShowCalculator(false)} />
 
       {/* Cheating Warning Modal */}
@@ -1299,9 +1394,9 @@ export default function MockTake() {
       <AnimatePresence>
         {showCheatingLocked && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/95 backdrop-blur-md animate-fade-in"
+             initial={{ opacity: 0 }}
+             animate={{ opacity: 1 }}
+             className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/95 backdrop-blur-md animate-fade-in"
           >
             <motion.div
               initial={{ scale: 0.9, y: 20 }}
