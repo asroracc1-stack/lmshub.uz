@@ -3,20 +3,16 @@ import re
 with open('src/pages/shared/MockTake.tsx.bak', 'r', encoding='utf-8') as f:
     content = f.read()
 
-# Find the start of the MockTake component
 split_idx = content.find('export default function MockTake() {')
 if split_idx == -1:
     print("Could not find MockTake function")
     exit(1)
 
-# Keep everything before the component
 header = content[:split_idx]
 
-# Add missing imports if needed
 if "import confetti" not in header:
     header = header.replace('import { ExamResultDashboard } from "@/components/exam/ExamResultDashboard";', 'import { ExamResultDashboard } from "@/components/exam/ExamResultDashboard";\nimport confetti from "canvas-confetti";')
 
-# New MockTake component
 new_component = """export default function MockTake() {
   const { t } = useTranslation();
   const { theme, toggle } = useTheme();
@@ -62,7 +58,7 @@ new_component = """export default function MockTake() {
     (event) => {
       if (started && !result && !showSuccessAnimation) {
         event.preventDefault();
-        return (event.returnValue = "Test davom etmoqda. Chiqmoqchimisiz?");
+        return (event.returnValue = "Test is in progress. Do you want to leave?");
       }
     },
     { capture: true }
@@ -106,7 +102,7 @@ new_component = """export default function MockTake() {
           const saved = localStorage.getItem(`lmshub_exam_${testId}`);
           if (saved) {
             setAnswers(JSON.parse(saved));
-            toast.info("Oldingi javoblaringiz tiklandi", { duration: 3000 });
+            toast.info("Session restored", { duration: 3000 });
           }
         } catch { /* ignore */ }
         
@@ -116,11 +112,11 @@ new_component = """export default function MockTake() {
               setResult(resResult.data);
               setStarted(true); 
             })
-            .catch(() => toast.error("Natijani yuklashda xatolik yuz berdi"));
+            .catch(() => toast.error("Error loading result"));
         }
       })
       .catch((err) => {
-        setLoadError(err?.response?.data?.message ?? err?.message ?? "Exam yuklanmadi");
+        setLoadError(err?.response?.data?.message ?? err?.message ?? "Failed to load exam");
       })
       .finally(() => setLoading(false));
   }, [testId, isReviewMode]);
@@ -192,23 +188,6 @@ new_component = """export default function MockTake() {
     setShowSuccessAnimation(true);
     window.scrollTo(0,0);
 
-    // Audio Chime
-    try {
-      const audio = new Audio("https://cdn.freesound.org/previews/320/320655_5260872-lq.mp3");
-      audio.volume = 0.6;
-      audio.play().catch(() => console.log("Audio play blocked by browser"));
-    } catch(e){}
-
-    // Confetti
-    setTimeout(() => {
-      confetti({
-        particleCount: 200,
-        spread: 120,
-        origin: { y: 0.6 },
-        colors: ['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b']
-      });
-    }, 1000);
-
     try {
       const kind = (exam.type ?? "").toLowerCase();
       const elapsedSec = Math.floor((Date.now() - startedAt.current) / 1000);
@@ -223,15 +202,15 @@ new_component = """export default function MockTake() {
       const res = await api.post("/exams/submit", payload);
       try { localStorage.removeItem(`lmshub_exam_${testId}`); } catch { /* ignore */ }
       
-      // Delay to show animation
+      // Clinical delay
       setTimeout(() => {
         setResult({ ...res.data, kind, elapsedSec, timeSpent: timeSpentRef.current });
         setShowSuccessAnimation(false);
-      }, 4000);
+      }, 3000);
       
     } catch (err: any) {
       console.error("Submission error:", err);
-      toast.error("Natijani yuborishda xatolik: " + (err.response?.data?.message || err.message));
+      toast.error("Error submitting exam: " + (err.response?.data?.message || err.message));
       setShowSuccessAnimation(false);
     } finally {
       setSubmitting(false);
@@ -243,18 +222,18 @@ new_component = """export default function MockTake() {
   };
 
   if (loading) return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-[#0B1121]">
-      <Loader2 className="h-10 w-10 animate-spin text-purple-500" />
-      <p className="text-sm font-bold uppercase tracking-widest text-slate-400">Loading Exam...</p>
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-white text-slate-800 font-sans">
+      <Loader2 className="h-8 w-8 animate-spin text-slate-800" />
+      <p className="text-sm font-bold uppercase tracking-widest">System Initialization...</p>
     </div>
   );
 
   if (loadError || !exam) return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-[#0B1121] text-white">
-      <AlertCircle className="h-12 w-12 text-rose-500" />
-      <h2 className="text-2xl font-bold">Exam Not Found</h2>
-      <p className="text-slate-400">{loadError}</p>
-      <Button variant="outline" onClick={() => nav(-1)}>Go Back</Button>
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-white text-slate-800 font-sans">
+      <AlertCircle className="h-12 w-12 text-rose-700" />
+      <h2 className="text-xl font-bold uppercase tracking-widest">System Error</h2>
+      <p className="text-slate-600">{loadError}</p>
+      <Button variant="outline" className="rounded-none border-2 border-slate-800" onClick={() => nav(-1)}>Return to Menu</Button>
     </div>
   );
 
@@ -262,10 +241,13 @@ new_component = """export default function MockTake() {
 
   if (showSuccessAnimation) {
     return (
-      <div className="fixed inset-0 z-[9999] bg-[#070b19] flex flex-col items-center justify-center overflow-hidden">
-        <dotlottie-wc src="https://lottie.host/52a57e71-839c-47e3-8d85-813ad8949eed/Zf3wrO3gZ7.lottie" style={{ width: 450, height: 450 }} autoplay loop></dotlottie-wc>
-        <h2 className="text-4xl font-black text-white mt-8 tracking-widest uppercase" style={{ animation: "pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite" }}>Exam Completed</h2>
-        <p className="text-slate-400 mt-4 font-bold uppercase tracking-widest text-sm">Uploading and analyzing your responses...</p>
+      <div className="fixed inset-0 z-[9999] bg-white flex flex-col items-center justify-center overflow-hidden border-[16px] border-[#0f2c59]">
+        <Loader2 className="w-12 h-12 animate-spin text-[#0f2c59] mb-6" />
+        <h2 className="text-2xl font-bold text-[#0f2c59] tracking-widest uppercase font-sans">Processing Data</h2>
+        <p className="text-slate-600 mt-2 font-bold uppercase tracking-widest text-xs font-sans">Do not close this window.</p>
+        <div className="w-64 h-2 bg-slate-200 mt-8 overflow-hidden border border-slate-300">
+           <div className="h-full bg-[#0f2c59] animate-[progress_3s_ease-in-out_forwards]" style={{width: '0%'}} />
+        </div>
       </div>
     );
   }
@@ -276,54 +258,44 @@ new_component = """export default function MockTake() {
 
   if (!started) {
     return (
-      <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 bg-slate-100 dark:bg-[#070b19]">
-        <div className="w-full max-w-3xl">
-          <Card className="p-0 shadow-2xl border-slate-200/50 dark:border-white/10 bg-white dark:bg-slate-900 rounded-xl overflow-hidden">
-            <div className="bg-slate-900 dark:bg-slate-950 p-6 flex items-center justify-between border-b border-white/10">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded bg-white/10 flex items-center justify-center">
-                  <Shield className="h-6 w-6 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-xl font-bold text-white tracking-tight">Official Test Environment</h1>
-                  <p className="text-slate-400 text-sm">LMSHub Certification Platform</p>
-                </div>
-              </div>
-              <Badge variant="outline" className="bg-slate-800 text-slate-300 border-slate-700">{exam.type}</Badge>
+      <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 bg-[#f4f4f4] font-sans selection:bg-blue-200">
+        <div className="w-full max-w-4xl bg-white border border-slate-300 shadow-xl rounded-none">
+          <div className="bg-[#0f2c59] p-6 flex items-center justify-between">
+            <h1 className="text-xl font-bold text-white tracking-widest uppercase">Official Examination Portal</h1>
+            <Badge variant="outline" className="bg-transparent text-white border-white/30 rounded-none uppercase text-[10px] tracking-widest">{exam.type}</Badge>
+          </div>
+          <div className="p-10 space-y-8">
+            <div className="border-b-2 border-slate-200 pb-4">
+              <h2 className="text-3xl font-bold text-slate-900 tracking-tight">{exam.title}</h2>
+              {exam.description && <p className="text-slate-600 mt-2">{exam.description}</p>}
             </div>
-            <div className="p-8 space-y-6">
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-white">{exam.title}</h2>
-              {exam.description && <p className="text-slate-600 dark:text-slate-400">{exam.description}</p>}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 flex flex-col gap-1">
-                  <span className="text-xs uppercase font-bold text-slate-500">Duration</span>
-                  <span className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                    <Clock className="h-5 w-5 text-blue-500" /> {exam.duration_minutes} minutes
-                  </span>
-                </div>
-                <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 flex flex-col gap-1">
-                  <span className="text-xs uppercase font-bold text-slate-500">Questions</span>
-                  <span className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                    <Flag className="h-5 w-5 text-blue-500" /> {questions.length} items
-                  </span>
-                </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border border-slate-300">
+              <div className="p-6 bg-slate-50 border-r border-slate-300 flex flex-col gap-1">
+                <span className="text-xs uppercase font-bold text-slate-500 tracking-widest">Time Allotted</span>
+                <span className="text-2xl font-bold text-slate-900">{exam.duration_minutes} minutes</span>
               </div>
-              <div className="p-5 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/30 text-sm text-blue-800 dark:text-blue-300 space-y-3">
-                <h3 className="font-bold flex items-center gap-2"><AlertCircle className="h-4 w-4" /> Exam Rules & Instructions</h3>
-                <ul className="list-disc pl-5 space-y-1.5 opacity-90 font-medium">
-                  <li>Do not switch tabs or minimize the browser window during the exam.</li>
-                  <li>Ensure your internet connection is stable.</li>
-                  <li>Use keyboard shortcuts (A, B, C, D) to select answers and Arrow Keys to navigate.</li>
-                  <li>The exam will auto-submit when the timer reaches zero.</li>
-                </ul>
+              <div className="p-6 bg-slate-50 flex flex-col gap-1">
+                <span className="text-xs uppercase font-bold text-slate-500 tracking-widest">Total Items</span>
+                <span className="text-2xl font-bold text-slate-900">{questions.length}</span>
               </div>
             </div>
-            <div className="bg-slate-50 dark:bg-slate-900 p-6 border-t border-slate-200 dark:border-white/10 flex justify-end">
-              <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 shadow-lg shadow-blue-500/20" onClick={() => { setStarted(true); startedAt.current = Date.now(); }}>
-                Start Exam <ChevronRight className="h-5 w-5 ml-2" />
-              </Button>
+            
+            <div className="p-6 border-l-4 border-[#0f2c59] bg-[#f8fafc] text-sm text-slate-800 space-y-4 font-medium">
+              <h3 className="font-bold uppercase tracking-widest text-xs flex items-center gap-2"><AlertCircle className="h-4 w-4" /> Non-Disclosure Agreement & Rules</h3>
+              <ul className="list-disc pl-5 space-y-2">
+                <li>By starting this exam, you agree to maintaining strict confidentiality of all test materials.</li>
+                <li>No external aids, materials, or devices are permitted.</li>
+                <li>Your session is actively monitored. Navigating away from this window may result in score invalidation.</li>
+                <li>Use standard keyboard keys (A, B, C, D) for answering. Left/Right arrows for navigation.</li>
+              </ul>
             </div>
-          </Card>
+          </div>
+          <div className="bg-slate-100 p-6 border-t border-slate-300 flex justify-end">
+            <Button size="lg" className="bg-[#0f2c59] hover:bg-[#1a365d] text-white font-bold px-10 rounded-none h-12 uppercase tracking-widest text-sm" onClick={() => { setStarted(true); startedAt.current = Date.now(); }}>
+              Acknowledge & Start
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -336,193 +308,160 @@ new_component = """export default function MockTake() {
   const answeredCount = Object.values(answers).filter(Boolean).length;
   const flaggedCount = flagged.size;
 
-  // REVIEW SCREEN
+  // REVIEW SCREEN - Clinical
   if (showReviewScreen) {
     return (
-      <div className="min-h-screen w-full bg-slate-100 dark:bg-[#070b19] flex flex-col p-4 md:p-8">
-        <Card className="w-full max-w-5xl mx-auto p-6 md:p-10 shadow-2xl border-slate-200/50 dark:border-white/10 bg-white dark:bg-slate-900 rounded-2xl">
-          <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-6 mb-6">
-            <div>
-              <h2 className="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Review Exam</h2>
-              <p className="text-slate-500 text-sm mt-1 font-semibold">Review your answers before final submission.</p>
-            </div>
-            <div className="flex items-center gap-4">
-               <div className="text-center px-6 py-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
-                 <span className="block text-2xl font-black text-slate-900 dark:text-white">{answeredCount}</span>
-                 <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Answered</span>
-               </div>
-               <div className="text-center px-6 py-3 bg-amber-50 dark:bg-amber-500/10 rounded-xl border border-amber-200 dark:border-amber-500/20">
-                 <span className="block text-2xl font-black text-amber-600 dark:text-amber-400">{flaggedCount}</span>
-                 <span className="text-[10px] uppercase font-bold text-amber-600/70 tracking-wider">Marked</span>
-               </div>
-               <div className="text-center px-6 py-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
-                 <span className="block text-2xl font-black text-slate-900 dark:text-white">{questions.length - answeredCount}</span>
-                 <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Unanswered</span>
-               </div>
+      <div className="min-h-screen w-full bg-[#f4f4f4] flex flex-col items-center justify-center p-4 md:p-8 font-sans selection:bg-blue-200">
+        <div className="w-full max-w-5xl bg-white border border-slate-300 shadow-xl rounded-none">
+          <div className="bg-[#0f2c59] p-6 text-white flex justify-between items-center">
+            <h2 className="text-xl font-bold uppercase tracking-widest">Section Review</h2>
+            <div className="font-mono text-xl font-bold tracking-widest bg-white/10 px-4 py-1 border border-white/20">
+              {fmt(timeLeft)}
             </div>
           </div>
           
-          <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 gap-4 mb-8">
-            {questions.map((q, idx) => {
-              const hasAns = !!answers[q.id];
-              const isFlg = flagged.has(q.id);
-              return (
-                <button
-                  key={q.id}
-                  onClick={() => {
-                    setActiveQuestionIndex(idx);
-                    setShowReviewScreen(false);
-                  }}
-                  className={cn(
-                    "aspect-square rounded-xl flex items-center justify-center text-lg font-black border-2 transition-all hover:scale-105",
-                    hasAns && !isFlg ? "bg-emerald-500 border-emerald-500 text-white shadow-md shadow-emerald-500/20" 
-                    : isFlg ? "bg-amber-500 border-amber-500 text-white shadow-md shadow-amber-500/20"
-                    : "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400"
-                  )}
-                >
-                  {q.position}
-                </button>
-              );
-            })}
+          <div className="p-8">
+            <div className="flex items-center gap-8 mb-8 border-b-2 border-slate-200 pb-6">
+              <div className="text-center">
+                <span className="block text-3xl font-bold text-[#166534]">{answeredCount}</span>
+                <span className="text-[10px] uppercase font-bold text-slate-500 tracking-widest">Answered</span>
+              </div>
+              <div className="text-center">
+                <span className="block text-3xl font-bold text-[#ca8a04]">{flaggedCount}</span>
+                <span className="text-[10px] uppercase font-bold text-slate-500 tracking-widest">Marked</span>
+              </div>
+              <div className="text-center">
+                <span className="block text-3xl font-bold text-[#991b1b]">{questions.length - answeredCount}</span>
+                <span className="text-[10px] uppercase font-bold text-slate-500 tracking-widest">Incomplete</span>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 gap-2 mb-8">
+              {questions.map((q, idx) => {
+                const hasAns = !!answers[q.id];
+                const isFlg = flagged.has(q.id);
+                return (
+                  <button
+                    key={q.id}
+                    onClick={() => {
+                      setActiveQuestionIndex(idx);
+                      setShowReviewScreen(false);
+                    }}
+                    className={cn(
+                      "aspect-square flex items-center justify-center text-sm font-bold border rounded-none transition-colors",
+                      hasAns && !isFlg ? "bg-white border-[#166534] text-[#166534] border-2" 
+                      : isFlg ? "bg-white border-[#ca8a04] text-[#ca8a04] border-2"
+                      : "bg-[#f8fafc] border-slate-300 text-slate-500"
+                    )}
+                  >
+                    {q.position}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
-          <div className="flex justify-between items-center bg-slate-50 dark:bg-slate-950 p-6 rounded-2xl border border-slate-200 dark:border-white/10">
-            <Button variant="outline" size="lg" className="rounded-xl font-bold" onClick={() => setShowReviewScreen(false)}>
-              <ChevronLeft className="w-5 h-5 mr-2" /> Return to Exam
+          <div className="flex justify-between items-center bg-slate-100 p-6 border-t border-slate-300">
+            <Button variant="outline" size="lg" className="rounded-none border-2 border-slate-800 font-bold uppercase tracking-widest text-xs" onClick={() => setShowReviewScreen(false)}>
+              <ChevronLeft className="w-4 h-4 mr-2" /> Return
             </Button>
-            <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-10 rounded-xl text-lg h-14" onClick={() => submit(false)}>
-              Submit Exam
+            <Button size="lg" className="bg-[#0f2c59] hover:bg-[#1a365d] text-white font-bold px-10 rounded-none text-xs uppercase tracking-widest" onClick={() => submit(false)}>
+              Submit Final Responses
             </Button>
           </div>
-        </Card>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="w-full min-h-screen bg-white dark:bg-[#070b19] text-slate-900 dark:text-slate-100 flex flex-col overflow-hidden font-sans select-none">
-      {/* 🚀 EXAM COMMAND CENTER HEADER */}
-      <header className={cn(
-        "h-[80px] shrink-0 border-b flex items-center justify-between px-8 sticky top-0 z-40 transition-all duration-300",
-        theme === "dark" ? "bg-[#0B1121] border-slate-800 shadow-lg" : "bg-white border-slate-200 shadow-md"
-      )}>
-        <div className="flex items-center gap-5 w-1/3">
-           <div className="h-12 w-12 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/30">
-             <Shield className="h-7 w-7 text-white" />
-           </div>
-           <div>
-             <h1 className="font-black text-lg md:text-xl leading-tight truncate text-slate-900 dark:text-white tracking-tight">{exam.title}</h1>
-             <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">{exam.type} EXAMINATION</p>
-           </div>
+    <div className="w-full min-h-screen bg-white text-slate-900 flex flex-col font-sans selection:bg-blue-200">
+      
+      {/* EXAM COMMAND CENTER HEADER - Official Blue Bar */}
+      <header className="h-[60px] shrink-0 bg-[#0f2c59] text-white flex items-center justify-between px-6 z-40 border-b border-[#0f2c59]">
+        <div className="flex items-center gap-4">
+           <h1 className="font-bold text-sm uppercase tracking-widest">{exam.title}</h1>
+           <span className="text-[10px] bg-white/10 px-2 py-0.5 border border-white/20 uppercase tracking-widest">{exam.type}</span>
         </div>
 
         {/* TIMER */}
-        <div className="w-1/3 flex justify-center">
+        <div className="flex items-center">
           <div className={cn(
-            "flex items-center justify-center gap-3 px-8 py-2.5 rounded-2xl font-mono text-3xl font-black tracking-[0.15em] transition-colors border-2 shadow-inner",
-            timeLeft < 30 ? "bg-rose-600 text-white border-rose-500" :
-            timeLeft < 60 ? "bg-rose-500 text-white border-rose-400" :
-            timeLeft < 300 ? "bg-amber-500 text-white border-amber-400" :
-            timeLeft < 900 ? "bg-yellow-500 text-white border-yellow-400" :
-            "bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-white border-slate-300 dark:border-slate-700",
-            timeLeft < 30 ? "animate-pulse shadow-[0_0_30px_rgba(225,29,72,0.5)]" : ""
+            "flex items-center justify-center px-6 py-1.5 font-mono text-xl font-bold tracking-[0.1em] border-2",
+            timeLeft < 60 ? "bg-[#991b1b] border-[#ef4444] animate-pulse" :
+            timeLeft < 300 ? "bg-[#ca8a04] border-[#facc15]" :
+            "bg-transparent border-transparent"
           )}>
+            <Clock className="w-4 h-4 mr-2 opacity-50" />
             {fmt(timeLeft)}
           </div>
         </div>
 
-        <div className="w-1/3 flex items-center justify-end gap-6">
-           <div className="flex items-center gap-4 text-sm font-bold uppercase tracking-wider text-slate-500">
-             <div className="flex flex-col items-end">
-               <span className="text-emerald-500 text-lg">{answeredCount}</span>
-               <span className="text-[9px]">Answered</span>
-             </div>
-             <div className="w-px h-8 bg-slate-300 dark:bg-slate-700" />
-             <div className="flex flex-col items-center">
-               <span className="text-amber-500 text-lg">{flaggedCount}</span>
-               <span className="text-[9px]">Flagged</span>
-             </div>
-             <div className="w-px h-8 bg-slate-300 dark:bg-slate-700" />
-             <div className="flex flex-col items-start">
-               <span className="text-slate-400 text-lg">{questions.length - answeredCount}</span>
-               <span className="text-[9px]">Remaining</span>
-             </div>
-           </div>
-           
-           <div className="w-px h-10 bg-slate-200 dark:bg-slate-800 mx-2" />
-           <Button variant="ghost" size="icon" className="rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800" onClick={toggleFullscreen}>
-             {isFullscreen ? <Minimize2 className="h-6 w-6" /> : <Maximize2 className="h-6 w-6" />}
+        <div className="flex items-center gap-4">
+           <Button variant="ghost" size="icon" className="rounded-none hover:bg-white/10" onClick={toggleFullscreen}>
+             {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
            </Button>
-           <Button variant="ghost" size="icon" className="rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800" onClick={() => setShowCalculator(!showCalculator)}>
-             <Calculator className="h-6 w-6" />
-           </Button>
-           <Button className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold px-6 h-12 text-sm uppercase tracking-wider" onClick={handleSubmitRequest}>
-             Finish
+           <Button variant="ghost" size="icon" className="rounded-none hover:bg-white/10" onClick={() => setShowCalculator(!showCalculator)}>
+             <Calculator className="h-4 w-4" />
            </Button>
         </div>
       </header>
 
-      {/* 🧩 QUESTION & PASSAGE AREA */}
-      <main className="flex-1 flex overflow-hidden bg-slate-50 dark:bg-[#070b19]">
-        {/* PASSAGE (if Reading) */}
+      {/* QUESTION AREA */}
+      <main className="flex-1 flex overflow-hidden bg-[#f4f4f4]">
         {isReading && sections[currentQuestion?.section_index] && (sections[currentQuestion?.section_index].passage || sections[currentQuestion?.section_index].imageUrl) && (
-          <div className="w-1/2 h-full overflow-y-auto border-r border-slate-200 dark:border-slate-800 p-8 xl:p-12">
-            <h2 className="text-2xl font-black mb-6 dark:text-white text-slate-900">{sections[currentQuestion.section_index].title}</h2>
+          <div className="w-1/2 h-full overflow-y-auto border-r border-slate-300 p-8 xl:p-12 bg-white">
+            <h2 className="text-xl font-bold mb-6 text-slate-900 uppercase tracking-widest border-b-2 border-slate-800 pb-2">{sections[currentQuestion.section_index].title}</h2>
             {sections[currentQuestion.section_index].imageUrl && (
-              <img src={getFullImageUrl(sections[currentQuestion.section_index].imageUrl)} className="max-w-full rounded-2xl mb-6 shadow-md" />
+              <img src={getFullImageUrl(sections[currentQuestion.section_index].imageUrl)} className="max-w-full border border-slate-300 mb-6" />
             )}
-            <div className="prose dark:prose-invert prose-lg max-w-none text-slate-800 dark:text-slate-200 font-medium leading-relaxed whitespace-pre-wrap">
+            <div className="prose prose-slate max-w-none text-slate-800 font-serif leading-loose text-lg whitespace-pre-wrap">
               {sections[currentQuestion.section_index].passage}
             </div>
           </div>
         )}
 
-        {/* QUESTION AREA (ONLY ONE QUESTION) */}
-        <div className={cn("h-full overflow-y-auto flex flex-col items-center p-8 xl:p-12 relative", isReading ? "w-1/2" : "w-full max-w-4xl mx-auto")}>
+        <div className={cn("h-full overflow-y-auto flex flex-col p-8 xl:p-12 bg-white", isReading ? "w-1/2" : "w-full max-w-5xl mx-auto border-x border-slate-300")}>
           
-          <div className="w-full max-w-3xl flex-1 flex flex-col mt-10">
+          <div className="w-full flex-1 flex flex-col">
             {currentQuestion && (
-              <motion.div 
-                key={currentQuestion.id}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3 }}
-                className="w-full space-y-10"
-              >
+              <div key={currentQuestion.id} className="w-full">
+                
                 {/* QUESTION HEADER */}
-                <div className="flex items-center justify-between border-b-2 border-slate-200 dark:border-slate-800 pb-6">
-                  <div className="flex items-center gap-4">
-                    <div className="h-14 w-14 rounded-2xl bg-slate-900 dark:bg-white flex items-center justify-center text-2xl font-black text-white dark:text-slate-900 shadow-md">
+                <div className="flex items-center justify-between border-b-2 border-[#0f2c59] pb-4 mb-8">
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 bg-[#0f2c59] text-white flex items-center justify-center text-sm font-bold">
                       {currentQuestion.position}
                     </div>
-                    <Badge variant="outline" className="text-xs uppercase font-extrabold px-3 py-1 border-slate-300 dark:border-slate-700 text-slate-500">
-                      {currentQuestion.qtype}
-                    </Badge>
+                    <span className="text-xs font-bold uppercase tracking-widest text-[#0f2c59]">
+                      Item {currentQuestion.position} of {questions.length}
+                    </span>
                   </div>
-                  <Button 
-                    variant="outline" 
-                    size="lg" 
-                    className={cn("rounded-xl font-bold transition-colors border-2", flagged.has(currentQuestion.id) ? "border-amber-500 text-amber-600 bg-amber-50 dark:bg-amber-500/10" : "border-slate-300 dark:border-slate-700 hover:border-amber-500 hover:text-amber-600")}
+                  <button 
+                    className={cn(
+                      "flex items-center text-xs font-bold uppercase tracking-widest px-3 py-1.5 border-2 transition-colors", 
+                      flagged.has(currentQuestion.id) ? "border-[#ca8a04] text-[#ca8a04]" : "border-slate-300 text-slate-500 hover:border-slate-500 hover:text-slate-700"
+                    )}
                     onClick={() => toggleFlag(currentQuestion.id)}
                   >
-                    <Flag className={cn("w-5 h-5 mr-2", flagged.has(currentQuestion.id) ? "fill-current" : "")} /> 
-                    {flagged.has(currentQuestion.id) ? "Marked for Review" : "Mark for Review"}
-                  </Button>
+                    <Bookmark className={cn("w-3 h-3 mr-2", flagged.has(currentQuestion.id) ? "fill-current" : "")} /> 
+                    {flagged.has(currentQuestion.id) ? "Marked" : "Mark"}
+                  </button>
                 </div>
 
                 {/* PROMPT */}
-                <div className="text-2xl md:text-3xl font-semibold leading-relaxed text-slate-900 dark:text-slate-100">
+                <div className="text-xl md:text-2xl font-serif leading-relaxed text-slate-900 mb-8">
                   {currentQuestion.prompt}
                 </div>
 
                 {/* MEDIA */}
                 {currentQuestion.imageUrl && (
-                  <img src={getFullImageUrl(currentQuestion.imageUrl)} className="max-w-full rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm" />
+                  <img src={getFullImageUrl(currentQuestion.imageUrl)} className="max-w-full border border-slate-300 mb-8" />
                 )}
 
                 {/* OPTIONS */}
                 {currentQuestion.options && currentQuestion.options.length > 0 ? (
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {currentQuestion.options.map((opt, oIdx) => {
                       const isSelected = answers[currentQuestion.id] === opt.text;
                       const labels = ['A', 'B', 'C', 'D', 'E', 'F'];
@@ -531,33 +470,25 @@ new_component = """export default function MockTake() {
                           key={opt.id}
                           onClick={() => onAnswer(currentQuestion.id, opt.text)}
                           className={cn(
-                            "w-full text-left p-6 rounded-2xl border-2 transition-all flex items-center gap-6 group relative overflow-hidden",
+                            "w-full text-left p-4 border-2 transition-none flex items-center gap-4 group rounded-none",
                             isSelected 
-                              ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 shadow-[0_8px_30px_rgba(99,102,241,0.15)]" 
-                              : "border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0B1121] hover:border-indigo-300 dark:hover:border-indigo-500/50 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                              ? "border-[#0f2c59] bg-[#f0f4f8]" 
+                              : "border-slate-300 bg-white hover:border-[#0f2c59]"
                           )}
                         >
                           <div className={cn(
-                            "h-12 w-12 rounded-full border-2 flex items-center justify-center font-black text-lg transition-colors shrink-0",
+                            "h-6 w-6 border-2 flex items-center justify-center font-bold text-xs shrink-0 rounded-full",
                             isSelected 
-                              ? "border-indigo-500 bg-indigo-500 text-white" 
-                              : "border-slate-300 dark:border-slate-600 text-slate-500 group-hover:border-indigo-400 group-hover:text-indigo-500"
+                              ? "border-[#0f2c59] bg-[#0f2c59] text-white" 
+                              : "border-slate-400 text-slate-600 group-hover:border-[#0f2c59] group-hover:text-[#0f2c59]"
                           )}>
                             {labels[oIdx]}
                           </div>
                           <div className="flex-1">
-                            {opt.imageUrl && <img src={getFullImageUrl(opt.imageUrl)} className="h-16 object-contain mb-3" />}
-                            <span className={cn("text-xl font-medium", isSelected ? "text-indigo-900 dark:text-indigo-100 font-bold" : "text-slate-700 dark:text-slate-300")}>
+                            {opt.imageUrl && <img src={getFullImageUrl(opt.imageUrl)} className="h-16 object-contain mb-2 border border-slate-200" />}
+                            <span className="text-lg font-serif text-slate-800">
                               {opt.text}
                             </span>
-                          </div>
-                          
-                          {/* Inner Radio Indicator */}
-                          <div className={cn(
-                            "absolute right-6 h-6 w-6 rounded-full border-2 transition-all flex items-center justify-center",
-                            isSelected ? "border-indigo-500" : "border-slate-300 dark:border-slate-600 opacity-0 group-hover:opacity-100"
-                          )}>
-                            {isSelected && <div className="h-3 w-3 bg-indigo-500 rounded-full" />}
                           </div>
                         </button>
                       );
@@ -567,61 +498,41 @@ new_component = """export default function MockTake() {
                   <div className="w-full">
                     <Textarea 
                       rows={6} 
-                      className="w-full p-6 text-xl rounded-2xl border-2 border-slate-200 dark:border-slate-700 focus:border-indigo-500 dark:bg-[#0B1121] resize-none"
-                      placeholder="Type your answer here..."
+                      className="w-full p-4 text-lg font-serif rounded-none border-2 border-slate-300 focus:border-[#0f2c59] resize-none bg-white"
+                      placeholder="Type your response here..."
                       value={answers[currentQuestion.id] || ""}
                       onChange={(e) => onAnswer(currentQuestion.id, e.target.value)}
                     />
                   </div>
                 )}
-              </motion.div>
+              </div>
             )}
           </div>
         </div>
       </main>
 
-      {/* 🧭 PROFESSIONAL EXAM NAVIGATOR */}
-      <footer className="h-[90px] border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B1121] px-8 flex items-center justify-between shrink-0 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] z-40">
+      {/* EXAM NAVIGATOR - Formal Status Bar */}
+      <footer className="h-[70px] bg-slate-100 border-t border-slate-300 flex items-center justify-between px-6 z-40">
         
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-4 w-1/4">
           <Button 
             size="lg" 
             variant="outline" 
             onClick={() => setActiveQuestionIndex(Math.max(0, activeQuestionIndex - 1))}
             disabled={activeQuestionIndex === 0}
-            className="h-14 px-8 rounded-2xl border-2 font-bold text-lg border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"
+            className="rounded-none border-2 border-slate-400 font-bold text-xs uppercase tracking-widest text-slate-700 bg-white"
           >
-            <ArrowLeft className="w-6 h-6 mr-3" /> Previous
+            <ChevronLeft className="w-4 h-4 mr-2" /> Back
           </Button>
         </div>
 
-        {/* Central Bubble Navigator */}
-        <div className="flex-1 max-w-3xl mx-8 overflow-x-auto py-2 hide-scrollbar flex items-center justify-center gap-2.5">
-          {questions.map((q, idx) => {
-            const isCurrent = idx === activeQuestionIndex;
-            const hasAns = !!answers[q.id];
-            const isFlg = flagged.has(q.id);
-            
-            return (
-              <button
-                key={q.id}
-                onClick={() => setActiveQuestionIndex(idx)}
-                className={cn(
-                  "h-12 w-12 shrink-0 rounded-full flex items-center justify-center font-black text-sm transition-all border-2",
-                  isCurrent 
-                    ? "border-purple-600 bg-purple-600 text-white scale-110 shadow-lg shadow-purple-500/30 z-10"
-                    : hasAns 
-                      ? isFlg ? "border-amber-500 bg-amber-500 text-white" : "border-emerald-500 bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400"
-                      : isFlg ? "border-amber-500 text-amber-500" : "border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0B1121] text-slate-500 hover:border-slate-400"
-                )}
-              >
-                {q.position}
-              </button>
-            );
-          })}
+        <div className="flex-1 flex justify-center items-center gap-8 text-xs font-bold uppercase tracking-widest text-slate-500">
+          <span className="text-[#166534]">Answered: {answeredCount}</span>
+          <span className="text-[#ca8a04]">Marked: {flaggedCount}</span>
+          <span className="text-slate-800">Unanswered: {questions.length - answeredCount}</span>
         </div>
 
-        <div className="flex items-center gap-6">
+        <div className="flex items-center justify-end gap-4 w-1/4">
           <Button 
             size="lg" 
             onClick={() => {
@@ -631,18 +542,16 @@ new_component = """export default function MockTake() {
                 setActiveQuestionIndex(Math.min(questions.length - 1, activeQuestionIndex + 1));
               }
             }}
-            className="h-14 px-8 rounded-2xl font-bold text-lg bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/20"
+            className="rounded-none font-bold text-xs uppercase tracking-widest bg-[#0f2c59] hover:bg-[#1a365d] text-white border-2 border-[#0f2c59]"
           >
-            {activeQuestionIndex === questions.length - 1 ? "Review" : "Next"} <ArrowRight className="w-6 h-6 ml-3" />
+            {activeQuestionIndex === questions.length - 1 ? "End Section" : "Next"} <ChevronRight className="w-4 h-4 ml-2" />
           </Button>
         </div>
 
       </footer>
 
-      <AnimatePresence>
-        {showScratchpad && <Scratchpad onClose={() => setShowScratchpad(false)} />}
-        {showCalculator && <div className="fixed bottom-24 left-8 z-[100] shadow-2xl rounded-xl overflow-hidden border border-slate-700"><DesmosCalculator /></div>}
-      </AnimatePresence>
+      {showScratchpad && <Scratchpad onClose={() => setShowScratchpad(false)} />}
+      {showCalculator && <div className="fixed bottom-24 left-8 z-[100] shadow-2xl border-2 border-slate-800"><DesmosCalculator /></div>}
     </div>
   );
 }
