@@ -1,252 +1,376 @@
-import React, { useState } from "react";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle2, XCircle, Clock, Award, Target, Brain, ArrowRight, ChevronDown, ChevronUp, BarChart3, RotateCcw } from "lucide-react";
+import {
+  CheckCircle2, Clock, AlertCircle, Award, Target, ThumbsUp, Lightbulb, BookMarked, ChevronDown, ChevronUp, BrainCircuit, LineChart, FastForward, Timer
+} from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { satScore, milliyScore, scoreLevel, rawToBand } from "@/lib/ielts";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
-import DOMPurify from "dompurify";
-import katex from "katex";
-import "katex/dist/katex.min.css";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
-function processLaTeX(text: string) {
-  if (!text) return "";
-  const parts = text.split(/(\$\$[\s\S]*?\$\$|\$[\s\S]*?\$)/g);
-  return parts.map((part, index) => {
-    if (part.startsWith('$$') && part.endsWith('$$')) {
-      const tex = part.slice(2, -2);
-      try { return <div key={index} dangerouslySetInnerHTML={{ __html: katex.renderToString(tex, { displayMode: true, throwOnError: false }) }} className="my-2" />; } catch { return <span key={index}>{part}</span>; }
-    } else if (part.startsWith('$') && part.endsWith('$')) {
-      const tex = part.slice(1, -1);
-      try { return <span key={index} dangerouslySetInnerHTML={{ __html: katex.renderToString(tex, { displayMode: false, throwOnError: false }) }} />; } catch { return <span key={index}>{part}</span>; }
-    }
-    return <span key={index} dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(part.replace(/\\n/g, '<br/>').replace(/\n/g, '<br/>')) }} />;
-  });
-}
+export function ExamResultDashboard({ result, questions, exam }: { result: any, questions: any[], exam: any }) {
+  const { t } = useTranslation();
+  const [expandedQ, setExpandedQ] = useState<string | null>(null);
 
-export function ExamResultDashboard({ result, questions, onRestart }: any) {
-  const [expandedQuestion, setExpandedQuestion] = useState<string | null>(null);
+  const kind = (result.kind ?? "exam").toLowerCase();
+  const isSat = kind === "sat";
+  const isMilliy = kind === "national_cert" || kind === "milliy";
+  const isIelts = kind === "ielts" || kind === "reading" || kind === "listening";
 
-  // Fallback computations if ai fields are null
-  const coachFeedback = result.aiCoachFeedback ? JSON.parse(result.aiCoachFeedback) : {
-    strengths: ["Time Management", "Answering core questions"],
-    weaknesses: ["Complex word problems", "Reading speed"],
-    recommendedTopics: ["Algebra II", "Advanced Vocabulary"],
-    studyPlan: "Great job completing the exam! You demonstrated a solid foundation. Focus your next 3 study sessions on the recommended topics to push your score even higher."
-  };
-
-  const accuracy = Math.round((result.correct / result.total) * 100);
-  const totalTime = result.timeUsedSeconds || 3600;
+  const totalCount = questions.length || 1;
+  const correctCount = result.correct ?? 0;
   
-  const fmtTime = (s: number) => {
-    const m = Math.floor(s / 60);
-    const secs = s % 60;
-    return m > 0 ? `${m}m ${secs}s` : `${secs}s`;
-  };
+  // Also count skipped. A question is skipped if it has no userAns or userAns is empty.
+  const details = result.detail || [];
+  const wrongCount = details.filter((d: any) => !d.ok && d.userAns).length;
+  const skippedCount = details.filter((d: any) => !d.userAns).length;
+  
+  const accuracy = Math.round((correctCount / Math.max(totalCount, 1)) * 100);
 
-  const timePerQuestion = Math.round(totalTime / result.total);
+  const satPts = satScore(correctCount, totalCount);
+  const milliyPts = milliyScore(correctCount, totalCount);
+  const band = result.bandScore ?? result.band ?? 0;
+  const { color: lvlColor, label: lvlLabel } = scoreLevel(accuracy);
+
+  const elapsedSec = result.elapsedSec ?? 0;
+  const elapsedMin = Math.floor(elapsedSec / 60);
+  const elapsedSecRem = elapsedSec % 60;
+  const timeStr = `${elapsedMin}:${String(elapsedSecRem).padStart(2, "0")}`;
+
+  const avgTimePerQuestion = Math.round(elapsedSec / totalCount);
+  const timeSpentMap = result.timeSpent || {};
+  let fastest = Infinity;
+  let slowest = 0;
+  Object.values(timeSpentMap).forEach((t: any) => {
+    if (t < fastest) fastest = t;
+    if (t > slowest) slowest = t;
+  });
+  if (fastest === Infinity) fastest = 0;
+
+  // Topic Analytics (using qtype as topic for now)
+  const topicStats: Record<string, { correct: number, total: number }> = {};
+  questions.forEach(q => {
+    if (!topicStats[q.qtype]) topicStats[q.qtype] = { correct: 0, total: 0 };
+    topicStats[q.qtype].total += 1;
+  });
+  details.forEach((d: any) => {
+    const q = questions.find(question => question.id === d.questionId);
+    if (q && d.ok) {
+      topicStats[q.qtype].correct += 1;
+    }
+  });
+
+  const getExplanation = (qtype: string, correct: string, user: string) => {
+    const c = `"${correct}"`;
+    if (qtype === "tfng") return `True/False/Not Given savollarida: agar gap matndagi ma'lumotni tasdiqlasa "True", unga butunlay zid bo'lsa "False", matnda bu haqda ma'lumot bo'lmasa "Not Given" bo'ladi. Matnga ko'ra to'g'ri javob ${c} bo'lishi kerak.`;
+    if (qtype === "ynng") return `Yes/No/Not Given savollarida: agar gap muallifning fikriga mos kelsa "Yes", unga qarshi bo'lsa "No", bu haqda muallif fikr bildirmagan bo'lsa "Not Given" bo'ladi. Ushbu savolda to'g'ri javob muallif fikriga ko'ra ${c} deb baholangan.`;
+    if (qtype === "mcq") return `Ko'p variantli savollarda (MCQ) to'g'ri javob varianti matndagi so'zlarning sinonimlari va paraphrase (boshqacha ifodalash) orqali yashiringan bo'ladi. Bu savolda eng to'g'ri variant ${c} hisoblanadi.`;
+    if (qtype === "fill") return `Bo'sh joyni to'ldirishda (Fill in the Blanks) so'z matndagidek harfma-harf aniq va grammatik jihatdan to'g'ri tushishi shart. To'g'ri javob ${c}.`;
+    return `Qisqa javobli savollarda to'g'ri javob matndagi faktlar asosida ${c} qilib belgilangan.`;
+  };
 
   return (
-    <div className="min-h-screen bg-[#f3f4f6] dark:bg-[#070b19] font-sans pb-24">
-      {/* PROFESSIONAL HEADER */}
-      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40 shadow-sm">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-           <div className="flex items-center gap-3">
-             <Award className="w-6 h-6 text-blue-600" />
-             <h1 className="font-bold text-lg text-slate-900 dark:text-white tracking-tight">Official Score Report</h1>
-             <span className="px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded text-xs font-black uppercase text-slate-500">{result.kind}</span>
-           </div>
-           <Button onClick={onRestart} variant="outline" className="font-bold border-slate-200 dark:border-slate-700">
-             <RotateCcw className="w-4 h-4 mr-2" /> Return to Dashboard
-           </Button>
+    <div className="w-full max-w-[1200px] mx-auto space-y-8 pb-20 px-4 md:px-8 mt-8">
+      {/* 🚀 OFFICIAL SCORE REPORT HERO */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="relative z-10">
+        <div className="bg-white dark:bg-[#0B1121] border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden">
+          <div className="bg-slate-900 text-white p-8 md:p-12 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-500/20 rounded-full blur-[100px] translate-x-1/2 -translate-y-1/2" />
+            <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+              <div>
+                <Badge className="bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 mb-4 border-blue-500/30">Official Score Report</Badge>
+                <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-2">{exam?.title || "Exam Result"}</h1>
+                <p className="text-slate-400 text-lg flex items-center gap-2">
+                  <Clock className="w-5 h-5" /> Completed in {timeStr}
+                </p>
+              </div>
+              <div className="text-center bg-white/10 backdrop-blur-md border border-white/20 p-6 rounded-2xl min-w-[200px]">
+                <p className="text-slate-300 text-sm font-bold uppercase tracking-widest mb-2">
+                  {isSat ? "Predicted SAT" : isMilliy ? "Predicted Ball" : isIelts ? "Predicted Band" : "Final Score"}
+                </p>
+                <div className="text-6xl font-black text-white">
+                  {isSat ? satPts : isMilliy ? milliyPts : isIelts ? (band || "0.0") : `${accuracy}%`}
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-slate-200 dark:bg-slate-800">
+            <div className="bg-white dark:bg-[#0B1121] p-6 text-center hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors">
+              <p className="text-slate-500 dark:text-slate-400 text-sm font-bold uppercase tracking-wider mb-2">Accuracy</p>
+              <p className={cn("text-3xl font-black", lvlColor)}>{accuracy}%</p>
+            </div>
+            <div className="bg-white dark:bg-[#0B1121] p-6 text-center hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors">
+              <p className="text-slate-500 dark:text-slate-400 text-sm font-bold uppercase tracking-wider mb-2">Correct</p>
+              <p className="text-3xl font-black text-emerald-500">{correctCount}</p>
+            </div>
+            <div className="bg-white dark:bg-[#0B1121] p-6 text-center hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors">
+              <p className="text-slate-500 dark:text-slate-400 text-sm font-bold uppercase tracking-wider mb-2">Wrong</p>
+              <p className="text-3xl font-black text-rose-500">{wrongCount}</p>
+            </div>
+            <div className="bg-white dark:bg-[#0B1121] p-6 text-center hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors">
+              <p className="text-slate-500 dark:text-slate-400 text-sm font-bold uppercase tracking-wider mb-2">Skipped</p>
+              <p className="text-3xl font-black text-slate-400">{skippedCount}</p>
+            </div>
+          </div>
         </div>
-      </div>
+      </motion.div>
 
-      <div className="max-w-6xl mx-auto px-4 md:px-6 py-8 space-y-8">
-        
-        {/* HERO METRICS */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <Card className="lg:col-span-1 p-8 bg-blue-600 text-white rounded-2xl shadow-xl shadow-blue-600/20 border-0 flex flex-col items-center justify-center text-center relative overflow-hidden">
-             <div className="absolute top-0 right-0 p-3 opacity-10">
-               <Award className="w-32 h-32" />
-             </div>
-             <p className="font-bold uppercase tracking-widest text-blue-200 text-sm mb-2 relative z-10">Predicted Score</p>
-             <h2 className="text-6xl font-black relative z-10 mb-2">{result.predictedScore || (result.bandScore > 0 ? result.bandScore.toFixed(1) : `${result.correct} / ${result.total}`)}</h2>
-             <p className="text-blue-100 font-medium relative z-10">Excellent performance.</p>
-          </Card>
+      <Tabs defaultValue="coach" className="w-full space-y-6 mt-8">
+        <TabsList className="grid w-full grid-cols-4 rounded-xl bg-slate-100 dark:bg-white/5 p-1.5 h-14">
+          <TabsTrigger value="coach" className="rounded-lg font-bold text-xs md:text-sm">AI Coach</TabsTrigger>
+          <TabsTrigger value="questions" className="rounded-lg font-bold text-xs md:text-sm">Questions</TabsTrigger>
+          <TabsTrigger value="topics" className="rounded-lg font-bold text-xs md:text-sm">Topics</TabsTrigger>
+          <TabsTrigger value="time" className="rounded-lg font-bold text-xs md:text-sm">Time</TabsTrigger>
+        </TabsList>
 
-          <Card className="lg:col-span-2 p-8 bg-white dark:bg-slate-900 rounded-2xl shadow-lg border-slate-200 dark:border-slate-800">
-            <h3 className="font-bold text-slate-500 uppercase tracking-widest text-xs mb-6">Exam Statistics</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              <div>
-                <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">Accuracy</p>
-                <p className="text-3xl font-black text-slate-900 dark:text-white mt-1">{accuracy}%</p>
-                <Progress value={accuracy} className="h-1.5 mt-3 bg-slate-100 dark:bg-slate-800" />
+        {/* 🧠 AI COACH */}
+        <TabsContent value="coach" className="space-y-6">
+          <Card className="p-8 border-slate-200 dark:border-white/5 bg-white dark:bg-[#0B1121] shadow-xl rounded-3xl">
+            <div className="flex items-center gap-4 mb-8 border-b border-slate-100 dark:border-white/5 pb-6">
+              <div className="h-12 w-12 rounded-2xl bg-purple-500/10 flex items-center justify-center">
+                <BrainCircuit className="h-6 w-6 text-purple-500" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">Correct</p>
-                <p className="text-3xl font-black text-emerald-600 dark:text-emerald-400 mt-1">{result.correct}</p>
-                <p className="text-xs text-slate-400 mt-2 font-medium">Out of {result.total}</p>
+                <h3 className="text-2xl font-bold text-slate-900 dark:text-white">Performance Analysis</h3>
+                <p className="text-slate-500">Your personalized AI tutor feedback</p>
               </div>
-              <div>
-                <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">Time Used</p>
-                <p className="text-3xl font-black text-slate-900 dark:text-white mt-1">{Math.floor(totalTime/60)}<span className="text-lg">m</span></p>
-                <p className="text-xs text-slate-400 mt-2 font-medium">Avg {timePerQuestion}s / Q</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-6">
+                <div className="p-6 rounded-2xl bg-emerald-500/5 border border-emerald-500/10">
+                  <h4 className="text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider mb-4 flex items-center gap-2">
+                    <ThumbsUp className="w-5 h-5" /> Strengths
+                  </h4>
+                  <ul className="space-y-3 text-sm text-slate-700 dark:text-slate-300 font-medium">
+                    {accuracy >= 80 ? (
+                      <li>Excellent overall accuracy indicating strong foundational knowledge.</li>
+                    ) : accuracy >= 50 ? (
+                      <li>Good understanding of basic concepts.</li>
+                    ) : (
+                      <li>You attempted {totalCount - skippedCount} questions, showing good persistence.</li>
+                    )}
+                    {Object.entries(topicStats).filter(([_, s]) => s.correct / s.total >= 0.7).map(([topic], idx) => (
+                      <li key={idx}>Strong performance in {topic.toUpperCase()} questions.</li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="p-6 rounded-2xl bg-rose-500/5 border border-rose-500/10">
+                  <h4 className="text-rose-600 dark:text-rose-400 font-bold uppercase tracking-wider mb-4 flex items-center gap-2">
+                    <Target className="w-5 h-5" /> Weaknesses
+                  </h4>
+                  <ul className="space-y-3 text-sm text-slate-700 dark:text-slate-300 font-medium">
+                    {skippedCount > 0 && <li>You left {skippedCount} questions unanswered. Always guess if there is no penalty!</li>}
+                    {Object.entries(topicStats).filter(([_, s]) => s.correct / s.total < 0.5).map(([topic], idx) => (
+                      <li key={idx}>Needs improvement in {topic.toUpperCase()} questions.</li>
+                    ))}
+                    {accuracy < 50 && <li>General accuracy is below target. Foundational review required.</li>}
+                  </ul>
+                </div>
               </div>
-              <div>
-                <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">Wrong/Skipped</p>
-                <p className="text-3xl font-black text-rose-500 dark:text-rose-400 mt-1">{result.total - result.correct}</p>
-                <p className="text-xs text-slate-400 mt-2 font-medium">Needs review</p>
+
+              <div className="space-y-6">
+                <div className="p-6 rounded-2xl bg-blue-500/5 border border-blue-500/10 h-full">
+                  <h4 className="text-blue-600 dark:text-blue-400 font-bold uppercase tracking-wider mb-4 flex items-center gap-2">
+                    <BookMarked className="w-5 h-5" /> Study Plan & Next Steps
+                  </h4>
+                  <div className="space-y-4">
+                    <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
+                      Based on your performance, we recommend the following 3-step action plan:
+                    </p>
+                    <ol className="space-y-4">
+                      <li className="flex gap-3">
+                        <span className="h-6 w-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-bold shrink-0">1</span>
+                        <p className="text-sm text-slate-700 dark:text-slate-300 font-medium">Review all {wrongCount} incorrect answers in the Questions tab to understand your mistakes.</p>
+                      </li>
+                      <li className="flex gap-3">
+                        <span className="h-6 w-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-bold shrink-0">2</span>
+                        <p className="text-sm text-slate-700 dark:text-slate-300 font-medium">
+                          Focus your study on {Object.entries(topicStats).filter(([_, s]) => s.correct / s.total < 0.5).map(([t]) => t.toUpperCase()).join(", ") || "core concepts"}.
+                        </p>
+                      </li>
+                      <li className="flex gap-3">
+                        <span className="h-6 w-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-bold shrink-0">3</span>
+                        <p className="text-sm text-slate-700 dark:text-slate-300 font-medium">Take another practice test focusing on time management to improve your {avgTimePerQuestion}s average pace.</p>
+                      </li>
+                    </ol>
+                  </div>
+                </div>
               </div>
             </div>
           </Card>
-        </div>
+        </TabsContent>
 
-        {/* AI COACH SECTION */}
-        <Card className="p-8 bg-white dark:bg-slate-900 rounded-2xl shadow-lg border-slate-200 dark:border-slate-800">
-          <div className="flex items-center gap-3 mb-6">
-             <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center">
-               <Brain className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-             </div>
-             <div>
-               <h2 className="text-xl font-bold text-slate-900 dark:text-white">AI Performance Coach</h2>
-               <p className="text-sm text-slate-500">Personalized feedback based on your exam data</p>
-             </div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-             <div>
-               <h3 className="font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider text-xs mb-4 flex items-center gap-2"><Target className="w-4 h-4" /> Core Strengths</h3>
-               <ul className="space-y-3">
-                 {coachFeedback.strengths.map((s: string, i: number) => (
-                   <li key={i} className="flex items-start gap-3 p-3 bg-emerald-50 dark:bg-emerald-500/5 rounded-xl border border-emerald-100 dark:border-emerald-500/10">
-                     <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
-                     <span className="text-emerald-900 dark:text-emerald-100 text-sm font-medium leading-relaxed">{s}</span>
-                   </li>
-                 ))}
-               </ul>
-             </div>
-             <div>
-               <h3 className="font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider text-xs mb-4 flex items-center gap-2"><BarChart3 className="w-4 h-4" /> Areas for Improvement</h3>
-               <ul className="space-y-3">
-                 {coachFeedback.weaknesses.map((s: string, i: number) => (
-                   <li key={i} className="flex items-start gap-3 p-3 bg-rose-50 dark:bg-rose-500/5 rounded-xl border border-rose-100 dark:border-rose-500/10">
-                     <XCircle className="w-5 h-5 text-rose-500 shrink-0" />
-                     <span className="text-rose-900 dark:text-rose-100 text-sm font-medium leading-relaxed">{s}</span>
-                   </li>
-                 ))}
-               </ul>
-             </div>
-          </div>
-
-          <div className="mt-8 p-6 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
-             <h3 className="font-bold text-slate-800 dark:text-white uppercase tracking-wider text-xs mb-3">Study Plan</h3>
-             <p className="text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
-               {coachFeedback.studyPlan}
-             </p>
-             <div className="mt-4 flex flex-wrap gap-2">
-               <span className="text-xs font-bold text-slate-500 uppercase mr-2">Focus Topics:</span>
-               {coachFeedback.recommendedTopics.map((t: string, i: number) => (
-                 <span key={i} className="px-3 py-1 bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 rounded-full text-xs font-bold">{t}</span>
-               ))}
-             </div>
-          </div>
-        </Card>
-
-        {/* DETAILED QUESTION ANALYSIS */}
-        <div className="mt-12">
-          <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-6 flex items-center gap-3">
-            Question Analysis
-          </h2>
-          
-          <div className="space-y-4">
-             {result.detail.map((d: any, idx: number) => {
-                const qEntity = questions.find((q: any) => q.id === d.questionId);
-                const isExpanded = expandedQuestion === d.questionId;
+        {/* 📝 QUESTION ANALYSIS */}
+        <TabsContent value="questions" className="space-y-4">
+          {details.map((detail: any, idx: number) => {
+            const q = questions.find(question => question.id === detail.questionId);
+            if (!q) return null;
+            
+            const isCorrect = detail.ok;
+            const isSkipped = !detail.userAns;
+            const isExpanded = expandedQ === q.id;
+            
+            const cardColor = isCorrect 
+              ? "border-emerald-500/30 bg-emerald-500/5 hover:border-emerald-500/50" 
+              : isSkipped 
+                ? "border-slate-500/30 bg-slate-500/5 hover:border-slate-500/50"
+                : "border-rose-500/30 bg-rose-500/5 hover:border-rose-500/50";
                 
-                return (
-                  <Card key={d.questionId} className={cn(
-                    "overflow-hidden transition-all duration-300",
-                    isExpanded ? "border-slate-300 dark:border-slate-600 shadow-md" : "border-slate-200 dark:border-slate-800 hover:border-blue-300"
-                  )}>
-                    <div 
-                      className={cn(
-                        "p-4 md:p-6 flex items-center justify-between cursor-pointer",
-                        d.ok ? "bg-emerald-50/50 dark:bg-emerald-900/10" : "bg-rose-50/50 dark:bg-rose-900/10"
-                      )}
-                      onClick={() => setExpandedQuestion(isExpanded ? null : d.questionId)}
-                    >
-                      <div className="flex items-center gap-4 md:gap-6 w-full">
-                        <div className={cn(
-                          "w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-black text-lg shrink-0",
-                          d.ok ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20" : "bg-rose-500 text-white shadow-md shadow-rose-500/20"
-                        )}>
-                          {idx + 1}
-                        </div>
-                        
-                        <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-4 items-center">
-                          <div className="col-span-2 md:col-span-1">
-                             <p className="text-[10px] uppercase font-bold tracking-widest text-slate-400 mb-1">Your Answer</p>
-                             <p className={cn("font-bold truncate", d.ok ? "text-emerald-700 dark:text-emerald-400" : "text-rose-700 dark:text-rose-400")}>
-                               {d.userAns || "— Skipped —"}
-                             </p>
-                          </div>
-                          <div className="col-span-2 md:col-span-1 hidden sm:block">
-                             <p className="text-[10px] uppercase font-bold tracking-widest text-slate-400 mb-1">Correct Answer</p>
-                             <p className="font-bold text-slate-700 dark:text-slate-300 truncate">
-                               {d.correctAns}
-                             </p>
-                          </div>
-                          <div className="hidden md:flex items-center gap-2">
-                             <Clock className="w-4 h-4 text-slate-400" />
-                             <span className="font-bold text-slate-500">{fmtTime(d.timeSpentSeconds || 0)}</span>
-                          </div>
-                        </div>
+            const badgeColor = isCorrect 
+              ? "bg-emerald-500 text-white" 
+              : isSkipped
+                ? "bg-slate-500 text-white"
+                : "bg-rose-500 text-white";
 
-                        <div className="shrink-0 text-slate-400">
-                          {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-                        </div>
-                      </div>
+            return (
+              <Card key={q.id} className={cn("transition-all duration-200 border-2 overflow-hidden", cardColor)}>
+                <div 
+                  className="p-4 md:p-6 cursor-pointer flex items-center justify-between"
+                  onClick={() => setExpandedQ(isExpanded ? null : q.id)}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center font-black text-white shadow-sm", badgeColor)}>
+                      {q.position}
                     </div>
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <Badge variant="outline" className="text-[10px] uppercase font-bold border-slate-300 dark:border-slate-700">{q.qtype}</Badge>
+                        <span className="text-xs font-bold text-slate-500 flex items-center gap-1">
+                          <Clock className="w-3 h-3" /> {(timeSpentMap[q.id] || 0)}s
+                        </span>
+                      </div>
+                      <p className="text-sm md:text-base font-semibold text-slate-800 dark:text-slate-200 line-clamp-1 max-w-[500px]">
+                        {q.prompt}
+                      </p>
+                    </div>
+                  </div>
+                  <div>
+                    {isExpanded ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
+                  </div>
+                </div>
 
-                    <AnimatePresence>
-                      {isExpanded && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: "auto", opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          className="border-t border-slate-200 dark:border-slate-800"
-                        >
-                          <div className="p-6 md:p-8 bg-white dark:bg-slate-900">
-                            {qEntity && (
-                              <div className="mb-8 pb-8 border-b border-slate-100 dark:border-slate-800">
-                                <h4 className="font-bold text-xs uppercase tracking-widest text-slate-400 mb-4">Question Prompt</h4>
-                                <div className="text-lg font-medium text-slate-800 dark:text-slate-200 leading-relaxed">
-                                  {processLaTeX(qEntity.prompt || qEntity.text)}
-                                </div>
-                              </div>
-                            )}
+                <AnimatePresence>
+                  {isExpanded && (
+                    <motion.div 
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="border-t border-slate-200/50 dark:border-white/5 bg-white/50 dark:bg-black/20"
+                    >
+                      <div className="p-6 space-y-6">
+                        <div>
+                          <p className="text-xs uppercase font-extrabold text-slate-500 tracking-wider mb-2">Question</p>
+                          <p className="text-base text-slate-800 dark:text-slate-200 font-medium">{q.prompt}</p>
+                        </div>
 
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+                            <p className="text-[10px] uppercase font-bold text-slate-500 mb-1">Your Answer</p>
+                            <p className={cn("text-base font-bold", isCorrect ? "text-emerald-500" : isSkipped ? "text-slate-500" : "text-rose-500")}>
+                              {detail.userAns || "Skipped"}
+                            </p>
+                          </div>
+                          {!isCorrect && (
+                            <div className="p-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5">
+                              <p className="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400 mb-1">Correct Answer</p>
+                              <p className="text-base font-bold text-emerald-600 dark:text-emerald-400">
+                                {detail.correctAns}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+
+                        {(!isCorrect || q.explanation) && (
+                          <div className="p-5 rounded-xl border border-blue-500/20 bg-blue-500/5 flex gap-4">
+                            <Lightbulb className="w-6 h-6 text-blue-500 shrink-0" />
                             <div>
-                               <h4 className="font-bold text-xs uppercase tracking-widest text-blue-600 mb-4 flex items-center gap-2"><Brain className="w-4 h-4" /> AI Explanation</h4>
-                               <div className="prose prose-slate dark:prose-invert max-w-none prose-p:leading-relaxed prose-p:font-medium">
-                                 {d.aiExplanation ? (
-                                   processLaTeX(d.aiExplanation)
-                                 ) : (
-                                   <p className="text-slate-500 italic">No AI explanation available for this question. (The AI explanation requires the backend `aiExplanation` field to be populated via Gemini).</p>
-                                 )}
-                               </div>
+                              <p className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 tracking-wider mb-2">Teacher's Explanation</p>
+                              <div className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-medium whitespace-pre-wrap">
+                                {q.explanation || getExplanation(q.qtype, detail.correctAns, detail.userAns)}
+                              </div>
                             </div>
                           </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </Card>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </Card>
+            );
+          })}
+        </TabsContent>
+
+        {/* 📊 TOPIC ANALYTICS */}
+        <TabsContent value="topics" className="space-y-6">
+          <Card className="p-8 border-slate-200 dark:border-white/5 bg-white dark:bg-[#0B1121] shadow-xl rounded-3xl">
+            <div className="flex items-center gap-4 mb-8 border-b border-slate-100 dark:border-white/5 pb-6">
+              <div className="h-12 w-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center">
+                <LineChart className="h-6 w-6 text-indigo-500" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-slate-900 dark:text-white">Topic Performance</h3>
+                <p className="text-slate-500">Your accuracy breakdown by question type</p>
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              {Object.entries(topicStats).map(([topic, stat]) => {
+                const pct = Math.round((stat.correct / stat.total) * 100);
+                const color = pct >= 80 ? "bg-emerald-500" : pct >= 50 ? "bg-amber-500" : "bg-rose-500";
+                return (
+                  <div key={topic}>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide text-sm">{topic}</span>
+                      <span className="font-black text-slate-900 dark:text-white">{stat.correct} / {stat.total} <span className="text-slate-400 font-semibold text-xs ml-2">({pct}%)</span></span>
+                    </div>
+                    <div className="h-3 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                      <div className={cn("h-full transition-all duration-1000", color)} style={{ width: `${pct}%` }} />
+                    </div>
+                  </div>
                 );
-             })}
-          </div>
-        </div>
-      </div>
+              })}
+            </div>
+          </Card>
+        </TabsContent>
+
+        {/* ⏱ TIME ANALYTICS */}
+        <TabsContent value="time" className="space-y-6">
+          <Card className="p-8 border-slate-200 dark:border-white/5 bg-white dark:bg-[#0B1121] shadow-xl rounded-3xl">
+            <div className="flex items-center gap-4 mb-8 border-b border-slate-100 dark:border-white/5 pb-6">
+              <div className="h-12 w-12 rounded-2xl bg-amber-500/10 flex items-center justify-center">
+                <Timer className="h-6 w-6 text-amber-500" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-slate-900 dark:text-white">Time Management</h3>
+                <p className="text-slate-500">Analysis of your pacing</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center">
+                <p className="text-slate-500 font-bold uppercase tracking-wider text-xs mb-2">Average Time</p>
+                <p className="text-4xl font-black text-slate-900 dark:text-white">{avgTimePerQuestion}s</p>
+                <p className="text-slate-400 text-xs mt-2 font-medium">per question</p>
+              </div>
+              <div className="p-6 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-center">
+                <FastForward className="w-6 h-6 text-emerald-500 mx-auto mb-2" />
+                <p className="text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider text-xs mb-2">Fastest Answer</p>
+                <p className="text-4xl font-black text-emerald-500">{fastest}s</p>
+              </div>
+              <div className="p-6 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-center">
+                <Clock className="w-6 h-6 text-rose-500 mx-auto mb-2" />
+                <p className="text-rose-600 dark:text-rose-400 font-bold uppercase tracking-wider text-xs mb-2">Slowest Answer</p>
+                <p className="text-4xl font-black text-rose-500">{slowest}s</p>
+              </div>
+            </div>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
