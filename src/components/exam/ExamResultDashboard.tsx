@@ -8,10 +8,12 @@ import {
 import { satScore, milliyScore, scoreLevel, rawToBand } from "@/lib/ielts";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function ExamResultDashboard({ result, questions, exam }: { result: any, questions: any[], exam: any }) {
   const [expandedQ, setExpandedQ] = useState<string | null>(null);
   const nav = useNavigate();
+  const { role } = useAuth();
 
   const kind = (result.kind ?? "exam").toLowerCase();
   const isSat = kind === "sat";
@@ -322,7 +324,7 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
         <div className="p-8 border-t border-slate-300 text-center font-sans">
           <p className="text-xs text-slate-400 uppercase tracking-widest mb-1">End of Official Score Report</p>
           <p className="text-[10px] text-slate-400 mb-8">Secure validation code: {Math.random().toString(36).substring(2, 15).toUpperCase()}</p>
-          <Button size="lg" className="bg-[#0f2c59] hover:bg-[#1a365d] text-white font-bold px-10 rounded-none h-12 uppercase tracking-widest text-sm w-full md:w-auto" onClick={() => nav('/student')}>
+          <Button size="lg" className="bg-[#0f2c59] hover:bg-[#1a365d] text-white font-bold px-10 rounded-none h-12 uppercase tracking-widest text-sm w-full md:w-auto" onClick={() => nav(`/${role || 'student'}`)}>
             Return to Platform
           </Button>
         </div>
