@@ -78,6 +78,7 @@ function translateArrayToUz(arr: any[] | null | undefined): string[] {
 
 export function ExamResultDashboard({ result, questions, exam }: { result: any, questions: any[], exam: any }) {
   const [expandedQ, setExpandedQ] = useState<string | null>(null);
+  const [filterMode, setFilterMode] = useState<'all' | 'correct' | 'incorrect' | 'omitted'>('all');
   const nav = useNavigate();
   const { role } = useAuth();
 
@@ -243,19 +244,51 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
             <p className="text-[10px] font-sans text-slate-400 uppercase text-center border-t border-slate-200 dark:border-slate-800 pt-2 w-full">{tPredictedScore}</p>
           </div>
           <div className="w-full md:w-2/3 grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#140D23]/60 p-4 flex flex-col justify-between transition-colors rounded-xl">
+            <div 
+              onClick={() => setFilterMode('all')}
+              className={cn(
+                "border p-4 flex flex-col justify-between rounded-xl cursor-pointer select-none transition-all duration-300",
+                filterMode === 'all'
+                  ? "border-slate-400 dark:border-slate-500 ring-2 ring-slate-400/50 bg-slate-50 dark:bg-slate-900/60 shadow-inner scale-[1.03]"
+                  : "border-slate-200 dark:border-slate-800 bg-white dark:bg-[#140D23]/60 hover:border-slate-400 dark:hover:border-slate-500"
+              )}
+            >
               <span className="text-[10px] font-sans font-bold text-slate-500 dark:text-slate-400 uppercase">{tTotalQuestions}</span>
               <span className="text-2xl font-bold text-slate-800 dark:text-slate-200">{totalCount}</span>
             </div>
-            <div className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#140D23]/60 p-4 flex flex-col justify-between transition-colors rounded-xl">
+            <div 
+              onClick={() => setFilterMode('correct')}
+              className={cn(
+                "border p-4 flex flex-col justify-between rounded-xl cursor-pointer select-none transition-all duration-300",
+                filterMode === 'correct'
+                  ? "border-emerald-500 dark:border-emerald-400 ring-2 ring-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-950/20 shadow-inner scale-[1.03]"
+                  : "border-slate-200 dark:border-slate-800 bg-white dark:bg-[#140D23]/60 hover:border-emerald-400 dark:hover:border-emerald-500"
+              )}
+            >
               <span className="text-[10px] font-sans font-bold text-[#166534] dark:text-[#22c55e] uppercase">{tCorrect}</span>
               <span className="text-2xl font-bold text-[#166534] dark:text-[#22c55e]">{correctCount}</span>
             </div>
-            <div className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#140D23]/60 p-4 flex flex-col justify-between transition-colors rounded-xl">
+            <div 
+              onClick={() => setFilterMode('incorrect')}
+              className={cn(
+                "border p-4 flex flex-col justify-between rounded-xl cursor-pointer select-none transition-all duration-300",
+                filterMode === 'incorrect'
+                  ? "border-rose-500 dark:border-rose-400 ring-2 ring-rose-500/30 bg-rose-500/5 dark:bg-rose-950/20 shadow-inner scale-[1.03]"
+                  : "border-slate-200 dark:border-slate-800 bg-white dark:bg-[#140D23]/60 hover:border-rose-400 dark:hover:border-rose-500"
+              )}
+            >
               <span className="text-[10px] font-sans font-bold text-[#991b1b] dark:text-[#ef4444] uppercase">{tIncorrect}</span>
               <span className="text-2xl font-bold text-[#991b1b] dark:text-[#ef4444]">{wrongCount}</span>
             </div>
-            <div className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#140D23]/60 p-4 flex flex-col justify-between transition-colors rounded-xl">
+            <div 
+              onClick={() => setFilterMode('omitted')}
+              className={cn(
+                "border p-4 flex flex-col justify-between rounded-xl cursor-pointer select-none transition-all duration-300",
+                filterMode === 'omitted'
+                  ? "border-slate-500 dark:border-slate-400 ring-2 ring-slate-500/30 bg-slate-500/5 dark:bg-slate-950/20 shadow-inner scale-[1.03]"
+                  : "border-slate-200 dark:border-slate-800 bg-white dark:bg-[#140D23]/60 hover:border-slate-450 dark:hover:border-slate-500"
+              )}
+            >
               <span className="text-[10px] font-sans font-bold text-slate-500 dark:text-slate-400 uppercase">{tOmitted}</span>
               <span className="text-2xl font-bold text-slate-800 dark:text-slate-200">{skippedCount}</span>
             </div>
@@ -436,9 +469,28 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
           </div>
 
           <div className="space-y-3 font-sans">
-            {details.map((detail: any, idx: number) => {
-              const q = questions.find(question => question.id === detail.questionId);
-              if (!q) return null;
+            {(() => {
+              const filteredDetails = details.filter((detail: any) => {
+                if (filterMode === 'all') return true;
+                if (filterMode === 'correct') return detail.ok;
+                if (filterMode === 'incorrect') return !detail.ok && detail.userAns;
+                if (filterMode === 'omitted') return !detail.userAns;
+                return true;
+              });
+
+              if (filteredDetails.length === 0) {
+                return (
+                  <div className="text-center py-12 px-4 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl text-slate-500 dark:text-slate-400">
+                    <p className="font-bold text-sm">
+                      {isMilliy ? "Ushbu turdagi savollar mavjud emas." : "No questions match the selected filter."}
+                    </p>
+                  </div>
+                );
+              }
+
+              return filteredDetails.map((detail: any, idx: number) => {
+                const q = questions.find(question => question.id === detail.questionId);
+                if (!q) return null;
               
               const isCorrect = detail.ok;
               const isSkipped = !detail.userAns;
@@ -525,6 +577,7 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                 </div>
               );
             })}
+          })()}
           </div>
         </div>
 
