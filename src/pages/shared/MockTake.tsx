@@ -993,11 +993,20 @@ export default function MockTake() {
             </div>
           </div>
 
-          <div className="flex justify-between items-center bg-slate-100 p-6 border-t border-slate-300">
-            <Button variant="outline" size="lg" className="rounded-none border-2 border-slate-800 font-bold uppercase tracking-widest text-xs" onClick={() => setShowReviewScreen(false)}>
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-0 justify-between items-stretch sm:items-center bg-slate-100 p-4 sm:p-6 border-t border-slate-300">
+            <Button 
+              variant="outline" 
+              size="lg" 
+              className="rounded-none border-2 border-slate-800 font-bold uppercase tracking-widest text-xs w-full sm:w-auto justify-center" 
+              onClick={() => setShowReviewScreen(false)}
+            >
               <ChevronLeft className="w-4 h-4 mr-2" /> Return
             </Button>
-            <Button size="lg" className="bg-[#0f2c59] hover:bg-[#1a365d] text-white font-bold px-10 rounded-none text-xs uppercase tracking-widest" onClick={() => submit(false)}>
+            <Button 
+              size="lg" 
+              className="bg-[#0f2c59] hover:bg-[#1a365d] text-white font-bold px-4 sm:px-10 rounded-none text-xs uppercase tracking-widest w-full sm:w-auto justify-center" 
+              onClick={() => submit(false)}
+            >
               Submit Final Responses
             </Button>
           </div>

@@ -1,17 +1,32 @@
 import React from 'react';
 import { useAdventureStore } from '@/store/useAdventureStore';
-import { Trophy, Medal } from 'lucide-react';
+import { Trophy, Medal, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-export const LeaderboardSidebar: React.FC = () => {
+interface LeaderboardSidebarProps {
+  onClose?: () => void;
+}
+
+export const LeaderboardSidebar: React.FC<LeaderboardSidebarProps> = ({ onClose }) => {
   const { leaderboard } = useAdventureStore();
   const { t } = useTranslation();
 
   return (
     <div className="w-full h-full bg-white/90 backdrop-blur-xl border-l border-slate-200 dark:border-white/10 p-6 flex flex-col shadow-[-10px_0_30px_-15px_rgba(0,0,0,0.1)] dark:shadow-[-10px_0_30px_-15px_rgba(0,0,0,0.5)] dark:bg-[#140D23]/90 z-50 overflow-hidden">
-      <div className="flex items-center gap-3 mb-4 shrink-0">
-        <Trophy className="w-6 h-6 text-yellow-500" />
-        <h2 className="text-xl font-bold text-slate-800 dark:text-white">{t('gamification.globalTravelers', 'Global Sayohatchilar')}</h2>
+      <div className="flex items-center justify-between mb-4 shrink-0">
+        <div className="flex items-center gap-3">
+          <Trophy className="w-6 h-6 text-yellow-500" />
+          <h2 className="text-xl font-bold text-slate-800 dark:text-white">{t('gamification.globalTravelers', 'Global Sayohatchilar')}</h2>
+        </div>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="md:hidden p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/10 text-slate-500 dark:text-slate-400 transition-colors"
+            aria-label="Close"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        )}
       </div>
 
       <div className="mb-6 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800/50 shrink-0">
