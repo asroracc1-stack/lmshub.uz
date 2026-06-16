@@ -190,9 +190,15 @@ api.interceptors.response.use(
 
     // Agar 401 Unauthorized xatosi kelsa, foydalanuvchini tizimdan chiqarish mumkin
     if (error.response && error.response.status === 401) {
-      console.error('Unauthorized, logging out...');
-      // localStorage.removeItem('accessToken');
-      // window.location.href = '/login'; // Login sahifasiga yo'naltirish
+      const url = error.config?.url || '';
+      if (!url.includes('/auth/')) {
+        console.error('Unauthorized, logging out...');
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('smart-clock-settings');
+        localStorage.removeItem('sidebar_collapsed_admin');
+        window.location.href = '/auth';
+      }
     }
     return Promise.reject(error);
   }

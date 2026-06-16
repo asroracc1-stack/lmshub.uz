@@ -485,7 +485,19 @@ export default function RoleLayout({
             </div>
 
             <div className="flex items-center gap-2 md:gap-4 h-full py-2">
-              <SmartClock />
+              <div className="hidden sm:block">
+                <SmartClock />
+              </div>
+
+              {/* Mobile Coins: visible in place of clock on mobile */}
+              <div 
+                className="flex sm:hidden items-center gap-1.5 px-2.5 py-1.5 rounded-full border border-border/60 bg-white/50 dark:bg-slate-900/50 shadow-sm cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                onClick={() => navigate(`${basePath}/achievements`)}
+                title="Sizning tangalaringiz"
+              >
+                <CircleDollarSign className="w-4 h-4 text-emerald-500" />
+                <span className="text-[12px] font-bold text-slate-800 dark:text-slate-200">{profile?.coins || 0}</span>
+              </div>
 
               {/* Gamification Stats */}
               <div className="hidden sm:flex items-center gap-2 px-1">

@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import { X, Calculator, GripHorizontal } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -10,15 +10,33 @@ export default function DesmosCalculator({ isOpen, onClose }: { isOpen: boolean;
   const resizing = useRef(false);
   const resizeStart = useRef({ x: 0, y: 0, w: 550, h: 420 });
 
+  useEffect(() => {
+    const updateSizeForScreen = () => {
+      if (window.innerWidth < 640) {
+        setSize({
+          w: Math.min(550, window.innerWidth - 24),
+          h: Math.min(420, window.innerHeight - 140),
+        });
+      } else {
+        setSize({ w: 550, h: 420 });
+      }
+    };
+    updateSizeForScreen();
+    window.addEventListener("resize", updateSizeForScreen);
+    return () => window.removeEventListener("resize", updateSizeForScreen);
+  }, []);
+
   const onResizeMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     resizing.current = true;
     resizeStart.current = { x: e.clientX, y: e.clientY, w: size.w, h: size.h };
     const onMove = (ev: MouseEvent) => {
       if (!resizing.current) return;
+      const maxW = window.innerWidth - 24;
+      const maxH = window.innerHeight - 140;
       setSize({
-        w: Math.max(320, resizeStart.current.w + ev.clientX - resizeStart.current.x),
-        h: Math.max(300, resizeStart.current.h + ev.clientY - resizeStart.current.y),
+        w: Math.min(maxW, Math.max(300, resizeStart.current.w + ev.clientX - resizeStart.current.x)),
+        h: Math.min(maxH, Math.max(250, resizeStart.current.h + ev.clientY - resizeStart.current.y)),
       });
     };
     const onUp = () => {
@@ -38,7 +56,7 @@ export default function DesmosCalculator({ isOpen, onClose }: { isOpen: boolean;
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 50, scale: 0.95 }}
           style={{ width: size.w, height: size.h }}
-          className="fixed bottom-24 right-4 md:right-8 bg-white/97 dark:bg-slate-900/97 backdrop-blur-xl rounded-3xl shadow-[0_20px_60px_-12px_rgba(0,0,0,0.3)] border border-slate-200/80 dark:border-white/10 z-50 overflow-hidden flex flex-col select-none"
+          className="fixed bottom-20 right-3 sm:right-4 md:right-8 bg-white/97 dark:bg-slate-900/97 backdrop-blur-xl rounded-3xl shadow-[0_20px_60px_-12px_rgba(0,0,0,0.3)] border border-slate-200/80 dark:border-white/10 z-50 overflow-hidden flex flex-col select-none max-w-[calc(100vw-24px)] max-h-[calc(100vh-120px)]"
         >
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-200 dark:border-white/5 bg-slate-50/60 dark:bg-slate-950/60 shrink-0">

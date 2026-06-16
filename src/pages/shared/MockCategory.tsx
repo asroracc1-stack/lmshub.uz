@@ -326,9 +326,9 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
                       </div>
                     )}
 
-                    <div className="p-5 md:p-6 flex items-center justify-between gap-4 flex-wrap">
+                    <div className="p-5 md:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       {/* Left: info */}
-                      <div className="flex-1 min-w-0 space-y-3">
+                      <div className="flex-1 min-w-0 space-y-3 w-full">
                         <div className="flex items-center gap-3 flex-wrap">
                           <h3 className={cn("font-display font-bold text-xl md:text-2xl", meta.color)}>
                             {test.title}
@@ -372,7 +372,7 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
                       </div>
 
                       {/* Right: actions */}
-                      <div className="flex items-center gap-2 flex-wrap justify-end shrink-0">
+                      <div className="flex items-center gap-2 flex-wrap justify-end shrink-0 w-full sm:w-auto mt-2 sm:mt-0">
                         {/* Admin controls */}
                         {canManage && (
                           <>
@@ -413,7 +413,7 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
                         {isLocked ? (
                           <Button
                             size="lg"
-                            className={cn("rounded-xl h-11 px-6 font-bold text-sm transition-all duration-300 opacity-90", theme.button)}
+                            className={cn("rounded-xl h-11 px-6 font-bold text-sm transition-all duration-300 opacity-90 w-full sm:w-auto justify-center", theme.button)}
                             onClick={() => nav(getPacksPath())}
                           >
                             {t("mockCategory.tryBtn")} <Lock className="h-4 w-4 ml-1.5" />
@@ -424,7 +424,7 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
                               asChild
                               size="lg"
                               variant="outline"
-                              className="rounded-xl h-11 px-6 font-bold text-sm transition-all duration-300 border-emerald-500 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/20"
+                              className="rounded-xl h-11 px-6 font-bold text-sm transition-all duration-300 border-emerald-500 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 w-full sm:w-auto flex-1 sm:flex-none justify-center"
                             >
                               <Link to={`${basePath}/mocks/take/${test.id}?review=true`}>
                                 {t("mockCategory.reviewBtn")}
@@ -432,7 +432,7 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
                             </Button>
                             <Button
                               size="lg"
-                              className="rounded-xl h-11 px-6 font-bold text-sm transition-all duration-300 bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/25"
+                              className="rounded-xl h-11 px-6 font-bold text-sm transition-all duration-300 bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/25 w-full sm:w-auto flex-1 sm:flex-none justify-center"
                               onClick={async () => {
                                 try {
                                   await api.delete(`/student/exams/${test.id}/attempt`);
@@ -451,7 +451,7 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
                             asChild
                             size="lg"
                             className={cn(
-                              "rounded-xl h-11 px-6 font-bold text-sm transition-all duration-300",
+                              "rounded-xl h-11 px-6 font-bold text-sm transition-all duration-300 w-full sm:w-auto justify-center",
                               canManage
                                 ? "bg-slate-800 hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 text-white"
                                 : theme.button
