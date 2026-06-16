@@ -22,6 +22,9 @@ export default function GoogleSignInButton({ label = "Google orqali kirish", cla
 
     localStorage.setItem("access_token", access_token);
     localStorage.setItem("user", JSON.stringify(userData));
+    if (userData.isFirstLogin) {
+      localStorage.setItem("show_first_login_coins_modal", "true");
+    }
     setAuth(access_token, userData);
 
     window.location.href = "/user/dashboard";

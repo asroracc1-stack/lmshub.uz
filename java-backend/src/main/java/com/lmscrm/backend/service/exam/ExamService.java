@@ -290,10 +290,7 @@ public class ExamService {
         String kind = exam.getType().name().toLowerCase();
         double band = IeltsGradingUtils.rawToBand(kind, correctCount, questions.size());
         
-        String aiCoachFeedback = null;
-        String predictedScore = null;
-        JsonNode explanationsNode = null;
-        
+        String examDataJson = "";
         try {
             // Build JSON for Gemini
             java.util.Map<String, Object> examDataMap = new java.util.HashMap<>();
@@ -312,29 +309,9 @@ public class ExamService {
             }
             examDataMap.put("questions", qDataList);
             
-            String examDataJson = objectMapper.writeValueAsString(examDataMap);
-            String reviewResult = geminiService.generateExamReview(examDataJson);
-            
-            if (reviewResult != null) {
-                JsonNode root = objectMapper.readTree(reviewResult);
-                if (root.has("coachFeedback")) {
-                    aiCoachFeedback = objectMapper.writeValueAsString(root.get("coachFeedback"));
-                }
-                if (root.has("predictedScore")) {
-                    predictedScore = root.get("predictedScore").asText();
-                }
-                if (root.has("explanations")) {
-                    explanationsNode = root.get("explanations");
-                    // populate details with explanations
-                    for (ExamResultDto.QuestionDetail d : details) {
-                        if (explanationsNode.has(d.getQuestionId())) {
-                            d.setAiExplanation(explanationsNode.get(d.getQuestionId()).asText());
-                        }
-                    }
-                }
-            }
+            examDataJson = objectMapper.writeValueAsString(examDataMap);
         } catch (Exception e) {
-            org.slf4j.LoggerFactory.getLogger(ExamService.class).error("Failed to generate AI review: ", e);
+            org.slf4j.LoggerFactory.getLogger(ExamService.class).error("Failed to build exam JSON: ", e);
         }
 
         if (user != null) {
@@ -355,8 +332,8 @@ public class ExamService {
             attempt.setIsPassed(correctCount >= exam.getPassingScore());
             attempt.setOverallBand(band);
             attempt.setTimeUsedSeconds((int) totalTimeSpent);
-            attempt.setAiCoachFeedback(aiCoachFeedback);
-            attempt.setPredictedScore(predictedScore);
+            attempt.setAiCoachFeedback(null);
+            attempt.setPredictedScore(null);
             attempt.setAutoSubmitted(request.getAuto_submitted() != null ? request.getAuto_submitted() : false);
             attempt = studentAttemptRepository.save(attempt);
 
@@ -377,7 +354,6 @@ public class ExamService {
                 String userAns = request.getAnswers().get(q.getId().toString());
                 List<QuestionOption> options = optionRepository.findByQuestionIdOrderByPositionOrderAsc(q.getId());
                 Long timeSpent = request.getTime_spent() != null ? request.getTime_spent().getOrDefault(q.getId().toString(), 0L) : 0L;
-                String aiExpl = explanationsNode != null && explanationsNode.has(q.getId().toString()) ? explanationsNode.get(q.getId().toString()).asText() : null;
                 
                 QuestionOption selectedOption = null;
                 if (userAns != null && !userAns.trim().isEmpty()) {
@@ -402,9 +378,17 @@ public class ExamService {
                         .isCorrect(isCorrect)
                         .pointsEarned(isCorrect ? q.getPoints() : 0)
                         .timeSpentSeconds(timeSpent.intValue())
-                        .aiExplanation(aiExpl)
+                        .aiExplanation(null)
                         .build();
                 studentAnswerRepository.save(answer);
+            }
+
+            if (!examDataJson.isEmpty()) {
+                final UUID finalAttemptId = attempt.getId();
+                final String finalExamDataJson = examDataJson;
+                java.util.concurrent.CompletableFuture.runAsync(() -> {
+                    updateAttemptWithAiFeedback(finalAttemptId, finalExamDataJson);
+                });
             }
         }
 
@@ -415,8 +399,8 @@ public class ExamService {
                 .bandScore(band)
                 .detail(details)
                 .timeUsedSeconds((int)totalTimeSpent)
-                .aiCoachFeedback(aiCoachFeedback)
-                .predictedScore(predictedScore)
+                .aiCoachFeedback(null)
+                .predictedScore(null)
                 .autoSubmitted(request.getAuto_submitted())
                 .violations(request.getViolations())
                 .build();
@@ -484,5 +468,42 @@ public class ExamService {
                         .details(v.getDetails())
                         .build()).collect(Collectors.toList()))
                 .build();
+    }
+
+    public void updateAttemptWithAiFeedback(UUID attemptId, String examDataJson) {
+        try {
+            String reviewResult = geminiService.generateExamReview(examDataJson);
+            if (reviewResult != null) {
+                StudentAttempt attempt = studentAttemptRepository.findById(attemptId).orElse(null);
+                if (attempt == null) return;
+
+                JsonNode root = objectMapper.readTree(reviewResult);
+                String aiCoachFeedback = null;
+                String predictedScore = null;
+                if (root.has("coachFeedback")) {
+                    aiCoachFeedback = objectMapper.writeValueAsString(root.get("coachFeedback"));
+                }
+                if (root.has("predictedScore")) {
+                    predictedScore = root.get("predictedScore").asText();
+                }
+                attempt.setAiCoachFeedback(aiCoachFeedback);
+                attempt.setPredictedScore(predictedScore);
+                studentAttemptRepository.save(attempt);
+
+                if (root.has("explanations")) {
+                    JsonNode explanationsNode = root.get("explanations");
+                    List<StudentAnswer> answers = studentAnswerRepository.findByAttemptId(attemptId);
+                    for (StudentAnswer answer : answers) {
+                        String qId = answer.getQuestion().getId().toString();
+                        if (explanationsNode.has(qId)) {
+                            answer.setAiExplanation(explanationsNode.get(qId).asText());
+                            studentAnswerRepository.save(answer);
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            org.slf4j.LoggerFactory.getLogger(ExamService.class).error("Failed to generate and save AI review asynchronously: ", e);
+        }
     }
 }

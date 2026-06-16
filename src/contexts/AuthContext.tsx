@@ -35,6 +35,7 @@ interface User {
   organizationId?: string | null;
   organization_id?: string | null;
   phone?: string | null;
+  isFirstLogin?: boolean;
 }
 
 interface Session {
@@ -206,6 +207,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
     initAuth();
   }, []);
+
+  useEffect(() => {
+    if (!session) return;
+    const interval = setInterval(() => {
+      refresh();
+    }, 15000);
+    return () => clearInterval(interval);
+  }, [session]);
 
   return (
     <AuthContext.Provider value={{ session, user, profile, role, loading, signOut, refresh, setAuth }}>

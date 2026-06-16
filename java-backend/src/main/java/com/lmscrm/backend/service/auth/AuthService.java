@@ -82,9 +82,12 @@ public class AuthService {
             user.setLastLoginAt(LocalDateTime.now());
             userRepository.save(user);
             Profile profile = getOrCreateProfile(user);
-            return buildLoginResponse(jwt, user, profile);
+            return buildLoginResponse(jwt, user, profile, false);
         } catch (BadCredentialsException e) {
             throw e;
+        } catch (org.springframework.security.authentication.DisabledException e) {
+            log.error("❌ Login failed: account is disabled for {}", loginRequest.getUsernameOrEmail());
+            throw new BadCredentialsException("Foydalanuvchi bloklangan");
         } catch (Exception e) {
             log.error("❌ Login failed for {}: {}", loginRequest.getUsernameOrEmail(), e.getMessage(), e);
             throw new BadCredentialsException("Username yoki parol xato");
@@ -140,7 +143,9 @@ public class AuthService {
             final String finalPicture = picture;
 
             // Step 2: User Creation
+            final boolean[] isNew = {false};
             User user = userRepository.findByEmail(finalEmail).orElseGet(() -> {
+                isNew[0] = true;
                 String baseUname = finalEmail.split("@")[0];
                 String finalUname = baseUname;
                 int count = 1;
@@ -157,14 +162,20 @@ public class AuthService {
                         .avatarUrl(finalPicture)
                         .fullName(finalName)
                         .createdAt(LocalDateTime.now())
-                        .coins(0L)
+                        .coins(10L)
                         .build();
             });
+
+            if (user != null && !user.isEnabled()) {
+                throw new BadCredentialsException("Foydalanuvchi bloklangan");
+            }
 
             user.setLastLoginAt(LocalDateTime.now());
             user.setIsGoogleUser(true);
             user.setRole(AppRole.USER);
-            if (finalPicture != null) user.setAvatarUrl(finalPicture);
+            if (finalPicture != null && (user.getAvatarUrl() == null || user.getAvatarUrl().trim().isEmpty() || user.getAvatarUrl().startsWith("https://lh3.googleusercontent.com/"))) {
+                user.setAvatarUrl(finalPicture);
+            }
             // Save User first
             final User finalSavedUser = userRepository.save(user);
 
@@ -192,7 +203,7 @@ public class AuthService {
             String jwt = tokenProvider.generateToken(auth);
 
             log.info("✅ [Google Auth] Login SUCCESS for {}", finalEmail);
-            return buildLoginResponse(jwt, fullySavedUser, profile);
+            return buildLoginResponse(jwt, fullySavedUser, profile, isNew[0]);
 
         } catch (Throwable t) {
             log.error("💥 [Google Auth] CRITICAL ERROR: ", t);
@@ -220,11 +231,13 @@ public class AuthService {
             throw new IllegalArgumentException("Parollar mos kelmadi");
         }
 
+        boolean isNew = false;
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseGet(() -> userRepository.findByUsername(request.getUsername().toLowerCase(java.util.Locale.ENGLISH))
                 .orElse(null));
 
         if (user == null) {
+            isNew = true;
             user = User.builder()
                     .email(request.getEmail())
                     .username(request.getUsername() != null ? request.getUsername().toLowerCase(java.util.Locale.ENGLISH).trim() : null)
@@ -234,6 +247,7 @@ public class AuthService {
                     .role(AppRole.USER)
                     .active(true)
                     .createdAt(LocalDateTime.now())
+                    .coins(10L)
                     .build();
             user = userRepository.save(user);
             
@@ -261,13 +275,17 @@ public class AuthService {
             profile = profileRepository.save(profile);
             user.setProfile(profile);
             userRepository.save(user);
+        } else {
+            if (!user.isEnabled()) {
+                throw new BadCredentialsException("Foydalanuvchi bloklangan");
+            }
         }
 
         Authentication auth = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(auth);
         String jwt = tokenProvider.generateToken(auth);
         
-        return buildLoginResponse(jwt, user, getOrCreateProfile(user));
+        return buildLoginResponse(jwt, user, getOrCreateProfile(user), isNew);
     }
 
     private Profile getOrCreateProfile(User user) {
@@ -284,7 +302,7 @@ public class AuthService {
         });
     }
 
-    private LoginResponse buildLoginResponse(String jwt, User user, Profile profile) {
+    private LoginResponse buildLoginResponse(String jwt, User user, Profile profile, boolean isFirstLogin) {
         return LoginResponse.builder()
                 .accessToken(jwt)
                 .tokenType("Bearer")
@@ -297,6 +315,7 @@ public class AuthService {
                         .firstName(profile != null ? profile.getFirstName() : user.getUsername())
                         .lastName(profile != null ? profile.getLastName() : "")
                         .organizationId(user.getOrganizationId())
+                        .isFirstLogin(isFirstLogin)
                         .build())
                 .build();
     }
@@ -352,6 +371,6 @@ public class AuthService {
         SecurityContextHolder.getContext().setAuthentication(auth);
         String jwt = tokenProvider.generateToken(auth);
 
-        return buildLoginResponse(jwt, saved, profile);
+        return buildLoginResponse(jwt, saved, profile, false);
     }
 }

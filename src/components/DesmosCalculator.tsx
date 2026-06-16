@@ -4,8 +4,8 @@ import { Button } from "./ui/button";
 import { X, Calculator, GripHorizontal } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
-export default function DesmosCalculator({
-  const { t } = useTranslation(); isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+export default function DesmosCalculator({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  const { t } = useTranslation();
   const [size, setSize] = useState({ w: 550, h: 420 });
   const resizing = useRef(false);
   const resizeStart = useRef({ x: 0, y: 0, w: 550, h: 420 });

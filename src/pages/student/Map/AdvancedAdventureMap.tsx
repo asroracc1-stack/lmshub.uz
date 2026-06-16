@@ -23,7 +23,7 @@ const AdvancedAdventureMap: React.FC = () => {
     <div className="relative w-full h-[calc(100vh-8.5rem)] min-h-[500px] rounded-[16px] flex flex-col md:flex-row overflow-hidden bg-slate-50 dark:bg-[#140D23]">
       
       {/* Mobile Header / Top Bar */}
-      <div className="absolute top-4 left-4 right-4 md:top-6 md:left-6 z-10 flex justify-between gap-2 md:gap-4 pointer-events-none">
+      <div className="absolute top-4 left-4 right-4 md:top-6 md:left-6 z-50 flex justify-between gap-2 md:gap-4 pointer-events-none">
         <div className="flex gap-2 md:gap-4 pointer-events-auto">
           <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md px-4 py-2 md:px-6 md:py-3 rounded-2xl shadow-lg border border-white/20">
             <p className="text-[10px] md:text-xs font-bold text-slate-500 uppercase tracking-wider">{t('gamification.travelPoints', 'Travel Points')}</p>
@@ -52,6 +52,14 @@ const AdvancedAdventureMap: React.FC = () => {
       <div className="flex-1 relative h-full">
         <MapCanvas />
       </div>
+
+      {/* Mobile Overlay */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/40 z-30 md:hidden transition-opacity"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
 
       {/* Leaderboard Sidebar - Responsive */}
       <div className={`

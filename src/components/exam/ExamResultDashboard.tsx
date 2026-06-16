@@ -3,27 +3,80 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import {
-  CheckCircle2, Clock, AlertCircle, ChevronDown, ChevronUp, BrainCircuit, LineChart, FastForward, Timer, XCircle, PlayCircle, BarChart3, Bookmark, FileText, ChevronRight, ShieldAlert, ShieldCheck, History, Target
+  CheckCircle2, Clock, AlertCircle, ChevronDown, ChevronUp, BrainCircuit, LineChart, FastForward, Timer, XCircle, PlayCircle, BarChart3, Bookmark, FileText, ChevronRight, ShieldAlert, ShieldCheck, History, Target, Loader2
 } from "lucide-react";
 import { satScore, milliyScore, scoreLevel, rawToBand } from "@/lib/ielts";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import DOMPurify from "dompurify";
+import katex from "katex";
+import "katex/dist/katex.min.css";
+import { api } from "@/lib/axios";
+
+function processLaTeX(text: string) {
+  if (!text) return "";
+  const parts = text.split(/(\$\$[\s\S]*?\ExternalString|[\s\S]*?\$)/g); // using standard split logic from .bak
+  // Let's refine split regex to match backup file's exact regex: text.split(/(\$\$[\s\S]*?\$\$|\$[\s\S]*?\$)/g)
+  const partsRegex = text.split(/(\$\$[\s\S]*?\$\$|\$[\s\S]*?\$)/g);
+  return partsRegex.map((part, index) => {
+    if (part.startsWith('$$') && part.endsWith('$$')) {
+      const tex = part.slice(2, -2);
+      try { return <div key={index} dangerouslySetInnerHTML={{ __html: katex.renderToString(tex, { displayMode: true, throwOnError: false }) }} className="my-2" />; } catch { return <span key={index}>{part}</span>; }
+    } else if (part.startsWith('$') && part.endsWith('$')) {
+      const tex = part.slice(1, -1);
+      try { return <span key={index} dangerouslySetInnerHTML={{ __html: katex.renderToString(tex, { displayMode: false, throwOnError: false }) }} />; } catch { return <span key={index}>{part}</span>; }
+    }
+    return <span key={index} dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(part.replace(/\\n/g, '<br/>').replace(/\n/g, '<br/>')) }} />;
+  });
+}
 
 export function ExamResultDashboard({ result, questions, exam }: { result: any, questions: any[], exam: any }) {
   const [expandedQ, setExpandedQ] = useState<string | null>(null);
   const nav = useNavigate();
   const { role } = useAuth();
 
-  const kind = (result.kind ?? "exam").toLowerCase();
+  const [currentResult, setCurrentResult] = useState(result);
+
+  useEffect(() => {
+    if (currentResult?.aiCoachFeedback) return;
+
+    let intervalId: any;
+    
+    const pollResult = async () => {
+      try {
+        const res = await api.get(`/student/exams/${exam?.id}/result`);
+        if (res.data && res.data.aiCoachFeedback) {
+          setCurrentResult((prev: any) => ({
+            ...prev,
+            aiCoachFeedback: res.data.aiCoachFeedback,
+            predictedScore: res.data.predictedScore,
+            detail: prev.detail.map((d: any) => {
+              const freshDetail = res.data.detail?.find((fd: any) => fd.questionId === d.questionId);
+              return freshDetail ? { ...d, aiExplanation: freshDetail.aiExplanation } : d;
+            })
+          }));
+          clearInterval(intervalId);
+        }
+      } catch (e) {
+        console.error("Error polling exam result:", e);
+      }
+    };
+
+    intervalId = setInterval(pollResult, 3000);
+
+    return () => clearInterval(intervalId);
+  }, [exam?.id, currentResult?.aiCoachFeedback]);
+
+  const kind = (currentResult.kind ?? "exam").toLowerCase();
   const isSat = kind === "sat";
   const isMilliy = kind === "national_cert" || kind === "milliy";
   const isIelts = kind === "ielts" || kind === "reading" || kind === "listening";
 
   const totalCount = questions.length || 1;
-  const correctCount = result.correct ?? 0;
+  const correctCount = currentResult.correct ?? 0;
   
-  const details = result.detail || [];
+  const details = currentResult.detail || [];
   const wrongCount = details.filter((d: any) => !d.ok && d.userAns).length;
   const skippedCount = details.filter((d: any) => !d.userAns).length;
   
@@ -31,15 +84,15 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
 
   const satPts = satScore(correctCount, totalCount);
   const milliyPts = milliyScore(correctCount, totalCount);
-  const band = result.bandScore ?? result.band ?? 0;
+  const band = currentResult.bandScore ?? currentResult.band ?? 0;
 
-  const elapsedSec = result.elapsedSec ?? 0;
+  const elapsedSec = currentResult.timeUsedSeconds ?? currentResult.elapsedSec ?? 0;
   const elapsedMin = Math.floor(elapsedSec / 60);
   const elapsedSecRem = elapsedSec % 60;
   const timeStr = `${elapsedMin}m ${elapsedSecRem}s`;
 
   const avgTimePerQuestion = Math.round(elapsedSec / totalCount);
-  const timeSpentMap = result.timeSpent || {};
+  const timeSpentMap = currentResult.timeSpent || {};
   let fastest = Infinity;
   let slowest = 0;
   Object.values(timeSpentMap).forEach((t: any) => {
@@ -124,67 +177,95 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
           </div>
         </div>
 
-        {/* AI PERFORMANCE COACH - Diagnostic Report */}
+        {/* AI PERFORMANCE COACH - Dynamic Diagnostic Report */}
         <div className="p-8 border-b border-slate-300">
-          <div className="flex items-center gap-2 mb-6 border-b-2 border-slate-800 pb-2">
-            <FileText className="w-6 h-6 text-slate-800" />
-            <h3 className="text-lg font-bold uppercase tracking-widest text-slate-800 font-sans">Diagnostic Analysis</h3>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-            <div>
-              <h4 className="text-sm font-sans font-bold uppercase text-[#166534] mb-3 flex items-center gap-2 border-b border-slate-200 pb-1">
-                <CheckCircle2 className="w-4 h-4" /> Demonstrated Strengths
-              </h4>
-              <ul className="list-disc pl-5 space-y-2 text-sm text-slate-700">
-                {accuracy >= 80 ? (
-                  <li>Candidate exhibits exceptional comprehension and foundational knowledge.</li>
-                ) : accuracy >= 50 ? (
-                  <li>Candidate displays adequate understanding of core concepts.</li>
-                ) : (
-                  <li>Candidate attempted a majority of items under timed conditions.</li>
-                )}
-                {Object.entries(topicStats).filter(([_, s]) => s.correct / s.total >= 0.7).map(([topic], idx) => (
-                  <li key={idx}>High proficiency in <strong>{topic.toUpperCase()}</strong> methodology.</li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-sm font-sans font-bold uppercase text-[#991b1b] mb-3 flex items-center gap-2 border-b border-slate-200 pb-1">
-                <AlertCircle className="w-4 h-4" /> Areas for Improvement
-              </h4>
-              <ul className="list-disc pl-5 space-y-2 text-sm text-slate-700">
-                {skippedCount > 0 && <li>Candidate omitted {skippedCount} items. Guessing is recommended when no penalty applies.</li>}
-                {Object.entries(topicStats).filter(([_, s]) => s.correct / s.total < 0.5).map(([topic], idx) => (
-                  <li key={idx}>Deficiency identified in <strong>{topic.toUpperCase()}</strong> format questions.</li>
-                ))}
-                {accuracy < 50 && <li>Overall accuracy falls below standard benchmarks. Remedial study required.</li>}
-              </ul>
-            </div>
-          </div>
-
-          <div className="bg-slate-50 border border-slate-200 p-6">
-            <h4 className="text-sm font-sans font-bold uppercase text-[#0f2c59] mb-4 flex items-center gap-2">
-              <Bookmark className="w-4 h-4" /> Recommended Study Plan
-            </h4>
-            <div className="space-y-4 text-sm text-slate-700">
-              <p>Based on the psychometric analysis of this examination, the following targeted interventions are recommended:</p>
-              <div className="grid grid-cols-1 gap-3">
-                <div className="flex gap-3 items-start border-l-2 border-[#0f2c59] pl-3">
-                  <span className="font-bold font-sans text-[#0f2c59]">Step 1:</span>
-                  <p>Conduct a thorough review of the {wrongCount} incorrectly answered items in the Detailed Item Analysis section to identify recurring logical errors.</p>
+          {!currentResult?.aiCoachFeedback ? (
+            <div className="bg-indigo-50/50 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/50 rounded-2xl p-8 shadow-sm">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center animate-pulse">
+                  <BrainCircuit className="w-5 h-5 text-indigo-600 dark:text-indigo-400 animate-spin" style={{ animationDuration: '4s' }} />
                 </div>
-                <div className="flex gap-3 items-start border-l-2 border-[#0f2c59] pl-3">
-                  <span className="font-bold font-sans text-[#0f2c59]">Step 2:</span>
-                  <p>Allocate focused study sessions to the following critical domains: <strong>{Object.entries(topicStats).filter(([_, s]) => s.correct / s.total < 0.5).map(([t]) => t.toUpperCase()).join(", ") || "Foundational concepts"}</strong>.</p>
-                </div>
-                <div className="flex gap-3 items-start border-l-2 border-[#0f2c59] pl-3">
-                  <span className="font-bold font-sans text-[#0f2c59]">Step 3:</span>
-                  <p>Implement timed practice protocols to optimize pacing, aiming to reduce the current average time of {avgTimePerQuestion} seconds per item.</p>
+                <div>
+                  <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    AI Performance Coach <span className="text-xs bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 px-2 py-0.5 rounded animate-pulse font-mono font-bold">Analyzing...</span>
+                  </h2>
+                  <p className="text-sm text-slate-500">AI is analyzing your exam details to generate personalized feedback...</p>
                 </div>
               </div>
+              <div className="space-y-4 animate-pulse">
+                <div className="h-6 bg-slate-200/60 dark:bg-slate-800 rounded w-1/3"></div>
+                <div className="h-4 bg-slate-200/60 dark:bg-slate-800 rounded w-full"></div>
+                <div className="h-4 bg-slate-200/60 dark:bg-slate-800 rounded w-5/6"></div>
+                <div className="h-20 bg-slate-100 dark:bg-slate-800/50 rounded-xl mt-6"></div>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div>
+              {(() => {
+                let coachFeedback = { strengths: [], weaknesses: [], recommendedTopics: [], studyPlan: "" };
+                try {
+                  coachFeedback = typeof currentResult.aiCoachFeedback === "string" 
+                    ? JSON.parse(currentResult.aiCoachFeedback) 
+                    : currentResult.aiCoachFeedback;
+                } catch (e) {
+                  console.error("Coach feedback parsing failed", e);
+                }
+                return (
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 md:p-8 shadow-sm space-y-6">
+                    <div className="flex items-center gap-3 mb-2">
+                       <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center">
+                         <BrainCircuit className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                       </div>
+                       <div>
+                         <h2 className="text-xl font-bold text-slate-900 dark:text-white">AI Performance Coach</h2>
+                         <p className="text-sm text-slate-500">Personalized feedback based on your exam data</p>
+                       </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                       <div>
+                         <h3 className="font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider text-xs mb-3 flex items-center gap-2"><Target className="w-4 h-4" /> Core Strengths</h3>
+                         <ul className="space-y-2.5">
+                           {coachFeedback?.strengths?.map((s: string, i: number) => (
+                             <li key={i} className="flex items-start gap-3 p-3 bg-emerald-50/50 dark:bg-emerald-500/5 rounded-xl border border-emerald-100/50 dark:border-emerald-500/10">
+                               <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                               <span className="text-emerald-900 dark:text-emerald-100 text-sm font-medium leading-relaxed">{s}</span>
+                             </li>
+                           )) || <li>No strengths recorded.</li>}
+                         </ul>
+                       </div>
+                       <div>
+                         <h3 className="font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider text-xs mb-3 flex items-center gap-2"><AlertCircle className="w-4 h-4" /> Areas for Improvement</h3>
+                         <ul className="space-y-2.5">
+                           {coachFeedback?.weaknesses?.map((s: string, i: number) => (
+                             <li key={i} className="flex items-start gap-3 p-3 bg-rose-50/50 dark:bg-rose-500/5 rounded-xl border border-rose-100/50 dark:border-rose-500/10">
+                               <XCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+                               <span className="text-rose-900 dark:text-rose-100 text-sm font-medium leading-relaxed">{s}</span>
+                             </li>
+                           )) || <li>No weaknesses recorded.</li>}
+                         </ul>
+                       </div>
+                    </div>
+
+                    <div className="p-6 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl">
+                       <h3 className="font-bold text-slate-800 dark:text-white uppercase tracking-wider text-xs mb-2">Study Plan</h3>
+                       <p className="text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
+                         {coachFeedback?.studyPlan}
+                       </p>
+                       {coachFeedback?.recommendedTopics && coachFeedback.recommendedTopics.length > 0 && (
+                         <div className="mt-4 flex flex-wrap gap-2 items-center">
+                           <span className="text-xs font-bold text-slate-500 uppercase mr-2">Focus Topics:</span>
+                           {coachFeedback.recommendedTopics.map((t: string, i: number) => (
+                             <span key={i} className="px-3 py-1 bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 rounded-full text-xs font-bold">{t}</span>
+                           ))}
+                         </div>
+                       )}
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
         </div>
 
         {/* ANALYTICS: TOPIC & TIME - Formal Layout */}
@@ -305,12 +386,20 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                         </tbody>
                       </table>
 
-                      <div className="bg-white border border-slate-300 p-5">
+                      <div className="bg-white border border-slate-300 p-5 rounded-xl shadow-inner">
                         <p className="text-xs font-sans font-bold uppercase text-[#0f2c59] mb-3 flex items-center gap-2">
-                          <BrainCircuit className="w-4 h-4" /> Item Rationale & Analysis
+                          <BrainCircuit className="w-4 h-4 text-indigo-500" /> Item Rationale & Analysis
                         </p>
-                        <div className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap font-sans">
-                          {q.explanation || getExplanation(q.qtype, detail.correctAns, detail.userAns)}
+                        <div className="text-sm text-slate-700 leading-relaxed font-sans whitespace-pre-wrap">
+                          {detail.aiExplanation ? (
+                            processLaTeX(detail.aiExplanation)
+                          ) : currentResult?.aiCoachFeedback ? (
+                            q.explanation || getExplanation(q.qtype, detail.correctAns, detail.userAns)
+                          ) : (
+                            <div className="flex items-center gap-2 text-indigo-500 animate-pulse font-medium">
+                              <Loader2 className="h-4 w-4 animate-spin" /> AI explanation is generating...
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>

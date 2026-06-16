@@ -31,6 +31,8 @@ import { getSidebarRoutes, NavItem } from "@/lib/navigation";
 import { usePackAccess } from "@/hooks/usePackAccess";
 import TigerLoader from "@/components/TigerLoader";
 import CommandPalette from "@/components/CommandPalette";
+import confetti from "canvas-confetti";
+import { DotLottiePlayer } from "@dotlottie/react-player";
 
 type Role = "admin" | "administrator" | "teacher" | "student" | "user" | "parent" | "super_admin" | "payment_manager";
 
@@ -49,7 +51,36 @@ export default function RoleLayout({
   role = "user",
   basePath = "/user",
 }: RoleLayoutProps) {
-  const { profile, signOut, user, loading: authLoading } = useAuth();
+  const { profile, signOut, user, loading: authLoading, refresh: refreshAuth } = useAuth();
+  const [showCoinsModal, setShowCoinsModal] = useState(false);
+
+  useEffect(() => {
+    if (localStorage.getItem("show_first_login_coins_modal") === "true") {
+      setShowCoinsModal(true);
+      setTimeout(() => {
+        try {
+          confetti({
+            particleCount: 150,
+            spread: 80,
+            origin: { y: 0.6 }
+          });
+        } catch (e) {
+          console.error(e);
+        }
+      }, 500);
+    }
+  }, []);
+
+  const handleCollectCoins = async () => {
+    localStorage.removeItem("show_first_login_coins_modal");
+    setShowCoinsModal(false);
+    try {
+      await refreshAuth();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const { theme } = useTheme();
   const { data: orgData } = useOrganization(
     role === "admin" || role === "super_admin" ? profile?.organization_id : null
@@ -522,6 +553,94 @@ export default function RoleLayout({
           </Suspense>
         </motion.main>
       </div>
+
+      {/* First Login Coins Reward Modal */}
+      <AnimatePresence>
+        {showCoinsModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-md"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 30, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.9, y: 30, opacity: 0 }}
+              transition={{ type: "spring", duration: 0.5 }}
+              className="relative w-full max-w-md overflow-hidden rounded-[24px] border border-amber-500/30 bg-[#160E26] p-8 text-center shadow-2xl shadow-amber-500/10"
+            >
+              <div className="absolute -top-40 -left-40 h-[300px] w-[300px] rounded-full bg-amber-500/10 blur-[80px]" />
+              <div className="absolute -bottom-40 -right-40 h-[300px] w-[300px] rounded-full bg-purple-500/10 blur-[80px]" />
+              
+              <div className="relative mx-auto mb-6 flex h-40 w-40 items-center justify-center">
+                <div className="absolute inset-0 rounded-full bg-amber-500/20 blur-2xl animate-pulse" />
+                <motion.div
+                  animate={{ 
+                    scale: [1, 1.1, 1],
+                    rotate: [0, 5, -5, 0]
+                  }}
+                  transition={{ 
+                    repeat: Infinity, 
+                    duration: 3,
+                    ease: "easeInOut"
+                  }}
+                  className="z-10"
+                >
+                  <DotLottiePlayer
+                    src="https://lottie.host/05a8da46-bffb-4416-a160-0b16adbce445/CxzFkSjThh.lottie"
+                    autoplay
+                    loop
+                    className="h-32 w-32"
+                  />
+                </motion.div>
+              </div>
+
+              <motion.h3 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="font-display text-2xl font-extrabold tracking-tight text-white"
+              >
+                Tabriklaymiz! 🎉
+              </motion.h3>
+
+              <motion.p 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="mt-3 text-sm text-slate-300 leading-relaxed"
+              >
+                Tizimga muvaffaqiyatli kirganingiz uchun sizga <span className="font-bold text-amber-400">10 LMSHub Coin</span> berildi! Tangalarni testlar va boshqa imkoniyatlar uchun ishlatishingiz mumkin.
+              </motion.p>
+
+              <motion.div 
+                initial={{ scale: 0.5, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.4, type: "spring" }}
+                className="mx-auto mt-6 flex max-w-fit items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-6 py-2.5 shadow-inner"
+              >
+                <CircleDollarSign className="h-6 w-6 text-amber-400" />
+                <span className="text-xl font-black text-amber-300 tracking-wider">+10 COINS</span>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="mt-8"
+              >
+                <Button
+                  onClick={handleCollectCoins}
+                  className="w-full h-12 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold text-base rounded-xl shadow-lg shadow-amber-500/20 transition-all hover:scale-[1.02] border-none"
+                >
+                  Qabul qilish 🪙
+                </Button>
+              </motion.div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

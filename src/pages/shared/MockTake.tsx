@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useParams, useNavigate, useBlocker, useBeforeUnload, useSearchParams } from "react-router-dom";
 import {
   AlertDialog,
@@ -24,7 +24,7 @@ import {
   BookOpen, ChevronLeft, ChevronRight, Flag, Play, Pause,
   Volume2, VolumeX, Maximize2, Minimize2, Mic, Calculator, X, PenLine, XCircle,
   Award, Target, ThumbsUp, Lightbulb, BookMarked, Sun, Moon,
-  Shield, Grid, CheckSquare, Menu, ArrowRight, ArrowLeft, Bookmark
+  Shield, Grid, CheckSquare, Menu, ArrowRight, ArrowLeft, Bookmark, GripHorizontal
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
@@ -246,6 +246,78 @@ const getFullImageUrl = (url?: string) => {
   // Default to files view API
   return `/api/v1/files/view/${cleanPath}`;
 };
+
+function DesmosCalculator({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  const { t } = useTranslation();
+  const [size, setSize] = useState({ w: 550, h: 420 });
+  const resizing = useRef(false);
+  const resizeStart = useRef({ x: 0, y: 0, w: 550, h: 420 });
+
+  const onResizeMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    resizing.current = true;
+    resizeStart.current = { x: e.clientX, y: e.clientY, w: size.w, h: size.h };
+    const onMove = (ev: MouseEvent) => {
+      if (!resizing.current) return;
+      setSize({
+        w: Math.max(320, resizeStart.current.w + ev.clientX - resizeStart.current.x),
+        h: Math.max(300, resizeStart.current.h + ev.clientY - resizeStart.current.y),
+      });
+    };
+    const onUp = () => {
+      resizing.current = false;
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+    };
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+  }, [size]);
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0, y: 50, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 50, scale: 0.95 }}
+          style={{ width: size.w, height: size.h }}
+          className="fixed bottom-24 right-4 md:right-8 bg-white/97 dark:bg-slate-900/97 backdrop-blur-xl rounded-3xl shadow-[0_20px_60px_-12px_rgba(0,0,0,0.3)] border border-slate-200/80 dark:border-white/10 z-50 overflow-hidden flex flex-col select-none"
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-200 dark:border-white/5 bg-slate-50/60 dark:bg-slate-950/60 shrink-0">
+            <span className="font-bold text-sm flex items-center gap-2 text-slate-700 dark:text-slate-300">
+              <Calculator className="h-4 w-4 text-purple-500" /> Desmos Kalkulyator
+            </span>
+            <div className="flex items-center gap-1.5">
+              <Button size="icon" variant="ghost" className="h-7 w-7 rounded-full hover:bg-slate-200 dark:hover:bg-white/10" onClick={onClose} title={t("dynamic.syllabus.yopish")}>
+                <X className="h-3.5 w-3.5 text-slate-500" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Iframe */}
+          <div className="flex-1 relative overflow-hidden bg-white dark:bg-[#070b19]/60">
+            <iframe
+              src="https://www.desmos.com/calculator"
+              title={t("dynamic.mocktake.desmos_graphing_calculator")}
+              className="absolute inset-0 w-full h-full border-0 select-text"
+              allow="clipboard-write"
+            />
+          </div>
+
+          {/* Resize handle */}
+          <div
+            onMouseDown={onResizeMouseDown}
+            className="absolute bottom-0 right-0 w-8 h-8 cursor-nwse-resize flex items-end justify-end pb-1.5 pr-1.5 group z-10"
+            title="Kengaytirish"
+          >
+            <GripHorizontal className="h-4 w-4 text-slate-300 dark:text-slate-600 rotate-45 group-hover:text-purple-500 transition-colors" />
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
 
 function CustomAudioPlayer({ src, isExternalPaused }: { src: string, isExternalPaused?: boolean }) {
   const fullSrc = useMemo(() => getFullAudioUrl(src), [src]);
@@ -517,6 +589,10 @@ export default function MockTake() {
   const [showScratchpad, setShowScratchpad] = useState(false);
   const [grading, setGrading] = useState(false);
   
+  const [cheatingStrikes, setCheatingStrikes] = useState(0);
+  const [showCheatingWarning, setShowCheatingWarning] = useState(false);
+  const [showCheatingLocked, setShowCheatingLocked] = useState(false);
+  
   const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
   
   const startedAt = useRef<number>(0);
@@ -634,6 +710,44 @@ export default function MockTake() {
     }, 1000);
     return () => clearInterval(id);
   }, [started, result, isPaused, showSuccessAnimation]);
+
+  // Anti-Cheat focus/visibility listeners
+  useEffect(() => {
+    if (!started || result || isPaused || showSuccessAnimation || showCheatingLocked) return;
+
+    const handleCheating = () => {
+      if (showCheatingWarning) return;
+
+      setCheatingStrikes((prev) => {
+        const next = prev + 1;
+        if (next === 1) {
+          setShowCheatingWarning(true);
+        } else if (next >= 2) {
+          setShowCheatingLocked(true);
+          submit(true);
+        }
+        return next;
+      });
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        handleCheating();
+      }
+    };
+
+    const handleWindowBlur = () => {
+      handleCheating();
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("blur", handleWindowBlur);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("blur", handleWindowBlur);
+    };
+  }, [started, result, isPaused, showSuccessAnimation, showCheatingWarning, showCheatingLocked]);
   
   // Track Time Spent per question
   useEffect(() => {
@@ -661,6 +775,14 @@ export default function MockTake() {
     setSubmitting(true);
     setShowSuccessAnimation(true);
     window.scrollTo(0,0);
+
+    try {
+      const utterance = new SpeechSynthesisUtterance("Your test has been successfully completed.");
+      utterance.lang = "en-US";
+      window.speechSynthesis.speak(utterance);
+    } catch (e) {
+      console.error("SpeechSynthesis error:", e);
+    }
 
     try {
       const kind = (exam.type ?? "").toLowerCase();
@@ -715,12 +837,25 @@ export default function MockTake() {
 
   if (showSuccessAnimation) {
     return (
-      <div className="fixed inset-0 z-[9999] bg-white flex flex-col items-center justify-center overflow-hidden border-[16px] border-[#0f2c59]">
-        <Loader2 className="w-12 h-12 animate-spin text-[#0f2c59] mb-6" />
-        <h2 className="text-2xl font-bold text-[#0f2c59] tracking-widest uppercase font-sans">Processing Data</h2>
-        <p className="text-slate-600 mt-2 font-bold uppercase tracking-widest text-xs font-sans">Do not close this window.</p>
-        <div className="w-64 h-2 bg-slate-200 mt-8 overflow-hidden border border-slate-300">
-           <div className="h-full bg-[#0f2c59] animate-[progress_3s_ease-in-out_forwards]" style={{width: '0%'}} />
+      <div className="fixed inset-0 z-[9999] bg-[#FCFAFF] dark:bg-[#0B0714] flex flex-col items-center justify-center overflow-hidden">
+        <div className="relative">
+          <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full animate-pulse" />
+          <TigerPlayer text="Exam data is being processed..." size={280} />
+        </div>
+        <div className="mt-8 flex flex-col items-center gap-2">
+          <p className="text-sm font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+            Do not close this window
+          </p>
+          <div className="flex gap-1.5 mt-2">
+            {[0, 1, 2].map((i) => (
+              <motion.div
+                key={i}
+                animate={{ scale: [1, 1.5, 1], opacity: [0.3, 1, 0.3] }}
+                transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
+                className="h-2.5 w-2.5 rounded-full bg-primary"
+              />
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -853,9 +988,9 @@ export default function MockTake() {
       
       {/* EXAM COMMAND CENTER HEADER - Official Blue Bar */}
       <header className="h-[60px] shrink-0 bg-[#0f2c59] text-white flex items-center justify-between px-6 z-40 border-b border-[#0f2c59]">
-        <div className="flex items-center gap-4">
-           <h1 className="font-bold text-sm uppercase tracking-widest">{exam.title}</h1>
-           <span className="text-[10px] bg-white/10 px-2 py-0.5 border border-white/20 uppercase tracking-widest">{exam.type}</span>
+        <div className="flex items-center gap-4 min-w-0">
+           <h1 className="font-bold text-sm uppercase tracking-widest truncate max-w-[150px] sm:max-w-none">{exam.title}</h1>
+           <span className="text-[10px] bg-white/10 px-2 py-0.5 border border-white/20 uppercase tracking-widest shrink-0">{exam.type}</span>
         </div>
 
         {/* TIMER */}
@@ -882,9 +1017,9 @@ export default function MockTake() {
       </header>
 
       {/* QUESTION AREA */}
-      <main className="flex-1 flex overflow-hidden bg-[#f4f4f4]">
+      <main className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden bg-[#f4f4f4]">
         {isReading && sections[currentQuestion?.section_index] && (sections[currentQuestion?.section_index].passage || sections[currentQuestion?.section_index].imageUrl) && (
-          <div className="w-1/2 h-full overflow-y-auto border-r border-slate-300 p-8 xl:p-12 bg-white">
+          <div className="w-full md:w-1/2 h-1/2 md:h-full overflow-y-auto border-b md:border-b-0 md:border-r border-slate-300 p-6 md:p-8 xl:p-12 bg-white">
             <h2 className="text-xl font-bold mb-6 text-slate-900 uppercase tracking-widest border-b-2 border-slate-800 pb-2">{sections[currentQuestion.section_index].title}</h2>
             {sections[currentQuestion.section_index].imageUrl && (
               <img src={getFullImageUrl(sections[currentQuestion.section_index].imageUrl)} className="max-w-full border border-slate-300 mb-6" />
@@ -895,7 +1030,7 @@ export default function MockTake() {
           </div>
         )}
 
-        <div className={cn("h-full overflow-y-auto flex flex-col p-8 xl:p-12 bg-white", isReading ? "w-1/2" : "w-full max-w-5xl mx-auto border-x border-slate-300")}>
+        <div className={cn("overflow-y-auto flex flex-col p-6 md:p-8 xl:p-12 bg-white", isReading ? "w-full md:w-1/2 h-1/2 md:h-full" : "w-full h-full max-w-5xl mx-auto border-x border-slate-300")}>
           
           <div className="w-full flex-1 flex flex-col">
             {currentQuestion && (
@@ -986,9 +1121,9 @@ export default function MockTake() {
       </main>
 
       {/* EXAM NAVIGATOR - Formal Status Bar */}
-      <footer className="h-[70px] bg-slate-100 border-t border-slate-300 flex items-center justify-between px-6 z-40">
+      <footer className="h-[70px] bg-slate-100 border-t border-slate-300 flex items-center justify-between px-4 sm:px-6 z-40">
         
-        <div className="flex items-center gap-4 w-1/4">
+        <div className="flex items-center gap-2 sm:gap-4 w-1/2 sm:w-1/4">
           <Button 
             size="lg" 
             variant="outline" 
@@ -996,17 +1131,17 @@ export default function MockTake() {
             disabled={activeQuestionIndex === 0}
             className="rounded-none border-2 border-slate-400 font-bold text-xs uppercase tracking-widest text-slate-700 bg-white"
           >
-            <ChevronLeft className="w-4 h-4 mr-2" /> Back
+            <ChevronLeft className="w-4 h-4 mr-1 sm:mr-2" /> Back
           </Button>
         </div>
 
-        <div className="flex-1 flex justify-center items-center gap-8 text-xs font-bold uppercase tracking-widest text-slate-500">
+        <div className="hidden md:flex flex-1 justify-center items-center gap-8 text-xs font-bold uppercase tracking-widest text-slate-500">
           <span className="text-[#166534]">Answered: {answeredCount}</span>
           <span className="text-[#ca8a04]">Marked: {flaggedCount}</span>
           <span className="text-slate-800">Unanswered: {questions.length - answeredCount}</span>
         </div>
 
-        <div className="flex items-center justify-end gap-4 w-1/4">
+        <div className="flex items-center justify-end gap-2 sm:gap-4 w-1/2 sm:w-1/4">
           <Button 
             size="lg" 
             onClick={() => {
@@ -1025,7 +1160,74 @@ export default function MockTake() {
       </footer>
 
       {showScratchpad && <Scratchpad onClose={() => setShowScratchpad(false)} />}
-      {showCalculator && <div className="fixed bottom-24 left-8 z-[100] shadow-2xl border-2 border-slate-800"><DesmosCalculator /></div>}
+      <DesmosCalculator isOpen={showCalculator} onClose={() => setShowCalculator(false)} />
+
+      {/* Cheating Warning Modal */}
+      <AlertDialog open={showCheatingWarning} onOpenChange={setShowCheatingWarning}>
+        <AlertDialogContent className="rounded-3xl border border-amber-500/30 bg-[#160E26]/95 text-white backdrop-blur-md max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-extrabold text-amber-400 flex items-center gap-2">
+              <AlertCircle className="h-6 w-6 text-amber-500 animate-bounce" /> Ogohlantirish!
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-300 mt-2 text-sm leading-relaxed">
+              Siz imtihon oynasini tark etdingiz (Alt-Tab yoki boshqa ilovaga o'tish). Imtihon oynasini yana bir marta tark etsangiz, javoblaringiz avtomatik ravishda yuboriladi va imtihon yakunlanadi!
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-6">
+            <AlertDialogAction
+              onClick={() => setShowCheatingWarning(false)}
+              className="bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl py-2 w-full border-none shadow-lg shadow-amber-500/20"
+            >
+              Tushundim, imtihonni davom ettiraman
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Cheating Locked Modal */}
+      <AnimatePresence>
+        {showCheatingLocked && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/95 backdrop-blur-md animate-fade-in"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              className="w-full max-w-md rounded-3xl border border-rose-500/30 bg-[#160E26] p-8 text-center shadow-2xl shadow-rose-500/10"
+            >
+              <div className="relative mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-rose-500/15">
+                <Shield className="h-10 w-10 text-rose-500" />
+              </div>
+              <h3 className="text-2xl font-black tracking-tight text-white">
+                Imtihon Bloklandi! 🔒
+              </h3>
+              <p className="mt-3 text-sm text-slate-300 leading-relaxed">
+                Tizim qoidalariga ko'ra, imtihon oynasini ikki marta tark etganingiz sababli imtihoningiz bloklandi va javoblaringiz avtomatik ravishda saqlab topshirildi.
+              </p>
+              <div className="mt-6 p-3 rounded-xl bg-rose-500/10 text-xs font-bold text-rose-400 border border-rose-500/20">
+                Imtihon faoliyati shubhali deb baholandi
+              </div>
+              <div className="mt-8">
+                <Button
+                  onClick={() => {
+                    if (result) {
+                      setShowCheatingLocked(false);
+                    } else {
+                      toast.info("Tizim javoblarni yuklamoqda, kuting...");
+                    }
+                  }}
+                  disabled={!result}
+                  className="w-full h-12 bg-rose-600 hover:bg-rose-700 text-white font-bold text-base rounded-xl transition-all border-none"
+                >
+                  Natijani ko'rish
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

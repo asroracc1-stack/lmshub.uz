@@ -140,8 +140,9 @@ public class GeminiService {
                 return callGeminiWithKey(prompt, key);
             } catch (org.springframework.web.client.HttpStatusCodeException e) {
                 int statusCode = e.getStatusCode().value();
-                if (statusCode == 429) {
-                    markKeyAsLimited(key, 60);
+                if (statusCode == 429 || statusCode == 503) {
+                    markKeyAsLimited(key, statusCode == 503 ? 10 : 60);
+                    try { Thread.sleep(2000); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); }
                     continue;
                 } else if (statusCode == 403) {
                     // Key is banned/leaked — permanently disable it for this session
@@ -198,8 +199,9 @@ public class GeminiService {
                 return callGeminiWithKeyAndBody(requestBody, key);
             } catch (org.springframework.web.client.HttpStatusCodeException e) {
                 int statusCode = e.getStatusCode().value();
-                if (statusCode == 429) {
-                    markKeyAsLimited(key, 60);
+                if (statusCode == 429 || statusCode == 503) {
+                    markKeyAsLimited(key, statusCode == 503 ? 10 : 60);
+                    try { Thread.sleep(2000); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); }
                     continue;
                 } else if (statusCode == 403) {
                     bannedKeys.add(key);
@@ -242,10 +244,12 @@ public class GeminiService {
         
         String prompt = "You are a professional teacher and exam creator. Analyze this exam PDF document.\n" +
                 "Extract all the questions, their possible options (if multiple choice), find the correct answer for each, and write a detailed step-by-step explanation for the solution of each question.\n" +
-                "CRITICAL: For any mathematical expressions, formulas, integrals, fractions, exponents, equations, or special characters, you MUST write them in standard, clean LaTeX format using $...$ for inline math and $$...$$ for block display math (e.g. use \\frac{a}{b}, \\int_{a}^{b}, \\sqrt{x}, \\cdot, etc.) so they render exactly 1-to-1 on the web page.\n" +
+                "CRITICAL INSTRUCTIONS:\n" +
+                "1. For any mathematical expressions, formulas, integrals, fractions, exponents, equations, or special characters, you MUST write them in standard, clean LaTeX format using $...$ for inline math and $$...$$ for block display math (e.g. use \\frac{a}{b}, \\int_{a}^{b}, \\sqrt{x}, \\cdot, etc.) so they render exactly 1-to-1 on the web page.\n" +
+                "2. SHAPES AND DIAGRAMS: If a question contains any geometric shapes, diagrams, graphs, or visual figures (like triangles, circles, coordinate planes, graphs, etc.), you MUST analyze the shape and RECREATE IT EXACTLY using raw inline SVG code. Insert this SVG code directly into the question 'prompt' or 'explanation'. Use appropriate SVG viewBox, paths, circles, texts, and styling to make it look identical to the PDF. DO NOT skip the images! Embed the SVG directly inside the JSON string.\n" +
                 "Output ONLY a raw JSON object with the following root structure: {\"sections\": [...]}\n" +
                 "There should be at least one section. Each section must look like this: {\"title\": \"...\", \"passage\": \"...\", \"questions\": [...]}\n" +
-                "Each question must look like this: {\"prompt\": \"Savol matni (prompt)\", \"qtype\": \"mcq\", \"options\": [\"Option A text\", \"Option B text\", \"Option C text\", \"Option D text\"], \"correct_answer\": \"The exact text of the correct option\", \"points\": 1, \"explanation\": \"Step-by-step explanation of the solution in LaTeX/Markdown\"}\n" +
+                "Each question must look like this: {\"prompt\": \"Savol matni (prompt) va <svg>...SVG shakl...</svg>\", \"qtype\": \"mcq\", \"options\": [\"Option A text\", \"Option B text\", \"Option C text\", \"Option D text\"], \"correct_answer\": \"The exact text of the correct option\", \"points\": 1, \"explanation\": \"Step-by-step explanation of the solution in LaTeX/Markdown\"}\n" +
                 "If the PDF questions are not MCQs, use \"qtype\": \"short\" and leave options array empty.";
 
         Map<String, Object> partText = Map.of("text", prompt);
