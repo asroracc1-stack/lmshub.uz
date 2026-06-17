@@ -357,7 +357,7 @@ public class GamificationService {
     /**
      * Get user learning contributions for the last 365 days
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public Map<String, Object> getUserContributions(User user) {
         User freshUser = userRepository.findById(user.getId()).orElse(user);
         LocalDateTime since = LocalDateTime.now().minusDays(364).truncatedTo(java.time.temporal.ChronoUnit.DAYS);
@@ -367,6 +367,23 @@ public class GamificationService {
         List<StudentAttempt> attempts = studentAttemptRepository.findAllByStudentIdAndStartedAtAfter(freshUser.getId(), since);
         List<Attendance> attendanceList = attendanceRepository.findAllByStudentIdAndCreatedAtAfter(freshUser.getId(), since);
         List<CoinTransaction> coinTransactions = coinTransactionRepository.findAllByStudentIdAndCreatedAtAfter(freshUser.getId(), since);
+
+        // Ensure today has at least a small login activity recorded if no activity exists yet
+        LocalDate today = LocalDate.now();
+        LocalDateTime startOfToday = today.atStartOfDay();
+        List<PracticeSession> todaySessions = practiceSessionRepository.findAllByUserIdAndCreatedAtAfter(freshUser.getId(), startOfToday);
+        List<StudentAttempt> todayAttempts = studentAttemptRepository.findAllByStudentIdAndStartedAtAfter(freshUser.getId(), startOfToday);
+        
+        if (todaySessions.isEmpty() && todayAttempts.isEmpty()) {
+            PracticeSession dailyLoginSession = PracticeSession.builder()
+                    .user(freshUser)
+                    .minutes(1.0) // 1 minute representing login/access
+                    .createdAt(LocalDateTime.now())
+                    .build();
+            practiceSessionRepository.save(dailyLoginSession);
+            sessions = new ArrayList<>(sessions);
+            sessions.add(dailyLoginSession);
+        }
 
         // Group by LocalDate
         Map<LocalDate, Double> dailyPracticeMins = sessions.stream()
@@ -383,9 +400,8 @@ public class GamificationService {
                 ));
 
         Map<LocalDate, List<StudentAttempt>> dailyAttempts = attempts.stream()
-                .filter(a -> a.getFinishedAt() != null)
                 .collect(Collectors.groupingBy(
-                        a -> a.getFinishedAt().toLocalDate()
+                        a -> a.getStartedAt().toLocalDate()
                 ));
 
         Map<LocalDate, Long> dailyCoins = coinTransactions.stream()

@@ -124,6 +124,7 @@ const TelegramLinks = lazy(() => import("./pages/super-admin/TelegramLinks"));
 const LMSNews = lazy(() => import("./pages/super-admin/LMSNews"));
 const SuperAdminParents = lazy(() => import("./pages/super-admin/Parents"));
 const StartupPitch = lazy(() => import("./pages/super-admin/StartupPitch"));
+const QuestionBank = lazy(() => import("./pages/super-admin/QuestionBank"));
 const AdminUsers = lazy(() => import("./pages/admin/Users"));
 const PaymentRequests = lazy(() => import("./pages/admin/PaymentRequests"));
 const SubscriptionRequests = lazy(() => import("./pages/admin/SubscriptionRequests"));
@@ -253,6 +254,7 @@ const AppRoutes = () => {
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="referral" element={<ReferralPage />} />
           <Route path="gamification" element={<GamificationAdmin />} />
+          <Route path="question-bank" element={<QuestionBank />} />
         </Route>
 
         {/* Admin */}

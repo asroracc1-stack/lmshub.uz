@@ -185,6 +185,7 @@ export const getSidebarRoutes = (role: string, t: TFunction, options: { ielts?: 
             { to: "/super-admin/national-cert", label: t("nav.nationalCert"), icon: Landmark },
           ]
         },
+        { to: "/super-admin/question-bank", label: "Savollar Banki", icon: BookOpen },
         { to: "/super-admin/groups", label: t("nav.groups"), icon: Users2 },
         { to: "/super-admin/packs", label: t("nav.packs"), icon: Package },
         { to: "/super-admin/packages", label: t("nav.pricingPlans"), icon: Package },

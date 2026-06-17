@@ -322,7 +322,7 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
   }
 
   return (
-    <div className="h-screen w-full grid grid-cols-1 lg:grid-cols-2 bg-white dark:bg-[#030712] text-slate-900 dark:text-white selection:bg-purple-500/30 selection:text-purple-900 dark:selection:text-purple-200 overflow-hidden relative">
+    <div className="h-screen w-full grid grid-cols-1 lg:grid-cols-2 bg-[#FCFAFF] dark:bg-[#030712] text-slate-900 dark:text-white selection:bg-purple-500/30 selection:text-purple-900 dark:selection:text-purple-200 overflow-hidden relative">
       
       {/* Background decoration glows */}
       <div className="absolute inset-0 z-0 pointer-events-none">
@@ -500,7 +500,7 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
       </div>
 
       {/* RIGHT COLUMN: Illustration & Branding */}
-      <div className="hidden lg:flex relative bg-[#F5F0FF] dark:bg-[#0A0518] items-center justify-center overflow-hidden border-l border-purple-100 dark:border-purple-950/30 h-full z-10">
+      <div className="hidden lg:flex relative bg-slate-50/50 dark:bg-slate-900/10 items-center justify-center overflow-hidden border-l border-slate-100 dark:border-slate-800/40 h-full z-10">
         
         {/* Premium Glow Effects */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[550px] bg-primary/5 dark:bg-primary/5 blur-[120px] rounded-full z-0 animate-pulse" />
