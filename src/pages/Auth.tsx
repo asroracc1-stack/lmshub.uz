@@ -517,7 +517,10 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
               className="flex flex-col items-center text-center"
             >
               <DotLottieReact 
-                src="https://lottie.host/5cac198d-102b-4824-af4c-62c8cfdd4418/V3GyV38qyt.lottie"
+                src={isSignIn 
+                  ? "https://lottie.host/a1b0978f-6321-4a25-85de-cd3ccd8c6368/JW4kdFrVWQ.lottie" 
+                  : "https://lottie.host/71dc29fa-7aa3-4b00-9b35-f6c86c999222/beB5zGBdIY.lottie"
+                }
                 loop 
                 autoplay 
                 className="w-[450px] h-[450px]" 
