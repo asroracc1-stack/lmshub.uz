@@ -174,29 +174,33 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
   };
 
   const finalScore = isSat ? satPts : isMilliy ? milliyPts : isIelts ? (band || "0.0") : `${accuracy}%`;
-  const scoreType = isSat ? "Total Score" : isMilliy ? "Umumiy ball" : isIelts ? "Band Score" : "Accuracy";
+  const scoreType = isSat ? "Total Score" : isMilliy ? "Taxminiy Ball" : isIelts ? "Band Score" : "Accuracy";
 
   // Uzbek Localization strings
   const tOfficialReport = isMilliy ? "Rasmiy Natija Hisoboti" : "Official Score Report";
   const tTestDate = isMilliy ? "Imtihon topshirilgan sana" : "Test Date";
   const tCandidateId = isMilliy ? "Talaba ID" : "Candidate ID";
-  const tPredictedScore = isMilliy ? "Taxminiy Natija" : "Predicted Result";
+  const tPredictedScore = isMilliy ? "Yakuniy natija" : "Predicted Result";
   
   const tTotalQuestions = isMilliy ? "Jami Savollar" : "Total Questions";
-  const tCorrect = isMilliy ? "To'g'ri" : "Correct";
-  const tIncorrect = isMilliy ? "Noto'g'ri" : "Incorrect";
-  const tOmitted = isMilliy ? "Belgilanmagan" : "Omitted";
-  const tTotalTimeUsed = isMilliy ? "Sarflangan umumiy vaqt" : "Total Time Used";
-  const tAccuracy = isMilliy ? "To'g'rilik foizi" : "Accuracy";
+  const tCorrect = isMilliy ? "To'g'ri javoblar" : "Correct";
+  const tIncorrect = isMilliy ? "Noto'g'ri javoblar" : "Incorrect";
+  const tOmitted = isMilliy ? "Belgilanmagan savollar" : "Omitted";
+  const tTotalTimeUsed = isMilliy ? "Sarflangan vaqt" : "Total Time Used";
+  const tAccuracy = isMilliy ? "Foiz ko'rsatkichi" : "Accuracy";
+
+  const tCorrectTag = isMilliy ? "To'g'ri" : "Correct";
+  const tIncorrectTag = isMilliy ? "Noto'g'ri" : "Incorrect";
+  const tOmittedTag = isMilliy ? "Belgilanmagan" : "Omitted";
 
   const tCoachTitle = isMilliy ? "Sun'iy Intellekt Tahlili" : "AI Performance Coach";
   const tCoachLoadingDesc = isMilliy ? "Sun'iy intellekt xatolaringiz va ko'rsatkichlaringizni tahlil qilib, tavsiyalar tayyorlamoqda..." : "AI is analyzing your exam details to generate personalized feedback...";
   const tCoachLoadingMetrics = isMilliy ? "Ko'rsatkichlar tahlil qilinmoqda..." : "Gathering test metrics...";
   const tCoachLoadedDesc = isMilliy ? "Imtihon natijalaringiz asosida tayyorlangan tahliliy hisobot" : "Personalized feedback based on your exam data";
 
-  const tStrengths = isMilliy ? "Asosiy Kuchli Tomonlaringiz" : "Core Strengths";
-  const tWeaknesses = isMilliy ? "Kamchiliklar va xato ustida ishlash" : "Areas for Improvement";
-  const tStudyPlan = isMilliy ? "Tavsiya etilgan o'quv rejasi" : "Study Plan";
+  const tStrengths = isMilliy ? "Kuchli tomonlar" : "Core Strengths";
+  const tWeaknesses = isMilliy ? "Zaif tomonlar" : "Areas for Improvement";
+  const tStudyPlan = isMilliy ? "Tavsiya etilgan reja" : "Study Plan";
   const tFocusTopics = isMilliy ? "E'tibor qaratilishi lozim bo'lgan mavzular" : "Focus Topics";
   const tNoStrengths = isMilliy ? "Kuchli tomonlar topilmadi." : "No strengths recorded.";
   const tNoWeaknesses = isMilliy ? "Kamchiliklar aniqlanmadi." : "No weaknesses recorded.";
@@ -220,13 +224,29 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
   const tReturnButton = isMilliy ? "Platformaga qaytish" : "Return to Platform";
 
   return (
-    <div className="min-h-screen bg-[#e5e7eb] dark:bg-[#0c0817] py-8 font-serif text-slate-900 dark:text-slate-100 selection:bg-blue-200 transition-colors">
-      <div className="max-w-[900px] mx-auto bg-white dark:bg-[#140D23] shadow-2xl border border-slate-300 dark:border-slate-800 transition-colors rounded-2xl overflow-hidden">
+    <div className={cn(
+      "min-h-screen py-8 font-serif text-slate-900 transition-colors",
+      isMilliy 
+        ? "bg-[#f1f5f9] dark:bg-[#060b13] dark:text-slate-100 selection:bg-emerald-200" 
+        : "bg-[#e5e7eb] dark:bg-[#0c0817] dark:text-slate-100 selection:bg-blue-200"
+    )}>
+      <div className={cn(
+        "max-w-[900px] mx-auto bg-white shadow-2xl border transition-colors rounded-2xl overflow-hidden",
+        isMilliy 
+          ? "dark:bg-[#0b1624] border-emerald-600/20 dark:border-slate-800" 
+          : "dark:bg-[#140D23] border-slate-300 dark:border-slate-800"
+      )}>
         
         {/* OFFICIAL SCORE REPORT HEADER */}
-        <div className={cn("border-b-[4px] p-8 bg-white dark:bg-[#140D23] flex justify-between items-start transition-colors", isMilliy ? "border-[#0d9488]" : "border-[#0f2c59] dark:border-blue-500")}>
+        <div className={cn("border-b-[4px] p-8 bg-white flex justify-between items-start transition-colors", 
+          isMilliy 
+            ? "dark:bg-[#0b1624] border-[#10b981]" 
+            : "dark:bg-[#140D23] border-[#0f2c59] dark:border-blue-500"
+        )}>
           <div>
-            <h1 className={cn("text-3xl font-bold tracking-tight uppercase mb-1", isMilliy ? "text-[#0d9488]" : "text-[#0f2c59] dark:text-blue-400")}>{tOfficialReport}</h1>
+            <h1 className={cn("text-3xl font-bold tracking-tight uppercase mb-1", 
+              isMilliy ? "text-[#059669] dark:text-[#10b981]" : "text-[#0f2c59] dark:text-blue-400"
+            )}>{tOfficialReport}</h1>
             <p className="text-sm font-sans text-slate-500 dark:text-slate-400 uppercase tracking-widest">{exam?.title || "Standardized Examination"}</p>
           </div>
           <div className="text-right">
@@ -237,10 +257,18 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
         </div>
 
         {/* HERO SCORES - Document Style */}
-        <div className="p-8 border-b border-slate-300 dark:border-slate-800 bg-[#f8fafc] dark:bg-[#0c0817]/40 flex flex-col md:flex-row gap-8 transition-colors">
-          <div className="w-full md:w-1/3 bg-white dark:bg-[#140D23]/60 border border-slate-300 dark:border-slate-800 p-6 flex flex-col items-center justify-center shadow-sm transition-colors rounded-xl">
+        <div className={cn("p-8 border-b flex flex-col md:flex-row gap-8 transition-colors", 
+          isMilliy 
+            ? "bg-[#f8fafc] dark:bg-[#070e17] border-slate-200 dark:border-slate-800" 
+            : "border-slate-300 dark:border-slate-800 bg-[#f8fafc] dark:bg-[#0c0817]/40"
+        )}>
+          <div className={cn("w-full md:w-1/3 bg-white border p-6 flex flex-col items-center justify-center shadow-sm transition-colors rounded-xl", 
+            isMilliy 
+              ? "dark:bg-[#0b1624]/60 border-slate-200 dark:border-slate-800" 
+              : "dark:bg-[#140D23]/60 border-slate-300 dark:border-slate-800"
+          )}>
             <h2 className="text-xs font-sans font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2 text-center">{scoreType}</h2>
-            <div className={cn("text-6xl font-bold tracking-tighter mb-2", isMilliy ? "text-[#0d9488]" : "text-[#0f2c59] dark:text-blue-400")}>{finalScore}</div>
+            <div className={cn("text-6xl font-bold tracking-tighter mb-2", isMilliy ? "text-[#059669] dark:text-[#10b981]" : "text-[#0f2c59] dark:text-blue-400")}>{finalScore}</div>
             <p className="text-[10px] font-sans text-slate-400 uppercase text-center border-t border-slate-200 dark:border-slate-800 pt-2 w-full">{tPredictedScore}</p>
           </div>
           <div className="w-full md:w-2/3 grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -250,7 +278,7 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                 "border p-4 flex flex-col justify-between rounded-xl cursor-pointer select-none transition-all duration-300",
                 filterMode === 'all'
                   ? "border-slate-400 dark:border-slate-500 ring-2 ring-slate-400/50 bg-slate-50 dark:bg-slate-900/60 shadow-inner scale-[1.03]"
-                  : "border-slate-200 dark:border-slate-800 bg-white dark:bg-[#140D23]/60 hover:border-slate-400 dark:hover:border-slate-500"
+                  : cn("bg-white hover:border-slate-400 dark:hover:border-slate-500", isMilliy ? "dark:bg-[#0b1624]/60 border-slate-200 dark:border-slate-800" : "dark:bg-[#140D23]/60 border-slate-200 dark:border-slate-800")
               )}
             >
               <span className="text-[10px] font-sans font-bold text-slate-500 dark:text-slate-400 uppercase">{tTotalQuestions}</span>
@@ -262,7 +290,7 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                 "border p-4 flex flex-col justify-between rounded-xl cursor-pointer select-none transition-all duration-300",
                 filterMode === 'correct'
                   ? "border-emerald-500 dark:border-emerald-400 ring-2 ring-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-950/20 shadow-inner scale-[1.03]"
-                  : "border-slate-200 dark:border-slate-800 bg-white dark:bg-[#140D23]/60 hover:border-emerald-400 dark:hover:border-emerald-500"
+                  : cn("bg-white hover:border-emerald-400 dark:hover:border-emerald-500", isMilliy ? "dark:bg-[#0b1624]/60 border-slate-200 dark:border-slate-800" : "dark:bg-[#140D23]/60 border-slate-200 dark:border-slate-800")
               )}
             >
               <span className="text-[10px] font-sans font-bold text-[#166534] dark:text-[#22c55e] uppercase">{tCorrect}</span>
@@ -274,7 +302,7 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                 "border p-4 flex flex-col justify-between rounded-xl cursor-pointer select-none transition-all duration-300",
                 filterMode === 'incorrect'
                   ? "border-rose-500 dark:border-rose-400 ring-2 ring-rose-500/30 bg-rose-500/5 dark:bg-rose-950/20 shadow-inner scale-[1.03]"
-                  : "border-slate-200 dark:border-slate-800 bg-white dark:bg-[#140D23]/60 hover:border-rose-400 dark:hover:border-rose-500"
+                  : cn("bg-white hover:border-rose-400 dark:hover:border-rose-500", isMilliy ? "dark:bg-[#0b1624]/60 border-slate-200 dark:border-slate-800" : "dark:bg-[#140D23]/60 border-slate-200 dark:border-slate-800")
               )}
             >
               <span className="text-[10px] font-sans font-bold text-[#991b1b] dark:text-[#ef4444] uppercase">{tIncorrect}</span>
@@ -286,19 +314,23 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                 "border p-4 flex flex-col justify-between rounded-xl cursor-pointer select-none transition-all duration-300",
                 filterMode === 'omitted'
                   ? "border-slate-500 dark:border-slate-400 ring-2 ring-slate-500/30 bg-slate-500/5 dark:bg-slate-950/20 shadow-inner scale-[1.03]"
-                  : "border-slate-200 dark:border-slate-800 bg-white dark:bg-[#140D23]/60 hover:border-slate-450 dark:hover:border-slate-500"
+                  : cn("bg-white hover:border-slate-450 dark:hover:border-slate-500", isMilliy ? "dark:bg-[#0b1624]/60 border-slate-200 dark:border-slate-800" : "dark:bg-[#140D23]/60 border-slate-200 dark:border-slate-800")
               )}
             >
               <span className="text-[10px] font-sans font-bold text-slate-500 dark:text-slate-400 uppercase">{tOmitted}</span>
               <span className="text-2xl font-bold text-slate-800 dark:text-slate-200">{skippedCount}</span>
             </div>
-            <div className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#140D23]/60 p-4 flex flex-col justify-between col-span-2 transition-colors rounded-xl">
+            <div className={cn("border p-4 flex flex-col justify-between col-span-2 transition-colors rounded-xl", 
+              isMilliy ? "dark:bg-[#0b1624]/60 border-slate-200 dark:border-slate-800" : "dark:bg-[#140D23]/60 border-slate-200 dark:border-slate-800 bg-white"
+            )}>
               <span className="text-[10px] font-sans font-bold text-slate-500 dark:text-slate-400 uppercase">{tTotalTimeUsed}</span>
               <span className="text-xl font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2"><Clock className="w-4 h-4 text-slate-400 dark:text-slate-400"/> {timeStr}</span>
             </div>
-            <div className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#140D23]/60 p-4 flex flex-col justify-between col-span-2 transition-colors rounded-xl">
-              <span className="text-[10px] font-sans font-bold text-[#0f2c59] dark:text-teal-500 dark:text-blue-400 uppercase">{tAccuracy}</span>
-              <span className={cn("text-xl font-bold flex items-center gap-2", isMilliy ? "text-[#0d9488]" : "text-[#0f2c59] dark:text-blue-400")}><Target className="w-4 h-4"/> {accuracy}%</span>
+            <div className={cn("border p-4 flex flex-col justify-between col-span-2 transition-colors rounded-xl", 
+              isMilliy ? "dark:bg-[#0b1624]/60 border-slate-200 dark:border-slate-800" : "dark:bg-[#140D23]/60 border-slate-200 dark:border-slate-800 bg-white"
+            )}>
+              <span className={cn("text-[10px] font-sans font-bold uppercase", isMilliy ? "text-[#059669] dark:text-[#10b981]" : "text-[#0f2c59] dark:text-blue-400")}>{tAccuracy}</span>
+              <span className={cn("text-xl font-bold flex items-center gap-2", isMilliy ? "text-[#059669] dark:text-[#10b981]" : "text-[#0f2c59] dark:text-blue-400")}><Target className="w-4 h-4"/> {accuracy}%</span>
             </div>
           </div>
         </div>
@@ -306,16 +338,29 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
         {/* AI PERFORMANCE COACH - Dynamic Diagnostic Report */}
         <div className="p-8 border-b border-slate-300 dark:border-slate-800 transition-colors">
           {!currentResult?.aiCoachFeedback ? (
-            <div className="bg-gradient-to-r from-indigo-50/80 to-purple-50/80 dark:from-indigo-950/20 dark:to-purple-950/20 border border-indigo-100/50 dark:border-[#2e1e52] rounded-2xl p-6 md:p-8 shadow-sm transition-colors relative overflow-hidden backdrop-blur-sm">
+            <div className={cn(
+              "border rounded-2xl p-6 md:p-8 shadow-sm transition-colors relative overflow-hidden backdrop-blur-sm",
+              isMilliy 
+                ? "bg-gradient-to-r from-emerald-50/80 to-amber-50/80 dark:from-emerald-950/10 dark:to-amber-950/10 border-emerald-100/50 dark:border-[#132d20]" 
+                : "bg-gradient-to-r from-indigo-50/80 to-purple-50/80 dark:from-indigo-950/20 dark:to-purple-950/20 border border-indigo-100/50 dark:border-[#2e1e52]"
+            )}>
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center relative">
-                  <BrainCircuit className="w-5 h-5 text-indigo-600 dark:text-indigo-400 animate-pulse" />
-                  <div className="absolute inset-0 rounded-full border border-indigo-400 dark:border-indigo-500 animate-ping opacity-25"></div>
+                <div className={cn("w-10 h-10 rounded-full flex items-center justify-center relative", 
+                  isMilliy ? "bg-emerald-100 dark:bg-emerald-500/20" : "bg-indigo-100 dark:bg-indigo-500/20"
+                )}>
+                  <BrainCircuit className={cn("w-5 h-5 animate-pulse", 
+                    isMilliy ? "text-emerald-600 dark:text-emerald-400" : "text-indigo-600 dark:text-indigo-400"
+                  )} />
+                  <div className={cn("absolute inset-0 rounded-full border animate-ping opacity-25", 
+                    isMilliy ? "border-emerald-400 dark:border-emerald-500" : "border-indigo-400 dark:border-indigo-500"
+                  )}></div>
                 </div>
                 <div>
                   <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                     {tCoachTitle}
-                    <span className="text-[10px] tracking-wider uppercase bg-indigo-600 dark:bg-indigo-500/20 text-white dark:text-indigo-300 px-2 py-0.5 rounded font-sans font-extrabold animate-pulse">
+                    <span className={cn("text-[10px] tracking-wider uppercase px-2 py-0.5 rounded font-sans font-extrabold animate-pulse", 
+                      isMilliy ? "bg-emerald-600 dark:bg-emerald-500/20 text-white dark:text-emerald-300" : "bg-indigo-600 dark:bg-indigo-500/20 text-white dark:text-indigo-300"
+                    )}>
                       {isMilliy ? "Tahlil qilinmoqda..." : "Analyzing..."}
                     </span>
                   </h2>
@@ -326,8 +371,12 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                 <div className="h-6 bg-gradient-to-r from-slate-200/80 via-indigo-100/30 to-slate-200/80 dark:from-slate-800/80 dark:via-indigo-950/20 dark:to-slate-800/80 rounded w-1/3 animate-pulse"></div>
                 <div className="h-4 bg-gradient-to-r from-slate-200/80 via-indigo-100/30 to-slate-200/80 dark:from-slate-800/80 dark:via-indigo-950/20 dark:to-slate-800/80 rounded w-full animate-pulse"></div>
                 <div className="h-4 bg-gradient-to-r from-slate-200/80 via-indigo-100/30 to-slate-200/80 dark:from-slate-800/80 dark:via-indigo-950/20 dark:to-slate-800/80 rounded w-5/6 animate-pulse"></div>
-                <div className="h-20 bg-slate-100/60 dark:bg-[#0c0817]/40 border border-slate-200/40 dark:border-slate-800/40 rounded-xl mt-6 animate-pulse flex items-center justify-center">
-                  <div className="flex items-center gap-2 text-indigo-500 dark:text-indigo-400 text-xs font-semibold uppercase tracking-wider">
+                <div className={cn("h-20 border rounded-xl mt-6 animate-pulse flex items-center justify-center", 
+                  isMilliy ? "bg-emerald-100/60 dark:bg-[#070e17] border-emerald-200/40 dark:border-emerald-800/40" : "bg-slate-100/60 dark:bg-[#0c0817]/40 border border-slate-200/40 dark:border-slate-800/40"
+                )}>
+                  <div className={cn("flex items-center gap-2 text-xs font-semibold uppercase tracking-wider", 
+                    isMilliy ? "text-emerald-500 dark:text-emerald-400" : "text-indigo-500 dark:text-indigo-400"
+                  )}>
                     <Loader2 className="w-4 h-4 animate-spin" /> {tCoachLoadingMetrics}
                   </div>
                 </div>
@@ -344,18 +393,22 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                 } catch (e) {
                   console.error("Coach feedback parsing failed", e);
                 }
-
+ 
                 // Translate contents if isMilliy
                 const finalStrengths = isMilliy ? translateArrayToUz(coachFeedback?.strengths) : (coachFeedback?.strengths || []);
                 const finalWeaknesses = isMilliy ? translateArrayToUz(coachFeedback?.weaknesses) : (coachFeedback?.weaknesses || []);
                 const finalRecommended = isMilliy ? translateArrayToUz(coachFeedback?.recommendedTopics) : (coachFeedback?.recommendedTopics || []);
                 const finalStudyPlan = isMilliy ? translateFeedbackToUz(coachFeedback?.studyPlan) : (coachFeedback?.studyPlan || "");
-
+ 
                 return (
-                  <div className="bg-gradient-to-br from-white to-slate-50/50 dark:from-[#140D23]/60 dark:to-[#1a122e]/40 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 md:p-8 shadow-sm space-y-6 transition-all duration-300">
+                  <div className={cn("border rounded-2xl p-6 md:p-8 shadow-sm space-y-6 transition-all duration-300", 
+                    isMilliy 
+                      ? "bg-white dark:bg-[#0b1624]/60 border-slate-200 dark:border-slate-800" 
+                      : "bg-gradient-to-br from-white to-slate-50/50 dark:from-[#140D23]/60 dark:to-[#1a122e]/40 border border-slate-200 dark:border-slate-800"
+                  )}>
                     <div className="flex items-center gap-3 mb-2">
-                       <div className={cn("w-10 h-10 rounded-full flex items-center justify-center shadow-inner", isMilliy ? "bg-teal-100 dark:bg-teal-950" : "bg-indigo-100 dark:bg-indigo-500/20")}>
-                         <BrainCircuit className={cn("w-5 h-5", isMilliy ? "text-teal-600 dark:text-teal-400" : "text-indigo-600 dark:text-indigo-400")} />
+                       <div className={cn("w-10 h-10 rounded-full flex items-center justify-center shadow-inner", isMilliy ? "bg-emerald-100 dark:bg-emerald-950" : "bg-indigo-100 dark:bg-indigo-500/20")}>
+                         <BrainCircuit className={cn("w-5 h-5", isMilliy ? "text-emerald-600 dark:text-emerald-400" : "text-indigo-600 dark:text-indigo-400")} />
                        </div>
                        <div>
                          <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">{tCoachTitle}</h2>
@@ -388,7 +441,11 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                        </div>
                     </div>
  
-                    <div className="p-6 bg-indigo-50/30 dark:bg-[#0c0817]/40 border border-indigo-100/50 dark:border-indigo-950/40 rounded-xl transition-all duration-300">
+                    <div className={cn("p-6 rounded-xl transition-all duration-300", 
+                      isMilliy 
+                        ? "bg-emerald-50/30 dark:bg-[#070e17] border border-emerald-100/50 dark:border-emerald-950/40" 
+                        : "bg-indigo-50/30 dark:bg-[#0c0817]/40 border border-indigo-100/50 dark:border-indigo-950/40"
+                    )}>
                        <h3 className="font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider text-xs mb-2 font-sans">{tStudyPlan}</h3>
                        <p className="text-slate-800 dark:text-slate-300 leading-relaxed text-sm font-medium">
                          {finalStudyPlan}
@@ -397,7 +454,11 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                          <div className="mt-4 flex flex-wrap gap-2 items-center border-t border-slate-200/40 dark:border-slate-800/40 pt-4">
                            <span className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase mr-2 font-sans">{tFocusTopics}:</span>
                            {finalRecommended.map((t: string, i: number) => (
-                             <span key={i} className="px-3 py-1 bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-200/50 dark:border-indigo-500/30 rounded-full text-xs font-bold font-sans tracking-wide">{t}</span>
+                             <span key={i} className={cn("px-3 py-1 border rounded-full text-xs font-bold font-sans tracking-wide", 
+                               isMilliy 
+                                 ? "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-200/50 dark:border-emerald-500/30" 
+                                 : "bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border-indigo-200/50 dark:border-indigo-500/30"
+                             )}>{t}</span>
                            ))}
                          </div>
                        )}
@@ -410,7 +471,11 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
         </div>
 
         {/* DOMAIN & TIMING ANALYTICS ROW */}
-        <div className="p-8 border-b border-slate-300 dark:border-slate-800 bg-slate-50/50 dark:bg-[#0c0817]/20 flex flex-col md:flex-row gap-8 transition-colors">
+        <div className={cn("p-8 border-b flex flex-col md:flex-row gap-8 transition-colors", 
+          isMilliy 
+            ? "bg-slate-50/50 dark:bg-[#070e17] border-slate-200 dark:border-slate-800" 
+            : "border-slate-300 dark:border-slate-800 bg-slate-50/50 dark:bg-[#0c0817]/20"
+        )}>
           <div className="w-full md:w-1/2">
             <div className="flex items-center gap-2 mb-6 border-b-2 border-slate-800 dark:border-slate-700 pb-2">
               <BarChart3 className="w-5 h-5 text-slate-800 dark:text-slate-200" />
@@ -419,7 +484,11 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
             <div className="space-y-4">
               {Object.entries(topicStats).map(([topic, stat]) => {
                 const pct = Math.round((stat.correct / stat.total) * 100);
-                const color = pct >= 80 ? "bg-emerald-600 dark:bg-emerald-500" : pct >= 50 ? "bg-amber-500 dark:bg-amber-400" : "bg-rose-600 dark:bg-rose-500";
+                const color = pct >= 80 
+                  ? (isMilliy ? "bg-emerald-600 dark:bg-emerald-500" : "bg-emerald-600 dark:bg-emerald-500") 
+                  : pct >= 50 
+                    ? (isMilliy ? "bg-amber-500 dark:bg-amber-400" : "bg-amber-500 dark:bg-amber-400") 
+                    : "bg-rose-600 dark:bg-rose-500";
                 return (
                   <div key={topic} className="font-sans">
                     <div className="flex items-center justify-between mb-1">
@@ -445,15 +514,15 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
             <table className="w-full text-sm font-sans border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden">
               <tbody>
                 <tr className="border-b border-slate-200 dark:border-slate-800 hover:bg-slate-100/50 dark:hover:bg-slate-900/20 transition-colors">
-                  <td className="p-3 bg-slate-50 dark:bg-slate-900/60 text-slate-600 dark:text-slate-400 font-bold uppercase text-xs border-r border-slate-200 dark:border-slate-800">{tAvgPace}</td>
+                  <td className={cn("p-3 text-slate-600 dark:text-slate-400 font-bold uppercase text-xs border-r border-slate-200 dark:border-slate-800", isMilliy ? "bg-slate-50 dark:bg-[#0b1624]" : "bg-slate-50 dark:bg-slate-900/60")}>{tAvgPace}</td>
                   <td className="p-3 text-right font-bold text-slate-900 dark:text-slate-100">{avgTimePerQuestion} {tPaceUnit}</td>
                 </tr>
                 <tr className="border-b border-slate-200 dark:border-slate-800 hover:bg-slate-100/50 dark:hover:bg-slate-900/20 transition-colors">
-                  <td className="p-3 bg-slate-50 dark:bg-slate-900/60 text-slate-600 dark:text-slate-400 font-bold uppercase text-xs border-r border-slate-200 dark:border-slate-800">{tFastest}</td>
+                  <td className={cn("p-3 text-slate-600 dark:text-slate-400 font-bold uppercase text-xs border-r border-slate-200 dark:border-slate-800", isMilliy ? "bg-slate-50 dark:bg-[#0b1624]" : "bg-slate-50 dark:bg-slate-900/60")}>{tFastest}</td>
                   <td className="p-3 text-right font-bold text-slate-900 dark:text-slate-100">{fastest} {tSecUnit}</td>
                 </tr>
                 <tr className="hover:bg-slate-100/50 dark:hover:bg-slate-900/20 transition-colors">
-                  <td className="p-3 bg-slate-50 dark:bg-slate-900/60 text-slate-600 dark:text-slate-400 font-bold uppercase text-xs border-r border-slate-200 dark:border-slate-800">{tSlowest}</td>
+                  <td className={cn("p-3 text-slate-600 dark:text-slate-400 font-bold uppercase text-xs border-r border-slate-200 dark:border-slate-800", isMilliy ? "bg-slate-50 dark:bg-[#0b1624]" : "bg-slate-50 dark:bg-slate-900/60")}>{tSlowest}</td>
                   <td className="p-3 text-right font-bold text-slate-900 dark:text-slate-100">{slowest} {tSecUnit}</td>
                 </tr>
               </tbody>
@@ -503,9 +572,15 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                   : "text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/20";
 
               return (
-                <div key={q.id} className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#140D23]/40 rounded-xl overflow-hidden shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-all duration-200">
+                <div key={q.id} className={cn("border rounded-xl overflow-hidden shadow-sm transition-all duration-200", 
+                  isMilliy 
+                    ? "bg-white dark:bg-[#0b1624]/40 border-emerald-600/10 hover:border-slate-350 dark:hover:border-slate-700" 
+                    : "border-slate-200 dark:border-slate-800 bg-white dark:bg-[#140D23]/40 hover:border-slate-300 dark:hover:border-slate-700"
+                )}>
                   <div 
-                    className="p-4 cursor-pointer flex items-center justify-between hover:bg-slate-50 dark:hover:bg-[#140D23]/80 transition-colors"
+                    className={cn("p-4 cursor-pointer flex items-center justify-between transition-colors", 
+                      isMilliy ? "hover:bg-slate-50 dark:hover:bg-[#0b1624]/80" : "hover:bg-slate-50 dark:hover:bg-[#140D23]/80"
+                    )}
                     onClick={() => setExpandedQ(isExpanded ? null : q.id)}
                   >
                     <div className="flex items-center gap-4 flex-wrap sm:flex-nowrap">
@@ -527,7 +602,11 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                   </div>
 
                   {isExpanded && (
-                    <div className="border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-[#0c0817]/40 p-6 font-serif">
+                    <div className={cn("border-t p-6 font-serif", 
+                      isMilliy 
+                        ? "border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-[#070e17]" 
+                        : "border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-[#0c0817]/40"
+                    )}>
                       <div className="mb-6">
                         <p className="text-xs font-sans font-bold uppercase text-slate-500 dark:text-slate-400 mb-2 border-b border-slate-200 dark:border-slate-800 pb-1">
                           {isMilliy ? `${q.position}-savol` : `Question Item ${q.position}`}
@@ -539,8 +618,12 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                         <table className="w-full text-sm font-sans border-collapse">
                           <thead>
                             <tr>
-                              <th className="border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900/80 p-2 text-left w-1/2 uppercase text-xs text-slate-600 dark:text-slate-400 font-bold">{tCandidateResponse}</th>
-                              <th className="border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900/80 p-2 text-left w-1/2 uppercase text-xs text-slate-600 dark:text-slate-400 font-bold">{tDesignatedCorrect}</th>
+                              <th className={cn("border border-slate-200 dark:border-slate-800 p-2 text-left w-1/2 uppercase text-xs text-slate-600 dark:text-slate-400 font-bold", 
+                                isMilliy ? "bg-slate-100 dark:bg-[#0a1420]/80" : "bg-slate-100 dark:bg-slate-900/80"
+                              )}>{tCandidateResponse}</th>
+                              <th className={cn("border border-slate-200 dark:border-slate-800 p-2 text-left w-1/2 uppercase text-xs text-slate-600 dark:text-slate-400 font-bold", 
+                                isMilliy ? "bg-slate-100 dark:bg-[#0a1420]/80" : "bg-slate-100 dark:bg-slate-900/80"
+                              )}>{tDesignatedCorrect}</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -556,9 +639,13 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                         </table>
                       </div>
 
-                      <div className="bg-white dark:bg-[#140D23]/60 border border-slate-200 dark:border-slate-800 p-5 rounded-xl shadow-sm">
-                        <p className="text-xs font-sans font-bold uppercase text-[#0f2c59] dark:text-blue-400 mb-3 flex items-center gap-2">
-                          <BrainCircuit className="w-4 h-4 text-indigo-500" /> {tRationaleTitle}
+                      <div className={cn("border p-5 rounded-xl shadow-sm", 
+                        isMilliy ? "bg-white dark:bg-[#0b1624]/60 border-slate-200 dark:border-slate-800" : "bg-white dark:bg-[#140D23]/60 border-slate-200 dark:border-slate-800"
+                      )}>
+                        <p className={cn("text-xs font-sans font-bold uppercase mb-3 flex items-center gap-2", 
+                          isMilliy ? "text-[#059669] dark:text-[#10b981]" : "text-[#0f2c59] dark:text-blue-400"
+                        )}>
+                          <BrainCircuit className={cn("w-4 h-4", isMilliy ? "text-emerald-500" : "text-[#059669] dark:text-[#10b981]")} /> {tRationaleTitle}
                         </p>
                         <div className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-sans whitespace-pre-wrap">
                           {detail.aiExplanation ? (
@@ -566,7 +653,7 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                           ) : currentResult?.aiCoachFeedback ? (
                             q.explanation || getExplanation(q.qtype, detail.correctAns, detail.userAns)
                           ) : (
-                            <div className="flex items-center gap-2 text-indigo-500 animate-pulse font-medium">
+                            <div className={cn("flex items-center gap-2 animate-pulse font-medium", isMilliy ? "text-emerald-500" : "text-indigo-500")}>
                               <Loader2 className="h-4 w-4 animate-spin" /> {tRationaleGenerating}
                             </div>
                           )}
@@ -576,15 +663,17 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                   )}
                 </div>
               );
-            })}
+            })
           })()}
           </div>
         </div>
 
-        <div className="p-8 border-t border-slate-200 dark:border-slate-800 text-center font-sans bg-white dark:bg-[#140D23]">
-          <p className="text-xs text-slate-400 uppercase tracking-widest mb-1">{tEndReport}</p>
-          <p className="text-[10px] text-slate-400 mb-8">{tValidationCode}: {Math.random().toString(36).substring(2, 15).toUpperCase()}</p>
-          <Button size="lg" className={cn("text-white font-bold px-10 rounded-xl h-12 uppercase tracking-widest text-sm w-full md:w-auto transition-all duration-200", isMilliy ? "bg-teal-600 hover:bg-teal-700" : "bg-[#0f2c59] hover:bg-[#1a365d] dark:bg-indigo-600 dark:hover:bg-indigo-500")} onClick={() => {
+        <div className={cn("p-8 border-t text-center font-sans bg-white transition-colors", 
+          isMilliy ? "dark:bg-[#0b1624] border-slate-200 dark:border-slate-800" : "border-slate-200 dark:border-slate-800 dark:bg-[#140D23]"
+        )}>
+          <p className="text-xs text-slate-450 uppercase tracking-widest mb-1">{tEndReport}</p>
+          <p className="text-[10px] text-slate-450 mb-8">{tValidationCode}: {Math.random().toString(36).substring(2, 15).toUpperCase()}</p>
+          <Button size="lg" className={cn("text-white font-bold px-10 rounded-xl h-12 uppercase tracking-widest text-sm w-full md:w-auto transition-all duration-200", isMilliy ? "bg-emerald-600 hover:bg-emerald-700" : "bg-[#0f2c59] hover:bg-[#1a365d] dark:bg-indigo-600 dark:hover:bg-indigo-500")} onClick={() => {
             const r = (role || 'student').toLowerCase();
             const path = r === 'super_admin' ? 'super-admin' : r === 'payment_manager' ? 'pack-manager' : r;
             nav(`/${path}`);

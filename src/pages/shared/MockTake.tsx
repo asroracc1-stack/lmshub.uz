@@ -807,15 +807,15 @@ export default function MockTake() {
     // Play Uzbek congratulations or English congratulations voice and celebratory chime
     try {
       if (isMilliyVal) {
-        // Web Audio arpeggio chord chime
+        // Play majestic, official achievement brass-like cadence chord
         const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-        const playTone = (freq: number, startTime: number, duration: number) => {
+        const playTone = (freq: number, startTime: number, duration: number, vol = 0.12) => {
           const osc = audioCtx.createOscillator();
           const gain = audioCtx.createGain();
-          osc.type = "sine";
+          osc.type = "triangle"; // Round, brass/organ-like tone
           osc.frequency.setValueAtTime(freq, startTime);
           gain.gain.setValueAtTime(0, startTime);
-          gain.gain.linearRampToValueAtTime(0.25, startTime + 0.05);
+          gain.gain.linearRampToValueAtTime(vol, startTime + 0.08);
           gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
           osc.connect(gain);
           gain.connect(audioCtx.destination);
@@ -823,10 +823,11 @@ export default function MockTake() {
           osc.stop(startTime + duration);
         };
         const now = audioCtx.currentTime;
-        playTone(523.25, now, 0.45); // C5
-        playTone(659.25, now + 0.12, 0.45); // E5
-        playTone(783.99, now + 0.24, 0.45); // G5
-        playTone(1046.50, now + 0.36, 1.2); // C6
+        playTone(261.63, now, 1.6, 0.15);     // C4
+        playTone(392.00, now + 0.08, 1.4, 0.10); // G4
+        playTone(523.25, now + 0.16, 1.3, 0.10); // C5
+        playTone(659.25, now + 0.24, 1.2, 0.10); // E5
+        playTone(783.99, now + 0.32, 1.5, 0.12); // G5
 
         if ('speechSynthesis' in window) {
           window.speechSynthesis.cancel();
@@ -903,25 +904,36 @@ export default function MockTake() {
   const kind = (exam.type ?? "").toLowerCase();
 
   if (showSuccessAnimation) {
+    const isMilliyVal = exam?.type ? (exam.type.toLowerCase() === "national_cert" || exam.type.toLowerCase() === "milliy") : false;
     return (
-      <div className="fixed inset-0 z-[9999] bg-[#080410] flex items-center justify-center p-4 overflow-hidden">
+      <div className={cn("fixed inset-0 z-[9999] flex items-center justify-center p-4 overflow-hidden", isMilliyVal ? "bg-[#050c18]" : "bg-[#080410]")}>
         {/* Glow Backgrounds */}
-        <div className="absolute top-1/4 left-1/4 h-[350px] w-[350px] rounded-full bg-blue-600/10 blur-[100px] animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 h-[350px] w-[350px] rounded-full bg-purple-600/10 blur-[100px] animate-pulse" />
+        <div className={cn("absolute top-1/4 left-1/4 h-[350px] w-[350px] rounded-full blur-[100px] animate-pulse", isMilliyVal ? "bg-emerald-650/10" : "bg-blue-600/10")} />
+        <div className={cn("absolute bottom-1/4 right-1/4 h-[350px] w-[350px] rounded-full blur-[100px] animate-pulse", isMilliyVal ? "bg-amber-600/10" : "bg-purple-600/10")} />
 
         <motion.div
           initial={{ scale: 0.9, y: 20, opacity: 0 }}
           animate={{ scale: 1, y: 0, opacity: 1 }}
           transition={{ type: "spring", duration: 0.6 }}
-          className="relative w-full max-w-md overflow-hidden rounded-[32px] border border-white/10 bg-white/5 dark:bg-[#140D23]/60 backdrop-blur-2xl p-10 text-center shadow-2xl shadow-purple-950/20"
+          className={cn(
+            "relative w-full max-w-md overflow-hidden rounded-[32px] border backdrop-blur-2xl p-10 text-center shadow-2xl",
+            isMilliyVal 
+              ? "border-emerald-550/20 bg-white/5 dark:bg-[#0b1624]/60 shadow-emerald-950/20" 
+              : "border-white/10 bg-white/5 dark:bg-[#140D23]/60 shadow-purple-950/20"
+          )}
         >
           {/* Top light beam */}
-          <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-[200px] h-[100px] bg-gradient-to-b from-blue-500/20 to-transparent blur-xl" />
+          <div className={cn("absolute -top-20 left-1/2 -translate-x-1/2 w-[200px] h-[100px] blur-xl", isMilliyVal ? "bg-gradient-to-b from-emerald-500/20 to-transparent" : "bg-gradient-to-b from-blue-500/20 to-transparent")} />
 
           {/* Lottie Animation Container */}
-          <div className="relative mx-auto mb-8 flex h-44 w-44 items-center justify-center rounded-full bg-gradient-to-br from-blue-500/5 to-purple-500/5 border border-white/5 shadow-inner">
+          <div className={cn(
+            "relative mx-auto mb-8 flex h-44 w-44 items-center justify-center rounded-full border shadow-inner",
+            isMilliyVal 
+              ? "from-emerald-500/5 to-amber-500/5 border-emerald-550/10" 
+              : "from-blue-500/5 to-purple-500/5 border-white/5"
+          )}>
             {/* Glow ring */}
-            <div className="absolute inset-2 rounded-full bg-gradient-to-br from-blue-500/10 to-purple-500/10 blur-md animate-pulse" />
+            <div className={cn("absolute inset-2 rounded-full blur-md animate-pulse", isMilliyVal ? "bg-gradient-to-br from-emerald-500/10 to-amber-500/10" : "bg-gradient-to-br from-blue-500/10 to-purple-500/10")} />
             <motion.div
               animate={{ 
                 scale: [1, 1.05, 1],
@@ -949,7 +961,7 @@ export default function MockTake() {
             transition={{ delay: 0.2 }}
             className="font-display text-2xl font-black tracking-tight text-white mb-3"
           >
-            Imtihon yakunlandi! 🎉
+            {isMilliyVal ? "Imtihon yakunlandi! 🎉" : "Section Completed! 🎉"}
           </motion.h3>
 
           <motion.p 
@@ -958,13 +970,15 @@ export default function MockTake() {
             transition={{ delay: 0.3 }}
             className="text-sm text-slate-300 leading-relaxed max-w-[280px] mx-auto mb-8 font-medium"
           >
-            Javoblaringiz muvaffaqiyatli qabul qilindi. Natijalar tahlil qilinmoqda, iltimos oynani yopmang...
+            {isMilliyVal 
+              ? "Javoblaringiz muvaffaqiyatli qabul qilindi. Natijalar tahlil qilinmoqda, iltimos oynani yopmang..." 
+              : "Your responses have been successfully submitted. Analyzing your performance, please do not close this window..."}
           </motion.p>
 
           {/* Premium Progress / Loader Dots */}
           <div className="flex flex-col items-center gap-3">
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-400 animate-pulse">
-              Javoblar yuborilmoqda
+            <span className={cn("text-[10px] font-bold uppercase tracking-[0.2em] animate-pulse", isMilliyVal ? "text-emerald-400" : "text-blue-400")}>
+              {isMilliyVal ? "Javoblar yuborilmoqda" : "Submitting Responses"}
             </span>
             <div className="flex gap-2 justify-center">
               {[0, 1, 2].map((i) => (
@@ -973,7 +987,7 @@ export default function MockTake() {
                   animate={{ 
                     scale: [1, 1.4, 1], 
                     opacity: [0.4, 1, 0.4],
-                    backgroundColor: ["#3b82f6", "#a855f7", "#3b82f6"]
+                    backgroundColor: isMilliyVal ? ["#10b981", "#f59e0b", "#10b981"] : ["#3b82f6", "#a855f7", "#3b82f6"]
                   }}
                   transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2, ease: "easeInOut" }}
                   className="h-2 w-2 rounded-full"
@@ -992,10 +1006,16 @@ export default function MockTake() {
 
   if (!started) {
     return (
-      <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 bg-[#f4f4f4] dark:bg-[#0c0817] font-sans selection:bg-teal-200 transition-colors">
-        <div className="w-full max-w-4xl bg-white dark:bg-[#140D23] border border-slate-300 dark:border-slate-800 shadow-xl rounded-2xl overflow-hidden transition-colors">
-          <div className={cn("p-6 flex items-center justify-between transition-colors", isMilliy ? "bg-[#0d9488] dark:bg-[#064e3b]" : "bg-[#0f2c59] dark:bg-[#0b1e3b]")}>
-            <h1 className="text-sm md:text-base font-bold text-white tracking-widest uppercase">
+      <div className={cn("min-h-screen w-full flex flex-col items-center justify-center p-4 font-sans transition-colors", 
+        isMilliy ? "bg-[#f1f5f9] dark:bg-[#060b13] selection:bg-emerald-200" : "bg-[#f4f4f4] dark:bg-[#0c0817] selection:bg-blue-200"
+      )}>
+        <div className={cn("w-full max-w-4xl bg-white border shadow-xl rounded-2xl overflow-hidden transition-colors", 
+          isMilliy ? "dark:bg-[#0b1624] border-slate-200 dark:border-slate-800" : "dark:bg-[#140D23] border-slate-300 dark:border-slate-800"
+        )}>
+          <div className={cn("p-6 flex items-center justify-between transition-colors text-white", 
+            isMilliy ? "bg-[#0a192f] border-b-2 border-[#10b981]" : "bg-[#0f2c59] dark:bg-[#0b1e3b]"
+          )}>
+            <h1 className="text-sm md:text-base font-bold tracking-widest uppercase">
               {isMilliy ? "BILIM VA MALAKALARNI BAHOLASH AGENTLIGI — IMTIHON PORTALI" : "Official Examination Portal"}
             </h1>
             <div className="flex items-center gap-4">
@@ -1011,14 +1031,18 @@ export default function MockTake() {
               <Badge variant="outline" className="bg-transparent text-white border-white/30 rounded-none uppercase text-[10px] tracking-widest">{exam.type}</Badge>
             </div>
           </div>
-          <div className="p-8 md:p-10 space-y-8 bg-white dark:bg-[#140D23]">
+          <div className={cn("p-8 md:p-10 space-y-8 bg-white transition-colors", 
+            isMilliy ? "dark:bg-[#0b1624]" : "dark:bg-[#140D23]"
+          )}>
             <div className="border-b-2 border-slate-200 dark:border-slate-800 pb-4">
               <h2 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">{exam.title}</h2>
               {exam.description && <p className="text-slate-600 dark:text-slate-400 mt-2">{exam.description}</p>}
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
-              <div className="p-6 bg-slate-50 dark:bg-slate-900/10 border-r border-slate-200 dark:border-slate-800 flex flex-col gap-1">
+              <div className={cn("p-6 border-r border-slate-200 dark:border-slate-800 flex flex-col gap-1 transition-colors", 
+                isMilliy ? "bg-slate-50/50 dark:bg-[#070e17]" : "bg-slate-50 dark:bg-slate-900/10"
+              )}>
                 <span className="text-xs uppercase font-bold text-slate-500 dark:text-slate-400 tracking-widest">
                   {isMilliy ? "Berilgan vaqt" : "Time Allotted"}
                 </span>
@@ -1026,7 +1050,9 @@ export default function MockTake() {
                   {exam.duration_minutes} {isMilliy ? "daqiqa" : "minutes"}
                 </span>
               </div>
-              <div className="p-6 bg-slate-50 dark:bg-slate-900/10 flex flex-col gap-1">
+              <div className={cn("p-6 flex flex-col gap-1 transition-colors", 
+                isMilliy ? "bg-slate-50/50 dark:bg-[#070e17]" : "bg-slate-50 dark:bg-slate-900/10"
+              )}>
                 <span className="text-xs uppercase font-bold text-slate-500 dark:text-slate-400 tracking-widest">
                   {isMilliy ? "Jami savollar" : "Total Items"}
                 </span>
@@ -1034,13 +1060,15 @@ export default function MockTake() {
               </div>
             </div>
             
-            <div className={cn("p-6 border-l-4 bg-[#f8fafc] dark:bg-slate-900/40 text-sm text-slate-800 dark:text-slate-200 space-y-4 font-medium", isMilliy ? "border-teal-500" : "border-[#0f2c59] dark:border-blue-500")}>
+            <div className={cn("p-6 border-l-4 text-sm text-slate-800 dark:text-slate-200 space-y-4 font-medium transition-colors", 
+              isMilliy ? "bg-emerald-500/5 border-emerald-600" : "bg-[#f8fafc] dark:bg-slate-900/40 border-[#0f2c59] dark:border-blue-500"
+            )}>
               <h3 className="font-bold uppercase tracking-widest text-xs flex items-center gap-2 text-slate-950 dark:text-white">
-                <AlertCircle className="h-4 w-4 text-amber-500" /> 
+                <AlertCircle className={cn("h-4 w-4", isMilliy ? "text-emerald-500" : "text-amber-500")} /> 
                 {isMilliy ? "Imtihon qoidalari va o'tish shartlari" : "Non-Disclosure Agreement & Rules"}
               </h3>
               {isMilliy ? (
-                <ul className="list-disc pl-5 space-y-2 text-slate-700 dark:text-slate-300">
+                <ul className="list-disc pl-5 space-y-2 text-slate-700 dark:text-slate-350 leading-relaxed font-sans text-xs">
                   <li>Ushbu imtihonni boshlash orqali siz test materiallarining maxfiyligini saqlashga rozilik bildirasiz.</li>
                   <li>Har qanday yordamchi ma'lumotlar, taqiqlangan kalkulyatorlar yoki boshqa elektron qurilmalardan foydalanish qat'iyan man etiladi.</li>
                   <li>Sessiyangiz to'liq nazorat qilinadi. Brauzer oynasini tark etish yoki boshqa sahifaga o'tish test natijalarining bekor bo'lishiga olib kelishi mumkin.</li>
@@ -1056,10 +1084,14 @@ export default function MockTake() {
               )}
             </div>
           </div>
-          <div className="bg-slate-50 dark:bg-[#0c0817]/60 p-6 border-t border-slate-200 dark:border-slate-800 flex justify-center">
+          <div className={cn("p-6 border-t flex justify-center transition-colors", 
+            isMilliy ? "bg-slate-50/50 dark:bg-[#070e17] border-slate-205 dark:border-slate-800" : "bg-slate-50 dark:bg-[#0c0817]/60 border-slate-200 dark:border-slate-800"
+          )}>
             <Button 
               size="lg" 
-              className={cn("text-white font-bold px-10 rounded-xl h-12 uppercase tracking-widest text-sm transition-all duration-300", isMilliy ? "bg-teal-600 hover:bg-teal-700 shadow-md shadow-teal-600/10" : "bg-[#0f2c59] dark:bg-blue-600 hover:bg-[#1a365d] dark:hover:bg-blue-700")} 
+              className={cn("text-white font-bold px-10 rounded-xl h-12 uppercase tracking-widest text-sm transition-all duration-300", 
+                isMilliy ? "bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-600/10" : "bg-[#0f2c59] dark:bg-blue-600 hover:bg-[#1a365d] dark:hover:bg-blue-700"
+              )} 
               onClick={() => { setStarted(true); startedAt.current = Date.now(); }}
             >
               {isMilliy ? "Qoidalarni qabul qilaman va testni boshlayman" : "Acknowledge & Start"}
@@ -1080,11 +1112,17 @@ export default function MockTake() {
   // REVIEW SCREEN - Clinical
   if (showReviewScreen) {
     return (
-      <div className="min-h-screen w-full bg-[#f4f4f4] dark:bg-[#0c0817] flex flex-col items-center justify-center p-4 md:p-8 font-sans selection:bg-blue-200 transition-colors">
-        <div className="w-full max-w-5xl bg-white dark:bg-[#140D23] border border-slate-300 dark:border-slate-800 shadow-xl rounded-2xl overflow-hidden transition-colors">
-          <div className={cn("p-6 text-white flex justify-between items-center", isMilliy ? "bg-[#0d9488] dark:bg-[#064e3b]" : "bg-[#0f2c59] dark:bg-[#0b1e3b]")}>
+      <div className={cn("min-h-screen w-full flex flex-col items-center justify-center p-4 md:p-8 font-sans transition-colors", 
+        isMilliy ? "bg-[#f1f5f9] dark:bg-[#060b13] selection:bg-emerald-200" : "bg-[#f4f4f4] dark:bg-[#0c0817] selection:bg-blue-200"
+      )}>
+        <div className={cn("w-full max-w-5xl bg-white border shadow-xl rounded-2xl overflow-hidden transition-colors", 
+          isMilliy ? "dark:bg-[#0b1624] border-slate-200 dark:border-slate-800" : "dark:bg-[#140D23] border-slate-300 dark:border-slate-800"
+        )}>
+          <div className={cn("p-6 text-white flex justify-between items-center transition-colors", 
+            isMilliy ? "bg-[#0a192f] border-b-2 border-[#10b981]" : "bg-[#0f2c59] dark:bg-[#0b1e3b]"
+          )}>
             <h2 className="text-xl font-bold uppercase tracking-widest">
-              {isMilliy ? "Bo'lim tahlili va testni yakunlash" : "Section Review"}
+              {isMilliy ? "Tekshirish" : "Section Review"}
             </h2>
             <div className="font-mono text-xl font-bold tracking-widest bg-white/10 dark:bg-white/5 px-4 py-1 border border-white/20 dark:border-white/10">
               {fmt(timeLeft)}
@@ -1092,23 +1130,23 @@ export default function MockTake() {
           </div>
           
           <div className="p-8">
-            <div className="flex items-center gap-8 mb-8 border-b-2 border-slate-200 dark:border-slate-800 pb-6">
+            <div className="flex items-center gap-8 mb-8 border-b-2 border-slate-200 dark:border-slate-850 pb-6">
               <div className="text-center">
-                <span className="block text-3xl font-bold text-[#166534] dark:text-[#22c55e]">{answeredCount}</span>
+                <span className={cn("block text-3xl font-bold", isMilliy ? "text-[#059669] dark:text-[#10b981]" : "text-[#166534] dark:text-[#22c55e]")}>{answeredCount}</span>
                 <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-widest">
                   {isMilliy ? "Javob berildi" : "Answered"}
                 </span>
               </div>
               <div className="text-center">
-                <span className="block text-3xl font-bold text-[#ca8a04] dark:text-[#eab308]">{flaggedCount}</span>
+                <span className={cn("block text-3xl font-bold", isMilliy ? "text-amber-600 dark:text-amber-500" : "text-[#ca8a04] dark:text-[#eab308]")}>{flaggedCount}</span>
                 <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-widest">
                   {isMilliy ? "Belgilandi" : "Marked"}
                 </span>
               </div>
               <div className="text-center">
-                <span className="block text-3xl font-bold text-[#991b1b] dark:text-[#ef4444]">{questions.length - answeredCount}</span>
+                <span className={cn("block text-3xl font-bold", isMilliy ? "text-rose-600 dark:text-rose-500" : "text-[#991b1b] dark:text-[#ef4444]")}>{questions.length - answeredCount}</span>
                 <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-widest">
-                  {isMilliy ? "Javobsiz" : "Incomplete"}
+                  {isMilliy ? "Belgilanmagan" : "Incomplete"}
                 </span>
               </div>
             </div>
@@ -1126,9 +1164,17 @@ export default function MockTake() {
                     }}
                     className={cn(
                       "aspect-square flex items-center justify-center text-sm font-bold border rounded-none transition-colors",
-                      hasAns && !isFlg ? "bg-white dark:bg-[#0f2c59]/20 border-[#166534] dark:border-[#22c55e] text-[#166534] dark:text-[#22c55e] border-2" 
-                      : isFlg ? "bg-white dark:bg-[#ca8a04]/20 border-[#ca8a04] dark:border-[#eab308] text-[#ca8a04] dark:text-[#eab308] border-2"
-                      : "bg-[#f8fafc] dark:bg-slate-900/50 border-slate-300 dark:border-slate-800 text-slate-500 dark:text-slate-400"
+                      hasAns && !isFlg 
+                        ? (isMilliy 
+                            ? "bg-white dark:bg-emerald-950/20 border-[#10b981] dark:border-[#10b981] text-[#059669] dark:text-[#10b981] border-2" 
+                            : "bg-white dark:bg-[#0f2c59]/20 border-[#166534] dark:border-[#22c55e] text-[#166534] dark:text-[#22c55e] border-2")
+                        : isFlg 
+                          ? (isMilliy 
+                              ? "bg-white dark:bg-amber-950/20 border-amber-500 dark:border-amber-450 text-amber-600 dark:text-amber-500 border-2" 
+                              : "bg-white dark:bg-[#ca8a04]/20 border-[#ca8a04] dark:border-[#eab308] text-[#ca8a04] dark:text-[#eab308] border-2")
+                          : (isMilliy 
+                              ? "bg-slate-100 dark:bg-slate-800/50 border-slate-350 dark:border-slate-700 text-slate-550 dark:text-slate-400" 
+                              : "bg-[#f8fafc] dark:bg-slate-900/50 border-slate-300 dark:border-slate-800 text-slate-500 dark:text-slate-400")
                     )}
                   >
                     {q.position}
@@ -1138,42 +1184,57 @@ export default function MockTake() {
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-0 justify-between items-stretch sm:items-center bg-slate-100 dark:bg-[#140D23]/60 p-4 sm:p-6 border-t border-slate-300 dark:border-slate-800">
+          <div className={cn("flex flex-col sm:flex-row gap-3 sm:gap-0 justify-between items-stretch sm:items-center p-4 sm:p-6 border-t transition-colors", 
+            isMilliy ? "bg-slate-50 dark:bg-[#0a192f]/60 border-slate-200 dark:border-slate-850" : "bg-slate-100 dark:bg-[#140D23]/60 border-slate-300 dark:border-slate-800"
+          )}>
             <Button 
               variant="outline" 
               size="lg" 
-              className="rounded-none border-2 border-slate-800 dark:border-slate-700 font-bold uppercase tracking-widest text-xs w-full sm:w-auto justify-center text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-900" 
+              className={cn("rounded-none border-2 font-bold uppercase tracking-widest text-xs w-full sm:w-auto justify-center text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-900", 
+                isMilliy ? "border-[#0a192f] dark:border-[#10b981]" : "border-slate-800 dark:border-slate-700"
+              )}
               onClick={() => setShowReviewScreen(false)}
             >
-              <ChevronLeft className="w-4 h-4 mr-2" /> {isMilliy ? "Orqaga qaytish" : "Return"}
+              <ChevronLeft className="w-4 h-4 mr-2" /> {isMilliy ? "Oldingi savol" : "Return"}
             </Button>
             <Button 
               size="lg" 
-              className={cn("text-white font-bold px-4 sm:px-10 rounded-none text-xs uppercase tracking-widest w-full sm:w-auto justify-center", isMilliy ? "bg-teal-600 hover:bg-teal-700 border-none shadow-lg shadow-teal-600/10" : "bg-[#0f2c59] hover:bg-[#1a365d]")} 
+              className={cn("text-white font-bold px-4 sm:px-10 rounded-none text-xs uppercase tracking-widest w-full sm:w-auto justify-center", 
+                isMilliy ? "bg-[#059669] hover:bg-[#047857] dark:bg-[#10b981] dark:hover:bg-[#059669] border-none shadow-lg shadow-emerald-600/10" : "bg-[#0f2c59] hover:bg-[#1a365d]"
+              )} 
               onClick={() => submit(false)}
             >
-              {isMilliy ? "Testni yakunlash va topshirish" : "Submit Final Responses"}
+              {isMilliy ? "Testni yakunlash" : "Submit Final Responses"}
             </Button>
           </div>
         </div>
       </div>
+    );
+  }
+
   return (
-    <div className={cn("w-full min-h-screen bg-white dark:bg-[#080410] text-slate-900 dark:text-slate-100 flex flex-col font-sans selection:bg-blue-200 transition-colors", isMilliy ? "selection:bg-teal-200" : "")}>
+    <div className={cn("w-full min-h-screen flex flex-col font-sans transition-colors", 
+      isMilliy ? "bg-[#f1f5f9] dark:bg-[#060b13] text-slate-900 dark:text-slate-105 selection:bg-emerald-250" : "bg-white dark:bg-[#080410] text-slate-900 dark:text-slate-100 selection:bg-blue-200"
+    )}>
       
-      {/* EXAM COMMAND CENTER HEADER - Official Blue/Teal Bar */}
-      <header className={cn("h-[60px] shrink-0 text-white flex items-center justify-between px-6 z-40 border-b transition-colors", isMilliy ? "bg-[#0d9488] dark:bg-[#064e3b] border-[#0d9488] dark:border-[#064e3b]" : "bg-[#0f2c59] dark:bg-[#0b1e3b] border-[#0f2c59] dark:border-[#0b1e3b]")}>
+      {/* EXAM COMMAND CENTER HEADER - Official Deep Blue/Teal Bar */}
+      <header className={cn("h-[60px] shrink-0 text-white flex items-center justify-between px-6 z-40 border-b transition-colors", 
+        isMilliy ? "bg-[#0a192f] border-b-2 border-b-[#10b981]" : "bg-[#0f2c59] dark:bg-[#0b1e3b] border-[#0f2c59] dark:border-[#0b1e3b]"
+      )}>
         <div className="flex items-center gap-4 min-w-0">
            <h1 className="font-bold text-sm uppercase tracking-widest truncate max-w-[150px] sm:max-w-none">
-             {isMilliy ? "BILIM VA MALAKALARNI BAHOLASH AGENTLIGI" : exam.title}
+             {isMilliy ? "O'ZBEKISTON RESPUBLIKASI MILLIY SERTIFIKAT IMTIHONI" : exam.title}
            </h1>
-           <span className="text-[10px] bg-white/10 px-2 py-0.5 border border-white/20 uppercase tracking-widest shrink-0">{exam.type}</span>
+           <span className="text-[10px] bg-white/10 px-2 py-0.5 border border-white/20 uppercase tracking-widest shrink-0">
+             {isMilliy ? "Milliy Sertifikat" : exam.type}
+           </span>
         </div>
 
         {/* TIMER */}
         <div className="flex items-center">
-          {isMilliy && (
-            <span className="text-xs uppercase font-bold text-teal-200 tracking-wider mr-2 hidden sm:inline">Qolgan vaqt:</span>
-          )}
+          <span className="text-xs uppercase font-bold tracking-wider mr-2 hidden sm:inline text-white/80">
+            {isMilliy ? "Qolgan vaqt:" : "Time Remaining:"}
+          </span>
           <div className={cn(
             "flex items-center justify-center px-6 py-1.5 font-mono text-xl font-bold tracking-[0.1em] border-2",
             timeLeft < 60 ? "bg-[#991b1b] border-[#ef4444] animate-pulse" :
@@ -1202,7 +1263,7 @@ export default function MockTake() {
              <Button 
                variant="ghost" 
                size="icon" 
-               className="rounded-none hover:bg-white/10 text-teal-300 hover:text-teal-200" 
+               className="rounded-none hover:bg-white/10 text-emerald-400 hover:text-emerald-300" 
                onClick={() => setShowScratchpad(!showScratchpad)}
                title="Qoralama daftari (Doska)"
              >
@@ -1217,12 +1278,20 @@ export default function MockTake() {
       </header>
 
       {/* QUESTION AREA */}
-      <main className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden bg-[#f4f4f4] dark:bg-[#0c0817] transition-colors">
+      <main className={cn("flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden transition-colors", 
+        isMilliy ? "bg-[#f1f5f9] dark:bg-[#060b13]" : "bg-[#f4f4f4] dark:bg-[#0c0817]"
+      )}>
         {isReading && sections[currentQuestion?.section_index] && (sections[currentQuestion?.section_index].passage || sections[currentQuestion?.section_index].imageUrl) && (
-          <div className="w-full md:w-1/2 h-1/2 md:h-full overflow-y-auto border-b md:border-b-0 md:border-r border-slate-300 dark:border-slate-800 p-6 md:p-8 xl:p-12 bg-white dark:bg-[#140D23] transition-colors">
-            <h2 className="text-xl font-bold mb-6 text-slate-900 dark:text-white uppercase tracking-widest border-b-2 border-slate-800 dark:border-slate-700 pb-2">{sections[currentQuestion.section_index].title}</h2>
+          <div className={cn("w-full md:w-1/2 h-1/2 md:h-full overflow-y-auto border-b md:border-b-0 md:border-r p-6 md:p-8 xl:p-12 transition-colors", 
+            isMilliy ? "bg-white dark:bg-[#0b1624] border-slate-200 dark:border-slate-805" : "bg-white dark:bg-[#140D23] border-slate-300 dark:border-slate-800"
+          )}>
+            <h2 className={cn("text-xl font-bold mb-6 uppercase tracking-widest border-b-2 pb-2", 
+              isMilliy ? "border-slate-200 dark:border-slate-800 text-[#0a192f] dark:text-white" : "border-slate-880 dark:border-slate-700 text-slate-900 dark:text-white"
+            )}>
+              {sections[currentQuestion.section_index].title}
+            </h2>
             {sections[currentQuestion.section_index].imageUrl && (
-              <img src={getFullImageUrl(sections[currentQuestion.section_index].imageUrl)} className="max-w-full border border-slate-300 dark:border-slate-800 mb-6" />
+              <img src={getFullImageUrl(sections[currentQuestion.section_index].imageUrl)} className={cn("max-w-full border mb-6", isMilliy ? "border-slate-200 dark:border-slate-800" : "border-slate-300 dark:border-slate-800")} />
             )}
             <div className="prose prose-slate dark:prose-invert max-w-none text-slate-800 dark:text-slate-200 font-serif leading-loose text-lg whitespace-pre-wrap">
               {sections[currentQuestion.section_index].passage}
@@ -1230,26 +1299,37 @@ export default function MockTake() {
           </div>
         )}
 
-        <div className={cn("overflow-y-auto flex flex-col p-6 md:p-8 xl:p-12 bg-white dark:bg-[#140D23] transition-colors", isReading ? "w-full md:w-1/2 h-1/2 md:h-full" : "w-full h-full max-w-5xl mx-auto border-x border-slate-300 dark:border-slate-800")}>
+        <div className={cn("overflow-y-auto flex flex-col p-6 md:p-8 xl:p-12 transition-colors", 
+          isReading ? "w-full md:w-1/2 h-1/2 md:h-full" : "w-full h-full max-w-5xl mx-auto border-x",
+          isMilliy ? "bg-white dark:bg-[#0b1624] border-slate-200 dark:border-slate-850" : "bg-white dark:bg-[#140D23] border-slate-300 dark:border-slate-800"
+        )}>
           
           <div className="w-full flex-1 flex flex-col">
             {currentQuestion && (
               <div key={currentQuestion.id} className="w-full">
                 
                 {/* QUESTION HEADER */}
-                <div className={cn("flex items-center justify-between border-b-2 pb-4 mb-8", isMilliy ? "border-[#0d9488]" : "border-[#0f2c59] dark:border-blue-500")}>
+                <div className={cn("flex items-center justify-between border-b-2 pb-4 mb-8", 
+                  isMilliy ? "border-[#10b981]" : "border-[#0f2c59] dark:border-blue-500"
+                )}>
                   <div className="flex items-center gap-3">
-                    <div className={cn("h-8 w-8 text-white flex items-center justify-center text-sm font-bold", isMilliy ? "bg-[#0d9488]" : "bg-[#0f2c59] dark:bg-blue-600")}>
+                    <div className={cn("h-8 w-8 text-white flex items-center justify-center text-sm font-bold", 
+                      isMilliy ? "bg-[#0a192f]" : "bg-[#0f2c59] dark:bg-blue-600"
+                    )}>
                       {currentQuestion.position}
                     </div>
-                    <span className={cn("text-xs font-bold uppercase tracking-widest", isMilliy ? "text-[#0d9488]" : "text-[#0f2c59] dark:text-blue-400")}>
+                    <span className={cn("text-xs font-bold uppercase tracking-widest", 
+                      isMilliy ? "text-[#059669] dark:text-[#10b981]" : "text-[#0f2c59] dark:text-blue-400"
+                    )}>
                       {isMilliy ? `${currentQuestion.position} - savol (jami ${questions.length} ta)` : `Item ${currentQuestion.position} of ${questions.length}`}
                     </span>
                   </div>
                   <button 
                     className={cn(
                       "flex items-center text-xs font-bold uppercase tracking-widest px-3 py-1.5 border-2 transition-colors", 
-                      flagged.has(currentQuestion.id) ? "border-[#ca8a04] text-[#ca8a04]" : "border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-500 dark:hover:border-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                      flagged.has(currentQuestion.id)
+                        ? (isMilliy ? "border-amber-500 text-amber-600" : "border-[#ca8a04] text-[#ca8a04]")
+                        : (isMilliy ? "border-slate-200 dark:border-slate-800 text-slate-500 hover:border-[#10b981] hover:text-[#10b981]" : "border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-500 dark:hover:border-slate-500 hover:text-slate-700 dark:hover:text-slate-300")
                     )}
                     onClick={() => toggleFlag(currentQuestion.id)}
                   >
@@ -1265,7 +1345,7 @@ export default function MockTake() {
 
                 {/* MEDIA */}
                 {currentQuestion.imageUrl && (
-                  <img src={getFullImageUrl(currentQuestion.imageUrl)} className="max-w-full border border-slate-300 dark:border-slate-800 mb-8" />
+                  <img src={getFullImageUrl(currentQuestion.imageUrl)} className={cn("max-w-full border mb-8", isMilliy ? "border-slate-200 dark:border-slate-805" : "border-slate-300 dark:border-slate-800")} />
                 )}
 
                 {/* OPTIONS */}
@@ -1281,21 +1361,21 @@ export default function MockTake() {
                           className={cn(
                             "w-full text-left p-4 border-2 transition-none flex items-center gap-4 group rounded-none",
                             isSelected 
-                              ? (isMilliy ? "border-[#0d9488] bg-[#f0f9f8] dark:bg-teal-950/20" : "border-[#0f2c59] dark:border-blue-500 bg-[#f0f4f8] dark:bg-blue-950/20")
-                              : "border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900/50 hover:border-[#0f2c59] dark:hover:border-blue-500"
+                              ? (isMilliy ? "border-[#10b981] bg-emerald-500/5 dark:bg-emerald-950/20" : "border-[#0f2c59] dark:border-blue-500 bg-[#f0f4f8] dark:bg-blue-950/20")
+                              : (isMilliy ? "border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0b1624] hover:border-[#10b981]" : "border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900/50 hover:border-[#0f2c59] dark:hover:border-blue-500")
                           )}
                         >
                           <div className={cn(
                             "h-6 w-6 border-2 flex items-center justify-center font-bold text-xs shrink-0 rounded-full",
                             isSelected 
-                              ? (isMilliy ? "border-[#0d9488] bg-[#0d9488] text-white" : "border-[#0f2c59] dark:border-blue-500 bg-[#0f2c59] dark:bg-blue-500 text-white")
-                              : "border-slate-400 dark:border-slate-600 text-slate-600 dark:text-slate-400 group-hover:border-[#0f2c59] dark:group-hover:border-blue-500 group-hover:text-[#0f2c59] dark:group-hover:text-blue-400"
+                              ? (isMilliy ? "border-[#10b981] bg-[#10b981] text-white" : "border-[#0f2c59] dark:border-blue-500 bg-[#0f2c59] dark:bg-blue-500 text-white")
+                              : (isMilliy ? "border-slate-300 dark:border-slate-700 text-slate-650 group-hover:border-[#10b981] group-hover:text-[#10b981]" : "border-slate-400 dark:border-slate-600 text-slate-600 dark:text-slate-400 group-hover:border-[#0f2c59] dark:group-hover:border-blue-500 group-hover:text-[#0f2c59] dark:group-hover:text-blue-400")
                           )}>
                             {labels[oIdx]}
                           </div>
                           <div className="flex-1">
-                            {opt.imageUrl && <img src={getFullImageUrl(opt.imageUrl)} className="h-16 object-contain mb-2 border border-slate-200 dark:border-slate-800" />}
-                            <span className="text-lg font-serif text-slate-800 dark:text-slate-200">
+                            {opt.imageUrl && <img src={getFullImageUrl(opt.imageUrl)} className={cn("h-16 object-contain mb-2 border", isMilliy ? "border-slate-200 dark:border-slate-800" : "border-slate-200 dark:border-slate-800")} />}
+                            <span className={cn("text-lg", isMilliy ? "font-sans text-slate-800 dark:text-slate-200" : "font-serif text-slate-800 dark:text-slate-200")}>
                               {opt.text}
                             </span>
                           </div>
@@ -1307,8 +1387,12 @@ export default function MockTake() {
                   <div className="w-full">
                     <Textarea 
                       rows={6} 
-                      className={cn("w-full p-4 text-lg font-serif rounded-none border-2 border-slate-300 dark:border-slate-800 resize-none bg-white dark:bg-slate-900/50 text-slate-900 dark:text-white", isMilliy ? "focus:border-[#0d9488]" : "focus:border-[#0f2c59] dark:focus:border-blue-500")}
-                      placeholder={isMilliy ? "Javobingizni shu yerga kiriting..." : "Type your response here..."}
+                      className={cn("w-full p-4 text-lg font-serif rounded-none border-2 resize-none", 
+                        isMilliy 
+                          ? "bg-white dark:bg-[#0b1624] border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:border-[#10b981]" 
+                          : "bg-white dark:bg-slate-900/50 border-slate-300 dark:border-slate-800 text-slate-900 dark:text-white focus:border-[#0f2c59] dark:focus:border-blue-500"
+                      )}
+                      placeholder={isMilliy ? "Javobingizni shu yerga yozing..." : "Type your response here..."}
                       value={answers[currentQuestion.id] || ""}
                       onChange={(e) => onAnswer(currentQuestion.id, e.target.value)}
                     />
@@ -1321,7 +1405,9 @@ export default function MockTake() {
       </main>
 
       {/* EXAM NAVIGATOR - Formal Status Bar */}
-      <footer className="h-[70px] bg-slate-100 dark:bg-[#140D23] border-t border-slate-300 dark:border-slate-800 flex items-center justify-between px-4 sm:px-6 z-40 transition-colors">
+      <footer className={cn("h-[70px] border-t flex items-center justify-between px-4 sm:px-6 z-40 transition-colors", 
+        isMilliy ? "bg-white dark:bg-[#0a192f] border-slate-200 dark:border-slate-850" : "bg-slate-100 dark:bg-[#140D23] border-t border-slate-300 dark:border-slate-800"
+      )}>
         
         <div className="flex items-center gap-2 sm:gap-4 w-1/2 sm:w-1/4">
           <Button 
@@ -1329,21 +1415,25 @@ export default function MockTake() {
             variant="outline" 
             onClick={() => setActiveQuestionIndex(Math.max(0, activeQuestionIndex - 1))}
             disabled={activeQuestionIndex === 0}
-            className="rounded-none border-2 border-slate-400 dark:border-slate-700 font-bold text-xs uppercase tracking-widest text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900"
+            className={cn("rounded-none border-2 font-bold text-xs uppercase tracking-widest", 
+              isMilliy 
+                ? "border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900" 
+                : "border-slate-400 dark:border-slate-700 text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900"
+            )}
           >
-            <ChevronLeft className="w-4 h-4 mr-1 sm:mr-2" /> {isMilliy ? "Orqaga" : "Back"}
+            <ChevronLeft className="w-4 h-4 mr-1 sm:mr-2" /> {isMilliy ? "Oldingi savol" : "Back"}
           </Button>
         </div>
 
         <div className="hidden md:flex flex-1 justify-center items-center gap-8 text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 font-sans">
-          <span className="text-[#166534] dark:text-[#22c55e]">
+          <span className={isMilliy ? "text-[#059669] dark:text-[#10b981]" : "text-[#166534] dark:text-[#22c55e]"}>
             {isMilliy ? `Javob berildi: ${answeredCount}` : `Answered: ${answeredCount}`}
           </span>
-          <span className="text-[#ca8a04] dark:text-[#eab308]">
+          <span className={isMilliy ? "text-amber-600 dark:text-amber-500" : "text-[#ca8a04] dark:text-[#eab308]"}>
             {isMilliy ? `Belgilandi: ${flaggedCount}` : `Marked: ${flaggedCount}`}
           </span>
           <span className="text-slate-800 dark:text-slate-300">
-            {isMilliy ? `Javobsiz: ${questions.length - answeredCount}` : `Unanswered: ${questions.length - answeredCount}`}
+            {isMilliy ? `Belgilanmagan: ${questions.length - answeredCount}` : `Unanswered: ${questions.length - answeredCount}`}
           </span>
         </div>
 
@@ -1357,9 +1447,13 @@ export default function MockTake() {
                 setActiveQuestionIndex(Math.min(questions.length - 1, activeQuestionIndex + 1));
               }
             }}
-            className={cn("rounded-none font-bold text-xs uppercase tracking-widest text-white border-2", isMilliy ? "bg-[#0d9488] hover:bg-[#0b7a6f] border-[#0d9488]" : "bg-[#0f2c59] dark:bg-blue-600 hover:bg-[#1a365d] dark:hover:bg-blue-700 border-[#0f2c59] dark:border-blue-600")}
+            className={cn("rounded-none font-bold text-xs uppercase tracking-widest text-white border-2 transition-colors", 
+              isMilliy 
+                ? "bg-[#059669] hover:bg-[#047857] border-[#059669] dark:bg-[#10b981] dark:hover:bg-[#059669] dark:border-[#10b981]" 
+                : "bg-[#0f2c59] dark:bg-blue-600 hover:bg-[#1a365d] dark:hover:bg-blue-700 border-[#0f2c59] dark:border-blue-600"
+            )}
           >
-            {activeQuestionIndex === questions.length - 1 ? (isMilliy ? "Testni yakunlash" : "End Section") : (isMilliy ? "Keyingi" : "Next")} <ChevronRight className="w-4 h-4 ml-2" />
+            {activeQuestionIndex === questions.length - 1 ? (isMilliy ? "Testni yakunlash" : "End Section") : (isMilliy ? "Keyingi savol" : "Next")} <ChevronRight className="w-4 h-4 ml-2" />
           </Button>
         </div>
 
@@ -1370,21 +1464,30 @@ export default function MockTake() {
 
       {/* Cheating Warning Modal */}
       <AlertDialog open={showCheatingWarning} onOpenChange={setShowCheatingWarning}>
-        <AlertDialogContent className="rounded-3xl border border-amber-500/30 bg-[#160E26]/95 text-white backdrop-blur-md max-w-md">
+        <AlertDialogContent className={cn("rounded-3xl border text-white backdrop-blur-md max-w-md", 
+          isMilliy ? "border-amber-500/30 bg-[#0a192f]/95" : "border-amber-500/30 bg-[#160E26]/95"
+        )}>
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl font-extrabold text-amber-400 flex items-center gap-2">
-              <AlertCircle className="h-6 w-6 text-amber-500 animate-bounce" /> Ogohlantirish!
+              <AlertCircle className="h-6 w-6 text-amber-500 animate-bounce" /> {isMilliy ? "Ogohlantirish!" : "Warning!"}
             </AlertDialogTitle>
             <AlertDialogDescription className="text-slate-300 mt-2 text-sm leading-relaxed">
-              Siz imtihon oynasini tark etdingiz (Alt-Tab yoki boshqa ilovaga o'tish). Imtihon oynasini yana bir marta tark etsangiz, javoblaringiz avtomatik ravishda yuboriladi va imtihon yakunlanadi!
+              {isMilliy 
+                ? "Siz imtihon oynasini tark etdingiz (Alt-Tab yoki boshqa ilovaga o'tish). Imtihon oynasini yana bir marta tark etsangiz, javoblaringiz avtomatik ravishda yuboriladi va imtihon yakunlanadi!" 
+                : "You have navigated away from the exam window (Alt-Tab or switched applications). If you leave the exam window one more time, your responses will be automatically submitted and the exam will end!"
+              }
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="mt-6">
             <AlertDialogAction
               onClick={() => setShowCheatingWarning(false)}
-              className="bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl py-2 w-full border-none shadow-lg shadow-amber-500/20"
+              className={cn("text-white font-bold rounded-xl py-2 w-full border-none shadow-lg", 
+                isMilliy 
+                  ? "bg-[#059669] hover:bg-[#047857] shadow-emerald-500/20" 
+                  : "bg-amber-500 hover:bg-amber-600 shadow-amber-500/20"
+              )}
             >
-              Tushundim, imtihonni davom ettiraman
+              {isMilliy ? "Tushundim, imtihonni davom ettiraman" : "I understand, resume exam"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1401,19 +1504,26 @@ export default function MockTake() {
             <motion.div
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
-              className="w-full max-w-md rounded-3xl border border-rose-500/30 bg-[#160E26] p-8 text-center shadow-2xl shadow-rose-500/10"
+              className={cn("w-full max-w-md rounded-3xl border p-8 text-center shadow-2xl", 
+                isMilliy 
+                  ? "border-rose-500/30 bg-[#0a192f] shadow-rose-950/20" 
+                  : "border-rose-500/30 bg-[#160E26] shadow-rose-500/10"
+              )}
             >
               <div className="relative mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-rose-500/15">
                 <Shield className="h-10 w-10 text-rose-500" />
               </div>
               <h3 className="text-2xl font-black tracking-tight text-white">
-                Imtihon Bloklandi! 🔒
+                {isMilliy ? "Imtihon Bloklandi! 🔒" : "Exam Locked! 🔒"}
               </h3>
               <p className="mt-3 text-sm text-slate-300 leading-relaxed">
-                Tizim qoidalariga ko'ra, imtihon oynasini ikki marta tark etganingiz sababli imtihoningiz bloklandi va javoblaringiz avtomatik ravishda saqlab topshirildi.
+                {isMilliy 
+                  ? "Tizim qoidalariga ko'ra, imtihon oynasini ikki marta tark etganingiz sababli imtihoningiz bloklandi va javoblaringiz avtomatik ravishda saqlab topshirildi." 
+                  : "According to system rules, because you left the exam window twice, your exam has been locked and your responses have been automatically submitted."
+                }
               </p>
               <div className="mt-6 p-3 rounded-xl bg-rose-500/10 text-xs font-bold text-rose-400 border border-rose-500/20">
-                Imtihon faoliyati shubhali deb baholandi
+                {isMilliy ? "Imtihon faoliyati shubhali deb baholandi" : "Exam activity flagged as suspicious"}
               </div>
               <div className="mt-8">
                 <Button
@@ -1421,13 +1531,15 @@ export default function MockTake() {
                     if (result) {
                       setShowCheatingLocked(false);
                     } else {
-                      toast.info("Tizim javoblarni yuklamoqda, kuting...");
+                      toast.info(isMilliy ? "Tizim javoblarni yuklamoqda, kuting..." : "System is submitting responses, please wait...");
                     }
                   }}
                   disabled={!result}
-                  className="w-full h-12 bg-rose-600 hover:bg-rose-700 text-white font-bold text-base rounded-xl transition-all border-none"
+                  className={cn("w-full h-12 text-white font-bold text-base rounded-xl transition-all border-none", 
+                    isMilliy ? "bg-[#059669] hover:bg-[#047857]" : "bg-rose-600 hover:bg-rose-700"
+                  )}
                 >
-                  Natijani ko'rish
+                  {isMilliy ? "Natijani ko'rish" : "View Result"}
                 </Button>
               </div>
             </motion.div>
