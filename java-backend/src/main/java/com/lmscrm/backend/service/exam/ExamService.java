@@ -33,6 +33,7 @@ public class ExamService {
     private final OrganizationRepository organizationRepository;
     private final StudentAttemptRepository studentAttemptRepository;
     private final StudentAnswerRepository studentAnswerRepository;
+    private final PracticeSessionRepository practiceSessionRepository;
     private final ExamMapper mapper;
     private final GeminiService geminiService;
     private final ObjectMapper objectMapper;
@@ -247,47 +248,75 @@ public class ExamService {
                 .stream().map(mapper::toExamDto).collect(Collectors.toList());
     }
 
+    private boolean tableExists(String tableName) {
+        try {
+            Number count = (Number) entityManager.createNativeQuery(
+                            "SELECT COUNT(*) FROM information_schema.tables WHERE LOWER(table_name) = LOWER(:tableName)")
+                    .setParameter("tableName", tableName)
+                    .getSingleResult();
+            return count != null && count.intValue() > 0;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     @Transactional
     public void deleteExam(UUID id) {
         // 1. Delete student answers associated with attempts of this exam
-        entityManager.createNativeQuery("DELETE FROM public.student_answers WHERE attempt_id IN (SELECT id FROM public.student_attempts WHERE exam_id = :examId)")
-                .setParameter("examId", id)
-                .executeUpdate();
+        if (tableExists("student_answers") && tableExists("student_attempts")) {
+            entityManager.createNativeQuery("DELETE FROM public.student_answers WHERE attempt_id IN (SELECT id FROM public.student_attempts WHERE exam_id = :examId)")
+                    .setParameter("examId", id)
+                    .executeUpdate();
+        }
 
         // 2. Delete exam violations associated with attempts of this exam
-        entityManager.createNativeQuery("DELETE FROM public.exam_violations WHERE attempt_id IN (SELECT id FROM public.student_attempts WHERE exam_id = :examId)")
-                .setParameter("examId", id)
-                .executeUpdate();
+        if (tableExists("exam_violations") && tableExists("student_attempts")) {
+            entityManager.createNativeQuery("DELETE FROM public.exam_violations WHERE attempt_id IN (SELECT id FROM public.student_attempts WHERE exam_id = :examId)")
+                    .setParameter("examId", id)
+                    .executeUpdate();
+        }
 
         // 3. Delete student attempts associated with this exam
-        entityManager.createNativeQuery("DELETE FROM public.student_attempts WHERE exam_id = :examId")
-                .setParameter("examId", id)
-                .executeUpdate();
+        if (tableExists("student_attempts")) {
+            entityManager.createNativeQuery("DELETE FROM public.student_attempts WHERE exam_id = :examId")
+                    .setParameter("examId", id)
+                    .executeUpdate();
+        }
 
         // 4. Delete subscription pack associations
-        entityManager.createNativeQuery("DELETE FROM public.subscription_pack_exams WHERE exam_id = :examId")
-                .setParameter("examId", id)
-                .executeUpdate();
+        if (tableExists("subscription_pack_exams")) {
+            entityManager.createNativeQuery("DELETE FROM public.subscription_pack_exams WHERE exam_id = :examId")
+                    .setParameter("examId", id)
+                    .executeUpdate();
+        }
 
         // 5. Delete question options associated with the questions of this exam
-        entityManager.createNativeQuery("DELETE FROM public.question_options WHERE question_id IN (SELECT id FROM public.questions WHERE exam_id = :examId)")
-                .setParameter("examId", id)
-                .executeUpdate();
+        if (tableExists("question_options") && tableExists("questions")) {
+            entityManager.createNativeQuery("DELETE FROM public.question_options WHERE question_id IN (SELECT id FROM public.questions WHERE exam_id = :examId)")
+                    .setParameter("examId", id)
+                    .executeUpdate();
+        }
 
         // 6. Delete questions associated with this exam
-        entityManager.createNativeQuery("DELETE FROM public.questions WHERE exam_id = :examId")
-                .setParameter("examId", id)
-                .executeUpdate();
+        if (tableExists("questions")) {
+            entityManager.createNativeQuery("DELETE FROM public.questions WHERE exam_id = :examId")
+                    .setParameter("examId", id)
+                    .executeUpdate();
+        }
 
         // 7. Delete passages associated with this exam
-        entityManager.createNativeQuery("DELETE FROM public.passages WHERE exam_id = :examId")
-                .setParameter("examId", id)
-                .executeUpdate();
+        if (tableExists("passages")) {
+            entityManager.createNativeQuery("DELETE FROM public.passages WHERE exam_id = :examId")
+                    .setParameter("examId", id)
+                    .executeUpdate();
+        }
 
         // 8. Delete the exam itself
-        entityManager.createNativeQuery("DELETE FROM public.exams WHERE id = :examId")
-                .setParameter("examId", id)
-                .executeUpdate();
+        if (tableExists("exams")) {
+            entityManager.createNativeQuery("DELETE FROM public.exams WHERE id = :examId")
+                    .setParameter("examId", id)
+                    .executeUpdate();
+        }
     }
 
     @Transactional

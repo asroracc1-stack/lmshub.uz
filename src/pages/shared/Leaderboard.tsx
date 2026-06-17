@@ -189,6 +189,7 @@ function PodiumCard({ row, cfg, isLoading }: { row: Row | null; cfg: typeof PODI
 
 // ── Rank Row (all ranks shown in list) ────────────────────
 function RankRow({ row, index, isCurrentUser }: { row: Row; index: number; isCurrentUser: boolean }) {
+  const { t } = useTranslation();
   // Medal config for top-3
   const medalConfig: Record<number, { icon: string; rankColor: string; rowBg: string; avatarRing: string }> = {
     1: {

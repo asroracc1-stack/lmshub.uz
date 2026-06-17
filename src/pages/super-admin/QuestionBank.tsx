@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus, Search, Filter, Trash2, Edit, Eye, Upload, X, ChevronDown,
@@ -138,74 +138,62 @@ function newQuestion(): Question {
   };
 }
 
-// ─── Mock data for UI demonstration (replace with real API calls) ─────────────
-const MOCK_QUESTIONS: Question[] = [
-  {
-    id: "q-001",
-    examType: "SAT",
-    subject: "Math",
-    topic: "Quadratic Equations",
-    difficulty: "MEDIUM",
-    questionType: "MCQ",
-    contentBlocks: [{ type: "PARAGRAPH", value: "If x² - 5x + 6 = 0, what are the values of x?" }],
-    rawText: "If x² - 5x + 6 = 0, what are the values of x?",
-    options: [
-      { label: "A", textContent: "x = 2 and x = 3", isCorrect: true },
-      { label: "B", textContent: "x = -2 and x = -3", isCorrect: false },
-      { label: "C", textContent: "x = 1 and x = 6", isCorrect: false },
-      { label: "D", textContent: "x = 2 and x = -3", isCorrect: false },
-    ],
-    correctAnswer: "A",
-    explanation: "Using the quadratic formula or factoring: x² - 5x + 6 = (x-2)(x-3) = 0, so x = 2 or x = 3.",
+// ─── API helpers ─────────────────────────────────────────────────────────────
+function mapApiToQuestion(item: any): Question {
+  let contentBlocks: ContentBlock[] = [{ type: "PARAGRAPH", value: item.text || "" }];
+  if (item.richContent) {
+    try { contentBlocks = JSON.parse(item.richContent); } catch { /* keep default */ }
+  }
+  return {
+    id: item.id,
+    examType: (item.examCategory || "GENERAL") as ExamType,
+    subject: item.subject || "",
+    topic: item.topic || "",
+    difficulty: (item.difficulty?.toUpperCase() || "MEDIUM") as Difficulty,
+    questionType: (item.questionType?.toUpperCase() || "MCQ") as QuestionType,
+    contentBlocks,
+    rawText: item.text || "",
+    options: (item.options || []).map((o: any) => ({
+      id: o.id,
+      label: o.positionOrder !== null ? ["A","B","C","D","E","F"][o.positionOrder] || String(o.positionOrder + 1) : "A",
+      textContent: o.text || "",
+      imageUrl: o.imageUrl || "",
+      isCorrect: !!o.isCorrect,
+    })),
+    correctAnswer: item.correctAnswer || "",
+    explanation: item.explanation || "",
     images: [],
-    tags: ["algebra", "quadratic"],
-    createdAt: "2026-06-15",
-  },
-  {
-    id: "q-002",
-    examType: "NATIONAL_CERT",
-    subject: "Matematika",
-    topic: "Geometriya",
-    difficulty: "HARD",
-    questionType: "MCQ",
-    contentBlocks: [
-      { type: "PARAGRAPH", value: "To'g'ri burchakli uchburchakda gipotenuz 10 sm, bir kateti 6 sm bo'lsa, ikkinchi kateti necha sm?" },
-      { type: "FORMULA", value: "a² + b² = c²" }
-    ],
-    rawText: "To'g'ri burchakli uchburchakda gipotenuz 10 sm, bir kateti 6 sm bo'lsa, ikkinchi kateti necha sm?",
-    options: [
-      { label: "A", textContent: "6 sm", isCorrect: false },
-      { label: "B", textContent: "7 sm", isCorrect: false },
-      { label: "C", textContent: "8 sm", isCorrect: true },
-      { label: "D", textContent: "9 sm", isCorrect: false },
-    ],
-    correctAnswer: "C",
-    explanation: "Pifagor teoremasi: a² + b² = c². 6² + b² = 10², 36 + b² = 100, b² = 64, b = 8 sm.",
-    images: [],
-    tags: ["geometriya", "pifagor"],
-    createdAt: "2026-06-14",
-  },
-  {
-    id: "q-003",
-    examType: "IELTS",
-    subject: "Reading",
-    topic: "Academic Reading",
-    difficulty: "MEDIUM",
-    questionType: "YES_NO_NG",
-    contentBlocks: [{ type: "PARAGRAPH", value: "The study found that regular exercise significantly improves cognitive function in elderly individuals." }],
-    rawText: "The study found that regular exercise significantly improves cognitive function in elderly individuals.",
-    options: [
-      { label: "Yes", textContent: "Yes", isCorrect: false },
-      { label: "No", textContent: "No", isCorrect: false },
-      { label: "Not Given", textContent: "Not Given", isCorrect: true },
-    ],
-    correctAnswer: "Not Given",
-    explanation: "The passage mentions benefits of exercise but does not specifically address cognitive function in elderly individuals.",
-    images: [],
-    tags: ["reading", "ielts", "yes-no-ng"],
-    createdAt: "2026-06-13",
-  },
-];
+    tags: item.tags ? item.tags.split(",").map((t: string) => t.trim()).filter(Boolean) : [],
+    passageText: item.passageText || "",
+    audioUrl: item.audioUrl || "",
+    createdAt: item.createdAt ? item.createdAt.split("T")[0] : "",
+  };
+}
+
+function mapQuestionToApi(q: Question) {
+  return {
+    subject: q.subject,
+    topic: q.topic,
+    examCategory: q.examType,
+    questionType: q.questionType.toLowerCase(),
+    difficulty: q.difficulty.toLowerCase(),
+    text: q.rawText || q.contentBlocks.find(b => b.type === "PARAGRAPH")?.value || "",
+    richContent: JSON.stringify(q.contentBlocks),
+    passageText: q.passageText || "",
+    audioUrl: q.audioUrl || "",
+    correctAnswer: q.correctAnswer || "",
+    explanation: q.explanation || "",
+    points: 1,
+    tags: q.tags.join(","),
+    options: q.options.map((o, i) => ({
+      text: o.textContent,
+      isCorrect: o.isCorrect,
+      positionOrder: i,
+      imageUrl: o.imageUrl || "",
+    })),
+  };
+}
+
 
 // ─── Helper: Difficulty badge ─────────────────────────────────────────────────
 function DifficultyBadge({ d }: { d: Difficulty }) {
@@ -1233,32 +1221,70 @@ function StatsCard({ label, value, icon, color }: { label: string; value: number
 
 // ─── Main Question Bank Page ──────────────────────────────────────────────────
 export default function QuestionBank() {
-  const [questions, setQuestions] = useState<Question[]>(MOCK_QUESTIONS);
+  const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(false);
+  const [totalPages, setTotalPages] = useState(0);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalItems, setTotalItems] = useState(0);
   const [search, setSearch] = useState("");
   const [filterExam, setFilterExam] = useState<ExamType | "ALL">("ALL");
   const [filterDiff, setFilterDiff] = useState<Difficulty | "ALL">("ALL");
   const [filterType, setFilterType] = useState<QuestionType | "ALL">("ALL");
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const [sortBy, setSortBy] = useState<"newest" | "oldest" | "difficulty">("newest");
+  const [apiStats, setApiStats] = useState<any>(null);
 
   const [showCreate, setShowCreate] = useState(false);
   const [editingQ, setEditingQ] = useState<Question | null>(null);
   const [previewQ, setPreviewQ] = useState<Question | null>(null);
   const [showPdfImport, setShowPdfImport] = useState(false);
 
-  // Filter + search
-  const filtered = questions.filter(q => {
-    const matchSearch = !search ||
-      q.rawText.toLowerCase().includes(search.toLowerCase()) ||
-      q.contentBlocks.some(b => b.value.toLowerCase().includes(search.toLowerCase())) ||
-      q.topic.toLowerCase().includes(search.toLowerCase()) ||
-      q.tags.some(t => t.toLowerCase().includes(search.toLowerCase()));
-    const matchExam = filterExam === "ALL" || q.examType === filterExam;
-    const matchDiff = filterDiff === "ALL" || q.difficulty === filterDiff;
-    const matchType = filterType === "ALL" || q.questionType === filterType;
-    return matchSearch && matchExam && matchDiff && matchType;
-  }).sort((a, b) => {
+  // ─── Load questions from API ───────────────────────────────────────────────
+  const loadQuestions = useCallback(async (page = 0) => {
+    setLoading(true);
+    try {
+      const params: Record<string, string | number> = { page, size: 20 };
+      if (search) params.search = search;
+      if (filterExam !== "ALL") params.examCategory = filterExam;
+      if (filterDiff !== "ALL") params.difficulty = filterDiff.toLowerCase();
+      if (filterType !== "ALL") params.questionType = filterType.toLowerCase();
+
+      const res = await api.get("/super-admin/question-bank", { params });
+      const data = res.data;
+      setQuestions((data.content || []).map(mapApiToQuestion));
+      setTotalPages(data.totalPages || 0);
+      setTotalItems(data.totalElements || 0);
+      setCurrentPage(data.number || 0);
+    } catch (e: any) {
+      // If API not yet available, show empty state
+      if (e?.response?.status !== 404) {
+        toast.error("Savollarni yuklashda xatolik");
+      }
+      setQuestions([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [search, filterExam, filterDiff, filterType]);
+
+  // Load stats
+  const loadStats = useCallback(async () => {
+    try {
+      const res = await api.get("/super-admin/question-bank/stats");
+      setApiStats(res.data);
+    } catch { /* ignore */ }
+  }, []);
+
+  // Initial load + filter changes
+  useEffect(() => {
+    loadQuestions(0);
+  }, [loadQuestions]);
+
+  useEffect(() => {
+    loadStats();
+  }, [loadStats]);
+
+  // Filter + search (client-side sort on loaded data)
+  const filtered = questions.sort((a, b) => {
     if (sortBy === "difficulty") {
       const order = { EASY: 0, MEDIUM: 1, HARD: 2 };
       return order[a.difficulty] - order[b.difficulty];
@@ -1268,65 +1294,70 @@ export default function QuestionBank() {
   });
 
   const stats = {
-    total: questions.length,
-    sat: questions.filter(q => q.examType === "SAT").length,
-    natCert: questions.filter(q => q.examType === "NATIONAL_CERT").length,
-    ielts: questions.filter(q => q.examType === "IELTS").length,
+    total: apiStats?.total ?? totalItems,
+    sat: apiStats?.byCategory?.SAT ?? questions.filter(q => q.examType === "SAT").length,
+    natCert: apiStats?.byCategory?.MILLIY_SERTIFIKAT ?? questions.filter(q => q.examType === "NATIONAL_CERT").length,
+    ielts: apiStats?.byCategory?.IELTS ?? questions.filter(q => q.examType === "IELTS").length,
     withImages: questions.filter(q => q.images.length > 0).length,
   };
 
   const handleSaveQuestion = async (q: Question) => {
+    const payload = mapQuestionToApi(q);
     if (q.id) {
-      // Edit existing
-      try {
-        // await api.put(`/admin/question-bank/${q.id}`, q);
-        setQuestions(prev => prev.map(p => p.id === q.id ? q : p));
-        toast.success("Savol yangilandi ✅");
-      } catch (e: any) {
-        // Mock fallback - update locally
-        setQuestions(prev => prev.map(p => p.id === q.id ? q : p));
-        toast.success("Savol yangilandi ✅");
-      }
+      const res = await api.put(`/super-admin/question-bank/${q.id}`, payload);
+      setQuestions(prev => prev.map(p => p.id === q.id ? mapApiToQuestion(res.data) : p));
+      toast.success("Savol yangilandi ✅");
     } else {
-      // Create new
-      try {
-        // const res = await api.post("/admin/question-bank", q);
-        const newQ = { ...q, id: `q-${Date.now()}`, createdAt: new Date().toISOString().split("T")[0] };
-        setQuestions(prev => [newQ, ...prev]);
-        toast.success("Savol yaratildi ✅");
-      } catch (e: any) {
-        const newQ = { ...q, id: `q-${Date.now()}`, createdAt: new Date().toISOString().split("T")[0] };
-        setQuestions(prev => [newQ, ...prev]);
-        toast.success("Savol yaratildi ✅");
-      }
+      const res = await api.post("/super-admin/question-bank", payload);
+      setQuestions(prev => [mapApiToQuestion(res.data), ...prev]);
+      setTotalItems(t => t + 1);
+      toast.success("Savol yaratildi ✅");
+    }
+    loadStats();
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Bu savolni o'chirasizmi?")) return;
+    try {
+      await api.delete(`/super-admin/question-bank/${id}`);
+      setQuestions(prev => prev.filter(q => q.id !== id));
+      setTotalItems(t => Math.max(0, t - 1));
+      toast.success("Savol o'chirildi");
+      loadStats();
+    } catch (e: any) {
+      toast.error("O'chirishda xatolik: " + (e?.response?.data?.message || e?.message));
     }
   };
 
-  const handleDelete = (id: string) => {
-    if (!confirm("Bu savolni o'chirasizmi?")) return;
-    setQuestions(prev => prev.filter(q => q.id !== id));
-    toast.success("Savol o'chirildi");
+  const handleDuplicate = async (q: Question) => {
+    try {
+      const payload = { ...mapQuestionToApi(q), topic: `${q.topic} (nusxa)` };
+      const res = await api.post("/super-admin/question-bank", payload);
+      setQuestions(prev => [mapApiToQuestion(res.data), ...prev]);
+      setTotalItems(t => t + 1);
+      toast.success("Savol nusxalandi ✅");
+    } catch {
+      toast.error("Nusxalashda xatolik");
+    }
   };
 
-  const handleDuplicate = (q: Question) => {
-    const dup: Question = {
-      ...q,
-      id: `q-${Date.now()}`,
-      topic: `${q.topic} (nusxa)`,
-      createdAt: new Date().toISOString().split("T")[0]
-    };
-    setQuestions(prev => [dup, ...prev]);
-    toast.success("Savol nusxalanandi");
-  };
-
-  const handlePdfImport = (imported: Question[]) => {
-    const withIds = imported.map((q, i) => ({
-      ...q,
-      id: `q-pdf-${Date.now()}-${i}`,
-      createdAt: new Date().toISOString().split("T")[0]
-    }));
-    setQuestions(prev => [...withIds, ...prev]);
-    toast.success(`${withIds.length} ta savol import qilindi ✅`);
+  const handlePdfImport = async (imported: Question[]) => {
+    let saved = 0;
+    let failed = 0;
+    for (const q of imported) {
+      try {
+        const payload = mapQuestionToApi(q);
+        const res = await api.post("/super-admin/question-bank", payload);
+        setQuestions(prev => [mapApiToQuestion(res.data), ...prev]);
+        saved++;
+      } catch {
+        failed++;
+      }
+    }
+    setTotalItems(t => t + saved);
+    loadStats();
+    if (saved > 0) toast.success(`${saved} ta savol import qilindi ✅`);
+    if (failed > 0) toast.error(`${failed} ta savol saqlanmadi`);
   };
 
   return (

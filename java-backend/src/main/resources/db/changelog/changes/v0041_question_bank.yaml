@@ -1,0 +1,212 @@
+databaseChangeLog:
+  # ─── Question Bank Items Table ─────────────────────────────────────────────
+  - changeSet:
+      id: v0041-1
+      author: antigravity
+      validCheckSum:
+        - ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: question_bank_items
+      changes:
+        - createTable:
+            tableName: question_bank_items
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: subject
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: topic
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: exam_category
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: question_type
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: difficulty
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: text
+                  type: text
+                  constraints:
+                    nullable: false
+              - column:
+                  name: rich_content
+                  type: text
+              - column:
+                  name: passage_text
+                  type: text
+              - column:
+                  name: audio_url
+                  type: text
+              - column:
+                  name: image_url
+                  type: text
+              - column:
+                  name: image_position
+                  type: varchar(50)
+              - column:
+                  name: correct_answer
+                  type: text
+              - column:
+                  name: explanation
+                  type: text
+              - column:
+                  name: points
+                  type: integer
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false
+              - column:
+                  name: matching_pairs
+                  type: text
+              - column:
+                  name: tags
+                  type: text
+              - column:
+                  name: usage_count
+                  type: integer
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: is_active
+                  type: boolean
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_by
+                  type: uuid
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: NOW()
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp
+                  defaultValueComputed: NOW()
+
+  # ─── Question Bank Options Table ────────────────────────────────────────────
+  - changeSet:
+      id: v0041-2
+      author: antigravity
+      validCheckSum:
+        - ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: question_bank_options
+      changes:
+        - createTable:
+            tableName: question_bank_options
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: question_bank_item_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_qbo_question_bank_item
+                    references: question_bank_items(id)
+              - column:
+                  name: text
+                  type: text
+                  constraints:
+                    nullable: false
+              - column:
+                  name: is_correct
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: position_order
+                  type: integer
+              - column:
+                  name: image_url
+                  type: text
+              - column:
+                  name: image_position
+                  type: varchar(50)
+
+  # ─── FK: question_bank_items -> users ───────────────────────────────────────
+  - changeSet:
+      id: v0041-3
+      author: antigravity
+      validCheckSum:
+        - ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: question_bank_items
+        - tableExists:
+            tableName: users
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: question_bank_items
+            baseColumnNames: created_by
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_qbi_created_by
+            onDelete: SET NULL
+
+  # ─── Index for performance ───────────────────────────────────────────────────
+  - changeSet:
+      id: v0041-4
+      author: antigravity
+      validCheckSum:
+        - ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: question_bank_items
+      changes:
+        - createIndex:
+            tableName: question_bank_items
+            indexName: idx_qbi_subject_topic
+            columns:
+              - column:
+                  name: subject
+              - column:
+                  name: topic
+        - createIndex:
+            tableName: question_bank_items
+            indexName: idx_qbi_exam_category
+            columns:
+              - column:
+                  name: exam_category
+        - createIndex:
+            tableName: question_bank_items
+            indexName: idx_qbi_question_type
+            columns:
+              - column:
+                  name: question_type
