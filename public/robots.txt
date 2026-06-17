@@ -23,5 +23,5 @@ Disallow: /404
 Disallow: /api/
 
 # Sitemap submission for indexer acceleration
-Sitemap: https://lmshub.uz/sitemap.xml
+Sitemap: https://www.lmshub.uz/sitemap.xml
 
