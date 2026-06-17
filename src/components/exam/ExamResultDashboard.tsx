@@ -79,6 +79,7 @@ function translateArrayToUz(arr: any[] | null | undefined): string[] {
 export function ExamResultDashboard({ result, questions, exam }: { result: any, questions: any[], exam: any }) {
   const [expandedQ, setExpandedQ] = useState<string | null>(null);
   const [filterMode, setFilterMode] = useState<'all' | 'correct' | 'incorrect' | 'omitted'>('all');
+  const [interactiveModalType, setInteractiveModalType] = useState<'correct' | 'incorrect' | 'omitted' | null>(null);
   const nav = useNavigate();
   const { role } = useAuth();
 
@@ -285,10 +286,16 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
               <span className="text-2xl font-bold text-slate-800 dark:text-slate-200">{totalCount}</span>
             </div>
             <div 
-              onClick={() => setFilterMode('correct')}
+              onClick={() => {
+                if (isMilliy) {
+                  setInteractiveModalType('correct');
+                } else {
+                  setFilterMode('correct');
+                }
+              }}
               className={cn(
                 "border p-4 flex flex-col justify-between rounded-xl cursor-pointer select-none transition-all duration-300",
-                filterMode === 'correct'
+                !isMilliy && filterMode === 'correct'
                   ? "border-emerald-500 dark:border-emerald-400 ring-2 ring-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-950/20 shadow-inner scale-[1.03]"
                   : cn("bg-white hover:border-emerald-400 dark:hover:border-emerald-500", isMilliy ? "dark:bg-[#0b1624]/60 border-slate-200 dark:border-slate-800" : "dark:bg-[#140D23]/60 border-slate-200 dark:border-slate-800")
               )}
@@ -297,10 +304,16 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
               <span className="text-2xl font-bold text-[#166534] dark:text-[#22c55e]">{correctCount}</span>
             </div>
             <div 
-              onClick={() => setFilterMode('incorrect')}
+              onClick={() => {
+                if (isMilliy) {
+                  setInteractiveModalType('incorrect');
+                } else {
+                  setFilterMode('incorrect');
+                }
+              }}
               className={cn(
                 "border p-4 flex flex-col justify-between rounded-xl cursor-pointer select-none transition-all duration-300",
-                filterMode === 'incorrect'
+                !isMilliy && filterMode === 'incorrect'
                   ? "border-rose-500 dark:border-rose-400 ring-2 ring-rose-500/30 bg-rose-500/5 dark:bg-rose-950/20 shadow-inner scale-[1.03]"
                   : cn("bg-white hover:border-rose-400 dark:hover:border-rose-500", isMilliy ? "dark:bg-[#0b1624]/60 border-slate-200 dark:border-slate-800" : "dark:bg-[#140D23]/60 border-slate-200 dark:border-slate-800")
               )}
@@ -309,10 +322,16 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
               <span className="text-2xl font-bold text-[#991b1b] dark:text-[#ef4444]">{wrongCount}</span>
             </div>
             <div 
-              onClick={() => setFilterMode('omitted')}
+              onClick={() => {
+                if (isMilliy) {
+                  setInteractiveModalType('omitted');
+                } else {
+                  setFilterMode('omitted');
+                }
+              }}
               className={cn(
                 "border p-4 flex flex-col justify-between rounded-xl cursor-pointer select-none transition-all duration-300",
-                filterMode === 'omitted'
+                !isMilliy && filterMode === 'omitted'
                   ? "border-slate-500 dark:border-slate-400 ring-2 ring-slate-500/30 bg-slate-500/5 dark:bg-slate-950/20 shadow-inner scale-[1.03]"
                   : cn("bg-white hover:border-slate-450 dark:hover:border-slate-500", isMilliy ? "dark:bg-[#0b1624]/60 border-slate-200 dark:border-slate-800" : "dark:bg-[#140D23]/60 border-slate-200 dark:border-slate-800")
               )}
@@ -681,6 +700,138 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
             {tReturnButton}
           </Button>
         </div>
+
+        {/* Interactive Modal for Milliy Sertifikat mock exam results */}
+        {interactiveModalType && (
+          <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-[#0a192f] border-2 border-[#10b981] w-full max-w-3xl rounded-[2.5rem] shadow-2xl flex flex-col max-h-[85vh] overflow-hidden transition-all duration-300">
+              {/* Header */}
+              <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-[#0b1624]/60">
+                <h2 className="text-xl font-sans font-bold flex items-center gap-2 text-slate-900 dark:text-white">
+                  {interactiveModalType === 'correct' && (
+                    <span className="text-[#059669] dark:text-[#10b981]">To'g'ri javoblar ro'yxati</span>
+                  )}
+                  {interactiveModalType === 'incorrect' && (
+                    <span className="text-rose-600 dark:text-rose-450">Noto'g'ri javoblar ro'yxati</span>
+                  )}
+                  {interactiveModalType === 'omitted' && (
+                    <span className="text-amber-500 dark:text-amber-450">Belgilanmagan savollar ro'yxati</span>
+                  )}
+                </h2>
+                <button 
+                  onClick={() => setInteractiveModalType(null)} 
+                  className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400"
+                >
+                  <XCircle className="h-6 w-6" />
+                </button>
+              </div>
+
+              {/* Scrollable list */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-white dark:bg-[#0a192f]">
+                {(() => {
+                  const modalDetails = details.filter((d: any) => {
+                    if (interactiveModalType === 'correct') return d.ok;
+                    if (interactiveModalType === 'incorrect') return !d.ok && d.userAns;
+                    if (interactiveModalType === 'omitted') return !d.userAns;
+                    return false;
+                  });
+
+                  if (modalDetails.length === 0) {
+                    return (
+                      <div className="text-center py-12 text-slate-500 dark:text-slate-400 font-sans">
+                        Savollar topilmadi.
+                      </div>
+                    );
+                  }
+
+                  return modalDetails.map((detail: any) => {
+                    const q = questions.find((question: any) => question.id === detail.questionId);
+                    if (!q) return null;
+
+                    const isCorrect = detail.ok;
+                    const isSkipped = !detail.userAns;
+                    
+                    const cardBorderColor = isCorrect 
+                      ? "border-emerald-500/20 dark:border-emerald-800/40 bg-emerald-500/5 dark:bg-emerald-950/10 text-emerald-900 dark:text-emerald-250"
+                      : isSkipped 
+                        ? "border-amber-500/20 dark:border-amber-800/40 bg-amber-500/5 dark:bg-amber-950/10 text-amber-900 dark:text-amber-250"
+                        : "border-rose-500/20 dark:border-rose-800/40 bg-rose-500/5 dark:bg-rose-950/10 text-rose-900 dark:text-rose-250";
+
+                    return (
+                      <div 
+                        key={q.id} 
+                        className={cn("border p-5 rounded-2xl flex flex-col gap-3 font-sans transition-all", cardBorderColor)}
+                      >
+                        <div className="flex justify-between items-center border-b border-slate-200/50 dark:border-slate-800 pb-2">
+                          <div className="flex items-center gap-2">
+                            <span className="h-6 w-6 text-white font-bold bg-[#0a192f] dark:bg-[#10b981] flex items-center justify-center rounded-md text-xs">
+                              {q.position}
+                            </span>
+                            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
+                              Savol ({q.qtype})
+                            </span>
+                          </div>
+                          <span className={cn("text-xs font-bold px-2 py-0.5 rounded border uppercase", 
+                            isCorrect ? "bg-emerald-100 border-emerald-300 text-emerald-800 dark:bg-emerald-950/40 dark:border-emerald-850 dark:text-emerald-400"
+                            : isSkipped ? "bg-amber-100 border-amber-300 text-amber-800 dark:bg-amber-950/40 dark:border-amber-850 dark:text-amber-400"
+                            : "bg-rose-100 border-rose-300 text-rose-800 dark:bg-rose-950/40 dark:border-rose-850 dark:text-rose-400"
+                          )}>
+                            {isCorrect ? "To'g'ri" : isSkipped ? "Belgilanmagan" : "Noto'g'ri"}
+                          </span>
+                        </div>
+
+                        {/* Prompt */}
+                        <div className="text-sm leading-relaxed text-slate-850 dark:text-slate-100">
+                          {processLaTeX(q.prompt)}
+                        </div>
+
+                        {/* Responses Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2 text-xs">
+                          <div className="p-3 bg-white/60 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl">
+                            <span className="block text-slate-500 dark:text-slate-400 font-semibold mb-1">Sizning javobingiz:</span>
+                            <span className={cn("font-bold", 
+                              isCorrect ? "text-[#059669] dark:text-[#10b981]" : isSkipped ? "text-slate-500 dark:text-slate-400" : "text-rose-600 dark:text-rose-450"
+                            )}>
+                              {detail.userAns ? translateFeedbackToUz(detail.userAns) : "BELGILANMAGAN"}
+                            </span>
+                          </div>
+                          <div className="p-3 bg-white/60 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl">
+                            <span className="block text-slate-500 dark:text-slate-400 font-semibold mb-1">To'g'ri javob:</span>
+                            <span className="font-bold text-[#059669] dark:text-[#10b981]">
+                              {translateFeedbackToUz(detail.correctAns)}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Explanation */}
+                        {(detail.aiExplanation || q.explanation) && (
+                          <div className="mt-3 p-4 bg-white/80 dark:bg-[#0b1624] border border-slate-200 dark:border-slate-800 rounded-xl text-xs">
+                            <span className="block font-bold text-slate-700 dark:text-slate-200 mb-1 flex items-center gap-1">
+                              <BrainCircuit className="h-3.5 w-3.5 text-[#10b981]" /> Tushuntirish va yechim:
+                            </span>
+                            <div className="text-slate-650 dark:text-slate-350 leading-relaxed font-sans">
+                              {processLaTeX(isMilliy ? translateFeedbackToUz(detail.aiExplanation || q.explanation) : (detail.aiExplanation || q.explanation))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
+
+              {/* Footer Close Button */}
+              <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex justify-center bg-slate-50/50 dark:bg-[#0b1624]/60">
+                <Button 
+                  onClick={() => setInteractiveModalType(null)}
+                  className="bg-[#059669] hover:bg-[#047857] dark:bg-[#10b981] dark:hover:bg-[#059669] text-white font-bold px-10 py-2.5 rounded-xl transition-all border-none"
+                >
+                  Yopish
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

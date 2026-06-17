@@ -615,6 +615,7 @@ export default function MockTake() {
   const [showCheatingLocked, setShowCheatingLocked] = useState(false);
   
   const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
+  const [successAnimPhase, setSuccessAnimPhase] = useState<'idle' | 'loading' | 'success'>('idle');
   
   const startedAt = useRef<number>(0);
   const questionStartRef = useRef<Record<string, number>>({});
@@ -799,59 +800,22 @@ export default function MockTake() {
   const submit = async (auto = false) => {
     if (submitting || !exam) return;
     setSubmitting(true);
-    setShowSuccessAnimation(true);
     window.scrollTo(0,0);
 
     const isMilliyVal = exam?.type ? (exam.type.toLowerCase() === "national_cert" || exam.type.toLowerCase() === "milliy") : false;
 
-    // Play Uzbek congratulations or English congratulations voice and celebratory chime
-    try {
-      if (isMilliyVal) {
-        // Play majestic, official achievement brass-like cadence chord
-        const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-        const playTone = (freq: number, startTime: number, duration: number, vol = 0.12) => {
-          const osc = audioCtx.createOscillator();
-          const gain = audioCtx.createGain();
-          osc.type = "triangle"; // Round, brass/organ-like tone
-          osc.frequency.setValueAtTime(freq, startTime);
-          gain.gain.setValueAtTime(0, startTime);
-          gain.gain.linearRampToValueAtTime(vol, startTime + 0.08);
-          gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
-          osc.connect(gain);
-          gain.connect(audioCtx.destination);
-          osc.start(startTime);
-          osc.stop(startTime + duration);
-        };
-        const now = audioCtx.currentTime;
-        playTone(261.63, now, 1.6, 0.15);     // C4
-        playTone(392.00, now + 0.08, 1.4, 0.10); // G4
-        playTone(523.25, now + 0.16, 1.3, 0.10); // C5
-        playTone(659.25, now + 0.24, 1.2, 0.10); // E5
-        playTone(783.99, now + 0.32, 1.5, 0.12); // G5
-
-        if ('speechSynthesis' in window) {
-          window.speechSynthesis.cancel();
-          const utterance = new SpeechSynthesisUtterance("Tabriklaymiz! Siz testni muvaffaqiyatli topshirdingiz. Natijalaringiz tahlil qilinmoqda. Iltimos kuting.");
-          utterance.lang = "uz-UZ";
-          utterance.rate = 0.9;
-          utterance.pitch = 1.05;
-          const voices = window.speechSynthesis.getVoices();
-          const uzVoice = voices.find(v => v.lang.startsWith("uz") || v.lang.startsWith("tr"));
-          if (uzVoice) utterance.voice = uzVoice;
-          window.speechSynthesis.speak(utterance);
-        }
-      } else {
-        if ('speechSynthesis' in window) {
-          window.speechSynthesis.cancel();
-          const utterance = new SpeechSynthesisUtterance("Your test has been successfully completed.");
-          utterance.lang = "en-US";
-          window.speechSynthesis.speak(utterance);
-        }
-      }
-    } catch (e) {
-      console.error("SpeechSynthesis error:", e);
+    if (isMilliyVal) {
+      setShowSuccessAnimation(true);
+      setSuccessAnimPhase('loading');
+    } else {
+      setShowSuccessAnimation(true);
     }
 
+    let apiResponseData: any = null;
+    let apiError: any = null;
+    const startTime = Date.now();
+
+    // Call submit API
     try {
       const kind = (exam.type ?? "").toLowerCase();
       const elapsedSec = Math.floor((Date.now() - startedAt.current) / 1000);
@@ -864,20 +828,98 @@ export default function MockTake() {
       };
 
       const res = await api.post("/exams/submit", payload);
+      apiResponseData = { ...res.data, kind, elapsedSec, timeSpent: timeSpentRef.current };
       try { localStorage.removeItem(`lmshub_exam_${testId}`); } catch { /* ignore */ }
-      
-      // Clinical delay
-      setTimeout(() => {
-        setResult({ ...res.data, kind, elapsedSec, timeSpent: timeSpentRef.current });
-        setShowSuccessAnimation(false);
-      }, 3000);
-      
     } catch (err: any) {
       console.error("Submission error:", err);
-      toast.error("Error submitting exam: " + (err.response?.data?.message || err.message));
-      setShowSuccessAnimation(false);
-    } finally {
-      setSubmitting(false);
+      apiError = err;
+    }
+
+    if (isMilliyVal) {
+      // Milliy mock exam loader must run for at least 2.5 seconds
+      const elapsedTime = Date.now() - startTime;
+      const remainingTime = Math.max(0, 2500 - elapsedTime);
+
+      setTimeout(() => {
+        if (apiError) {
+          toast.error("Error submitting exam: " + (apiError.response?.data?.message || apiError.message));
+          setShowSuccessAnimation(false);
+          setSuccessAnimPhase('idle');
+          setSubmitting(false);
+          return;
+        }
+
+        // Transition to success checkmark phase
+        setSuccessAnimPhase('success');
+
+        // Play congrats.mp3 sound automatically
+        try {
+          const audio = new Audio('/congrats.mp3');
+          audio.play().catch(e => {
+            console.log("Failed to play congrats.mp3, using warm synth fallback:", e);
+            // warm synthesizer fallback chord (sine wave)
+            const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+            const now = audioCtx.currentTime;
+            const playTone = (freq: number, startTimeVal: number, duration: number, vol = 0.15) => {
+              const osc = audioCtx.createOscillator();
+              const gain = audioCtx.createGain();
+              osc.type = "sine";
+              osc.frequency.setValueAtTime(freq, startTimeVal);
+              gain.gain.setValueAtTime(0, startTimeVal);
+              gain.gain.linearRampToValueAtTime(vol, startTimeVal + 0.1);
+              gain.gain.exponentialRampToValueAtTime(0.0001, startTimeVal + duration);
+              osc.connect(gain);
+              gain.connect(audioCtx.destination);
+              osc.start(startTimeVal);
+              osc.stop(startTimeVal + duration);
+            };
+            playTone(261.63, now, 2.0, 0.12);     // C4
+            playTone(329.63, now + 0.05, 1.9, 0.10); // E4
+            playTone(392.00, now + 0.10, 1.8, 0.10); // G4
+            playTone(493.88, now + 0.15, 1.75, 0.08); // B4
+            playTone(587.33, now + 0.20, 1.7, 0.06);  // D5
+          });
+        } catch (soundErr) {
+          console.error("Audio trigger error:", soundErr);
+        }
+
+        // Redirect to results dashboard after 2.0 seconds of success checkmark
+        setTimeout(() => {
+          setResult(apiResponseData);
+          setShowSuccessAnimation(false);
+          setSuccessAnimPhase('idle');
+          setSubmitting(false);
+        }, 2000);
+
+      }, remainingTime);
+
+    } else {
+      // Standard SAT completion logic
+      try {
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+          const utterance = new SpeechSynthesisUtterance("Your test has been successfully completed.");
+          utterance.lang = "en-US";
+          window.speechSynthesis.speak(utterance);
+        }
+      } catch (soundErr) {
+        console.error(soundErr);
+      }
+
+      const elapsedTime = Date.now() - startTime;
+      const remainingTime = Math.max(0, 3000 - elapsedTime);
+
+      setTimeout(() => {
+        if (apiError) {
+          toast.error("Error submitting exam: " + (apiError.response?.data?.message || apiError.message));
+          setShowSuccessAnimation(false);
+          setSubmitting(false);
+          return;
+        }
+        setResult(apiResponseData);
+        setShowSuccessAnimation(false);
+        setSubmitting(false);
+      }, remainingTime);
     }
   };
 
@@ -905,6 +947,50 @@ export default function MockTake() {
 
   if (showSuccessAnimation) {
     const isMilliyVal = exam?.type ? (exam.type.toLowerCase() === "national_cert" || exam.type.toLowerCase() === "milliy") : false;
+
+    if (isMilliyVal) {
+      return (
+        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center p-4 bg-gradient-to-br from-white via-emerald-50/20 to-white dark:from-[#060b13] dark:via-[#09221a] dark:to-[#060b13] transition-colors duration-500">
+          <div className="w-full max-w-md p-10 flex flex-col items-center justify-center text-center">
+            {successAnimPhase === 'loading' ? (
+              <>
+                {/* Modern circular progress loader */}
+                <div className="relative mb-8 flex h-24 w-24 items-center justify-center">
+                  <svg className="animate-spin h-20 w-20 text-[#16a34a] dark:text-[#22c55e]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-20" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-85" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                </div>
+                <h3 className="font-sans text-xl font-bold text-slate-800 dark:text-slate-100 animate-pulse">
+                  Natijalar tayyorlanmoqda....
+                </h3>
+              </>
+            ) : (
+              <>
+                {/* Checkmark ✔ scale + fade effect animation */}
+                <motion.div
+                  initial={{ scale: 0.3, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: "spring", stiffness: 220, damping: 16 }}
+                  className="h-24 w-24 rounded-full bg-emerald-50 dark:bg-emerald-950/30 border-4 border-[#16a34a] dark:border-[#22c55e] flex items-center justify-center text-[#16a34a] dark:text-[#22c55e] text-5xl font-extrabold shadow-lg shadow-emerald-500/10 mb-8"
+                >
+                  ✔
+                </motion.div>
+                <motion.h2 
+                  initial={{ opacity: 0, y: 12 }} 
+                  animate={{ opacity: 1, y: 0 }} 
+                  transition={{ delay: 0.15, duration: 0.4 }} 
+                  className="font-sans text-2xl font-extrabold text-slate-800 dark:text-slate-100 mb-2"
+                >
+                  Tabriklaymiz! Test muvaffaqiyatli yakunlandi.
+                </motion.h2>
+              </>
+            )}
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className={cn("fixed inset-0 z-[9999] flex items-center justify-center p-4 overflow-hidden", isMilliyVal ? "bg-[#050c18]" : "bg-[#080410]")}>
         {/* Glow Backgrounds */}
