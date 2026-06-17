@@ -357,7 +357,7 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
           </Link>
         </div>
 
-        <div className="w-full max-w-md mx-auto flex flex-col justify-center h-full max-h-screen py-2 sm:py-6 relative z-10">
+        <div className="w-full max-w-xl mx-auto flex flex-col justify-center h-full max-h-screen py-2 sm:py-6 relative z-10">
           <AnimatePresence mode="wait">
             <motion.div
               key={isSignIn ? "signin" : "signup"}
