@@ -514,16 +514,19 @@ export default function Auth({ defaultMode = "signin" }: AuthProps) {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 1.1 }}
               transition={{ duration: 0.6, ease: "easeInOut" }}
-              className="flex flex-col items-center text-center"
+              className="flex flex-col items-center text-center justify-center relative"
             >
+              {/* Subtle background container (loader bg) */}
+              <div className="absolute w-[400px] h-[400px] rounded-full bg-gradient-to-tr from-primary/[0.04] to-violet-500/[0.06] dark:from-primary/[0.02] dark:to-violet-500/[0.03] border border-primary/[0.08] dark:border-primary/[0.04] blur-[2px] z-0" />
+              
               <DotLottieReact 
                 src={isSignIn 
-                  ? "https://lottie.host/a1b0978f-6321-4a25-85de-cd3ccd8c6368/JW4kdFrVWQ.lottie" 
-                  : "https://lottie.host/71dc29fa-7aa3-4b00-9b35-f6c86c999222/beB5zGBdIY.lottie"
+                  ? "https://lottie.host/ee21e617-29ac-4886-a000-601713ebfc8b/P5IsCPslIu.lottie" 
+                  : "https://lottie.host/4861b967-7a8d-483f-8623-3c04068fa885/XmnEoBntUV.lottie"
                 }
                 loop 
                 autoplay 
-                className="w-[450px] h-[450px]" 
+                className="w-[450px] h-[450px] relative z-10" 
               />
             </motion.div>
           </AnimatePresence>
