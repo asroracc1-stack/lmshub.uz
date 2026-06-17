@@ -223,10 +223,10 @@ public class QuestionBankService {
         dto.setUpdatedAt(item.getUpdatedAt());
 
         if (item.getCreatedBy() != null) {
-            String name = item.getCreatedBy().getFirstName() != null
-                    ? item.getCreatedBy().getFirstName() + " " + (item.getCreatedBy().getLastName() != null ? item.getCreatedBy().getLastName() : "")
+            String name = item.getCreatedBy().getFullName() != null && !item.getCreatedBy().getFullName().isBlank()
+                    ? item.getCreatedBy().getFullName()
                     : item.getCreatedBy().getUsername();
-            dto.setCreatedByName(name.trim());
+            dto.setCreatedByName(name != null ? name.trim() : "");
         }
 
         // Options

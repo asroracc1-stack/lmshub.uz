@@ -471,11 +471,11 @@ public class GamificationService {
 
         // Calculate current streak
         int currentStreak = 0;
-        LocalDate today = LocalDate.now();
-        LocalDate yesterday = today.minusDays(1);
+        LocalDate checkToday = LocalDate.now();
+        LocalDate yesterday = checkToday.minusDays(1);
         
-        if (activeDates.contains(today) || activeDates.contains(yesterday)) {
-            LocalDate checkDate = activeDates.contains(today) ? today : yesterday;
+        if (activeDates.contains(checkToday) || activeDates.contains(yesterday)) {
+            LocalDate checkDate = activeDates.contains(checkToday) ? checkToday : yesterday;
             while (activeDates.contains(checkDate)) {
                 currentStreak++;
                 checkDate = checkDate.minusDays(1);
