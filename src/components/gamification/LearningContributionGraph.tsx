@@ -218,7 +218,7 @@ export default function LearningContributionGraph() {
     if (loading) {
       return (
         <Card className={cn(
-          "p-12 flex flex-col items-center justify-center min-h-[350px] rounded-[2rem] border",
+          "p-8 sm:p-12 flex flex-col items-center justify-center min-h-[250px] sm:min-h-[350px] rounded-2xl sm:rounded-[2rem] border",
           isDark ? "bg-slate-900/40 border-white/5 backdrop-blur-md" : "bg-white border-slate-100"
         )}>
           <Loader2 className="w-10 h-10 animate-spin text-purple-500 mb-4" />
@@ -232,7 +232,7 @@ export default function LearningContributionGraph() {
     if (error || !data) {
       return (
         <Card className={cn(
-          "p-8 flex flex-col items-center justify-center min-h-[300px] rounded-[2rem] border text-center",
+          "p-6 sm:p-8 flex flex-col items-center justify-center min-h-[250px] sm:min-h-[300px] rounded-2xl sm:rounded-[2rem] border text-center",
           isDark ? "bg-slate-900/40 border-white/5 backdrop-blur-md" : "bg-white border-slate-100"
         )}>
           <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
@@ -251,16 +251,16 @@ export default function LearningContributionGraph() {
 
     return (
       <Card className={cn(
-        "p-8 shadow-2xl rounded-[2rem] border relative overflow-hidden transition-all duration-300",
+        "p-4 sm:p-6 md:p-8 shadow-2xl rounded-2xl sm:rounded-[2rem] border relative overflow-hidden transition-all duration-300",
         isDark ? "bg-slate-900/40 backdrop-blur-md border-white/5" : "bg-white border-slate-100 shadow-slate-200/50"
       )}>
         {isDark && (
           <div className="absolute -right-40 -top-40 w-96 h-96 bg-emerald-500/10 rounded-full blur-[100px] pointer-events-none -z-10" />
         )}
 
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 mb-5 sm:mb-8">
           <div>
-            <h3 className={cn("font-display font-black text-2xl tracking-tight", isDark ? "text-white" : "text-slate-900")}>
+            <h3 className={cn("font-display font-black text-lg sm:text-2xl tracking-tight", isDark ? "text-white" : "text-slate-900")}>
               {t("dynamic.learningGraph.title")}
             </h3>
             <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 font-medium">
@@ -280,7 +280,7 @@ export default function LearningContributionGraph() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-4 mb-4 sm:mb-8">
           <div className={cn(
             "p-4 rounded-2xl border flex flex-col justify-center",
             isDark ? "bg-slate-800/30 border-white/5" : "bg-slate-50 border-slate-100"

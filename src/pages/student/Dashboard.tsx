@@ -48,9 +48,9 @@ export default function StudentDashboard() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3 sm:space-y-6">
       {/* Ambient glow */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 dark:bg-primary/10 rounded-full blur-[120px] -z-10 pointer-events-none" />
+      <div className="absolute top-0 right-0 w-[250px] h-[250px] sm:w-[500px] sm:h-[500px] bg-primary/5 dark:bg-primary/10 rounded-full blur-[80px] sm:blur-[120px] -z-10 pointer-events-none" />
 
       <DashboardBanner data={data} />
 

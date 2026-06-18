@@ -98,7 +98,7 @@ export const AdventureMap: React.FC<AdventureMapProps> = ({ progressData, compac
   // ----------------------------------------------------
   if (compact) {
     return (
-      <div className={`relative w-full overflow-hidden rounded-[2.5rem] border p-6 md:p-8 shadow-2xl transition-all duration-500 ${
+      <div className={`relative w-full overflow-hidden rounded-2xl sm:rounded-[2.5rem] border p-4 sm:p-6 md:p-8 shadow-2xl transition-all duration-500 ${
         isDark 
           ? "bg-gradient-to-br from-[#0c152b] via-[#090e1a] to-[#050810] border-slate-800/80 shadow-slate-950/60" 
           : "bg-gradient-to-br from-amber-50/60 via-orange-50/20 to-sky-100/50 border-orange-100 shadow-orange-100/40"
@@ -112,47 +112,47 @@ export const AdventureMap: React.FC<AdventureMapProps> = ({ progressData, compac
           </svg>
         </div>
 
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-gradient-to-tr from-amber-500 to-yellow-400 rounded-2xl text-slate-950 shadow-lg shadow-orange-500/20">
-                <Compass className="w-5 h-5 animate-spin-slow" />
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6">
+          <div className="space-y-2 sm:space-y-3">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="p-2 sm:p-3 bg-gradient-to-tr from-amber-500 to-yellow-400 rounded-xl sm:rounded-2xl text-slate-950 shadow-lg shadow-orange-500/20">
+                <Compass className="w-4 h-4 sm:w-5 sm:h-5 animate-spin-slow" />
               </div>
               <div>
                 <span className="text-[10px] font-black uppercase tracking-widest text-amber-500 block">
                   {t("dynamic.learningWorld.title")}
                 </span>
-                <h3 className={`text-xl font-black ${isDark ? "text-white" : "text-slate-900"}`}>
+                <h3 className={`text-base sm:text-xl font-black ${isDark ? "text-white" : "text-slate-900"}`}>
                   {getLocalizedCurrentRegion(current_region)}
                 </h3>
               </div>
             </div>
             
-            <div className="flex flex-wrap items-center gap-3 text-xs font-bold">
-              <span className={`flex items-center gap-1.5 px-3 py-1.5 border rounded-xl shadow-sm ${
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-[11px] sm:text-xs font-bold">
+              <span className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 border rounded-lg sm:rounded-xl shadow-sm ${
                 isDark ? "bg-slate-900/60 border-slate-800 text-amber-300" : "bg-white border-orange-100 text-orange-700"
               }`}>
-                <Trophy className="w-4 h-4 text-amber-500" />
+                <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500" />
                 {Math.round(total_distance / 1000)} km
               </span>
-              <span className={`flex items-center gap-1.5 px-3 py-1.5 border rounded-xl shadow-sm ${
+              <span className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 border rounded-lg sm:rounded-xl shadow-sm ${
                 isDark ? "bg-slate-900/60 border-slate-800 text-yellow-300" : "bg-white border-orange-100 text-orange-600"
               }`}>
-                <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-yellow-500 fill-yellow-500" />
                 {xp} {t("dynamic.learningWorld.xp")}
               </span>
-              <span className={`flex items-center gap-1.5 px-3 py-1.5 border rounded-xl shadow-sm ${
+              <span className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 border rounded-lg sm:rounded-xl shadow-sm ${
                 isDark ? "bg-slate-900/60 border-slate-800 text-orange-300" : "bg-white border-orange-100 text-orange-600"
               }`}>
-                <Flame className="w-4 h-4 text-orange-500 fill-orange-500" />
+                <Flame className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-orange-500 fill-orange-500" />
                 {streak} {t("dynamic.learningWorld.dailyStreak")}
               </span>
             </div>
           </div>
 
-          <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-4 min-w-[280px]">
+          <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-3 sm:gap-4 min-w-0 sm:min-w-[280px]">
             {nextCheckpoint && (
-              <div className={`flex-1 p-3.5 rounded-2xl border ${
+              <div className={`flex-1 p-3 rounded-xl sm:rounded-2xl border ${
                 isDark ? "bg-slate-950/60 border-slate-800/80" : "bg-white border-orange-100 shadow-sm"
               }`}>
                 <div className="flex justify-between items-center gap-2 mb-1">
@@ -170,7 +170,7 @@ export const AdventureMap: React.FC<AdventureMapProps> = ({ progressData, compac
 
             <button
               onClick={() => navigate(total_distance >= 0 ? "/user/map" : "/student/map")}
-              className="px-6 py-4 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-600 hover:to-yellow-500 text-slate-950 text-xs font-black rounded-2xl shadow-lg shadow-orange-500/20 transition flex items-center justify-center gap-2 group whitespace-nowrap self-stretch md:self-auto"
+              className="px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-600 hover:to-yellow-500 text-slate-950 text-[11px] sm:text-xs font-black rounded-xl sm:rounded-2xl shadow-lg shadow-orange-500/20 transition flex items-center justify-center gap-2 group whitespace-nowrap self-stretch md:self-auto"
             >
               {t("dynamic.learningWorld.openFullMap")}
               <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
@@ -178,7 +178,7 @@ export const AdventureMap: React.FC<AdventureMapProps> = ({ progressData, compac
           </div>
         </div>
 
-        <div className="mt-5">
+        <div className="mt-3 sm:mt-5">
           <div className="flex justify-between text-[10px] font-bold text-slate-400 mb-1.5">
             <span>{t("dynamic.learningWorld.progress")}</span>
             <span>{Math.round(progress_percentage)}%</span>

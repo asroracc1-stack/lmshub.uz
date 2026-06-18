@@ -68,7 +68,7 @@ export default function LeaderboardAndHistory({ data }: LeaderboardAndHistoryPro
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
       
       {/* COLUMN 1: Learning Stats & Progress */}
       <motion.div
@@ -76,7 +76,7 @@ export default function LeaderboardAndHistory({ data }: LeaderboardAndHistoryPro
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
       >
-        <Card className="p-6 rounded-[2rem] border bg-white dark:bg-slate-900/40 border-slate-100 dark:border-white/5 shadow-xl shadow-slate-200/50 dark:shadow-none backdrop-blur-md flex flex-col h-full min-h-[400px] hover:border-purple-500/20 dark:hover:border-purple-500/30 transition-all duration-300 animate-fade-in">
+        <Card className="p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] border bg-white dark:bg-slate-900/40 border-slate-100 dark:border-white/5 shadow-xl shadow-slate-200/50 dark:shadow-none backdrop-blur-md flex flex-col h-full min-h-0 sm:min-h-[400px] hover:border-purple-500/20 dark:hover:border-purple-500/30 transition-all duration-300 animate-fade-in">
           <div className="flex items-center gap-3 mb-5">
             <div className="p-3 rounded-2xl bg-purple-500/10 text-purple-500">
               <Activity className="h-5 w-5" />
@@ -170,7 +170,7 @@ export default function LeaderboardAndHistory({ data }: LeaderboardAndHistoryPro
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
       >
-        <Card className="p-6 rounded-[2rem] border bg-white dark:bg-slate-900/40 border-slate-100 dark:border-white/5 shadow-xl shadow-slate-200/50 dark:shadow-none backdrop-blur-md flex flex-col h-full min-h-[400px] hover:border-blue-500/20 dark:hover:border-blue-500/30 transition-all duration-300 animate-fade-in">
+        <Card className="p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] border bg-white dark:bg-slate-900/40 border-slate-100 dark:border-white/5 shadow-xl shadow-slate-200/50 dark:shadow-none backdrop-blur-md flex flex-col h-full min-h-0 sm:min-h-[400px] hover:border-blue-500/20 dark:hover:border-blue-500/30 transition-all duration-300 animate-fade-in">
           <div className="flex items-center gap-3 mb-5">
             <div className="p-3 rounded-2xl bg-blue-500/10 text-blue-500">
               <Crown className="h-5 w-5" />
@@ -301,7 +301,7 @@ export default function LeaderboardAndHistory({ data }: LeaderboardAndHistoryPro
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
       >
-        <Card className="p-6 rounded-[2rem] border bg-white dark:bg-slate-900/40 border-slate-100 dark:border-white/5 shadow-xl shadow-slate-200/50 dark:shadow-none backdrop-blur-md flex flex-col h-full min-h-[400px] hover:border-emerald-500/20 dark:hover:border-emerald-500/30 transition-all duration-300 animate-fade-in">
+        <Card className="p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] border bg-white dark:bg-slate-900/40 border-slate-100 dark:border-white/5 shadow-xl shadow-slate-200/50 dark:shadow-none backdrop-blur-md flex flex-col h-full min-h-0 sm:min-h-[400px] hover:border-emerald-500/20 dark:hover:border-emerald-500/30 transition-all duration-300 animate-fade-in">
           <div className="flex items-center gap-3 mb-5">
             <div className="p-3 rounded-2xl bg-emerald-500/10 text-emerald-500">
               <Wallet className="h-5 w-5" />

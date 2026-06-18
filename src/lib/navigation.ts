@@ -25,7 +25,10 @@ import {
   Send,
   Presentation,
   Gift,
-  Compass
+  Compass,
+  Database,
+  PlusCircle,
+  ListChecks
 } from "lucide-react";
 import { TFunction } from "i18next";
 
@@ -165,7 +168,6 @@ export const getSidebarRoutes = (role: string, t: TFunction, options: { ielts?: 
           ]
         },
         { to: "/super-admin/finance", label: t("nav.finance"), icon: Wallet },
-        // { to: "/super-admin/payment-requests", label: t("nav.paymentRequests", "To'lov so'rovlari"), icon: Wallet },
         { to: "/super-admin/calendar", label: t("nav.calendar"), icon: Calendar },
         { to: "/super-admin/messages", label: t("nav.messages"), icon: MessagesSquare },
         { to: "/super-admin/leaderboard", label: t("nav.leaderboard"), icon: Trophy },
@@ -178,14 +180,16 @@ export const getSidebarRoutes = (role: string, t: TFunction, options: { ielts?: 
           ]
         },
         { 
-          label: t("nav.subjectsMenu"), 
+          label: "SAT & Matematika", 
           icon: Target,
           children: [
-            { to: "/super-admin/sat", label: t("nav.sat"), icon: Target },
-            { to: "/super-admin/national-cert", label: t("nav.nationalCert"), icon: Landmark },
+            { to: "/super-admin/sat-mocks", label: "SAT Mocklar", icon: ListChecks },
+            { to: "/super-admin/sat-mocks/new", label: "Yangi SAT Mock", icon: PlusCircle },
+            { to: "/super-admin/milliy-mocks", label: "Milliy Sertifikat", icon: Landmark },
+            { to: "/super-admin/milliy-mocks/new", label: "Yangi Mock", icon: PlusCircle },
+            { to: "/super-admin/question-bank", label: "Savollar Ombori", icon: Database },
           ]
         },
-        { to: "/super-admin/question-bank", label: "Savollar Banki", icon: BookOpen },
         { to: "/super-admin/groups", label: t("nav.groups"), icon: Users2 },
         { to: "/super-admin/packs", label: t("nav.packs"), icon: Package },
         { to: "/super-admin/packages", label: t("nav.pricingPlans"), icon: Package },

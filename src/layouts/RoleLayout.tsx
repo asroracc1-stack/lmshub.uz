@@ -415,7 +415,7 @@ export default function RoleLayout({
   return (
     <div
       className={cn(
-        "h-screen flex w-full overflow-hidden transition-colors duration-500 p-3 gap-3",
+        "h-screen flex w-full overflow-hidden transition-colors duration-500 p-0 gap-0 md:p-3 md:gap-3",
         theme === "dark" ? "bg-[#080410] text-slate-100" : "bg-[#F3F4F6] text-slate-900"
       )}
     >
@@ -448,22 +448,22 @@ export default function RoleLayout({
       {/* ── Main content ────────────────────────────── */}
       <div 
         className={cn(
-          "flex-1 flex flex-col min-w-0 h-full overflow-y-auto overflow-x-hidden relative thin-scrollbar rounded-[16px] border",
+          "flex-1 flex flex-col min-w-0 h-full overflow-y-auto overflow-x-hidden relative thin-scrollbar rounded-none border-0 md:rounded-[16px] md:border",
           theme === "dark"
-            ? "bg-[#140D23] border-[#2E1E52] shadow-2xl"
-            : "bg-white border-[#E8DDFB] shadow-xl shadow-purple-100/40"
+            ? "bg-[#140D23] md:border-[#2E1E52] shadow-2xl"
+            : "bg-white md:border-[#E8DDFB] shadow-xl shadow-purple-100/40"
         )}
       >
         {/* Topbar */}
         <header
           className={cn(
-            "shrink-0 h-16 border-b sticky top-0 z-30 transition-all w-full flex justify-center rounded-t-[16px]",
+            "shrink-0 h-14 sm:h-16 border-b sticky top-0 z-30 transition-all w-full flex justify-center rounded-none md:rounded-t-[16px]",
             theme === "dark"
               ? "bg-[#140D23]/60 backdrop-blur-xl border-[#2E1E52]"
               : "bg-white/80 backdrop-blur-md border-[#E8DDFB]"
           )}
         >
-          <div className="w-full px-4 flex items-center justify-between h-full">
+          <div className="w-full px-3 sm:px-4 flex items-center justify-between h-full">
             <div className="flex items-center gap-3">
               {/* Mobile hamburger */}
               <Button
@@ -484,7 +484,7 @@ export default function RoleLayout({
               </div>
             </div>
 
-            <div className="flex items-center gap-2 md:gap-4 h-full py-2">
+            <div className="flex items-center gap-1.5 sm:gap-2 md:gap-4 h-full py-2">
               <div className="hidden sm:block">
                 <SmartClock />
               </div>
@@ -529,14 +529,14 @@ export default function RoleLayout({
                   <span>⌘</span>K
                 </kbd>
               </button>
-              <div className="flex items-center gap-1.5 md:gap-3 pl-2 md:pl-4 border-l border-border h-8">
+              <div className="flex items-center gap-1 sm:gap-1.5 md:gap-3 pl-1.5 sm:pl-2 md:pl-4 border-l border-border h-8">
                 {/* Referral button */}
                 <button
                   onClick={() => navigate(`${basePath}/referral`)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-purple-500 text-white hover:bg-purple-600 transition-colors text-xs font-semibold shadow-sm shadow-purple-500/30"
+                  className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full bg-purple-500 text-white hover:bg-purple-600 transition-colors text-[11px] sm:text-xs font-semibold shadow-sm shadow-purple-500/30"
                   title={t("nav.referral")}
                 >
-                  <Gift className="h-3.5 w-3.5" />
+                  <Gift className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                   <span className="hidden sm:inline">{t("nav.referral")}</span>
                 </button>
                 <NotificationsBell />
@@ -552,7 +552,7 @@ export default function RoleLayout({
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.25 }}
-          className="flex-1 p-5 w-full"
+          className="flex-1 p-3 sm:p-4 md:p-5 w-full"
         >
           <Suspense
             fallback={

@@ -254,3 +254,46 @@
   animation: spin-slow 12s linear infinite;
 }
 
+/* ── Mobile Responsive Overrides ────────────────────── */
+
+/* Safe area padding for notched devices (iPhone X+) */
+@supports (padding-top: env(safe-area-inset-top)) {
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Hide scrollbar on small screens for cleaner appearance */
+@media (max-width: 639px) {
+  ::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
+  * {
+    scrollbar-width: none;
+  }
+
+  /* Prevent horizontal overflow on mobile */
+  body, #root {
+    overflow-x: hidden !important;
+  }
+
+  /* Improve touch targets on mobile */
+  button, a, [role="button"] {
+    min-height: 32px;
+  }
+}
+
+/* Prevent text/content overflow on narrow screens */
+@media (max-width: 420px) {
+  .truncate-mobile {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
