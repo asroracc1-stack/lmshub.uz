@@ -64,7 +64,7 @@ export default function MobileSidebarDrawer({
             animate={{ x: 0 }}
             exit={{ x: "-100%" }}
             transition={{ type: "tween", duration: 0.22, ease: "easeOut" }}
-            className="fixed inset-y-0 left-0 z-50 flex w-[min(18rem,86vw)] flex-col border-r border-sidebar-border bg-sidebar shadow-elegant md:hidden will-change-transform"
+            className="fixed inset-y-0 left-0 z-50 flex w-[min(19rem,82vw)] flex-col border-r border-sidebar-border bg-white dark:bg-[#140D23] shadow-2xl shadow-black/20 dark:shadow-black/50 md:hidden will-change-transform rounded-r-2xl overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex-1 min-h-0 flex flex-col pt-2">
