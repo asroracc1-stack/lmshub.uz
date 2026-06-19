@@ -20,6 +20,17 @@ export function normalizeMathUnicode(text: string): string {
     .replace(/₄/g, "_4")
     .replace(/₅/g, "_5")
     .replace(/ₙ/g, "_n")
+    .replace(/log₂/g, "\\log_{2}")
+    .replace(/log₁₀/g, "\\log_{10}")
+    .replace(/log/g, "\\log")
+    .replace(/π/g, "\\pi")
+    .replace(/≤/g, "\\le")
+    .replace(/≥/g, "\\ge")
+    .replace(/≠/g, "\\neq")
+    .replace(/±/g, "\\pm")
+    .replace(/×/g, "\\times")
+    .replace(/÷/g, "\\div")
+    .replace(/−/g, "-") // Unicode minus
     .replace(/√([a-zA-Z0-9]+|\([^\)]+\))/g, (match, p1) => {
       if (p1.startsWith("(") && p1.endsWith(")")) {
         return `\\sqrt{${p1.slice(1, -1)}}`;
@@ -27,6 +38,36 @@ export function normalizeMathUnicode(text: string): string {
       return `\\sqrt{${p1}}`;
     })
     .replace(/√/g, "\\sqrt ");
+}
+
+/**
+ * Checks if a string token represents a mathematical component
+ */
+function isMathToken(token: string): boolean {
+  const t = token.replace(/[\.,;\?\!]+$/, "");
+  if (!t) return false;
+
+  // Contains mathematical symbols/LaTeX keywords
+  if (/[\^_\\√π≤≥≠±×÷−]/.test(t)) return true;
+
+  // Single character variables, operators, brackets
+  if (t.length === 1) {
+    return /[a-zA-Z0-9\+\-\*\/\=\<\>\(\)\[\]\{\}]/.test(t);
+  }
+
+  // Pure numbers (digits, decimals)
+  if (/^\d+(?:\.\d+)?$/.test(t)) return true;
+
+  // Simple algebraic terms (e.g. 5x, 2a, 10n)
+  if (/^\d+[a-zA-Z]$/.test(t)) return true;
+
+  // Mathematical function keywords
+  if (/^(?:log|ln|sin|cos|tan|cot|lim|log_2|log_10|log₂|log₁₀)$/i.test(t)) return true;
+
+  // Parenthesized simple expressions
+  if (/^\([a-zA-Z0-9\+\-\*\/\=]+\)$/.test(t)) return true;
+
+  return false;
 }
 
 /**
@@ -40,11 +81,12 @@ export function formatMathText(text: string): React.ReactNode {
   const normalized = normalizeMathUnicode(text);
 
   // Split by explicit LaTeX blocks first: $$block$$ or $inline$
-  const parts = normalized.split(/(\$\$[\s\S]*?\$\$|\$[^\$\n]+?\$)/g);
+  const parts = normalized.split(/(\$\$[\s\S]*?\ExternalString|[\s\S]*?\$)/g);
+  const partsRegex = normalized.split(/(\$\$[\s\S]*?\$\$|\$[^\$\n]+?\$)/g);
 
   return (
     <>
-      {parts.map((part, index) => {
+      {partsRegex.map((part, index) => {
         if (part.startsWith("$$") && part.endsWith("$$")) {
           const tex = part.slice(2, -2);
           try {
@@ -77,57 +119,76 @@ export function formatMathText(text: string): React.ReactNode {
           }
         }
 
-        // Implicit math regex:
-        // Matches any segment of characters containing exponents (^), subscripts (_), or common LaTeX keywords
-        const implicitMathRegex = /((?:[a-zA-Z0-9\(\)\{\}\[\]\+\-\*\/\=\<\>\s]|\\[a-zA-Z]+)*?(?:[\^_](?:[0-9a-zA-Z]|\{[^{}]*\})|\\(?:frac|sqrt|int|sum|sin|cos|tan|log|lim|alpha|beta|theta|pi|pm|cdot|angle|degree|parallel|perp|triangle))[a-zA-Z0-9\(\)\{\}\[\]\+\-\*\/\=\<\>\s\^_\\,\.]*)/g;
+        // Tokenize the text to parse implicit math without gluing words
+        const tokens = part.split(/(\s+)/);
+        const resultElements: React.ReactNode[] = [];
+        let currentMathGroup: string[] = [];
 
-        const subParts = part.split(implicitMathRegex);
+        const flushMathGroup = (keyPrefix: string) => {
+          if (currentMathGroup.length === 0) return;
+          let mathExpr = currentMathGroup.join("").trim();
+          currentMathGroup = [];
+          if (!mathExpr) return;
 
-        return (
-          <React.Fragment key={`text-block-${index}`}>
-            {subParts.map((subPart, subIdx) => {
-              if (subIdx % 2 === 1) {
-                let mathExpr = subPart.trim();
-                let trailingPunct = "";
-                const punctMatch = mathExpr.match(/([\.,;\?\!]+)$/);
-                if (punctMatch) {
-                  trailingPunct = punctMatch[1];
-                  mathExpr = mathExpr.slice(0, -trailingPunct.length).trim();
-                }
+          let trailingPunct = "";
+          const punctMatch = mathExpr.match(/([\.,;\?\!]+)$/);
+          if (punctMatch) {
+            trailingPunct = punctMatch[1];
+            mathExpr = mathExpr.slice(0, -trailingPunct.length).trim();
+          }
 
-                // If mathExpr is empty after stripping punctuation, render as is
-                if (!mathExpr) {
-                  return <span key={`implicit-${index}-${subIdx}`}>{subPart}</span>;
-                }
+          if (!mathExpr) return;
 
-                try {
-                  return (
-                    <span key={`implicit-${index}-${subIdx}`} className="inline-block mx-0.5">
-                      <span
-                        dangerouslySetInnerHTML={{
-                          __html: katex.renderToString(mathExpr, { displayMode: false, throwOnError: false })
-                        }}
-                      />
-                      {trailingPunct}
-                    </span>
-                  );
-                } catch (err) {
-                  return <span key={`implicit-err-${index}-${subIdx}`}>{subPart}</span>;
-                }
-              }
-
-              // Normal text
-              return (
+          try {
+            resultElements.push(
+              <span key={`math-${keyPrefix}-${resultElements.length}`} className="inline-block mx-0.5">
                 <span
-                  key={`text-${index}-${subIdx}`}
                   dangerouslySetInnerHTML={{
-                    __html: DOMPurify.sanitize(subPart.replace(/\\n/g, "<br/>").replace(/\n/g, "<br/>"))
+                    __html: katex.renderToString(mathExpr, { displayMode: false, throwOnError: false })
+                  }}
+                />
+                {trailingPunct}
+              </span>
+            );
+          } catch (err) {
+            resultElements.push(<span key={`math-err-${keyPrefix}-${resultElements.length}`}>{mathExpr}{trailingPunct}</span>);
+          }
+        };
+
+        for (let i = 0; i < tokens.length; i++) {
+          const token = tokens[i];
+          if (i % 2 === 1) {
+            // Space / newline
+            if (currentMathGroup.length > 0) {
+              currentMathGroup.push(token);
+            } else {
+              resultElements.push(
+                <span
+                  key={`space-${index}-${i}`}
+                  dangerouslySetInnerHTML={{ __html: token.replace(/\n/g, "<br/>") }}
+                />
+              );
+            }
+          } else {
+            // Word token
+            if (isMathToken(token)) {
+              currentMathGroup.push(token);
+            } else {
+              flushMathGroup(`${index}-${i}`);
+              resultElements.push(
+                <span
+                  key={`text-${index}-${i}`}
+                  dangerouslySetInnerHTML={{
+                    __html: DOMPurify.sanitize(token.replace(/\\n/g, "<br/>").replace(/\n/g, "<br/>"))
                   }}
                 />
               );
-            })}
-          </React.Fragment>
-        );
+            }
+          }
+        }
+        flushMathGroup(`${index}-final`);
+
+        return <React.Fragment key={`text-block-${index}`}>{resultElements}</React.Fragment>;
       })}
     </>
   );
