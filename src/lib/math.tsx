@@ -43,12 +43,21 @@ export function normalizeMathUnicode(text: string): string {
 /**
  * Checks if a string token represents a mathematical component
  */
+/**
+ * Checks if a string token represents a mathematical component
+ */
 function isMathToken(token: string): boolean {
   const t = token.replace(/[\.,;\?\!]+$/, "");
   if (!t) return false;
 
-  // Contains mathematical symbols/LaTeX keywords
-  if (/[\^_\\√π≤≥≠±×÷−]/.test(t)) return true;
+  // Contains mathematical symbols/LaTeX keywords or standard operators
+  if (/[\^_\\√π≤≥≠±×÷\+\-\*\/\=\<\>]/.test(t)) {
+    // Exclude hyphenated Uzbek/English words (e.g., super-admin, to'g'ri-burchakli)
+    if (/^[a-zA-Z\']+(?:-[a-zA-Z\']+)+$/.test(t)) {
+      if (t.length > 3) return false;
+    }
+    return true;
+  }
 
   // Single character variables, operators, brackets
   if (t.length === 1) {
@@ -81,7 +90,6 @@ export function formatMathText(text: string): React.ReactNode {
   const normalized = normalizeMathUnicode(text);
 
   // Split by explicit LaTeX blocks first: $$block$$ or $inline$
-  const parts = normalized.split(/(\$\$[\s\S]*?\ExternalString|[\s\S]*?\$)/g);
   const partsRegex = normalized.split(/(\$\$[\s\S]*?\$\$|\$[^\$\n]+?\$)/g);
 
   return (
@@ -126,9 +134,26 @@ export function formatMathText(text: string): React.ReactNode {
 
         const flushMathGroup = (keyPrefix: string) => {
           if (currentMathGroup.length === 0) return;
+
+          let trailingSpaces = "";
+          while (currentMathGroup.length > 0 && /^\s+$/.test(currentMathGroup[currentMathGroup.length - 1])) {
+            trailingSpaces = currentMathGroup.pop() + trailingSpaces;
+          }
+
           let mathExpr = currentMathGroup.join("").trim();
           currentMathGroup = [];
-          if (!mathExpr) return;
+
+          if (!mathExpr) {
+            if (trailingSpaces) {
+              resultElements.push(
+                <span
+                  key={`space-restored-${keyPrefix}-${resultElements.length}`}
+                  dangerouslySetInnerHTML={{ __html: trailingSpaces.replace(/\n/g, "<br/>") }}
+                />
+              );
+            }
+            return;
+          }
 
           let trailingPunct = "";
           const punctMatch = mathExpr.match(/([\.,;\?\!]+)$/);
@@ -137,11 +162,21 @@ export function formatMathText(text: string): React.ReactNode {
             mathExpr = mathExpr.slice(0, -trailingPunct.length).trim();
           }
 
-          if (!mathExpr) return;
+          if (!mathExpr) {
+            if (trailingSpaces) {
+              resultElements.push(
+                <span
+                  key={`space-restored-${keyPrefix}-${resultElements.length}`}
+                  dangerouslySetInnerHTML={{ __html: trailingSpaces.replace(/\n/g, "<br/>") }}
+                />
+              );
+            }
+            return;
+          }
 
           try {
             resultElements.push(
-              <span key={`math-${keyPrefix}-${resultElements.length}`} className="inline-block mx-0.5">
+              <span key={`math-${keyPrefix}-${resultElements.length}`} className="inline-block mx-1">
                 <span
                   dangerouslySetInnerHTML={{
                     __html: katex.renderToString(mathExpr, { displayMode: false, throwOnError: false })
@@ -152,6 +187,15 @@ export function formatMathText(text: string): React.ReactNode {
             );
           } catch (err) {
             resultElements.push(<span key={`math-err-${keyPrefix}-${resultElements.length}`}>{mathExpr}{trailingPunct}</span>);
+          }
+
+          if (trailingSpaces) {
+            resultElements.push(
+              <span
+                key={`space-after-${keyPrefix}-${resultElements.length}`}
+                dangerouslySetInnerHTML={{ __html: trailingSpaces.replace(/\n/g, "<br/>") }}
+              />
+            );
           }
         };
 

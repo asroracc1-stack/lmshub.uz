@@ -7,6 +7,7 @@ import java.util.List;
 @Data
 @Builder
 public class ExamResultDto {
+    private java.util.UUID attemptId;
     private Double bandScore;
     private Integer correct;
     private Integer total;

@@ -113,4 +113,13 @@ public class StudentExamController {
             @AuthenticationPrincipal User user) {
         return ResponseEntity.ok(examService.getExamResult(examId, user));
     }
+
+    @GetMapping("/attempts/{attemptId}/result")
+    @PreAuthorize("hasAnyRole('STUDENT', 'USER')")
+    @Operation(summary = "Get Completed Exam Result by Attempt ID", description = "Retrieves the graded result details for a specific completed exam attempt.")
+    public ResponseEntity<com.lmscrm.backend.dto.exam.ExamResultDto> getExamResultByAttemptId(
+            @PathVariable UUID attemptId,
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(examService.getExamResultByAttemptId(attemptId, user));
+    }
 }

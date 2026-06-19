@@ -463,6 +463,7 @@ public class ExamService {
         }
 
         return ExamResultDto.builder()
+                .attemptId(attempt != null ? attempt.getId() : null)
                 .kind(kind)
                 .correct(correctCount)
                 .total(questions.size())
@@ -523,6 +524,76 @@ public class ExamService {
         String kind = attempt.getExam().getType().name().toLowerCase();
         
         return ExamResultDto.builder()
+                .attemptId(attempt.getId())
+                .kind(kind)
+                .correct(attempt.getTotalScore() != null ? attempt.getTotalScore() : correctCount)
+                .total(attempt.getMaxScore() != null ? attempt.getMaxScore() : questions.size())
+                .bandScore(attempt.getOverallBand() != null ? attempt.getOverallBand() : 0.0)
+                .detail(details)
+                .timeUsedSeconds(attempt.getTimeUsedSeconds() != null ? attempt.getTimeUsedSeconds() : 0)
+                .aiCoachFeedback(attempt.getAiCoachFeedback())
+                .predictedScore(attempt.getPredictedScore())
+                .autoSubmitted(attempt.getAutoSubmitted() != null ? attempt.getAutoSubmitted() : false)
+                .violations(attempt.getViolations().stream().map(v -> ExamViolationDto.builder()
+                        .violationType(v.getViolationType())
+                        .timestamp(v.getTimestamp().toString())
+                        .details(v.getDetails())
+                        .build()).collect(Collectors.toList()))
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public ExamResultDto getExamResultByAttemptId(UUID attemptId, User student) {
+        StudentAttempt attempt = studentAttemptRepository.findById(attemptId)
+                .orElseThrow(() -> new ResourceNotFoundException("No attempt found with id: " + attemptId));
+
+        if (!attempt.getStudent().getId().equals(student.getId())) {
+            throw new org.springframework.security.access.AccessDeniedException("You do not have permission to view this attempt result");
+        }
+
+        List<Question> questions = questionRepository.findByExamIdOrderByPositionOrderAsc(attempt.getExam().getId());
+        List<StudentAnswer> answers = studentAnswerRepository.findByAttemptId(attempt.getId());
+        java.util.Map<UUID, StudentAnswer> answerMap = answers.stream()
+                .collect(Collectors.toMap(a -> a.getQuestion().getId(), a -> a));
+
+        List<ExamResultDto.QuestionDetail> details = new ArrayList<>();
+        int correctCount = 0;
+
+        for (Question q : questions) {
+            StudentAnswer answer = answerMap.get(q.getId());
+            String userAns = "";
+            boolean ok = false;
+            Integer timeSpent = 0;
+            String aiExpl = null;
+            if (answer != null) {
+                userAns = answer.getUserAnswerText() != null ? answer.getUserAnswerText() : (answer.getSelectedOption() != null ? answer.getSelectedOption().getText() : "");
+                ok = answer.getIsCorrect() != null && answer.getIsCorrect();
+                correctCount += (answer.getPointsEarned() != null) ? answer.getPointsEarned() : 0;
+                timeSpent = answer.getTimeSpentSeconds() != null ? answer.getTimeSpentSeconds() : 0;
+                aiExpl = answer.getAiExplanation();
+            }
+
+            List<QuestionOption> options = optionRepository.findByQuestionIdOrderByPositionOrderAsc(q.getId());
+            String correctAns = options.stream()
+                    .filter(QuestionOption::getIsCorrect)
+                    .map(QuestionOption::getText)
+                    .findFirst()
+                    .orElse("");
+
+            details.add(ExamResultDto.QuestionDetail.builder()
+                    .questionId(q.getId().toString())
+                    .userAns(userAns)
+                    .correctAns(correctAns)
+                    .ok(ok)
+                    .timeSpentSeconds(timeSpent)
+                    .aiExplanation(aiExpl)
+                    .build());
+        }
+
+        String kind = attempt.getExam().getType().name().toLowerCase();
+        
+        return ExamResultDto.builder()
+                .attemptId(attempt.getId())
                 .kind(kind)
                 .correct(attempt.getTotalScore() != null ? attempt.getTotalScore() : correctCount)
                 .total(attempt.getMaxScore() != null ? attempt.getMaxScore() : questions.size())

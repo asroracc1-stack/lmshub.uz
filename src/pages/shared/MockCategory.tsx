@@ -426,7 +426,7 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
                               variant="outline"
                               className="rounded-xl h-11 px-6 font-bold text-sm transition-all duration-300 border-emerald-500 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 w-full sm:w-auto flex-1 sm:flex-none justify-center"
                             >
-                              <Link to={`${basePath}/mocks/take/${test.id}?review=true`}>
+                              <Link to={`${basePath}/mocks/take/${test.id}?review=true&attemptId=${attempt.id}`}>
                                 {t("mockCategory.reviewBtn")}
                               </Link>
                             </Button>

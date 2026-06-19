@@ -679,7 +679,10 @@ export default function MockTake() {
         } catch { /* ignore */ }
         
         if (isReviewMode) {
-          api.get(`/student/exams/${testId}/result`)
+          const url = attemptId 
+            ? `/student/exams/attempts/${attemptId}/result`
+            : `/student/exams/${testId}/result`;
+          api.get(url)
             .then((resResult) => {
               setResult(resResult.data);
               setStarted(true); 
@@ -691,7 +694,7 @@ export default function MockTake() {
         setLoadError(err?.response?.data?.message ?? err?.message ?? "Failed to load exam");
       })
       .finally(() => setLoading(false));
-  }, [testId, isReviewMode]);
+  }, [testId, isReviewMode, attemptId]);
 
   // Keyboard Shortcuts (A, B, C, D, Left, Right)
   useEffect(() => {

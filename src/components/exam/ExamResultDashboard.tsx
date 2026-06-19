@@ -70,13 +70,20 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
   const [currentResult, setCurrentResult] = useState(result);
 
   useEffect(() => {
+    setCurrentResult(result);
+  }, [result]);
+
+  useEffect(() => {
     if (currentResult?.aiCoachFeedback) return;
 
     let intervalId: any;
     
     const pollResult = async () => {
       try {
-        const res = await api.get(`/student/exams/${exam?.id}/result`);
+        const url = currentResult?.attemptId 
+          ? `/student/exams/attempts/${currentResult.attemptId}/result`
+          : `/student/exams/${exam?.id}/result`;
+        const res = await api.get(url);
         if (res.data && res.data.aiCoachFeedback) {
           setCurrentResult((prev: any) => ({
             ...prev,
@@ -97,7 +104,7 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
     intervalId = setInterval(pollResult, 3000);
 
     return () => clearInterval(intervalId);
-  }, [exam?.id, currentResult?.aiCoachFeedback]);
+  }, [exam?.id, currentResult?.aiCoachFeedback, currentResult?.attemptId]);
 
   const kind = (currentResult.kind ?? "exam").toLowerCase();
   const isSat = kind === "sat";
@@ -614,7 +621,7 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                         <p className="text-xs font-sans font-bold uppercase text-slate-500 dark:text-slate-400 mb-2 border-b border-slate-200 dark:border-slate-800 pb-1">
                           {isMilliy ? `${q.position}-savol` : `Question Item ${q.position}`}
                         </p>
-                        <p className="text-base text-slate-900 dark:text-slate-100 leading-relaxed font-sans">{q.prompt}</p>
+                        <div className="text-base text-slate-900 dark:text-slate-100 leading-relaxed font-sans">{processLaTeX(q.prompt)}</div>
                       </div>
 
                       <div className="overflow-x-auto mb-6">
@@ -632,10 +639,10 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                           <tbody>
                             <tr>
                               <td className={cn("border border-slate-200 dark:border-slate-800 p-3 font-bold", isCorrect ? "text-[#166534] dark:text-[#22c55e]" : isSkipped ? "text-slate-500 dark:text-slate-400" : "text-[#991b1b] dark:text-[#f43f5e]")}>
-                                {detail.userAns ? translateFeedbackToUz(detail.userAns) : (isMilliy ? "BELGILANMAGAN" : "OMITTED")}
+                                {detail.userAns ? processLaTeX(translateFeedbackToUz(detail.userAns)) : (isMilliy ? "BELGILANMAGAN" : "OMITTED")}
                               </td>
                               <td className="border border-slate-200 dark:border-slate-800 p-3 font-bold text-slate-800 dark:text-slate-200">
-                                {translateFeedbackToUz(detail.correctAns)}
+                                {processLaTeX(translateFeedbackToUz(detail.correctAns))}
                               </td>
                             </tr>
                           </tbody>
@@ -776,13 +783,13 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                             <span className={cn("font-bold", 
                               isCorrect ? "text-[#059669] dark:text-[#10b981]" : isSkipped ? "text-slate-500 dark:text-slate-400" : "text-rose-600 dark:text-rose-450"
                             )}>
-                              {detail.userAns ? translateFeedbackToUz(detail.userAns) : "BELGILANMAGAN"}
+                              {detail.userAns ? processLaTeX(translateFeedbackToUz(detail.userAns)) : "BELGILANMAGAN"}
                             </span>
                           </div>
                           <div className="p-3 bg-white/60 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl">
                             <span className="block text-slate-500 dark:text-slate-400 font-semibold mb-1">To'g'ri javob:</span>
                             <span className="font-bold text-[#059669] dark:text-[#10b981]">
-                              {translateFeedbackToUz(detail.correctAns)}
+                              {processLaTeX(translateFeedbackToUz(detail.correctAns))}
                             </span>
                           </div>
                         </div>
