@@ -266,6 +266,9 @@ const AppRoutes = () => {
           <Route path="gamification" element={<GamificationAdmin />} />
           <Route path="question-bank" element={<QuestionBank />} />
           <Route path="library" element={<Library />} />
+          <Route path="library/adabiy-kitoblar" element={<LibraryCategoryDetail code="adabiy_kitoblar" />} />
+          <Route path="library/maktab-darsliklari" element={<LibraryCategoryDetail code="maktab_darsliklari" />} />
+          <Route path="library/oquv-qollanmalar" element={<LibraryCategoryDetail code="oquv_qollanmalar" />} />
           <Route path="library/category/:code" element={<LibraryCategoryDetail />} />
           <Route path="library/read/:materialId" element={<PdfViewerPage />} />
           <Route path="library-manage" element={<LibraryManage />} />
@@ -302,6 +305,9 @@ const AppRoutes = () => {
           <Route path="referral" element={<ReferralPage />} />
           <Route path="gamification" element={<GamificationAdmin />} />
           <Route path="library" element={<Library />} />
+          <Route path="library/adabiy-kitoblar" element={<LibraryCategoryDetail code="adabiy_kitoblar" />} />
+          <Route path="library/maktab-darsliklari" element={<LibraryCategoryDetail code="maktab_darsliklari" />} />
+          <Route path="library/oquv-qollanmalar" element={<LibraryCategoryDetail code="oquv_qollanmalar" />} />
           <Route path="library/category/:code" element={<LibraryCategoryDetail />} />
           <Route path="library/read/:materialId" element={<PdfViewerPage />} />
         </Route>
@@ -335,6 +341,9 @@ const AppRoutes = () => {
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="referral" element={<ReferralPage />} />
           <Route path="library" element={<Library />} />
+          <Route path="library/adabiy-kitoblar" element={<LibraryCategoryDetail code="adabiy_kitoblar" />} />
+          <Route path="library/maktab-darsliklari" element={<LibraryCategoryDetail code="maktab_darsliklari" />} />
+          <Route path="library/oquv-qollanmalar" element={<LibraryCategoryDetail code="oquv_qollanmalar" />} />
           <Route path="library/category/:code" element={<LibraryCategoryDetail />} />
           <Route path="library/read/:materialId" element={<PdfViewerPage />} />
         </Route>
@@ -366,6 +375,9 @@ const AppRoutes = () => {
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="referral" element={<ReferralPage />} />
           <Route path="library" element={<Library />} />
+          <Route path="library/adabiy-kitoblar" element={<LibraryCategoryDetail code="adabiy_kitoblar" />} />
+          <Route path="library/maktab-darsliklari" element={<LibraryCategoryDetail code="maktab_darsliklari" />} />
+          <Route path="library/oquv-qollanmalar" element={<LibraryCategoryDetail code="oquv_qollanmalar" />} />
           <Route path="library/category/:code" element={<LibraryCategoryDetail />} />
           <Route path="library/read/:materialId" element={<PdfViewerPage />} />
         </Route>
@@ -403,6 +415,9 @@ const AppRoutes = () => {
           <Route path="referral" element={<ReferralPage />} />
           <Route path="map" element={<AdventureMapFull />} />
           <Route path="library" element={<Library />} />
+          <Route path="library/adabiy-kitoblar" element={<LibraryCategoryDetail code="adabiy_kitoblar" />} />
+          <Route path="library/maktab-darsliklari" element={<LibraryCategoryDetail code="maktab_darsliklari" />} />
+          <Route path="library/oquv-qollanmalar" element={<LibraryCategoryDetail code="oquv_qollanmalar" />} />
           <Route path="library/category/:code" element={<LibraryCategoryDetail />} />
           <Route path="library/read/:materialId" element={<PdfViewerPage />} />
         </Route>
@@ -427,6 +442,9 @@ const AppRoutes = () => {
           <Route path="referral" element={<ReferralPage />} />
           <Route path="map" element={<AdventureMapFull />} />
           <Route path="library" element={<Library />} />
+          <Route path="library/adabiy-kitoblar" element={<LibraryCategoryDetail code="adabiy_kitoblar" />} />
+          <Route path="library/maktab-darsliklari" element={<LibraryCategoryDetail code="maktab_darsliklari" />} />
+          <Route path="library/oquv-qollanmalar" element={<LibraryCategoryDetail code="oquv_qollanmalar" />} />
           <Route path="library/category/:code" element={<LibraryCategoryDetail />} />
           <Route path="library/read/:materialId" element={<PdfViewerPage />} />
         </Route>

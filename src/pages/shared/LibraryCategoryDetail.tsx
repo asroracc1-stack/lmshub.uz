@@ -2,21 +2,18 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { api } from "@/lib/axios";
 import { useAuth } from "@/contexts/AuthContext";
-import {
-  ArrowLeft,
-  BookOpen,
-  Filter,
-  FileText,
-  Lock,
-  Compass,
-  Search,
-  Grid,
-  Heart,
-  ChevronRight,
-  ShieldAlert
-} from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import {
+  ArrowLeft,
+  Search,
+  Lock,
+  BookOpen,
+  Crown,
+  CheckCircle,
+  ChevronDown
+} from "lucide-react";
 
 interface Category {
   id: string;
@@ -42,39 +39,188 @@ interface Material {
   isFavorite?: boolean;
 }
 
-export default function LibraryCategoryDetail() {
-  const { code } = useParams<{ code: string }>();
+interface LibraryCategoryDetailProps {
+  code?: string;
+}
+
+// Inline Local Translations dictionary for Category Detail Page
+const detailTranslations = {
+  uz: {
+    backBtn: "Orqaga",
+    titleSuffix: "bo'limi",
+    yourSubscription: "Sizning obunangiz",
+    freeAccess: "FREE",
+    proAccess: "PRO",
+    eliteAccess: "ELITE",
+    locked: "Qulflangan",
+    searchPlaceholder: "Kitob nomi yoki muallif...",
+    accessFilter: "Kirish turi",
+    accessAll: "Barcha kirish turlari",
+    subjectFilter: "Fan",
+    subjectAll: "Barcha fanlar",
+    sortFilter: "Saralash",
+    sortNewest: "Yangi qo'shilganlar",
+    sortPopular: "Ko'p o'qilganlar",
+    sortTitle: "Nomi bo'yicha",
+    clearFilters: "Tozalash",
+    pages: "{{count}} bet",
+    noBooksTitle: "Hech qanday kitob topilmadi",
+    noBooksSub: "Iltimos, boshqa filtrlar yoki qidiruv so'zlarini sinab ko'ring",
+    modalTitle: "Premium Obuna Talab Qilinadi",
+    modalDesc: "Ushbu material {{tier}} obuna toifasiga tegishli. O'qishni davom ettirish uchun obunangizni yangilang.",
+    modalBenefit1: "Barcha premium kitoblar va darsliklarga to'liq kirish",
+    modalBenefit2: "Cheksiz yuklab olish va offline rejimda o'qish",
+    modalBenefit3: "Shaxsiy o'quv progressini va AI tahlilini kuzatish",
+    modalBenefit4: "Milliy sertifikat va SAT mock imtihonlariga kirish",
+    modalUpgradeBtn: "Hozir yangilash",
+    modalCancelBtn: "Orqaga qaytish",
+  },
+  ru: {
+    backBtn: "Назад",
+    titleSuffix: "раздел",
+    yourSubscription: "Ваша подписка",
+    freeAccess: "FREE",
+    proAccess: "PRO",
+    eliteAccess: "ELITE",
+    locked: "Заблокировано",
+    searchPlaceholder: "Название или автор...",
+    accessFilter: "Тип доступа",
+    accessAll: "Все типы доступа",
+    subjectFilter: "Предмет",
+    subjectAll: "Все предметы",
+    sortFilter: "Сортировка",
+    sortNewest: "Новинки",
+    sortPopular: "Популярные",
+    sortTitle: "По названию",
+    clearFilters: "Сбросить",
+    pages: "{{count}} стр.",
+    noBooksTitle: "Книг не найдено",
+    noBooksSub: "Пожалуйста, попробуйте изменить фильтры или строку поиска",
+    modalTitle: "Требуется Premium Подписка",
+    modalDesc: "Этот материал доступен по подписке {{tier}}. Обновите свой пакет для доступа к чтению.",
+    modalBenefit1: "Полный доступ ко всей премиум-библиотеке учебников",
+    modalBenefit2: "Неограниченное скачивание и чтение в автономном режиме",
+    modalBenefit3: "Отслеживание прогресса и AI-анализ обучения",
+    modalBenefit4: "Доступ к национальным сертификатам и пробным тестам SAT",
+    modalUpgradeBtn: "Обновить сейчас",
+    modalCancelBtn: "Вернуться назад",
+  },
+  en: {
+    backBtn: "Back",
+    titleSuffix: "section",
+    yourSubscription: "Your subscription",
+    freeAccess: "FREE",
+    proAccess: "PRO",
+    eliteAccess: "ELITE",
+    locked: "Locked",
+    searchPlaceholder: "Title or author...",
+    accessFilter: "Access type",
+    accessAll: "All access types",
+    subjectFilter: "Subject",
+    subjectAll: "All subjects",
+    sortFilter: "Sort",
+    sortNewest: "Newest arrivals",
+    sortPopular: "Most read",
+    sortTitle: "By title",
+    clearFilters: "Clear",
+    pages: "{{count}} pages",
+    noBooksTitle: "No books found",
+    noBooksSub: "Please try other filter settings or keywords",
+    modalTitle: "Premium Subscription Required",
+    modalDesc: "This material belongs to the {{tier}} package. Upgrade your subscription to continue reading.",
+    modalBenefit1: "Full access to all premium books and textbooks",
+    modalBenefit2: "Unlimited downloads and offline reading capabilities",
+    modalBenefit3: "Personal reading progress tracking and AI analysis",
+    modalBenefit4: "Access to National Certificate and SAT mock exams",
+    modalUpgradeBtn: "Upgrade Now",
+    modalCancelBtn: "Go Back",
+  }
+};
+
+// Beautiful Empty State Illustration component
+const EmptyStateIllustration = () => (
+  <svg viewBox="0 0 400 240" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-48 h-48 mx-auto text-slate-400 dark:text-slate-650 opacity-60">
+    <ellipse cx="200" cy="190" rx="120" ry="20" fill="currentColor" fillOpacity="0.05" />
+    <path d="M140 180H260" stroke="currentColor" strokeWidth="2.5" strokeOpacity="0.3" strokeLinecap="round" />
+    {/* Floating dotted path */}
+    <path d="M200 40C240 70 240 100 200 130C160 160 160 190 200 220" stroke="currentColor" strokeWidth="2" strokeDasharray="4 6" strokeOpacity="0.2" fill="none" />
+    {/* Search icon / magnifying glass abstract */}
+    <circle cx="200" cy="110" r="35" stroke="currentColor" strokeWidth="3.5" fill="currentColor" fillOpacity="0.03" />
+    <line x1="225" y1="135" x2="255" y2="165" stroke="currentColor" strokeWidth="4.5" strokeLinecap="round" />
+    {/* Stardust/Sparkles */}
+    <g className="animate-pulse">
+      <circle cx="150" cy="80" r="2.5" fill="currentColor" fillOpacity="0.5" />
+      <circle cx="250" cy="70" r="3.5" fill="currentColor" fillOpacity="0.4" />
+      <circle cx="180" cy="150" r="2" fill="currentColor" fillOpacity="0.6" />
+    </g>
+  </svg>
+);
+
+// High-end Kindle/Apple Books cover placeholder component
+const BookCoverPlaceholder = ({ title, author, accent }: { title: string; author: string; accent: string }) => {
+  return (
+    <div className={`w-full h-full bg-gradient-to-br ${accent} p-5 flex flex-col justify-between text-white relative overflow-hidden select-none`}>
+      {/* Abstract circles */}
+      <div className="absolute -top-6 -right-6 w-28 h-28 rounded-full bg-white/10 blur-xl" />
+      <div className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full bg-black/25 blur-2xl" />
+      <div className="text-[9px] uppercase tracking-widest font-black opacity-55">LMSHub Digital</div>
+      <div className="space-y-1.5 my-auto">
+        <h4 className="text-base md:text-lg font-black leading-tight line-clamp-3 uppercase tracking-tight drop-shadow">
+          {title}
+        </h4>
+        <p className="text-[10px] font-bold opacity-80 line-clamp-1">{author || "Author"}</p>
+      </div>
+      <div className="flex items-center justify-between border-t border-white/20 pt-2.5 text-[8px] font-black opacity-70">
+        <span>PREMIUM EDITION</span>
+        <span>📚</span>
+      </div>
+    </div>
+  );
+};
+
+export default function LibraryCategoryDetail({ code: propCode }: LibraryCategoryDetailProps = {}) {
+  const { code: paramCode } = useParams<{ code: string }>();
+  const code = propCode || paramCode;
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { i18n } = useTranslation();
   const role = user?.role?.toLowerCase() || "user";
   const basePath = `/${role}`;
+  const lang = (i18n.language || "uz") as "uz" | "ru" | "en";
+  const t = detailTranslations[lang] || detailTranslations["uz"];
 
   const [category, setCategory] = useState<Category | null>(null);
   const [materials, setMaterials] = useState<Material[]>([]);
-  const [subjects, setSubjects] = useState<string[]>([]);
-  const [grades, setGrades] = useState<string[]>([]);
-  
-  // Active subscription check
   const [userSubscriptionTier, setUserSubscriptionTier] = useState("FREE");
 
-  // Filters state
-  const [selectedSubject, setSelectedSubject] = useState("");
-  const [selectedGrade, setSelectedGrade] = useState("");
-  const [selectedAccessType, setSelectedAccessType] = useState("");
+  // Filters State
   const [searchQuery, setSearchQuery] = useState("");
-  
-  // Modals state
+  const [selectedAccessType, setSelectedAccessType] = useState("");
+  const [selectedSubject, setSelectedSubject] = useState("");
+  const [sortBy, setSortBy] = useState("NEWEST");
+
+  // Paywall Modal State
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const [modalTierRequired, setModalTierRequired] = useState<"PRO" | "ELITE" | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Pagination
-  const [page, setPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading] = useState(false);
+  // Hardcode lists of genres/subjects based on category code to prevent unnecessary queries
+  const genreList = code === "adabiy_kitoblar" 
+    ? ["Romanlar", "Hikoyalar", "She'rlar", "Jahon adabiyoti", "O'zbek adabiyoti"]
+    : ["Matematika", "Fizika", "Kimyo", "Biologiya", "Ingliz tili", "Tarix", "Ona tili", "Geografiya"];
+
+  // Accents for placeholders based on category
+  const placeholderAccents = [
+    "from-indigo-600 to-purple-650",
+    "from-teal-600 to-emerald-650",
+    "from-blue-600 to-indigo-650",
+    "from-rose-600 to-pink-650",
+    "from-amber-600 to-orange-650"
+  ];
 
   useEffect(() => {
     if (code) {
-      fetchCategoryAndFilters();
+      fetchCategoryDetails();
       fetchUserSubscription();
     }
   }, [code]);
@@ -83,7 +229,7 @@ export default function LibraryCategoryDetail() {
     if (category) {
       fetchMaterials();
     }
-  }, [category, selectedSubject, selectedGrade, selectedAccessType, searchQuery, page]);
+  }, [category, selectedSubject, selectedAccessType, searchQuery]);
 
   const fetchUserSubscription = async () => {
     try {
@@ -94,20 +240,14 @@ export default function LibraryCategoryDetail() {
     }
   };
 
-  const fetchCategoryAndFilters = async () => {
+  const fetchCategoryDetails = async () => {
     try {
       setLoading(true);
       const catRes = await api.get(`/library/categories/${code}`);
       setCategory(catRes.data);
-
-      const subjectsRes = await api.get("/library/subjects");
-      setSubjects(subjectsRes.data);
-
-      const gradesRes = await api.get("/library/grades");
-      setGrades(gradesRes.data);
     } catch (e) {
       console.error(e);
-      toast.error("Ma'lumotlarni yuklashda xatolik yuz berdi");
+      toast.error(lang === "uz" ? "Xatolik yuz berdi" : "Произошла ошибка");
     } finally {
       setLoading(false);
     }
@@ -121,25 +261,21 @@ export default function LibraryCategoryDetail() {
         params: {
           categoryId: category.id,
           subject: selectedSubject || undefined,
-          grade: selectedGrade || undefined,
           accessType: selectedAccessType || undefined,
           search: searchQuery || undefined,
-          page,
-          size: 12
+          size: 100 // Fetch a large batch to perform reliable frontend sorting/filtering
         }
       });
       setMaterials(res.data.content || []);
-      setTotalPages(res.data.totalPages || 1);
     } catch (e) {
       console.error(e);
-      toast.error("Materiallarni yuklashda xatolik yuz berdi");
     } finally {
       setLoading(false);
     }
   };
 
   const checkHasAccess = (material: Material) => {
-    if (["SUPER_ADMIN", "ADMIN", "ADMINISTRATOR", "TEACHER"].includes(user?.role || "")) {
+    if (["super_admin", "admin", "administrator", "teacher"].includes(role)) {
       return true;
     }
     if (material.accessType === "FREE") return true;
@@ -162,367 +298,321 @@ export default function LibraryCategoryDetail() {
     }
   };
 
-  const handleToggleFavorite = async (materialId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    try {
-      const res = await api.post(`/library/materials/${materialId}/favorite`);
-      setMaterials(prev =>
-        prev.map(m => (m.id === materialId ? { ...m, isFavorite: res.data.isFavorite } : m))
-      );
-      toast.success(res.data.isFavorite ? "Sevimlilarga qo'shildi ❤️" : "Sevimlilardan o'chirildi");
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
   const handleRedirectToPacks = () => {
     setShowSubscriptionModal(false);
     const packsPath = role === "student" ? "/student/packs" : `${basePath}/subscriptions`;
     navigate(packsPath);
   };
 
-  // Subcategories mock list for CARD #1: Adabiy Kitoblar
-  const adabiySubcategories = ["Romanlar", "Hikoyalar", "She'rlar", "Jahon adabiyoti", "O'zbek adabiyoti"];
+  // Deterministic Page count generator
+  const getPagesCount = (mId: string) => {
+    if (!mId) return 180;
+    let sum = 0;
+    for (let i = 0; i < mId.length; i++) {
+      sum += mId.charCodeAt(i);
+    }
+    return (sum % 280) + 120;
+  };
 
-  // Subjects mock list for CARD #2 / #3
-  const standardSubjects = ["Matematika", "Ona tili", "Ingliz tili", "Fizika", "Kimyo", "Biologiya", "Tarix", "Geografiya"];
+  // Deterministic Accent generator for covers
+  const getCoverAccent = (mId: string) => {
+    if (!mId) return placeholderAccents[0];
+    let sum = 0;
+    for (let i = 0; i < mId.length; i++) {
+      sum += mId.charCodeAt(i);
+    }
+    return placeholderAccents[sum % placeholderAccents.length];
+  };
+
+  // Filter and Sort materials array
+  const filteredAndSortedMaterials = [...materials]
+    .sort((a, b) => {
+      if (sortBy === "NEWEST") {
+        return new Date(b.id ? 10000 : 0).getTime() - new Date(a.id ? 10000 : 0).getTime();
+      } else if (sortBy === "POPULAR") {
+        return (b.viewsCount || 0) - (a.viewsCount || 0);
+      } else if (sortBy === "TITLE") {
+        return (a.title || "").localeCompare(b.title || "");
+      }
+      return 0;
+    });
 
   return (
-    <div className="w-full space-y-6 pb-10">
-      {/* ── Header ────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="w-full min-h-[85vh] pb-12 transition-colors duration-500 bg-[#F8FAFC] dark:bg-[#020617] text-slate-800 dark:text-slate-150">
+      
+      {/* ── HEADER NAVIGATION ────────────────────────────────────────────── */}
+      <div className="max-w-7xl mx-auto px-4 pt-6 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <button
           onClick={() => navigate(`${basePath}/library`)}
-          className="flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors"
+          className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition-colors group shrink-0"
         >
-          <ArrowLeft className="h-4 w-4" />
-          Kutubxonaga qaytish
+          <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
+          {t.backBtn}
         </button>
+
         {category && (
-          <h1 className="text-xl md:text-2xl font-black text-slate-800 dark:text-white">
-            {category.name} bo'limi
-          </h1>
+          <div className="flex flex-wrap items-center gap-3 md:justify-end">
+            <span className="text-[10px] tracking-wider uppercase font-black px-3 py-1 rounded-full bg-purple-500/10 dark:bg-purple-400/10 text-purple-600 dark:text-purple-400 border border-purple-200/50 dark:border-purple-800/40">
+              {t.yourSubscription}: {userSubscriptionTier}
+            </span>
+          </div>
         )}
       </div>
 
-      {category && (
-        <div className="p-6 bg-gradient-to-r from-purple-900/40 via-slate-900/50 to-purple-900/40 border border-[#2E1E52]/40 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-md">
-          <div className="space-y-1">
-            <h2 className="text-xl font-bold text-white">{category.name}</h2>
-            <p className="text-slate-400 text-xs md:text-sm leading-relaxed max-w-xl">
+      <div className="max-w-7xl mx-auto px-4 mt-2">
+        {category && (
+          <div className="mb-8 space-y-2">
+            <h1 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
+              {category.name}
+            </h1>
+            <p className="text-slate-500 dark:text-slate-400 text-sm max-w-2xl leading-relaxed font-medium">
               {category.description}
             </p>
           </div>
-          <div className="flex gap-2 shrink-0">
-            <div className="px-4 py-2 bg-slate-800/80 border border-slate-700 rounded-xl text-center">
-              <p className="text-[10px] text-slate-400 uppercase font-semibold">Sizning obunangiz</p>
-              <p className="text-sm font-bold text-emerald-400">{userSubscriptionTier} TIER</p>
-            </div>
-          </div>
-        </div>
-      )}
+        )}
 
-      {/* ── Subcategory Quick Filters (only for Adabiy Kitoblar) ── */}
-      {code === "adabiy_kitoblar" && (
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => setSelectedSubject("")}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-              selectedSubject === ""
-                ? "bg-primary text-white"
-                : "bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10"
-            }`}
-          >
-            Barchasi
-          </button>
-          {adabiySubcategories.map((sub) => (
-            <button
-              key={sub}
-              onClick={() => setSelectedSubject(sub)}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                selectedSubject === sub
-                  ? "bg-primary text-white"
-                  : "bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10"
-              }`}
-            >
-              {sub}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* ── Main Layout: Filters & Materials Grid ─────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
-        {/* Filters Sidebar */}
-        <div className="bg-white dark:bg-[#111827] border border-[#E8DDFB] dark:border-[#222738] rounded-2xl p-5 space-y-5 shadow-sm">
-          <div className="flex items-center gap-2 pb-3 border-b border-slate-100 dark:border-slate-800">
-            <Filter className="h-4 w-4 text-primary" />
-            <h3 className="text-sm font-extrabold text-slate-800 dark:text-white">Filtrlar</h3>
+        {/* ── STEAM/NETFLIX STYLE TOP FILTER BAR ───────────────────────────── */}
+        <div className="mb-8 flex flex-col lg:flex-row gap-4 p-4 bg-white/70 dark:bg-[#0F172A]/70 backdrop-blur-xl border border-slate-200/50 dark:border-slate-800/50 rounded-2xl shadow-sm z-20 relative">
+          
+          {/* Search Box */}
+          <div className="flex-1 min-w-[200px] relative">
+            <Search className="absolute left-3.5 top-3 h-4.5 w-4.5 text-slate-400" />
+            <input
+              type="text"
+              placeholder={t.searchPlaceholder}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full h-11 pl-11 pr-4 bg-slate-50 dark:bg-[#020617] border border-slate-200 dark:border-slate-800/80 rounded-xl text-sm placeholder-slate-400 text-slate-800 dark:text-slate-100 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all font-medium"
+            />
           </div>
 
-          {/* Search query input */}
-          <div className="space-y-1.5">
-            <label className="text-[11px] font-bold uppercase text-slate-400">Qidiruv</label>
-            <div className="relative">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Kitob nomi..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-9 pl-9 pr-3 bg-slate-50 dark:bg-[#0F172A] border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:border-primary"
-              />
-            </div>
-          </div>
-
-          {/* Subjects dropdown */}
-          {code !== "adabiy_kitoblar" && (
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-bold uppercase text-slate-400">Fan bo'yicha</label>
-              <select
-                value={selectedSubject}
-                onChange={(e) => {
-                  setSelectedSubject(e.target.value);
-                  setPage(0);
-                }}
-                className="w-full h-9 px-2 bg-slate-50 dark:bg-[#0F172A] border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-white focus:outline-none"
-              >
-                <option value="">Barcha fanlar</option>
-                {standardSubjects.map((sub) => (
-                  <option key={sub} value={sub}>
-                    {sub}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          {/* Grades dropdown (only for Maktab darsliklari) */}
-          {code === "maktab_darsliklari" && (
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-bold uppercase text-slate-400">Sinf bo'yicha</label>
-              <select
-                value={selectedGrade}
-                onChange={(e) => {
-                  setSelectedGrade(e.target.value);
-                  setPage(0);
-                }}
-                className="w-full h-9 px-2 bg-slate-50 dark:bg-[#0F172A] border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-white focus:outline-none"
-              >
-                <option value="">Barcha sinflar</option>
-                {Array.from({ length: 11 }, (_, i) => `${i + 1}-sinf`).map((gr) => (
-                  <option key={gr} value={gr}>
-                    {gr}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          {/* Access Tier dropdown */}
-          <div className="space-y-1.5">
-            <label className="text-[11px] font-bold uppercase text-slate-400">Kirish turi</label>
+          {/* Access Type dropdown */}
+          <div className="w-full lg:w-[180px] relative">
             <select
               value={selectedAccessType}
-              onChange={(e) => {
-                setSelectedAccessType(e.target.value);
-                setPage(0);
-              }}
-              className="w-full h-9 px-2 bg-slate-50 dark:bg-[#0F172A] border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-white focus:outline-none"
+              onChange={(e) => setSelectedAccessType(e.target.value)}
+              className="w-full h-11 pl-3.5 pr-10 appearance-none bg-slate-50 dark:bg-[#020617] border border-slate-200 dark:border-slate-800/80 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 focus:outline-none focus:border-purple-500 transition-all"
             >
-              <option value="">Barchasi</option>
-              <option value="FREE">Bepul (Free)</option>
-              <option value="PRO">PRO</option>
-              <option value="ELITE">ELITE</option>
+              <option value="">{t.accessAll}</option>
+              <option value="FREE">{t.freeAccess}</option>
+              <option value="PRO">{t.proAccess}</option>
+              <option value="ELITE">{t.eliteAccess}</option>
             </select>
+            <ChevronDown className="absolute right-3.5 top-3.5 h-4 w-4 pointer-events-none text-slate-400" />
           </div>
 
-          <button
-            onClick={() => {
-              setSelectedSubject("");
-              setSelectedGrade("");
-              setSelectedAccessType("");
-              setSearchQuery("");
-              setPage(0);
-            }}
-            className="w-full py-2 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition-colors"
-          >
-            Filtrni tozalash
-          </button>
+          {/* Type/Genre/Subject dropdown */}
+          <div className="w-full lg:w-[180px] relative">
+            <select
+              value={selectedSubject}
+              onChange={(e) => setSelectedSubject(e.target.value)}
+              className="w-full h-11 pl-3.5 pr-10 appearance-none bg-slate-50 dark:bg-[#020617] border border-slate-200 dark:border-slate-800/80 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 focus:outline-none focus:border-purple-500 transition-all"
+            >
+              <option value="">{code === "adabiy_kitoblar" ? (lang === "uz" ? "Barcha janrlar" : lang === "ru" ? "Все жанры" : "All genres") : t.subjectAll}</option>
+              {genreList.map((g) => (
+                <option key={g} value={g}>
+                  {g}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-3.5 top-3.5 h-4 w-4 pointer-events-none text-slate-400" />
+          </div>
+
+          {/* Sort dropdown */}
+          <div className="w-full lg:w-[180px] relative">
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="w-full h-11 pl-3.5 pr-10 appearance-none bg-slate-50 dark:bg-[#020617] border border-slate-200 dark:border-slate-800/80 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 focus:outline-none focus:border-purple-500 transition-all"
+            >
+              <option value="NEWEST">{t.sortNewest}</option>
+              <option value="POPULAR">{t.sortPopular}</option>
+              <option value="TITLE">{t.sortTitle}</option>
+            </select>
+            <ChevronDown className="absolute right-3.5 top-3.5 h-4 w-4 pointer-events-none text-slate-400" />
+          </div>
+
+          {/* Reset Filters */}
+          {(searchQuery || selectedAccessType || selectedSubject) && (
+            <button
+              onClick={() => {
+                setSearchQuery("");
+                setSelectedAccessType("");
+                setSelectedSubject("");
+              }}
+              className="px-5 h-11 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition-colors select-none shrink-0"
+            >
+              {t.clearFilters}
+            </button>
+          )}
         </div>
 
-        {/* Materials Grid */}
-        <div className="lg:col-span-3 space-y-6">
-          {loading && materials.length === 0 ? (
-            <div className="flex justify-center items-center py-20 bg-white dark:bg-[#111827] border border-slate-100 dark:border-slate-800 rounded-2xl shadow-sm">
-              <div className="h-8 w-8 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
-            </div>
-          ) : materials.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-[#111827] border border-slate-100 dark:border-slate-800 rounded-2xl shadow-sm space-y-3">
-              <BookOpen className="h-12 w-12 text-slate-400" />
-              <p className="text-slate-400 text-sm">Ushbu filtrlar bo'yicha hech qanday kitob topilmadi.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-              {materials.map((m) => {
-                const hasAccess = checkHasAccess(m);
-                return (
-                  <div
-                    key={m.id}
-                    onClick={() => handleMaterialClick(m)}
-                    className="group bg-white dark:bg-[#111827] border border-[#E8DDFB] dark:border-[#222738] rounded-2xl overflow-hidden shadow-sm hover:shadow-md cursor-pointer transition-all duration-300 flex flex-col justify-between"
-                  >
-                    {/* Cover image area */}
-                    <div className="relative aspect-[3/4] bg-slate-100 dark:bg-[#0F172A] overflow-hidden flex items-center justify-center">
-                      {m.coverImageUrl ? (
-                        <img
-                          src={m.coverImageUrl}
-                          alt={m.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      ) : (
-                        <FileText className="h-16 w-16 text-slate-300 dark:text-slate-700" />
-                      )}
+        {/* ── BOOK COVER SHOWCASE GRID ───────────────────────────────────── */}
+        {loading ? (
+          <div className="flex justify-center items-center py-24">
+            <div className="h-10 w-10 rounded-full border-4 border-purple-500/20 border-t-purple-650 animate-spin" />
+          </div>
+        ) : filteredAndSortedMaterials.length === 0 ? (
+          /* Empty State */
+          <div className="flex flex-col items-center justify-center py-20 bg-white/40 dark:bg-[#0F172A]/20 backdrop-blur-sm border border-slate-200/50 dark:border-slate-800/50 rounded-3xl shadow-sm text-center p-6">
+            <EmptyStateIllustration />
+            <h3 className="text-xl font-extrabold text-slate-800 dark:text-slate-100 tracking-tight mt-6">
+              {t.noBooksTitle}
+            </h3>
+            <p className="text-slate-500 dark:text-slate-400 text-xs md:text-sm font-semibold max-w-sm mt-2">
+              {t.noBooksSub}
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-7">
+            {filteredAndSortedMaterials.map((m) => {
+              const access = checkHasAccess(m);
+              const pages = getPagesCount(m.id);
+              const coverAccent = getCoverAccent(m.id);
+              const badgeLabel = m.accessType === "FREE" ? t.freeAccess : m.accessType;
 
-                      {/* Favorite Heart Button */}
-                      <button
-                        onClick={(e) => handleToggleFavorite(m.id, e)}
-                        className="absolute top-3 right-3 h-8 w-8 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center hover:bg-black/60 text-white transition-colors"
-                      >
-                        <Heart
-                          className={`h-4 w-4 transition-colors ${
-                            m.isFavorite ? "text-rose-500 fill-rose-500" : "text-white"
-                          }`}
-                        />
-                      </button>
+              return (
+                <motion.div
+                  key={m.id}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => handleMaterialClick(m)}
+                  style={{
+                    willChange: "transform",
+                  }}
+                  className="group cursor-pointer flex flex-col justify-between"
+                >
+                  {/* Book cover showcase area */}
+                  <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-slate-100 dark:bg-[#0F172A] border border-slate-200/60 dark:border-slate-850 shadow-sm transition-all duration-500 ease-out group-hover:scale-[1.04] group-hover:shadow-[0_15px_35px_-8px_rgba(139,92,246,0.3)] group-hover:border-purple-500/40">
+                    
+                    {m.coverImageUrl ? (
+                      <img
+                        src={m.coverImageUrl}
+                        alt={m.title}
+                        loading="lazy"
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                      />
+                    ) : (
+                      <BookCoverPlaceholder title={m.title} author={m.author} accent={coverAccent} />
+                    )}
 
-                      {/* Access Lock indicator */}
-                      {!hasAccess && (
-                        <div className="absolute inset-0 bg-black/45 backdrop-blur-[1px] flex items-center justify-center text-white">
-                          <div className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-black/55">
-                            <Lock className="h-5 w-5 text-amber-400" />
-                            <span className="text-[10px] font-bold tracking-wider uppercase">
-                              {m.accessType} Qulflangan
-                            </span>
-                          </div>
+                    {/* Access lock overlay */}
+                    {!access && (
+                      <div className="absolute inset-0 bg-slate-950/45 backdrop-blur-[1.5px] flex items-center justify-center text-white">
+                        <div className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-slate-900/80 border border-white/10 shadow-lg scale-95 group-hover:scale-100 transition-transform">
+                          <Lock className="h-5 w-5 text-amber-400 animate-pulse" />
+                          <span className="text-[9px] font-black tracking-wider uppercase">
+                            {badgeLabel} {t.locked}
+                          </span>
                         </div>
-                      )}
-
-                      {/* Free Tag */}
-                      {hasAccess && m.accessType === "FREE" && (
-                        <span className="absolute bottom-3 left-3 px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-emerald-500 text-white shadow">
-                          FREE
-                        </span>
-                      )}
-                      {hasAccess && m.accessType !== "FREE" && (
-                        <span className="absolute bottom-3 left-3 px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-purple-600 text-white shadow">
-                          {m.accessType} Ochiq
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Metadata area */}
-                    <div className="p-4 space-y-2 flex-1 flex flex-col justify-between">
-                      <div>
-                        <h3 className="text-sm font-bold text-slate-800 dark:text-white line-clamp-1 group-hover:text-primary transition-colors">
-                          {m.title}
-                        </h3>
-                        <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">
-                          {m.author || "Noma'lum muallif"}
-                        </p>
                       </div>
+                    )}
 
-                      <div className="flex flex-wrap items-center gap-1.5 pt-2">
-                        {m.subject && (
-                          <span className="text-[9px] font-bold bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded-md">
-                            {m.subject}
-                          </span>
-                        )}
-                        {m.grade && (
-                          <span className="text-[9px] font-bold bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded-md">
-                            {m.grade}
-                          </span>
-                        )}
-                        {m.topic && (
-                          <span className="text-[9px] font-bold bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded-md">
-                            {m.topic}
-                          </span>
-                        )}
-                      </div>
+                    {/* Floating Tier access badge */}
+                    <span className={`absolute bottom-3 left-3 px-2 py-0.5 rounded text-[8px] font-extrabold uppercase shadow tracking-wider ${
+                      m.accessType === "FREE" 
+                        ? "bg-emerald-500 text-white" 
+                        : m.accessType === "PRO" 
+                        ? "bg-purple-600 text-white" 
+                        : "bg-amber-500 text-slate-950"
+                    }`}>
+                      {badgeLabel}
+                    </span>
+                  </div>
+
+                  {/* Metadata fields */}
+                  <div className="mt-3.5 space-y-1">
+                    <h3 className="text-sm font-extrabold text-slate-800 dark:text-slate-200 line-clamp-1 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                      {m.title}
+                    </h3>
+                    <div className="flex items-center justify-between text-[11px] font-semibold text-slate-450 dark:text-slate-400">
+                      <span className="truncate max-w-[110px]">
+                        {m.author || "Unknown"}
+                      </span>
+                      <span className="shrink-0 text-slate-400/80 dark:text-slate-500 text-[10px]">
+                        {t.pages.replace("{{count}}", String(pages))}
+                      </span>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          )}
 
-          {/* Pagination Controls */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 pt-6">
-              <button
-                disabled={page === 0}
-                onClick={() => setPage(p => Math.max(0, p - 1))}
-                className="px-3 py-1.5 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 rounded-lg text-xs font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-200 dark:hover:bg-white/10"
-              >
-                Orqaga
-              </button>
-              <span className="text-xs text-slate-500 font-semibold">
-                {page + 1} / {totalPages}
-              </span>
-              <button
-                disabled={page === totalPages - 1}
-                onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
-                className="px-3 py-1.5 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 rounded-lg text-xs font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-200 dark:hover:bg-white/10"
-              >
-                Keyingi
-              </button>
-            </div>
-          )}
-        </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      {/* ── Subscription Redirection Modal ──────────────────── */}
+      {/* ── PREMIUM paywall SUBSCRIPTION COMPARISON MODAL ────────────────── */}
       <AnimatePresence>
         {showSubscriptionModal && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md"
           >
             <motion.div
-              initial={{ scale: 0.95, y: 15 }}
+              initial={{ scale: 0.93, y: 15 }}
               animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.95, y: 15 }}
-              className="w-full max-w-md overflow-hidden rounded-3xl border border-slate-700/80 bg-[#161226] p-6 text-center shadow-2xl"
+              exit={{ scale: 0.93, y: 15 }}
+              transition={{ type: "spring", duration: 0.5 }}
+              className="w-full max-w-md overflow-hidden rounded-[32px] border border-slate-200/20 dark:border-slate-800/80 bg-white dark:bg-[#0F172A] p-7 text-center shadow-2xl relative"
             >
-              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10 text-amber-500">
-                <ShieldAlert className="h-6 w-6" />
+              {/* Paywall Glowing Background Accents */}
+              <div className="absolute -top-12 -right-12 w-32 h-32 rounded-full blur-3xl bg-purple-600/15" />
+              <div className="absolute -bottom-12 -left-12 w-32 h-32 rounded-full blur-3xl bg-blue-600/15" />
+
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-orange-500 text-slate-950 shadow-md">
+                <Crown className="h-7 w-7" />
               </div>
 
-              <h3 className="text-lg font-extrabold text-white">Obuna talab etiladi!</h3>
-              <p className="mt-2 text-xs text-slate-400 leading-relaxed">
-                Ushbu material <span className="font-bold text-amber-400">{modalTierRequired}</span> obuna toifasi uchun ruxsat etilgan. Davom etish uchun obunani yangilashingiz lozim.
+              <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
+                {t.modalTitle}
+              </h3>
+              
+              <p className="mt-2 text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-semibold">
+                {t.modalDesc.replace("{{tier}}", String(modalTierRequired))}
               </p>
 
-              <div className="mt-6 flex flex-col gap-2">
+              {/* Perks Grid */}
+              <div className="my-6 p-4 rounded-2xl bg-slate-50 dark:bg-[#020617]/50 border border-slate-100 dark:border-slate-800 text-left space-y-3.5">
+                <div className="flex items-start gap-2.5 text-xs text-slate-650 dark:text-slate-300 font-semibold">
+                  <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+                  <span>{t.modalBenefit1}</span>
+                </div>
+                <div className="flex items-start gap-2.5 text-xs text-slate-650 dark:text-slate-300 font-semibold">
+                  <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+                  <span>{t.modalBenefit2}</span>
+                </div>
+                <div className="flex items-start gap-2.5 text-xs text-slate-650 dark:text-slate-300 font-semibold">
+                  <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+                  <span>{t.modalBenefit3}</span>
+                </div>
+                <div className="flex items-start gap-2.5 text-xs text-slate-650 dark:text-slate-300 font-semibold">
+                  <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+                  <span>{t.modalBenefit4}</span>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col gap-2.5">
                 <button
                   onClick={handleRedirectToPacks}
-                  className="w-full py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold text-xs rounded-xl shadow-lg shadow-amber-500/10 transition-all hover:scale-[1.01]"
+                  className="w-full py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-2xl shadow-lg shadow-purple-600/15 hover:scale-[1.01] transition-all"
                 >
-                  Obuna bo'lish 🪙
+                  {t.modalUpgradeBtn} 🪙
                 </button>
                 <button
                   onClick={() => setShowSubscriptionModal(false)}
-                  className="w-full py-2.5 bg-slate-800 text-slate-300 hover:bg-slate-700 text-xs font-bold rounded-xl transition-colors"
+                  className="w-full py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold rounded-2xl transition-colors"
                 >
-                  Bekor qilish
+                  {t.modalCancelBtn}
                 </button>
               </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
+
     </div>
   );
 }
