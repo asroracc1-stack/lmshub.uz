@@ -347,9 +347,8 @@ export default function RoleLayout({
                       )}
                     />
                     {mini && item.badge && (
-                      <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                      <span className="absolute -top-1 -right-1 flex h-2 w-2">
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
                       </span>
                     )}
                   </div>
@@ -357,9 +356,8 @@ export default function RoleLayout({
                     <>
                       <span className="flex-1 truncate">{item.label}</span>
                       {item.badge && (
-                        <span className="relative flex h-5 items-center justify-center rounded-full bg-emerald-500 px-2 text-[10px] font-bold text-white shadow-sm">
-                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
-                          <span className="relative">{item.badge}</span>
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-[6px] text-[10px] font-bold text-white bg-gradient-to-r from-orange-500 to-amber-500 shadow-sm leading-none ml-auto shrink-0 select-none">
+                          {item.badge}
                         </span>
                       )}
                     </>
