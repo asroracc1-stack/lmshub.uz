@@ -183,6 +183,12 @@ const listTranslations = {
   }
 };
 
+const accessOptions = [
+  { value: "FREE", label: "FREE" },
+  { value: "PRO", label: "PRO" },
+  { value: "ELITE", label: "ELITE" }
+];
+
 // 60 FPS Count-Up Animation Component
 const AnimatedNumber = ({ value }: { value: number }) => {
   const [displayValue, setDisplayValue] = useState(0);
