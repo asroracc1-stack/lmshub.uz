@@ -167,7 +167,7 @@ public class LibraryService {
                 .pdfUrl(request.getPdfUrl())
                 .accessType(request.getAccessType() != null ? request.getAccessType() : "FREE")
                 .status(request.getStatus() != null ? request.getStatus() : "ACTIVE")
-                .createdBy(creator != null ? entityManager.getReference(User.class, creator.getId()) : null)
+                .createdBy(creator != null ? entityManager.find(User.class, creator.getId()) : null)
                 .build();
 
         LibraryMaterial saved = materialRepository.save(material);
