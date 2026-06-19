@@ -25,7 +25,8 @@ import {
   Sparkles,
   Calendar,
   Check,
-  Filter
+  Filter,
+  Loader2
 } from "lucide-react";
 
 interface Category {
