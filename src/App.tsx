@@ -135,6 +135,7 @@ const Library = lazy(() => import("./pages/shared/Library"));
 const LibraryCategoryDetail = lazy(() => import("./pages/shared/LibraryCategoryDetail"));
 const PdfViewerPage = lazy(() => import("./pages/shared/PdfViewerPage"));
 const LibraryManage = lazy(() => import("./pages/super-admin/LibraryManage"));
+const LibraryForm = lazy(() => import("./pages/super-admin/LibraryForm"));
 const AdminAdministrators = lazy(() => import("./pages/admin/Administrators"));
 const TeacherDashboard = lazy(() => import("./pages/teacher/Dashboard"));
 const SmartDashboard = lazy(() => import("./pages/teacher/SmartDashboard"));
@@ -272,6 +273,8 @@ const AppRoutes = () => {
           <Route path="library/category/:code" element={<LibraryCategoryDetail />} />
           <Route path="library/read/:materialId" element={<PdfViewerPage />} />
           <Route path="library-manage" element={<LibraryManage />} />
+          <Route path="library-manage/create" element={<LibraryForm />} />
+          <Route path="library-manage/edit/:id" element={<LibraryForm />} />
         </Route>
 
         {/* Admin */}
