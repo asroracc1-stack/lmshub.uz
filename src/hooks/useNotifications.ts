@@ -54,35 +54,37 @@ export function useNotifications() {
     
     // 2. Real-time Socket connection for Chat messages
     let socket: any = null;
-    import("socket.io-client").then(({ io }) => {
-      const socketUrl = import.meta.env.VITE_CHAT_SERVER_URL || "http://localhost:5000";
-      socket = io(socketUrl, { query: { userId: user.id } });
-      
-      socket.on("global_notification", (msg: any) => {
-        // Create an in-memory notification for the new chat message
-        const newNotif: Notification = {
-          id: msg.id || Date.now().toString(),
-          user_id: user.id,
-          title: `Yangi xabar`,
-          message: `${msg.sender?.fullName || "Foydalanuvchi"}: ${msg.body}`,
-          body: msg.body,
-          type: "NEW_MESSAGE",
-          link: "/admin/messages",
-          is_read: false,
-          created_at: msg.createdAt || new Date().toISOString()
-        };
+    const socketUrl = import.meta.env.VITE_CHAT_SERVER_URL || (import.meta.env.DEV ? "http://localhost:5000" : "");
+    if (socketUrl) {
+      import("socket.io-client").then(({ io }) => {
+        socket = io(socketUrl, { query: { userId: user.id } });
         
-        setItems(prev => {
-          // Prevent duplicates
-          if (prev.some(n => n.id === newNotif.id)) return prev;
-          return [newNotif, ...prev];
-        });
-        
-        toast.success(`Yangi xabar: ${msg.sender?.fullName || ""}`, {
-          description: msg.body?.length > 30 ? msg.body.substring(0, 30) + "..." : msg.body,
+        socket.on("global_notification", (msg: any) => {
+          // Create an in-memory notification for the new chat message
+          const newNotif: Notification = {
+            id: msg.id || Date.now().toString(),
+            user_id: user.id,
+            title: `Yangi xabar`,
+            message: `${msg.sender?.fullName || "Foydalanuvchi"}: ${msg.body}`,
+            body: msg.body,
+            type: "NEW_MESSAGE",
+            link: "/admin/messages",
+            is_read: false,
+            created_at: msg.createdAt || new Date().toISOString()
+          };
+          
+          setItems(prev => {
+            // Prevent duplicates
+            if (prev.some(n => n.id === newNotif.id)) return prev;
+            return [newNotif, ...prev];
+          });
+          
+          toast.success(`Yangi xabar: ${msg.sender?.fullName || ""}`, {
+            description: msg.body?.length > 30 ? msg.body.substring(0, 30) + "..." : msg.body,
+          });
         });
       });
-    });
+    }
     
     return () => {
       clearInterval(interval);

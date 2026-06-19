@@ -185,13 +185,23 @@ export default function LibraryCategoryDetail({ code: propCode }: LibraryCategor
   const { user } = useAuth();
   const { i18n } = useTranslation();
   const role = user?.role?.toLowerCase() || "user";
-  const basePath = `/${role}`;
+  const rolePath = role === "super_admin" ? "super-admin" : role === "payment_manager" ? "pack-manager" : role;
+  const basePath = `/${rolePath}`;
   const lang = (i18n.language || "uz") as "uz" | "ru" | "en";
   const t = detailTranslations[lang] || detailTranslations["uz"];
 
   const [category, setCategory] = useState<Category | null>(null);
   const [materials, setMaterials] = useState<Material[]>([]);
   const [userSubscriptionTier, setUserSubscriptionTier] = useState("FREE");
+
+  // Helper: Get absolute file URL
+  const getFileUrl = (url: string) => {
+    if (!url) return "";
+    if (url.startsWith("http") || url.startsWith("data:")) return url;
+    const baseUrl = api.defaults.baseURL || "";
+    const origin = baseUrl.replace("/api/v1", "");
+    return `${origin}${url}`;
+  };
 
   // Filters State
   const [searchQuery, setSearchQuery] = useState("");
@@ -486,7 +496,7 @@ export default function LibraryCategoryDetail({ code: propCode }: LibraryCategor
                     
                     {m.coverImageUrl ? (
                       <img
-                        src={m.coverImageUrl}
+                        src={getFileUrl(m.coverImageUrl)}
                         alt={m.title}
                         loading="lazy"
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"

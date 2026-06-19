@@ -216,6 +216,15 @@ export default function LibraryForm() {
     }
   };
 
+  // Helper: Get absolute file URL
+  const getFileUrl = (url: string) => {
+    if (!url) return "";
+    if (url.startsWith("http") || url.startsWith("data:")) return url;
+    const baseUrl = api.defaults.baseURL || "";
+    const origin = baseUrl.replace("/api/v1", "");
+    return `${origin}${url}`;
+  };
+
   // Helper: Get human readable file size
   const formatBytes = (bytes: number, decimals = 2) => {
     if (bytes === 0) return "0 Bytes";
@@ -583,7 +592,7 @@ export default function LibraryForm() {
               ) : coverImageUrl ? (
                 <div className="flex items-center gap-5 p-5 bg-[#070B17] border border-white/5 rounded-2xl relative overflow-hidden group">
                   <div className="w-20 aspect-[2/3] rounded-lg overflow-hidden border border-white/10 shrink-0 select-none shadow">
-                    <img src={coverImageUrl} className="w-full h-full object-cover" alt="Cropped Cover" />
+                    <img src={getFileUrl(coverImageUrl)} className="w-full h-full object-cover" alt="Cropped Cover" />
                   </div>
                   <div className="space-y-2">
                     <div className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-1.5">
@@ -596,7 +605,7 @@ export default function LibraryForm() {
                     <div className="flex gap-3 pt-1">
                       <button
                         type="button"
-                        onClick={() => setImageSrc(coverImageUrl)}
+                        onClick={() => setImageSrc(getFileUrl(coverImageUrl))}
                         className="text-[10px] text-[#8B5CF6] font-bold hover:underline uppercase tracking-wider transition-colors"
                       >
                         Qayta kesish (Recrop)
@@ -1023,7 +1032,7 @@ export default function LibraryForm() {
                       }}
                     >
                       {coverImageUrl ? (
-                        <img src={coverImageUrl} className="w-full h-full object-cover" alt="Live preview cover" />
+                        <img src={getFileUrl(coverImageUrl)} className="w-full h-full object-cover" alt="Live preview cover" />
                       ) : (
                         <div className={`w-full h-full bg-gradient-to-br ${getGradientForCategory()} p-4 flex flex-col justify-between text-white text-left relative`}>
                           <div className="text-[7px] uppercase tracking-widest font-black opacity-55">LMSHub Digital</div>

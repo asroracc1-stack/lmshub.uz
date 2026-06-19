@@ -24,7 +24,8 @@ export default function PdfViewerPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const role = user?.role?.toLowerCase() || "user";
-  const basePath = `/${role}`;
+  const rolePath = role === "super_admin" ? "super-admin" : role === "payment_manager" ? "pack-manager" : role;
+  const basePath = `/${rolePath}`;
 
   const [title, setTitle] = useState("Kitob o'qish");
   const [pdfUrl, setPdfUrl] = useState("");

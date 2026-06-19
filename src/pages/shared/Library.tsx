@@ -235,7 +235,8 @@ export default function Library() {
   const { user } = useAuth();
   const { i18n } = useTranslation();
   const role = user?.role?.toLowerCase() || "user";
-  const basePath = `/${role}`;
+  const rolePath = role === "super_admin" ? "super-admin" : role === "payment_manager" ? "pack-manager" : role;
+  const basePath = `/${rolePath}`;
   const lang = (i18n.language || "uz") as "uz" | "ru" | "en";
   const t = translations[lang] || translations["uz"];
 
