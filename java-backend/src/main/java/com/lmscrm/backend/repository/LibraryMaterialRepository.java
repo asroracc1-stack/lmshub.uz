@@ -16,7 +16,7 @@ public interface LibraryMaterialRepository extends JpaRepository<LibraryMaterial
 
     @Query("""
         SELECT lm FROM LibraryMaterial lm
-        WHERE (:categoryId IS NULL OR lm.category.id = :categoryId)
+        WHERE (CAST(:categoryId AS uuid) IS NULL OR lm.category.id = :categoryId)
           AND (:subject IS NULL OR lm.subject = :subject)
           AND (:grade IS NULL OR lm.grade = :grade)
           AND (:accessType IS NULL OR lm.accessType = :accessType)

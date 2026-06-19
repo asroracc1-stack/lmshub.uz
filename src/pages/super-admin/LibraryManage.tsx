@@ -31,7 +31,8 @@ import {
   Crop,
   Upload,
   CheckCircle2,
-  BarChart2
+  BarChart2,
+  Image as ImageIcon
 } from "lucide-react";
 import Cropper from "react-easy-crop";
 import getCroppedImg from "@/lib/cropUtils";
