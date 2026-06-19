@@ -131,6 +131,10 @@ const PaymentRequests = lazy(() => import("./pages/admin/PaymentRequests"));
 const SubscriptionRequests = lazy(() => import("./pages/admin/SubscriptionRequests"));
 
 const AdminDashboard = lazy(() => import("./pages/admin/Dashboard"));
+const Library = lazy(() => import("./pages/shared/Library"));
+const LibraryCategoryDetail = lazy(() => import("./pages/shared/LibraryCategoryDetail"));
+const PdfViewerPage = lazy(() => import("./pages/shared/PdfViewerPage"));
+const LibraryManage = lazy(() => import("./pages/super-admin/LibraryManage"));
 const AdminAdministrators = lazy(() => import("./pages/admin/Administrators"));
 const TeacherDashboard = lazy(() => import("./pages/teacher/Dashboard"));
 const SmartDashboard = lazy(() => import("./pages/teacher/SmartDashboard"));
@@ -261,6 +265,10 @@ const AppRoutes = () => {
           <Route path="referral" element={<ReferralPage />} />
           <Route path="gamification" element={<GamificationAdmin />} />
           <Route path="question-bank" element={<QuestionBank />} />
+          <Route path="library" element={<Library />} />
+          <Route path="library/category/:code" element={<LibraryCategoryDetail />} />
+          <Route path="library/read/:materialId" element={<PdfViewerPage />} />
+          <Route path="library-manage" element={<LibraryManage />} />
         </Route>
 
         {/* Admin */}
@@ -293,6 +301,9 @@ const AppRoutes = () => {
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="referral" element={<ReferralPage />} />
           <Route path="gamification" element={<GamificationAdmin />} />
+          <Route path="library" element={<Library />} />
+          <Route path="library/category/:code" element={<LibraryCategoryDetail />} />
+          <Route path="library/read/:materialId" element={<PdfViewerPage />} />
         </Route>
 
         {/* Administrator */}
@@ -323,6 +334,9 @@ const AppRoutes = () => {
           <Route path="settings" element={<SettingsPage />} />
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="referral" element={<ReferralPage />} />
+          <Route path="library" element={<Library />} />
+          <Route path="library/category/:code" element={<LibraryCategoryDetail />} />
+          <Route path="library/read/:materialId" element={<PdfViewerPage />} />
         </Route>
 
         {/* Teacher */}
@@ -351,6 +365,9 @@ const AppRoutes = () => {
           <Route path="settings" element={<SettingsPage />} />
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="referral" element={<ReferralPage />} />
+          <Route path="library" element={<Library />} />
+          <Route path="library/category/:code" element={<LibraryCategoryDetail />} />
+          <Route path="library/read/:materialId" element={<PdfViewerPage />} />
         </Route>
 
         {/* Student Role */}
@@ -385,6 +402,9 @@ const AppRoutes = () => {
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="referral" element={<ReferralPage />} />
           <Route path="map" element={<AdventureMapFull />} />
+          <Route path="library" element={<Library />} />
+          <Route path="library/category/:code" element={<LibraryCategoryDetail />} />
+          <Route path="library/read/:materialId" element={<PdfViewerPage />} />
         </Route>
 
         {/* Regular User Role */}
@@ -406,6 +426,9 @@ const AppRoutes = () => {
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="referral" element={<ReferralPage />} />
           <Route path="map" element={<AdventureMapFull />} />
+          <Route path="library" element={<Library />} />
+          <Route path="library/category/:code" element={<LibraryCategoryDetail />} />
+          <Route path="library/read/:materialId" element={<PdfViewerPage />} />
         </Route>
 
         {/* Parent */}

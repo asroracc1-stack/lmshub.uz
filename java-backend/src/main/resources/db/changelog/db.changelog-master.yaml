@@ -81,3 +81,5 @@ databaseChangeLog:
       file: db/changelog/changes/v0040_advanced_gamification.yaml
   - include:
       file: db/changelog/changes/v0041_question_bank.yaml
+  - include:
+      file: db/changelog/changes/v0042_library_module.yaml

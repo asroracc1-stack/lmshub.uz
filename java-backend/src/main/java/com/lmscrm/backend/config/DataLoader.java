@@ -21,6 +21,7 @@ public class DataLoader implements CommandLineRunner {
     private final UserRepository userRepository;
     private final ProfileRepository profileRepository;
     private final com.lmscrm.backend.repository.PricingPlanRepository pricingPlanRepository;
+    private final com.lmscrm.backend.repository.LibraryCategoryRepository categoryRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -29,8 +30,10 @@ public class DataLoader implements CommandLineRunner {
         log.info("🚀 DATA LOADER: Seeding pricing plans and regular users...");
         seedPricingPlans();
         seedRegularUsers();
+        seedLibraryCategories();
         log.info("✅ SUCCESS: DATA LOADER completed seeding.");
     }
+
 
 
     private void seedRegularUsers() {
@@ -107,4 +110,30 @@ public class DataLoader implements CommandLineRunner {
             log.info("✅ Seeding complete.");
         }
     }
+
+    private void seedLibraryCategories() {
+        if (categoryRepository.count() == 0) {
+            log.info("🌱 Seeding initial library categories...");
+            categoryRepository.save(com.lmscrm.backend.domain.entity.LibraryCategory.builder()
+                    .name("📖 Adabiy Kitoblar")
+                    .code("adabiy_kitoblar")
+                    .description("Romanlar, Hikoyalar, She'rlar, Jahon va O'zbek adabiyoti to'plami.")
+                    .coverImage("/api/v1/files/view/adabiy_kitoblar.jpg")
+                    .build());
+            categoryRepository.save(com.lmscrm.backend.domain.entity.LibraryCategory.builder()
+                    .name("🎓 Maktab Darsliklari")
+                    .code("maktab_darsliklari")
+                    .description("1-sinfdan 11-sinfgacha bo'lgan barcha maktab fanlari darsliklari.")
+                    .coverImage("/api/v1/files/view/maktab_darsliklari.jpg")
+                    .build());
+            categoryRepository.save(com.lmscrm.backend.domain.entity.LibraryCategory.builder()
+                    .name("📚 O'quv Qo'llanmalar")
+                    .code("oquv_qollanmalar")
+                    .description("Fanlar bo'yicha qo'shimcha o'quv qo'llanmalari va formulalar to'plami.")
+                    .coverImage("/api/v1/files/view/oquv_qollanmalar.jpg")
+                    .build());
+            log.info("✅ Library categories seeded.");
+        }
+    }
 }
+

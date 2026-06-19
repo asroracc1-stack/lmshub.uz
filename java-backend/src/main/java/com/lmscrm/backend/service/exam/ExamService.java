@@ -384,9 +384,9 @@ public class ExamService {
             org.slf4j.LoggerFactory.getLogger(ExamService.class).error("Failed to build exam JSON: ", e);
         }
 
+        StudentAttempt attempt = null;
         if (user != null) {
             java.util.Optional<StudentAttempt> attemptOpt = studentAttemptRepository.findByExamIdAndStudentId(exam.getId(), user.getId());
-            StudentAttempt attempt;
             if (attemptOpt.isPresent()) {
                 attempt = attemptOpt.get();
                 studentAnswerRepository.deleteByAttemptId(attempt.getId());

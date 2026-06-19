@@ -1,0 +1,348 @@
+databaseChangeLog:
+  # ─── Library Categories Table ────────────────────────────────────────────────
+  - changeSet:
+      id: v0042-1
+      author: antigravity
+      validCheckSum:
+        - ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: library_categories
+      changes:
+        - createTable:
+            tableName: library_categories
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: code
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: description
+                  type: text
+              - column:
+                  name: cover_image
+                  type: text
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: NOW()
+              - column:
+                  name: updated_at
+                  type: timestamp
+                  defaultValueComputed: NOW()
+
+  # ─── Library Materials Table ─────────────────────────────────────────────────
+  - changeSet:
+      id: v0042-2
+      author: antigravity
+      validCheckSum:
+        - ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: library_materials
+      changes:
+        - createTable:
+            tableName: library_materials
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: category_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_lm_category
+                    references: library_categories(id)
+              - column:
+                  name: title
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: author
+                  type: varchar(255)
+              - column:
+                  name: description
+                  type: text
+              - column:
+                  name: subject
+                  type: varchar(100)
+              - column:
+                  name: grade
+                  type: varchar(50)
+              - column:
+                  name: topic
+                  type: varchar(255)
+              - column:
+                  name: cover_image_url
+                  type: text
+              - column:
+                  name: pdf_url
+                  type: text
+              - column:
+                  name: access_type
+                  type: varchar(50)
+                  defaultValue: "FREE"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: varchar(50)
+                  defaultValue: "ACTIVE"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: views_count
+                  type: integer
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: downloads_count
+                  type: integer
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_by
+                  type: uuid
+                  constraints:
+                    foreignKeyName: fk_lm_creator
+                    references: users(id)
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: NOW()
+              - column:
+                  name: updated_at
+                  type: timestamp
+                  defaultValueComputed: NOW()
+
+  # ─── Library Views Table ─────────────────────────────────────────────────────
+  - changeSet:
+      id: v0042-3
+      author: antigravity
+      validCheckSum:
+        - ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: library_views
+      changes:
+        - createTable:
+            tableName: library_views
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: material_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_lv_material
+                    references: library_materials(id)
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_lv_user
+                    references: users(id)
+              - column:
+                  name: viewed_at
+                  type: timestamp
+                  defaultValueComputed: NOW()
+
+  # ─── Library Progress Table ──────────────────────────────────────────────────
+  - changeSet:
+      id: v0042-4
+      author: antigravity
+      validCheckSum:
+        - ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: library_progress
+      changes:
+        - createTable:
+            tableName: library_progress
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: material_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_lp_material
+                    references: library_materials(id)
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_lp_user
+                    references: users(id)
+              - column:
+                  name: last_page
+                  type: integer
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp
+                  defaultValueComputed: NOW()
+        - addUniqueConstraint:
+            tableName: library_progress
+            columnNames: user_id, material_id
+            constraintName: uq_lp_user_material
+
+  # ─── Library Favorites Table ─────────────────────────────────────────────────
+  - changeSet:
+      id: v0042-5
+      author: antigravity
+      validCheckSum:
+        - ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: library_favorites
+      changes:
+        - createTable:
+            tableName: library_favorites
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: material_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_lf_material
+                    references: library_materials(id)
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_lf_user
+                    references: users(id)
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: NOW()
+        - addUniqueConstraint:
+            tableName: library_favorites
+            columnNames: user_id, material_id
+            constraintName: uq_lf_user_material
+
+  # ─── Library Downloads Table ─────────────────────────────────────────────────
+  - changeSet:
+      id: v0042-6
+      author: antigravity
+      validCheckSum:
+        - ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: library_downloads
+      changes:
+        - createTable:
+            tableName: library_downloads
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: material_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_ld_material
+                    references: library_materials(id)
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_ld_user
+                    references: users(id)
+              - column:
+                  name: downloaded_at
+                  type: timestamp
+                  defaultValueComputed: NOW()
+
+  # ─── Library Statistics Table ────────────────────────────────────────────────
+  - changeSet:
+      id: v0042-7
+      author: antigravity
+      validCheckSum:
+        - ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: library_statistics
+      changes:
+        - createTable:
+            tableName: library_statistics
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: metric_name
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: metric_value
+                  type: varchar(255)
+              - column:
+                  name: updated_at
+                  type: timestamp
+                  defaultValueComputed: NOW()
