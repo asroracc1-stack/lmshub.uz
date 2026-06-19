@@ -338,7 +338,7 @@ export default function LibraryCategoryDetail({ code: propCode }: LibraryCategor
     });
 
   return (
-    <div className="w-full min-h-[85vh] pb-12 transition-colors duration-500 bg-[#F8FAFC] dark:bg-[#020617] text-slate-800 dark:text-slate-150">
+    <div className="w-full min-h-[85vh] pb-12 transition-colors duration-500 bg-transparent text-slate-800 dark:text-slate-150">
       
       {/* ── HEADER NAVIGATION ────────────────────────────────────────────── */}
       <div className="max-w-7xl mx-auto px-4 pt-6 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -352,7 +352,7 @@ export default function LibraryCategoryDetail({ code: propCode }: LibraryCategor
 
         {category && (
           <div className="flex flex-wrap items-center gap-3 md:justify-end">
-            <span className="text-[10px] tracking-wider uppercase font-black px-3 py-1 rounded-full bg-purple-500/10 dark:bg-purple-400/10 text-purple-600 dark:text-purple-400 border border-purple-200/50 dark:border-purple-800/40">
+            <span className="text-[10px] tracking-wider uppercase font-black px-3 py-1 rounded-full bg-purple-500/10 dark:bg-purple-400/10 text-purple-600 dark:text-purple-300 border border-purple-200/50 dark:border-purple-800/40">
               {t.yourSubscription}: {userSubscriptionTier}
             </span>
           </div>
@@ -365,7 +365,7 @@ export default function LibraryCategoryDetail({ code: propCode }: LibraryCategor
             <h1 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
               {category.name}
             </h1>
-            <p className="text-slate-500 dark:text-slate-400 text-sm max-w-2xl leading-relaxed font-medium">
+            <p className="text-slate-500 dark:text-slate-300 text-sm max-w-2xl leading-relaxed font-medium">
               {category.description}
             </p>
           </div>
@@ -459,7 +459,7 @@ export default function LibraryCategoryDetail({ code: propCode }: LibraryCategor
             <h3 className="text-xl font-extrabold text-slate-800 dark:text-slate-100 tracking-tight mt-6">
               {t.noBooksTitle}
             </h3>
-            <p className="text-slate-500 dark:text-slate-400 text-xs md:text-sm font-semibold max-w-sm mt-2">
+            <p className="text-slate-500 dark:text-slate-300 text-xs md:text-sm font-semibold max-w-sm mt-2">
               {t.noBooksSub}
             </p>
           </div>
@@ -524,11 +524,11 @@ export default function LibraryCategoryDetail({ code: propCode }: LibraryCategor
                     <h3 className="text-sm font-extrabold text-slate-800 dark:text-slate-200 line-clamp-1 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
                       {m.title}
                     </h3>
-                    <div className="flex items-center justify-between text-[11px] font-semibold text-slate-450 dark:text-slate-400">
+                    <div className="flex items-center justify-between text-[11px] font-semibold text-slate-500 dark:text-slate-300">
                       <span className="truncate max-w-[110px]">
                         {m.author || "Unknown"}
                       </span>
-                      <span className="shrink-0 text-slate-400/80 dark:text-slate-500 text-[10px]">
+                      <span className="shrink-0 text-slate-400/80 dark:text-slate-450 text-[10px]">
                         {t.pages.replace("{{count}}", String(pages))}
                       </span>
                     </div>

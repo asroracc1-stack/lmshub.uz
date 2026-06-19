@@ -319,7 +319,7 @@ export default function Library() {
   ];
 
   return (
-    <div className="w-full min-h-[80vh] flex flex-col justify-center px-4 py-8 md:py-16 transition-colors duration-500 bg-[#F8FAFC] dark:bg-[#020617]">
+    <div className="w-full min-h-[80vh] flex flex-col justify-center px-4 py-8 md:py-16 transition-colors duration-500 bg-transparent">
       {/* CSS Keyframes for floating particles and shine effect */}
       <style dangerouslySetInnerHTML={{__html: `
         @keyframes float-p-1 {
@@ -352,7 +352,7 @@ export default function Library() {
           <BookOpen className="h-8 w-8 md:h-10 md:w-10 text-purple-600 dark:text-purple-400" />
           {t.title}
         </h1>
-        <p className="text-slate-500 dark:text-slate-400 text-sm md:text-base font-medium">
+        <p className="text-slate-500 dark:text-slate-300 text-sm md:text-base font-medium">
           {t.subtitle}
         </p>
       </div>
@@ -404,7 +404,7 @@ export default function Library() {
                   {/* Floating particles inside card */}
                   <div className="absolute inset-0 pointer-events-none">
                     <div className="absolute top-1/4 left-10 w-2.5 h-2.5 rounded-full bg-purple-400/30 particle-1" />
-                    <div className="absolute bottom-1/3 right-12 w-2 h-2 rounded-full bg-blue-400/20 particle-2" />
+                    <div className="absolute bottom-1/3 right-12 w-2.5 h-2.5 rounded-full bg-blue-400/20 particle-2" />
                     <div className="absolute top-1/3 right-1/4 w-3 h-3 rounded-full bg-pink-400/25 particle-3" />
                   </div>
 
@@ -426,7 +426,7 @@ export default function Library() {
                       </span>
                     </div>
 
-                    <p className="text-slate-500 dark:text-slate-400 text-xs md:text-sm font-medium leading-relaxed line-clamp-3">
+                    <p className="text-slate-500 dark:text-slate-300 text-xs md:text-sm font-medium leading-relaxed line-clamp-3">
                       {cardDesc}
                     </p>
 
