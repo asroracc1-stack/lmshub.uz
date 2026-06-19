@@ -125,6 +125,7 @@ const LMSNews = lazy(() => import("./pages/super-admin/LMSNews"));
 const SuperAdminParents = lazy(() => import("./pages/super-admin/Parents"));
 const StartupPitch = lazy(() => import("./pages/super-admin/StartupPitch"));
 const QuestionBank = lazy(() => import("./pages/super-admin/QuestionBank"));
+const SatMocks = lazy(() => import("./pages/super-admin/SatMocks"));
 const AdminUsers = lazy(() => import("./pages/admin/Users"));
 const PaymentRequests = lazy(() => import("./pages/admin/PaymentRequests"));
 const SubscriptionRequests = lazy(() => import("./pages/admin/SubscriptionRequests"));
@@ -233,6 +234,11 @@ const AppRoutes = () => {
           <Route path="mocks/take/:testId" element={<MockTake />} />
           <Route path="sat" element={<MockCategory basePath="/super-admin" forcedKind="sat" />} />
           <Route path="national-cert" element={<MockCategory basePath="/super-admin" forcedKind="national_cert" />} />
+          <Route path="sat-mocks" element={<SatMocks />} />
+          <Route path="sat-mocks/new" element={<MockEditor basePath="/super-admin" defaultKind="sat" />} />
+          <Route path="sat-mocks/edit/:testId" element={<MockEditor basePath="/super-admin" defaultKind="sat" />} />
+          <Route path="milliy-mocks" element={<MockCategory basePath="/super-admin" forcedKind="national_cert" />} />
+          <Route path="milliy-mocks/new" element={<MockEditor basePath="/super-admin" defaultKind="national_cert" />} />
           <Route path="packs" element={<Packs />} />
           <Route path="subscriptions" element={<Subscriptions />} />
           <Route path="subscription-requests" element={<SubscriptionRequests />} />

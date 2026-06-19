@@ -40,14 +40,14 @@ const newQ = (): Q => ({
 const newSection = (): Section => ({ title: "", passage: "", questions: [newQ()] });
 
 export default function MockEditor({
-  basePath = "/super-admin" }: { basePath?: string }) {
+  basePath = "/super-admin", defaultKind }: { basePath?: string; defaultKind?: "reading" | "listening" | "writing" | "speaking" | "sat" | "national_cert" }) {
   const { t } = useTranslation();
   const { profile } = useAuth();
   const nav = useNavigate();
   const { testId } = useParams<{ testId?: string }>();
   const isEdit = !!testId;
 
-  const [kind, setKind] = useState<"reading" | "listening" | "writing" | "speaking" | "sat" | "national_cert">("reading");
+  const [kind, setKind] = useState<"reading" | "listening" | "writing" | "speaking" | "sat" | "national_cert">(defaultKind || "reading");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [audioUrl, setAudioUrl] = useState("");
