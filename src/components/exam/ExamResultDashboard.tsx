@@ -9,26 +9,10 @@ import { satScore, milliyScore, scoreLevel, rawToBand } from "@/lib/ielts";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import DOMPurify from "dompurify";
-import katex from "katex";
-import "katex/dist/katex.min.css";
-import { api } from "@/lib/axios";
+import { formatMathText } from "@/lib/math";
 
 function processLaTeX(text: string) {
-  if (!text) return "";
-  const parts = text.split(/(\$\$[\s\S]*?\ExternalString|[\s\S]*?\$)/g); // using standard split logic from .bak
-  // Let's refine split regex to match backup file's exact regex: text.split(/(\$\$[\s\S]*?\$\$|\$[\s\S]*?\$)/g)
-  const partsRegex = text.split(/(\$\$[\s\S]*?\$\$|\$[\s\S]*?\$)/g);
-  return partsRegex.map((part, index) => {
-    if (part.startsWith('$$') && part.endsWith('$$')) {
-      const tex = part.slice(2, -2);
-      try { return <div key={index} dangerouslySetInnerHTML={{ __html: katex.renderToString(tex, { displayMode: true, throwOnError: false }) }} className="my-2" />; } catch { return <span key={index}>{part}</span>; }
-    } else if (part.startsWith('$') && part.endsWith('$')) {
-      const tex = part.slice(1, -1);
-      try { return <span key={index} dangerouslySetInnerHTML={{ __html: katex.renderToString(tex, { displayMode: false, throwOnError: false }) }} />; } catch { return <span key={index}>{part}</span>; }
-    }
-    return <span key={index} dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(part.replace(/\\n/g, '<br/>').replace(/\n/g, '<br/>')) }} />;
-  });
+  return formatMathText(text);
 }
 
 const UZ_DICTIONARY: Record<string, string> = {

@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
+import { formatMathText } from "@/lib/math";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 export type ExamType = "SAT" | "NATIONAL_CERT" | "IELTS" | "GENERAL";
@@ -245,13 +246,21 @@ function ContentBlockEditor({
         <div key={i} className="relative group flex gap-2">
           <div className="flex-1">
             {block.type === "PARAGRAPH" && (
-              <Textarea
-                rows={3}
-                placeholder="Savol matni (LaTeX uchun $...$ yoki $$...$$)"
-                value={block.value}
-                onChange={e => updateBlock(i, { value: e.target.value })}
-                className="resize-none font-mono text-sm"
-              />
+              <div className="space-y-1.5">
+                <Textarea
+                  rows={3}
+                  placeholder="Savol matni (LaTeX uchun $...$ yoki $$...$$)"
+                  value={block.value}
+                  onChange={e => updateBlock(i, { value: e.target.value })}
+                  className="resize-none font-mono text-sm"
+                />
+                {block.value && (
+                  <div className="p-2 border rounded bg-slate-50 dark:bg-slate-900/60 text-sm">
+                    <span className="text-[10px] uppercase font-bold text-muted-foreground block mb-1">Savol matni preview:</span>
+                    <div className="leading-relaxed">{formatMathText(block.value)}</div>
+                  </div>
+                )}
+              </div>
             )}
             {block.type === "FORMULA" && (
               <div className="space-y-1.5">
@@ -265,8 +274,9 @@ function ContentBlockEditor({
                   className="font-mono text-sm"
                 />
                 {block.value && (
-                  <div className="p-3 bg-slate-50 dark:bg-slate-900 rounded border text-sm font-mono">
-                    {block.value}
+                  <div className="p-3 bg-slate-50 dark:bg-slate-900 rounded border text-sm">
+                    <span className="text-xs text-muted-foreground block mb-1">Formula Preview:</span>
+                    <div className="overflow-x-auto">{formatMathText(`$$${block.value}$$`)}</div>
                   </div>
                 )}
               </div>
@@ -453,6 +463,11 @@ function OptionEditor({
               className="h-9 text-sm"
               onChange={e => onChange(options.map((o, i) => i === oi ? { ...o, textContent: e.target.value } : o))}
             />
+            {opt.textContent && (
+              <div className="text-xs text-muted-foreground pl-1 mt-1">
+                Variant preview: {formatMathText(opt.textContent)}
+              </div>
+            )}
             {/* Option image */}
             {opt.imageUrl ? (
               <div className="flex items-center gap-2">
@@ -782,6 +797,12 @@ function QuestionFormModal({
                   onChange={e => patch({ explanation: e.target.value })}
                   className="font-serif text-sm"
                 />
+                {q.explanation && (
+                  <div className="p-2.5 border border-dashed rounded-lg bg-violet-500/5 dark:bg-violet-950/10 text-sm mt-2">
+                    <span className="text-[10px] uppercase font-bold text-violet-650 dark:text-violet-400 block mb-1">Izoh preview:</span>
+                    <div className="leading-relaxed">{formatMathText(q.explanation)}</div>
+                  </div>
+                )}
               </div>
               <div className="space-y-2">
                 <Label className="text-sm font-semibold flex items-center gap-2">
@@ -905,7 +926,7 @@ function QuestionPreviewModal({ open, onClose, question }: { open: boolean; onCl
           {question.passageText && (
             <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-lg border border-l-4 border-l-blue-400">
               <p className="text-xs font-semibold text-blue-600 mb-2">PASSAGE</p>
-              <p className="text-sm leading-relaxed font-serif">{question.passageText}</p>
+              <div className="text-sm leading-relaxed font-serif">{formatMathText(question.passageText)}</div>
             </div>
           )}
 
@@ -914,11 +935,11 @@ function QuestionPreviewModal({ open, onClose, question }: { open: boolean; onCl
             {question.contentBlocks.map((block, i) => (
               <div key={i}>
                 {block.type === "PARAGRAPH" && (
-                  <p className="text-base leading-relaxed font-medium">{block.value}</p>
+                  <div className="text-base leading-relaxed font-medium">{formatMathText(block.value)}</div>
                 )}
                 {block.type === "FORMULA" && (
-                  <div className="p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border text-center font-mono text-blue-800 dark:text-blue-200">
-                    {block.value}
+                  <div className="p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border text-center text-blue-800 dark:text-blue-200">
+                    {formatMathText(`$$${block.value}$$`)}
                   </div>
                 )}
                 {block.type === "IMAGE" && block.value && (
@@ -975,7 +996,7 @@ function QuestionPreviewModal({ open, onClose, question }: { open: boolean; onCl
                   {opt.isCorrect ? <Check className="h-4 w-4" /> : opt.label}
                 </span>
                 <div className="flex-1">
-                  {opt.textContent && <span className="text-sm">{opt.textContent}</span>}
+                  {opt.textContent && <span className="text-sm">{formatMathText(opt.textContent)}</span>}
                   {opt.imageUrl && <img src={opt.imageUrl} alt={`opt-${i}`} className="mt-1 h-16 rounded border object-contain" />}
                 </div>
                 {opt.isCorrect && (
@@ -991,7 +1012,7 @@ function QuestionPreviewModal({ open, onClose, question }: { open: boolean; onCl
               <p className="text-xs font-semibold text-violet-700 dark:text-violet-300 uppercase tracking-wide flex items-center gap-1.5">
                 <Sparkles className="h-3.5 w-3.5" /> Izoh (Explanation)
               </p>
-              <p className="text-sm font-serif leading-relaxed text-violet-900 dark:text-violet-100">{question.explanation}</p>
+              <div className="text-sm font-serif leading-relaxed text-violet-900 dark:text-violet-100">{formatMathText(question.explanation)}</div>
               {question.explanationImage && (
                 <img src={question.explanationImage} alt="expl" className="max-h-32 rounded border mt-2" />
               )}
@@ -1595,9 +1616,9 @@ export default function QuestionBank() {
                         </div>
 
                         {/* Question text preview */}
-                        <p className="text-sm font-medium leading-relaxed line-clamp-2 text-foreground">
-                          {q.rawText || q.contentBlocks.find(b => b.type === "PARAGRAPH")?.value || ""}
-                        </p>
+                        <div className="text-sm font-medium leading-relaxed line-clamp-2 text-foreground">
+                          {formatMathText(q.rawText || q.contentBlocks.find(b => b.type === "PARAGRAPH")?.value || "")}
+                        </div>
 
                         {/* Options preview */}
                         <div className="flex flex-wrap gap-1.5">

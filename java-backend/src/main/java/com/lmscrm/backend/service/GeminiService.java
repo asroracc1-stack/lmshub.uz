@@ -245,7 +245,7 @@ public class GeminiService {
         String prompt = "You are a professional teacher and exam creator. Analyze this exam PDF document.\n" +
                 "Extract all the questions, their possible options (if multiple choice), find the correct answer for each, and write a detailed step-by-step explanation for the solution of each question.\n" +
                 "CRITICAL INSTRUCTIONS:\n" +
-                "1. For any mathematical expressions, formulas, integrals, fractions, exponents, equations, or special characters, you MUST write them in standard, clean LaTeX format using $...$ for inline math and $$...$$ for block display math (e.g. use \\frac{a}{b}, \\int_{a}^{b}, \\sqrt{x}, \\cdot, etc.) so they render exactly 1-to-1 on the web page.\n" +
+                "1. For any mathematical expressions, formulas, integrals, fractions, exponents, equations, or special characters, you MUST write them in standard, clean LaTeX format using $...$ for inline math and $$...$$ for block display math (e.g. use \\frac{a}{b}, \\int_{a}^{b}, \\sqrt{x}, \\cdot, etc.) so they render exactly 1-to-1 on the web page. Never convert mathematical formulas, operations, indices, or variables into words (e.g. never write 'x kvadrat', 'x birinchi indeks', 'ildiz ostida x').\n" +
                 "2. SHAPES AND DIAGRAMS: If a question contains any geometric shapes, diagrams, graphs, or visual figures (like triangles, circles, coordinate planes, graphs, etc.), you MUST analyze the shape and RECREATE IT EXACTLY using raw inline SVG code. Insert this SVG code directly into the question 'prompt' or 'explanation'. Use appropriate SVG viewBox, paths, circles, texts, and styling to make it look identical to the PDF. DO NOT skip the images! Embed the SVG directly inside the JSON string.\n" +
                 "Output ONLY a raw JSON object with the following root structure: {\"sections\": [...]}\n" +
                 "There should be at least one section. Each section must look like this: {\"title\": \"...\", \"passage\": \"...\", \"questions\": [...]}\n" +
@@ -284,7 +284,7 @@ public class GeminiService {
                     "CRITICAL: All texts in your JSON response (strengths, weaknesses, recommendedTopics, studyPlan, and explanations) MUST be in the UZBEK language.\n" +
                     "You must speak like an encouraging, professional Uzbek teacher.\n" +
                     "Example comments: 'Siz Algebra mavzusida yaxshi natija ko'rsatdingiz.', 'Ko'proq ishlash tavsiya etiladi: - Uchburchaklar - Aylana'.\n" +
-                    "Format any math formulas in the explanation using standard LaTeX with $...$ or $$...$$.\n" +
+                    "Format any math formulas in the explanation using standard LaTeX with $...$ or $$...$$. Never convert mathematical formulas, operations, indices, or variables into words (e.g. never write 'x kvadrat', 'x birinchi indeks', 'ildiz ostida x'). Always use LaTeX or unicode math representations.\n" +
                     "Output ONLY a raw JSON object (no markdown formatting blocks) with the following exact structure:\n" +
                     "{\n" +
                     "  \"coachFeedback\": {\n" +
@@ -304,7 +304,7 @@ public class GeminiService {
             prompt = "You are an expert AI Tutor and Exam Examiner. Analyze the student's exam submission.\n" +
                     "I will provide a JSON containing the exam questions, the correct answers, and the student's answers (along with time spent).\n" +
                     "You need to evaluate their performance, provide coaching feedback, and write a step-by-step explanation for EACH question (especially if they got it wrong, explain why the correct answer is right and their answer is wrong; if they got it right, briefly reinforce the concept).\n" +
-                    "IMPORTANT: Format any math formulas in the explanation using standard LaTeX with $...$ or $$...$$.\n" +
+                    "IMPORTANT: Format any math formulas in the explanation using standard LaTeX with $...$ or $$...$$. Never convert mathematical formulas, operations, indices, or variables into words (e.g. never write 'x kvadrat', 'x birinchi indeks', 'ildiz ostida x'). Always use LaTeX or unicode math representations.\n" +
                     "Output ONLY a raw JSON object (no markdown formatting blocks) with the following exact structure:\n" +
                     "{\n" +
                     "  \"coachFeedback\": {\n" +

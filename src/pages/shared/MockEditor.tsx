@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Loader2, Plus, Trash2, Upload, Sparkles, Music, FileText, Wand2, Save, BrainCircuit, ChevronLeft, ChevronRight, Image as ImageIcon, X } from "lucide-react";
+import { formatMathText } from "@/lib/math";
 
 interface OptionState {
   text: string;
@@ -632,7 +633,19 @@ export default function MockEditor({
                       <span className="text-xs font-bold mt-2 w-6">#{qi + 1}</span>
                       <div className="flex-1 space-y-2">
                         <Textarea rows={2} placeholder="Savol matni..." className="text-sm" value={q.prompt} onChange={(e) => updQ(si, qi, { prompt: e.target.value })} />
+                        {q.prompt && (
+                          <div className="p-2 border rounded bg-slate-50 dark:bg-slate-900/60 text-sm">
+                            <span className="text-[10px] uppercase font-bold text-muted-foreground block mb-1">Savol preview:</span>
+                            <div className="leading-relaxed">{formatMathText(q.prompt)}</div>
+                          </div>
+                        )}
                         <Textarea rows={2} placeholder="Yechim tushuntirishi (LaTeX formulalarini yozish uchun $...$ va $$...$$ dan foydalaning)..." className="text-sm border-violet-500/20" value={q.explanation || ""} onChange={(e) => updQ(si, qi, { explanation: e.target.value })} />
+                        {q.explanation && (
+                          <div className="p-2 border border-dashed rounded bg-violet-500/5 dark:bg-violet-950/10 text-sm">
+                            <span className="text-[10px] uppercase font-bold text-violet-600 dark:text-violet-400 block mb-1">Tushuntirish preview:</span>
+                            <div className="leading-relaxed">{formatMathText(q.explanation)}</div>
+                          </div>
+                        )}
                         <div className="flex items-center gap-2 flex-wrap">
                           <label className="cursor-pointer">
                             <input type="file" accept="image/*" hidden onChange={async (e) => {
@@ -724,6 +737,11 @@ export default function MockEditor({
                                       updQ(si, qi, { options: newOpts });
                                   }}><X className="h-4 w-4" /></Button>
                                 </div>
+                                {opt.text && (
+                                   <div className="text-[10px] text-muted-foreground ml-1">
+                                     Variant preview: {formatMathText(opt.text)}
+                                   </div>
+                                )}
                                 {opt.imageUrl && (
                                    <div className="flex items-center gap-2">
                                      <img src={opt.imageUrl} alt="preview" className="h-12 object-contain rounded border" />

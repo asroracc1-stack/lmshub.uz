@@ -35,7 +35,7 @@ import Scratchpad from "@/components/Scratchpad";
 import TigerPlayer from "@/components/TigerPlayer";
 import { useTheme } from "@/contexts/ThemeContext";
 import { DotLottiePlayer } from "@dotlottie/react-player";
-// Icons are already imported above
+import { formatMathText } from "@/lib/math";
 
 // Java API dan keluvchi tuzilma
 interface QuestionOption {
@@ -1380,7 +1380,7 @@ export default function MockTake() {
               <img src={getFullImageUrl(sections[currentQuestion.section_index].imageUrl)} className={cn("max-w-full border mb-6", isMilliy ? "border-slate-200 dark:border-slate-800" : "border-slate-300 dark:border-slate-800")} />
             )}
             <div className="prose prose-slate dark:prose-invert max-w-none text-slate-800 dark:text-slate-200 font-serif leading-loose text-lg whitespace-pre-wrap">
-              {sections[currentQuestion.section_index].passage}
+              {formatMathText(sections[currentQuestion.section_index].passage)}
             </div>
           </div>
         )}
@@ -1426,7 +1426,7 @@ export default function MockTake() {
 
                 {/* PROMPT */}
                 <div className="text-xl md:text-2xl font-serif leading-relaxed text-slate-900 dark:text-white mb-8">
-                  {currentQuestion.prompt}
+                  {formatMathText(currentQuestion.prompt)}
                 </div>
 
                 {/* MEDIA */}
@@ -1462,7 +1462,7 @@ export default function MockTake() {
                           <div className="flex-1">
                             {opt.imageUrl && <img src={getFullImageUrl(opt.imageUrl)} className={cn("h-16 object-contain mb-2 border", isMilliy ? "border-slate-200 dark:border-slate-800" : "border-slate-200 dark:border-slate-800")} />}
                             <span className={cn("text-lg", isMilliy ? "font-sans text-slate-800 dark:text-slate-200" : "font-serif text-slate-800 dark:text-slate-200")}>
-                              {opt.text}
+                              {formatMathText(opt.text)}
                             </span>
                           </div>
                         </button>
