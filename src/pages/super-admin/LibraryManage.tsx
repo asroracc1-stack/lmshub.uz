@@ -925,11 +925,15 @@ export default function LibraryManage() {
   });
 
   // Calculate stats dynamically from data list
-  const totalCount = materials.length;
-  const pdfCount = materials.length; // all materials in the library are PDFs
-  const viewsSum = materials.reduce((acc, curr) => acc + (curr.viewsCount || 0), 0);
-  const downloadsSum = materials.reduce((acc, curr) => acc + (curr.downloadsCount || 0), 0);
-  const premiumCount = materials.filter(m => m.accessType === "PRO" || m.accessType === "ELITE").length;
+  const totalCount = React.useMemo(() => materials.length, [materials]);
+  const freeCount = React.useMemo(() => materials.filter(m => m.accessType === "FREE").length, [materials]);
+  const proCount = React.useMemo(() => materials.filter(m => m.accessType === "PRO").length, [materials]);
+  const eliteCount = React.useMemo(() => materials.filter(m => m.accessType === "ELITE").length, [materials]);
+
+  const pdfCount = React.useMemo(() => materials.length, [materials]); // all materials in the library are PDFs
+  const viewsSum = React.useMemo(() => materials.reduce((acc, curr) => acc + (curr.viewsCount || 0), 0), [materials]);
+  const downloadsSum = React.useMemo(() => materials.reduce((acc, curr) => acc + (curr.downloadsCount || 0), 0), [materials]);
+  const premiumCount = React.useMemo(() => materials.filter(m => m.accessType === "PRO" || m.accessType === "ELITE").length, [materials]);
 
   const popularBook = [...materials]
     .sort((a, b) => (b.viewsCount || 0) - (a.viewsCount || 0))[0]?.title || "N/A";
@@ -1040,10 +1044,10 @@ export default function LibraryManage() {
           {/* Dashboard Metrics grid */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
             {[
-              { label: "Jami Materiallar", val: totalCount, icon: BookOpen, color: "text-purple-500", bg: "bg-purple-500/10" },
-              { label: "Jami O'qishlar", val: viewsSum, icon: Eye, color: "text-blue-500", bg: "bg-blue-500/10" },
-              { label: "Yuklab Olishlar", val: downloadsSum, icon: Download, color: "text-emerald-500", bg: "bg-emerald-500/10" },
-              { label: "Premium Kitoblar", val: premiumCount, icon: Lock, color: "text-amber-500", bg: "bg-amber-500/10" }
+              { label: t.statTotal, val: totalCount, icon: BookOpen, color: "text-purple-500", bg: "bg-purple-500/10" },
+              { label: t.statFree, val: freeCount, icon: BookOpen, color: "text-emerald-500", bg: "bg-emerald-500/10" },
+              { label: t.statPro, val: proCount, icon: Lock, color: "text-blue-500", bg: "bg-blue-500/10" },
+              { label: t.statElite, val: eliteCount, icon: Sparkles, color: "text-amber-500", bg: "bg-amber-500/10" }
             ].map((metric, i) => (
               <div
                 key={i}
