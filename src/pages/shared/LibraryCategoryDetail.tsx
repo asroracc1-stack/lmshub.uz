@@ -182,9 +182,9 @@ export default function LibraryCategoryDetail({ code: propCode }: LibraryCategor
   const { code: paramCode } = useParams<{ code: string }>();
   const code = propCode || paramCode;
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, role: authRole } = useAuth();
   const { i18n } = useTranslation();
-  const role = user?.role?.toLowerCase() || "user";
+  const role = authRole || "user";
   const rolePath = role === "super_admin" ? "super-admin" : role === "payment_manager" ? "pack-manager" : role;
   const basePath = `/${rolePath}`;
   const lang = (i18n.language || "uz") as "uz" | "ru" | "en";
@@ -532,7 +532,7 @@ export default function LibraryCategoryDetail({ code: propCode }: LibraryCategor
                   <div className="h-[320px] w-full relative rounded-2xl overflow-hidden bg-slate-100 dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[rgba(255,255,255,0.08)] shadow-md transition-all duration-300 ease-out group-hover:scale-[1.05] group-hover:shadow-[0_12px_28px_rgba(139,92,246,0.25),_0_12px_28px_rgba(59,130,246,0.25)] group-hover:border-purple-500/40">
                     
                     {/* Admin Actions Overlay (Edit/Delete) */}
-                    {(role === "super_admin" || role === "admin") && (
+                    {(role === "super_admin") && (
                       <div className="absolute top-3 right-3 flex items-center gap-1.5 z-30" onClick={(e) => e.stopPropagation()}>
                         <button
                           onClick={(e) => {

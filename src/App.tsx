@@ -274,7 +274,7 @@ const AppRoutes = () => {
           <Route path="library/read/:materialId" element={<PdfViewerPage />} />
           <Route path="library-manage" element={<LibraryManage />} />
           <Route path="library-manage/create" element={<LibraryForm />} />
-          <Route path="library-manage/edit/:id" element={<LibraryForm />} />
+          <Route path="library-manage/edit/:id" element={<LibraryManage />} />
         </Route>
 
         {/* Admin */}
