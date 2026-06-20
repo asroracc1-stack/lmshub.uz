@@ -318,6 +318,39 @@ export default function LibraryCategoryDetail({ code: propCode }: LibraryCategor
     navigate(packsPath);
   };
 
+  const handleDeleteMaterial = async (e: React.MouseEvent, materialId: string) => {
+    e.stopPropagation();
+    const confirmDelete = window.confirm(
+      lang === "uz" 
+        ? "Haqiqatan ham ushbu kitobni o'chirmoqchimisiz?" 
+        : lang === "ru" 
+        ? "Вы действительно хотите удалить эту книгу?" 
+        : "Are you sure you want to delete this book?"
+    );
+    if (!confirmDelete) return;
+
+    try {
+      await api.delete(`/library/materials/${materialId}`);
+      toast.success(
+        lang === "uz" 
+          ? "Material muvaffaqiyatli o'chirildi" 
+          : lang === "ru" 
+          ? "Материал успешно удаlen" 
+          : "Material successfully deleted"
+      );
+      setMaterials((prev) => prev.filter((m) => m.id !== materialId));
+    } catch (err) {
+      console.error(err);
+      toast.error(
+        lang === "uz" 
+          ? "O'chirishda xatolik yuz berdi" 
+          : lang === "ru" 
+          ? "Ошибка при удалении" 
+          : "Error deleting material"
+      );
+    }
+  };
+
   // Deterministic Page count generator
   const getPagesCount = (mId: string) => {
     if (!mId) return 180;
@@ -498,6 +531,29 @@ export default function LibraryCategoryDetail({ code: propCode }: LibraryCategor
                   {/* Top Section (80% Height): Book cover showcase area */}
                   <div className="h-[320px] w-full relative rounded-2xl overflow-hidden bg-slate-100 dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[rgba(255,255,255,0.08)] shadow-md transition-all duration-300 ease-out group-hover:scale-[1.05] group-hover:shadow-[0_12px_28px_rgba(139,92,246,0.25),_0_12px_28px_rgba(59,130,246,0.25)] group-hover:border-purple-500/40">
                     
+                    {/* Admin Actions Overlay (Edit/Delete) */}
+                    {(role === "super_admin" || role === "admin") && (
+                      <div className="absolute top-3 right-3 flex items-center gap-1.5 z-30" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`${basePath}/library-manage/edit/${m.id}`);
+                          }}
+                          className="p-2 bg-slate-900/85 hover:bg-slate-950 text-white rounded-lg transition-all border border-white/10 shadow hover:scale-105 active:scale-95"
+                          title="Tahrirlash"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                        </button>
+                        <button
+                          onClick={(e) => handleDeleteMaterial(e, m.id)}
+                          className="p-2 bg-rose-950/85 hover:bg-rose-900 text-rose-250 hover:text-white rounded-lg transition-all border border-rose-800/30 shadow hover:scale-105 active:scale-95"
+                          title="O'chirish"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 text-rose-450 hover:text-white"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                        </button>
+                      </div>
+                    )}
+
                     {m.coverImageUrl ? (
                       <img
                         src={getFileUrl(m.coverImageUrl)}
