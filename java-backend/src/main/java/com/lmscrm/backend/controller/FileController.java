@@ -70,8 +70,21 @@ public class FileController {
             }
         }
         String mimeType = Files.probeContentType(file);
-        if (mimeType == null) {
-            mimeType = "application/octet-stream";
+        if (mimeType == null || mimeType.equals("application/octet-stream")) {
+            String lower = filename.toLowerCase();
+            if (lower.endsWith(".webp")) {
+                mimeType = "image/webp";
+            } else if (lower.endsWith(".png")) {
+                mimeType = "image/png";
+            } else if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) {
+                mimeType = "image/jpeg";
+            } else if (lower.endsWith(".gif")) {
+                mimeType = "image/gif";
+            } else if (lower.endsWith(".pdf")) {
+                mimeType = "application/pdf";
+            } else {
+                mimeType = "application/octet-stream";
+            }
         }
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(mimeType))
