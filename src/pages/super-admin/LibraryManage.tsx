@@ -842,7 +842,8 @@ export default function LibraryManage() {
   // Filtering materials to display in grid (Local Tab-filter + search query)
   const filteredMaterials = materials.filter(m => {
     // Tab category filter
-    const matchedCategory = categories.find(c => c.id === m.categoryId);
+    const catId = m.categoryId || (m as any).category_id || (m as any).category?.id;
+    const matchedCategory = categories.find(c => c.id === catId);
     if (!matchedCategory || matchedCategory.code !== activeTab) {
       return false;
     }
@@ -855,22 +856,25 @@ export default function LibraryManage() {
       if (!matchTitle && !matchAuthor && !matchSubject) return false;
     }
     // Access Type
-    if (filterAccess && m.accessType !== filterAccess) return false;
+    const accessType = m.accessType || (m as any).access_type;
+    if (filterAccess && accessType !== filterAccess) return false;
     // Status
-    if (filterStatus && m.status !== filterStatus) return false;
+    const status = m.status || (m as any).status;
+    if (filterStatus && status !== filterStatus) return false;
 
     return true;
   });
 
   // Calculate dynamic stats from list
   const activeTabMaterials = materials.filter(m => {
-    const cat = categories.find(c => c.id === m.categoryId);
+    const catId = m.categoryId || (m as any).category_id || (m as any).category?.id;
+    const cat = categories.find(c => c.id === catId);
     return cat && cat.code === activeTab;
   });
   const countTotal = activeTabMaterials.length;
-  const countFree = activeTabMaterials.filter(m => m.accessType === "FREE").length;
-  const countPro = activeTabMaterials.filter(m => m.accessType === "PRO").length;
-  const countElite = activeTabMaterials.filter(m => m.accessType === "ELITE").length;
+  const countFree = activeTabMaterials.filter(m => (m.accessType || (m as any).access_type) === "FREE").length;
+  const countPro = activeTabMaterials.filter(m => (m.accessType || (m as any).access_type) === "PRO").length;
+  const countElite = activeTabMaterials.filter(m => (m.accessType || (m as any).access_type) === "ELITE").length;
 
   return (
     <div className="w-full min-h-[90vh] bg-[#F8FAFC] dark:bg-[#070B17] text-slate-800 dark:text-white p-6 md:p-8 rounded-[24px] border border-black/5 dark:border-white/5 shadow-2xl relative transition-colors duration-500">
@@ -1000,6 +1004,8 @@ export default function LibraryManage() {
           {filteredMaterials.map((m) => {
             const isSelected = selectedIds.includes(m.id);
             const spineGrad = getSpineGradient(m.id);
+            const coverImageUrl = m.coverImageUrl || (m as any).cover_image_url;
+            const accessType = m.accessType || (m as any).access_type;
             
             return (
               <motion.div
@@ -1021,9 +1027,9 @@ export default function LibraryManage() {
                   <div className={`absolute left-0 top-0 bottom-0 w-[8px] bg-gradient-to-r ${spineGrad} z-10 opacity-70`} />
 
                   {/* Cover image or Kindle gradient layout */}
-                  {m.coverImageUrl ? (
+                  {coverImageUrl ? (
                     <img
-                      src={getFileUrl(m.coverImageUrl)}
+                      src={getFileUrl(coverImageUrl)}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-102"
                       alt={m.title}
                       loading="lazy"
@@ -1103,13 +1109,13 @@ export default function LibraryManage() {
 
                   {/* Access Badge Overlay */}
                   <span className={`absolute bottom-3 left-3 px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider shadow z-15 ${
-                    m.accessType === "FREE"
+                    accessType === "FREE"
                       ? "bg-emerald-500 text-white"
-                      : m.accessType === "PRO"
+                      : accessType === "PRO"
                       ? "bg-blue-600 text-white"
                       : "bg-amber-500 text-slate-950"
                   }`}>
-                    {m.accessType}
+                    {accessType}
                   </span>
 
                 </div>
@@ -1123,8 +1129,8 @@ export default function LibraryManage() {
                     {m.author || "N/A"}
                   </p>
                   <div className="flex items-center justify-between text-[9px] text-slate-400 font-bold pt-1 border-t border-slate-100 dark:border-white/5 mt-1.5">
-                    <span className="flex items-center gap-0.5"><Eye className="h-3 w-3" /> {m.viewsCount}</span>
-                    <span className="flex items-center gap-0.5"><Calendar className="h-3 w-3" /> {m.createdAt ? new Date(m.createdAt).toLocaleDateString(undefined, { year: '2-digit', month: '2-digit', day: '2-digit' }) : "2026"}</span>
+                    <span className="flex items-center gap-0.5"><Eye className="h-3 w-3" /> {viewsCount !== undefined ? viewsCount : 0}</span>
+                    <span className="flex items-center gap-0.5"><Calendar className="h-3 w-3" /> {createdAt ? new Date(createdAt).toLocaleDateString(undefined, { year: '2-digit', month: '2-digit', day: '2-digit' }) : "2026"}</span>
                   </div>
                 </div>
 
