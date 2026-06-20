@@ -64,7 +64,10 @@ public class FileController {
     public ResponseEntity<byte[]> view(@PathVariable String filename) throws IOException {
         Path file = Paths.get(uploadDir).resolve(filename);
         if (!Files.exists(file)) {
-            return ResponseEntity.notFound().build();
+            file = Paths.get("java-backend/" + uploadDir).resolve(filename);
+            if (!Files.exists(file)) {
+                return ResponseEntity.notFound().build();
+            }
         }
         String mimeType = Files.probeContentType(file);
         if (mimeType == null) {
@@ -180,8 +183,11 @@ public class FileController {
         try {
             Path file = Paths.get(uploadDir, "logos").resolve(filename);
             if (!Files.exists(file)) {
-                log.warn("🔍 Logo not found: {}", filename);
-                return ResponseEntity.notFound().build();
+                file = Paths.get("java-backend", uploadDir, "logos").resolve(filename);
+                if (!Files.exists(file)) {
+                    log.warn("🔍 Logo not found: {}", filename);
+                    return ResponseEntity.notFound().build();
+                }
             }
             log.info("🖼️ Serving logo: {}", filename);
             return ResponseEntity.ok()
@@ -199,8 +205,11 @@ public class FileController {
         try {
             Path file = Paths.get(uploadDir, "receipts").resolve(filename);
             if (!Files.exists(file)) {
-                log.warn("Receipt not found: {}", filename);
-                return ResponseEntity.notFound().build();
+                file = Paths.get("java-backend", uploadDir, "receipts").resolve(filename);
+                if (!Files.exists(file)) {
+                    log.warn("Receipt not found: {}", filename);
+                    return ResponseEntity.notFound().build();
+                }
             }
             String mimeType = Files.probeContentType(file);
             if (mimeType == null) mimeType = "image/png";
