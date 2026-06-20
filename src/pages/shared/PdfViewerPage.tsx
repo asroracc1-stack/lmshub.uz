@@ -34,33 +34,51 @@ export default function PdfViewerPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // States to trace canvas page rendering
+  const [renderingPage, setRenderingPage] = useState(false);
+  const [renderError, setRenderError] = useState<string | null>(null);
+
   const [pdfDoc, setPdfDoc] = useState<any>(null);
+  const [canvasElement, setCanvasElement] = useState<HTMLCanvasElement | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const renderTaskRef = useRef<any>(null);
 
   // Fetch material details and initial progress
   useEffect(() => {
     if (materialId) {
+      console.log("[PDF Viewer] Fetching material with ID:", materialId);
       fetchMaterialDetails();
     }
   }, [materialId]);
 
-  // Load PDF.js script dynamically from CDN
+  // Load PDF.js script dynamically from CDN and configure worker Src robustly
   const loadPdfJS = (): Promise<any> => {
     return new Promise((resolve, reject) => {
+      const configureWorker = (pdfjs: any) => {
+        pdfjs.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js";
+        console.log("[PDF Viewer] PDF.js worker configured:", pdfjs.GlobalWorkerOptions.workerSrc);
+      };
+
       if ((window as any).pdfjsLib) {
+        configureWorker((window as any).pdfjsLib);
         resolve((window as any).pdfjsLib);
         return;
       }
+
+      console.log("[PDF Viewer] PDF.js script not loaded yet. Creating script tag...");
       const script = document.createElement("script");
       script.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js";
       script.onload = () => {
-        (window as any).pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js";
-        resolve((window as any).pdfjsLib);
+        const pdfjs = (window as any).pdfjsLib;
+        console.log("[PDF Viewer] PDF.js library script loaded successfully.");
+        configureWorker(pdfjs);
+        resolve(pdfjs);
       };
-      script.onerror = () => reject(new Error("PDF.js yuklanmadi"));
+      script.onerror = () => {
+        console.error("[PDF Viewer] PDF.js script download failed.");
+        reject(new Error("PDF.js yuklanmadi"));
+      };
       document.body.appendChild(script);
     });
   };
@@ -72,6 +90,9 @@ export default function PdfViewerPage() {
       
       // Fetch material metadata
       const res = await api.get(`/library/materials/${materialId}`);
+      console.log("[PDF Viewer] API response metadata:", res.data);
+      console.log("[PDF Viewer] Material PDF URL:", res.data.pdfUrl);
+      
       setTitle(res.data.title);
       setIsFavorite(res.data.isFavorite || false);
 
@@ -80,30 +101,38 @@ export default function PdfViewerPage() {
       try {
         const progressRes = await api.get(`/library/materials/${materialId}/progress`);
         startingPage = progressRes.data?.lastPage || 1;
+        console.log("[PDF Viewer] API progress response lastPage:", startingPage);
       } catch (progressErr) {
         console.warn("Progress load error, using default page 1:", progressErr);
       }
 
       // Fetch PDF as arraybuffer (automatically inherits Auth headers from Axios interceptor)
       const streamUrl = `/library/materials/${materialId}/pdf-stream`;
+      console.log("[PDF Viewer] Fetching PDF binary stream from:", streamUrl);
+      
       const response = await api.get(streamUrl, { responseType: "arraybuffer" });
+      console.log("[PDF Viewer] Network response status:", response.status);
+      
       const pdfData = new Uint8Array(response.data);
-
       const pdfjs = await loadPdfJS();
+      
+      console.log("[PDF Viewer] PDF.js loaded. Initializing document load task...");
       const loadingTask = pdfjs.getDocument({ data: pdfData });
+      
       const pdf = await loadingTask.promise;
+      console.log("[PDF Viewer] Document load status: SUCCESS. Total pages:", pdf.numPages);
 
       setPdfDoc(pdf);
       setNumPages(pdf.numPages);
       setCurrentPage(Math.min(startingPage, pdf.numPages || 1));
 
     } catch (e: any) {
-      console.error("PDF load error:", e);
+      console.error("[PDF Viewer] PDF load error:", e);
       if (e.response?.status === 403) {
         toast.error("Ushbu material uchun sizda faol obuna yo'q");
         navigate(`${basePath}/library`);
       } else {
-        setError("PDF fayl yuklanmadi");
+        setError("Fayl mavjud emas yoki URL noto'g'ri.");
         toast.error("Material yuklanishida xatolik yuz berdi");
       }
     } finally {
@@ -117,6 +146,7 @@ export default function PdfViewerPage() {
 
     const saveProgressTimeout = setTimeout(async () => {
       try {
+        console.log("[PDF Viewer] Saving user progress. Page:", currentPage);
         await api.post(`/library/materials/${materialId}/progress`, {
           lastPage: currentPage
         });
@@ -130,13 +160,21 @@ export default function PdfViewerPage() {
 
   // Render PDF page onto canvas
   useEffect(() => {
-    if (!pdfDoc) return;
+    if (!pdfDoc || !canvasElement) {
+      console.log("[PDF Viewer] Render aborted: pdfDoc ready:", !!pdfDoc, "canvasElement ready:", !!canvasElement);
+      return;
+    }
 
     let isCancelled = false;
 
     const render = async () => {
       try {
+        setRenderingPage(true);
+        setRenderError(null);
+        console.log("[PDF Viewer] Starting canvas render for page:", currentPage, "scale:", scale);
+
         if (renderTaskRef.current) {
+          console.log("[PDF Viewer] Cancelling previous rendering task...");
           renderTaskRef.current.cancel();
           renderTaskRef.current = null;
         }
@@ -145,14 +183,13 @@ export default function PdfViewerPage() {
         if (isCancelled) return;
 
         const viewport = page.getViewport({ scale });
-        const canvas = canvasRef.current;
-        if (!canvas) return;
+        const context = canvasElement.getContext("2d");
+        if (!context) {
+          throw new Error("Canvas 2D context is not available");
+        }
 
-        const context = canvas.getContext("2d");
-        if (!context) return;
-
-        canvas.height = viewport.height;
-        canvas.width = viewport.width;
+        canvasElement.height = viewport.height;
+        canvasElement.width = viewport.width;
 
         const renderContext = {
           canvasContext: context,
@@ -161,12 +198,17 @@ export default function PdfViewerPage() {
 
         const renderTask = page.render(renderContext);
         renderTaskRef.current = renderTask;
-        await renderTask.promise;
         
+        await renderTask.promise;
+        console.log("[PDF Viewer] Page render status: SUCCESS for page:", currentPage);
+        
+        setRenderingPage(false);
         renderTaskRef.current = null;
       } catch (err: any) {
         if (err.name !== "RenderingCancelledException") {
-          console.error("Canvas render error:", err);
+          console.error("[PDF Viewer] Canvas render error:", err);
+          setRenderError("PDF sahifasini chizishda xatolik yuz berdi");
+          setRenderingPage(false);
         }
       }
     };
@@ -180,7 +222,7 @@ export default function PdfViewerPage() {
         renderTaskRef.current = null;
       }
     };
-  }, [pdfDoc, currentPage, scale]);
+  }, [pdfDoc, currentPage, scale, canvasElement]);
 
   const handleNextPage = () => {
     if (currentPage < numPages) {
@@ -234,31 +276,47 @@ export default function PdfViewerPage() {
     }
   };
 
+  // Center loader screen
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[500px] h-[70vh] space-y-4 text-slate-400">
-        <Loader2 className="h-10 w-10 text-primary animate-spin" />
-        <p className="text-sm font-semibold">PDF yuklanmoqda...</p>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#020617] text-slate-350 space-y-4">
+        <Loader2 className="h-10 w-10 text-[#8B5CF6] animate-spin" />
+        <p className="text-sm font-semibold tracking-wide">PDF yuklanmoqda...</p>
       </div>
     );
   }
 
+  // Error screen layout matching specifications exactly
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[500px] h-[70vh] space-y-4 text-center p-6 bg-[#020617] rounded-3xl border border-red-500/20">
-        <div className="p-4 bg-red-500/10 rounded-full text-red-500">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#020617] text-center p-6 select-none">
+        <div className="p-4 bg-red-500/10 rounded-full text-red-500 mb-6 border border-red-500/20 shadow-lg animate-pulse">
           <BookOpen className="h-10 w-10" />
         </div>
-        <h3 className="text-xl font-bold text-red-500">{error}</h3>
-        <p className="text-slate-400 text-sm max-w-sm leading-relaxed">
-          Faylni yuklashda xatolik yuz berdi. Iltimos, internet aloqasini tekshirib qayta urinib ko'ring.
+        <h3 className="text-2xl font-black text-white tracking-tight">PDF yuklanmadi</h3>
+        <p className="text-slate-400 text-sm max-w-sm leading-relaxed mt-2.5">
+          Fayl mavjud emas yoki URL noto'g'ri.
         </p>
-        <button
-          onClick={fetchMaterialDetails}
-          className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-lg hover:scale-[1.01]"
-        >
-          Qayta urinish
-        </button>
+        <div className="flex gap-4 mt-8">
+          <button
+            onClick={() => {
+              console.log("[PDF Viewer] User clicked retry button");
+              fetchMaterialDetails();
+            }}
+            className="px-6 py-3 bg-[#8B5CF6] hover:bg-[#7c4fe3] text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all shadow-lg shadow-[#8B5CF6]/20 hover:scale-[1.01]"
+          >
+            Qayta urinish
+          </button>
+          <button
+            onClick={() => {
+              console.log("[PDF Viewer] User clicked back button");
+              navigate(-1);
+            }}
+            className="px-6 py-3 bg-slate-800 hover:bg-slate-750 text-slate-355 rounded-xl text-xs font-black uppercase tracking-wider transition-all border border-slate-700/60"
+          >
+            Orqaga qaytish
+          </button>
+        </div>
       </div>
     );
   }
@@ -271,16 +329,16 @@ export default function PdfViewerPage() {
       }`}
     >
       {/* ── Top Control Bar ── */}
-      <div className="flex items-center justify-between gap-4 p-4 bg-slate-900/90 backdrop-blur-md border border-slate-800/80 rounded-2xl shadow-xl text-white select-none">
+      <div className="flex items-center justify-between gap-4 p-4 bg-[#0F172A]/90 backdrop-blur-md border border-[rgba(255,255,255,0.08)] rounded-2xl shadow-xl text-white select-none">
         <div className="flex items-center gap-3 min-w-0">
           <button
             onClick={() => navigate(-1)}
-            className="p-2.5 hover:bg-slate-800 active:scale-95 rounded-xl transition-all shrink-0"
+            className="p-2.5 hover:bg-slate-800 active:scale-95 rounded-xl transition-all shrink-0 border border-transparent hover:border-[rgba(255,255,255,0.08)]"
             title="Orqaga"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
-          <div className="min-w-0">
+          <div className="min-w-0 text-left">
             <h2 className="text-sm font-bold truncate">{title}</h2>
             <p className="text-[10px] text-slate-450 font-semibold uppercase tracking-wider flex items-center gap-1">
               <BookOpen className="h-3 w-3 text-purple-400 animate-pulse" />
@@ -290,7 +348,7 @@ export default function PdfViewerPage() {
         </div>
 
         {/* Custom PDF Controls */}
-        <div className="flex items-center gap-1 sm:gap-2 bg-slate-950/60 p-1.5 rounded-xl border border-slate-800/50">
+        <div className="flex items-center gap-1 sm:gap-2 bg-slate-950/65 p-1.5 rounded-xl border border-[rgba(255,255,255,0.08)]">
           {/* Zoom controls */}
           <button
             onClick={handleZoomOut}
@@ -368,18 +426,46 @@ export default function PdfViewerPage() {
 
       {/* ── Secure Canvas Container ── */}
       <div
-        className="flex-1 bg-[#0F172A] border border-slate-800/80 rounded-2xl overflow-auto shadow-2xl relative flex items-start justify-center p-4 min-h-0 w-full"
+        className="flex-1 bg-[#0F172A] border border-[rgba(255,255,255,0.08)] rounded-2xl overflow-auto shadow-2xl relative flex items-start justify-center p-4 min-h-0 w-full"
         onContextMenu={(e) => e.preventDefault()}
       >
+        {/* Render level Loading Spinner overlay */}
+        {renderingPage && (
+          <div className="absolute inset-0 bg-[#0F172A]/80 backdrop-blur-[1px] flex flex-col items-center justify-center z-10 space-y-3">
+            <Loader2 className="h-8 w-8 text-[#8B5CF6] animate-spin" />
+            <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Sahifa yuklanmoqda...</p>
+          </div>
+        )}
+
+        {/* Render level Error overlay */}
+        {renderError && (
+          <div className="absolute inset-0 bg-[#0F172A] flex flex-col items-center justify-center z-10 p-6 text-center space-y-3">
+            <div className="p-3 bg-red-500/10 rounded-full text-red-500 border border-red-500/20">
+              <Info className="h-6 w-6" />
+            </div>
+            <h4 className="text-sm font-black text-white uppercase tracking-wider">{renderError}</h4>
+            <button
+              onClick={() => {
+                console.log("[PDF Viewer] Retrying page render for page:", currentPage);
+                setCurrentPage(currentPage);
+              }}
+              className="px-4 py-2 bg-slate-800 hover:bg-slate-750 text-slate-300 rounded-lg text-[10px] font-black uppercase tracking-wider border border-slate-700/60"
+            >
+              Qayta urinish
+            </button>
+          </div>
+        )}
+
         <div className="relative inline-block select-none">
+          {/* React callback ref mapping to prevent null state bindings on render */}
           <canvas
-            ref={canvasRef}
+            ref={setCanvasElement}
             className="shadow-2xl transition-all duration-300 rounded-lg dark:invert-[0.9] dark:hue-rotate-180 bg-white"
           />
         </div>
 
         {/* Floating Instruction overlay */}
-        <div className="absolute bottom-4 right-4 bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-lg border border-slate-700/80 text-[10px] text-slate-400 font-bold flex items-center gap-1.5 pointer-events-none select-none">
+        <div className="absolute bottom-4 right-4 bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-lg border border-slate-700/80 text-[10px] text-slate-450 font-bold flex items-center gap-1.5 pointer-events-none select-none">
           <Info className="h-3.5 w-3.5 text-purple-400 animate-pulse" />
           Kattalashtirish uchun yuqoridagi + tugmasini bosing.
         </div>
