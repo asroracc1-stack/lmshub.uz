@@ -21,11 +21,11 @@ public interface LibraryMaterialRepository extends JpaRepository<LibraryMaterial
           AND (:grade IS NULL OR lm.grade = :grade)
           AND (:accessType IS NULL OR lm.accessType = :accessType)
           AND (:status IS NULL OR lm.status = :status)
-          AND (:search IS NULL OR LOWER(lm.title) LIKE LOWER(CONCAT('%', :search, '%'))
-               OR LOWER(lm.author) LIKE LOWER(CONCAT('%', :search, '%'))
-               OR LOWER(lm.subject) LIKE LOWER(CONCAT('%', :search, '%'))
-               OR LOWER(lm.grade) LIKE LOWER(CONCAT('%', :search, '%'))
-               OR LOWER(lm.topic) LIKE LOWER(CONCAT('%', :search, '%')))
+          AND (:search IS NULL OR LOWER(lm.title) LIKE :search
+               OR LOWER(lm.author) LIKE :search
+               OR LOWER(lm.subject) LIKE :search
+               OR LOWER(lm.grade) LIKE :search
+               OR LOWER(lm.topic) LIKE :search)
     """)
     Page<LibraryMaterial> findFiltered(
             @Param("categoryId") UUID categoryId,
@@ -55,4 +55,7 @@ public interface LibraryMaterialRepository extends JpaRepository<LibraryMaterial
     
     @Query("SELECT lm FROM LibraryMaterial lm WHERE lm.status = 'ACTIVE' AND lm.category.code = :categoryCode ORDER BY lm.viewsCount DESC")
     List<LibraryMaterial> findPopularMaterialsByCategory(@Param("categoryCode") String categoryCode, Pageable pageable);
+
+    @Query("SELECT COALESCE(SUM(lm.viewsCount), 0) FROM LibraryMaterial lm")
+    long sumViewsCount();
 }

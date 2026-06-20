@@ -9,10 +9,12 @@ import com.lmscrm.backend.dto.library.LibraryProgressRequest;
 import com.lmscrm.backend.dto.library.LibraryStatsDto;
 import com.lmscrm.backend.repository.LibraryMaterialRepository;
 import com.lmscrm.backend.service.library.LibraryService;
+import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -86,7 +88,7 @@ public class LibraryController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     @Operation(summary = "Yangi material yaratish")
     public ResponseEntity<LibraryMaterialDto> createMaterial(
-            @RequestBody LibraryMaterialRequest request,
+            @RequestBody @Valid LibraryMaterialRequest request,
             @AuthenticationPrincipal User user
     ) {
         return ResponseEntity.ok(libraryService.createMaterial(request, user));
@@ -97,7 +99,7 @@ public class LibraryController {
     @Operation(summary = "Materialni yangilash")
     public ResponseEntity<LibraryMaterialDto> updateMaterial(
             @PathVariable UUID id,
-            @RequestBody LibraryMaterialRequest request
+            @RequestBody @Valid LibraryMaterialRequest request
     ) {
         return ResponseEntity.ok(libraryService.updateMaterial(id, request));
     }
@@ -137,7 +139,7 @@ public class LibraryController {
     @Operation(summary = "O'qish progressini saqlash")
     public ResponseEntity<Void> saveProgress(
             @PathVariable UUID id,
-            @RequestBody LibraryProgressRequest request,
+            @RequestBody @Valid LibraryProgressRequest request,
             @AuthenticationPrincipal User user
     ) {
         libraryService.saveProgress(id, request.getLastPage(), user);

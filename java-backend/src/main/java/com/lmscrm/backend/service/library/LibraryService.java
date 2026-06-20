@@ -118,13 +118,18 @@ public class LibraryService {
             queryStatus = "ACTIVE";
         }
 
+        String searchPattern = null;
+        if (search != null && !search.isBlank()) {
+            searchPattern = "%" + search.trim().toLowerCase() + "%";
+        }
+
         Page<LibraryMaterial> materials = materialRepository.findFiltered(
                 categoryId,
                 blankToNull(subject),
                 blankToNull(grade),
                 blankToNull(accessType),
                 blankToNull(queryStatus),
-                blankToNull(search),
+                searchPattern,
                 pageable
         );
 
@@ -289,9 +294,7 @@ public class LibraryService {
         long totalPdfs = materialRepository.countPdfMaterials("ACTIVE") + materialRepository.countPdfMaterials("DRAFT") + materialRepository.countPdfMaterials("HIDDEN");
         
         // Sum views_count across all materials
-        Long totalViews = materialRepository.findAll().stream()
-                .mapToLong(LibraryMaterial::getViewsCount)
-                .sum();
+        long totalViews = materialRepository.sumViewsCount();
 
         // Popular kitob
         List<LibraryMaterial> popularBooks = materialRepository.findPopularMaterialsByCategory("adabiy_kitoblar", PageRequest.of(0, 1));
