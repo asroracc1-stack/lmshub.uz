@@ -141,13 +141,19 @@ export default function PdfViewerPage() {
     }
   };
 
-  // Source URL with hashtag page and zoom parameter
-  const getIframeSrc = () => {
-    if (!pdfUrl) return "";
+  // Dynamically update the iframe src hash without triggering a full iframe reload
+  useEffect(() => {
+    if (!iframeRef.current || !pdfUrl) return;
     const zoomPct = Math.round(scale * 100);
-    // standard browser pdf queries
-    return `${pdfUrl}#page=${currentPage}&zoom=${zoomPct}`;
-  };
+    const newSrc = `${pdfUrl}#page=${currentPage}&zoom=${zoomPct}&toolbar=0&navpanes=0`;
+    
+    // Only update the src attribute if it differs from the new target URL.
+    // Since only the hash portion (#page=...) changes, modern browsers
+    // will scroll to the target page smoothly instead of reloading the document.
+    if (iframeRef.current.src !== newSrc) {
+      iframeRef.current.src = newSrc;
+    }
+  }, [currentPage, scale, pdfUrl]);
 
   if (loading) {
     return (
@@ -161,11 +167,11 @@ export default function PdfViewerPage() {
   return (
     <div className="w-full flex flex-col h-[calc(100vh-80px)] md:h-[calc(100vh-40px)] space-y-4">
       {/* ── Top Bar ── */}
-      <div className="flex items-center justify-between gap-4 p-4 bg-slate-900 border border-slate-800 rounded-2xl shadow-lg text-white">
+      <div className="flex items-center justify-between gap-4 p-4 bg-slate-900/85 backdrop-blur-md border border-slate-800/80 rounded-2xl shadow-xl text-white">
         <div className="flex items-center gap-3 min-w-0">
           <button
             onClick={() => navigate(-1)}
-            className="p-2 hover:bg-slate-800 rounded-xl transition-colors shrink-0"
+            className="p-2.5 hover:bg-slate-800 active:scale-95 rounded-xl transition-all shrink-0"
             title="Orqaga"
           >
             <ArrowLeft className="h-5 w-5" />
@@ -173,18 +179,18 @@ export default function PdfViewerPage() {
           <div className="min-w-0">
             <h2 className="text-sm font-bold truncate">{title}</h2>
             <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider flex items-center gap-1">
-              <BookOpen className="h-3 w-3" />
+              <BookOpen className="h-3 w-3 text-primary animate-pulse" />
               LMSHub Viewer
             </p>
           </div>
         </div>
 
         {/* Custom PDF Controls */}
-        <div className="flex items-center gap-1 sm:gap-2">
+        <div className="flex items-center gap-1 sm:gap-2 bg-slate-950/50 p-1.5 rounded-xl border border-slate-800/50">
           {/* Zoom controls */}
           <button
             onClick={handleZoomOut}
-            className="p-2 hover:bg-slate-800 rounded-xl transition-colors text-slate-300"
+            className="p-1.5 hover:bg-slate-800 active:scale-95 rounded-lg transition-all text-slate-300"
             title="Kichiklashtirish"
           >
             <ZoomOut className="h-4.5 w-4.5" />
@@ -194,7 +200,7 @@ export default function PdfViewerPage() {
           </span>
           <button
             onClick={handleZoomIn}
-            className="p-2 hover:bg-slate-800 rounded-xl transition-colors text-slate-300"
+            className="p-1.5 hover:bg-slate-800 active:scale-95 rounded-lg transition-all text-slate-300"
             title="Kattalashtirish"
           >
             <ZoomIn className="h-4.5 w-4.5" />
@@ -206,7 +212,7 @@ export default function PdfViewerPage() {
           <button
             onClick={handlePrevPage}
             disabled={currentPage <= 1}
-            className="p-2 hover:bg-slate-800 rounded-xl transition-colors text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed"
+            className="p-1.5 hover:bg-slate-800 active:scale-95 rounded-lg transition-all text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed"
             title="Oldingi bet"
           >
             <ChevronLeft className="h-4.5 w-4.5" />
@@ -220,13 +226,13 @@ export default function PdfViewerPage() {
                 const val = parseInt(e.target.value);
                 if (val > 0) setCurrentPage(val);
               }}
-              className="w-10 h-7 text-center text-xs font-bold bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none"
+              className="w-10 h-7 text-center text-xs font-bold bg-slate-850 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-primary transition-colors"
             />
             <span className="text-xs text-slate-400 font-bold select-none">/ bet</span>
           </div>
           <button
             onClick={handleNextPage}
-            className="p-2 hover:bg-slate-800 rounded-xl transition-colors text-slate-300"
+            className="p-1.5 hover:bg-slate-800 active:scale-95 rounded-lg transition-all text-slate-300"
             title="Keyingi bet"
           >
             <ChevronRight className="h-4.5 w-4.5" />
@@ -237,16 +243,16 @@ export default function PdfViewerPage() {
           {/* Favorite Bookmarking */}
           <button
             onClick={handleToggleFavorite}
-            className="p-2 hover:bg-slate-800 rounded-xl transition-colors"
+            className="p-1.5 hover:bg-slate-800 active:scale-95 rounded-lg transition-all"
             title={isFavorite ? "Sevimlilardan o'chirish" : "Sevimlilarga qo'shish"}
           >
-            <Bookmark className={`h-4.5 w-4.5 ${isFavorite ? "text-rose-500 fill-rose-500" : "text-slate-300"}`} />
+            <Bookmark className={`h-4.5 w-4.5 transition-colors ${isFavorite ? "text-rose-500 fill-rose-500" : "text-slate-300 hover:text-rose-450"}`} />
           </button>
 
           {/* Fullscreen */}
           <button
             onClick={toggleFullscreen}
-            className="p-2 hover:bg-slate-800 rounded-xl transition-colors text-slate-300"
+            className="p-1.5 hover:bg-slate-800 active:scale-95 rounded-lg transition-all text-slate-300"
             title={isFullscreen ? "Kichik ekran" : "To'liq ekran"}
           >
             {isFullscreen ? <Minimize2 className="h-4.5 w-4.5" /> : <Maximize2 className="h-4.5 w-4.5" />}
@@ -257,7 +263,7 @@ export default function PdfViewerPage() {
       {/* ── Secure iframe Container ── */}
       <div
         ref={containerRef}
-        className="flex-1 bg-[#0F172A] border border-slate-800 rounded-2xl overflow-hidden shadow-2xl relative flex flex-col"
+        className="flex-1 bg-[#0F172A] border border-slate-800/80 rounded-2xl overflow-hidden shadow-2xl relative flex flex-col"
       >
         {/* Anti-download Overlay for context-menu blocking & click interception */}
         <div 
@@ -268,7 +274,6 @@ export default function PdfViewerPage() {
         {pdfUrl ? (
           <iframe
             ref={iframeRef}
-            src={getIframeSrc()}
             className="w-full h-full border-0 select-none bg-slate-950"
             title="LMSHub PDF Built-in Viewer"
             allow="fullscreen"
@@ -282,7 +287,7 @@ export default function PdfViewerPage() {
         {/* Floating Instruction overlay */}
         <div className="absolute bottom-4 right-4 bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-lg border border-slate-700/80 text-[10px] text-slate-400 font-bold flex items-center gap-1.5 pointer-events-none select-none">
           <Info className="h-3.5 w-3.5 text-primary" />
-          Qidirish va matn topish uchun PDF ichida Ctrl+F tugmalarini bosing.
+          Matn topish uchun PDF ichida Ctrl+F tugmalarini bosing.
         </div>
       </div>
     </div>
