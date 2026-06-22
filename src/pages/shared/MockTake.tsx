@@ -585,6 +585,7 @@ export default function MockTake() {
   const nav = useNavigate();
   const [searchParams] = useSearchParams();
   const isReviewMode = searchParams.get("review") === "true";
+  const attemptId = searchParams.get("attemptId");
 
   const [exam, setExam] = useState<ExamData | null>(null);
   const isMilliy = exam?.type ? (exam.type.toLowerCase() === "national_cert" || exam.type.toLowerCase() === "milliy") : false;

@@ -209,6 +209,20 @@ public class LibraryService {
     public void deleteMaterial(UUID materialId) {
         LibraryMaterial material = materialRepository.findById(materialId)
                 .orElseThrow(() -> new ResourceNotFoundException("Material topilmadi: " + materialId));
+        
+        entityManager.createQuery("DELETE FROM LibraryFavorite f WHERE f.material.id = :materialId")
+                .setParameter("materialId", materialId)
+                .executeUpdate();
+        entityManager.createQuery("DELETE FROM LibraryProgress p WHERE p.material.id = :materialId")
+                .setParameter("materialId", materialId)
+                .executeUpdate();
+        entityManager.createQuery("DELETE FROM LibraryView v WHERE v.material.id = :materialId")
+                .setParameter("materialId", materialId)
+                .executeUpdate();
+        entityManager.createQuery("DELETE FROM LibraryDownload d WHERE d.material.id = :materialId")
+                .setParameter("materialId", materialId)
+                .executeUpdate();
+
         materialRepository.delete(material);
         updateCachedStatistics();
     }

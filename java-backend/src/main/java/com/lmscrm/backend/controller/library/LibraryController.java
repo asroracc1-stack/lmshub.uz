@@ -191,6 +191,12 @@ public class LibraryController {
 
         String filename = pdfUrl.substring(pdfUrl.lastIndexOf("/") + 1);
         try {
+            filename = java.net.URLDecoder.decode(filename, java.nio.charset.StandardCharsets.UTF_8.name());
+        } catch (Exception e) {
+            // fallback if decode fails
+        }
+
+        try {
             Path file = Paths.get("uploads/").resolve(filename);
             if (!Files.exists(file)) {
                 // Try checking inside java-backend directory
