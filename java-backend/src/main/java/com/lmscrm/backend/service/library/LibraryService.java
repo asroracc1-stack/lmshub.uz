@@ -34,6 +34,7 @@ public class LibraryService {
     private final LibraryFavoriteRepository favoriteRepository;
     private final LibraryDownloadRepository downloadRepository;
     private final LibraryStatisticRepository statisticRepository;
+    private final LibraryStatsService libraryStatsService;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -300,69 +301,13 @@ public class LibraryService {
         downloadRepository.save(download);
     }
 
-    // ─── STATISTICS ─────────────────────────────────────────────────────────────
     @Transactional(readOnly = true)
     public LibraryStatsDto getStatistics() {
-        // Return dynamic real-time stats
-        long totalMaterials = materialRepository.count();
-        long totalPdfs = materialRepository.countPdfMaterials("ACTIVE") + materialRepository.countPdfMaterials("DRAFT") + materialRepository.countPdfMaterials("HIDDEN");
-        
-        // Sum views_count across all materials
-        long totalViews = materialRepository.sumViewsCount();
-
-        // Popular kitob
-        List<LibraryMaterial> popularBooks = materialRepository.findPopularMaterialsByCategory("adabiy_kitoblar", PageRequest.of(0, 1));
-        String popularBook = popularBooks.isEmpty() ? "Yo'q" : popularBooks.get(0).getTitle();
-
-        // Popular darslik
-        List<LibraryMaterial> popularTextbooks = materialRepository.findPopularMaterialsByCategory("maktab_darsliklari", PageRequest.of(0, 1));
-        String popularTextbook = popularTextbooks.isEmpty() ? "Yo'q" : popularTextbooks.get(0).getTitle();
-
-        // Popular o'quv qo'llanma
-        List<LibraryMaterial> popularGuides = materialRepository.findPopularMaterialsByCategory("oquv_qollanmalar", PageRequest.of(0, 1));
-        String popularGuide = popularGuides.isEmpty() ? "Yo'q" : popularGuides.get(0).getTitle();
-
-        long freeCount = materialRepository.countByAccessTypeAndStatus("FREE", "ACTIVE");
-        long proCount = materialRepository.countByAccessTypeAndStatus("PRO", "ACTIVE");
-        long eliteCount = materialRepository.countByAccessTypeAndStatus("ELITE", "ACTIVE");
-
-        return LibraryStatsDto.builder()
-                .totalMaterials(totalMaterials)
-                .totalPdfs(totalPdfs)
-                .totalViews(totalViews)
-                .popularBook(popularBook)
-                .popularTextbook(popularTextbook)
-                .popularGuide(popularGuide)
-                .freeCount(freeCount)
-                .proCount(proCount)
-                .eliteCount(eliteCount)
-                .build();
+        return libraryStatsService.getStatistics();
     }
 
-    @Transactional
     public void updateCachedStatistics() {
-        try {
-            LibraryStatsDto stats = getStatistics();
-            saveOrUpdateStat("total_materials", String.valueOf(stats.getTotalMaterials()));
-            saveOrUpdateStat("total_pdfs", String.valueOf(stats.getTotalPdfs()));
-            saveOrUpdateStat("total_views", String.valueOf(stats.getTotalViews()));
-            saveOrUpdateStat("popular_book", stats.getPopularBook());
-            saveOrUpdateStat("popular_textbook", stats.getPopularTextbook());
-            saveOrUpdateStat("popular_guide", stats.getPopularGuide());
-            saveOrUpdateStat("free_count", String.valueOf(stats.getFreeCount()));
-            saveOrUpdateStat("pro_count", String.valueOf(stats.getProCount()));
-            saveOrUpdateStat("elite_count", String.valueOf(stats.getEliteCount()));
-        } catch (Exception e) {
-            log.error("Failed to update cached statistics: {}", e.getMessage());
-        }
-    }
-
-    private void saveOrUpdateStat(String key, String value) {
-        LibraryStatistic stat = statisticRepository.findByMetricName(key)
-                .orElse(LibraryStatistic.builder().metricName(key).build());
-        stat.setMetricValue(value);
-        stat.setUpdatedAt(LocalDateTime.now());
-        statisticRepository.save(stat);
+        libraryStatsService.updateCachedStatistics();
     }
 
     // ─── FILTERS LIST ───────────────────────────────────────────────────────────
