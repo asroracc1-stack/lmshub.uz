@@ -186,10 +186,18 @@ export const VoiceAssistantPanel: React.FC = () => {
 
               {/* Keyboard Shortcut Info */}
               <div className="p-3 rounded-xl border border-muted/20 bg-muted/5 flex items-center justify-between text-xs">
-                <span className="font-semibold text-muted-foreground">Tezkor tugma:</span>
-                <kbd className="px-2 py-0.5 rounded border border-muted/60 bg-background/80 font-mono font-bold text-[10px]">
-                  Ctrl + Shift + V
-                </kbd>
+                {typeof window !== "undefined" && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? (
+                  <span className="font-semibold text-muted-foreground w-full text-center">
+                    🎙️ Mikrofon tugmasini bosing
+                  </span>
+                ) : (
+                  <>
+                    <span className="font-semibold text-muted-foreground">Tezkor tugma:</span>
+                    <kbd className="px-2 py-0.5 rounded border border-muted/60 bg-background/80 font-mono font-bold text-[10px]">
+                      Ctrl + Shift + V
+                    </kbd>
+                  </>
+                )}
               </div>
 
               {/* History Section */}

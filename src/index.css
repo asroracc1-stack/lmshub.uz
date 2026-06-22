@@ -310,3 +310,52 @@
   }
 }
 
+/* Custom Global overrides for hardcoded purple (#8B5CF6) classes */
+[class*="[#8B5CF6]"] {
+  --primary-raw: var(--primary);
+}
+.text-\[\#8B5CF6\] {
+  color: var(--primary) !important;
+}
+.bg-\[\#8B5CF6\] {
+  background-color: var(--primary) !important;
+}
+.border-\[\#8B5CF6\] {
+  border-color: var(--primary) !important;
+}
+.accent-\[\#8B5CF6\] {
+  accent-color: var(--primary) !important;
+}
+.shadow-\[\#8B5CF6\]\/20 {
+  box-shadow: 0 10px 15px -3px var(--primary-glow), 0 4px 6px -4px var(--primary-glow) !important;
+}
+.hover\:border-\[\#8B5CF6\]\/60:hover {
+  border-color: var(--primary-border) !important;
+}
+.bg-\[\#8B5CF6\]\/5 {
+  background-color: var(--primary-glow) !important;
+}
+.bg-\[\#8B5CF6\]\/10 {
+  background-color: var(--primary-glow) !important;
+}
+.bg-\[\#8B5CF6\]\/15 {
+  background-color: var(--primary-glow) !important;
+}
+.hover\:bg-\[\#8B5CF6\]\/10:hover {
+  background-color: var(--primary-glow) !important;
+}
+.shadow-\[0_4px_15px_rgba\(139\,92\,246\,0\.35\)\] {
+  box-shadow: 0 4px 15px var(--primary-glow) !important;
+}
+.shadow-\[0_0_20px_rgba\(139\,92\,246\,0\.15\)\] {
+  box-shadow: 0 0 20px var(--primary-glow) !important;
+}
+.bg-gradient-to-r.from-\[\#8B5CF6\] {
+  background-image: linear-gradient(to right, var(--primary), var(--primary-dark)) !important;
+}
+
+/* Ensure smooth 400ms transition for all components during real-time updates */
+* {
+  transition: background-color 400ms ease, color 400ms ease, border-color 400ms ease, box-shadow 400ms ease, filter 400ms ease, transform 400ms ease !important;
+}
+

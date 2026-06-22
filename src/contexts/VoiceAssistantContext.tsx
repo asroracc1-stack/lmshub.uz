@@ -175,12 +175,18 @@ export const VoiceAssistantProvider: React.FC<{ children: React.ReactNode }> = (
   }, [role, handleCommandMatch, addHistoryItem]);
 
   const startListening = useCallback(() => {
+    setPanelOpen(true);
+
     if (!speechRecognitionService.isSupported()) {
-      toast.error("Speech Recognition is not supported by your browser.");
+      setStatus("error");
+      toast.info("Ovozli buyruqlar ushbu brauzerda qo'llab-quvvatlanmaydi. Buyruqni matn orqali yozishingiz mumkin.");
+      setTimeout(() => {
+        const inputEl = document.querySelector('input[placeholder*="bu yerga yozing"]') as HTMLInputElement;
+        if (inputEl) inputEl.focus();
+      }, 300);
       return;
     }
 
-    setPanelOpen(true);
     speechRecognitionService.start({
       lang: localStorage.getItem("i18nextLng") === "uz" ? "uz-UZ" : "en-US",
       onStart: () => {
@@ -211,6 +217,15 @@ export const VoiceAssistantProvider: React.FC<{ children: React.ReactNode }> = (
             ? "❌ Tarmoq xatoligi. Internet ulanishini tekshiring." 
             : "❌ Network error. Please check your internet connection."
           );
+        } else if (err === "service-not-allowed") {
+          toast.error(isUz
+            ? "❌ Ovozli buyruqlar ushbu brauzerda qo'llab-quvvatlanmaydi. Matn orqali yozing."
+            : "❌ Voice service restricted on this browser. Please type commands."
+          );
+          setTimeout(() => {
+            const inputEl = document.querySelector('input[placeholder*="bu yerga yozing"]') as HTMLInputElement;
+            if (inputEl) inputEl.focus();
+          }, 300);
         } else {
           toast.error(isUz 
             ? `❌ Ovozli yordamchi xatosi: ${err}` 
