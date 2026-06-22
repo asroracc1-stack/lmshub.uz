@@ -531,8 +531,19 @@ export default function LibraryCategoryDetail({ code: propCode }: LibraryCategor
                   {/* Top Section (80% Height): Book cover showcase area */}
                   <div className="h-[320px] w-full relative rounded-2xl overflow-hidden bg-slate-100 dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[rgba(255,255,255,0.08)] shadow-md transition-all duration-300 ease-out group-hover:scale-[1.05] group-hover:shadow-[0_12px_28px_rgba(139,92,246,0.25),_0_12px_28px_rgba(59,130,246,0.25)] group-hover:border-purple-500/40">
                     
+                    {m.coverImageUrl ? (
+                      <img
+                        src={getFileUrl(m.coverImageUrl)}
+                        alt={m.title}
+                        loading="lazy"
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                      />
+                    ) : (
+                      <BookCoverPlaceholder title={m.title} author={m.author} accent={coverAccent} />
+                    )}
+
                     {/* Admin Actions Overlay (Edit/Delete) */}
-                    {(role === "super_admin") && (
+                    {(role === "super_admin" || user?.role?.toLowerCase() === "super_admin") && (
                       <div className="absolute top-3 right-3 flex items-center gap-1.5 z-30" onClick={(e) => e.stopPropagation()}>
                         <button
                           onClick={(e) => {
@@ -552,17 +563,6 @@ export default function LibraryCategoryDetail({ code: propCode }: LibraryCategor
                           <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 text-rose-450 hover:text-white"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
                         </button>
                       </div>
-                    )}
-
-                    {m.coverImageUrl ? (
-                      <img
-                        src={getFileUrl(m.coverImageUrl)}
-                        alt={m.title}
-                        loading="lazy"
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-                      />
-                    ) : (
-                      <BookCoverPlaceholder title={m.title} author={m.author} accent={coverAccent} />
                     )}
 
                     {/* Access lock overlay */}
@@ -702,25 +702,6 @@ export default function LibraryCategoryDetail({ code: propCode }: LibraryCategor
           </motion.div>
         )}
       </AnimatePresence>
-
-    </div>
-  );
-} from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-2xl shadow-lg shadow-purple-600/15 hover:scale-[1.01] transition-all"
-                >
-                  {t.modalUpgradeBtn} 🪙
-                </button>
-                <button
-                  onClick={() => setShowSubscriptionModal(false)}
-                  className="w-full py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold rounded-2xl transition-colors"
-                >
-                  {t.modalCancelBtn}
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
     </div>
   );
 }
