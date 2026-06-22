@@ -83,3 +83,6 @@ databaseChangeLog:
       file: db/changelog/changes/v0041_question_bank.yaml
   - include:
       file: db/changelog/changes/v0042_library_module.yaml
+  - include:
+      file: db/changelog/changes/v0043_library_topic_length.yaml
+

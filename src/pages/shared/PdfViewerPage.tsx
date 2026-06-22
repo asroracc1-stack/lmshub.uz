@@ -9,7 +9,9 @@ import {
   BookOpen,
   Maximize2,
   Minimize2,
-  Loader2
+  Loader2,
+  Sun,
+  Moon
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -28,6 +30,22 @@ export default function PdfViewerPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  
+  const [pdfNightMode, setPdfNightMode] = useState<boolean>(() => {
+    const saved = localStorage.getItem("pdf.nightmode");
+    return saved !== null ? saved === "true" : theme === "dark";
+  });
+
+  useEffect(() => {
+    const saved = localStorage.getItem("pdf.nightmode");
+    if (saved === null) {
+      setPdfNightMode(theme === "dark");
+    }
+  }, [theme]);
+
+  useEffect(() => {
+    localStorage.setItem("pdf.nightmode", String(pdfNightMode));
+  }, [pdfNightMode]);
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -161,7 +179,7 @@ export default function PdfViewerPage() {
   return (
     <div 
       ref={containerRef}
-      className={`w-full flex flex-col h-[calc(100vh-80px)] md:h-[calc(100vh-40px)] space-y-4 p-2 transition-colors duration-300 ${
+      className={`w-full flex flex-col h-[calc(100vh-120px)] sm:h-[calc(100vh-140px)] md:h-[calc(100vh-150px)] space-y-4 p-2 transition-colors duration-300 ${
         isFullscreen 
           ? (theme === "dark" ? "bg-[#020617] p-4 h-screen" : "bg-slate-50 p-4 h-screen") 
           : "bg-transparent"
@@ -202,6 +220,21 @@ export default function PdfViewerPage() {
             ? "bg-slate-950/65 border-[rgba(255,255,255,0.08)] text-white"
             : "bg-slate-50 border-slate-200 text-slate-700"
         }`}>
+          {/* Night Mode Toggle */}
+          <button
+            onClick={() => setPdfNightMode(!pdfNightMode)}
+            className={`p-1.5 active:scale-95 rounded-lg transition-all ${
+              theme === "dark" ? "hover:bg-slate-800" : "hover:bg-slate-200"
+            }`}
+            title={pdfNightMode ? "Kunduzgi rejim (PDF)" : "Tungi rejim (PDF)"}
+          >
+            {pdfNightMode ? (
+              <Sun className="h-4.5 w-4.5 text-amber-500" />
+            ) : (
+              <Moon className="h-4.5 w-4.5 text-slate-500 hover:text-purple-600" />
+            )}
+          </button>
+
           {/* Favorite Bookmarking */}
           <button
             onClick={handleToggleFavorite}
@@ -237,7 +270,11 @@ export default function PdfViewerPage() {
         {pdfUrl ? (
           <iframe 
             src={pdfUrl} 
-            className="w-full h-full border-none"
+            className="w-full h-full border-none transition-all duration-300"
+            style={{
+              filter: pdfNightMode ? "invert(0.9) hue-rotate(180deg)" : "none",
+              backgroundColor: pdfNightMode ? "#0F172A" : "white"
+            }}
             title={title}
           />
         ) : (

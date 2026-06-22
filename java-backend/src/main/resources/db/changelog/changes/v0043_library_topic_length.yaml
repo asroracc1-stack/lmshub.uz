@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0043-1
+      author: antigravity
+      validCheckSum:
+        - ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: library_materials
+      changes:
+        - modifyDataType:
+            tableName: library_materials
+            columnName: topic
+            newDataType: text
