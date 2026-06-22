@@ -60,12 +60,19 @@ export default function CommandPalette() {
       }
     };
     const onOpenEvent = () => setOpen(true);
+    const onSearchQuery = (e: Event) => {
+      const query = (e as CustomEvent).detail;
+      setSearch(query || "");
+      setOpen(true);
+    };
 
     window.addEventListener("keydown", onKey);
     window.addEventListener("open-global-search", onOpenEvent);
+    window.addEventListener("global-search-query", onSearchQuery as EventListener);
     return () => {
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("open-global-search", onOpenEvent);
+      window.removeEventListener("global-search-query", onSearchQuery as EventListener);
     };
   }, []);
 

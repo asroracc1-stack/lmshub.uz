@@ -33,6 +33,9 @@ import TigerLoader from "@/components/TigerLoader";
 import CommandPalette from "@/components/CommandPalette";
 import confetti from "canvas-confetti";
 import { DotLottiePlayer } from "@dotlottie/react-player";
+import { VoiceAssistantProvider } from "@/contexts/VoiceAssistantContext";
+import VoiceAssistantButton from "@/components/voice/VoiceAssistantButton";
+import VoiceAssistantPanel from "@/components/voice/VoiceAssistantPanel";
 
 type Role = "admin" | "administrator" | "teacher" | "student" | "user" | "parent" | "super_admin" | "payment_manager";
 
@@ -424,12 +427,13 @@ export default function RoleLayout({
      MAIN LAYOUT
   ════════════════════════════════════════════════════ */
   return (
-    <div
-      className={cn(
-        "h-screen flex w-full overflow-hidden transition-colors duration-500 p-0 gap-0 md:p-3 md:gap-3",
-        theme === "dark" ? "bg-[#080410] text-slate-100" : "bg-[#F3F4F6] text-slate-900"
-      )}
-    >
+    <VoiceAssistantProvider>
+      <div
+        className={cn(
+          "h-screen flex w-full overflow-hidden transition-colors duration-500 p-0 gap-0 md:p-3 md:gap-3",
+          theme === "dark" ? "bg-[#080410] text-slate-100" : "bg-[#F3F4F6] text-slate-900"
+        )}
+      >
       <TigerLoader isLoading={authLoading} />
       <CommandPalette />
 
@@ -496,6 +500,7 @@ export default function RoleLayout({
             </div>
 
             <div className="flex items-center gap-1.5 sm:gap-2 md:gap-4 h-full py-2">
+              <VoiceAssistantButton />
               <div className="hidden sm:block">
                 <SmartClock />
               </div>
@@ -665,5 +670,7 @@ export default function RoleLayout({
         )}
       </AnimatePresence>
     </div>
+    <VoiceAssistantPanel />
+    </VoiceAssistantProvider>
   );
 }
