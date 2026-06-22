@@ -17,9 +17,14 @@
     --popover-foreground: 263 45% 11%;
 
     /* Brand — Premium Purple Aesthetic */
-    --primary: 266 31% 64%; /* #9F86C0 */
+    --primary: #8B5CF6;
+    --primary-light: #A78BFA;
+    --primary-dark: #7C3AED;
+    --primary-glow: rgba(139, 92, 246, 0.15);
+    --primary-border: rgba(139, 92, 246, 0.3);
+    --primary-muted: rgba(139, 92, 246, 0.5);
+    --primary-hsl: 258 90.3% 66.1%;
     --primary-foreground: 0 0% 100%; /* #FFFFFF */
-    --primary-glow: 275 100% 89%; /* #E7C6FF */
 
     --secondary: 271 100% 14%; /* #240046 */
     --secondary-foreground: 0 0% 100%;
@@ -70,7 +75,13 @@
     --popover: 260 45% 13%;
     --popover-foreground: 0 0% 100%;
 
-    --primary: 266 31% 64%; /* #9F86C0 */
+    --primary: #8B5CF6;
+    --primary-light: #A78BFA;
+    --primary-dark: #7C3AED;
+    --primary-glow: rgba(139, 92, 246, 0.15);
+    --primary-border: rgba(139, 92, 246, 0.3);
+    --primary-muted: rgba(139, 92, 246, 0.5);
+    --primary-hsl: 258 90.3% 66.1%;
     --primary-foreground: 0 0% 100%;
     
     --secondary: 275 100% 89%; /* #E7C6FF */
@@ -100,10 +111,12 @@
   }
   * { 
     @apply border-border; 
-    transition: background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1), 
-                color 0.5s cubic-bezier(0.4, 0, 0.2, 1), 
-                border-color 0.5s cubic-bezier(0.4, 0, 0.2, 1), 
-                box-shadow 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: background-color 400ms cubic-bezier(0.4, 0, 0.2, 1), 
+                color 400ms cubic-bezier(0.4, 0, 0.2, 1), 
+                border-color 400ms cubic-bezier(0.4, 0, 0.2, 1), 
+                box-shadow 400ms cubic-bezier(0.4, 0, 0.2, 1),
+                background-image 400ms cubic-bezier(0.4, 0, 0.2, 1),
+                filter 400ms cubic-bezier(0.4, 0, 0.2, 1);
   }
   html, body, #root {
     overflow-x: hidden;
@@ -142,7 +155,7 @@
   .glass-premium:hover, .glass:hover {
     @apply border-primary/50 shadow-2xl;
     background: hsla(var(--card) / 0.95);
-    box-shadow: 0 12px 40px 0 rgba(159, 134, 192, 0.15), inset 0 0 0 1px hsla(var(--primary) / 0.3);
+    box-shadow: 0 12px 40px 0 rgba(159, 134, 192, 0.15), inset 0 0 0 1px var(--primary-border);
   }
 
   /* Standard Button Animations */
@@ -153,7 +166,7 @@
 
 @layer utilities {
   .shadow-glow-purple {
-    box-shadow: 0 0 25px -5px hsla(var(--primary) / 0.4);
+    box-shadow: 0 0 25px -5px var(--primary-glow);
   }
   
   .text-gradient {
@@ -177,7 +190,7 @@
   border-radius: 10px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: hsla(var(--primary) / 0.4);
+  background: var(--primary-muted);
 }
 
 /* Explicit class for thin, visible scrollbars (e.g. sidebar) */

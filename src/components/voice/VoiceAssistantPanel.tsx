@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Mic, MicOff, Palette, Sun, Moon, HelpCircle, Terminal } from "lucide-react";
 import { useVoiceAssistant } from "@/hooks/useVoiceAssistant";
@@ -9,7 +9,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 
 const SUGGESTIONS = [
   { group: "Mavzular (Theme)", items: ["dark mode", "light mode", "qorong'i rejim", "yorug' rejim"] },
-  { group: "Ranglar (Accent Color)", items: ["red (qizil)", "blue (ko'k)", "green (yashil)", "violet (to'q binafsha)", "indigo"] },
+  { group: "Ranglar (Accent Color)", items: ["red (qizil)", "blue (ko'k)", "green (yashil)", "pink (pushti)", "indigo"] },
   { group: "Navigatsiya (Routes)", items: ["dashboard", "kutubxona (library)", "sat", "milliy sertifikat", "profil (profile)", "sozlamalar"] },
   { group: "Qidiruv (Search)", items: ["search physics", "qidiring matematika"] },
   { group: "Tizim Amallari (System)", items: ["logout (chiqish)", "refresh page", "go back", "hello lmshub"] },
@@ -27,7 +27,18 @@ export const VoiceAssistantPanel: React.FC = () => {
     startListening,
     stopListening,
     clearHistory,
+    executeVoiceCommand,
   } = useVoiceAssistant();
+
+  const [manualCommand, setManualCommand] = useState("");
+
+  const handleManualSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (manualCommand.trim()) {
+      executeVoiceCommand(manualCommand.trim());
+      setManualCommand("");
+    }
+  };
 
   const { theme } = useTheme();
 
@@ -127,6 +138,25 @@ export const VoiceAssistantPanel: React.FC = () => {
                     </p>
                   </div>
                 )}
+
+                {/* Manual Command Input Fallback */}
+                <div className="mt-4 pt-4 border-t border-muted/20 w-full">
+                  <form onSubmit={handleManualSubmit} className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Yoki buyruqni bu yerga yozing..."
+                      value={manualCommand}
+                      onChange={(e) => setManualCommand(e.target.value)}
+                      className="flex-1 px-3 py-2 text-xs rounded-xl border border-muted/30 bg-background/60 dark:bg-slate-900/60 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-slate-800 dark:text-slate-100"
+                    />
+                    <button
+                      type="submit"
+                      className="px-3.5 py-2 text-xs font-bold text-white bg-primary hover:bg-primary-dark rounded-xl transition-all shadow-sm cursor-pointer active:scale-95"
+                    >
+                      OK
+                    </button>
+                  </form>
+                </div>
               </div>
 
               {/* Status Settings Badge */}

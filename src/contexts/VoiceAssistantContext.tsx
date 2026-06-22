@@ -32,9 +32,9 @@ interface VoiceAssistantContextType {
 const VoiceAssistantContext = createContext<VoiceAssistantContextType | undefined>(undefined);
 
 const HISTORY_KEY = "lmshub.voice_history";
-const ACCENT_KEY = "lmshub.accent_color";
+const ACCENT_KEY = "accentColor";
 
-export const VoiceAssistantProvider: React.FC<{ children: React.Node }> = ({ children }) => {
+export const VoiceAssistantProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const navigate = useNavigate();
   const { role } = useAuth();
   const { setTheme } = useTheme();
@@ -44,7 +44,7 @@ export const VoiceAssistantProvider: React.FC<{ children: React.Node }> = ({ chi
   const [lastRecognizedText, setLastRecognizedText] = useState("");
   const [isPanelOpen, setPanelOpen] = useState(false);
   const [currentAccentColor, setCurrentAccentColor] = useState(() => {
-    return localStorage.getItem(ACCENT_KEY) || "purple";
+    return localStorage.getItem("accentColor") || "purple";
   });
 
   const [commandHistory, setCommandHistory] = useState<CommandHistoryItem[]>(() => {
@@ -60,9 +60,15 @@ export const VoiceAssistantProvider: React.FC<{ children: React.Node }> = ({ chi
   const applyAccentColor = useCallback((colorName: string) => {
     const colorObj = ACCENT_COLORS[colorName];
     if (colorObj) {
-      document.documentElement.style.setProperty("--primary", colorObj.hsl);
+      document.documentElement.style.setProperty("--primary", colorObj.hex);
+      document.documentElement.style.setProperty("--primary-light", colorObj.light);
+      document.documentElement.style.setProperty("--primary-dark", colorObj.dark);
+      document.documentElement.style.setProperty("--primary-glow", colorObj.glow);
+      document.documentElement.style.setProperty("--primary-border", colorObj.border);
+      document.documentElement.style.setProperty("--primary-muted", colorObj.muted);
+      document.documentElement.style.setProperty("--primary-hsl", colorObj.hsl);
       document.documentElement.style.setProperty("--ring", colorObj.hsl);
-      localStorage.setItem(ACCENT_KEY, colorName);
+      localStorage.setItem("accentColor", colorName);
       setCurrentAccentColor(colorName);
     }
   }, []);
@@ -188,6 +194,29 @@ export const VoiceAssistantProvider: React.FC<{ children: React.Node }> = ({ chi
         console.error("Speech Recognition Error:", err);
         setIsListening(false);
         setStatus("error");
+        
+        const isUz = localStorage.getItem("i18nextLng") === "uz" || true; // Fallback to uz
+        if (err === "not-allowed") {
+          toast.error(isUz 
+            ? "❌ Mikrofon ruxsati rad etildi. Sozlamalardan brauzerga mikrofon ruxsatini bering." 
+            : "❌ Microphone access denied. Please allow microphone permission in settings."
+          );
+        } else if (err === "no-speech") {
+          toast.error(isUz 
+            ? "❌ Ovoz aniqlanmadi. Iltimos, qayta urinib ko'ring." 
+            : "❌ No speech detected. Please try again."
+          );
+        } else if (err === "network") {
+          toast.error(isUz 
+            ? "❌ Tarmoq xatoligi. Internet ulanishini tekshiring." 
+            : "❌ Network error. Please check your internet connection."
+          );
+        } else {
+          toast.error(isUz 
+            ? `❌ Ovozli yordamchi xatosi: ${err}` 
+            : `❌ Voice assistant error: ${err}`
+          );
+        }
       },
       onEnd: () => {
         setIsListening(false);

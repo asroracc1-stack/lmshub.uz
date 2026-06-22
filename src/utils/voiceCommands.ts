@@ -15,28 +15,118 @@ export interface CommandMatch {
   lang: "uz-UZ" | "en-US";
 }
 
-export const ACCENT_COLORS: Record<string, { hex: string; hsl: string; labelUz: string; labelEn: string }> = {
-  red: { hex: "#EF4444", hsl: "0 84.2% 60.2%", labelUz: "Qizil", labelEn: "Red" },
-  yellow: { hex: "#EAB308", hsl: "45.4% 93.3% 47.1%", labelUz: "Sariq", labelEn: "Yellow" },
-  green: { hex: "#22C55E", hsl: "142.1% 70.6% 45.3%", labelUz: "Yashil", labelEn: "Green" },
-  blue: { hex: "#3B82F6", hsl: "217.2% 91.2% 59.8%", labelUz: "Ko'k", labelEn: "Blue" },
-  purple: { hex: "#8B5CF6", hsl: "258.1% 89.7% 66.3%", labelUz: "Binafsha", labelEn: "Purple" },
-  orange: { hex: "#F97316", hsl: "24.6% 95% 53.1%", labelUz: "Olovrang", labelEn: "Orange" },
-  pink: { hex: "#EC4899", hsl: "330.4% 81.2% 60.4%", labelUz: "Pushti", labelEn: "Pink" },
-  cyan: { hex: "#06B6D4", hsl: "188.7% 86.1% 40.2%", labelUz: "Havorang", labelEn: "Cyan" },
-  violet: { hex: "#7C3AED", hsl: "262.1% 83.3% 57.8%", labelUz: "To'q binafsha", labelEn: "Violet" },
-  indigo: { hex: "#4F46E5", hsl: "243.4% 75.4% 58.6%", labelUz: "Indigo", labelEn: "Indigo" },
+export interface AccentColorPreset {
+  hex: string;
+  hsl: string;
+  light: string;
+  dark: string;
+  glow: string;
+  border: string;
+  muted: string;
+  labelUz: string;
+  labelEn: string;
+}
+
+export const ACCENT_COLORS: Record<string, AccentColorPreset> = {
+  green: {
+    hex: "#10B981",
+    hsl: "162 72.7% 41.2%",
+    light: "#34D399",
+    dark: "#059669",
+    glow: "rgba(16, 185, 129, 0.15)",
+    border: "rgba(16, 185, 129, 0.3)",
+    muted: "rgba(16, 185, 129, 0.5)",
+    labelUz: "Yashil",
+    labelEn: "Green"
+  },
+  red: {
+    hex: "#EF4444",
+    hsl: "0 84.3% 60.2%",
+    light: "#F87171",
+    dark: "#DC2626",
+    glow: "rgba(239, 68, 68, 0.15)",
+    border: "rgba(239, 68, 68, 0.3)",
+    muted: "rgba(239, 68, 68, 0.5)",
+    labelUz: "Qizil",
+    labelEn: "Red"
+  },
+  blue: {
+    hex: "#3B82F6",
+    hsl: "217 91.2% 59.8%",
+    light: "#60A5FA",
+    dark: "#2563EB",
+    glow: "rgba(59, 130, 246, 0.15)",
+    border: "rgba(59, 130, 246, 0.3)",
+    muted: "rgba(59, 130, 246, 0.5)",
+    labelUz: "Ko'k",
+    labelEn: "Blue"
+  },
+  yellow: {
+    hex: "#F59E0B",
+    hsl: "38 93.7% 47.8%",
+    light: "#FBBF24",
+    dark: "#D97706",
+    glow: "rgba(245, 158, 11, 0.15)",
+    border: "rgba(245, 158, 11, 0.3)",
+    muted: "rgba(245, 158, 11, 0.5)",
+    labelUz: "Sariq",
+    labelEn: "Yellow"
+  },
+  pink: {
+    hex: "#EC4899",
+    hsl: "330 81.2% 60.4%",
+    light: "#F472B6",
+    dark: "#DB2777",
+    glow: "rgba(236, 72, 153, 0.15)",
+    border: "rgba(236, 72, 153, 0.3)",
+    muted: "rgba(236, 72, 153, 0.5)",
+    labelUz: "Pushti",
+    labelEn: "Pink"
+  },
+  purple: {
+    hex: "#8B5CF6",
+    hsl: "258 90.3% 66.1%",
+    light: "#A78BFA",
+    dark: "#7C3AED",
+    glow: "rgba(139, 92, 246, 0.15)",
+    border: "rgba(139, 92, 246, 0.3)",
+    muted: "rgba(139, 92, 246, 0.5)",
+    labelUz: "Binafsha",
+    labelEn: "Purple"
+  },
+  indigo: {
+    hex: "#6366F1",
+    hsl: "239 84.1% 66.7%",
+    light: "#818CF8",
+    dark: "#4F46E5",
+    glow: "rgba(99, 102, 241, 0.15)",
+    border: "rgba(99, 102, 241, 0.3)",
+    muted: "rgba(99, 102, 241, 0.5)",
+    labelUz: "Indigo",
+    labelEn: "Indigo"
+  },
+  orange: {
+    hex: "#F97316",
+    hsl: "25 95% 53.1%",
+    light: "#FB923C",
+    dark: "#EA580C",
+    glow: "rgba(249, 115, 22, 0.15)",
+    border: "rgba(249, 115, 22, 0.3)",
+    muted: "rgba(249, 115, 22, 0.5)",
+    labelUz: "Olovrang",
+    labelEn: "Orange"
+  }
 };
 
 export function parseVoiceCommand(text: string, currentRole = "student"): CommandMatch | null {
   const cleanText = text.trim().toLowerCase();
   
   // Detect language based on simple word matches, defaulting to Uzbek or English
-  const isUzbek = /rejim|tungi|yorug|kunduzgi|yarat|chiq|sertifikat|yordam|salom|kutubxona|sozlamalar/i.test(cleanText);
+  const isUzbek = /rejim|tungi|yorug|kunduzgi|yarat|chiq|sertifikat|yordam|salom|kutubxona|sozlamalar|rang|qil/i.test(cleanText);
   const lang = isUzbek ? "uz-UZ" : "en-US";
 
   // 1. Theme Commands
-  const darkThemeWords = ["dark", "dark mode", "qorong'i rejim", "tungi rejim", "qorongqi rejim", "qorongu rejim"];
+  const darkThemeWords = ["dark", "dark mode", "qorong'i rejim", "tungi rejim", "qorongqi rejim", "qorongu rejim", "enable dark mode", "switch dark mode"];
   if (darkThemeWords.some((word) => cleanText === word || cleanText.includes(word))) {
     return {
       type: "theme",
@@ -47,7 +137,7 @@ export function parseVoiceCommand(text: string, currentRole = "student"): Comman
     };
   }
 
-  const lightThemeWords = ["light", "light mode", "yorug' rejim", "kunduzgi rejim", "yorug rejim", "kunduz rejim"];
+  const lightThemeWords = ["light", "light mode", "yorug' rejim", "kunduzgi rejim", "yorug rejim", "kunduz rejim", "enable light mode", "switch light mode"];
   if (lightThemeWords.some((word) => cleanText === word || cleanText.includes(word))) {
     return {
       type: "theme",
@@ -60,19 +150,16 @@ export function parseVoiceCommand(text: string, currentRole = "student"): Comman
 
   // 2. Accent Color Commands
   for (const color of Object.keys(ACCENT_COLORS)) {
-    // English name matches, or Uzbek equivalent/contains
     const colorObj = ACCENT_COLORS[color];
-    const isColorMatch = cleanText === color || 
-      (color === "red" && cleanText.includes("qizil")) ||
-      (color === "yellow" && cleanText.includes("sariq")) ||
-      (color === "green" && cleanText.includes("yashil")) ||
-      (color === "blue" && cleanText.includes("ko'k") || cleanText.includes("kok")) ||
-      (color === "purple" && cleanText.includes("binafsha")) ||
-      (color === "orange" && cleanText.includes("olovrang")) ||
-      (color === "pink" && cleanText.includes("pushti")) ||
-      (color === "cyan" && cleanText.includes("havorang")) ||
-      (color === "violet" && cleanText.includes("to'q binafsha") || cleanText.includes("toq binafsha")) ||
-      (color === "indigo" && cleanText.includes("indigo"));
+    const isColorMatch = cleanText === color ||
+      (color === "green" && (cleanText.includes("yashil") || cleanText.includes("green"))) ||
+      (color === "red" && (cleanText.includes("qizil") || cleanText.includes("red"))) ||
+      (color === "blue" && (cleanText.includes("ko'k") || cleanText.includes("kok") || cleanText.includes("blue"))) ||
+      (color === "yellow" && (cleanText.includes("sariq") || cleanText.includes("yellow"))) ||
+      (color === "pink" && (cleanText.includes("pushti") || cleanText.includes("pink"))) ||
+      (color === "purple" && (cleanText.includes("binafsha") || cleanText.includes("purple"))) ||
+      (color === "indigo" && (cleanText.includes("indigo"))) ||
+      (color === "orange" && (cleanText.includes("olovrang") || cleanText.includes("orange")));
 
     if (isColorMatch) {
       return {
