@@ -100,6 +100,7 @@ interface UserRow {
   card_holder?: string | null;
   role: AppRole;
   created_at: string;
+  coins?: number;
 }
 
 interface Org {
@@ -857,7 +858,18 @@ export default function UsersManager({
                           </Avatar>
                           <div>
                             <p className="font-medium">{u.full_name || "—"}</p>
-                            <p className="text-xs text-muted-foreground font-mono">@{u.username || "—"}</p>
+                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                              <span className="font-mono">@{u.username || "—"}</span>
+                              {(mappedRole === "student" || mappedRole === "user") && (
+                                <>
+                                  <span>•</span>
+                                  <span className="inline-flex items-center gap-0.5 text-amber-600 dark:text-amber-400 font-bold bg-amber-500/10 dark:bg-amber-500/20 px-1.5 py-0.5 rounded-md text-[10px]">
+                                    <Sparkles className="h-2.5 w-2.5 fill-amber-400 text-amber-400" />
+                                    {u.coins || 0}
+                                  </span>
+                                </>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </TableCell>
@@ -905,7 +917,7 @@ export default function UsersManager({
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="inline-flex gap-1">
-                          {u.role === "user" && !u.organization_id && (
+                          {(mappedRole === "user" || mappedRole === "student") && (
                             <Button
                               size="icon"
                               variant="ghost"
@@ -1032,7 +1044,9 @@ export default function UsersManager({
               </Avatar>
               <div>
                 <p className="font-bold text-amber-900">{grantCoinsTarget?.full_name}</p>
-                <p className="text-xs text-amber-700/70">{t("dynamic.usersmanager.regular_user_global")}</p>
+                <p className="text-xs text-amber-700/70">
+                  {grantCoinsTarget?.role ? (roleLabel[(grantCoinsTarget.role as string).toLowerCase() as AppRole] || grantCoinsTarget.role) : ""}
+                </p>
               </div>
             </div>
 

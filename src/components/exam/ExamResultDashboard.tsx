@@ -888,7 +888,7 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
 
             {/* SAT Specific Score Section */}
             {isSat && (
-              <Card className="border border-white/[0.06] p-6 rounded-2xl bg-[#0F172A] shadow-xl">
+              <div className="border border-white/[0.06] p-6 rounded-2xl bg-[#0F172A] shadow-xl transition-all duration-300 hover:bg-[#131C31] hover:shadow-2xl hover:border-white/[0.1] hover:scale-[1.005]">
                 <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Digital SAT Section Scaled Scores</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div className="p-5 rounded-xl border border-white/[0.04] bg-white/[0.01]">
@@ -918,7 +918,7 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                     </div>
                   </div>
                 </div>
-              </Card>
+              </div>
             )}
 
             {/* National Certificate Specific Score Card */}
