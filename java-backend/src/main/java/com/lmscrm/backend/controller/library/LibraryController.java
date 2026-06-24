@@ -206,8 +206,10 @@ public class LibraryController {
             // fallback if decode fails
         }
 
+        final String finalFilename = filename;
+
         // Try retrieving from hybrid storage table db_stored_files first
-        Optional<DbStoredFile> opt = dbStoredFileRepository.findByFilename(filename);
+        Optional<DbStoredFile> opt = dbStoredFileRepository.findByFilename(finalFilename);
         if (opt.isPresent()) {
             DbStoredFile storedFile = opt.get();
             String etag = "\"" + storedFile.getFilename() + "-" + storedFile.getFileSize() + "\"";
@@ -215,12 +217,12 @@ public class LibraryController {
                 Resource resource = new ByteArrayResource(storedFile.getData()) {
                     @Override
                     public String getFilename() {
-                        return filename;
+                        return finalFilename;
                     }
                 };
                 return ResponseEntity.ok()
                         .contentType(MediaType.APPLICATION_PDF)
-                        .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filename + "\"")
+                        .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + finalFilename + "\"")
                         .header(HttpHeaders.CACHE_CONTROL, "max-age=31536000, must-revalidate")
                         .eTag(etag)
                         .body(resource);
@@ -230,7 +232,7 @@ public class LibraryController {
                     Resource resource = new FileSystemResource(path);
                     return ResponseEntity.ok()
                             .contentType(MediaType.APPLICATION_PDF)
-                            .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filename + "\"")
+                            .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + finalFilename + "\"")
                             .header(HttpHeaders.CACHE_CONTROL, "max-age=31536000, must-revalidate")
                             .eTag(etag)
                             .body(resource);
@@ -240,18 +242,18 @@ public class LibraryController {
 
         // Legacy file fallback
         try {
-            Path file = Paths.get("uploads/").resolve(filename);
+            Path file = Paths.get("uploads/").resolve(finalFilename);
             if (!Files.exists(file)) {
-                file = Paths.get("java-backend/uploads/").resolve(filename);
+                file = Paths.get("java-backend/uploads/").resolve(finalFilename);
                 if (!Files.exists(file)) {
                     return ResponseEntity.notFound().build();
                 }
             }
-            String etag = "\"" + filename + "-" + Files.size(file) + "\"";
+            String etag = "\"" + finalFilename + "-" + Files.size(file) + "\"";
             Resource resource = new FileSystemResource(file);
             return ResponseEntity.ok()
                     .contentType(MediaType.APPLICATION_PDF)
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filename + "\"")
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + finalFilename + "\"")
                     .header(HttpHeaders.CACHE_CONTROL, "max-age=31536000, must-revalidate")
                     .eTag(etag)
                     .body(resource);
