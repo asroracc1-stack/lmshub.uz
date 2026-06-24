@@ -1,3 +1,5 @@
+import { getExamCalculator } from "./scoring";
+
 // Official IELTS band score conversion tables (Academic Reading & Listening)
 // Source: British Council / IDP IELTS published conversion tables.
 
@@ -36,27 +38,20 @@ export const LISTENING_BAND: Record<number, number> = {
 };
 
 export function rawToBand(kind: string, raw: number, total: number): number {
-  // Scale to 40-point IELTS scale
-  const scaled = Math.round((raw / Math.max(total, 1)) * 40);
-  const table = kind === "listening" ? LISTENING_BAND : READING_BAND;
-  if (table[scaled] !== undefined) return table[scaled];
-  if (scaled <= 3) return 2;
-  if (scaled >= 40) return 9;
-  // Find closest lower
-  for (let i = scaled; i >= 4; i--) if (table[i] !== undefined) return table[i];
-  return 0;
+  const calc = getExamCalculator(kind);
+  return calc.calculate(raw, total, undefined, { type: kind }) as number;
 }
 
-/** SAT scoring: 200–800 per section */
+/** SAT scoring: 200–800 per section (or combined 400-1600 if using SATCalculator) */
 export function satScore(correct: number, total: number): number {
-  if (total === 0) return 200;
-  return Math.round(200 + (correct / total) * 600);
+  const calc = getExamCalculator("sat");
+  return calc.calculate(correct, total) as number;
 }
 
 /** Milliy Sertifikat: 0–100 */
 export function milliyScore(correct: number, total: number): number {
-  if (total === 0) return 0;
-  return Math.round((correct / total) * 100);
+  const calc = getExamCalculator("national_cert");
+  return calc.calculate(correct, total) as number;
 }
 
 /** Returns color class based on accuracy percentage */
