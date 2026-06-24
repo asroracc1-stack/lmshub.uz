@@ -1968,6 +1968,10 @@
     "completedTests": "Completed Tests",
     "testsCount": "{{count}} tests",
     "activeDays": "{{count}} days active",
-    "you": "You"
+    "you": "You",
+    "practiceTime": "Practice Time",
+    "hoursAndMins": "{{hours}}h {{mins}}m",
+    "hoursCount": "{{count}}h",
+    "minsCount": "{{count}}m"
   }
 }

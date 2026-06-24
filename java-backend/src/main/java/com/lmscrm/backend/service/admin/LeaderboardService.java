@@ -58,9 +58,10 @@ public class LeaderboardService {
 
         List<LeaderboardDto> mappedUsers = mapResults(resultsPage.getContent(), page * size);
         
-        // Calculate dynamic streaks in batch for these mapped users
+        // Calculate dynamic streaks and practice minutes in batch for these mapped users
         if (!mappedUsers.isEmpty()) {
             calculateStreaksInBatch(mappedUsers);
+            populatePracticeMinutesInBatch(mappedUsers);
         }
 
         // Calculate current user's stats
@@ -88,6 +89,7 @@ public class LeaderboardService {
         List<LeaderboardDto> mappedUsers = mapResults(resultsPage.getContent(), 0);
         if (!mappedUsers.isEmpty()) {
             calculateStreaksInBatch(mappedUsers);
+            populatePracticeMinutesInBatch(mappedUsers);
         }
         return mappedUsers;
     }
@@ -243,5 +245,23 @@ public class LeaderboardService {
                 .usersAbove(usersAbove)
                 .usersBelow(usersBelow)
                 .build();
+    }
+
+    private void populatePracticeMinutesInBatch(List<LeaderboardDto> dtos) {
+        if (dtos == null || dtos.isEmpty()) return;
+        List<UUID> userIds = dtos.stream().map(LeaderboardDto::getId).collect(Collectors.toList());
+        List<Object[]> results = practiceSessionRepository.sumMinutesByUserIds(userIds);
+        
+        Map<UUID, Double> userPracticeMinutes = new HashMap<>();
+        for (Object[] row : results) {
+            if (row == null || row.length < 2) continue;
+            UUID userId = (UUID) row[0];
+            Double minutes = (Double) row[1];
+            userPracticeMinutes.put(userId, minutes != null ? minutes : 0.0);
+        }
+        
+        for (LeaderboardDto dto : dtos) {
+            dto.setPracticeMinutes(userPracticeMinutes.getOrDefault(dto.getId(), 0.0));
+        }
     }
 }

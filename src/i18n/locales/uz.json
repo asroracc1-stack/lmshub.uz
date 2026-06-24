@@ -1970,6 +1970,10 @@
     "completedTests": "Tugallangan testlar",
     "testsCount": "{{count}} ta",
     "activeDays": "{{count}} kunlik",
-    "you": "Siz"
+    "you": "Siz",
+    "practiceTime": "Mashq qilgan vaqti",
+    "hoursAndMins": "{{hours}} soat {{mins}} daqiqa",
+    "hoursCount": "{{count}} soat",
+    "minsCount": "{{count}} daqiqa"
   }
 }

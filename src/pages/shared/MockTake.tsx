@@ -737,7 +737,8 @@ export default function MockTake() {
       const totalSec = (resExam.data.duration_minutes ?? resExam.data.durationMinutes ?? 60) * 60;
       setTimeLeft(Math.max(0, totalSec - elapsedSec));
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || "Failed to start exam");
+      const errMsg = err?.response?.data?.message || err?.response?.data || err?.message || "Failed to start exam";
+      toast.error(typeof errMsg === "string" ? errMsg : "Failed to start exam");
     } finally {
       setLoading(false);
     }
@@ -748,7 +749,7 @@ export default function MockTake() {
     setLoading(true);
     setLoadError(null);
 
-    // If not review mode and not already started/resumed, check for active attempt
+    // If not review mode and not already started/resumed, check for active or completed attempt
     if (!isReviewMode && !attemptId) {
       api.get<any[]>('/student/exams/attempts')
         .then((resAttempts) => {
@@ -756,6 +757,11 @@ export default function MockTake() {
           if (active) {
             setSearchParams({ attemptId: active.id, seed: active.attemptSeed });
             setStarted(true);
+          } else {
+            const completed = resAttempts.data.find(a => a.examId === testId && a.finishedAt);
+            if (completed) {
+              setSearchParams({ attemptId: completed.id, review: "true" });
+            }
           }
         })
         .catch(console.error);

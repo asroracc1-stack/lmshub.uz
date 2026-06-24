@@ -1961,6 +1961,10 @@
     "completedTests": "Завершенные тесты",
     "testsCount": "{{count}} тестов",
     "activeDays": "{{count}} дн.",
-    "you": "Вы"
+    "you": "Вы",
+    "practiceTime": "Время тренировок",
+    "hoursAndMins": "{{hours}} ч. {{mins}} мин.",
+    "hoursCount": "{{count}} ч.",
+    "minsCount": "{{count}} мин."
   }
 }

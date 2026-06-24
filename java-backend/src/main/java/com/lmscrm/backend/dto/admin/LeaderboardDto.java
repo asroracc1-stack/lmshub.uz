@@ -22,5 +22,6 @@ public class LeaderboardDto {
     private Integer testsCompleted;
     private Integer streak;
     private String joinDate;
+    private Double practiceMinutes;
 
 }

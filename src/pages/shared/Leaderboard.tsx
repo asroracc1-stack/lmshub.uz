@@ -21,6 +21,7 @@ import {
   ChevronRight,
   TrendingUp,
   Calendar,
+  Clock,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -40,6 +41,7 @@ interface Row {
   testsCompleted: number;
   streak: number;
   joinDate: string;
+  practiceMinutes: number;
 }
 
 interface CurrentUserStats {
@@ -324,6 +326,23 @@ function RankRow({ row, index, isCurrentUser, onClick }: { row: Row; index: numb
 // ── Profile Popup Modal Component ──────────────────────────────────
 function UserProfilePopup({ user, rank, onClose }: { user: Row; rank: number; onClose: () => void }) {
   const { t } = useTranslation();
+
+  const formatPracticeTime = (minutes: number) => {
+    const totalMinutes = Math.round(minutes || 0);
+    const hrs = Math.floor(totalMinutes / 60);
+    const mins = totalMinutes % 60;
+    if (hrs > 0) {
+      if (mins > 0) {
+        return t("leaderboardPage.hoursAndMins", { hours: hrs, mins });
+      }
+      return t("leaderboardPage.hoursCount", { count: hrs });
+    }
+    if (totalMinutes > 0) {
+      return t("leaderboardPage.minsCount", { count: totalMinutes });
+    }
+    return t("leaderboardPage.hoursCount", { count: 0 });
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
       <motion.div
@@ -421,6 +440,14 @@ function UserProfilePopup({ user, rank, onClose }: { user: Row; rank: number; on
             <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase">{t("leaderboardPage.completedTests")}</span>
           </div>
           <span className="text-xs font-bold text-slate-700 dark:text-white">{t("leaderboardPage.testsCount", { count: user.testsCompleted })}</span>
+        </div>
+
+        <div className="mt-1 flex items-center justify-between bg-slate-50 dark:bg-white/[0.02] px-4 py-3 rounded-2xl border border-slate-100 dark:border-white/5">
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4 text-slate-400 dark:text-slate-500" />
+            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase">{t("leaderboardPage.practiceTime")}</span>
+          </div>
+          <span className="text-xs font-bold text-slate-700 dark:text-white">{formatPracticeTime(user.practiceMinutes)}</span>
         </div>
       </motion.div>
     </div>
