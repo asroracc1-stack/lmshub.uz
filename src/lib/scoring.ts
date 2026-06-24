@@ -4,9 +4,23 @@ export interface ScoreCalculator {
 
 export class SATCalculator implements ScoreCalculator {
   calculate(correct: number, total: number, details?: any[], exam?: any): number {
-    if (total === 0) return 200;
+    const { totalScore } = this.calculateBreakdown(correct, total, details, exam);
+    return totalScore;
+  }
 
-    // Split questions into Reading & Writing (RW) and Math
+  calculateBreakdown(correct: number, total: number, details?: any[], exam?: any) {
+    if (total === 0) {
+      return {
+        rwCorrect: 0,
+        rwTotal: 0,
+        rwScore: 200,
+        mathCorrect: 0,
+        mathTotal: 0,
+        mathScore: 200,
+        totalScore: 400
+      };
+    }
+
     let rwCorrect = 0;
     let rwTotal = 0;
     let mathCorrect = 0;
@@ -15,16 +29,18 @@ export class SATCalculator implements ScoreCalculator {
     const items = details || [];
     if (items.length > 0) {
       items.forEach((item: any) => {
-        const prompt = (item.prompt || "").toLowerCase();
         const category = (item.qtype || item.category || "").toLowerCase();
+        const prompt = (item.prompt || "").toLowerCase();
 
-        // Detect Math questions based on markers
+        // Check if question belongs to Math section
         const isMath = category.includes("math") || 
                        category.includes("calcul") || 
                        category.includes("algebra") || 
                        category.includes("geometry") || 
                        category.includes("trig") ||
-                       prompt.includes("\\(") || // LaTeX notation
+                       category.includes("problem solving") ||
+                       category.includes("data analysis") ||
+                       prompt.includes("\\(") || 
                        prompt.includes("$$");
 
         if (isMath) {
@@ -37,40 +53,62 @@ export class SATCalculator implements ScoreCalculator {
       });
     }
 
-    // Realistic Digital SAT Section scaled score calculation (200 - 800)
-    const getSATSectionScore = (c: number, t: number): number => {
-      if (t === 0) return 400; // default mid-score for missing section
-      const ratio = c / t;
-      if (ratio >= 1.0) return 800;
-      if (ratio <= 0.0) return 200;
-
-      // Realistic SAT curve: S-curve shape to simulate standard College Board scoring
-      if (ratio >= 0.90) {
-        return 700 + Math.round((ratio - 0.90) * 1000); // e.g. 90% is 700, 95% is 750, 100% is 800
-      } else if (ratio >= 0.50) {
-        return 450 + Math.round(((ratio - 0.50) / 0.40) * 25) * 10; // e.g. 50% is 450, 70% is 575
-      } else {
-        return 200 + Math.round((ratio / 0.50) * 25) * 10; // e.g. 20% is 300, 40% is 400
-      }
+    // Realistic Digital SAT RW Table mapping (out of 54 questions)
+    const getRWScore = (correctCount: number, totalCount: number): number => {
+      if (totalCount === 0) return 200;
+      // Scale correct count to standard 54 questions
+      const scaledCorrect = Math.round((correctCount / totalCount) * 54);
+      
+      const table: Record<number, number> = {
+        54: 800, 53: 790, 52: 780, 51: 770, 50: 760, 49: 740, 48: 730, 47: 720, 46: 710, 45: 700,
+        44: 690, 43: 680, 42: 670, 41: 660, 40: 650, 39: 640, 38: 630, 37: 620, 36: 610, 35: 600,
+        34: 590, 33: 580, 32: 570, 31: 560, 30: 550, 29: 540, 28: 530, 27: 520, 26: 510, 25: 500,
+        24: 490, 23: 480, 22: 470, 21: 460, 20: 450, 19: 440, 18: 430, 17: 420, 16: 410, 15: 400,
+        14: 390, 13: 380, 12: 370, 11: 360, 10: 350, 9: 340, 8: 320, 7: 300, 6: 280, 5: 260,
+        4: 240, 3: 220, 2: 210, 1: 205, 0: 200
+      };
+      
+      return table[scaledCorrect] ?? 200;
     };
 
-    // If both sections are present, sum them (Range: 400 - 1600)
-    if (rwTotal > 0 && mathTotal > 0) {
-      return getSATSectionScore(rwCorrect, rwTotal) + getSATSectionScore(mathCorrect, mathTotal);
+    // Realistic Digital SAT Math Table mapping (out of 44 questions)
+    const getMathScore = (correctCount: number, totalCount: number): number => {
+      if (totalCount === 0) return 200;
+      // Scale correct count to standard 44 questions
+      const scaledCorrect = Math.round((correctCount / totalCount) * 44);
+
+      const table: Record<number, number> = {
+        44: 800, 43: 790, 42: 780, 41: 770, 40: 750, 39: 740, 38: 730, 37: 720, 36: 700, 35: 690,
+        34: 680, 33: 670, 32: 660, 31: 650, 30: 640, 29: 630, 28: 620, 27: 610, 26: 600, 25: 590,
+        24: 580, 23: 570, 22: 560, 21: 550, 20: 540, 19: 530, 18: 520, 17: 510, 16: 500, 15: 490,
+        14: 480, 13: 470, 12: 460, 11: 450, 10: 430, 9: 410, 8: 390, 7: 370, 6: 350, 5: 320,
+        4: 290, 3: 265, 2: 240, 1: 220, 0: 200
+      };
+
+      return table[scaledCorrect] ?? 200;
+    };
+
+    if (rwTotal === 0 && mathTotal === 0) {
+      const ratio = correct / total;
+      rwTotal = Math.round(total * 54 / 98);
+      mathTotal = total - rwTotal;
+      rwCorrect = Math.round(ratio * rwTotal);
+      mathCorrect = correct - rwCorrect;
     }
 
-    // If it's a short test (<= 30 questions) and only one section is found,
-    // let's return a single section score scaled from 200 to 800.
-    if (total <= 30) {
-      return getSATSectionScore(correct, total);
-    }
+    const rwScore = getRWScore(rwCorrect, rwTotal);
+    const mathScore = getMathScore(mathCorrect, mathTotal);
+    const totalScore = rwScore + mathScore;
 
-    // Fallback combined score when questions aren't cleanly categorized
-    const rwPart = Math.round(correct / 2);
-    const mathPart = correct - rwPart;
-    const rwTotalPart = Math.round(total / 2);
-    const mathTotalPart = total - rwTotalPart;
-    return getSATSectionScore(rwPart, rwTotalPart) + getSATSectionScore(mathPart, mathTotalPart);
+    return {
+      rwCorrect,
+      rwTotal,
+      rwScore,
+      mathCorrect,
+      mathTotal,
+      mathScore,
+      totalScore
+    };
   }
 }
 
