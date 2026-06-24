@@ -496,6 +496,38 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference * (1 - scoreRatio);
 
+  const renderPackDetails = () => {
+    return (
+      <Card className="border border-slate-200 dark:border-slate-800 p-6 rounded-2xl bg-gradient-to-br from-indigo-50/50 via-white to-purple-50/30 dark:from-slate-900/50 dark:via-slate-950 dark:to-slate-900/30 shadow-sm relative overflow-hidden transition-all duration-300 hover:shadow-md">
+        <div className="absolute top-0 right-0 w-24 h-24 bg-violet-500/10 rounded-full blur-2xl pointer-events-none"></div>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-violet-100 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400 flex items-center justify-center font-bold">
+              👑
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-850 dark:text-slate-200 text-sm">Sizning Imtihon Paketingiz</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">LMSHub Premium full access litsenziyasi</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 sm:flex sm:items-center gap-4 text-xs font-semibold">
+            <div className="border-r border-slate-200 dark:border-slate-800 pr-4">
+              <span className="text-slate-400 block uppercase text-[9px] tracking-wider mb-0.5">Xarid qilingan</span>
+              <span className="text-slate-800 dark:text-slate-200 font-bold">24 Iyun, 2026</span>
+            </div>
+            <div className="sm:border-r sm:border-slate-200 sm:dark:border-slate-800 sm:pr-4">
+              <span className="text-slate-400 block uppercase text-[9px] tracking-wider mb-0.5">Tugash muddati</span>
+              <span className="text-slate-850 dark:text-slate-200 font-bold text-amber-600 dark:text-amber-400">24 Iyul, 2026</span>
+            </div>
+            <div className="col-span-2 sm:col-span-1 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200/50 dark:border-emerald-800/20 px-3 py-1.5 rounded-lg text-emerald-700 dark:text-emerald-400 text-center font-bold">
+              Qolgan: 30 Kun (Faol)
+            </div>
+          </div>
+        </div>
+      </Card>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-[#070B14] text-slate-100 font-sans pb-16 selection:bg-[#8B5CF6]/30 selection:text-[#C084FC]">
       
