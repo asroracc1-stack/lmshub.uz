@@ -534,12 +534,11 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
         {/* Filters panel for Answer sheet */}
         {showFilters && (
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-[#0F172A] border border-slate-200 dark:border-white/[0.06] p-4 rounded-xl select-none">
-            <div className="flex items-center gap-2 overflow-x-auto py-1">
-              <Button
+            <div className="flex items-center gap-2 overflow-x-auto py-1              <Button
                 size="sm"
                 variant={filterState === 'all' ? 'default' : 'outline'}
                 onClick={() => setFilterState('all')}
-                className={cn("rounded-lg text-xs font-bold h-7 px-3", filterState === 'all' ? "bg-purple-650 hover:bg-purple-700 text-white" : "border-slate-200 dark:border-white/[0.06] text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white")}
+                className={cn("rounded-lg text-xs font-bold h-7 px-3", filterState === 'all' ? "bg-purple-600 hover:bg-purple-700 text-white" : "border-slate-200 dark:border-white/[0.06] text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white")}
               >
                 All ({questionStates.length})
               </Button>
@@ -571,10 +570,10 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                 size="sm"
                 variant={filterState === 'skipped' ? 'default' : 'outline'}
                 onClick={() => setFilterState('skipped')}
-                className={cn("rounded-lg text-xs font-bold h-7 px-3", filterState === 'skipped' ? "bg-slate-700 hover:bg-slate-650 text-white" : "border-slate-200 dark:border-white/[0.06] text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white")}
+                className={cn("rounded-lg text-xs font-bold h-7 px-3", filterState === 'skipped' ? "bg-slate-700 hover:bg-slate-600 text-white" : "border-slate-200 dark:border-white/[0.06] text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white")}
               >
                 Skipped ({questionStates.filter(r => r.state === 'skipped').length})
-              </Button>
+              </Button>on>
             </div>
             
             <div className="flex items-center gap-2">
@@ -607,14 +606,12 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                 const isActive = activeQuestionIndex === originalIdx;
                 let statusStyle = "";
                 let statusBadge = "";
-                let statusText = "Wrong";
-
-                if (res.state === 'correct') {
+                let statusText = "Wrong"                if (res.state === 'correct') {
                   statusStyle = "border-emerald-500/20 dark:border-emerald-500/10 bg-emerald-50 dark:bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 hover:border-emerald-500/40 hover:bg-emerald-100 dark:hover:bg-emerald-500/10";
                   statusBadge = "bg-emerald-500 text-white";
                   statusText = "Correct";
                 } else if (res.state === 'skipped') {
-                  statusStyle = "border-slate-300 dark:border-slate-700/30 bg-slate-100 dark:bg-slate-800/10 text-slate-655 dark:text-slate-400 hover:border-slate-400 dark:hover:border-slate-700/50 hover:bg-slate-200 dark:hover:bg-slate-800/20";
+                  statusStyle = "border-slate-300 dark:border-slate-700/30 bg-slate-100 dark:bg-slate-800/10 text-slate-600 dark:text-slate-400 hover:border-slate-400 dark:hover:border-slate-700/50 hover:bg-slate-200 dark:hover:bg-slate-800/20";
                   statusBadge = "bg-slate-600 text-white";
                   statusText = "Skipped";
                 } else if (res.state === 'review') {
@@ -625,7 +622,7 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                   statusStyle = "border-rose-500/20 dark:border-rose-500/10 bg-rose-50 dark:bg-rose-500/5 text-rose-600 dark:text-rose-400 hover:border-rose-500/40 hover:bg-rose-100 dark:hover:bg-rose-500/10";
                   statusBadge = "bg-rose-500 text-white";
                   statusText = "Wrong";
-                }
+                }  }
 
                 return (
                   <button
@@ -694,7 +691,7 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
       <header className="bg-white dark:bg-[#0F172A] border-b border-slate-200 dark:border-white/[0.06] py-4 px-6 sticky top-0 z-30 shadow-md backdrop-blur-md bg-white/90 dark:bg-[#0F172A]/90 select-none text-slate-900 dark:text-slate-100">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <Button size="icon" variant="ghost" className="rounded-full hover:bg-slate-100 dark:hover:bg-white/10 shrink-0 text-slate-650 dark:text-slate-300" onClick={() => nav(-1)}>
+            <Button size="icon" variant="ghost" className="rounded-full hover:bg-slate-100 dark:hover:bg-white/10 shrink-0 text-slate-600 dark:text-slate-300" onClick={() => nav(-1)}>
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
@@ -834,7 +831,7 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                       <div className="absolute top-2 right-2 text-emerald-500/10 group-hover/card:text-emerald-500/20 transition-all"><CheckCircle2 className="w-8 h-8" /></div>
                       <span className="text-slate-400 block text-[9px] uppercase font-black tracking-wider mb-1">Correct Answers</span>
                       <span className="text-3xl font-black text-emerald-500 dark:text-emerald-400">{correctAnswers}</span>
-                      <span className="text-slate-550 text-xs font-bold block mt-1">({Math.round(correctAnswers / totalQuestions * 100)}% accuracy)</span>
+                      <span className="text-slate-500 text-xs font-bold block mt-1">({Math.round(correctAnswers / totalQuestions * 100)}% accuracy)</span>
                     </div>
 
                     {/* Wrong Card */}
@@ -842,7 +839,7 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                       <div className="absolute top-2 right-2 text-rose-500/10 group-hover/card:text-rose-500/20 transition-all"><XCircle className="w-8 h-8" /></div>
                       <span className="text-slate-400 block text-[9px] uppercase font-black tracking-wider mb-1">Wrong Answers</span>
                       <span className="text-3xl font-black text-rose-500">{incorrectAnswers}</span>
-                      <span className="text-slate-555 text-xs font-bold block mt-1">({Math.round(incorrectAnswers / totalQuestions * 100)}% count)</span>
+                      <span className="text-slate-500 text-xs font-bold block mt-1">({Math.round(incorrectAnswers / totalQuestions * 100)}% count)</span>
                     </div>
 
                     {/* Omitted Card */}
@@ -850,7 +847,7 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                       <div className="absolute top-2 right-2 text-amber-500/10 group-hover/card:text-amber-500/20 transition-all"><AlertCircle className="w-8 h-8" /></div>
                       <span className="text-slate-400 block text-[9px] uppercase font-black tracking-wider mb-1">Omitted Questions</span>
                       <span className="text-3xl font-black text-amber-500">{omittedAnswers}</span>
-                      <span className="text-slate-555 text-xs font-bold block mt-1">({Math.round(omittedAnswers / totalQuestions * 100)}% count)</span>
+                      <span className="text-slate-500 text-xs font-bold block mt-1">({Math.round(omittedAnswers / totalQuestions * 100)}% count)</span>
                     </div>
 
                     {/* Time Card */}
@@ -858,7 +855,7 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                       <div className="absolute top-2 right-2 text-[#8B5CF6]/10 group-hover/card:text-[#8B5CF6]/20 transition-all"><Clock className="w-8 h-8" /></div>
                       <span className="text-slate-400 block text-[9px] uppercase font-black tracking-wider mb-1">Sarflangan Vaqt</span>
                       <span className="text-3xl font-black text-slate-900 dark:text-white">{timeStr}</span>
-                      <span className="text-slate-555 text-xs font-bold block mt-1">Jami vaqt</span>
+                      <span className="text-slate-500 text-xs font-bold block mt-1">Jami vaqt</span>
                     </div>
                   </div>
                 </div>
@@ -961,19 +958,19 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
               <div className="lg:col-span-2 space-y-6">
 
                 {/* GPT + Notion AI styled Insight Panel */}
-                <Card className="border border-white/[0.06] p-6 rounded-2xl bg-[#0F172A] shadow-xl relative overflow-hidden">
+                <Card className="border border-slate-200 dark:border-white/[0.06] p-6 rounded-2xl bg-white dark:bg-[#0F172A] shadow-xl relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-48 h-48 bg-[#A855F7]/5 rounded-full blur-3xl pointer-events-none"></div>
                   
                   {/* AI Header */}
-                  <div className="flex items-center gap-3 mb-6 border-b border-white/[0.06] pb-4">
+                  <div className="flex items-center gap-3 mb-6 border-b border-slate-200 dark:border-white/[0.06] pb-4">
                     <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-[#8B5CF6] to-[#A855F7] text-white flex items-center justify-center font-bold shadow-lg shadow-[#8B5CF6]/20">
                       <Sparkles className="w-5 h-5 animate-pulse" />
                     </div>
                     <div>
-                      <h2 className="text-base font-extrabold text-white flex items-center gap-2">
+                      <h2 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
                         AI Performance Diagnostics Insights <Badge className="bg-[#8B5CF6]/20 text-[#A855F7] border border-[#8B5CF6]/30 text-[9px] uppercase font-black">Active</Badge>
                       </h2>
-                      <p className="text-xs text-slate-400">Synthesized cognitive analytics and pacing diagnoses</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">Synthesized cognitive analytics and pacing diagnoses</p>
                     </div>
                   </div>
 
@@ -981,12 +978,12 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Strengths */}
                     <div className="space-y-3">
-                      <h3 className="text-xs font-black text-emerald-400 uppercase tracking-wider flex items-center gap-2">
+                      <h3 className="text-xs font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-2">
                         <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Cognitive Strengths
                       </h3>
                       <ul className="space-y-2">
                         {analysis.strengths.map((str, i) => (
-                          <li key={i} className="text-xs text-slate-300 flex items-start gap-2 bg-emerald-500/5 p-3 rounded-xl border border-emerald-500/10 font-bold">
+                          <li key={i} className="text-xs text-slate-750 dark:text-slate-300 flex items-start gap-2 bg-emerald-50 dark:bg-emerald-500/5 p-3 rounded-xl border border-emerald-100 dark:border-emerald-500/10 font-bold">
                             <span className="text-emerald-500">✔</span>
                             <span>{str}</span>
                           </li>
@@ -996,12 +993,12 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
 
                     {/* Weaknesses */}
                     <div className="space-y-3">
-                      <h3 className="text-xs font-black text-rose-455 uppercase tracking-wider flex items-center gap-2">
+                      <h3 className="text-xs font-black text-rose-650 dark:text-rose-400 uppercase tracking-wider flex items-center gap-2">
                         <XCircle className="w-4 h-4 text-rose-500" /> Focus Improvement Areas
                       </h3>
                       <ul className="space-y-2">
                         {analysis.weaknesses.map((weak, i) => (
-                          <li key={i} className="text-xs text-slate-300 flex items-start gap-2 bg-rose-500/5 p-3 rounded-xl border border-rose-500/10 font-bold">
+                          <li key={i} className="text-xs text-slate-750 dark:text-slate-300 flex items-start gap-2 bg-rose-55 dark:bg-rose-500/5 p-3 rounded-xl border border-rose-100 dark:border-rose-500/10 font-bold">
                             <span className="text-rose-500">✖</span>
                             <span>{weak}</span>
                           </li>
@@ -1011,20 +1008,20 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                   </div>
 
                   {/* Vocabulary & Grammar analyses (Notion style blocks) */}
-                  <div className="mt-6 pt-6 border-t border-white/[0.06] grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="bg-white/[0.01] p-4.5 rounded-xl border border-white/[0.04] space-y-2">
-                      <h4 className="text-xs font-black text-slate-300 uppercase tracking-wide flex items-center gap-1.5">
+                  <div className="mt-6 pt-6 border-t border-slate-200 dark:border-white/[0.06] grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="bg-slate-50 dark:bg-white/[0.01] p-4.5 rounded-xl border border-slate-200 dark:border-white/[0.04] space-y-2">
+                      <h4 className="text-xs font-black text-slate-800 dark:text-slate-300 uppercase tracking-wide flex items-center gap-1.5">
                         <span className="w-2 h-2 rounded-full bg-[#8B5CF6]"></span> Vocabulary & Lexicon Analysis
                       </h4>
-                      <p className="text-xs text-slate-400 font-bold leading-relaxed">
+                      <p className="text-xs text-slate-600 dark:text-slate-400 font-bold leading-relaxed">
                         {analysis.vocabAnalysis}
                       </p>
                     </div>
-                    <div className="bg-white/[0.01] p-4.5 rounded-xl border border-white/[0.04] space-y-2">
-                      <h4 className="text-xs font-black text-slate-300 uppercase tracking-wide flex items-center gap-1.5">
+                    <div className="bg-slate-50 dark:bg-white/[0.01] p-4.5 rounded-xl border border-slate-200 dark:border-white/[0.04] space-y-2">
+                      <h4 className="text-xs font-black text-slate-800 dark:text-slate-300 uppercase tracking-wide flex items-center gap-1.5">
                         <span className="w-2 h-2 rounded-full bg-[#A855F7]"></span> Structural Grammar & Syntax Analysis
                       </h4>
-                      <p className="text-xs text-slate-400 font-bold leading-relaxed">
+                      <p className="text-xs text-slate-600 dark:text-slate-400 font-bold leading-relaxed">
                         {analysis.grammarAnalysis}
                       </p>
                     </div>
@@ -1032,22 +1029,22 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                 </Card>
 
                 {/* Recommendation Engine and Action Plan */}
-                <Card className="border border-white/[0.06] p-6 rounded-2xl bg-[#0F172A] shadow-xl space-y-4">
+                <Card className="border border-slate-200 dark:border-white/[0.06] p-6 rounded-2xl bg-white dark:bg-[#0F172A] shadow-xl space-y-4">
                   <h3 className="text-xs font-black text-[#A855F7] uppercase tracking-wider flex items-center gap-2">
                     <Lightbulb className="w-4 h-4 text-amber-500 animate-pulse" /> Topic Recommendations & Syllabus Focus
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-bold text-xs">
-                    <div className="bg-[#8B5CF6]/5 p-4 border border-[#8B5CF6]/10 rounded-xl space-y-2">
-                      <h4 className="text-xs font-black text-[#A855F7] uppercase">Recommended Focus Topics</h4>
-                      <ul className="space-y-2 text-slate-300 list-disc list-inside">
+                    <div className="bg-[#8B5CF6]/10 dark:bg-[#8B5CF6]/5 p-4 border border-[#8B5CF6]/20 dark:border-[#8B5CF6]/10 rounded-xl space-y-2">
+                      <h4 className="text-xs font-black text-[#8B5CF6] dark:text-[#A855F7] uppercase">Recommended Focus Topics</h4>
+                      <ul className="space-y-2 text-slate-700 dark:text-slate-300 list-disc list-inside">
                         {analysis.recommendations.map((rec, i) => (
                           <li key={i}>{rec}</li>
                         ))}
                       </ul>
                     </div>
-                    <div className="bg-[#A855F7]/5 p-4 border border-[#A855F7]/10 rounded-xl space-y-2">
-                      <h4 className="text-xs font-black text-amber-500 uppercase">Suggested Step-by-Step Study Plan</h4>
-                      <ul className="space-y-2 text-slate-300 list-disc list-inside">
+                    <div className="bg-[#A855F7]/10 dark:bg-[#A855F7]/5 p-4 border border-[#A855F7]/20 dark:border-[#A855F7]/10 rounded-xl space-y-2">
+                      <h4 className="text-xs font-black text-amber-600 dark:text-amber-500 uppercase">Suggested Step-by-Step Study Plan</h4>
+                      <ul className="space-y-2 text-slate-700 dark:text-slate-300 list-disc list-inside">
                         {analysis.studyPlan.map((step, i) => (
                           <li key={i}>{step}</li>
                         ))}
@@ -1062,23 +1059,23 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
               <div className="space-y-6">
 
                 {/* Score Projection Panel */}
-                <Card className="border border-[#8B5CF6]/20 p-6 rounded-2xl bg-gradient-to-br from-[#8B5CF6]/10 via-[#0F172A] to-transparent shadow-2xl relative overflow-hidden">
+                <Card className="border border-[#8B5CF6]/30 dark:border-[#8B5CF6]/20 p-6 rounded-2xl bg-gradient-to-br from-violet-50 via-white to-purple-50/50 dark:from-[#8B5CF6]/10 dark:via-[#0F172A] dark:to-transparent shadow-2xl relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-24 h-24 bg-[#A855F7]/10 rounded-full blur-2xl pointer-events-none"></div>
-                  <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2 select-none">
+                  <h3 className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2 select-none">
                     <Zap className="w-4 h-4 text-[#A855F7] animate-bounce" /> Projected Target Score
                   </h3>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-black tracking-tight text-white">{analysis.estFutureScore}</span>
+                    <span className="text-4xl font-black tracking-tight text-slate-900 dark:text-white">{analysis.estFutureScore}</span>
                   </div>
-                  <p className="text-[10px] text-slate-400 font-bold mt-2 leading-relaxed">
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold mt-2 leading-relaxed">
                     Estimated next attempt result based on full coverage of recommended topic study plans.
                   </p>
                 </Card>
 
                 {/* National Certificate Subject Metrics */}
                 {isMilliy && (
-                  <Card className="border border-white/[0.06] p-6 rounded-2xl bg-[#0F172A] shadow-xl space-y-4">
-                    <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                  <Card className="border border-slate-200 dark:border-white/[0.06] p-6 rounded-2xl bg-white dark:bg-[#0F172A] shadow-xl space-y-4">
+                    <h3 className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
                       <BarChart3 className="w-4 h-4 text-[#8B5CF6]" /> Subject Proficiency Analysis
                     </h3>
                     <div className="space-y-4 text-xs font-bold">
@@ -1089,19 +1086,19 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
 
                         return (
                           <div key={i} className="space-y-1.5">
-                            <div className="flex justify-between items-center text-slate-200">
+                            <div className="flex justify-between items-center text-slate-800 dark:text-slate-200">
                               <span>{sub.subjectName}</span>
                               <span>{sub.correct} / {sub.total} ({sub.accuracy}%)</span>
                             </div>
-                            <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                            <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                               <div
                                 className={cn("h-full rounded-full transition-all duration-500", barColor)}
                                 style={{ width: `${sub.accuracy}%` }}
                               />
                             </div>
-                            <div className="flex justify-between items-center text-[10px] text-slate-500 font-semibold">
+                            <div className="flex justify-between items-center text-[10px] text-slate-500 dark:text-slate-500 font-semibold">
                               <span>Omitted: {sub.omitted} | Incorrect: {sub.incorrect}</span>
-                              <span className={cn(sub.isStrength ? "text-emerald-400" : "text-rose-455")}>
+                              <span className={cn(sub.isStrength ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-500")}>
                                 {sub.isStrength ? "Strength" : "Improvement Needed"}
                               </span>
                             </div>
@@ -1113,16 +1110,16 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                 )}
 
                 {/* Time pacing Diagnostics */}
-                <Card className="border border-white/[0.06] p-6 rounded-2xl bg-[#0F172A] shadow-xl space-y-4">
-                  <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                <Card className="border border-slate-200 dark:border-white/[0.06] p-6 rounded-2xl bg-white dark:bg-[#0F172A] shadow-xl space-y-4">
+                  <h3 className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
                     <Timer className="w-4 h-4 text-[#8B5CF6]" /> Pacing Diagnostics
                   </h3>
                   <div className="space-y-3 font-bold">
-                    <div className="p-3 bg-white/[0.01] border border-white/[0.04] rounded-xl">
+                    <div className="p-3 bg-slate-50 dark:bg-white/[0.01] border border-slate-200 dark:border-white/[0.04] rounded-xl">
                       <span className="text-[9px] uppercase tracking-wider block text-slate-500 mb-0.5">Average Pace Rate</span>
-                      <span className="text-xl font-black text-white">{avgTimePerQuestion} sec / question</span>
+                      <span className="text-xl font-black text-slate-900 dark:text-white">{avgTimePerQuestion} sec / question</span>
                     </div>
-                    <p className="text-xs text-slate-400 leading-relaxed font-semibold">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-semibold">
                       {omittedAnswers > totalQuestions * 0.2
                         ? "Critical pacing blockages. Plan to skip time-consuming items and save buffers."
                         : "Healthy pacing. Continue practice to lock in consistent timing parameters."}
@@ -1131,17 +1128,17 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                 </Card>
 
                 {/* Difficulty distributions */}
-                <Card className="border border-white/[0.06] p-6 rounded-2xl bg-[#0F172A] shadow-xl space-y-4">
-                  <h3 className="text-xs font-black text-slate-455 uppercase tracking-widest flex items-center gap-2">
+                <Card className="border border-slate-200 dark:border-white/[0.06] p-6 rounded-2xl bg-white dark:bg-[#0F172A] shadow-xl space-y-4">
+                  <h3 className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
                     <BarChart3 className="w-4 h-4 text-[#8B5CF6]" /> Difficulty Analytics
                   </h3>
                   <div className="space-y-3 text-xs font-bold">
                     <div>
-                      <div className="flex justify-between mb-1 text-slate-200">
+                      <div className="flex justify-between mb-1 text-slate-800 dark:text-slate-200">
                         <span>Easy Questions</span>
                         <span>{analysis.byDifficulty.easy.correct} / {analysis.byDifficulty.easy.total}</span>
                       </div>
-                      <div className="w-full h-2 bg-slate-805 rounded-full overflow-hidden">
+                      <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                         <div
                           className="h-full bg-emerald-500 rounded-full"
                           style={{ width: `${(analysis.byDifficulty.easy.correct / analysis.byDifficulty.easy.total) * 100}%` }}
@@ -1149,11 +1146,11 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                       </div>
                     </div>
                     <div>
-                      <div className="flex justify-between mb-1 text-slate-200">
+                      <div className="flex justify-between mb-1 text-slate-800 dark:text-slate-200">
                         <span>Medium Questions</span>
                         <span>{analysis.byDifficulty.medium.correct} / {analysis.byDifficulty.medium.total}</span>
                       </div>
-                      <div className="w-full h-2 bg-slate-805 rounded-full overflow-hidden">
+                      <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                         <div
                           className="h-full bg-amber-500 rounded-full"
                           style={{ width: `${(analysis.byDifficulty.medium.correct / analysis.byDifficulty.medium.total) * 100}%` }}
@@ -1161,11 +1158,11 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                       </div>
                     </div>
                     <div>
-                      <div className="flex justify-between mb-1 text-slate-200">
+                      <div className="flex justify-between mb-1 text-slate-800 dark:text-slate-200">
                         <span>Hard Questions</span>
                         <span>{analysis.byDifficulty.hard.correct} / {analysis.byDifficulty.hard.total}</span>
                       </div>
-                      <div className="w-full h-2 bg-slate-805 rounded-full overflow-hidden">
+                      <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                         <div
                           className="h-full bg-rose-500 rounded-full"
                           style={{ width: `${(analysis.byDifficulty.hard.correct / analysis.byDifficulty.hard.total) * 100}%` }}
@@ -1180,15 +1177,15 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
             </div>
 
             {/* Question Performance Analysis Table */}
-            <Card className="border border-white/[0.06] p-6 rounded-2xl bg-[#0F172A] shadow-xl overflow-hidden">
-              <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+            <Card className="border border-slate-200 dark:border-white/[0.06] p-6 rounded-2xl bg-white dark:bg-[#0F172A] shadow-xl overflow-hidden">
+              <h3 className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
                 <FileText className="w-4 h-4 text-[#8B5CF6]" /> Question-Level Performance Analysis Table
               </h3>
 
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse text-left text-xs font-semibold">
                   <thead>
-                    <tr className="border-b border-white/[0.06] text-slate-500 font-black uppercase tracking-wider">
+                    <tr className="border-b border-slate-200 dark:border-white/[0.06] text-slate-500 font-black uppercase tracking-wider">
                       <th className="py-3 px-4"># Question</th>
                       <th className="py-3 px-4">Selected Answer</th>
                       <th className="py-3 px-4">Correct Answer</th>
@@ -1197,31 +1194,31 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                       <th className="py-3 px-4 text-right">Action</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/[0.03] font-bold">
+                  <tbody className="divide-y divide-slate-100 dark:divide-white/[0.03] font-bold">
                     {questionStates.map((res: any, idx: number) => {
                       return (
-                        <tr key={idx} className="hover:bg-white/[0.01] transition-colors">
-                          <td className="py-3.5 px-4 font-extrabold text-slate-200">
+                        <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-white/[0.01] transition-colors">
+                          <td className="py-3.5 px-4 font-extrabold text-slate-850 dark:text-slate-200">
                             Question {idx + 1}
                           </td>
                           <td className={cn(
                             "py-3.5 px-4 font-black",
-                            res.state === 'correct' ? "text-emerald-400" : res.state === 'skipped' ? "text-slate-500" : "text-rose-455"
+                            res.state === 'correct' ? "text-emerald-600 dark:text-emerald-400" : res.state === 'skipped' ? "text-slate-500" : "text-rose-600 dark:text-rose-400"
                           )}>
                             {res.state === 'skipped' ? "— Omitted —" : <MathRenderer text={res.userAns} />}
                           </td>
-                          <td className="py-3.5 px-4 text-slate-300 font-black">
+                          <td className="py-3.5 px-4 text-slate-700 dark:text-slate-300 font-black">
                             <MathRenderer text={res.correctAns} />
                           </td>
                           <td className="py-3.5 px-4 text-center">
                             {res.state === 'correct' ? (
-                              <Badge className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold text-[10px] rounded-lg">Correct ✅</Badge>
+                              <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-bold text-[10px] rounded-lg">Correct ✅</Badge>
                             ) : res.state === 'skipped' ? (
-                              <Badge className="bg-slate-805/10 text-slate-400 border border-slate-700/30 font-bold text-[10px] rounded-lg">Omitted ⚪</Badge>
+                              <Badge className="bg-slate-100 dark:bg-slate-800/10 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700/30 font-bold text-[10px] rounded-lg">Omitted ⚪</Badge>
                             ) : res.state === 'review' ? (
-                              <Badge className="bg-amber-500/10 text-amber-400 border border-amber-500/20 font-bold text-[10px] rounded-lg">Review ⚠️</Badge>
+                              <Badge className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 font-bold text-[10px] rounded-lg">Review ⚠️</Badge>
                             ) : (
-                              <Badge className="bg-rose-500/10 text-rose-400 border border-rose-500/20 font-bold text-[10px] rounded-lg">Incorrect ❌</Badge>
+                              <Badge className="bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 font-bold text-[10px] rounded-lg">Incorrect ❌</Badge>
                             )}
                           </td>
                           <td className="py-3.5 px-4 font-mono font-medium text-slate-500">
@@ -1345,7 +1342,7 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                         </div>
                       </div>
                       <div>
-                        <span className="text-slate-550 dark:text-slate-500 block uppercase tracking-wider mb-1">Correct Answer</span>
+                        <span className="text-slate-500 dark:text-slate-500 block uppercase tracking-wider mb-1">Correct Answer</span>
                         <div className="text-sm font-extrabold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                           <MathRenderer text={activeResult?.correctAns} /> ✅
                         </div>
