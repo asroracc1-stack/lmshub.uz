@@ -533,13 +533,13 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
       <div className="space-y-4">
         {/* Filters panel for Answer sheet */}
         {showFilters && (
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#0F172A] border border-white/[0.06] p-4 rounded-xl select-none">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-[#0F172A] border border-slate-200 dark:border-white/[0.06] p-4 rounded-xl select-none">
             <div className="flex items-center gap-2 overflow-x-auto py-1">
               <Button
                 size="sm"
                 variant={filterState === 'all' ? 'default' : 'outline'}
                 onClick={() => setFilterState('all')}
-                className={cn("rounded-lg text-xs font-bold h-7 px-3", filterState === 'all' ? "bg-purple-650 hover:bg-purple-700 text-white" : "border-white/[0.06] text-slate-400 hover:text-white")}
+                className={cn("rounded-lg text-xs font-bold h-7 px-3", filterState === 'all' ? "bg-purple-650 hover:bg-purple-700 text-white" : "border-slate-200 dark:border-white/[0.06] text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white")}
               >
                 All ({questionStates.length})
               </Button>
@@ -547,7 +547,7 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                 size="sm"
                 variant={filterState === 'correct' ? 'default' : 'outline'}
                 onClick={() => setFilterState('correct')}
-                className={cn("rounded-lg text-xs font-bold h-7 px-3", filterState === 'correct' ? "bg-emerald-600 hover:bg-emerald-700 text-white" : "border-white/[0.06] text-slate-400 hover:text-white")}
+                className={cn("rounded-lg text-xs font-bold h-7 px-3", filterState === 'correct' ? "bg-emerald-600 hover:bg-emerald-700 text-white" : "border-slate-200 dark:border-white/[0.06] text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white")}
               >
                 Correct ({questionStates.filter(r => r.state === 'correct').length})
               </Button>
@@ -555,7 +555,7 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                 size="sm"
                 variant={filterState === 'wrong' ? 'default' : 'outline'}
                 onClick={() => setFilterState('wrong')}
-                className={cn("rounded-lg text-xs font-bold h-7 px-3", filterState === 'wrong' ? "bg-rose-600 hover:bg-rose-700 text-white" : "border-white/[0.06] text-slate-400 hover:text-white")}
+                className={cn("rounded-lg text-xs font-bold h-7 px-3", filterState === 'wrong' ? "bg-rose-600 hover:bg-rose-700 text-white" : "border-slate-200 dark:border-white/[0.06] text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white")}
               >
                 Wrong ({questionStates.filter(r => r.state === 'wrong').length})
               </Button>
@@ -563,7 +563,7 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                 size="sm"
                 variant={filterState === 'review' ? 'default' : 'outline'}
                 onClick={() => setFilterState('review')}
-                className={cn("rounded-lg text-xs font-bold h-7 px-3", filterState === 'review' ? "bg-amber-600 hover:bg-amber-700 text-white" : "border-white/[0.06] text-slate-400 hover:text-white")}
+                className={cn("rounded-lg text-xs font-bold h-7 px-3", filterState === 'review' ? "bg-amber-600 hover:bg-amber-700 text-white" : "border-slate-200 dark:border-white/[0.06] text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white")}
               >
                 Review ({questionStates.filter(r => r.state === 'review').length})
               </Button>
@@ -571,19 +571,19 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                 size="sm"
                 variant={filterState === 'skipped' ? 'default' : 'outline'}
                 onClick={() => setFilterState('skipped')}
-                className={cn("rounded-lg text-xs font-bold h-7 px-3", filterState === 'skipped' ? "bg-slate-700 hover:bg-slate-650 text-white" : "border-white/[0.06] text-slate-400 hover:text-white")}
+                className={cn("rounded-lg text-xs font-bold h-7 px-3", filterState === 'skipped' ? "bg-slate-700 hover:bg-slate-650 text-white" : "border-slate-200 dark:border-white/[0.06] text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white")}
               >
                 Skipped ({questionStates.filter(r => r.state === 'skipped').length})
               </Button>
             </div>
             
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-slate-400">Show correct options</span>
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Show correct options</span>
               <button
                 onClick={() => setShowCorrectAnswers(!showCorrectAnswers)}
                 className={cn(
                   "w-9 h-5 rounded-full p-0.5 transition-colors duration-200 focus:outline-none",
-                  showCorrectAnswers ? "bg-[#8B5CF6]" : "bg-slate-800"
+                  showCorrectAnswers ? "bg-[#8B5CF6]" : "bg-slate-350 dark:bg-slate-800"
                 )}
               >
                 <div
@@ -598,7 +598,7 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
         )}
 
         {/* Answer Sheet grid */}
-        <Card className="border border-white/[0.06] p-6 rounded-2xl bg-[#0F172A] shadow-xl">
+        <Card className="border border-slate-200 dark:border-white/[0.06] p-6 rounded-2xl bg-white dark:bg-[#0F172A] shadow-xl">
           <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3">
             {questionStates
               .map((res: any, idx: number) => ({ res, originalIdx: idx }))
@@ -610,19 +610,19 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                 let statusText = "Wrong";
 
                 if (res.state === 'correct') {
-                  statusStyle = "border-emerald-500/20 bg-emerald-500/5 text-emerald-400 hover:border-emerald-500/40 hover:bg-emerald-500/10";
+                  statusStyle = "border-emerald-500/20 dark:border-emerald-500/10 bg-emerald-50 dark:bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 hover:border-emerald-500/40 hover:bg-emerald-100 dark:hover:bg-emerald-500/10";
                   statusBadge = "bg-emerald-500 text-white";
                   statusText = "Correct";
                 } else if (res.state === 'skipped') {
-                  statusStyle = "border-slate-700/30 bg-slate-800/10 text-slate-400 hover:border-slate-700/50 hover:bg-slate-805/20";
+                  statusStyle = "border-slate-300 dark:border-slate-700/30 bg-slate-100 dark:bg-slate-800/10 text-slate-655 dark:text-slate-400 hover:border-slate-400 dark:hover:border-slate-700/50 hover:bg-slate-200 dark:hover:bg-slate-800/20";
                   statusBadge = "bg-slate-600 text-white";
                   statusText = "Skipped";
                 } else if (res.state === 'review') {
-                  statusStyle = "border-amber-500/20 bg-amber-500/5 text-amber-400 hover:border-amber-500/40 hover:bg-amber-500/10";
+                  statusStyle = "border-amber-500/20 dark:border-amber-500/10 bg-amber-50 dark:bg-amber-500/5 text-amber-600 dark:text-amber-400 hover:border-amber-500/40 hover:bg-amber-100 dark:hover:bg-amber-500/10";
                   statusBadge = "bg-amber-500 text-white";
                   statusText = "Review";
                 } else {
-                  statusStyle = "border-rose-500/20 bg-rose-500/5 text-rose-455 hover:border-rose-500/40 hover:bg-rose-505/10";
+                  statusStyle = "border-rose-500/20 dark:border-rose-500/10 bg-rose-50 dark:bg-rose-500/5 text-rose-600 dark:text-rose-400 hover:border-rose-500/40 hover:bg-rose-100 dark:hover:bg-rose-500/10";
                   statusBadge = "bg-rose-500 text-white";
                   statusText = "Wrong";
                 }
@@ -634,7 +634,7 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                     className={cn(
                       "p-3 rounded-xl border flex flex-col justify-between text-xs font-bold transition-all duration-200 select-none text-left w-full h-20 relative group hover:scale-[1.03]",
                       statusStyle,
-                      isActive && "ring-2 ring-[#8B5CF6] ring-offset-2 ring-offset-[#070B14] shadow-lg shadow-[#8B5CF6]/10"
+                      isActive && "ring-2 ring-[#8B5CF6] ring-offset-2 ring-offset-white dark:ring-offset-[#070B14] shadow-lg shadow-[#8B5CF6]/10"
                     )}
                   >
                     <div className="flex items-center justify-between w-full">
@@ -644,12 +644,12 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                       <span className="text-[10px] font-bold opacity-80">{statusText}</span>
                     </div>
                     <div className="mt-2.5 flex items-center justify-between w-full select-none text-[10px]">
-                      <span className="truncate max-w-[50px] font-black text-white">
+                      <span className="truncate max-w-[50px] font-black text-slate-800 dark:text-white">
                         {res.isOmitted ? "-" : res.userAns}
                       </span>
                       {showCorrectAnswers && (
-                        <span className="text-slate-550 font-black flex items-center gap-0.5">
-                          ➔ <span className="text-[#A855F7]">{res.correctAns}</span>
+                        <span className="text-slate-400 dark:text-slate-500 font-black flex items-center gap-0.5">
+                          ➔ <span className="text-[#8B5CF6] dark:text-[#A855F7]">{res.correctAns}</span>
                         </span>
                       )}
                     </div>
@@ -661,23 +661,23 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
 
         {/* Action Bar */}
         {showFilters && (
-          <div className="flex flex-wrap items-center justify-between gap-3 pt-6 border-t border-white/[0.06] select-none">
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-6 border-t border-slate-200 dark:border-white/[0.06] select-none">
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" className="rounded-xl font-bold gap-2 text-xs h-10 px-4 border-white/[0.06] bg-[#0F172A] text-slate-300 hover:bg-white/5" onClick={handleShare}>
+              <Button variant="outline" size="sm" className="rounded-xl font-bold gap-2 text-xs h-10 px-4 border-slate-200 dark:border-white/[0.06] bg-white dark:bg-[#0F172A] text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5" onClick={handleShare}>
                 <Share2 className="w-4 h-4" /> Share Results
               </Button>
               <Button variant="default" size="sm" className="rounded-xl font-bold gap-2 text-xs h-10 px-6 bg-gradient-to-r from-[#8B5CF6] to-[#A855F7] text-white hover:opacity-90" onClick={() => setActiveTab('analysis')}>
                 <BrainCircuit className="w-4 h-4" /> Analyze Performance
               </Button>
-              <Button variant="outline" size="sm" className="rounded-xl font-bold gap-2 text-xs h-10 px-4 border-white/[0.06] bg-[#0F172A] text-slate-300 hover:bg-white/5" onClick={() => nav(-1)}>
+              <Button variant="outline" size="sm" className="rounded-xl font-bold gap-2 text-xs h-10 px-4 border-slate-200 dark:border-white/[0.06] bg-white dark:bg-[#0F172A] text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5" onClick={() => nav(-1)}>
                 <RotateCcw className="w-4 h-4" /> Retry Mock Test
               </Button>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" className="rounded-xl font-bold gap-2 text-xs h-10 px-4 border-emerald-500/20 bg-emerald-500/5 text-emerald-400 hover:bg-emerald-500/10" onClick={() => toast.success("Diagnostic feedback sent to academic coaches!")}>
+              <Button variant="outline" size="sm" className="rounded-xl font-bold gap-2 text-xs h-10 px-4 border-emerald-500/20 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10" onClick={() => toast.success("Diagnostic feedback sent to academic coaches!")}>
                 Send Feedback
               </Button>
-              <Button variant="default" size="sm" className="rounded-xl font-bold gap-2 text-xs h-10 px-6 bg-slate-800 hover:bg-slate-700 text-slate-200" onClick={() => nav(-1)}>
+              <Button variant="default" size="sm" className="rounded-xl font-bold gap-2 text-xs h-10 px-6 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200" onClick={() => nav(-1)}>
                 Back to Practice
               </Button>
             </div>
@@ -688,18 +688,18 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
   };
 
   return (
-    <div className="min-h-screen bg-[#070B14] text-slate-100 font-sans pb-16 selection:bg-[#8B5CF6]/30 selection:text-[#C084FC]">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#070B14] text-slate-900 dark:text-slate-100 font-sans pb-16 selection:bg-[#8B5CF6]/30 selection:text-[#C084FC]">
       
       {/* Header Bar */}
-      <header className="bg-[#0F172A] border-b border-white/[0.06] py-4 px-6 sticky top-0 z-30 shadow-md backdrop-blur-md bg-[#0F172A]/90 select-none">
+      <header className="bg-white dark:bg-[#0F172A] border-b border-slate-200 dark:border-white/[0.06] py-4 px-6 sticky top-0 z-30 shadow-md backdrop-blur-md bg-white/90 dark:bg-[#0F172A]/90 select-none text-slate-900 dark:text-slate-100">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <Button size="icon" variant="ghost" className="rounded-full hover:bg-white/10 shrink-0 text-slate-300" onClick={() => nav(-1)}>
+            <Button size="icon" variant="ghost" className="rounded-full hover:bg-slate-100 dark:hover:bg-white/10 shrink-0 text-slate-650 dark:text-slate-300" onClick={() => nav(-1)}>
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
-              <h1 className="font-extrabold text-lg text-white uppercase tracking-tight line-clamp-1">{exam?.title || "Exam Result"}</h1>
-              <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">LMSHub Premium Review & Learning Center</p>
+              <h1 className="font-extrabold text-lg text-slate-900 dark:text-white uppercase tracking-tight line-clamp-1">{exam?.title || "Exam Result"}</h1>
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider">LMSHub Premium Review & Learning Center</p>
             </div>
           </div>
           <div className="flex items-center flex-wrap gap-2.5">
@@ -714,7 +714,7 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                 "rounded-xl gap-2 font-bold text-xs h-9 px-4 transition-all duration-300",
                 activeTab === 'analytics' 
                   ? "bg-gradient-to-r from-[#8B5CF6] to-[#A855F7] text-white shadow-lg shadow-[#8B5CF6]/25" 
-                  : "bg-[#0F172A] border-white/[0.06] text-slate-300 hover:bg-white/5"
+                  : "bg-white dark:bg-[#0F172A] border-slate-200 dark:border-white/[0.06] text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5"
               )}
             >
               <LayoutDashboard className="w-3.5 h-3.5" /> Dashboard
@@ -727,7 +727,7 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                 "rounded-xl gap-2 font-bold text-xs h-9 px-4 transition-all duration-300",
                 activeTab === 'analysis' 
                   ? "bg-gradient-to-r from-[#8B5CF6] to-[#A855F7] text-white shadow-lg shadow-[#8B5CF6]/25" 
-                  : "bg-[#0F172A] border-white/[0.06] text-slate-300 hover:bg-white/5"
+                  : "bg-white dark:bg-[#0F172A] border-slate-200 dark:border-white/[0.06] text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5"
               )}
             >
               <BrainCircuit className="w-3.5 h-3.5" /> AI Coach
@@ -740,7 +740,7 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                 "rounded-xl gap-2 font-bold text-xs h-9 px-4 transition-all duration-300",
                 activeTab === 'review' 
                   ? "bg-gradient-to-r from-[#8B5CF6] to-[#A855F7] text-white shadow-lg shadow-[#8B5CF6]/25" 
-                  : "bg-[#0F172A] border-white/[0.06] text-slate-300 hover:bg-white/5"
+                  : "bg-white dark:bg-[#0F172A] border-slate-200 dark:border-white/[0.06] text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5"
               )}
             >
               <Search className="w-3.5 h-3.5" /> Question Review
@@ -755,11 +755,10 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
         {activeTab === 'analytics' && (
           <div className="space-y-6 animate-fadeIn">
             
-            {/* Top Score Circular Progress & Statistics Cards Row */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
               {/* Animated Progress Ring Card */}
-              <Card className="border border-white/[0.06] p-8 rounded-2xl bg-[#0F172A] flex flex-col items-center justify-between shadow-xl relative overflow-hidden group">
+              <Card className="border border-slate-200 dark:border-white/[0.06] p-8 rounded-2xl bg-white dark:bg-[#0F172A] flex flex-col items-center justify-between shadow-xl relative overflow-hidden group">
                 {/* Glow ring in the background */}
                 <div className="absolute top-0 right-0 w-32 h-32 bg-[#8B5CF6]/10 rounded-full blur-3xl pointer-events-none group-hover:bg-[#8B5CF6]/15 transition-all duration-500"></div>
                 
@@ -786,9 +785,10 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                       cx="96"
                       cy="96"
                       r={radius}
-                      stroke="rgba(255,255,255,0.03)"
+                      stroke="currentColor"
                       strokeWidth={strokeWidth}
                       fill="transparent"
+                      className="text-slate-100 dark:text-white/[0.03]"
                     />
                     {/* Animated foreground ring */}
                     <circle
@@ -808,65 +808,65 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
 
                   {/* Score text absolute values */}
                   <div className="absolute flex flex-col items-center justify-center text-center">
-                    <span className="text-5xl font-black tracking-tighter text-white">
+                    <span className="text-5xl font-black tracking-tighter text-slate-900 dark:text-white">
                       {isMilliy && allUnanswered ? 0 : finalScore}
                     </span>
-                    <span className={cn("text-xs font-extrabold uppercase mt-1 tracking-wider px-2 py-0.5 rounded-full bg-white/[0.04] border border-white/[0.08]", labelColor)}>
+                    <span className={cn("text-xs font-extrabold uppercase mt-1 tracking-wider px-2 py-0.5 rounded-full bg-slate-100 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08]", labelColor)}>
                       {performanceLabel}
                     </span>
                   </div>
                 </div>
 
-                <div className="w-full border-t border-white/[0.06] pt-4 flex justify-between items-center text-xs font-semibold text-slate-400 select-none">
+                <div className="w-full border-t border-slate-200 dark:border-white/[0.06] pt-4 flex justify-between items-center text-xs font-semibold text-slate-400 select-none">
                   <span>Score Status</span>
-                  <span className="text-white font-extrabold uppercase tracking-wide">Official Scale</span>
+                  <span className="text-slate-900 dark:text-white font-extrabold uppercase tracking-wide">Official Scale</span>
                 </div>
               </Card>
 
               {/* Statistics Grid (Glassmorphic cards with hovers) */}
-              <Card className="lg:col-span-2 border border-white/[0.06] p-6 rounded-2xl bg-[#0F172A] shadow-xl flex flex-col justify-between group">
+              <Card className="lg:col-span-2 border border-slate-200 dark:border-white/[0.06] p-6 rounded-2xl bg-white dark:bg-[#0F172A] shadow-xl flex flex-col justify-between group">
                 <div>
                   <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-5">Exam Performance Statistics</h3>
                   
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                     {/* Correct Card */}
-                    <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:border-emerald-500/30 hover:bg-emerald-500/[0.01] transition-all duration-300 group/card relative overflow-hidden">
+                    <div className="p-4 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.04] hover:border-emerald-500/30 hover:bg-emerald-500/[0.01] transition-all duration-300 group/card relative overflow-hidden">
                       <div className="absolute top-2 right-2 text-emerald-500/10 group-hover/card:text-emerald-500/20 transition-all"><CheckCircle2 className="w-8 h-8" /></div>
                       <span className="text-slate-400 block text-[9px] uppercase font-black tracking-wider mb-1">Correct Answers</span>
-                      <span className="text-3xl font-black text-emerald-400">{correctAnswers}</span>
-                      <span className="text-slate-500 text-xs font-bold block mt-1">({Math.round(correctAnswers / totalQuestions * 100)}% accuracy)</span>
+                      <span className="text-3xl font-black text-emerald-500 dark:text-emerald-400">{correctAnswers}</span>
+                      <span className="text-slate-550 text-xs font-bold block mt-1">({Math.round(correctAnswers / totalQuestions * 100)}% accuracy)</span>
                     </div>
 
                     {/* Wrong Card */}
-                    <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:border-rose-500/30 hover:bg-rose-500/[0.01] transition-all duration-300 group/card relative overflow-hidden">
+                    <div className="p-4 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.04] hover:border-rose-500/30 hover:bg-rose-500/[0.01] transition-all duration-300 group/card relative overflow-hidden">
                       <div className="absolute top-2 right-2 text-rose-500/10 group-hover/card:text-rose-500/20 transition-all"><XCircle className="w-8 h-8" /></div>
                       <span className="text-slate-400 block text-[9px] uppercase font-black tracking-wider mb-1">Wrong Answers</span>
-                      <span className="text-3xl font-black text-rose-455">{incorrectAnswers}</span>
-                      <span className="text-slate-500 text-xs font-bold block mt-1">({Math.round(incorrectAnswers / totalQuestions * 100)}% count)</span>
+                      <span className="text-3xl font-black text-rose-500">{incorrectAnswers}</span>
+                      <span className="text-slate-555 text-xs font-bold block mt-1">({Math.round(incorrectAnswers / totalQuestions * 100)}% count)</span>
                     </div>
 
                     {/* Omitted Card */}
-                    <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:border-amber-500/30 hover:bg-amber-500/[0.01] transition-all duration-300 group/card relative overflow-hidden">
+                    <div className="p-4 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.04] hover:border-amber-500/30 hover:bg-amber-500/[0.01] transition-all duration-300 group/card relative overflow-hidden">
                       <div className="absolute top-2 right-2 text-amber-500/10 group-hover/card:text-amber-500/20 transition-all"><AlertCircle className="w-8 h-8" /></div>
                       <span className="text-slate-400 block text-[9px] uppercase font-black tracking-wider mb-1">Omitted Questions</span>
                       <span className="text-3xl font-black text-amber-500">{omittedAnswers}</span>
-                      <span className="text-slate-500 text-xs font-bold block mt-1">({Math.round(omittedAnswers / totalQuestions * 100)}% count)</span>
+                      <span className="text-slate-555 text-xs font-bold block mt-1">({Math.round(omittedAnswers / totalQuestions * 100)}% count)</span>
                     </div>
 
                     {/* Time Card */}
-                    <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:border-[#8B5CF6]/30 hover:bg-[#8B5CF6]/[0.01] transition-all duration-300 group/card relative overflow-hidden">
+                    <div className="p-4 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.04] hover:border-[#8B5CF6]/30 hover:bg-[#8B5CF6]/[0.01] transition-all duration-300 group/card relative overflow-hidden">
                       <div className="absolute top-2 right-2 text-[#8B5CF6]/10 group-hover/card:text-[#8B5CF6]/20 transition-all"><Clock className="w-8 h-8" /></div>
                       <span className="text-slate-400 block text-[9px] uppercase font-black tracking-wider mb-1">Sarflangan Vaqt</span>
-                      <span className="text-3xl font-black text-white">{timeStr}</span>
-                      <span className="text-slate-500 text-xs font-bold block mt-1">Jami vaqt</span>
+                      <span className="text-3xl font-black text-slate-900 dark:text-white">{timeStr}</span>
+                      <span className="text-slate-555 text-xs font-bold block mt-1">Jami vaqt</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="border-t border-white/[0.06] pt-4 grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs font-bold select-none text-slate-400">
+                <div className="border-t border-slate-200 dark:border-white/[0.06] pt-4 grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs font-bold select-none text-slate-400">
                   <div>
                     <span className="text-[9px] uppercase tracking-wider block mb-0.5 text-slate-500">Pace Per Question</span>
-                    <span className="text-slate-200 font-extrabold">{avgTimePerQuestion} sec / q</span>
+                    <span className="text-slate-800 dark:text-slate-200 font-extrabold">{avgTimePerQuestion} sec / q</span>
                   </div>
                   <div>
                     <span className="text-[9px] uppercase tracking-wider block mb-0.5 text-slate-500">Total Accuracy</span>
@@ -874,11 +874,11 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                   </div>
                   <div>
                     <span className="text-[9px] uppercase tracking-wider block mb-0.5 text-slate-500">Attempted Rate</span>
-                    <span className="text-slate-200 font-extrabold">{Math.round(((totalQuestions - omittedAnswers) / totalQuestions) * 100)}%</span>
+                    <span className="text-slate-800 dark:text-slate-200 font-extrabold">{Math.round(((totalQuestions - omittedAnswers) / totalQuestions) * 105)}%</span>
                   </div>
                   <div>
                     <span className="text-[9px] uppercase tracking-wider block mb-0.5 text-slate-500">Total Questions</span>
-                    <span className="text-slate-200 font-extrabold">{totalQuestions} items</span>
+                    <span className="text-slate-800 dark:text-slate-200 font-extrabold">{totalQuestions} items</span>
                   </div>
                 </div>
               </Card>
@@ -922,14 +922,14 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
 
             {/* National Certificate Specific Score Card */}
             {isMilliy && (
-              <Card className="border border-white/[0.06] p-6 rounded-2xl bg-[#0F172A] shadow-xl">
+              <Card className="border border-slate-200 dark:border-white/[0.06] p-6 rounded-2xl bg-white dark:bg-[#0F172A] shadow-xl">
                 <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Official National Certificate Result</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center font-bold">
-                  <div className="p-4 rounded-xl bg-white/[0.01] border border-white/[0.04]">
+                  <div className="p-4 rounded-xl bg-slate-50 dark:bg-white/[0.01] border border-slate-200 dark:border-white/[0.04]">
                     <span className="text-[10px] uppercase font-black tracking-wider text-slate-500 block mb-1">Raw Correct Count</span>
-                    <span className="text-2xl font-black text-white">{correctAnswers} / {totalQuestions}</span>
+                    <span className="text-2xl font-black text-slate-900 dark:text-white">{correctAnswers} / {totalQuestions}</span>
                   </div>
-                  <div className="p-4 rounded-xl bg-white/[0.01] border border-white/[0.04]">
+                  <div className="p-4 rounded-xl bg-slate-50 dark:bg-white/[0.01] border border-slate-200 dark:border-white/[0.04]">
                     <span className="text-[10px] uppercase font-black tracking-wider text-slate-500 block mb-1">Accuracy Percentage</span>
                     <span className="text-2xl font-black text-[#A855F7]">{accuracy}%</span>
                   </div>
@@ -1256,13 +1256,13 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
             {/* Question detail card */}
             <div className="max-w-4xl mx-auto space-y-6">
               {activeQ && (
-                <Card id="active-question-card" className="border border-white/[0.06] p-6 sm:p-8 rounded-2xl bg-[#0F172A] shadow-xl flex flex-col justify-between">
+                <Card id="active-question-card" className="border border-slate-200 dark:border-white/[0.06] p-6 sm:p-8 rounded-2xl bg-white dark:bg-[#0F172A] shadow-xl flex flex-col justify-between">
                   <div className="space-y-6">
                     
                     {/* Detail Header */}
-                    <div className="flex items-center justify-between pb-3.5 border-b border-white/[0.06] select-none">
+                    <div className="flex items-center justify-between pb-3.5 border-b border-slate-200 dark:border-white/[0.06] select-none">
                       <div className="flex items-center gap-2">
-                        <span className="font-extrabold text-slate-200 text-sm uppercase">Question {activeQuestionIndex + 1}</span>
+                        <span className="font-extrabold text-slate-800 dark:text-slate-200 text-sm uppercase">Question {activeQuestionIndex + 1}</span>
                         {isSat && activeMeta && (
                           <Badge variant="outline" className="text-[10px] font-black uppercase text-[#A855F7] bg-[#8B5CF6]/10 border-[#8B5CF6]/30">
                             {activeMeta.skillCategory}
@@ -1276,19 +1276,19 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                       </div>
                       <div>
                         {activeResult?.state === 'correct' ? (
-                          <Badge className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold gap-1 rounded-lg">
+                          <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-bold gap-1 rounded-lg">
                             <CheckCircle2 className="w-3.5 h-3.5" /> Correct ✅
                           </Badge>
                         ) : activeResult?.state === 'skipped' ? (
-                          <Badge className="bg-slate-805/10 text-slate-400 border border-slate-700/30 font-bold gap-1 rounded-lg">
+                          <Badge className="bg-slate-200/50 dark:bg-[#0F172A]/10 text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-700/30 font-bold gap-1 rounded-lg">
                             <AlertCircle className="w-3.5 h-3.5" /> Omitted ⚪
                           </Badge>
                         ) : activeResult?.state === 'review' ? (
-                          <Badge className="bg-amber-500/10 text-amber-400 border border-amber-500/20 font-bold gap-1 rounded-lg">
+                          <Badge className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 font-bold gap-1 rounded-lg">
                             <AlertTriangle className="w-3.5 h-3.5" /> Review ⚠️
                           </Badge>
                         ) : (
-                          <Badge className="bg-rose-500/10 text-rose-455 border border-rose-500/20 font-bold gap-1 rounded-lg">
+                          <Badge className="bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 font-bold gap-1 rounded-lg">
                             <XCircle className="w-3.5 h-3.5" /> Incorrect ❌
                           </Badge>
                         )}
@@ -1296,7 +1296,7 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                     </div>
 
                     {/* Question text prompt */}
-                    <div className="text-base sm:text-lg text-white font-semibold leading-relaxed">
+                    <div className="text-base sm:text-lg text-slate-900 dark:text-white font-semibold leading-relaxed">
                       <MathRenderer text={activeQ.prompt} />
                     </div>
 
@@ -1307,15 +1307,15 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                           const isUserSelected = activeResult?.userAns === opt.text;
                           const isCorrectOption = opt.isCorrect || opt.is_correct || activeResult?.correctAns === opt.text;
 
-                          let optionStyle = "border-white/[0.04] bg-white/[0.01] hover:bg-white/[0.03]";
+                          let optionStyle = "border-slate-200 dark:border-white/[0.04] bg-slate-50 dark:bg-white/[0.01] text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/[0.03]";
                           let checkMarker = null;
 
                           if (isCorrectOption) {
-                            optionStyle = "border-emerald-500/40 bg-emerald-500/5 text-emerald-300 ring-1 ring-emerald-500/30";
-                            checkMarker = <span className="text-emerald-400 font-bold flex items-center gap-1">Correct Answer ✔</span>;
+                            optionStyle = "border-emerald-500/40 bg-emerald-50 dark:bg-emerald-500/5 text-emerald-700 dark:text-emerald-300 ring-1 ring-emerald-500/30";
+                            checkMarker = <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">Correct Answer ✔</span>;
                           } else if (isUserSelected && !isCorrectOption) {
-                            optionStyle = "border-rose-500/40 bg-rose-500/5 text-rose-400 ring-1 ring-rose-500/30";
-                            checkMarker = <span className="text-rose-455 font-bold flex items-center gap-1">Your Answer ✖</span>;
+                            optionStyle = "border-rose-500/40 bg-rose-50 dark:bg-rose-500/5 text-rose-700 dark:text-rose-455 ring-1 ring-rose-500/30";
+                            checkMarker = <span className="text-rose-600 dark:text-rose-400 font-bold flex items-center gap-1">Your Answer ✖</span>;
                           }
 
                           return (
@@ -1334,19 +1334,19 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                     )}
 
                     {/* Output block structured exactly as requested */}
-                    <div className="p-5 bg-white/[0.01] rounded-xl border border-white/[0.06] grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-bold leading-relaxed">
+                    <div className="p-5 bg-slate-50 dark:bg-white/[0.01] rounded-xl border border-slate-200 dark:border-white/[0.06] grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-bold leading-relaxed">
                       <div>
                         <span className="text-slate-500 block uppercase tracking-wider mb-1">Your Selected Answer</span>
                         <div className={cn("text-sm font-extrabold flex items-center gap-1.5", 
-                          activeResult?.state === 'correct' ? "text-emerald-400" : activeResult?.state === 'skipped' ? "text-slate-500" : "text-rose-455"
+                          activeResult?.state === 'correct' ? "text-emerald-600 dark:text-emerald-400" : activeResult?.state === 'skipped' ? "text-slate-500" : "text-rose-600 dark:text-rose-400"
                         )}>
                           {activeResult?.state === 'skipped' ? "Not Answered ⚪" : <MathRenderer text={activeResult?.userAns} />}
                           {activeResult?.state === 'skipped' ? null : activeResult?.state === 'correct' ? "✅" : "❌"}
                         </div>
                       </div>
                       <div>
-                        <span className="text-slate-500 block uppercase tracking-wider mb-1">Correct Answer</span>
-                        <div className="text-sm font-extrabold text-slate-200 flex items-center gap-1.5">
+                        <span className="text-slate-550 dark:text-slate-500 block uppercase tracking-wider mb-1">Correct Answer</span>
+                        <div className="text-sm font-extrabold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                           <MathRenderer text={activeResult?.correctAns} /> ✅
                         </div>
                       </div>
@@ -1357,23 +1357,23 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-bold text-slate-400">
                         {isSat && (
                           <>
-                            <div className="p-3 bg-white/[0.01] rounded-lg border border-white/[0.04]">
+                            <div className="p-3 bg-slate-50 dark:bg-white/[0.01] rounded-lg border border-slate-200 dark:border-white/[0.04]">
                               <span className="text-[9px] uppercase tracking-wider block text-slate-500 mb-0.5">Skill Category</span>
-                              <span className="text-slate-200 font-extrabold">{activeMeta.skillCategory}</span>
+                              <span className="text-slate-800 dark:text-slate-200 font-extrabold">{activeMeta.skillCategory}</span>
                             </div>
-                            <div className="p-3 bg-white/[0.01] rounded-lg border border-white/[0.04]">
+                            <div className="p-3 bg-slate-50 dark:bg-white/[0.01] rounded-lg border border-slate-200 dark:border-white/[0.04]">
                               <span className="text-[9px] uppercase tracking-wider block text-slate-500 mb-0.5">Difficulty Level</span>
                               <span className={cn("font-extrabold", 
-                                activeMeta.difficulty === "Easy" ? "text-emerald-450" : activeMeta.difficulty === "Medium" ? "text-amber-500" : "text-rose-455"
+                                activeMeta.difficulty === "Easy" ? "text-emerald-600 dark:text-emerald-400" : activeMeta.difficulty === "Medium" ? "text-amber-600 dark:text-amber-500" : "text-rose-600 dark:text-rose-500"
                               )}>{activeMeta.difficulty}</span>
                             </div>
-                            <div className="p-3 bg-white/[0.01] rounded-lg border border-white/[0.04]">
+                            <div className="p-3 bg-slate-50 dark:bg-white/[0.01] rounded-lg border border-slate-200 dark:border-white/[0.04]">
                               <span className="text-[9px] uppercase tracking-wider block text-slate-500 mb-0.5">Time Spent</span>
-                              <span className="text-slate-200 font-extrabold">{activeMeta.timeSpent} seconds</span>
+                              <span className="text-slate-800 dark:text-slate-200 font-extrabold">{activeMeta.timeSpent} seconds</span>
                             </div>
-                            <div className="p-3 bg-white/[0.01] rounded-lg border border-white/[0.04]">
+                            <div className="p-3 bg-slate-50 dark:bg-white/[0.01] rounded-lg border border-slate-200 dark:border-white/[0.04]">
                               <span className="text-[9px] uppercase tracking-wider block text-slate-500 mb-0.5">Pacing Status</span>
-                              <span className="text-slate-200 font-extrabold">
+                              <span className="text-slate-800 dark:text-slate-200 font-extrabold">
                                 {activeMeta.timeSpent > avgTimePerQuestion * 1.3 ? "Slow Pace" : "Good Pace"}
                               </span>
                             </div>
@@ -1381,23 +1381,23 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                         )}
                         {isMilliy && (
                           <>
-                            <div className="p-3 bg-white/[0.01] rounded-lg border border-white/[0.04]">
+                            <div className="p-3 bg-slate-50 dark:bg-white/[0.01] rounded-lg border border-slate-200 dark:border-white/[0.04]">
                               <span className="text-[9px] uppercase tracking-wider block text-slate-500 mb-0.5">Subject</span>
-                              <span className="text-slate-200 font-extrabold">{activeMeta.subject}</span>
+                              <span className="text-slate-800 dark:text-slate-200 font-extrabold">{activeMeta.subject}</span>
                             </div>
-                            <div className="p-3 bg-white/[0.01] rounded-lg border border-white/[0.04]">
+                            <div className="p-3 bg-slate-50 dark:bg-white/[0.01] rounded-lg border border-slate-200 dark:border-white/[0.04]">
                               <span className="text-[9px] uppercase tracking-wider block text-slate-500 mb-0.5">Topic</span>
-                              <span className="text-slate-200 font-extrabold">{activeMeta.topic}</span>
+                              <span className="text-slate-800 dark:text-slate-200 font-extrabold">{activeMeta.topic}</span>
                             </div>
-                            <div className="p-3 bg-white/[0.01] rounded-lg border border-white/[0.04]">
+                            <div className="p-3 bg-slate-50 dark:bg-white/[0.01] rounded-lg border border-slate-200 dark:border-white/[0.04]">
                               <span className="text-[9px] uppercase tracking-wider block text-slate-500 mb-0.5">Difficulty</span>
                               <span className={cn("font-extrabold", 
-                                activeMeta.difficulty === "Easy" ? "text-emerald-450" : activeMeta.difficulty === "Medium" ? "text-amber-500" : "text-rose-455"
+                                activeMeta.difficulty === "Easy" ? "text-emerald-600 dark:text-emerald-400" : activeMeta.difficulty === "Medium" ? "text-amber-600 dark:text-amber-500" : "text-rose-600 dark:text-rose-500"
                               )}>{activeMeta.difficulty}</span>
                             </div>
-                            <div className="p-3 bg-white/[0.01] rounded-lg border border-white/[0.04]">
+                            <div className="p-3 bg-slate-50 dark:bg-white/[0.01] rounded-lg border border-slate-200 dark:border-white/[0.04]">
                               <span className="text-[9px] uppercase tracking-wider block text-slate-500 mb-0.5">Subject Proficiency</span>
-                              <span className="text-slate-200 font-extrabold">
+                              <span className="text-slate-800 dark:text-slate-200 font-extrabold">
                                 {subjectStats[activeMeta.subject || ""] ? Math.round((subjectStats[activeMeta.subject || ""].correct / subjectStats[activeMeta.subject || ""].total) * 100) : 0}%
                               </span>
                             </div>
@@ -1409,10 +1409,10 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                     {/* SAT Text Evidence explanation */}
                     {isSat && activeMeta?.evidenceExplanation && (
                       <div className="bg-emerald-500/5 p-4 border border-emerald-500/10 rounded-xl space-y-1.5 font-semibold">
-                        <h4 className="text-xs font-black text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <h4 className="text-xs font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
                           <span>📍</span> Text Evidence Citation
                         </h4>
-                        <p className="text-slate-300 text-xs leading-relaxed">
+                        <p className="text-slate-700 dark:text-slate-300 text-xs leading-relaxed">
                           {activeMeta.evidenceExplanation}
                         </p>
                       </div>
@@ -1420,10 +1420,10 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
 
                     {/* Rationale / Explanation */}
                     <div className="bg-[#8B5CF6]/5 p-4 border border-[#8B5CF6]/10 rounded-xl space-y-2">
-                      <h4 className="text-xs font-black text-[#A855F7] uppercase tracking-wider flex items-center gap-1.5 font-bold">
+                      <h4 className="text-xs font-black text-[#8B5CF6] dark:text-[#A855F7] uppercase tracking-wider flex items-center gap-1.5 font-bold">
                         <BrainCircuit className="w-4 h-4 animate-pulse" /> Explanation & Rationale
                       </h4>
-                      <p className="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap font-semibold">
+                      <p className="text-slate-700 dark:text-slate-300 text-sm leading-relaxed whitespace-pre-wrap font-semibold">
                         <MathRenderer text={activeMeta?.explanation || "No explanation provided for this question."} />
                       </p>
                     </div>
@@ -1431,10 +1431,10 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                     {/* Learning Tip */}
                     {activeMeta?.learningTip && (
                       <div className="bg-amber-500/5 p-4 border border-amber-500/10 rounded-xl space-y-1.5 font-semibold">
-                        <h4 className="text-xs font-black text-amber-500 uppercase tracking-wider flex items-center gap-1.5">
-                          <Lightbulb className="w-4 h-4 text-amber-400" /> Learning Tip
+                        <h4 className="text-xs font-black text-amber-600 dark:text-amber-500 uppercase tracking-wider flex items-center gap-1.5">
+                          <Lightbulb className="w-4 h-4 text-amber-500 dark:text-amber-400" /> Learning Tip
                         </h4>
-                        <p className="text-slate-300 text-xs leading-relaxed">
+                        <p className="text-slate-700 dark:text-slate-300 text-xs leading-relaxed">
                           <MathRenderer text={activeMeta.learningTip} />
                         </p>
                       </div>
@@ -1443,17 +1443,17 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                   </div>
 
                   {/* Review Tab Navigation buttons */}
-                  <div className="flex items-center justify-between pt-6 border-t border-white/[0.06] mt-6 select-none shrink-0 font-bold">
+                  <div className="flex items-center justify-between pt-6 border-t border-slate-200 dark:border-white/[0.06] mt-6 select-none shrink-0 font-bold">
                     <Button
                       variant="outline"
                       size="sm"
                       disabled={activeQuestionIndex === 0}
                       onClick={() => setActiveQuestionIndex(prev => prev - 1)}
-                      className="rounded-xl font-bold gap-1 text-xs border-white/[0.06] bg-[#0F172A] text-slate-300 hover:bg-white/5"
+                      className="rounded-xl font-bold gap-1 text-xs border-slate-200 dark:border-white/[0.06] bg-white dark:bg-[#0F172A] text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5"
                     >
                       <ChevronLeft className="w-4 h-4" /> Previous
                     </Button>
-                    <span className="text-xs text-slate-400 font-black">
+                    <span className="text-xs text-slate-500 dark:text-slate-450 font-black">
                       Question {activeQuestionIndex + 1} / {totalQuestions}
                     </span>
                     <Button
@@ -1461,7 +1461,7 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                       size="sm"
                       disabled={activeQuestionIndex === totalQuestions - 1}
                       onClick={() => setActiveQuestionIndex(prev => prev + 1)}
-                      className="rounded-xl font-bold gap-1 text-xs border-white/[0.06] bg-[#0F172A] text-slate-300 hover:bg-white/5"
+                      className="rounded-xl font-bold gap-1 text-xs border-slate-200 dark:border-white/[0.06] bg-white dark:bg-[#0F172A] text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5"
                     >
                       Next <ChevronRight className="w-4 h-4" />
                     </Button>
