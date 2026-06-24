@@ -639,7 +639,7 @@ export default function MockTake() {
   const { theme, toggle } = useTheme();
   const { testId } = useParams();
   const nav = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const isReviewMode = searchParams.get("review") === "true";
   const attemptId = searchParams.get("attemptId");
 
