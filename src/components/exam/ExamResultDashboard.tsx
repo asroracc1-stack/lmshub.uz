@@ -534,7 +534,8 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
         {/* Filters panel for Answer sheet */}
         {showFilters && (
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-[#0F172A] border border-slate-200 dark:border-white/[0.06] p-4 rounded-xl select-none">
-            <div className="flex items-center gap-2 overflow-x-auto py-1              <Button
+            <div className="flex items-center gap-2 overflow-x-auto py-1">
+              <Button
                 size="sm"
                 variant={filterState === 'all' ? 'default' : 'outline'}
                 onClick={() => setFilterState('all')}
@@ -573,8 +574,9 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                 className={cn("rounded-lg text-xs font-bold h-7 px-3", filterState === 'skipped' ? "bg-slate-700 hover:bg-slate-600 text-white" : "border-slate-200 dark:border-white/[0.06] text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white")}
               >
                 Skipped ({questionStates.filter(r => r.state === 'skipped').length})
-              </Button>on>
+              </Button>
             </div>
+
             
             <div className="flex items-center gap-2">
               <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Show correct options</span>
@@ -606,7 +608,9 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                 const isActive = activeQuestionIndex === originalIdx;
                 let statusStyle = "";
                 let statusBadge = "";
-                let statusText = "Wrong"                if (res.state === 'correct') {
+                let statusText = "Wrong";
+                if (res.state === 'correct') {
+
                   statusStyle = "border-emerald-500/20 dark:border-emerald-500/10 bg-emerald-50 dark:bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 hover:border-emerald-500/40 hover:bg-emerald-100 dark:hover:bg-emerald-500/10";
                   statusBadge = "bg-emerald-500 text-white";
                   statusText = "Correct";
@@ -622,7 +626,7 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                   statusStyle = "border-rose-500/20 dark:border-rose-500/10 bg-rose-50 dark:bg-rose-500/5 text-rose-600 dark:text-rose-400 hover:border-rose-500/40 hover:bg-rose-100 dark:hover:bg-rose-500/10";
                   statusBadge = "bg-rose-500 text-white";
                   statusText = "Wrong";
-                }  }
+                }
 
                 return (
                   <button

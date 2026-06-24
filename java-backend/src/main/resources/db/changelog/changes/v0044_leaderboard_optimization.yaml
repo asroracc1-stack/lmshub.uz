@@ -1,0 +1,79 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0044-1
+      author: antigravity
+      validCheckSum:
+        - ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: users
+      changes:
+        - createIndex:
+            indexName: idx_users_coins
+            tableName: users
+            columns:
+              - column:
+                  name: coins
+        - createIndex:
+            indexName: idx_users_role_coins_xp
+            tableName: users
+            columns:
+              - column:
+                  name: role
+              - column:
+                  name: coins
+              - column:
+                  name: xp
+        - createIndex:
+            indexName: idx_users_org_role_coins_xp
+            tableName: users
+            columns:
+              - column:
+                  name: organization_id
+              - column:
+                  name: role
+              - column:
+                  name: coins
+              - column:
+                  name: xp
+
+  - changeSet:
+      id: v0044-2
+      author: antigravity
+      validCheckSum:
+        - ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: coin_transactions
+      changes:
+        - createIndex:
+            indexName: idx_coin_transactions_student_created
+            tableName: coin_transactions
+            columns:
+              - column:
+                  name: student_id
+              - column:
+                  name: created_at
+              - column:
+                  name: amount
+
+  - changeSet:
+      id: v0044-3
+      author: antigravity
+      validCheckSum:
+        - ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: practice_sessions
+      changes:
+        - createIndex:
+            indexName: idx_practice_sessions_user_created
+            tableName: practice_sessions
+            columns:
+              - column:
+                  name: user_id
+              - column:
+                  name: created_at

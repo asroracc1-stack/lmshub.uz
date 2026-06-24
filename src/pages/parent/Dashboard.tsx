@@ -148,7 +148,8 @@ export default function ParentDashboard() {
       const { data } = await api.get("/leaderboard", {
         params: { period: "all_time", role: "STUDENT", isGlobal: true }
       });
-      return data || [];
+      return data?.users || [];
+
     },
     enabled: !!activeChild?.id,
     staleTime: 5 * 60 * 1000,

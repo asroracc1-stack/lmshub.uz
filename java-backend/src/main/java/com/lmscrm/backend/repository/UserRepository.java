@@ -94,4 +94,75 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     Optional<User> findByReferralCode(String referralCode);
     List<User> findByReferredBy(UUID referredBy);
     long countByReferredBy(UUID referredBy);
+
+    // Leaderboard Rebuild Queries
+    long countByRoleAndActive(AppRole role, boolean active);
+    long countByRoleAndOrganizationIdAndActive(AppRole role, UUID orgId, boolean active);
+
+    @Query("SELECT u, " +
+           "COALESCE(uts.avatarLevel, 1), " +
+           "COALESCE(ugp.claimedCheckpointIds, ''), " +
+           "(SELECT COUNT(sa) FROM StudentAttempt sa WHERE sa.student = u AND sa.finishedAt IS NOT NULL) " +
+           "FROM User u " +
+           "LEFT JOIN UserTravelState uts ON uts.user = u " +
+           "LEFT JOIN UserGamificationProgress ugp ON ugp.user = u " +
+           "WHERE u.role = :role AND u.active = true " +
+           "ORDER BY u.coins DESC, u.xp DESC, u.createdAt ASC")
+    Page<Object[]> getLeaderboardAllTimeGlobal(@Param("role") AppRole role, Pageable pageable);
+
+    @Query("SELECT u, " +
+           "COALESCE(uts.avatarLevel, 1), " +
+           "COALESCE(ugp.claimedCheckpointIds, ''), " +
+           "(SELECT COUNT(sa) FROM StudentAttempt sa WHERE sa.student = u AND sa.finishedAt IS NOT NULL) " +
+           "FROM User u " +
+           "LEFT JOIN UserTravelState uts ON uts.user = u " +
+           "LEFT JOIN UserGamificationProgress ugp ON ugp.user = u " +
+           "WHERE u.role = :role AND u.active = true AND u.organizationId = :orgId " +
+           "ORDER BY u.coins DESC, u.xp DESC, u.createdAt ASC")
+    Page<Object[]> getLeaderboardAllTimeByOrg(@Param("role") AppRole role, @Param("orgId") UUID orgId, Pageable pageable);
+
+    @Query("SELECT u, " +
+           "COALESCE(uts.avatarLevel, 1), " +
+           "COALESCE(ugp.claimedCheckpointIds, ''), " +
+           "(SELECT COUNT(sa) FROM StudentAttempt sa WHERE sa.student = u AND sa.finishedAt IS NOT NULL), " +
+           "COALESCE((SELECT SUM(ct.amount) FROM CoinTransaction ct WHERE ct.student = u AND ct.createdAt >= :startDate), 0L) as periodCoins " +
+           "FROM User u " +
+           "LEFT JOIN UserTravelState uts ON uts.user = u " +
+           "LEFT JOIN UserGamificationProgress ugp ON ugp.user = u " +
+           "WHERE u.role = :role AND u.active = true " +
+           "ORDER BY periodCoins DESC, u.coins DESC, u.xp DESC, u.createdAt ASC")
+    Page<Object[]> getLeaderboardPeriodGlobal(@Param("role") AppRole role, @Param("startDate") LocalDateTime startDate, Pageable pageable);
+
+    @Query("SELECT u, " +
+           "COALESCE(uts.avatarLevel, 1), " +
+           "COALESCE(ugp.claimedCheckpointIds, ''), " +
+           "(SELECT COUNT(sa) FROM StudentAttempt sa WHERE sa.student = u AND sa.finishedAt IS NOT NULL), " +
+           "COALESCE((SELECT SUM(ct.amount) FROM CoinTransaction ct WHERE ct.student = u AND ct.createdAt >= :startDate), 0L) as periodCoins " +
+           "FROM User u " +
+           "LEFT JOIN UserTravelState uts ON uts.user = u " +
+           "LEFT JOIN UserGamificationProgress ugp ON ugp.user = u " +
+           "WHERE u.role = :role AND u.active = true AND u.organizationId = :orgId " +
+           "ORDER BY periodCoins DESC, u.coins DESC, u.xp DESC, u.createdAt ASC")
+    Page<Object[]> getLeaderboardPeriodByOrg(@Param("role") AppRole role, @Param("orgId") UUID orgId, @Param("startDate") LocalDateTime startDate, Pageable pageable);
+
+    @Query("SELECT COUNT(u) FROM User u WHERE u.role = :role AND u.active = true AND " +
+           "(u.coins > :coins OR (u.coins = :coins AND u.xp > :xp) OR (u.coins = :coins AND u.xp = :xp AND u.createdAt < :createdAt))")
+    long countUsersAboveAllTimeGlobal(@Param("role") AppRole role, @Param("coins") Long coins, @Param("xp") Long xp, @Param("createdAt") LocalDateTime createdAt);
+
+    @Query("SELECT COUNT(u) FROM User u WHERE u.role = :role AND u.active = true AND u.organizationId = :orgId AND " +
+           "(u.coins > :coins OR (u.coins = :coins AND u.xp > :xp) OR (u.coins = :coins AND u.xp = :xp AND u.createdAt < :createdAt))")
+    long countUsersAboveAllTimeByOrg(@Param("role") AppRole role, @Param("orgId") UUID orgId, @Param("coins") Long coins, @Param("xp") Long xp, @Param("createdAt") LocalDateTime createdAt);
+
+    @Query("SELECT COUNT(u) FROM User u WHERE u.role = :role AND u.active = true AND " +
+           "COALESCE((SELECT SUM(ct.amount) FROM CoinTransaction ct WHERE ct.student = u AND ct.createdAt >= :startDate), 0L) > :periodCoins")
+    long countUsersAbovePeriodGlobal(@Param("role") AppRole role, @Param("startDate") LocalDateTime startDate, @Param("periodCoins") Long periodCoins);
+
+    @Query("SELECT COUNT(u) FROM User u WHERE u.role = :role AND u.active = true AND u.organizationId = :orgId AND " +
+           "COALESCE((SELECT SUM(ct.amount) FROM CoinTransaction ct WHERE ct.student = u AND ct.createdAt >= :startDate), 0L) > :periodCoins")
+    long countUsersAbovePeriodByOrg(@Param("role") AppRole role, @Param("orgId") UUID orgId, @Param("startDate") LocalDateTime startDate, @Param("periodCoins") Long periodCoins);
+
+    @Query("SELECT COALESCE(SUM(ct.amount), 0) FROM CoinTransaction ct WHERE ct.student.id = :userId AND ct.createdAt >= :startDate")
+    Integer getLeaderboardPeriodCoins(@Param("userId") UUID userId, @Param("startDate") LocalDateTime startDate);
 }
+
+

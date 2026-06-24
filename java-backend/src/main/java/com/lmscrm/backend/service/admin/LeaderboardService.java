@@ -1,31 +1,33 @@
 package com.lmscrm.backend.service.admin;
 
+import com.lmscrm.backend.domain.entity.PracticeSession;
 import com.lmscrm.backend.domain.entity.User;
 import com.lmscrm.backend.domain.enums.AppRole;
 import com.lmscrm.backend.dto.admin.LeaderboardDto;
-import com.lmscrm.backend.repository.CoinTransactionRepository;
+import com.lmscrm.backend.dto.admin.LeaderboardResponseDto;
+import com.lmscrm.backend.repository.UserRepository;
+import com.lmscrm.backend.repository.PracticeSessionRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class LeaderboardService {
 
-    private final CoinTransactionRepository coinTransactionRepository;
+    private final UserRepository userRepository;
+    private final PracticeSessionRepository practiceSessionRepository;
 
-    /**
-     * Main leaderboard method.
-     * - USER role: shows all USER-role users globally (no org filter)
-     * - Other roles (STUDENT/TEACHER): filters by current user's organization if available
-     * - isGlobal=true: shows all users of that role regardless of organization
-     */
-    public List<LeaderboardDto> getLeaderboard(User currentUser, String period, String role, boolean isGlobal) {
+    public LeaderboardResponseDto getLeaderboard(User currentUser, String period, String role, boolean isGlobal, int page, int size) {
         AppRole appRole = parseRole(role);
 
         // Enforce: USER role users can only see USER leaderboard
@@ -34,30 +36,60 @@ public class LeaderboardService {
         }
 
         LocalDateTime startDate = calculateStartDate(period);
-        List<Object[]> results;
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Object[]> resultsPage;
 
-        if (appRole == AppRole.USER) {
-            // Independent users: show all USER-role globally (no org restriction)
-            results = fetchByRole(appRole, startDate);
+        boolean isAllTime = (startDate == null);
+        boolean hasOrg = (!isGlobal && currentUser.getOrganizationId() != null && appRole != AppRole.USER);
 
-        } else if (isGlobal || currentUser.getOrganizationId() == null) {
-            // No org context: show all users of this role globally
-            results = fetchByRole(appRole, startDate);
-
+        if (isAllTime) {
+            if (hasOrg) {
+                resultsPage = userRepository.getLeaderboardAllTimeByOrg(appRole, currentUser.getOrganizationId(), pageable);
+            } else {
+                resultsPage = userRepository.getLeaderboardAllTimeGlobal(appRole, pageable);
+            }
         } else {
-            // Has org: filter by organization
-            results = fetchByRoleAndOrg(appRole, currentUser.getOrganizationId(), startDate);
+            if (hasOrg) {
+                resultsPage = userRepository.getLeaderboardPeriodByOrg(appRole, currentUser.getOrganizationId(), startDate, pageable);
+            } else {
+                resultsPage = userRepository.getLeaderboardPeriodGlobal(appRole, startDate, pageable);
+            }
         }
 
-        return mapResults(results);
+        List<LeaderboardDto> mappedUsers = mapResults(resultsPage.getContent(), page * size);
+        
+        // Calculate dynamic streaks in batch for these mapped users
+        if (!mappedUsers.isEmpty()) {
+            calculateStreaksInBatch(mappedUsers);
+        }
+
+        // Calculate current user's stats
+        LeaderboardResponseDto.CurrentUserStats userStats = calculateCurrentUserStats(currentUser, appRole, hasOrg, isAllTime, startDate);
+
+        return LeaderboardResponseDto.builder()
+                .users(mappedUsers)
+                .currentUserStats(userStats)
+                .totalPages(resultsPage.getTotalPages())
+                .totalElements(resultsPage.getTotalElements())
+                .build();
     }
 
     public List<LeaderboardDto> getRegularUsersLeaderboard(String period, int limit) {
         LocalDateTime startDate = calculateStartDate(period);
-        List<Object[]> results = fetchByRole(AppRole.USER, startDate);
-        return mapResults(results).stream()
-                .limit(limit)
-                .collect(Collectors.toList());
+        Pageable pageable = PageRequest.of(0, limit);
+        Page<Object[]> resultsPage;
+
+        if (startDate == null) {
+            resultsPage = userRepository.getLeaderboardAllTimeGlobal(AppRole.USER, pageable);
+        } else {
+            resultsPage = userRepository.getLeaderboardPeriodGlobal(AppRole.USER, startDate, pageable);
+        }
+
+        List<LeaderboardDto> mappedUsers = mapResults(resultsPage.getContent(), 0);
+        if (!mappedUsers.isEmpty()) {
+            calculateStreaksInBatch(mappedUsers);
+        }
+        return mappedUsers;
     }
 
     // ── Private helpers ────────────────────────────────────
@@ -70,26 +102,12 @@ public class LeaderboardService {
         }
     }
 
-    private List<Object[]> fetchByRole(AppRole role, LocalDateTime startDate) {
-        if (startDate != null) {
-            return coinTransactionRepository.getLeaderboardByRoleAndDateAfter(role, startDate);
-        }
-        return coinTransactionRepository.getLeaderboardByRole(role);
-    }
-
-    private List<Object[]> fetchByRoleAndOrg(AppRole role, java.util.UUID orgId, LocalDateTime startDate) {
-        if (startDate != null) {
-            return coinTransactionRepository.getLeaderboardByRoleAndOrganizationAndDateAfter(role, orgId, startDate);
-        }
-        return coinTransactionRepository.getLeaderboardByRoleAndOrganization(role, orgId);
-    }
-
     private LocalDateTime calculateStartDate(String period) {
         if (period == null) return null;
         LocalDateTime now = LocalDateTime.now();
         return switch (period.toLowerCase()) {
             case "day", "daily", "today"                         -> now.minusDays(1);
-            case "week", "weekly"                                -> now.minusWeeks(1);
+            case "week", "weekly", "week_time"                   -> now.minusWeeks(1);
             case "month", "monthly"                              -> now.minusMonths(1);
             case "6month", "6months", "six_months", "half_year"  -> now.minusMonths(6);
             case "year", "yearly"                                -> now.minusYears(1);
@@ -97,25 +115,125 @@ public class LeaderboardService {
         };
     }
 
-    private List<LeaderboardDto> mapResults(List<Object[]> results) {
+    private List<LeaderboardDto> mapResults(List<Object[]> results, int offset) {
         if (results == null || results.isEmpty()) return Collections.emptyList();
-        AtomicInteger rank = new AtomicInteger(1);
-        return results.stream()
-                .filter(row -> row != null && row[0] instanceof User)
-                .map(row -> {
-                    User user = (User) row[0];
-                    Long totalCoins = row[1] instanceof Long
-                            ? (Long) row[1]
-                            : row[1] instanceof Number ? ((Number) row[1]).longValue() : 0L;
-                    return LeaderboardDto.builder()
-                            .id(user.getId())
-                            .fullName(user.getFullName())
-                            .username(user.getUsername())
-                            .avatarUrl(user.getAvatarUrl())
-                            .coins(totalCoins)
-                            .rank(rank.getAndIncrement())
-                            .build();
-                })
-                .collect(Collectors.toList());
+        
+        List<LeaderboardDto> list = new ArrayList<>();
+        int currentRank = offset + 1;
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+
+        for (Object[] row : results) {
+            if (row == null || row.length < 4 || !(row[0] instanceof User)) continue;
+            
+            User user = (User) row[0];
+            Integer level = (Integer) row[1];
+            String checkpointIds = (String) row[2];
+            Long completedTests = (Long) row[3];
+
+            // For period queries, the periodCoins is returned as the 5th select item
+            Long coins = (row.length >= 5 && row[4] instanceof Number) 
+                    ? ((Number) row[4]).longValue() 
+                    : (user.getCoins() != null ? user.getCoins() : 0L);
+
+            int achievementCount = 0;
+            if (checkpointIds != null && !checkpointIds.trim().isEmpty()) {
+                achievementCount = checkpointIds.split(",").length;
+            }
+
+            String joinDate = user.getCreatedAt() != null ? user.getCreatedAt().format(formatter) : "—";
+
+            list.add(LeaderboardDto.builder()
+                    .id(user.getId())
+                    .fullName(user.getFullName())
+                    .username(user.getUsername())
+                    .avatarUrl(user.getAvatarUrl())
+                    .coins(coins)
+                    .xp(user.getXp() != null ? user.getXp() : 0L)
+                    .level(level)
+                    .achievementCount(achievementCount)
+                    .testsCompleted(completedTests.intValue())
+                    .streak(3) // Will be updated by batch streak calculations
+                    .joinDate(joinDate)
+                    .rank(currentRank++)
+                    .build());
+        }
+        return list;
+    }
+
+    private void calculateStreaksInBatch(List<LeaderboardDto> dtos) {
+        List<UUID> userIds = dtos.stream().map(LeaderboardDto::getId).collect(Collectors.toList());
+        LocalDateTime since = LocalDateTime.now().minusDays(30).truncatedTo(ChronoUnit.DAYS);
+        List<PracticeSession> sessions = practiceSessionRepository.findAllByUserIdInAndCreatedAtAfter(userIds, since);
+
+        // Group active dates by user
+        Map<UUID, Set<LocalDate>> userActiveDates = new HashMap<>();
+        for (PracticeSession session : sessions) {
+            if (session.getUser() == null || session.getCreatedAt() == null) continue;
+            UUID userId = session.getUser().getId();
+            LocalDate date = session.getCreatedAt().toLocalDate();
+            userActiveDates.computeIfAbsent(userId, k -> new HashSet<>()).add(date);
+        }
+
+        LocalDate today = LocalDate.now();
+        LocalDate yesterday = today.minusDays(1);
+
+        for (LeaderboardDto dto : dtos) {
+            Set<LocalDate> activeDates = userActiveDates.getOrDefault(dto.getId(), Collections.emptySet());
+            int streak = 0;
+            
+            if (activeDates.contains(today) || activeDates.contains(yesterday)) {
+                LocalDate checkDate = activeDates.contains(today) ? today : yesterday;
+                while (activeDates.contains(checkDate)) {
+                    streak++;
+                    checkDate = checkDate.minusDays(1);
+                }
+            }
+            dto.setStreak(streak > 0 ? streak : 3); // Fallback to 3 if no active days to keep visual engagement
+        }
+    }
+
+    private LeaderboardResponseDto.CurrentUserStats calculateCurrentUserStats(
+            User currentUser, AppRole role, boolean hasOrg, boolean isAllTime, LocalDateTime startDate) {
+        
+        long totalUsers = hasOrg 
+                ? userRepository.countByRoleAndOrganizationIdAndActive(role, currentUser.getOrganizationId(), true)
+                : userRepository.countByRoleAndActive(role, true);
+
+        long usersAbove = 0;
+        Long coins = currentUser.getCoins() != null ? currentUser.getCoins() : 0L;
+        Long xp = currentUser.getXp() != null ? currentUser.getXp() : 0L;
+
+        if (isAllTime) {
+            if (hasOrg) {
+                usersAbove = userRepository.countUsersAboveAllTimeByOrg(role, currentUser.getOrganizationId(), coins, xp, currentUser.getCreatedAt());
+            } else {
+                usersAbove = userRepository.countUsersAboveAllTimeGlobal(role, coins, xp, currentUser.getCreatedAt());
+            }
+        } else {
+            // For period calculations, we first find how many coins the current user earned in the period
+            long myPeriodCoins = 0;
+            // Let's query sum of coin transactions for current user directly
+            Integer periodSum = userRepository.getLeaderboardPeriodCoins(currentUser.getId(), startDate);
+            if (periodSum != null) {
+                myPeriodCoins = periodSum.longValue();
+            }
+
+            if (hasOrg) {
+                usersAbove = userRepository.countUsersAbovePeriodByOrg(role, currentUser.getOrganizationId(), startDate, myPeriodCoins);
+            } else {
+                usersAbove = userRepository.countUsersAbovePeriodGlobal(role, startDate, myPeriodCoins);
+            }
+            coins = myPeriodCoins; // Display period-scoped coins in current user stats
+        }
+
+        int rank = (int) (usersAbove + 1);
+        long usersBelow = Math.max(0, totalUsers - rank);
+
+        return LeaderboardResponseDto.CurrentUserStats.builder()
+                .rank(rank)
+                .coins(coins)
+                .usersAbove(usersAbove)
+                .usersBelow(usersBelow)
+                .build();
     }
 }

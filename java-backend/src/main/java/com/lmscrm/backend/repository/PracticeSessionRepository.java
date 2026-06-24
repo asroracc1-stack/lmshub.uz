@@ -12,4 +12,6 @@ import java.util.UUID;
 public interface PracticeSessionRepository extends JpaRepository<PracticeSession, UUID> {
     List<PracticeSession> findAllByUserIdAndCreatedAtAfter(UUID userId, LocalDateTime since);
     List<PracticeSession> findAllByUserId(UUID userId);
+    List<PracticeSession> findAllByUserIdInAndCreatedAtAfter(List<UUID> userIds, LocalDateTime since);
 }
+

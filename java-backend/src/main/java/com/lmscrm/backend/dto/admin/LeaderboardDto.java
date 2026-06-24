@@ -16,4 +16,11 @@ public class LeaderboardDto {
     private String avatarUrl;
     private Long coins;
     private Integer rank;
+    private Long xp;
+    private Integer level;
+    private Integer achievementCount;
+    private Integer testsCompleted;
+    private Integer streak;
+    private String joinDate;
+
 }
