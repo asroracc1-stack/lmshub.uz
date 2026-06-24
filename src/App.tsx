@@ -256,6 +256,7 @@ const AppRoutes = () => {
           <Route path="speaking/partners" element={<SpeakingPartners />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="profile" element={<Profile />} />
+          <Route path="achievements" element={<UserAchievements />} />
           <Route path="telegram" element={<TelegramLinks />} />
           <Route path="pitch" element={<StartupPitch />} />
           <Route path="news" element={<LMSNews />} />
@@ -295,6 +296,7 @@ const AppRoutes = () => {
           <Route path="payments" element={<OrgPayments />} />
           <Route path="payment-requests" element={<PaymentRequests />} />
           <Route path="profile" element={<SharedProfile />} />
+          <Route path="achievements" element={<UserAchievements />} />
           <Route path="rewards" element={<OrgRewards />} />
           <Route path="leaderboard" element={<Leaderboard defaultRole="student" />} />
           <Route path="packs" element={<Packs />} />
@@ -332,6 +334,7 @@ const AppRoutes = () => {
           <Route path="messages" element={<OrgMessages />} />
           <Route path="payments" element={<OrgPayments />} />
           <Route path="profile" element={<SharedProfile />} />
+          <Route path="achievements" element={<UserAchievements />} />
           <Route path="rewards" element={<OrgRewards />} />
           <Route path="leaderboard" element={<Leaderboard defaultRole="student" />} />
           <Route path="packs" element={<Packs />} />
@@ -367,6 +370,7 @@ const AppRoutes = () => {
           <Route path="chat" element={<RealTimeChat />} />
           <Route path="messages" element={<OrgMessages />} />
           <Route path="profile" element={<SharedProfile />} />
+          <Route path="achievements" element={<UserAchievements />} />
           <Route path="leaderboard" element={<Leaderboard defaultRole="student" />} />
           <Route path="packs" element={<Packs />} />
           <Route path="speaking" element={<SpeakingHub basePath="/teacher" />} />
@@ -461,6 +465,7 @@ const AppRoutes = () => {
           <Route path="messages" element={<OrgMessages />} />
           <Route path="leaderboard" element={<Leaderboard defaultRole="student" />} />
           <Route path="profile" element={<SharedProfile />} />
+          <Route path="achievements" element={<UserAchievements />} />
           <Route path="packs" element={<Packs />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="calendar" element={<OrgEvents />} />
@@ -492,6 +497,7 @@ const AppRoutes = () => {
           <Route path="mocks/c/:kind" element={<MockCategory basePath="/pack-manager" />} />
           <Route path="mocks/take/:testId" element={<MockTake />} />
           <Route path="profile" element={<SharedProfile />} />
+          <Route path="achievements" element={<UserAchievements />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="referral" element={<ReferralPage />} />
