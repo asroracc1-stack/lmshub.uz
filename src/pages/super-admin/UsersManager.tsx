@@ -465,7 +465,7 @@ export default function UsersManager({
   };
 
   const grantCoinsMutation = useMutation({
-    mutationFn: async (payload: { studentId: string, amount: number, reason: string, comment?: string }) => {
+    mutationFn: async (payload: { student_id: string, amount: number, reason: string, comment?: string }) => {
       return api.post("/admin/coins/grant", payload);
     },
     onSuccess: () => {
@@ -1095,7 +1095,7 @@ export default function UsersManager({
               onClick={() => {
                 if (grantCoinsTarget) {
                   grantCoinsMutation.mutate({
-                    studentId: grantCoinsTarget.id,
+                    student_id: grantCoinsTarget.id,
                     amount: grantAmount,
                     reason: grantReason,
                     comment: grantComment

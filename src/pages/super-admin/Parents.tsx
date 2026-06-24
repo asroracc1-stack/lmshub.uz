@@ -239,7 +239,7 @@ export default function ParentsPage() {
   const grantCoinsMutation = useMutation({
     mutationFn: async (payload: { studentId: string, amount: number, reason: string, comment?: string }) => {
       return api.post("/admin/coins/grant", {
-        studentId: payload.studentId,
+        student_id: payload.studentId,
         amount: Number(payload.amount),
         reason: payload.reason || "Ota-ona faolligi",
         comment: payload.comment || ""
