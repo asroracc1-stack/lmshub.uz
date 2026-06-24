@@ -39,6 +39,13 @@ public class ReferralController {
 
         long inviteCount = userRepository.countByReferredBy(user.getId());
 
+        // Dynamic reconciliation: Ensure user has at least 10 coins per referral
+        long expectedReferralCoins = inviteCount * 10L;
+        if (user.getCoins() == null || user.getCoins() < expectedReferralCoins) {
+            user.setCoins(expectedReferralCoins);
+            userRepository.save(user);
+        }
+
         String referredByName = null;
         if (user.getReferredBy() != null) {
             Optional<User> referrerOpt = userRepository.findById(user.getReferredBy());

@@ -8,7 +8,7 @@ export const DONATION = {
   bank: "HUMO",
 };
 
-export const REFERRAL_BONUS = 5;
+export const REFERRAL_BONUS = 10;
 
 export const inviteLink = (code: string) =>
   `${APP_BASE_URL}/signup?invite=${encodeURIComponent(code)}`;

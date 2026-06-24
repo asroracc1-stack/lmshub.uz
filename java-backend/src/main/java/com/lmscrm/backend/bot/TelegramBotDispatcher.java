@@ -352,10 +352,17 @@ public class TelegramBotDispatcher {
                     newUser.setPassword("tg_" + chatId);
                     newUser.setEmail("tg_" + chatId + "@lmshub.uz");
                     newUser.setRole(AppRole.USER);
-                    newUser.setCoins(0L);
+                    newUser.setCoins(20L); // 10 initial + 10 referral bonus
                     newUser.setActive(true);
                     newUser.setReferredBy(inviterOpt.get().getId());
+                    
+                    // Award coins to inviter as well
+                    User inviter = inviterOpt.get();
+                    inviter.setCoins((inviter.getCoins() != null ? inviter.getCoins() : 0L) + 10L);
+                    userRepository.save(inviter);
+                    
                     userRepository.save(newUser);
+                    log.info("🎁 Telegram Bot Referral: {} invited {} — both +10 coins", inviter.getUsername(), newUser.getUsername());
                 }
             }
         }
@@ -385,7 +392,7 @@ public class TelegramBotDispatcher {
                 newUser.setPassword("tg_" + chatId); // dummy password
                 newUser.setEmail("tg_" + chatId + "@lmshub.uz");
                 newUser.setRole(AppRole.USER);
-                newUser.setCoins(0L);
+                newUser.setCoins(10L); // 10 initial coins (direct registration)
                 newUser.setActive(true);
                 return newUser;
             });
