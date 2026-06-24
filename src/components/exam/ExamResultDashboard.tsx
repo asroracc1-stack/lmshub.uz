@@ -528,6 +528,165 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
     );
   };
 
+  const renderAnswerSheet = (showFilters = true) => {
+    return (
+      <div className="space-y-4">
+        {/* Filters panel for Answer sheet */}
+        {showFilters && (
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#0F172A] border border-white/[0.06] p-4 rounded-xl select-none">
+            <div className="flex items-center gap-2 overflow-x-auto py-1">
+              <Button
+                size="sm"
+                variant={filterState === 'all' ? 'default' : 'outline'}
+                onClick={() => setFilterState('all')}
+                className={cn("rounded-lg text-xs font-bold h-7 px-3", filterState === 'all' ? "bg-purple-650 hover:bg-purple-700 text-white" : "border-white/[0.06] text-slate-400 hover:text-white")}
+              >
+                All ({questionStates.length})
+              </Button>
+              <Button
+                size="sm"
+                variant={filterState === 'correct' ? 'default' : 'outline'}
+                onClick={() => setFilterState('correct')}
+                className={cn("rounded-lg text-xs font-bold h-7 px-3", filterState === 'correct' ? "bg-emerald-600 hover:bg-emerald-700 text-white" : "border-white/[0.06] text-slate-400 hover:text-white")}
+              >
+                Correct ({questionStates.filter(r => r.state === 'correct').length})
+              </Button>
+              <Button
+                size="sm"
+                variant={filterState === 'wrong' ? 'default' : 'outline'}
+                onClick={() => setFilterState('wrong')}
+                className={cn("rounded-lg text-xs font-bold h-7 px-3", filterState === 'wrong' ? "bg-rose-600 hover:bg-rose-700 text-white" : "border-white/[0.06] text-slate-400 hover:text-white")}
+              >
+                Wrong ({questionStates.filter(r => r.state === 'wrong').length})
+              </Button>
+              <Button
+                size="sm"
+                variant={filterState === 'review' ? 'default' : 'outline'}
+                onClick={() => setFilterState('review')}
+                className={cn("rounded-lg text-xs font-bold h-7 px-3", filterState === 'review' ? "bg-amber-600 hover:bg-amber-700 text-white" : "border-white/[0.06] text-slate-400 hover:text-white")}
+              >
+                Review ({questionStates.filter(r => r.state === 'review').length})
+              </Button>
+              <Button
+                size="sm"
+                variant={filterState === 'skipped' ? 'default' : 'outline'}
+                onClick={() => setFilterState('skipped')}
+                className={cn("rounded-lg text-xs font-bold h-7 px-3", filterState === 'skipped' ? "bg-slate-700 hover:bg-slate-650 text-white" : "border-white/[0.06] text-slate-400 hover:text-white")}
+              >
+                Skipped ({questionStates.filter(r => r.state === 'skipped').length})
+              </Button>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold text-slate-400">Show correct options</span>
+              <button
+                onClick={() => setShowCorrectAnswers(!showCorrectAnswers)}
+                className={cn(
+                  "w-9 h-5 rounded-full p-0.5 transition-colors duration-200 focus:outline-none",
+                  showCorrectAnswers ? "bg-[#8B5CF6]" : "bg-slate-800"
+                )}
+              >
+                <div
+                  className={cn(
+                    "w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-200",
+                    showCorrectAnswers ? "translate-x-4" : "translate-x-0"
+                  )}
+                />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Answer Sheet grid */}
+        <Card className="border border-white/[0.06] p-6 rounded-2xl bg-[#0F172A] shadow-xl">
+          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3">
+            {questionStates
+              .map((res: any, idx: number) => ({ res, originalIdx: idx }))
+              .filter(({ res }) => !showFilters || filterState === 'all' || res.state === filterState)
+              .map(({ res, originalIdx }) => {
+                const isActive = activeQuestionIndex === originalIdx;
+                let statusStyle = "";
+                let statusBadge = "";
+                let statusText = "Wrong";
+
+                if (res.state === 'correct') {
+                  statusStyle = "border-emerald-500/20 bg-emerald-500/5 text-emerald-400 hover:border-emerald-500/40 hover:bg-emerald-500/10";
+                  statusBadge = "bg-emerald-500 text-white";
+                  statusText = "Correct";
+                } else if (res.state === 'skipped') {
+                  statusStyle = "border-slate-700/30 bg-slate-800/10 text-slate-400 hover:border-slate-700/50 hover:bg-slate-805/20";
+                  statusBadge = "bg-slate-600 text-white";
+                  statusText = "Skipped";
+                } else if (res.state === 'review') {
+                  statusStyle = "border-amber-500/20 bg-amber-500/5 text-amber-400 hover:border-amber-500/40 hover:bg-amber-500/10";
+                  statusBadge = "bg-amber-500 text-white";
+                  statusText = "Review";
+                } else {
+                  statusStyle = "border-rose-500/20 bg-rose-500/5 text-rose-455 hover:border-rose-500/40 hover:bg-rose-505/10";
+                  statusBadge = "bg-rose-500 text-white";
+                  statusText = "Wrong";
+                }
+
+                return (
+                  <button
+                    key={originalIdx}
+                    onClick={() => handleQuestionClick(originalIdx)}
+                    className={cn(
+                      "p-3 rounded-xl border flex flex-col justify-between text-xs font-bold transition-all duration-200 select-none text-left w-full h-20 relative group hover:scale-[1.03]",
+                      statusStyle,
+                      isActive && "ring-2 ring-[#8B5CF6] ring-offset-2 ring-offset-[#070B14] shadow-lg shadow-[#8B5CF6]/10"
+                    )}
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      <span className={cn("w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0", statusBadge)}>
+                        {originalIdx + 1}
+                      </span>
+                      <span className="text-[10px] font-bold opacity-80">{statusText}</span>
+                    </div>
+                    <div className="mt-2.5 flex items-center justify-between w-full select-none text-[10px]">
+                      <span className="truncate max-w-[50px] font-black text-white">
+                        {res.isOmitted ? "-" : res.userAns}
+                      </span>
+                      {showCorrectAnswers && (
+                        <span className="text-slate-550 font-black flex items-center gap-0.5">
+                          ➔ <span className="text-[#A855F7]">{res.correctAns}</span>
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+          </div>
+        </Card>
+
+        {/* Action Bar */}
+        {showFilters && (
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-6 border-t border-white/[0.06] select-none">
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" className="rounded-xl font-bold gap-2 text-xs h-10 px-4 border-white/[0.06] bg-[#0F172A] text-slate-300 hover:bg-white/5" onClick={handleShare}>
+                <Share2 className="w-4 h-4" /> Share Results
+              </Button>
+              <Button variant="default" size="sm" className="rounded-xl font-bold gap-2 text-xs h-10 px-6 bg-gradient-to-r from-[#8B5CF6] to-[#A855F7] text-white hover:opacity-90" onClick={() => setActiveTab('analysis')}>
+                <BrainCircuit className="w-4 h-4" /> Analyze Performance
+              </Button>
+              <Button variant="outline" size="sm" className="rounded-xl font-bold gap-2 text-xs h-10 px-4 border-white/[0.06] bg-[#0F172A] text-slate-300 hover:bg-white/5" onClick={() => nav(-1)}>
+                <RotateCcw className="w-4 h-4" /> Retry Mock Test
+              </Button>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" className="rounded-xl font-bold gap-2 text-xs h-10 px-4 border-emerald-500/20 bg-emerald-500/5 text-emerald-400 hover:bg-emerald-500/10" onClick={() => toast.success("Diagnostic feedback sent to academic coaches!")}>
+                Send Feedback
+              </Button>
+              <Button variant="default" size="sm" className="rounded-xl font-bold gap-2 text-xs h-10 px-6 bg-slate-800 hover:bg-slate-700 text-slate-200" onClick={() => nav(-1)}>
+                Back to Practice
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-[#070B14] text-slate-100 font-sans pb-16 selection:bg-[#8B5CF6]/30 selection:text-[#C084FC]">
       
@@ -786,156 +945,7 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
             {renderPackDetails()}
 
             {/* Top Interactive Answer Sheet */}
-            <div className="space-y-4">
-              {/* Filters panel for Answer sheet */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#0F172A] border border-white/[0.06] p-4 rounded-xl select-none">
-                <div className="flex items-center gap-2 overflow-x-auto py-1">
-                  <Button
-                    size="sm"
-                    variant={filterState === 'all' ? 'default' : 'outline'}
-                    onClick={() => setFilterState('all')}
-                    className={cn("rounded-lg text-xs font-bold h-7 px-3", filterState === 'all' ? "bg-purple-650 hover:bg-purple-700 text-white" : "border-white/[0.06] text-slate-400 hover:text-white")}
-                  >
-                    All ({questionStates.length})
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={filterState === 'correct' ? 'default' : 'outline'}
-                    onClick={() => setFilterState('correct')}
-                    className={cn("rounded-lg text-xs font-bold h-7 px-3", filterState === 'correct' ? "bg-emerald-600 hover:bg-emerald-700 text-white" : "border-white/[0.06] text-slate-400 hover:text-white")}
-                  >
-                    Correct ({questionStates.filter(r => r.state === 'correct').length})
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={filterState === 'wrong' ? 'default' : 'outline'}
-                    onClick={() => setFilterState('wrong')}
-                    className={cn("rounded-lg text-xs font-bold h-7 px-3", filterState === 'wrong' ? "bg-rose-600 hover:bg-rose-700 text-white" : "border-white/[0.06] text-slate-400 hover:text-white")}
-                  >
-                    Wrong ({questionStates.filter(r => r.state === 'wrong').length})
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={filterState === 'review' ? 'default' : 'outline'}
-                    onClick={() => setFilterState('review')}
-                    className={cn("rounded-lg text-xs font-bold h-7 px-3", filterState === 'review' ? "bg-amber-600 hover:bg-amber-700 text-white" : "border-white/[0.06] text-slate-400 hover:text-white")}
-                  >
-                    Review ({questionStates.filter(r => r.state === 'review').length})
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={filterState === 'skipped' ? 'default' : 'outline'}
-                    onClick={() => setFilterState('skipped')}
-                    className={cn("rounded-lg text-xs font-bold h-7 px-3", filterState === 'skipped' ? "bg-slate-700 hover:bg-slate-650 text-white" : "border-white/[0.06] text-slate-400 hover:text-white")}
-                  >
-                    Skipped ({questionStates.filter(r => r.state === 'skipped').length})
-                  </Button>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold text-slate-400">Show correct options</span>
-                  <button
-                    onClick={() => setShowCorrectAnswers(!showCorrectAnswers)}
-                    className={cn(
-                      "w-9 h-5 rounded-full p-0.5 transition-colors duration-200 focus:outline-none",
-                      showCorrectAnswers ? "bg-[#8B5CF6]" : "bg-slate-800"
-                    )}
-                  >
-                    <div
-                      className={cn(
-                        "w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-200",
-                        showCorrectAnswers ? "translate-x-4" : "translate-x-0"
-                      )}
-                    />
-                  </button>
-                </div>
-              </div>
-
-              {/* Answer Sheet grid */}
-              <Card className="border border-white/[0.06] p-6 rounded-2xl bg-[#0F172A] shadow-xl">
-                <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3">
-                  {questionStates
-                    .map((res: any, idx: number) => ({ res, originalIdx: idx }))
-                    .filter(({ res }) => filterState === 'all' || res.state === filterState)
-                    .map(({ res, originalIdx }) => {
-                      const isActive = activeQuestionIndex === originalIdx;
-                      let statusStyle = "";
-                      let statusBadge = "";
-                      let statusText = "Wrong";
-
-                      if (res.state === 'correct') {
-                        statusStyle = "border-emerald-500/20 bg-emerald-500/5 text-emerald-400 hover:border-emerald-500/40 hover:bg-emerald-500/10";
-                        statusBadge = "bg-emerald-500 text-white";
-                        statusText = "Correct";
-                      } else if (res.state === 'skipped') {
-                        statusStyle = "border-slate-700/30 bg-slate-800/10 text-slate-400 hover:border-slate-700/50 hover:bg-slate-805/20";
-                        statusBadge = "bg-slate-600 text-white";
-                        statusText = "Skipped";
-                      } else if (res.state === 'review') {
-                        statusStyle = "border-amber-500/20 bg-amber-500/5 text-amber-400 hover:border-amber-500/40 hover:bg-amber-500/10";
-                        statusBadge = "bg-amber-500 text-white";
-                        statusText = "Review";
-                      } else {
-                        statusStyle = "border-rose-500/20 bg-rose-500/5 text-rose-455 hover:border-rose-500/40 hover:bg-rose-505/10";
-                        statusBadge = "bg-rose-500 text-white";
-                        statusText = "Wrong";
-                      }
-
-                      return (
-                        <button
-                          key={originalIdx}
-                          onClick={() => handleQuestionClick(originalIdx)}
-                          className={cn(
-                            "p-3 rounded-xl border flex flex-col justify-between text-xs font-bold transition-all duration-200 select-none text-left w-full h-20 relative group hover:scale-[1.03]",
-                            statusStyle,
-                            isActive && "ring-2 ring-[#8B5CF6] ring-offset-2 ring-offset-[#070B14] shadow-lg shadow-[#8B5CF6]/10"
-                          )}
-                        >
-                          <div className="flex items-center justify-between w-full">
-                            <span className={cn("w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0", statusBadge)}>
-                              {originalIdx + 1}
-                            </span>
-                            <span className="text-[10px] font-bold opacity-80">{statusText}</span>
-                          </div>
-                          <div className="mt-2.5 flex items-center justify-between w-full select-none text-[10px]">
-                            <span className="truncate max-w-[50px] font-black text-white">
-                              {res.isOmitted ? "-" : res.userAns}
-                            </span>
-                            {showCorrectAnswers && (
-                              <span className="text-slate-550 font-black flex items-center gap-0.5">
-                                ➔ <span className="text-[#A855F7]">{res.correctAns}</span>
-                              </span>
-                            )}
-                          </div>
-                        </button>
-                      );
-                    })}
-                </div>
-              </Card>
-            </div>
-
-            {/* Action Bar */}
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-6 border-t border-white/[0.06] select-none">
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" className="rounded-xl font-bold gap-2 text-xs h-10 px-4 border-white/[0.06] bg-[#0F172A] text-slate-300 hover:bg-white/5" onClick={handleShare}>
-                  <Share2 className="w-4 h-4" /> Share Results
-                </Button>
-                <Button variant="default" size="sm" className="rounded-xl font-bold gap-2 text-xs h-10 px-6 bg-gradient-to-r from-[#8B5CF6] to-[#A855F7] text-white hover:opacity-90" onClick={() => setActiveTab('analysis')}>
-                  <BrainCircuit className="w-4 h-4" /> Analyze Performance
-                </Button>
-                <Button variant="outline" size="sm" className="rounded-xl font-bold gap-2 text-xs h-10 px-4 border-white/[0.06] bg-[#0F172A] text-slate-300 hover:bg-white/5" onClick={() => nav(-1)}>
-                  <RotateCcw className="w-4 h-4" /> Retry Mock Test
-                </Button>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" className="rounded-xl font-bold gap-2 text-xs h-10 px-4 border-emerald-500/20 bg-emerald-500/5 text-emerald-400 hover:bg-emerald-500/10" onClick={() => toast.success("Diagnostic feedback sent to academic coaches!")}>
-                  Send Feedback
-                </Button>
-                <Button variant="default" size="sm" className="rounded-xl font-bold gap-2 text-xs h-10 px-6 bg-slate-800 hover:bg-slate-700 text-slate-200" onClick={() => nav(-1)}>
-                  Back to Practice
-                </Button>
-              </div>
-            </div>
+            {renderAnswerSheet(true)}
 
           </div>
         )}
