@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   CheckCircle2, Clock, AlertCircle, ChevronDown, ChevronUp, BrainCircuit,
   Timer, XCircle, PlayCircle, BarChart3, Bookmark, FileText, ChevronRight,
@@ -16,8 +17,9 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatMathText, MathRenderer } from "@/lib/math";
 import { toast } from "sonner";
-
+ 
 export function ExamResultDashboard({ result, questions, exam }: { result: any, questions: any[], exam: any }) {
+  const { t } = useTranslation();
   const nav = useNavigate();
   const { role } = useAuth();
   const [activeTab, setActiveTab] = useState<'analytics' | 'analysis' | 'review'>('analytics');
@@ -124,9 +126,13 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
 
   const accuracy = Math.round((correctAnswers / totalQuestions) * 100);
 
-  // Recalculate score using strategy classes
-  const calculator = getExamCalculator(kind);
-  const finalScore = allUnanswered ? 0 : calculator.calculate(correctAnswers, totalQuestions, details, exam);
+  // Mapped details with prompt and qtype for exact classification
+  const mappedDetailsForCalc = questionResults.map(r => ({
+    ...r.detail,
+    ok: r.isCorrect,
+    qtype: r.question.questionType || r.question.question_type || r.question.category || "",
+    prompt: r.question.text || r.question.prompt || ""
+  }));
 
   // If SAT, fetch details breakdown from the SATCalculator
   let satBreakdown = {
@@ -136,21 +142,26 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
     mathCorrect: 0,
     mathTotal: 0,
     mathScore: 200,
-    totalScore: 400
+    totalScore: 400,
+    isSingleSection: false,
+    singleSectionName: ""
   };
 
-  if (isSat) {
-    const satCalc = getExamCalculator("sat") as SATCalculator;
-    if (satCalc && typeof satCalc.calculateBreakdown === "function") {
-      satBreakdown = allUnanswered
-        ? { rwCorrect: 0, rwTotal: 27, rwScore: 200, mathCorrect: 0, mathTotal: 22, mathScore: 200, totalScore: 400 }
-        : satCalc.calculateBreakdown(correctAnswers, totalQuestions, details, exam);
-    }
+  const satCalc = getExamCalculator("sat") as SATCalculator;
+  if (isSat && satCalc && typeof satCalc.calculateBreakdown === "function") {
+    satBreakdown = satCalc.calculateBreakdown(allUnanswered ? 0 : correctAnswers, totalQuestions, mappedDetailsForCalc, exam);
+  }
+
+  // Recalculate score using strategy classes
+  const calculator = getExamCalculator(kind);
+  let finalScore = allUnanswered ? 0 : calculator.calculate(correctAnswers, totalQuestions, mappedDetailsForCalc, exam);
+  if (isSat && allUnanswered) {
+    finalScore = satBreakdown.isSingleSection ? 200 : 400;
   }
 
   // Performance Rating Logic for Circular progress label
   const scoreRatio = isSat
-    ? Math.max(0, ((allUnanswered ? 400 : Number(finalScore)) - 400) / 1200)
+    ? Math.max(0, ((allUnanswered ? (satBreakdown.isSingleSection ? 200 : 400) : Number(finalScore)) - (satBreakdown.isSingleSection ? 200 : 400)) / (satBreakdown.isSingleSection ? 600 : 1200))
     : isMilliy
     ? (allUnanswered ? 0 : Number(finalScore)) / 100
     : accuracy / 100;
@@ -171,8 +182,13 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
     labelColor = "text-rose-500";
   }
 
-  const scoreType = isSat ? "SAT Score" : isIelts ? "IELTS Band" : isMilliy ? "Milliy Sertifikat" : "General Score";
-  const scoreSub = isSat ? "400 - 1600 Scale" : isIelts ? "0 - 9.0 Band Score" : isMilliy ? "0 - 100 Ball" : "Percentage Natija";
+  const scoreType = isSat 
+    ? (satBreakdown.isSingleSection ? (satBreakdown.singleSectionName === "math" ? "Math Section Score" : "R&W Section Score") : "SAT Score") 
+    : isIelts ? "IELTS Band" : isMilliy ? "Milliy Sertifikat" : "General Score";
+    
+  const scoreSub = isSat 
+    ? (satBreakdown.isSingleSection ? "200 - 800 Scale" : "400 - 1600 Scale") 
+    : isIelts ? "0 - 9.0 Band Score" : isMilliy ? "0 - 100 Ball" : "Percentage Natija";
 
   const elapsedSec = result.timeUsedSeconds ?? result.elapsedSec ?? 0;
   const elapsedMin = Math.floor(elapsedSec / 60);
@@ -409,8 +425,10 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
     // Estimated Future Score projection (Encouraging +10% improvement path)
     let estFutureScore = "";
     if (isSat) {
-      const currentScoreNum = allUnanswered ? 400 : Number(finalScore);
-      estFutureScore = `${Math.min(1600, currentScoreNum + Math.round(110 * (1.15 - scoreRatio)))}`;
+      const currentScoreNum = allUnanswered ? (satBreakdown.isSingleSection ? 200 : 400) : Number(finalScore);
+      const maxLimit = satBreakdown.isSingleSection ? 800 : 1600;
+      const addScore = satBreakdown.isSingleSection ? 55 : 110;
+      estFutureScore = `${Math.min(maxLimit, currentScoreNum + Math.round(addScore * (1.15 - scoreRatio)))}`;
     } else if (isMilliy) {
       const currentScoreNum = allUnanswered ? 0 : Number(finalScore);
       estFutureScore = `${Math.min(100, currentScoreNum + Math.round(12 * (1.15 - scoreRatio)))} Ball`;
@@ -678,6 +696,9 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
               <Button variant="outline" size="sm" className="rounded-xl font-bold gap-2 text-xs h-10 px-4 border-emerald-500/20 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10" onClick={() => toast.success("Diagnostic feedback sent to academic coaches!")}>
                 Send Feedback
               </Button>
+              <Button variant="default" size="sm" className="rounded-xl font-bold gap-2 text-xs h-10 px-6 bg-[#8B5CF6] text-white hover:bg-[#7C3AED] transition-all" onClick={() => nav(`/${role || "student"}/dashboard`)}>
+                <LayoutDashboard className="w-4 h-4" /> {t("cheating.returnToDashboard")}
+              </Button>
               <Button variant="default" size="sm" className="rounded-xl font-bold gap-2 text-xs h-10 px-6 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200" onClick={() => nav(-1)}>
                 Back to Practice
               </Button>
@@ -810,7 +831,7 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                   {/* Score text absolute values */}
                   <div className="absolute flex flex-col items-center justify-center text-center">
                     <span className="text-5xl font-black tracking-tighter text-slate-900 dark:text-white">
-                      {isMilliy && allUnanswered ? 0 : finalScore}
+                      {isSat && allUnanswered ? (satBreakdown.isSingleSection ? 200 : 400) : (isMilliy && allUnanswered ? 0 : finalScore)}
                     </span>
                     <span className={cn("text-xs font-extrabold uppercase mt-1 tracking-wider px-2 py-0.5 rounded-full bg-slate-100 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08]", labelColor)}>
                       {performanceLabel}

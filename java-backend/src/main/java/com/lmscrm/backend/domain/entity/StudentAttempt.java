@@ -61,6 +61,9 @@ public class StudentAttempt {
     @Column(name = "auto_submitted")
     private Boolean autoSubmitted;
 
+    @Column(name = "attempt_seed")
+    private String attemptSeed;
+
     @OneToMany(mappedBy = "attempt", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ExamViolation> violations = new ArrayList<>();
 

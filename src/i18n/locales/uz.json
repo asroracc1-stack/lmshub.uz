@@ -330,6 +330,13 @@
       "viewPlansBtn": "Tarifni ko'rish"
     }
   },
+  "cheating": {
+    "warning": "Kattalik (shpargalka) qilish taqiqlanadi",
+    "copyDisabled": "Imtihon shaffofligi uchun savol matnini nusxalash taqiqlangan.",
+    "pasteDisabled": "Nusxalangan matnni joylashtirish taqiqlangan.",
+    "tabSwitchWarning": "Boshqa oynaga o'tish aniqlandi! Shpargalka qilish taqiqlanadi.",
+    "returnToDashboard": "Dashboardga Qaytish"
+  },
   "userDashboard": {
     "toast": {
       "examDateSaved": "Imtihon sanasi saqlandi ✅",
@@ -1926,5 +1933,43 @@
     "feedbackComment": "Izoh",
     "feedbackPlaceholder": "Yozing...",
     "sendBtn": "Yuborish"
+  },
+  "leaderboardPage": {
+    "title": "Peshqadamlar",
+    "daily": "Kunlik",
+    "weekly": "Haftalik",
+    "monthly": "Oylik",
+    "allTime": "Hamma vaqt",
+    "dailyRating": "Kunlik reytingi",
+    "weeklyRating": "Haftalik reytingi",
+    "monthlyRating": "Oylik reytingi",
+    "allTimeRating": "Hamma vaqt reytingi",
+    "students": "Talabalar",
+    "regularUsers": "Mustaqil userlar",
+    "teachers": "O'qituvchilar",
+    "fullRanking": "To'liq reyting",
+    "totalUsers": "Jami: {{count}} ta user",
+    "noDataTitle": "Hozircha ma'lumot yo'q",
+    "noDataDesc": "Foydalanuvchilar faolligi oshishi bilan bu yerda reyting hosil bo'ladi!",
+    "loading": "Yuklanmoqda...",
+    "errorLoading": "Ma'lumotlar yuklanmadi. Qayta urinib ko'ring.",
+    "tryAgain": "Qayta urinish",
+    "previous": "Oldingi",
+    "next": "Keyingi",
+    "page": "Sahifa",
+    "yourPosition": "Sizning o'rningiz",
+    "above": "Tepada",
+    "below": "Pastda",
+    "aboveCount": "{{count}} ta user",
+    "belowCount": "{{count}} ta user",
+    "rank": "Reyting",
+    "coins": "Coinlar",
+    "xp": "Tajriba (XP)",
+    "achievements": "Yutuqlar",
+    "joinDate": "A'zo bo'lgan sana",
+    "completedTests": "Tugallangan testlar",
+    "testsCount": "{{count}} ta",
+    "activeDays": "{{count}} kunlik",
+    "you": "Siz"
   }
 }

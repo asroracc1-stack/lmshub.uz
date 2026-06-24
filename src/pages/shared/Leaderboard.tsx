@@ -290,7 +290,7 @@ function RankRow({ row, index, isCurrentUser, onClick }: { row: Row; index: numb
           {getDisplayName(row)}
           {isCurrentUser && (
             <span className="inline-flex items-center rounded-full bg-purple-500/20 px-2 py-0.5 text-[9px] font-black text-purple-600 dark:text-purple-400 uppercase tracking-wider">
-              Siz
+              {t("leaderboardPage.you")}
             </span>
           )}
           {row.streak >= 7 && (
@@ -323,6 +323,7 @@ function RankRow({ row, index, isCurrentUser, onClick }: { row: Row; index: numb
 
 // ── Profile Popup Modal Component ──────────────────────────────────
 function UserProfilePopup({ user, rank, onClose }: { user: Row; rank: number; onClose: () => void }) {
+  const { t } = useTranslation();
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
       <motion.div
@@ -365,7 +366,7 @@ function UserProfilePopup({ user, rank, onClose }: { user: Row; rank: number; on
             {user.streak >= 3 && (
               <span className="px-3 py-1 rounded-full bg-orange-500/10 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400 text-[10px] font-black uppercase tracking-wider border border-orange-500/20 flex items-center gap-0.5">
                 <Flame className="h-3 w-3 fill-orange-500 text-orange-500" />
-                {user.streak} kunlik
+                {t("leaderboardPage.activeDays", { count: user.streak })}
               </span>
             )}
           </div>
@@ -376,7 +377,7 @@ function UserProfilePopup({ user, rank, onClose }: { user: Row; rank: number; on
           <div className="flex items-center gap-2.5 bg-slate-50 dark:bg-white/[0.02] p-3 rounded-2xl border border-slate-100 dark:border-white/5">
             <Trophy className="h-5 w-5 text-amber-500" />
             <div>
-              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase">Reyting</p>
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase">{t("leaderboardPage.rank")}</p>
               <p className="text-sm font-black text-slate-700 dark:text-white">#{rank}</p>
             </div>
           </div>
@@ -384,7 +385,7 @@ function UserProfilePopup({ user, rank, onClose }: { user: Row; rank: number; on
           <div className="flex items-center gap-2.5 bg-slate-50 dark:bg-white/[0.02] p-3 rounded-2xl border border-slate-100 dark:border-white/5">
             <Star className="h-5 w-5 fill-amber-400 text-amber-400" />
             <div>
-              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase">Coinlar</p>
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase">{t("leaderboardPage.coins")}</p>
               <p className="text-sm font-black text-slate-700 dark:text-white">{Number(user.coins).toLocaleString()}</p>
             </div>
           </div>
@@ -392,7 +393,7 @@ function UserProfilePopup({ user, rank, onClose }: { user: Row; rank: number; on
           <div className="flex items-center gap-2.5 bg-slate-50 dark:bg-white/[0.02] p-3 rounded-2xl border border-slate-100 dark:border-white/5">
             <TrendingUp className="h-5 w-5 text-emerald-500" />
             <div>
-              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase">Tajriba (XP)</p>
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase">{t("leaderboardPage.xp")}</p>
               <p className="text-sm font-black text-slate-700 dark:text-white">{user.xp} XP</p>
             </div>
           </div>
@@ -400,7 +401,7 @@ function UserProfilePopup({ user, rank, onClose }: { user: Row; rank: number; on
           <div className="flex items-center gap-2.5 bg-slate-50 dark:bg-white/[0.02] p-3 rounded-2xl border border-slate-100 dark:border-white/5">
             <Medal className="h-5 w-5 text-blue-500" />
             <div>
-              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase">Yutuqlar</p>
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase">{t("leaderboardPage.achievements")}</p>
               <p className="text-sm font-black text-slate-700 dark:text-white">{user.achievementCount}</p>
             </div>
           </div>
@@ -409,7 +410,7 @@ function UserProfilePopup({ user, rank, onClose }: { user: Row; rank: number; on
         <div className="mt-3 flex items-center justify-between bg-slate-50 dark:bg-white/[0.02] px-4 py-3 rounded-2xl border border-slate-100 dark:border-white/5">
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4 text-slate-400 dark:text-slate-500" />
-            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase">A'zo bo'lgan sana</span>
+            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase">{t("leaderboardPage.joinDate")}</span>
           </div>
           <span className="text-xs font-bold text-slate-700 dark:text-white">{user.joinDate}</span>
         </div>
@@ -417,9 +418,9 @@ function UserProfilePopup({ user, rank, onClose }: { user: Row; rank: number; on
         <div className="mt-1 flex items-center justify-between bg-slate-50 dark:bg-white/[0.02] px-4 py-3 rounded-2xl border border-slate-100 dark:border-white/5">
           <div className="flex items-center gap-2">
             <ShieldCheck className="h-4 w-4 text-slate-400 dark:text-slate-500" />
-            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase">Tugallangan testlar</span>
+            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase">{t("leaderboardPage.completedTests")}</span>
           </div>
-          <span className="text-xs font-bold text-slate-700 dark:text-white">{user.testsCompleted} ta</span>
+          <span className="text-xs font-bold text-slate-700 dark:text-white">{t("leaderboardPage.testsCount", { count: user.testsCompleted })}</span>
         </div>
       </motion.div>
     </div>
@@ -432,11 +433,11 @@ export default function Leaderboard({ defaultRole = "student", isGlobal = false 
   const { user } = useAuth();
 
   const PERIODS = useMemo((): { value: Period; label: string; emoji: string }[] => [
-    { value: "daily",    label: "Kunlik",     emoji: "☀️" },
-    { value: "weekly",   label: "Haftalik",   emoji: "📅" },
-    { value: "monthly",  label: "Oylik",      emoji: "🗓️" },
-    { value: "all_time", label: "Hamma vaqt", emoji: "🏆" },
-  ], []);
+    { value: "daily",    label: t("leaderboardPage.daily"),     emoji: "☀️" },
+    { value: "weekly",   label: t("leaderboardPage.weekly"),    emoji: "📅" },
+    { value: "monthly",  label: t("leaderboardPage.monthly"),   emoji: "🗓️" },
+    { value: "all_time", label: t("leaderboardPage.allTime"),   emoji: "🏆" },
+  ], [t]);
 
   const isRegularUser = user?.role === "user";
   const initialRole: AppRole = isRegularUser ? "user" : defaultRole;
@@ -447,6 +448,16 @@ export default function Leaderboard({ defaultRole = "student", isGlobal = false 
   const [currentUserStats, setCurrentUserStats] = useState<CurrentUserStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState<string | null>(null);
+
+  const activePeriodRatingLabel = useMemo(() => {
+    switch (period) {
+      case "daily": return t("leaderboardPage.dailyRating");
+      case "weekly": return t("leaderboardPage.weeklyRating");
+      case "monthly": return t("leaderboardPage.monthlyRating");
+      case "all_time": return t("leaderboardPage.allTimeRating");
+      default: return "";
+    }
+  }, [period, t]);
   
   // Pagination State
   const [page, setPage] = useState(0);
@@ -460,9 +471,14 @@ export default function Leaderboard({ defaultRole = "student", isGlobal = false 
   const podiumRows  = useMemo(() => PODIUM_ORDER.map((i) => rows[i] ?? null), [rows]);
   const listRows    = useMemo(() => rows.slice(3), [rows]);
 
-  const ROLE_TABS = isRegularUser
-    ? ALL_ROLE_TABS.filter((t) => t.value === "user")
-    : ALL_ROLE_TABS;
+  const ROLE_TABS = useMemo(() => {
+    const allTabs = [
+      { value: "student" as AppRole, label: t("leaderboardPage.students"),     icon: Users,       emoji: "🎓" },
+      { value: "user" as AppRole,    label: t("leaderboardPage.regularUsers"), icon: Sparkles,    emoji: "✨" },
+      { value: "teacher" as AppRole, label: t("leaderboardPage.teachers"),     icon: ShieldCheck,  emoji: "👨‍🏫" },
+    ];
+    return isRegularUser ? allTabs.filter((t) => t.value === "user") : allTabs;
+  }, [isRegularUser, t]);
 
   const load = useCallback(async (showSkeleton = true) => {
     if (showSkeleton) setLoading(true);
@@ -481,10 +497,10 @@ export default function Leaderboard({ defaultRole = "student", isGlobal = false 
         coins:     Number(row.coins ?? 0),
         xp:        Number(row.xp ?? 0),
         level:     Number(row.level ?? 1),
-        achievementCount: Number(row.achievementCount ?? 0),
-        testsCompleted: Number(row.testsCompleted ?? 0),
+        achievementCount: Number(row.achievementCount ?? row.achievement_count ?? 0),
+        testsCompleted: Number(row.testsCompleted ?? row.tests_completed ?? 0),
         streak:    Number(row.streak ?? 3),
-        joinDate:  row.joinDate ?? "—",
+        joinDate:  row.joinDate ?? row.join_date ?? "—",
         rank:      row.rank || (page * PAGE_SIZE) + idx + 1,
       })) as Row[];
 
@@ -502,7 +518,7 @@ export default function Leaderboard({ defaultRole = "student", isGlobal = false 
       }
     } catch (err: any) {
       console.error("Leaderboard load error", err);
-      setError("Ma'lumotlar yuklanmadi. Qayta urinib ko'ring.");
+      setError(t("leaderboardPage.errorLoading"));
     } finally {
       setLoading(false);
     }
@@ -539,12 +555,12 @@ export default function Leaderboard({ defaultRole = "student", isGlobal = false 
           <div className="flex items-center justify-center gap-2 mb-1">
             <Flame className="h-7 w-7 text-amber-500 animate-pulse" />
             <h1 className="text-3xl font-black text-white tracking-tight bg-clip-text bg-gradient-to-r from-white via-slate-100 to-slate-300 drop-shadow-md">
-              {t("dynamic.leaderboardandhistory.peshqadamlar")}
+              {t("leaderboardPage.title")}
             </h1>
             <Flame className="h-7 w-7 text-amber-500 animate-pulse" />
           </div>
           <p className="text-emerald-500/70 text-[10px] font-black uppercase tracking-widest">
-            {activePeriodLabel} reytingi
+            {activePeriodRatingLabel}
           </p>
         </div>
 
@@ -635,7 +651,7 @@ export default function Leaderboard({ defaultRole = "student", isGlobal = false 
                   {user?.fullName || user?.username || "Siz"}
                 </p>
                 <p className="text-[10px] font-black text-purple-300 uppercase tracking-widest">
-                  Sizning o'rningiz
+                  {t("leaderboardPage.yourPosition")}
                 </p>
               </div>
             </div>
@@ -643,12 +659,12 @@ export default function Leaderboard({ defaultRole = "student", isGlobal = false 
             {/* Position Details */}
             <div className="flex items-center gap-4 sm:gap-6 justify-between w-full sm:w-auto border-t border-purple-500/20 pt-2 sm:pt-0 sm:border-0">
               <div className="text-center sm:text-right">
-                <p className="text-[9px] text-purple-300 font-black uppercase">Tepada</p>
-                <p className="text-sm font-black text-purple-200">{currentUserStats.usersAbove} ta user</p>
+                <p className="text-[9px] text-purple-300 font-black uppercase">{t("leaderboardPage.above")}</p>
+                <p className="text-sm font-black text-purple-200">{t("leaderboardPage.aboveCount", { count: currentUserStats.usersAbove })}</p>
               </div>
               <div className="text-center sm:text-right">
-                <p className="text-[9px] text-purple-300 font-black uppercase">Pastda</p>
-                <p className="text-sm font-black text-purple-200">{currentUserStats.usersBelow} ta user</p>
+                <p className="text-[9px] text-purple-300 font-black uppercase">{t("leaderboardPage.below")}</p>
+                <p className="text-sm font-black text-purple-200">{t("leaderboardPage.belowCount", { count: currentUserStats.usersBelow })}</p>
               </div>
               <div className="flex items-center gap-1.5 bg-black/40 rounded-2xl px-3 py-1.5 border border-purple-500/30">
                 <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
@@ -670,12 +686,12 @@ export default function Leaderboard({ defaultRole = "student", isGlobal = false 
           <div className="flex items-center gap-2">
             <Medal className="h-5 w-5 text-emerald-500" />
             <span className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
-              To'liq reyting
+              {t("leaderboardPage.fullRanking")}
             </span>
           </div>
           {totalElements > 0 && (
             <span className="text-[10px] text-slate-400 dark:text-slate-500 font-black uppercase">
-              Jami: {totalElements} ta user
+              {t("leaderboardPage.totalUsers", { count: totalElements })}
             </span>
           )}
         </div>
@@ -684,7 +700,7 @@ export default function Leaderboard({ defaultRole = "student", isGlobal = false 
         {loading && rows.length === 0 ? (
           <div className="py-20 flex flex-col items-center justify-center gap-3">
             <div className="h-10 w-10 rounded-full border-2 border-emerald-500/30 border-t-emerald-500 animate-spin" />
-            <p className="text-xs text-slate-400 font-semibold animate-pulse">Yuklanmoqda...</p>
+            <p className="text-xs text-slate-400 font-semibold animate-pulse">{t("leaderboardPage.loading")}</p>
           </div>
         ) : error && rows.length === 0 ? (
           <div className="py-16 text-center space-y-4">
@@ -693,7 +709,7 @@ export default function Leaderboard({ defaultRole = "student", isGlobal = false 
               onClick={() => load(true)}
               className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all"
             >
-              Qayta urinish
+              {t("leaderboardPage.tryAgain")}
             </button>
           </div>
         ) : rows.length === 0 ? (
@@ -701,9 +717,9 @@ export default function Leaderboard({ defaultRole = "student", isGlobal = false 
             <div className="rounded-full bg-slate-50 dark:bg-white/5 p-6 border border-slate-100 dark:border-white/5 shadow-inner">
               <Trophy className="h-12 w-12 text-emerald-500/60" />
             </div>
-            <h3 className="text-base font-black text-slate-700 dark:text-slate-200">Hozircha ma'lumot yo'q</h3>
+            <h3 className="text-base font-black text-slate-700 dark:text-slate-200">{t("leaderboardPage.noDataTitle")}</h3>
             <p className="text-xs text-slate-400 dark:text-slate-500 max-w-[260px]">
-              Foydalanuvchilar faolligi oshishi bilan bu yerda reyting hosil bo'ladi!
+              {t("leaderboardPage.noDataDesc")}
             </p>
           </div>
         ) : (
@@ -731,17 +747,17 @@ export default function Leaderboard({ defaultRole = "student", isGlobal = false 
                   className="inline-flex items-center gap-1 px-3.5 py-2 rounded-xl text-xs font-bold border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 disabled:opacity-40 disabled:pointer-events-none transition-colors"
                 >
                   <ChevronLeft className="h-4 w-4" />
-                  Oldingi
+                  {t("leaderboardPage.previous")}
                 </button>
                 <span className="text-[11px] text-slate-400 dark:text-slate-500 font-bold">
-                  Sahifa {page + 1} / {totalPages}
+                  {t("leaderboardPage.page")} {page + 1} / {totalPages}
                 </span>
                 <button
                   disabled={page >= totalPages - 1}
                   onClick={() => setPage((p) => p + 1)}
                   className="inline-flex items-center gap-1 px-3.5 py-2 rounded-xl text-xs font-bold border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 disabled:opacity-40 disabled:pointer-events-none transition-colors"
                 >
-                  Keyingi
+                  {t("leaderboardPage.next")}
                   <ChevronRight className="h-4 w-4" />
                 </button>
               </div>

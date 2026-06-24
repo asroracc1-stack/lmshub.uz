@@ -170,7 +170,7 @@ public class LibraryController {
     }
 
     // ─── SECURE PDF STREAMING ───────────────────────────────────────────────────
-    @GetMapping("/materials/{id}/pdf-stream")
+    @GetMapping({"/materials/{id}/pdf-stream", "/materials/{id}/pdf"})
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Ruxsat etilgan foydalanuvchiga PDF-ni xavfsiz oqim shaklida taqdim etish")
     public ResponseEntity<byte[]> streamPdf(

@@ -126,16 +126,26 @@ public class LeaderboardService {
             if (row == null || row.length < 4 || !(row[0] instanceof User)) continue;
             
             User user = (User) row[0];
-            Integer level = (Integer) row[1];
-            String checkpointIds = (String) row[2];
             Long completedTests = (Long) row[3];
 
-            // Display user's total coins instead of period-scoped coins
+            // Display user's total coins and XP dynamically
             Long coins = user.getCoins() != null ? user.getCoins() : 0L;
+            Long xp = user.getXp() != null ? user.getXp() : 0L;
 
+            // Calculate dynamic total distance
+            double distance = (coins * 10.0) + (xp * 1.0) + (completedTests * 500.0);
+
+            // Calculate dynamic level (1 level per 5000 travel units/meters)
+            int calculatedLevel = 1 + (int)(distance / 5000.0);
+            if (calculatedLevel < 1) calculatedLevel = 1;
+
+            // Calculate dynamic achievements count based on reached milestones
+            double[] milestones = {1000.0, 5000.0, 10000.0, 20000.0, 50000.0, 100000.0, 200000.0, 350000.0, 500000.0};
             int achievementCount = 0;
-            if (checkpointIds != null && !checkpointIds.trim().isEmpty()) {
-                achievementCount = checkpointIds.split(",").length;
+            for (double milestone : milestones) {
+                if (distance >= milestone) {
+                    achievementCount++;
+                }
             }
 
             String joinDate = user.getCreatedAt() != null ? user.getCreatedAt().format(formatter) : "—";
@@ -146,8 +156,8 @@ public class LeaderboardService {
                     .username(user.getUsername())
                     .avatarUrl(user.getAvatarUrl())
                     .coins(coins)
-                    .xp(user.getXp() != null ? user.getXp() : 0L)
-                    .level(level)
+                    .xp(xp)
+                    .level(calculatedLevel)
                     .achievementCount(achievementCount)
                     .testsCompleted(completedTests.intValue())
                     .streak(3) // Will be updated by batch streak calculations

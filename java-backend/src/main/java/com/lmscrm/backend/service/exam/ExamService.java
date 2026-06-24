@@ -394,6 +394,7 @@ public class ExamService {
                 attempt = new StudentAttempt();
                 attempt.setExam(exam);
                 attempt.setStudent(user);
+                attempt.setAttemptSeed(java.util.UUID.randomUUID().toString());
             }
             attempt.setStartedAt(java.time.LocalDateTime.now().minusMinutes(exam.getDurationMinutes() != null ? exam.getDurationMinutes() : 60));
             attempt.setFinishedAt(java.time.LocalDateTime.now());
@@ -464,6 +465,7 @@ public class ExamService {
 
         return ExamResultDto.builder()
                 .attemptId(attempt != null ? attempt.getId() : null)
+                .attemptSeed(attempt != null ? attempt.getAttemptSeed() : null)
                 .kind(kind)
                 .correct(correctCount)
                 .total(questions.size())
@@ -525,6 +527,7 @@ public class ExamService {
         
         return ExamResultDto.builder()
                 .attemptId(attempt.getId())
+                .attemptSeed(attempt.getAttemptSeed())
                 .kind(kind)
                 .correct(attempt.getTotalScore() != null ? attempt.getTotalScore() : correctCount)
                 .total(attempt.getMaxScore() != null ? attempt.getMaxScore() : questions.size())
@@ -594,6 +597,7 @@ public class ExamService {
         
         return ExamResultDto.builder()
                 .attemptId(attempt.getId())
+                .attemptSeed(attempt.getAttemptSeed())
                 .kind(kind)
                 .correct(attempt.getTotalScore() != null ? attempt.getTotalScore() : correctCount)
                 .total(attempt.getMaxScore() != null ? attempt.getMaxScore() : questions.size())

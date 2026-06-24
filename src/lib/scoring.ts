@@ -17,7 +17,9 @@ export class SATCalculator implements ScoreCalculator {
         mathCorrect: 0,
         mathTotal: 0,
         mathScore: 200,
-        totalScore: 400
+        totalScore: 400,
+        isSingleSection: false,
+        singleSectionName: ""
       };
     }
 
@@ -98,7 +100,19 @@ export class SATCalculator implements ScoreCalculator {
 
     const rwScore = getRWScore(rwCorrect, rwTotal);
     const mathScore = getMathScore(mathCorrect, mathTotal);
-    const totalScore = rwScore + mathScore;
+    
+    let totalScore = rwScore + mathScore;
+    let isSingleSection = false;
+    let singleSectionName = "";
+    if (rwTotal > 0 && mathTotal === 0) {
+      totalScore = rwScore;
+      isSingleSection = true;
+      singleSectionName = "rw";
+    } else if (mathTotal > 0 && rwTotal === 0) {
+      totalScore = mathScore;
+      isSingleSection = true;
+      singleSectionName = "math";
+    }
 
     return {
       rwCorrect,
@@ -107,7 +121,9 @@ export class SATCalculator implements ScoreCalculator {
       mathCorrect,
       mathTotal,
       mathScore,
-      totalScore
+      totalScore,
+      isSingleSection,
+      singleSectionName
     };
   }
 }

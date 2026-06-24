@@ -8,6 +8,7 @@ import java.util.List;
 @Builder
 public class ExamResultDto {
     private java.util.UUID attemptId;
+    private String attemptSeed;
     private Double bandScore;
     private Integer correct;
     private Integer total;

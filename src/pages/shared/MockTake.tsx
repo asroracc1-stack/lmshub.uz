@@ -126,7 +126,37 @@ function mapQtype(raw: string | null | undefined): string {
   return t; // mcq, fill, short, tfng, ynng, matching, headings — already correct
 }
 
-function normalize(exam: ExamData): { sections: { title: string; passage: string; imageUrl: string }[]; questions: NormalQ[] } {
+function hashStringToInt(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash |= 0;
+  }
+  return hash;
+}
+
+function mulberry32(a: number) {
+  return function() {
+    let t = a += 0x6D2B79F5;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  }
+}
+
+function deterministicShuffle<T>(array: T[], seedStr: string): T[] {
+  const seed = hashStringToInt(seedStr);
+  const rand = mulberry32(seed);
+  const result = [...array];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
+function normalize(exam: ExamData, attemptSeed?: string | null): { sections: { title: string; passage: string; imageUrl: string }[]; questions: NormalQ[] } {
   const sections: { title: string; passage: string; imageUrl: string }[] = [];
   const questions: NormalQ[] = [];
 
@@ -145,12 +175,22 @@ function normalize(exam: ExamData): { sections: { title: string; passage: string
     rootQuestionsCount: (exam as any).questions?.length ?? 0,
   }));
 
-  if (rawPassages.length > 0) {
-    rawPassages.forEach((p, sIdx) => {
+  const passagesToUse = attemptSeed && rawPassages.length > 0
+    ? deterministicShuffle(rawPassages, attemptSeed)
+    : rawPassages;
+
+  if (passagesToUse.length > 0) {
+    passagesToUse.forEach((p, sIdx) => {
       sections.push({ title: p.title ?? "", passage: p.content ?? "", imageUrl: p.imageUrl ?? p.image_url ?? "" });
-      (p.questions ?? []).forEach((q) => {
+      
+      const rawQuestions = p.questions ?? [];
+      const questionsToUse = attemptSeed
+        ? deterministicShuffle(rawQuestions, attemptSeed + "_" + (p.id || sIdx))
+        : rawQuestions;
+
+      questionsToUse.forEach((q) => {
         const qtype = mapQtype(q.questionType ?? q.question_type);
-        const rawOpts = q.options && q.options.length > 0
+        let rawOpts = q.options && q.options.length > 0
           ? q.options.map(o => ({
               id: o.id,
               text: o.text,
@@ -160,10 +200,15 @@ function normalize(exam: ExamData): { sections: { title: string; passage: string
               imagePosition: o.imagePosition ?? o.image_position ?? "left"
             })).sort((a, b) => a.positionOrder - b.positionOrder)
           : null;
+
+        if (attemptSeed && rawOpts && rawOpts.length > 0) {
+          rawOpts = deterministicShuffle(rawOpts, q.id + attemptSeed);
+        }
+
         questions.push({
           id: q.id,
           position: questions.length + 1,
-          section_index: sIdx,
+          section_index: sections.length - 1,
           prompt: q.text ?? q.prompt ?? "",
           qtype,
           options: rawOpts,
@@ -175,35 +220,46 @@ function normalize(exam: ExamData): { sections: { title: string; passage: string
         });
       });
     });
-  } else if ((exam as any).questions && (exam as any).questions.length > 0) {
-    // Flat questions at root level (some backends return this)
-    sections.push({ title: exam.title ?? "Section 1", passage: "", imageUrl: "" });
-    ((exam as any).questions as Q[]).forEach((q) => {
-      const qtype = mapQtype(q.questionType ?? q.question_type);
-      const rawOpts = q.options && q.options.length > 0
-        ? q.options.map(o => ({
-            id: o.id,
-            text: o.text,
-            isCorrect: o.isCorrect ?? o.is_correct ?? false,
-            positionOrder: o.positionOrder ?? o.position_order ?? 0,
-            imageUrl: o.imageUrl ?? o.image_url,
-            imagePosition: o.imagePosition ?? o.image_position ?? "left"
-          })).sort((a, b) => a.positionOrder - b.positionOrder)
-        : null;
-      questions.push({
-        id: q.id,
-        position: questions.length + 1,
-        section_index: 0,
-        prompt: q.text ?? q.prompt ?? "",
-        qtype,
-        options: rawOpts,
-        correct_answer: q.correctAnswer ?? q.correct_answer ?? null,
-        points: q.points ?? 1,
-        imageUrl: q.imageUrl ?? q.image_url,
-        imagePosition: q.imagePosition ?? q.image_position,
-        explanation: q.explanation ?? "",
+  } else {
+    const rawRootQuestions = (exam as any).questions ?? [];
+    const questionsToUse = attemptSeed
+      ? deterministicShuffle(rawRootQuestions, attemptSeed)
+      : rawRootQuestions;
+
+    if (questionsToUse.length > 0) {
+      sections.push({ title: exam.title ?? "Section 1", passage: "", imageUrl: "" });
+      questionsToUse.forEach((q) => {
+        const qtype = mapQtype(q.questionType ?? q.question_type);
+        let rawOpts = q.options && q.options.length > 0
+          ? q.options.map(o => ({
+              id: o.id,
+              text: o.text,
+              isCorrect: o.isCorrect ?? o.is_correct ?? false,
+              positionOrder: o.positionOrder ?? o.position_order ?? 0,
+              imageUrl: o.imageUrl ?? o.image_url,
+              imagePosition: o.imagePosition ?? o.image_position ?? "left"
+            })).sort((a, b) => a.positionOrder - b.positionOrder)
+          : null;
+
+        if (attemptSeed && rawOpts && rawOpts.length > 0) {
+          rawOpts = deterministicShuffle(rawOpts, q.id + attemptSeed);
+        }
+
+        questions.push({
+          id: q.id,
+          position: questions.length + 1,
+          section_index: 0,
+          prompt: q.text ?? q.prompt ?? "",
+          qtype,
+          options: rawOpts,
+          correct_answer: q.correctAnswer ?? q.correct_answer ?? null,
+          points: q.points ?? 1,
+          imageUrl: q.imageUrl ?? q.image_url,
+          imagePosition: q.imagePosition ?? q.image_position,
+          explanation: q.explanation ?? "",
+        });
       });
-    });
+    }
   }
 
   console.log(`[MockTake] normalize done — ${sections.length} sections, ${questions.length} questions`);
@@ -658,18 +714,78 @@ export default function MockTake() {
     return () => document.removeEventListener("fullscreenchange", handleFsChange);
   }, []);
 
+  const attemptSeed = searchParams.get("seed");
+
+  const handleStartExam = async () => {
+    if (!testId) return;
+    try {
+      setLoading(true);
+      const resStart = await api.post(`/student/exams/${testId}/start`);
+      const attempt = resStart.data;
+      setSearchParams({ attemptId: attempt.id, seed: attempt.attemptSeed });
+      setStarted(true);
+      startedAt.current = Date.now();
+      
+      const resExam = await api.get<ExamData>(`/admin/exams/${testId}?t=${Date.now()}`);
+      setExam(resExam.data);
+      const { sections: s, questions: q } = normalize(resExam.data, attempt.attemptSeed);
+      setSections(s);
+      setQuestions(q);
+      
+      const startTimeMs = new Date(attempt.startedAt).getTime();
+      const elapsedSec = Math.floor((Date.now() - startTimeMs) / 1000);
+      const totalSec = (resExam.data.duration_minutes ?? resExam.data.durationMinutes ?? 60) * 60;
+      setTimeLeft(Math.max(0, totalSec - elapsedSec));
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to start exam");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!testId) return;
     setLoading(true);
     setLoadError(null);
+
+    // If not review mode and not already started/resumed, check for active attempt
+    if (!isReviewMode && !attemptId) {
+      api.get<any[]>('/student/exams/attempts')
+        .then((resAttempts) => {
+          const active = resAttempts.data.find(a => a.examId === testId && !a.finishedAt);
+          if (active) {
+            setSearchParams({ attemptId: active.id, seed: active.attemptSeed });
+            setStarted(true);
+          }
+        })
+        .catch(console.error);
+    }
+
     api.get<ExamData>(`/admin/exams/${testId}?t=${Date.now()}`)
       .then((res) => {
         const data = res.data;
         setExam(data);
-        const { sections: s, questions: q } = normalize(data);
+        const { sections: s, questions: q } = normalize(data, attemptSeed);
         setSections(s);
         setQuestions(q);
-        setTimeLeft((data.duration_minutes ?? 60) * 60);
+
+        if (attemptId) {
+          api.get<any[]>('/student/exams/attempts')
+            .then(resAttempts => {
+              const att = resAttempts.data.find(a => a.id === attemptId);
+              if (att && att.startedAt) {
+                const startTimeMs = new Date(att.startedAt).getTime();
+                const elapsedSec = Math.floor((Date.now() - startTimeMs) / 1000);
+                const totalSec = (data.duration_minutes ?? data.durationMinutes ?? 60) * 60;
+                setTimeLeft(Math.max(0, totalSec - elapsedSec));
+              } else {
+                setTimeLeft((data.duration_minutes ?? data.durationMinutes ?? 60) * 60);
+              }
+            })
+            .catch(() => setTimeLeft((data.duration_minutes ?? data.durationMinutes ?? 60) * 60));
+        } else {
+          setTimeLeft((data.duration_minutes ?? data.durationMinutes ?? 60) * 60);
+        }
         
         try {
           const saved = localStorage.getItem(`lmshub_exam_${testId}`);
@@ -685,8 +801,12 @@ export default function MockTake() {
             : `/student/exams/${testId}/result`;
           api.get(url)
             .then((resResult) => {
-              setResult(resResult.data);
-              setStarted(true); 
+              const resultData = resResult.data;
+              setResult(resultData);
+              setStarted(true);
+              const { sections: sRev, questions: qRev } = normalize(data, resultData.attemptSeed);
+              setSections(sRev);
+              setQuestions(qRev);
             })
             .catch(() => toast.error("Error loading result"));
         }
@@ -695,7 +815,7 @@ export default function MockTake() {
         setLoadError(err?.response?.data?.message ?? err?.message ?? "Failed to load exam");
       })
       .finally(() => setLoading(false));
-  }, [testId, isReviewMode, attemptId]);
+  }, [testId, isReviewMode, attemptId, attemptSeed]);
 
   // Keyboard Shortcuts (A, B, C, D, Left, Right)
   useEffect(() => {
@@ -742,6 +862,7 @@ export default function MockTake() {
     if (!started || result || isPaused || showSuccessAnimation || showCheatingLocked) return;
 
     const handleCheating = () => {
+      toast.warning(t("cheating.warning", { defaultValue: "Cheating is not allowed" }));
       if (showCheatingWarning) return;
 
       setCheatingStrikes((prev) => {
@@ -758,6 +879,7 @@ export default function MockTake() {
 
     const handleVisibilityChange = () => {
       if (document.hidden) {
+        toast.error(t("cheating.tabSwitchWarning", { defaultValue: "Tab switching detected! Cheating is not allowed." }));
         handleCheating();
       }
     };
@@ -771,14 +893,35 @@ export default function MockTake() {
       }, 100);
     };
 
+    const handleCopy = (e: ClipboardEvent) => {
+      e.preventDefault();
+      toast.warning(t("cheating.warning", { defaultValue: "Cheating is not allowed" }) + ": " + t("cheating.copyDisabled", { defaultValue: "Copying question content is disabled." }));
+    };
+
+    const handlePaste = (e: ClipboardEvent) => {
+      e.preventDefault();
+      toast.warning(t("cheating.warning", { defaultValue: "Cheating is not allowed" }) + ": " + t("cheating.pasteDisabled", { defaultValue: "Pasting content is disabled." }));
+    };
+
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+      toast.warning(t("cheating.warning", { defaultValue: "Cheating is not allowed" }));
+    };
+
     document.addEventListener("visibilitychange", handleVisibilityChange);
     window.addEventListener("blur", handleWindowBlur);
+    document.addEventListener("copy", handleCopy);
+    document.addEventListener("paste", handlePaste);
+    document.addEventListener("contextmenu", handleContextMenu);
 
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("blur", handleWindowBlur);
+      document.removeEventListener("copy", handleCopy);
+      document.removeEventListener("paste", handlePaste);
+      document.removeEventListener("contextmenu", handleContextMenu);
     };
-  }, [started, result, isPaused, showSuccessAnimation, showCheatingWarning, showCheatingLocked]);
+  }, [started, result, isPaused, showSuccessAnimation, showCheatingWarning, showCheatingLocked, t]);
   
   // Track Time Spent per question
   useEffect(() => {
@@ -1182,7 +1325,7 @@ export default function MockTake() {
               className={cn("text-white font-bold px-10 rounded-xl h-12 uppercase tracking-widest text-sm transition-all duration-300", 
                 isMilliy ? "bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-600/10" : "bg-[#0f2c59] dark:bg-blue-600 hover:bg-[#1a365d] dark:hover:bg-blue-700"
               )} 
-              onClick={() => { setStarted(true); startedAt.current = Date.now(); }}
+              onClick={handleStartExam}
             >
               {isMilliy ? "Qoidalarni qabul qilaman va testni boshlayman" : "Acknowledge & Start"}
             </Button>

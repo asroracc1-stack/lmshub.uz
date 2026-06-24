@@ -559,17 +559,17 @@
       "progress": "Progress"
     },
     "goalsandachievements": {
-      "bugungi_maqsadlar": "Bugungi maqsadlar",
-      "yutuqlar": "Yutuqlar"
+      "bugungi_maqsadlar": "Цели на сегодня",
+      "yutuqlar": "Достижения"
     },
     "leaderboardandhistory": {
-      "peshqadamlar": "Peshqadamlar",
-      "so_nggi_testlar": "So'nggi testlar",
-      "hisobingiz": "Hisobingiz",
-      "premium": "Premium",
-      "a_zolik_turi": "A'zolik turi",
-      "topshirilgan_testlar": "Topshirilgan testlar",
-      "umumiy_progress": "Umumiy progress"
+      "peshqadamlar": "Лидеры",
+      "so_nggi_testlar": "Последние тесты",
+      "hisobingiz": "Ваш аккаунт",
+      "premium": "Премиум",
+      "a_zolik_turi": "Тип подписки",
+      "topshirilgan_testlar": "Сданные тесты",
+      "umumiy_progress": "Общий прогресс"
     },
     "weeklychart": {
       "haftalik_natija": "Haftalik natija",
@@ -1924,5 +1924,43 @@
     "feedbackComment": "Отзыв",
     "feedbackPlaceholder": "Напишите что-нибудь...",
     "sendBtn": "Отправить"
+  },
+  "leaderboardPage": {
+    "title": "Лидеры",
+    "daily": "За день",
+    "weekly": "За неделю",
+    "monthly": "За месяц",
+    "allTime": "Все время",
+    "dailyRating": "Дневной рейтинг",
+    "weeklyRating": "Недельный рейтинг",
+    "monthlyRating": "Месячный рейтинг",
+    "allTimeRating": "Рейтинг за все время",
+    "students": "Студенты",
+    "regularUsers": "Независимые пользователи",
+    "teachers": "Учителя",
+    "fullRanking": "Полный рейтинг",
+    "totalUsers": "Всего: {{count}} пользователей",
+    "noDataTitle": "Пока нет данных",
+    "noDataDesc": "Как только пользователи станут активнее, здесь появится рейтинг!",
+    "loading": "Загрузка...",
+    "errorLoading": "Не удалось загрузить данные. Попробуйте еще раз.",
+    "tryAgain": "Повторить",
+    "previous": "Назад",
+    "next": "Вперед",
+    "page": "Страница",
+    "yourPosition": "Ваша позиция",
+    "above": "Выше вас",
+    "below": "Ниже вас",
+    "aboveCount": "{{count}} пользователей",
+    "belowCount": "{{count}} пользователей",
+    "rank": "Рейтинг",
+    "coins": "Монеты",
+    "xp": "Опыт (XP)",
+    "achievements": "Достижения",
+    "joinDate": "Дата регистрации",
+    "completedTests": "Завершенные тесты",
+    "testsCount": "{{count}} тестов",
+    "activeDays": "{{count}} дн.",
+    "you": "Вы"
   }
 }

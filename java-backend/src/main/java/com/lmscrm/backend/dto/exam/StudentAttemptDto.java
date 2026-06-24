@@ -16,4 +16,5 @@ public class StudentAttemptDto {
     private Integer totalScore;
     private Integer maxScore;
     private Boolean isPassed;
+    private String attemptSeed;
 }

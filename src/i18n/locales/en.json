@@ -330,6 +330,13 @@
       "viewPlansBtn": "View Plans"
     }
   },
+  "cheating": {
+    "warning": "Cheating is not allowed",
+    "copyDisabled": "Copying question content is disabled for exam integrity.",
+    "pasteDisabled": "Pasting is disabled for exam integrity.",
+    "tabSwitchWarning": "Tab switching detected! Cheating is not allowed.",
+    "returnToDashboard": "Return to Dashboard"
+  },
   "userDashboard": {
     "toast": {
       "examDateSaved": "Exam date saved ✅",
@@ -559,17 +566,17 @@
       "progress": "Progress"
     },
     "goalsandachievements": {
-      "bugungi_maqsadlar": "Bugungi maqsadlar",
-      "yutuqlar": "Yutuqlar"
+      "bugungi_maqsadlar": "Today's Goals",
+      "yutuqlar": "Achievements"
     },
     "leaderboardandhistory": {
-      "peshqadamlar": "Peshqadamlar",
-      "so_nggi_testlar": "So'nggi testlar",
-      "hisobingiz": "Hisobingiz",
+      "peshqadamlar": "Leaderboard",
+      "so_nggi_testlar": "Recent Tests",
+      "hisobingiz": "Your Account",
       "premium": "Premium",
-      "a_zolik_turi": "A'zolik turi",
-      "topshirilgan_testlar": "Topshirilgan testlar",
-      "umumiy_progress": "Umumiy progress"
+      "a_zolik_turi": "Membership Type",
+      "topshirilgan_testlar": "Completed Tests",
+      "umumiy_progress": "Overall Progress"
     },
     "weeklychart": {
       "haftalik_natija": "Haftalik natija",
@@ -1924,5 +1931,43 @@
     "feedbackComment": "Feedback",
     "feedbackPlaceholder": "Write something...",
     "sendBtn": "Send"
+  },
+  "leaderboardPage": {
+    "title": "Leaderboard",
+    "daily": "Daily",
+    "weekly": "Weekly",
+    "monthly": "Monthly",
+    "allTime": "All Time",
+    "dailyRating": "Daily rating",
+    "weeklyRating": "Weekly rating",
+    "monthlyRating": "Monthly rating",
+    "allTimeRating": "All-time rating",
+    "students": "Students",
+    "regularUsers": "Independent Users",
+    "teachers": "Teachers",
+    "fullRanking": "Full Ranking",
+    "totalUsers": "Total: {{count}} users",
+    "noDataTitle": "No data yet",
+    "noDataDesc": "As user activity increases, the ranking will appear here!",
+    "loading": "Loading...",
+    "errorLoading": "Failed to load data. Please try again.",
+    "tryAgain": "Try Again",
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page",
+    "yourPosition": "Your position",
+    "above": "Above",
+    "below": "Below",
+    "aboveCount": "{{count}} users",
+    "belowCount": "{{count}} users",
+    "rank": "Rank",
+    "coins": "Coins",
+    "xp": "Experience (XP)",
+    "achievements": "Achievements",
+    "joinDate": "Join Date",
+    "completedTests": "Completed Tests",
+    "testsCount": "{{count}} tests",
+    "activeDays": "{{count}} days active",
+    "you": "You"
   }
 }

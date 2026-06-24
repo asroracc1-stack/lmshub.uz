@@ -239,7 +239,7 @@ export default function UsersManager({
     full_name: "",
     role: (filterRole ?? "student") as AppRole,
     phone_number: "",
-    organization_id: profile?.organization_id || "",
+    organization_id: (myRole === "super_admin" ? "" : profile?.organization_id) || "",
     group_id: "",
     subject: "",
     telegram_chat_id: "",
@@ -250,13 +250,13 @@ export default function UsersManager({
 
   // Ensure form gets organization_id when profile loads
   useEffect(() => {
-    if (profile?.organization_id && !form.organization_id) {
+    if (myRole !== "super_admin" && profile?.organization_id && !form.organization_id) {
       setForm((f) => ({ ...f, organization_id: profile.organization_id || "" }));
     }
-  }, [profile]);
+  }, [profile, myRole]);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["users", filterRole, page, debouncedSearch, profile?.organization_id, orgIdParam],
+    queryKey: ["users", filterRole, page, debouncedSearch, myRole === "super_admin" ? undefined : profile?.organization_id, orgIdParam],
     queryFn: async () => {
       // Backend controller: AdminUserController (@RequestMapping("/api/v1/admin/users"))
       // Endpointlar: /all (hamma uchun) yoki /by-role/{role}
@@ -270,7 +270,7 @@ export default function UsersManager({
           size: pageSize,
           query: debouncedSearch || "", // Backend 'query' parametrini kutyapti for /all
           search: debouncedSearch || "",  // Backend 'search' parametrini kutyapti for /by-role
-          organizationId: orgIdParam || profile?.organization_id || undefined,
+          organizationId: orgIdParam || (myRole === "super_admin" ? undefined : profile?.organization_id) || undefined,
         }
       });
       return data;
@@ -285,22 +285,23 @@ export default function UsersManager({
     },
   });
 
+  const effectiveOrgIdForGroups = form.organization_id || (myRole === "super_admin" ? "" : profile?.organization_id);
+
   const { data: groups = [] } = useQuery({
-    queryKey: ["groups-list", form.organization_id || profile?.organization_id],
+    queryKey: ["groups-list", effectiveOrgIdForGroups],
     queryFn: async () => {
-      const orgId = form.organization_id || profile?.organization_id;
-      if (!orgId || orgId === "none") return [];
-      const { data } = await api.get<any>(`/admin/organizations/${orgId}/groups`);
+      if (!effectiveOrgIdForGroups || effectiveOrgIdForGroups === "none") return [];
+      const { data } = await api.get<any>(`/admin/organizations/${effectiveOrgIdForGroups}/groups`);
       return data || [];
     },
-    enabled: !!(form.organization_id || profile?.organization_id),
+    enabled: !!effectiveOrgIdForGroups,
   });
 
   const { data: allGroups = [] } = useQuery({
-    queryKey: ["all-groups-list-global", profile?.organization_id],
+    queryKey: ["all-groups-list-global", myRole === "super_admin" ? undefined : profile?.organization_id],
     queryFn: async () => {
       const { data } = await api.get<any>("/admin/groups", {
-        params: { size: 1000, organizationId: profile?.organization_id || undefined }
+        params: { size: 1000, organizationId: myRole === "super_admin" ? undefined : profile?.organization_id }
       });
       return data.content || [];
     },
@@ -342,7 +343,7 @@ export default function UsersManager({
       full_name: "",
       role: (filterRole ?? "student") as AppRole,
       phone_number: "",
-      organization_id: profile?.organization_id || "",
+      organization_id: (myRole === "super_admin" ? "" : profile?.organization_id) || "",
       group_id: "",
       subject: "",
       telegram_chat_id: "",
@@ -362,7 +363,7 @@ export default function UsersManager({
       full_name: u.full_name ?? "",
       role: (u.role as string).toLowerCase() as AppRole,
       phone_number: u.phone_number ?? "",
-      organization_id: u.organization_id || profile?.organization_id || "",
+      organization_id: u.organization_id || (myRole === "super_admin" ? "" : profile?.organization_id) || "",
       group_id: u.group_id ?? "",
       subject: u.subject ?? "",
       telegram_chat_id: u.telegram_chat_id ?? "",
@@ -374,7 +375,9 @@ export default function UsersManager({
   };
 
   const submit = async () => {
-    const targetOrgId = form.organization_id && form.organization_id !== "none" ? form.organization_id : (profile?.organization_id || "");
+    const targetOrgId = form.organization_id && form.organization_id !== "none" 
+      ? form.organization_id 
+      : (myRole === "super_admin" ? "" : (profile?.organization_id || ""));
     if (form.role !== "super_admin" && form.role !== "administrator" && form.role !== "user" && form.role !== "payment_manager" && !targetOrgId) {
       toast.error(t("dynamic.usersmanager.iltimos_tashkilotni_tanlang"));
       return;
