@@ -130,10 +130,8 @@ public class LeaderboardService {
             String checkpointIds = (String) row[2];
             Long completedTests = (Long) row[3];
 
-            // For period queries, the periodCoins is returned as the 5th select item
-            Long coins = (row.length >= 5 && row[4] instanceof Number) 
-                    ? ((Number) row[4]).longValue() 
-                    : (user.getCoins() != null ? user.getCoins() : 0L);
+            // Display user's total coins instead of period-scoped coins
+            Long coins = user.getCoins() != null ? user.getCoins() : 0L;
 
             int achievementCount = 0;
             if (checkpointIds != null && !checkpointIds.trim().isEmpty()) {
@@ -223,7 +221,7 @@ public class LeaderboardService {
             } else {
                 usersAbove = userRepository.countUsersAbovePeriodGlobal(role, startDate, myPeriodCoins);
             }
-            coins = myPeriodCoins; // Display period-scoped coins in current user stats
+            // Display user's total coins instead of period-scoped coins in current user stats
         }
 
         int rank = (int) (usersAbove + 1);
