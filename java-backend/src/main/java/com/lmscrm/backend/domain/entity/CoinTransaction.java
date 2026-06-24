@@ -36,7 +36,7 @@ public class CoinTransaction {
     private User awardedBy;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "organization_id", nullable = false)
+    @JoinColumn(name = "organization_id", nullable = true)
     private Organization organization;
 
     @Column(name = "created_at", nullable = false, updatable = false)

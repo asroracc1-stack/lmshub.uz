@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0046-1
+      author: antigravity
+      changes:
+        - dropNotNullConstraint:
+            tableName: coin_transactions
+            columnName: organization_id
+            columnDataType: uuid
