@@ -1,0 +1,45 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0045-1
+      author: antigravity
+      preConditions:
+        - onFail: MARK_RAN
+          not:
+            - tableExists:
+                tableName: db_stored_files
+      changes:
+        - createTable:
+            tableName: db_stored_files
+            columns:
+              - column:
+                  name: filename
+                  type: varchar(255)
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: content_type
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: file_size
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: storage_type
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: path
+                  type: varchar(512)
+              - column:
+                  name: data
+                  type: bytea
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false

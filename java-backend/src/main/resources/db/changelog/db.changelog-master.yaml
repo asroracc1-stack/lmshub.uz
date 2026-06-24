@@ -87,5 +87,7 @@ databaseChangeLog:
       file: db/changelog/changes/v0043_library_topic_length.yaml
   - include:
       file: db/changelog/changes/v0044_leaderboard_optimization.yaml
+  - include:
+      file: db/changelog/changes/v0045_db_file_storage.yaml
 
 

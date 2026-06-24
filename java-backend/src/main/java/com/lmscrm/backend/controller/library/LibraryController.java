@@ -21,6 +21,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.web.util.UriUtils;
+import java.nio.charset.StandardCharsets;
+import com.lmscrm.backend.repository.DbStoredFileRepository;
+import com.lmscrm.backend.domain.entity.DbStoredFile;
+import java.util.Optional;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -38,6 +47,7 @@ public class LibraryController {
 
     private final LibraryService libraryService;
     private final LibraryMaterialRepository materialRepository;
+    private final DbStoredFileRepository dbStoredFileRepository;
 
     // ─── CATEGORIES ─────────────────────────────────────────────────────────────
     @GetMapping("/categories")
@@ -173,7 +183,7 @@ public class LibraryController {
     @GetMapping({"/materials/{id}/pdf-stream", "/materials/{id}/pdf"})
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Ruxsat etilgan foydalanuvchiga PDF-ni xavfsiz oqim shaklida taqdim etish")
-    public ResponseEntity<byte[]> streamPdf(
+    public ResponseEntity<Resource> streamPdf(
             @PathVariable UUID id,
             @AuthenticationPrincipal User user
     ) {
@@ -191,25 +201,60 @@ public class LibraryController {
 
         String filename = pdfUrl.substring(pdfUrl.lastIndexOf("/") + 1);
         try {
-            filename = java.net.URLDecoder.decode(filename, java.nio.charset.StandardCharsets.UTF_8.name());
+            filename = UriUtils.decode(filename, StandardCharsets.UTF_8);
         } catch (Exception e) {
             // fallback if decode fails
         }
 
+        // Try retrieving from hybrid storage table db_stored_files first
+        Optional<DbStoredFile> opt = dbStoredFileRepository.findByFilename(filename);
+        if (opt.isPresent()) {
+            DbStoredFile storedFile = opt.get();
+            String etag = "\"" + storedFile.getFilename() + "-" + storedFile.getFileSize() + "\"";
+            if ("DB".equals(storedFile.getStorageType())) {
+                Resource resource = new ByteArrayResource(storedFile.getData()) {
+                    @Override
+                    public String getFilename() {
+                        return filename;
+                    }
+                };
+                return ResponseEntity.ok()
+                        .contentType(MediaType.APPLICATION_PDF)
+                        .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filename + "\"")
+                        .header(HttpHeaders.CACHE_CONTROL, "max-age=31536000, must-revalidate")
+                        .eTag(etag)
+                        .body(resource);
+            } else {
+                Path path = Paths.get(storedFile.getPath());
+                if (Files.exists(path)) {
+                    Resource resource = new FileSystemResource(path);
+                    return ResponseEntity.ok()
+                            .contentType(MediaType.APPLICATION_PDF)
+                            .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filename + "\"")
+                            .header(HttpHeaders.CACHE_CONTROL, "max-age=31536000, must-revalidate")
+                            .eTag(etag)
+                            .body(resource);
+                }
+            }
+        }
+
+        // Legacy file fallback
         try {
             Path file = Paths.get("uploads/").resolve(filename);
             if (!Files.exists(file)) {
-                // Try checking inside java-backend directory
                 file = Paths.get("java-backend/uploads/").resolve(filename);
                 if (!Files.exists(file)) {
                     return ResponseEntity.notFound().build();
                 }
             }
-            byte[] data = Files.readAllBytes(file);
+            String etag = "\"" + filename + "-" + Files.size(file) + "\"";
+            Resource resource = new FileSystemResource(file);
             return ResponseEntity.ok()
                     .contentType(MediaType.APPLICATION_PDF)
-                    .header("Content-Disposition", "inline; filename=\"" + filename + "\"")
-                    .body(data);
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filename + "\"")
+                    .header(HttpHeaders.CACHE_CONTROL, "max-age=31536000, must-revalidate")
+                    .eTag(etag)
+                    .body(resource);
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
