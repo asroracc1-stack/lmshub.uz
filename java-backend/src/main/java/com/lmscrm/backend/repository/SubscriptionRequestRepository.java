@@ -10,4 +10,6 @@ import java.util.UUID;
 public interface SubscriptionRequestRepository extends JpaRepository<SubscriptionRequest, UUID> {
     List<SubscriptionRequest> findAllByOrderByRequestedAtDesc();
     List<SubscriptionRequest> findByStatusOrderByRequestedAtDesc(String status);
+    List<SubscriptionRequest> findByUserIdOrderByRequestedAtDesc(UUID userId);
+    long countByStatus(String status);
 }

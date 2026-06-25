@@ -37,6 +37,7 @@ public class ExamService {
     private final ExamMapper mapper;
     private final GeminiService geminiService;
     private final ObjectMapper objectMapper;
+    private final com.lmscrm.backend.service.SubscriptionService subscriptionService;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -89,7 +90,14 @@ public class ExamService {
 
     @Transactional(readOnly = true)
     @Cacheable(cacheNames = "examsByType", key = "#type")
-    public List<QuestionDto> getExamQuestions(UUID examId, boolean excludeCorrectAnswers) {
+    public List<QuestionDto> getExamQuestions(UUID examId, User user, boolean excludeCorrectAnswers) {
+        Exam exam = examRepository.findById(examId)
+                .orElseThrow(() -> new ResourceNotFoundException("Exam not found: " + examId));
+
+        if (user != null && !subscriptionService.hasMockAccess(user, exam)) {
+            throw new com.lmscrm.backend.exception.BusinessException("Bu mock premium paket uchun mavjud");
+        }
+
         List<Question> questions = questionRepository.findByExamIdOrderByPositionOrderAsc(examId);
 
         return questions.stream().map(q -> {

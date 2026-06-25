@@ -69,13 +69,19 @@ export default function RoleLayout({
 
   const [showMySubscriptionsModal, setShowMySubscriptionsModal] = useState(false);
   const [mySubscriptions, setMySubscriptions] = useState<any[]>([]);
+  const [myRequests, setMyRequests] = useState<any[]>([]);
   const [loadingSubscriptions, setLoadingSubscriptions] = useState(false);
+  const [activeTab, setActiveTab] = useState<"active" | "history">("active");
 
   const fetchMySubscriptions = async () => {
     try {
       setLoadingSubscriptions(true);
-      const { data } = await api.get("/profile/my-subscriptions");
-      setMySubscriptions(data || []);
+      const [subsRes, reqsRes] = await Promise.all([
+        api.get("/profile/my-subscriptions"),
+        api.get("/profile/my-subscription-requests").catch(() => ({ data: [] }))
+      ]);
+      setMySubscriptions(subsRes.data || []);
+      setMyRequests(reqsRes.data || []);
     } catch (e) {
       console.error("Error fetching subscriptions:", e);
     } finally {
@@ -721,71 +727,123 @@ export default function RoleLayout({
             </DialogTitle>
           </DialogHeader>
 
+          <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+            <button
+              onClick={() => setActiveTab("active")}
+              className={cn(
+                "flex-1 py-1.5 text-xs font-bold rounded-lg transition-all",
+                activeTab === "active" ? "bg-white dark:bg-slate-700 text-primary shadow-sm" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+              )}
+            >
+              Aktiv Paketlar
+            </button>
+            <button
+              onClick={() => setActiveTab("history")}
+              className={cn(
+                "flex-1 py-1.5 text-xs font-bold rounded-lg transition-all",
+                activeTab === "history" ? "bg-white dark:bg-slate-700 text-primary shadow-sm" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+              )}
+            >
+              So'rovlar tarixi
+            </button>
+          </div>
+
           <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto thin-scrollbar">
             {loadingSubscriptions ? (
               <div className="flex justify-center py-8">
                 <div className="h-6 w-6 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
               </div>
-            ) : mySubscriptions.length === 0 ? (
-              <div className="text-center py-8 space-y-2">
-                <Crown className="h-10 w-10 text-slate-350 mx-auto opacity-55" />
-                <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">Sizda hali faol paketlar mavjud emas.</p>
-                <Button size="sm" onClick={() => { setShowMySubscriptionsModal(false); navigate(`${basePath}/packs`); }} className="bg-primary text-white text-xs rounded-xl mt-2 font-bold px-4">
-                  Paket sotib olish
-                </Button>
-              </div>
-            ) : (
-              mySubscriptions.map((sub: any) => {
-                const isActive = sub.status === "ACTIVE";
-                const isExpired = sub.status === "EXPIRED";
-                
-                return (
-                  <div 
-                    key={sub.id} 
-                    className={cn(
-                      "p-4 rounded-2xl border transition-all duration-300 flex flex-col gap-2.5 bg-slate-50/50 dark:bg-white/5",
-                      isActive ? "border-emerald-500/20 shadow-emerald-500/5 bg-emerald-500/5" : "border-slate-200 dark:border-white/5"
-                    )}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-450">{sub.packType}</span>
-                        <h4 className="text-sm font-black text-slate-800 dark:text-white">{sub.packName}</h4>
+            ) : activeTab === "active" ? (
+              mySubscriptions.length === 0 ? (
+                <div className="text-center py-8 space-y-2">
+                  <Crown className="h-10 w-10 text-slate-350 mx-auto opacity-55" />
+                  <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">Sizda hali faol paketlar mavjud emas.</p>
+                  <Button size="sm" onClick={() => { setShowMySubscriptionsModal(false); navigate(`${basePath}/packs`); }} className="bg-primary text-white text-xs rounded-xl mt-2 font-bold px-4">
+                    Paket sotib olish
+                  </Button>
+                </div>
+              ) : (
+                mySubscriptions.map((sub: any) => {
+                  const isActive = sub.status === "ACTIVE";
+                  const isExpired = sub.status === "EXPIRED";
+                  
+                  return (
+                    <div 
+                      key={sub.id} 
+                      className={cn(
+                        "p-4 rounded-2xl border transition-all duration-300 flex flex-col gap-2.5 bg-slate-50/50 dark:bg-white/5",
+                        isActive ? "border-emerald-500/20 shadow-emerald-500/5 bg-emerald-500/5" : "border-slate-200 dark:border-white/5"
+                      )}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <span className="text-[10px] font-black uppercase tracking-wider text-slate-450">{sub.packType}</span>
+                          <h4 className="text-sm font-black text-slate-800 dark:text-white">{sub.packName}</h4>
+                        </div>
+                        <Badge className={cn(
+                          "rounded-full px-2 py-0.5 text-[9px] font-bold uppercase",
+                          isActive && "bg-emerald-500 text-white border-none",
+                          isExpired && "bg-rose-500 text-white border-none",
+                          sub.status === "INACTIVE" && "bg-slate-500 text-white border-none"
+                        )}>
+                          {isActive ? "Faol" : isExpired ? "Muddati tugagan" : "Nofaol"}
+                        </Badge>
                       </div>
+
+                      <div className="grid grid-cols-2 gap-2 text-xs border-t border-slate-100 dark:border-white/5 pt-2 font-semibold text-slate-500 dark:text-slate-400">
+                        <div>
+                          <p className="text-[9px] uppercase font-black text-slate-450">Boshlandi</p>
+                          <p className="text-slate-800 dark:text-slate-200 mt-0.5">
+                            {sub.startsAt ? new Date(sub.startsAt).toLocaleDateString() : "Noma'lum"}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-[9px] uppercase font-black text-slate-450">Tugaydi</p>
+                          <p className="text-slate-800 dark:text-slate-200 mt-0.5">
+                            {sub.expiresAt ? new Date(sub.expiresAt).toLocaleDateString() : "Noma'lum"}
+                          </p>
+                        </div>
+                      </div>
+
+                      {isActive && (
+                        <div className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl p-2 text-center text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 mt-1 border border-emerald-500/10">
+                          <Clock className="w-3.5 h-3.5" />
+                          {sub.remainingDays} kun qoldi
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              )
+            ) : (
+              myRequests.length === 0 ? (
+                <div className="text-center py-8 space-y-2">
+                  <Clock className="h-10 w-10 text-slate-350 mx-auto opacity-55" />
+                  <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">So'rovlar tarixi bo'sh.</p>
+                </div>
+              ) : (
+                myRequests.map((req: any) => (
+                  <div key={req.id} className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col gap-2.5">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-bold">{req.packName}</h4>
                       <Badge className={cn(
                         "rounded-full px-2 py-0.5 text-[9px] font-bold uppercase",
-                        isActive && "bg-emerald-500 text-white border-none",
-                        isExpired && "bg-rose-500 text-white border-none",
-                        sub.status === "INACTIVE" && "bg-slate-500 text-white border-none"
+                        req.status === "PENDING" && "bg-amber-500 text-white",
+                        req.status === "APPROVED" && "bg-emerald-500 text-white",
+                        req.status === "REJECTED" && "bg-rose-500 text-white"
                       )}>
-                        {isActive ? "Faol" : isExpired ? "Muddati tugagan" : "Nofaol"}
+                        {req.status === "PENDING" ? "Kutilmoqda" : req.status === "APPROVED" ? "Tasdiqlangan" : "Rad etilgan"}
                       </Badge>
                     </div>
-
-                    <div className="grid grid-cols-2 gap-2 text-xs border-t border-slate-100 dark:border-white/5 pt-2 font-semibold text-slate-500 dark:text-slate-400">
-                      <div>
-                        <p className="text-[9px] uppercase font-black text-slate-450">Boshlandi</p>
-                        <p className="text-slate-800 dark:text-slate-200 mt-0.5">
-                          {sub.startsAt ? new Date(sub.startsAt).toLocaleDateString() : "Noma'lum"}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-[9px] uppercase font-black text-slate-450">Tugaydi</p>
-                        <p className="text-slate-800 dark:text-slate-200 mt-0.5">
-                          {sub.expiresAt ? new Date(sub.expiresAt).toLocaleDateString() : "Noma'lum"}
-                        </p>
-                      </div>
-                    </div>
-
-                    {isActive && (
-                      <div className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl p-2 text-center text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 mt-1 border border-emerald-500/10">
-                        <Clock className="w-3.5 h-3.5" />
-                        {sub.remainingDays} kun qoldi
-                      </div>
+                    <p className="text-[10px] text-slate-500">{new Date(req.requestedAt).toLocaleString()}</p>
+                    {req.status === "REJECTED" && req.rejectionReason && (
+                      <p className="text-xs text-rose-500 bg-rose-50 dark:bg-rose-500/10 p-2 rounded-lg mt-1 font-medium">
+                        Sabab: {req.rejectionReason}
+                      </p>
                     )}
                   </div>
-                );
-              })
+                ))
+              )
             )}
           </div>
         </DialogContent>

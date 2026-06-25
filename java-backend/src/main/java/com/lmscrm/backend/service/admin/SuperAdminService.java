@@ -32,6 +32,8 @@ public class SuperAdminService {
     private final com.lmscrm.backend.repository.GroupRepository groupRepository;
     private final PaymentRepository paymentRepository;
     private final com.lmscrm.backend.repository.SubjectRepository subjectRepository;
+    private final com.lmscrm.backend.repository.UserSubscriptionRepository userSubscriptionRepository;
+    private final com.lmscrm.backend.repository.SubscriptionRequestRepository subscriptionRequestRepository;
 
     @Transactional(readOnly = true)
     public SuperAdminStatsDto getDashboardStats() {
@@ -50,6 +52,8 @@ public class SuperAdminService {
                 .groups(groupRepository.count())
                 .totalSubjects(subjectRepository.count())
                 .totalRevenue(paymentRepository.sumTotalRevenue())
+                .activeSubscriptions(userSubscriptionRepository.countByIsActiveTrue())
+                .pendingRequests(subscriptionRequestRepository.countByStatus("PENDING"))
                 .build();
 
         // 2. Real Growth Data (Last 6 months)

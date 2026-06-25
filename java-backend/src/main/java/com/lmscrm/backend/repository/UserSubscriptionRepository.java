@@ -12,4 +12,5 @@ import java.util.UUID;
 public interface UserSubscriptionRepository extends JpaRepository<UserSubscription, UUID> {
     List<UserSubscription> findByUserId(UUID userId);
     Optional<UserSubscription> findFirstByUserIdAndIsActiveTrueOrderByExpiresAtDesc(UUID userId);
+    long countByIsActiveTrue();
 }

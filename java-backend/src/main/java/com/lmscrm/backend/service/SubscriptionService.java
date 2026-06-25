@@ -18,6 +18,40 @@ import java.util.UUID;
 public class SubscriptionService {
 
     private final UserSubscriptionRepository userSubscriptionRepository;
+    private final com.lmscrm.backend.repository.UserRepository userRepository;
+
+    /**
+     * Checks all subscriptions for the given user, expires any that have expired,
+     * and downgrades their role to USER if no active subscriptions remain.
+     */
+    @org.springframework.transaction.annotation.Transactional
+    public void checkAndExpireUserSubscriptions(User user) {
+        if (user == null) return;
+
+        List<UserSubscription> subscriptions = userSubscriptionRepository.findByUserId(user.getId());
+        LocalDateTime now = LocalDateTime.now();
+        boolean roleChanged = false;
+        boolean hasAnyActive = false;
+
+        for (UserSubscription sub : subscriptions) {
+            if (Boolean.TRUE.equals(sub.getIsActive())) {
+                if (sub.getExpiresAt() != null && sub.getExpiresAt().isBefore(now)) {
+                    sub.setIsActive(false);
+                    sub.setStatus("EXPIRED");
+                    userSubscriptionRepository.save(sub);
+                    roleChanged = true;
+                } else {
+                    hasAnyActive = true;
+                }
+            }
+        }
+
+        if (roleChanged && !hasAnyActive && user.getRole() == AppRole.STUDENT) {
+            user.setRole(AppRole.USER);
+            userRepository.save(user);
+            log.info("Downgraded user {} to USER role due to subscription expiration", user.getUsername());
+        }
+    }
 
     /**
      * Checks if the user has access to a given mock exam.

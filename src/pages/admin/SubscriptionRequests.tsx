@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  Check, X, Clock, User, Package, DollarSign,
+  Check, X, Clock, User, Package, DollarSign, Phone,
   Search, CheckCircle2, AlertCircle, Loader2, XCircle, ShieldCheck, Crown
 } from "lucide-react";
 import { api } from "@/lib/axios";
@@ -12,6 +12,10 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 
 interface SubscriptionRequest {
   id: string;
@@ -19,6 +23,8 @@ interface SubscriptionRequest {
     username: string;
     fullName: string;
     email: string;
+    phoneNumber?: string;
+    phone?: string;
   };
   pack: {
     name: string;
@@ -31,6 +37,7 @@ interface SubscriptionRequest {
   processedAt?: string;
   receiptUrl?: string;
   receipt_url?: string;
+  rejectionReason?: string;
 }
 
 const getProofUrl = (path?: string | null): string => {
@@ -54,6 +61,10 @@ export default function SubscriptionRequests() {
   const [searchTerm, setSearchTerm] = useState("");
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [filter, setFilter] = useState<"ALL" | "PENDING" | "APPROVED" | "REJECTED">("ALL");
+
+  // Reject dialog states
+  const [rejectId, setRejectId] = useState<string | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
 
   const loadRequests = async () => {
     try {
@@ -83,11 +94,21 @@ export default function SubscriptionRequests() {
     }
   };
 
-  const onReject = async (id: string) => {
-    setProcessingId(id + "-reject");
+  const handleRejectSubmit = async () => {
+    if (!rejectId) return;
+    if (!rejectReason.trim()) {
+      toast.error("Iltimos, rad etish sababini kiriting");
+      return;
+    }
+
+    setProcessingId(rejectId + "-reject");
     try {
-      await api.post(`/admin/subscription-requests/${id}/reject`);
+      await api.post(`/admin/subscription-requests/${rejectId}/reject`, null, {
+        params: { reason: rejectReason }
+      });
       toast.success(t("dynamic.subscriptionrequests.so_rov_rad_etildi"));
+      setRejectId(null);
+      setRejectReason("");
       await loadRequests();
     } catch (e) {
       toast.error(t("dynamic.parents.xatolik_yuz_berdi"));
@@ -106,7 +127,9 @@ export default function SubscriptionRequests() {
     const matchSearch = 
       r.user.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       r.user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      r.pack.name?.toLowerCase().includes(searchTerm.toLowerCase());
+      r.pack.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      r.user.phone?.includes(searchTerm) ||
+      r.user.phoneNumber?.includes(searchTerm);
     const matchFilter = filter === "ALL" || r.status === filter;
     return matchSearch && matchFilter;
   });
@@ -152,7 +175,7 @@ export default function SubscriptionRequests() {
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input
               className="pl-12 h-12 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl focus-visible:ring-2 focus-visible:ring-primary/30 shadow-sm"
-              placeholder="Foydalanuvchi yoki paket..."
+              placeholder="Foydalanuvchi, paket yoki tel..."
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
             />
@@ -224,27 +247,40 @@ export default function SubscriptionRequests() {
                     : "bg-red-400"
                   )} />
 
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pl-4">
+                  <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 pl-4">
                     {/* User info */}
-                    <div className="flex items-center gap-5">
+                    <div className="flex items-start gap-5">
                       <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-white/5 flex items-center justify-center border border-slate-200 dark:border-white/10 shrink-0">
                         <User className="h-5 w-5 text-slate-400" />
                       </div>
-                      <div className="space-y-1 min-w-0">
+                      <div className="space-y-1.5 min-w-0">
                         <h3 className="font-black text-slate-900 dark:text-white flex items-center gap-2 flex-wrap">
                           {req.user.fullName || req.user.username}
                           <span className="text-[10px] text-slate-400 font-normal bg-slate-100 dark:bg-white/5 px-2 py-0.5 rounded-lg">@{req.user.username}</span>
                         </h3>
-                        <div className="flex items-center gap-3 text-xs text-slate-500 flex-wrap">
-                          <span className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
+                        <div className="flex flex-col gap-1 text-xs text-slate-500">
+                          <span className="flex items-center gap-1.5">
+                            <Clock className="h-3.5 w-3.5 text-slate-400" />
                             {new Date(req.requestedAt).toLocaleString("uz-UZ")}
                           </span>
+                          {(req.user.phone || req.user.phoneNumber) && (
+                            <span className="flex items-center gap-1.5">
+                              <Phone className="h-3.5 w-3.5 text-slate-400" />
+                              <a href={`tel:${req.user.phone || req.user.phoneNumber}`} className="text-blue-500 hover:underline">
+                                {req.user.phone || req.user.phoneNumber}
+                              </a>
+                            </span>
+                          )}
                           {req.user.email && <span className="truncate">{req.user.email}</span>}
                         </div>
                         {req.processedBy && (
-                          <p className="text-[10px] text-slate-400 font-medium">
+                          <p className="text-[10px] text-slate-400 font-medium pt-1">
                             {req.status === "APPROVED" ? "✅" : "❌"} {req.processedBy} tomonidan {req.status === "APPROVED" ? "tasdiqlandi" : "rad etildi"}
+                          </p>
+                        )}
+                        {req.status === "REJECTED" && req.rejectionReason && (
+                          <p className="text-xs text-rose-500 bg-rose-50 dark:bg-rose-500/10 px-2 py-1.5 rounded-lg mt-1 font-medium border border-rose-200 dark:border-rose-500/20 max-w-sm">
+                            <span className="font-bold">Sabab:</span> {req.rejectionReason}
                           </p>
                         )}
                       </div>
@@ -307,7 +343,7 @@ export default function SubscriptionRequests() {
 
                       {/* Action buttons for PENDING only */}
                       {req.status === "PENDING" && (
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 mt-2 md:mt-0">
                           <Button
                             onClick={() => onApprove(req.id)}
                             disabled={processingId === req.id + "-approve" || processingId === req.id + "-reject"}
@@ -319,14 +355,12 @@ export default function SubscriptionRequests() {
                             Tasdiqlash
                           </Button>
                           <Button
-                            onClick={() => onReject(req.id)}
+                            onClick={() => setRejectId(req.id)}
                             disabled={processingId === req.id + "-approve" || processingId === req.id + "-reject"}
                             variant="outline"
                             className="h-10 px-5 text-red-500 border-red-200 hover:bg-red-50 dark:hover:bg-red-950/30 dark:border-red-800/40 rounded-xl font-black uppercase text-[9px] tracking-widest gap-2"
                           >
-                            {processingId === req.id + "-reject"
-                              ? <Loader2 className="h-4 w-4 animate-spin text-red-500" />
-                              : <XCircle className="h-4 w-4" />}
+                            <XCircle className="h-4 w-4" />
                             Rad etish
                           </Button>
                         </div>
@@ -346,6 +380,46 @@ export default function SubscriptionRequests() {
           )}
         </AnimatePresence>
       </div>
+
+      {/* Reject Modal */}
+      <Dialog open={!!rejectId} onOpenChange={(v) => !v && setRejectId(null)}>
+        <DialogContent className="max-w-md bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl rounded-[2.5rem] border-none shadow-2xl p-6">
+          <DialogHeader className="pb-3 border-b border-slate-100 dark:border-white/5">
+            <DialogTitle className="text-xl font-black tracking-tight flex items-center gap-2.5 text-red-500">
+              <XCircle className="h-5 w-5" />
+              So'rovni rad etish
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label className="text-sm font-bold text-slate-700 dark:text-slate-300">Rad etish sababi</Label>
+              <Input
+                value={rejectReason}
+                onChange={e => setRejectReason(e.target.value)}
+                placeholder="Masalan: Chek yaroqsiz, to'lov to'liq emas..."
+                className="bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 rounded-xl h-12"
+                autoFocus
+              />
+              <p className="text-[10px] text-slate-500 font-medium">Bu sabab foydalanuvchiga ko'rinadi</p>
+            </div>
+
+            <div className="flex items-center gap-3 justify-end pt-4">
+              <Button variant="ghost" onClick={() => setRejectId(null)} className="rounded-xl font-bold">
+                Bekor qilish
+              </Button>
+              <Button 
+                onClick={handleRejectSubmit} 
+                disabled={processingId?.includes("reject") || !rejectReason.trim()}
+                className="bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold px-6 shadow-lg shadow-red-500/20"
+              >
+                {processingId?.includes("reject") ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                Rad etish
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

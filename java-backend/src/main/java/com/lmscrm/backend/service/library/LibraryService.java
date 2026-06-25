@@ -318,8 +318,6 @@ public class LibraryService {
         dto.setCoverImageUrl(material.getCoverImageUrl());
         if (user != null && hasAccess(material, user)) {
             dto.setPdfUrl(material.getPdfUrl());
-        } else if (user == null) {
-            dto.setPdfUrl(material.getPdfUrl());
         } else {
             dto.setPdfUrl(null);
         }

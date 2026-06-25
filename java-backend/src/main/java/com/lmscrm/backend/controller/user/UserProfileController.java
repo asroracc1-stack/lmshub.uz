@@ -25,6 +25,7 @@ public class UserProfileController {
     private final UserRepository userRepository;
     private final ProfileRepository profileRepository;
     private final jakarta.persistence.EntityManager entityManager;
+    private final com.lmscrm.backend.service.SubscriptionService subscriptionService;
 
     @GetMapping("/profile")
     @Operation(summary = "Get Current User Profile")
@@ -32,6 +33,9 @@ public class UserProfileController {
         if (currentUser == null) {
             return ResponseEntity.status(401).body("Unauthorized");
         }
+
+        // Check and expire active subscriptions in real-time
+        subscriptionService.checkAndExpireUserSubscriptions(currentUser);
 
         User user = userRepository.findById(currentUser.getId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -58,10 +62,10 @@ public class UserProfileController {
         }
 
         try {
-            // Find the most prominent active subscription
+            // Find the most prominent active subscription joining subscription_packs (not subscription_packages)
             java.util.List<?> subs = entityManager.createNativeQuery(
                 "SELECT p.code FROM public.user_subscriptions us " +
-                "JOIN public.subscription_packages p ON us.pack_id = p.id " +
+                "JOIN public.subscription_packs p ON us.pack_id = p.id " +
                 "WHERE us.user_id = CAST(:userId AS UUID) AND us.is_active = true " +
                 "AND us.expires_at > NOW() " +
                 "ORDER BY p.price DESC LIMIT 1"

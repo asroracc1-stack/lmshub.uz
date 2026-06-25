@@ -144,6 +144,16 @@ export default function Packs() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [requestSent, setRequestSent] = useState<Pack | null>(null);
 
+  // Fetch current user active subscriptions
+  const { data: mySubscriptions = [] } = useQuery({
+    queryKey: ["my-subscriptions-packs"],
+    queryFn: async () => {
+      const { data } = await api.get("/profile/my-subscriptions");
+      return data || [];
+    },
+    enabled: !!user,
+  });
+
   // 1. Fetch available packages via Pack Manager API
   const { data: packs = [], isLoading: loadingPacks } = useQuery<Pack[]>({
     queryKey: ["packs-list"],
@@ -735,7 +745,7 @@ export default function Packs() {
           {/* Premium Cards Grid for Client view */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {packs.map((p) => {
-              const isOwn = profile?.subscriptionPackCode === p.code || (p.type === "FREE" && !profile?.subscriptionPackCode);
+              const isOwn = mySubscriptions.some((sub: any) => sub.packId === p.id && sub.isActive) || (p.type === "FREE" && mySubscriptions.length === 0);
               
               const isElite = p.type === "ELITE";
               const isPro = p.type === "PRO";
@@ -743,7 +753,11 @@ export default function Packs() {
 
               const oldPriceVal = p.oldPrice || (isPro ? 99000 : isElite ? 199000 : 0);
               const priceVal = p.price;
-              const discountVal = p.discountPercent !== undefined ? p.discountPercent : (isPro || isElite ? 51 : 0);
+              const discountVal = p.discountPercent !== null && p.discountPercent !== undefined && p.discountPercent > 0
+                ? p.discountPercent
+                : (oldPriceVal > priceVal 
+                    ? Math.round(((oldPriceVal - priceVal) / oldPriceVal) * 100) 
+                    : 0);
 
               // Background images mapped to locally saved 3D assets
               const bgImageMap: Record<string, string> = {
@@ -827,10 +841,16 @@ export default function Packs() {
                       <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/25 to-black/10" />
 
                       {/* Top-Left Category Badge */}
-                      <div className="absolute top-4 left-4 z-10">
+                      <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
                         <span className={cn("px-3 py-1 text-[10px] font-black tracking-wider uppercase rounded-lg shadow-sm", badgeBgMap[p.type] || "bg-slate-500 text-white")}>
                           {p.type === "FREE" ? "BEPUL" : p.type}
                         </span>
+                        {isOwn && (
+                          <span className="bg-emerald-500 text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow-sm flex items-center gap-1 border border-emerald-400">
+                            <CheckCircle2 className="w-3 h-3" />
+                            Aktiv
+                          </span>
+                        )}
                       </div>
 
                       {/* Top-Right Red Discount Badge */}
@@ -912,11 +932,19 @@ export default function Packs() {
                           </Button>
                         ) : (
                           <Button
-                            onClick={() => setCheckoutPack(p)}
+                            onClick={() => {
+                              if (isOwn) {
+                                toast.error("Sizda allaqachon ushbu obuna mavjud", {
+                                  description: "Boshqa paket tanlang yoki joriy paketingiz tugashini kuting."
+                                });
+                                return;
+                              }
+                              setCheckoutPack(p);
+                            }}
                             className={cn(
                               "h-10 px-6 rounded-xl font-extrabold uppercase text-[10px] tracking-wider shadow-md transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] text-white border-none flex items-center gap-1.5",
                               isOwn 
-                                ? "bg-slate-500 hover:bg-slate-600 shadow-slate-500/20" 
+                                ? "bg-slate-500 hover:bg-slate-600 shadow-slate-500/20 opacity-80" 
                                 : isPro
                                   ? "bg-[#7209B7] hover:bg-[#5E079B] shadow-purple-500/20"
                                   : "bg-[#F77F00] hover:bg-[#D96E00] shadow-orange-500/20"

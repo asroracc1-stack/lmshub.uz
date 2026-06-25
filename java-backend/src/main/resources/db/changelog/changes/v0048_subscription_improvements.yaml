@@ -1,0 +1,102 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0048-1
+      author: antigravity
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: subscription_requests
+      changes:
+        - renameTable:
+            oldTableName: subscription_requests
+            newTableName: subscription_transactions
+
+  - changeSet:
+      id: v0048-2
+      author: antigravity
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: subscription_transactions
+      changes:
+        - createTable:
+            tableName: subscription_transactions
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_sub_tx_user
+                    references: users(id)
+              - column:
+                  name: pack_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_sub_tx_pack
+                    references: subscription_packs(id)
+              - column:
+                  name: created_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: processed_at
+                  type: timestamp
+              - column:
+                  name: status
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: processed_by
+                  type: varchar(255)
+              - column:
+                  name: receipt_url
+                  type: varchar(1024)
+
+  - changeSet:
+      id: v0048-3
+      author: antigravity
+      preConditions:
+        - onFail: MARK_RAN
+        - and:
+            - tableExists:
+                tableName: subscription_transactions
+            - columnExists:
+                tableName: subscription_transactions
+                columnName: requested_at
+      changes:
+        - renameColumn:
+            tableName: subscription_transactions
+            oldColumnName: requested_at
+            newColumnName: created_at
+            columnDataType: timestamp
+
+  - changeSet:
+      id: v0048-4
+      author: antigravity
+      preConditions:
+        - onFail: MARK_RAN
+        - and:
+            - tableExists:
+                tableName: subscription_transactions
+            - not:
+                - columnExists:
+                    tableName: subscription_transactions
+                    columnName: rejection_reason
+      changes:
+        - addColumn:
+            tableName: subscription_transactions
+            columns:
+              - column:
+                  name: rejection_reason
+                  type: varchar(1024)

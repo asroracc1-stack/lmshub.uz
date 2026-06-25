@@ -40,6 +40,28 @@ public class SubscriptionRequestService {
         SubscriptionPack pack = packRepository.findById(packId)
                 .orElseThrow(() -> new RuntimeException("Pack not found"));
 
+        // Double purchase check
+        String userIdStr = user.getId().toString();
+        String packIdStr = pack.getId().toString();
+        try {
+            List<?> activeSubs = entityManager.createNativeQuery(
+                "SELECT id FROM public.user_subscriptions " +
+                "WHERE user_id = CAST(:userId AS UUID) AND pack_id = CAST(:packId AS UUID) " +
+                "AND is_active = true AND expires_at > NOW()"
+            )
+            .setParameter("userId", userIdStr)
+            .setParameter("packId", packIdStr)
+            .getResultList();
+
+            if (!activeSubs.isEmpty()) {
+                throw new com.lmscrm.backend.exception.BusinessException("Sizda ushbu paketning aktiv obunasi mavjud");
+            }
+        } catch (com.lmscrm.backend.exception.BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Error checking active subscription: {}", e.getMessage());
+        }
+
         SubscriptionRequest request = SubscriptionRequest.builder()
                 .user(user)
                 .pack(pack)
@@ -196,8 +218,8 @@ public class SubscriptionRequestService {
         // 3. Notify and 4. In-App notification
         notificationService.createNotification(
             user,
-            "🎉 Obuna tasdiqlandi",
-            String.format("Tabriklaymiz! Sizning %s paketingiz tasdiqlandi. Endi testlarni ishlashingiz mumkin.", pack.getName()),
+            "Obunangiz muvaffaqiyatli faollashtirildi",
+            String.format("Tabriklaymiz! Sizning %s paketingiz muvaffaqiyatli faollashtirildi. Endi testlarni ishlashingiz mumkin.", pack.getName()),
             NotificationType.INFO
         );
 
@@ -232,21 +254,32 @@ public class SubscriptionRequestService {
 
     @Transactional
     public void rejectRequest(UUID requestId, String adminUsername) {
+        rejectRequest(requestId, adminUsername, null);
+    }
+
+    @Transactional
+    public void rejectRequest(UUID requestId, String adminUsername, String reason) {
         SubscriptionRequest request = repository.findById(requestId)
                 .orElseThrow(() -> new RuntimeException("Request not found"));
 
         request.setStatus("REJECTED");
         request.setProcessedAt(LocalDateTime.now());
         request.setProcessedBy(adminUsername);
+        request.setRejectionReason(reason);
         repository.save(request);
 
         // Notify the requesting user
         User user = request.getUser();
         SubscriptionPack pack = request.getPack();
+        
+        String rejectMsg = "Obunangiz rad etildi.";
+        if (reason != null && !reason.isBlank()) {
+            rejectMsg = String.format("Obunangiz rad etildi. Sabab: %s", reason);
+        }
+        
         notificationService.createNotification(user,
-            "❌ Obuna so'rovi rad etildi",
-            String.format("%s uchun so'rovingiz %s tomonidan ko'rib chiqildi va rad etildi. Qo'shimcha ma'lumot uchun adminlar bilan bog'laning.",
-                pack.getName(), adminUsername),
+            "Obunangiz rad etildi",
+            rejectMsg,
             NotificationType.ALERT
         );
 
@@ -256,6 +289,7 @@ public class SubscriptionRequestService {
             "👤 <b>Foydalanuvchi:</b> %s (@%s)\n" +
             "📦 <b>Paket:</b> %s\n" +
             "🛡 <b>Admin:</b> %s\n" +
+            (reason != null && !reason.isBlank() ? "📝 <b>Sabab:</b> " + reason + "\n" : "") +
             "🕒 <b>Vaqt:</b> %s",
             user.getFullName() != null ? user.getFullName() : user.getUsername(),
             user.getUsername(),

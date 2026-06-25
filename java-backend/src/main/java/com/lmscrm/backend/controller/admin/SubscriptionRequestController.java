@@ -34,8 +34,12 @@ public class SubscriptionRequestController {
 
     @PostMapping("/{requestId}/reject")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'PACK_MANAGER')")
-    public ResponseEntity<?> reject(@PathVariable UUID requestId, Authentication auth) {
-        service.rejectRequest(requestId, auth.getName());
+    public ResponseEntity<?> reject(@PathVariable UUID requestId, @RequestBody(required = false) Map<String, String> body, Authentication auth) {
+        String reason = null;
+        if (body != null && body.containsKey("reason")) {
+            reason = body.get("reason");
+        }
+        service.rejectRequest(requestId, auth.getName(), reason);
         return ResponseEntity.ok().build();
     }
 

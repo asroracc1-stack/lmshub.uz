@@ -117,4 +117,33 @@ public class UserSubscriptionController {
 
         return ResponseEntity.ok(result);
     }
+
+    private final com.lmscrm.backend.repository.SubscriptionRequestRepository subscriptionRequestRepository;
+
+    /**
+     * Returns all subscription requests for the current user.
+     */
+    @GetMapping("/my-subscription-requests")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<Map<String, Object>>> getMySubscriptionRequests(Authentication auth) {
+        User user = userRepository.findByUsername(auth.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        List<com.lmscrm.backend.domain.entity.SubscriptionRequest> requests = subscriptionRequestRepository.findByUserIdOrderByRequestedAtDesc(user.getId());
+
+        List<Map<String, Object>> result = requests.stream().map(req -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", req.getId());
+            map.put("packId", req.getPack() != null ? req.getPack().getId() : null);
+            map.put("packName", req.getPack() != null ? req.getPack().getName() : "Unknown");
+            map.put("requestedAt", req.getRequestedAt());
+            map.put("status", req.getStatus());
+            map.put("receiptUrl", req.getReceiptUrl());
+            map.put("rejectionReason", req.getRejectionReason());
+            map.put("processedAt", req.getProcessedAt());
+            return map;
+        }).collect(Collectors.toList());
+
+        return ResponseEntity.ok(result);
+    }
 }

@@ -69,8 +69,10 @@ public class StudentExamController {
             summary = "Get Exam Questions",
             description = "Returns the list of questions and options for an exam. IMPORTANT: Correct answers are hidden from the student."
     )
-    public ResponseEntity<List<QuestionDto>> getExamQuestions(@PathVariable UUID examId) {
-        return ResponseEntity.ok(examService.getExamQuestions(examId, true));
+    public ResponseEntity<List<QuestionDto>> getExamQuestions(
+            @PathVariable UUID examId,
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(examService.getExamQuestions(examId, user, true));
     }
 
     @PostMapping("/submit")

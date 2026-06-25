@@ -33,6 +33,8 @@ public class SuperAdminStatsDto {
         private long groups;
         private long totalSubjects;
         private java.math.BigDecimal totalRevenue;
+        private long activeSubscriptions;
+        private long pendingRequests;
     }
 
     @Data

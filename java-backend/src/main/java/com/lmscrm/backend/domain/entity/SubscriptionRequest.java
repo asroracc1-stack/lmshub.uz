@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "subscription_requests", schema = "public")
+@Table(name = "subscription_transactions", schema = "public")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -26,7 +26,7 @@ public class SubscriptionRequest {
     @JoinColumn(name = "pack_id", nullable = false)
     private SubscriptionPack pack;
 
-    @Column(nullable = false)
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime requestedAt;
 
     private LocalDateTime processedAt;
@@ -38,4 +38,7 @@ public class SubscriptionRequest {
 
     @Column(name = "receipt_url")
     private String receiptUrl;
+
+    @Column(name = "rejection_reason")
+    private String rejectionReason;
 }

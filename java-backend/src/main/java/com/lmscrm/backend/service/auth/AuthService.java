@@ -36,6 +36,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final OtpService otpService;
+    private final com.lmscrm.backend.service.SubscriptionService subscriptionService;
 
     @Value("${spring.security.oauth2.client.registration.google.client-id:}")
     private String googleClientId;
@@ -77,6 +78,8 @@ public class AuthService {
                 }
             }
             // ─────────────────────────────────────────────────────────────────
+
+            subscriptionService.checkAndExpireUserSubscriptions(user);
 
             String jwt = tokenProvider.generateToken(authentication);
             user.setLastLoginAt(LocalDateTime.now());
@@ -172,10 +175,13 @@ public class AuthService {
 
             user.setLastLoginAt(LocalDateTime.now());
             user.setIsGoogleUser(true);
-            user.setRole(AppRole.USER);
+            if (isNew[0] || user.getRole() == null) {
+                user.setRole(AppRole.USER);
+            }
             if (finalPicture != null && (user.getAvatarUrl() == null || user.getAvatarUrl().trim().isEmpty() || user.getAvatarUrl().startsWith("https://lh3.googleusercontent.com/"))) {
                 user.setAvatarUrl(finalPicture);
             }
+            subscriptionService.checkAndExpireUserSubscriptions(user);
             // Save User first
             final User finalSavedUser = userRepository.save(user);
 
