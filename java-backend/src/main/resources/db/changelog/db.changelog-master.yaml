@@ -91,5 +91,7 @@ databaseChangeLog:
       file: db/changelog/changes/v0045_db_file_storage.yaml
   - include:
       file: db/changelog/changes/v0046_make_coin_tx_org_nullable.yaml
+  - include:
+      file: db/changelog/changes/v0047_subscription_and_leaderboard_rebuild.yaml
 
 

@@ -1,5 +1,9 @@
 package com.lmscrm.backend.controller.admin;
 
+import com.lmscrm.backend.domain.entity.User;
+import com.lmscrm.backend.domain.entity.UserSubscription;
+import com.lmscrm.backend.repository.UserRepository;
+import com.lmscrm.backend.repository.UserSubscriptionRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
@@ -8,9 +12,12 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Endpoint for checking current user's active subscription pack.
@@ -22,6 +29,9 @@ public class UserSubscriptionController {
 
     @PersistenceContext
     private EntityManager entityManager;
+
+    private final UserRepository userRepository;
+    private final UserSubscriptionRepository userSubscriptionRepository;
 
     /**
      * Returns the current user's active subscription pack type.
@@ -66,6 +76,44 @@ public class UserSubscriptionController {
             result.put("hasActive", false);
             result.put("packType", "FREE");
         }
+
+        return ResponseEntity.ok(result);
+    }
+
+    /**
+     * Returns all user subscriptions.
+     */
+    @GetMapping("/my-subscriptions")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<Map<String, Object>>> getMySubscriptions(Authentication auth) {
+        User user = userRepository.findByUsername(auth.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        List<UserSubscription> subscriptions = userSubscriptionRepository.findByUserId(user.getId());
+
+        List<Map<String, Object>> result = subscriptions.stream().map(sub -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", sub.getId());
+            map.put("packId", sub.getPack() != null ? sub.getPack().getId() : null);
+            map.put("packName", sub.getPack() != null ? sub.getPack().getName() : "Unknown");
+            map.put("packType", sub.getPack() != null ? sub.getPack().getType().name() : "FREE");
+            map.put("startsAt", sub.getStartsAt());
+            map.put("expiresAt", sub.getExpiresAt());
+
+            boolean expired = sub.getExpiresAt() != null && sub.getExpiresAt().isBefore(LocalDateTime.now());
+            String computedStatus = expired ? "EXPIRED" : (Boolean.TRUE.equals(sub.getIsActive()) ? "ACTIVE" : "INACTIVE");
+            map.put("status", computedStatus);
+            map.put("isActive", Boolean.TRUE.equals(sub.getIsActive()) && !expired);
+
+            long remainingDays = 0;
+            if (!expired && sub.getExpiresAt() != null) {
+                remainingDays = ChronoUnit.DAYS.between(LocalDateTime.now(), sub.getExpiresAt());
+                if (remainingDays < 0) remainingDays = 0;
+            }
+            map.put("remainingDays", remainingDays);
+
+            return map;
+        }).collect(Collectors.toList());
 
         return ResponseEntity.ok(result);
     }

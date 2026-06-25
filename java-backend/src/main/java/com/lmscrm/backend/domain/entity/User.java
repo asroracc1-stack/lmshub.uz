@@ -90,6 +90,10 @@ public class User implements UserDetails {
     @Builder.Default
     private Long xp = 0L;
 
+    @Column(name = "current_streak")
+    @Builder.Default
+    private Integer currentStreak = 3;
+
     @Column(name = "referral_code", unique = true)
     private String referralCode;
 

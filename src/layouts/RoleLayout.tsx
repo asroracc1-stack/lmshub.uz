@@ -16,9 +16,19 @@ import {
   Gift,
   Star,
   CircleDollarSign,
+  Crown,
+  Clock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { api } from "@/lib/axios";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 import NotificationsBell from "@/components/NotificationsBell";
 import Logo from "@/components/Logo";
 import ProfileMenu from "@/components/ProfileMenu";
@@ -56,6 +66,28 @@ export default function RoleLayout({
 }: RoleLayoutProps) {
   const { profile, signOut, user, loading: authLoading, refresh: refreshAuth } = useAuth();
   const [showCoinsModal, setShowCoinsModal] = useState(false);
+
+  const [showMySubscriptionsModal, setShowMySubscriptionsModal] = useState(false);
+  const [mySubscriptions, setMySubscriptions] = useState<any[]>([]);
+  const [loadingSubscriptions, setLoadingSubscriptions] = useState(false);
+
+  const fetchMySubscriptions = async () => {
+    try {
+      setLoadingSubscriptions(true);
+      const { data } = await api.get("/profile/my-subscriptions");
+      setMySubscriptions(data || []);
+    } catch (e) {
+      console.error("Error fetching subscriptions:", e);
+    } finally {
+      setLoadingSubscriptions(false);
+    }
+  };
+
+  useEffect(() => {
+    if (showMySubscriptionsModal) {
+      fetchMySubscriptions();
+    }
+  }, [showMySubscriptionsModal]);
 
   useEffect(() => {
     if (localStorage.getItem("show_first_login_coins_modal") === "true") {
@@ -546,6 +578,15 @@ export default function RoleLayout({
                 </kbd>
               </button>
               <div className="flex items-center gap-1 sm:gap-1.5 md:gap-3 pl-1.5 sm:pl-2 md:pl-4 border-l border-border h-8">
+                {/* Mening Paketlarim button */}
+                <button
+                  onClick={() => setShowMySubscriptionsModal(true)}
+                  className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full bg-gradient-to-r from-blue-500 to-indigo-650 text-white hover:opacity-90 transition-opacity text-[11px] sm:text-xs font-semibold shadow-sm shadow-indigo-500/20"
+                  title="Mening Paketlarim"
+                >
+                  <Crown className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                  <span className="hidden sm:inline">Paketlarim</span>
+                </button>
                 {/* Referral button */}
                 <button
                   onClick={() => navigate(`${basePath}/referral`)}
@@ -669,6 +710,86 @@ export default function RoleLayout({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Mening Paketlarim (My Subscriptions) Modal */}
+      <Dialog open={showMySubscriptionsModal} onOpenChange={setShowMySubscriptionsModal}>
+        <DialogContent className="max-w-md bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl rounded-[2.5rem] border-none shadow-2xl p-6">
+          <DialogHeader className="pb-3 border-b border-slate-100 dark:border-white/5">
+            <DialogTitle className="text-xl font-black tracking-tight flex items-center gap-2.5">
+              <Crown className="h-5 w-5 text-amber-500" />
+              Mening Paketlarim
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto thin-scrollbar">
+            {loadingSubscriptions ? (
+              <div className="flex justify-center py-8">
+                <div className="h-6 w-6 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
+              </div>
+            ) : mySubscriptions.length === 0 ? (
+              <div className="text-center py-8 space-y-2">
+                <Crown className="h-10 w-10 text-slate-350 mx-auto opacity-55" />
+                <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">Sizda hali faol paketlar mavjud emas.</p>
+                <Button size="sm" onClick={() => { setShowMySubscriptionsModal(false); navigate(`${basePath}/packs`); }} className="bg-primary text-white text-xs rounded-xl mt-2 font-bold px-4">
+                  Paket sotib olish
+                </Button>
+              </div>
+            ) : (
+              mySubscriptions.map((sub: any) => {
+                const isActive = sub.status === "ACTIVE";
+                const isExpired = sub.status === "EXPIRED";
+                
+                return (
+                  <div 
+                    key={sub.id} 
+                    className={cn(
+                      "p-4 rounded-2xl border transition-all duration-300 flex flex-col gap-2.5 bg-slate-50/50 dark:bg-white/5",
+                      isActive ? "border-emerald-500/20 shadow-emerald-500/5 bg-emerald-500/5" : "border-slate-200 dark:border-white/5"
+                    )}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-450">{sub.packType}</span>
+                        <h4 className="text-sm font-black text-slate-800 dark:text-white">{sub.packName}</h4>
+                      </div>
+                      <Badge className={cn(
+                        "rounded-full px-2 py-0.5 text-[9px] font-bold uppercase",
+                        isActive && "bg-emerald-500 text-white border-none",
+                        isExpired && "bg-rose-500 text-white border-none",
+                        sub.status === "INACTIVE" && "bg-slate-500 text-white border-none"
+                      )}>
+                        {isActive ? "Faol" : isExpired ? "Muddati tugagan" : "Nofaol"}
+                      </Badge>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-xs border-t border-slate-100 dark:border-white/5 pt-2 font-semibold text-slate-500 dark:text-slate-400">
+                      <div>
+                        <p className="text-[9px] uppercase font-black text-slate-450">Boshlandi</p>
+                        <p className="text-slate-800 dark:text-slate-200 mt-0.5">
+                          {sub.startsAt ? new Date(sub.startsAt).toLocaleDateString() : "Noma'lum"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[9px] uppercase font-black text-slate-450">Tugaydi</p>
+                        <p className="text-slate-800 dark:text-slate-200 mt-0.5">
+                          {sub.expiresAt ? new Date(sub.expiresAt).toLocaleDateString() : "Noma'lum"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {isActive && (
+                      <div className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl p-2 text-center text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 mt-1 border border-emerald-500/10">
+                        <Clock className="w-3.5 h-3.5" />
+                        {sub.remainingDays} kun qoldi
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
     <VoiceAssistantPanel />
     </VoiceAssistantProvider>

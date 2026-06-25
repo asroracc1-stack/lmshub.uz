@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 type Period = "daily" | "weekly" | "monthly" | "all_time";
 
@@ -128,18 +129,36 @@ const PODIUM_CONFIG = [
 
 // ── Podium Card Component ────────────────────────────────────────────
 function PodiumCard({ row, cfg, isLoading, onClick }: { row: Row | null; cfg: typeof PODIUM_CONFIG[number]; isLoading: boolean; onClick: () => void }) {
+  const isPremiumMasked = row?.username === "premium_user";
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: cfg.place * 0.1, duration: 0.5, ease: "easeOut" }}
-      onClick={() => row && onClick()}
+      onClick={() => {
+        if (!row) return;
+        if (isPremiumMasked) {
+          toast.info("Premium foydalanuvchini ko'rish uchun profilingizni Pro yoki Elite-ga o'tkazing!");
+        } else {
+          onClick();
+        }
+      }}
       className={cn(
-        "relative flex flex-col items-center gap-2 rounded-[24px] border backdrop-blur-md px-3 py-4 cursor-pointer",
+        "relative flex flex-col items-center gap-2 rounded-[24px] border backdrop-blur-md px-3 py-4 cursor-pointer overflow-hidden",
         "transition-all duration-300 hover:scale-[1.05] hover:shadow-2xl active:scale-[0.98]",
         cfg.size, cfg.cardBg, cfg.cardBorder, cfg.mt, cfg.glow
       )}
     >
+      {/* Premium Lock overlay */}
+      {row && isPremiumMasked && (
+        <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm rounded-[24px] flex flex-col items-center justify-center p-3 text-center z-20">
+          <Crown className="h-7 w-7 text-amber-500 animate-pulse mb-1.5" />
+          <p className="text-[10px] font-black text-white uppercase tracking-widest leading-none">Premium</p>
+          <p className="text-[8px] text-slate-400 font-bold mt-1">Pro yoki Elite kerak</p>
+        </div>
+      )}
+
       {/* Crown or Special Element on Rank #1 */}
       {cfg.place === 1 && !isLoading && row && (
         <div className="absolute -top-7 left-1/2 -translate-x-1/2 text-3xl select-none animate-bounce" style={{ animationDuration: '3s' }}>
@@ -218,6 +237,7 @@ function PodiumCard({ row, cfg, isLoading, onClick }: { row: Row | null; cfg: ty
 // ── Rank Row Component (List view) ────────────────────
 function RankRow({ row, index, isCurrentUser, onClick }: { row: Row; index: number; isCurrentUser: boolean; onClick: () => void }) {
   const { t } = useTranslation();
+  const isPremiumMasked = row.username === "premium_user";
   
   // Medal mappings for top rows
   const medalConfig: Record<number, { icon: string; rankColor: string; rowBg: string; avatarRing: string }> = {
@@ -246,6 +266,41 @@ function RankRow({ row, index, isCurrentUser, onClick }: { row: Row; index: numb
     4: "text-[#fbbf24]", 5: "text-[#f59e0b]", 6: "text-[#a78bfa]"
   };
   const rankColor = medal?.rankColor ?? rankColors[row.rank] ?? "text-slate-400 dark:text-slate-500";
+
+  if (isPremiumMasked) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, x: -15 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: Math.min(index * 0.03, 0.3), duration: 0.3 }}
+        onClick={() => toast.info("Premium foydalanuvchini ko'rish uchun profilingizni Pro yoki Elite-ga o'tkazing!")}
+        className="flex items-center gap-3 sm:gap-4 px-4 py-3.5 border-b border-slate-100 dark:border-white/[0.04] rounded-xl my-0.5 bg-slate-50/20 dark:bg-white/[0.01] hover:bg-slate-50/40 opacity-75 cursor-pointer"
+      >
+        <div className="w-8 shrink-0 flex items-center justify-center font-black text-slate-450">
+          {row.rank}
+        </div>
+        <div className="h-10 w-10 shrink-0 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 dark:text-slate-650">
+          <Crown className="h-4 w-4" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-bold text-slate-450 dark:text-slate-550 flex items-center gap-1.5">
+            🔒 Premium Foydalanuvchi
+          </p>
+          <p className="text-[10px] text-slate-450 dark:text-slate-550 font-medium">
+            Tarifni Pro yoki Elite-ga yangilang
+          </p>
+        </div>
+        <div className="shrink-0 text-right">
+          <div className="flex items-center gap-1 justify-end opacity-50">
+            <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+            <span className="text-sm font-black text-slate-450 tabular-nums">
+              ***
+            </span>
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div

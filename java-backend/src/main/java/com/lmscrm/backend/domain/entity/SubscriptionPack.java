@@ -30,8 +30,47 @@ public class SubscriptionPack {
     @Column(nullable = false)
     private BigDecimal price;
 
+    @Column(name = "old_price")
+    private BigDecimal oldPrice;
+
+    @Column(name = "discount_percent")
+    private Integer discountPercent;
+
     @Column(nullable = false)
     private Integer duration; // in months
+
+    @Column(name = "duration_days")
+    @Builder.Default
+    private Integer durationDays = 30;
+
+    @Column(name = "color_and_design")
+    private String colorAndDesign;
+
+    private String icon;
+
+    @Column(name = "access_all_mocks")
+    @Builder.Default
+    private Boolean accessAllMocks = false;
+
+    @Column(name = "access_sat_mocks")
+    @Builder.Default
+    private Boolean accessSatMocks = false;
+
+    @Column(name = "access_nat_mocks")
+    @Builder.Default
+    private Boolean accessNatMocks = false;
+
+    @Column(name = "access_ielts_mocks")
+    @Builder.Default
+    private Boolean accessIeltsMocks = false;
+
+    @Column(name = "access_custom_mocks")
+    @Builder.Default
+    private Boolean accessCustomMocks = false;
+
+    @Column(name = "access_all_books")
+    @Builder.Default
+    private Boolean accessAllBooks = false;
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "subscription_pack_features", joinColumns = @JoinColumn(name = "pack_id"))
@@ -47,6 +86,15 @@ public class SubscriptionPack {
     )
     @Builder.Default
     private List<Exam> exams = new ArrayList<>();
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "subscription_pack_books",
+        joinColumns = @JoinColumn(name = "pack_id"),
+        inverseJoinColumns = @JoinColumn(name = "material_id")
+    )
+    @Builder.Default
+    private List<LibraryMaterial> allowedBooks = new ArrayList<>();
 
     @Column(name = "is_popular")
     @Builder.Default

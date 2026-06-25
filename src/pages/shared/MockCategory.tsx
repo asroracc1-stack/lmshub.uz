@@ -96,6 +96,9 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
+  const [lockModalOpen, setLockModalOpen] = useState(false);
+  const [requiredPackType, setRequiredPackType] = useState("pro");
+
   const loadTests = async () => {
     if (!kind) return;
     setLoading(true);
@@ -414,7 +417,10 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
                           <Button
                             size="lg"
                             className={cn("rounded-xl h-11 px-6 font-bold text-sm transition-all duration-300 opacity-90 w-full sm:w-auto justify-center", theme.button)}
-                            onClick={() => nav(getPacksPath())}
+                            onClick={() => {
+                              setRequiredPackType(test.required_pack || "pro");
+                              setLockModalOpen(true);
+                            }}
                           >
                             {t("mockCategory.tryBtn")} <Lock className="h-4 w-4 ml-1.5" />
                           </Button>
@@ -609,6 +615,34 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
           )}
         </Card>
       </div>
+
+      {/* Premium Lock Modal */}
+      <AlertDialog open={lockModalOpen} onOpenChange={setLockModalOpen}>
+        <AlertDialogContent className="bg-white dark:bg-slate-900 border-none rounded-[2.5rem] shadow-2xl max-w-md p-6 text-center">
+          <div className="h-16 w-16 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto mb-4 border border-amber-500/20">
+            <Lock className="h-8 w-8 animate-pulse" />
+          </div>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-black tracking-tight text-slate-800 dark:text-white">
+              Bu mock premium paket uchun mavjud
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-sm text-slate-400 mt-2">
+              Ushbu mock test yopiq hisoblanadi. Uni boshlash uchun sizda faol <span className="font-bold text-indigo-500 uppercase">{requiredPackType}</span> obuna paketi bo'lishi talab qilinadi.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-6 flex flex-col sm:flex-row gap-2 justify-center">
+            <AlertDialogCancel className="bg-slate-100 dark:bg-white/5 border-none text-slate-500 rounded-xl h-12 px-6 font-bold flex-1 sm:flex-none">
+              Bekor qilish
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => { setLockModalOpen(false); nav(getPacksPath()); }}
+              className="bg-purple-600 hover:bg-purple-700 text-white rounded-xl h-12 px-6 font-black uppercase text-xs tracking-widest shadow-lg shadow-purple-500/20 flex-1 sm:flex-none"
+            >
+              Tariflarni ko'rish
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

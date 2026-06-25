@@ -1,0 +1,125 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0047-1
+      author: antigravity
+      changes:
+        - addColumn:
+            tableName: subscription_packs
+            columns:
+              - column:
+                  name: old_price
+                  type: decimal(15,2)
+              - column:
+                  name: discount_percent
+                  type: int
+              - column:
+                  name: duration_days
+                  type: int
+                  defaultValueNumeric: 30
+              - column:
+                  name: color_and_design
+                  type: varchar(255)
+              - column:
+                  name: icon
+                  type: varchar(100)
+              - column:
+                  name: access_all_mocks
+                  type: boolean
+                  defaultValueBoolean: false
+              - column:
+                  name: access_sat_mocks
+                  type: boolean
+                  defaultValueBoolean: false
+              - column:
+                  name: access_nat_mocks
+                  type: boolean
+                  defaultValueBoolean: false
+              - column:
+                  name: access_ielts_mocks
+                  type: boolean
+                  defaultValueBoolean: false
+              - column:
+                  name: access_custom_mocks
+                  type: boolean
+                  defaultValueBoolean: false
+              - column:
+                  name: access_all_books
+                  type: boolean
+                  defaultValueBoolean: false
+
+  - changeSet:
+      id: v0047-2
+      author: antigravity
+      changes:
+        - createTable:
+            tableName: subscription_pack_books
+            columns:
+              - column:
+                  name: pack_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_spb_pack
+                    references: subscription_packs(id)
+              - column:
+                  name: material_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_spb_material
+                    references: library_materials(id)
+
+  - changeSet:
+      id: v0047-3
+      author: antigravity
+      changes:
+        - createTable:
+            tableName: xp_transactions
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_xp_tx_user
+                    references: users(id)
+              - column:
+                  name: amount
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: now()
+
+  - changeSet:
+      id: v0047-4
+      author: antigravity
+      changes:
+        - addColumn:
+            tableName: users
+            columns:
+              - column:
+                  name: current_streak
+                  type: int
+                  defaultValueNumeric: 3
+
+  - changeSet:
+      id: v0047-5
+      author: antigravity
+      changes:
+        - createIndex:
+            indexName: idx_xp_transactions_user_created
+            tableName: xp_transactions
+            columns:
+              - column:
+                  name: user_id
+              - column:
+                  name: created_at

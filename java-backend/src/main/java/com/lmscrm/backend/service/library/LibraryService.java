@@ -17,6 +17,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.lmscrm.backend.service.SubscriptionService;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -35,6 +36,7 @@ public class LibraryService {
     private final LibraryDownloadRepository downloadRepository;
     private final LibraryStatisticRepository statisticRepository;
     private final LibraryStatsService libraryStatsService;
+    private final SubscriptionService subscriptionService;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -61,28 +63,7 @@ public class LibraryService {
 
     public boolean hasAccess(LibraryMaterial material, User user) {
         if (user == null) return false;
-
-        // Elevated roles bypass subscription checks
-        String role = user.getRole().name();
-        if (role.equals("SUPER_ADMIN") || role.equals("ADMIN") || role.equals("ADMINISTRATOR") || role.equals("TEACHER")) {
-            return true;
-        }
-
-        if ("FREE".equalsIgnoreCase(material.getAccessType())) {
-            return true;
-        }
-
-        String userTier = getUserSubscriptionType(user.getId());
-
-        if ("PRO".equalsIgnoreCase(material.getAccessType())) {
-            return "PRO".equalsIgnoreCase(userTier) || "ELITE".equalsIgnoreCase(userTier);
-        }
-
-        if ("ELITE".equalsIgnoreCase(material.getAccessType())) {
-            return "ELITE".equalsIgnoreCase(userTier);
-        }
-
-        return false;
+        return subscriptionService.hasLibraryAccess(user, material);
     }
 
     // ─── CATEGORY METHODS ───────────────────────────────────────────────────────
@@ -335,7 +316,13 @@ public class LibraryService {
         dto.setGrade(material.getGrade());
         dto.setTopic(material.getTopic());
         dto.setCoverImageUrl(material.getCoverImageUrl());
-        dto.setPdfUrl(material.getPdfUrl());
+        if (user != null && hasAccess(material, user)) {
+            dto.setPdfUrl(material.getPdfUrl());
+        } else if (user == null) {
+            dto.setPdfUrl(material.getPdfUrl());
+        } else {
+            dto.setPdfUrl(null);
+        }
         dto.setAccessType(material.getAccessType());
         dto.setStatus(material.getStatus());
         dto.setViewsCount(material.getViewsCount());

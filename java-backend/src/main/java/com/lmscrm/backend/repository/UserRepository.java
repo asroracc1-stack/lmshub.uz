@@ -125,24 +125,26 @@ public interface UserRepository extends JpaRepository<User, UUID> {
            "COALESCE(uts.avatarLevel, 1), " +
            "COALESCE(ugp.claimedCheckpointIds, ''), " +
            "(SELECT COUNT(sa) FROM StudentAttempt sa WHERE sa.student = u AND sa.finishedAt IS NOT NULL), " +
-           "COALESCE((SELECT SUM(ct.amount) FROM CoinTransaction ct WHERE ct.student = u AND ct.createdAt >= :startDate), 0L) as periodCoins " +
+           "COALESCE((SELECT SUM(ct.amount) FROM CoinTransaction ct WHERE ct.student = u AND ct.createdAt >= :startDate), 0L) as periodCoins, " +
+           "COALESCE((SELECT SUM(xt.amount) FROM XpTransaction xt WHERE xt.user = u AND xt.createdAt >= :startDate), 0L) as periodXp " +
            "FROM User u " +
            "LEFT JOIN UserTravelState uts ON uts.user = u " +
            "LEFT JOIN UserGamificationProgress ugp ON ugp.user = u " +
            "WHERE u.role = :role AND u.active = true " +
-           "ORDER BY periodCoins DESC, u.coins DESC, u.xp DESC, u.createdAt ASC")
+           "ORDER BY periodCoins DESC, periodXp DESC, u.createdAt ASC")
     Page<Object[]> getLeaderboardPeriodGlobal(@Param("role") AppRole role, @Param("startDate") LocalDateTime startDate, Pageable pageable);
 
     @Query("SELECT u, " +
            "COALESCE(uts.avatarLevel, 1), " +
            "COALESCE(ugp.claimedCheckpointIds, ''), " +
            "(SELECT COUNT(sa) FROM StudentAttempt sa WHERE sa.student = u AND sa.finishedAt IS NOT NULL), " +
-           "COALESCE((SELECT SUM(ct.amount) FROM CoinTransaction ct WHERE ct.student = u AND ct.createdAt >= :startDate), 0L) as periodCoins " +
+           "COALESCE((SELECT SUM(ct.amount) FROM CoinTransaction ct WHERE ct.student = u AND ct.createdAt >= :startDate), 0L) as periodCoins, " +
+           "COALESCE((SELECT SUM(xt.amount) FROM XpTransaction xt WHERE xt.user = u AND xt.createdAt >= :startDate), 0L) as periodXp " +
            "FROM User u " +
            "LEFT JOIN UserTravelState uts ON uts.user = u " +
            "LEFT JOIN UserGamificationProgress ugp ON ugp.user = u " +
            "WHERE u.role = :role AND u.active = true AND u.organizationId = :orgId " +
-           "ORDER BY periodCoins DESC, u.coins DESC, u.xp DESC, u.createdAt ASC")
+           "ORDER BY periodCoins DESC, periodXp DESC, u.createdAt ASC")
     Page<Object[]> getLeaderboardPeriodByOrg(@Param("role") AppRole role, @Param("orgId") UUID orgId, @Param("startDate") LocalDateTime startDate, Pageable pageable);
 
     @Query("SELECT COUNT(u) FROM User u WHERE u.role = :role AND u.active = true AND " +

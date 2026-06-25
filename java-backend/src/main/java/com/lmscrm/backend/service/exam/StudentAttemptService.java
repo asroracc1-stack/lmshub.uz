@@ -9,6 +9,7 @@ import com.lmscrm.backend.exception.ResourceNotFoundException;
 import com.lmscrm.backend.mapper.ExamMapper;
 import com.lmscrm.backend.repository.*;
 import com.lmscrm.backend.service.finance.CoinService;
+import com.lmscrm.backend.service.SubscriptionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -32,11 +33,16 @@ public class StudentAttemptService {
     private final CoinService coinService;
     private final UserRepository userRepository;
     private final ExamMapper mapper;
+    private final SubscriptionService subscriptionService;
 
     @Transactional
     public StudentAttemptDto startExam(UUID examId, User student) {
         Exam exam = examRepository.findById(examId)
                 .orElseThrow(() -> new ResourceNotFoundException("Exam not found"));
+
+        if (!subscriptionService.hasMockAccess(student, exam)) {
+            throw new BusinessException("Bu mock premium paket uchun mavjud");
+        }
 
         if (!exam.getIsActive()) {
             throw new BusinessException("Exam is not active");

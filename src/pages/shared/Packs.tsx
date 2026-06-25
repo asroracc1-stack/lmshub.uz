@@ -6,7 +6,8 @@ import {
   Check, Sparkles, Crown, Gift, Loader2, CreditCard, Copy, Send, X,
   Plus, Pencil, Trash2, Settings, ShieldCheck, XCircle, Clock, Zap, Rocket, 
   ChevronRight, Info, Users, BarChart3, Star, Layers, TrendingUp, Infinity,
-  MessageCircle, Bell, AlertTriangle, CheckCircle2, RefreshCw, Search, Globe
+  MessageCircle, Bell, AlertTriangle, CheckCircle2, RefreshCw, Search, Globe,
+  BookOpen
 } from "lucide-react";
 import { api } from "@/lib/axios";
 import { useAuth } from "@/contexts/AuthContext";
@@ -44,13 +45,25 @@ interface Pack {
   code: string;
   name: string;
   price: number;
+  oldPrice?: number;
+  discountPercent?: number;
   duration: number; // in months
+  durationDays?: number; // in days
+  colorAndDesign?: string;
+  icon?: string;
+  accessAllMocks?: boolean;
+  accessSatMocks?: boolean;
+  accessNatMocks?: boolean;
+  accessIeltsMocks?: boolean;
+  accessCustomMocks?: boolean;
+  accessAllBooks?: boolean;
   features: string[];
   isPopular: boolean;
   status: string;
   type: PackType;
   totalPurchases?: number;
   examIds?: string[];
+  allowedBookIds?: string[];
 }
 
 interface FeatureItem {
@@ -70,7 +83,13 @@ interface AdminPaymentInfo {
 const ICONS: Record<string, any> = { 
   FREE: Rocket, 
   PRO: Zap, 
-  ELITE: Crown 
+  ELITE: Crown,
+  Rocket: Rocket,
+  Zap: Zap,
+  Crown: Crown,
+  Gift: Gift,
+  Star: Star,
+  Sparkles: Sparkles
 };
 
 const NARRATIVES: Record<string, string> = {
@@ -116,7 +135,9 @@ export default function Packs() {
   const [editing, setEditing] = useState<Partial<Pack> | null>(null);
   const [editFeatures, setEditFeatures] = useState<FeatureItem[]>([]);
   const [selectedExams, setSelectedExams] = useState<string[]>([]);
+  const [selectedBooks, setSelectedBooks] = useState<string[]>([]);
   const [examSearch, setExamSearch] = useState("");
+  const [bookSearch, setBookSearch] = useState("");
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [requestSent, setRequestSent] = useState<Pack | null>(null);
 
@@ -130,13 +151,25 @@ export default function Packs() {
         code: p.code,
         name: p.name,
         price: p.price,
+        oldPrice: p.oldPrice ?? p.old_price,
+        discountPercent: p.discountPercent ?? p.discount_percent,
         duration: p.duration,
+        durationDays: p.durationDays ?? p.duration_days ?? 30,
+        colorAndDesign: p.colorAndDesign ?? p.color_and_design,
+        icon: p.icon,
+        accessAllMocks: p.accessAllMocks ?? p.access_all_mocks ?? false,
+        accessSatMocks: p.accessSatMocks ?? p.access_sat_mocks ?? false,
+        accessNatMocks: p.accessNatMocks ?? p.access_nat_mocks ?? false,
+        accessIeltsMocks: p.accessIeltsMocks ?? p.access_ielts_mocks ?? false,
+        accessCustomMocks: p.accessCustomMocks ?? p.access_custom_mocks ?? false,
+        accessAllBooks: p.accessAllBooks ?? p.access_all_books ?? false,
         features: p.features || [],
         isPopular: p.isPopular ?? p.is_popular ?? false,
         status: p.status,
         type: p.type,
         totalPurchases: p.totalPurchases ?? p.total_purchases ?? 0,
         examIds: p.examIds ?? p.exam_ids ?? [],
+        allowedBookIds: p.allowedBookIds ?? p.allowed_book_ids ?? [],
       })).sort((a: Pack, b: Pack) => a.price - b.price);
     },
   });
@@ -147,6 +180,16 @@ export default function Packs() {
     queryFn: async () => {
       const { data } = await api.get("/admin/exams");
       return data || [];
+    },
+    enabled: isManager,
+  });
+
+  // Fetch available library materials for checklist
+  const { data: libraryBooksList = [] } = useQuery<any[]>({
+    queryKey: ["all-library-materials"],
+    queryFn: async () => {
+      const { data } = await api.get("/library/materials", { params: { size: 500 } });
+      return data.content || [];
     },
     enabled: isManager,
   });
@@ -426,7 +469,18 @@ export default function Packs() {
       code: "PRO",
       name: "",
       price: 0,
+      oldPrice: 0,
+      discountPercent: 0,
       duration: 1,
+      durationDays: 30,
+      colorAndDesign: "bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500",
+      icon: "Zap",
+      accessAllMocks: false,
+      accessSatMocks: false,
+      accessNatMocks: false,
+      accessIeltsMocks: false,
+      accessCustomMocks: false,
+      accessAllBooks: false,
       features: [""],
       isPopular: false,
       status: "ACTIVE",
@@ -435,6 +489,7 @@ export default function Packs() {
     });
     setEditFeatures([{ id: Math.random().toString(36).substr(2, 9), text: "" }]);
     setSelectedExams([]);
+    setSelectedBooks([]);
     setEditorOpen(true);
   };
 
@@ -442,6 +497,7 @@ export default function Packs() {
     setEditing({ ...p });
     setEditFeatures((p.features || [""]).map(f => ({ id: Math.random().toString(36).substr(2, 9), text: f })));
     setSelectedExams(p.examIds || []);
+    setSelectedBooks(p.allowedBookIds || []);
     setEditorOpen(true);
   };
 
@@ -482,12 +538,24 @@ export default function Packs() {
       type: editing.type,
       code: uniqueCode,
       price: editing.type === "FREE" ? 0 : Number(editing.price),
+      oldPrice: editing.type === "FREE" ? 0 : (editing.oldPrice ? Number(editing.oldPrice) : null),
+      discountPercent: editing.type === "FREE" ? 0 : (editing.discountPercent ? Number(editing.discountPercent) : null),
       duration: Number(editing.duration),
+      durationDays: Number(editing.durationDays || 30),
+      colorAndDesign: editing.colorAndDesign,
+      icon: editing.icon || "Zap",
+      accessAllMocks: !!editing.accessAllMocks,
+      accessSatMocks: !!editing.accessSatMocks,
+      accessNatMocks: !!editing.accessNatMocks,
+      accessIeltsMocks: !!editing.accessIeltsMocks,
+      accessCustomMocks: !!editing.accessCustomMocks,
+      accessAllBooks: !!editing.accessAllBooks,
       features: cleanFeatures,
       isPopular: editing.isPopular ?? false,
       status: editing.status ?? "ACTIVE",
       totalPurchases: Number(editing.totalPurchases || 0),
       examIds: selectedExams,
+      allowedBookIds: selectedBooks,
     };
 
     saveMutation.mutate(payload);
@@ -620,35 +688,14 @@ export default function Packs() {
           {/* Premium Cards Grid for Client view */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {packs.map((p) => {
-              const PackIcon = p.type === "FREE" ? Gift : p.type === "ELITE" ? Zap : Crown;
+              const PackIcon = ICONS[p.icon || ""] || (p.type === "FREE" ? Gift : p.type === "ELITE" ? Zap : Crown);
               const isOwn = profile?.subscriptionPackCode === p.code || (p.type === "FREE" && !profile?.subscriptionPackCode);
               
               const isElite = p.type === "ELITE";
               const isPro = p.type === "PRO";
               const isFree = p.type === "FREE";
 
-              const displayFeatures = isFree ? [
-                { text: "5 ta test yaratish", active: true },
-                { text: "Basic statistika", active: true },
-                { text: "Leaderboard", active: true },
-                { text: "AI tekshiruv", active: false },
-                { text: "Premium mock testlar", active: false },
-                { text: "Natijalar tahlili", active: false }
-              ] : isElite ? [
-                { text: "50 ta mock test / oy", active: true },
-                { text: "IELTS testlari", active: true },
-                { text: "SAT testlari", active: true },
-                { text: "AI analiz va tekshiruv", active: true },
-                { text: "Natijalar tahlili", active: true },
-                { text: "Priority qo'llab-quvvatlash", active: true }
-              ] : isPro ? [
-                { text: "Cheksiz testlar", active: true },
-                { text: "Cheksiz mock testlar", active: true },
-                { text: "AI Coach (shaxsay mentor)", active: true },
-                { text: "Premium analytics", active: true },
-                { text: "Telegram bot integratsiyasi", active: true },
-                { text: "Rasmiy sertifikat", active: true }
-              ] : p.features.map(f => ({ text: f, active: !f.startsWith("x ") }));
+              const displayFeatures = p.features.map(f => ({ text: f, active: !f.startsWith("x ") }));
 
               const packSubtitles: Record<string, string> = {
                 FREE: "Boshlang'ich paket",
@@ -704,9 +751,9 @@ export default function Packs() {
                   )} />
 
                   {/* Elite "MOST POPULAR" centered badge */}
-                  {isElite && (
-                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#9F86C0] text-white text-[9px] font-black tracking-widest uppercase py-1.5 px-4 rounded-full shadow-lg z-10 flex items-center gap-1 border border-purple-450/20">
-                      <Star className="h-3 w-3 fill-white text-white" /> MOST POPULAR
+                  {p.isPopular && (
+                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#9F86C0] text-white text-[9px] font-black tracking-widest uppercase py-1.5 px-4 rounded-full shadow-lg z-10 flex items-center gap-1 border border-purple-450/20 animate-pulse">
+                      <Star className="h-3 w-3 fill-white text-white animate-spin" /> MOST POPULAR
                     </div>
                   )}
 
@@ -718,15 +765,19 @@ export default function Packs() {
                   )}>
                     {/* Top half wrapper */}
                     <div className={cn(
-                      "p-8 pb-6 relative flex flex-col gap-4",
-                      isFree && "bg-slate-50/50 dark:bg-slate-950/20 border-b border-slate-100 dark:border-slate-800/50",
-                      isElite && "bg-gradient-to-b from-[#9F86C0] to-[#240046] text-white",
-                      isPro && "bg-gradient-to-b from-[#4f46e5] to-[#6366f1] text-white"
+                      "p-8 pb-6 relative flex flex-col gap-4 text-white",
+                      p.colorAndDesign ? p.colorAndDesign : (
+                        isFree 
+                          ? "bg-slate-50/50 dark:bg-slate-950/20 border-b border-slate-100 dark:border-slate-800/50 text-slate-900 dark:text-white"
+                          : isElite 
+                            ? "bg-gradient-to-b from-[#9F86C0] to-[#240046]"
+                            : "bg-gradient-to-b from-[#4f46e5] to-[#6366f1]"
+                      )
                     )}>
                       {/* Circle icon container */}
                       <div className={cn(
                         "w-12 h-12 rounded-full flex items-center justify-center shadow-sm",
-                        isFree 
+                        (isFree && !p.colorAndDesign)
                           ? "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
                           : "bg-white/20 text-white backdrop-blur-md"
                       )}>
@@ -738,14 +789,14 @@ export default function Packs() {
                         <div className="flex items-center justify-between">
                           <h3 className={cn(
                             "text-2xl font-black tracking-tight",
-                            isFree ? "text-slate-900 dark:text-white" : "text-white"
+                            (isFree && !p.colorAndDesign) ? "text-slate-900 dark:text-white" : "text-white"
                           )}>
                             {p.name}
                           </h3>
                           {isOwn && (
                             <Badge className={cn(
                               "px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border",
-                              isFree 
+                              (isFree && !p.colorAndDesign)
                                 ? "bg-purple-500/10 text-purple-500 border-purple-500/20" 
                                 : "bg-white text-purple-600 border-white/20 shadow-sm"
                             )}>
@@ -755,7 +806,7 @@ export default function Packs() {
                         </div>
                         <p className={cn(
                           "text-[11px] font-bold mt-1.5",
-                          isFree ? "text-slate-400 dark:text-slate-500" : "text-white/80"
+                          (isFree && !p.colorAndDesign) ? "text-slate-400 dark:text-slate-500" : "text-white/80"
                         )}>
                           {packSubtitles[p.type] || "Premium paket imkoniyatlari"}
                         </p>
@@ -763,26 +814,35 @@ export default function Packs() {
 
                       {/* Price Section */}
                       <div className="mt-1">
+                        {p.oldPrice && p.oldPrice > p.price && (
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className={cn(
+                              "text-xs line-through opacity-70",
+                              (isFree && !p.colorAndDesign) ? "text-slate-500" : "text-white/70"
+                            )}>
+                              {p.oldPrice.toLocaleString()} UZS
+                            </span>
+                            {p.discountPercent && p.discountPercent > 0 && (
+                              <Badge className="bg-red-500 text-white border-none rounded-full px-1.5 py-0.5 text-[9px] font-bold">
+                                -{p.discountPercent}%
+                              </Badge>
+                            )}
+                          </div>
+                        )}
                         <div className="flex items-baseline gap-1">
                           <span className={cn(
                             "text-3xl font-black tracking-tight",
-                            isFree ? "text-slate-950 dark:text-white" : "text-white"
+                            (isFree && !p.colorAndDesign) ? "text-slate-950 dark:text-white" : "text-white"
                           )}>
-                            {p.price === 0 ? "0" : p.price.toLocaleString()}
+                            {p.price === 0 ? "Bepul" : `${p.price.toLocaleString()} UZS`}
                           </span>
-                          <span className={cn(
-                            "text-[10px] font-black tracking-wider uppercase",
-                            isFree ? "text-slate-500" : "text-white/80"
-                          )}>{t("dynamic.finance.uzs")}</span>
                         </div>
-                        {!isFree && (
-                          <div className={cn(
-                            "text-[10px] font-bold mt-0.5",
-                            isFree ? "text-slate-400" : "text-white/70"
-                          )}>
-                            / oy
-                          </div>
-                        )}
+                        <div className={cn(
+                          "text-[10px] font-bold mt-0.5",
+                          (isFree && !p.colorAndDesign) ? "text-slate-450" : "text-white/80"
+                        )}>
+                          / {p.durationDays || 30} kun
+                        </div>
                       </div>
                     </div>
 
@@ -1084,28 +1144,127 @@ export default function Packs() {
 
                 <div className="space-y-2">
                   <Label className="text-[10px] uppercase font-black text-slate-400 tracking-widest">{t("dynamic.packs.paket_nomi")}</Label>
-                  <Input className="bg-slate-50 dark:bg-white/5 h-12 rounded-xl border-none" value={editing.name} onChange={e => setEditing({...editing, name: e.target.value})} />
+                  <Input className="bg-slate-50 dark:bg-white/5 h-12 rounded-xl border-none font-bold" value={editing.name} onChange={e => setEditing({...editing, name: e.target.value})} />
                 </div>
 
                 <div className="space-y-2">
                   <Label className="text-[10px] uppercase font-black text-slate-400 tracking-widest">{t("dynamic.packs.narx_uzs")}</Label>
-                  <Input type="number" className="bg-slate-50 dark:bg-white/5 h-12 rounded-xl border-none disabled:opacity-50" value={editing.price} disabled={editing.type === "FREE"} onChange={e => setEditing({...editing, price: +e.target.value})} />
+                  <Input type="number" className="bg-slate-50 dark:bg-white/5 h-12 rounded-xl border-none disabled:opacity-50 font-bold text-primary" value={editing.price} disabled={editing.type === "FREE"} onChange={e => setEditing({...editing, price: +e.target.value})} />
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-[10px] uppercase font-black text-slate-400 tracking-widest">{t("dynamic.packs.muddat_oy")}</Label>
-                  <Select value={String(editing.duration)} onValueChange={(v) => setEditing({...editing, duration: +v})}>
-                    <SelectTrigger className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border-none">
-                      <SelectValue placeholder={t("dynamic.packs.muddat")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">{t("dynamic.packs.1_oy")}</SelectItem>
-                      <SelectItem value="3">{t("dynamic.packs.3_oy")}</SelectItem>
-                      <SelectItem value="6">{t("dynamic.packs.6_oy")}</SelectItem>
-                      <SelectItem value="12">{t("dynamic.packs.12_oy")}</SelectItem>
-                      <SelectItem value="-1">{t("dynamic.packs.cheksiz_abadiy")}</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Eski Narxi (UZS)</Label>
+                  <Input type="number" className="bg-slate-50 dark:bg-white/5 h-12 rounded-xl border-none disabled:opacity-50 text-slate-400 font-medium" value={editing.oldPrice || 0} disabled={editing.type === "FREE"} onChange={e => setEditing({...editing, oldPrice: +e.target.value})} />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Chegirma Foizi (%)</Label>
+                  <Input type="number" className="bg-slate-50 dark:bg-white/5 h-12 rounded-xl border-none disabled:opacity-50 text-red-500 font-bold" value={editing.discountPercent || 0} disabled={editing.type === "FREE"} onChange={e => setEditing({...editing, discountPercent: +e.target.value})} />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Davomiyligi (kunlarda)</Label>
+                  <Input type="number" className="bg-slate-50 dark:bg-white/5 h-12 rounded-xl border-none font-bold" value={editing.durationDays || 30} onChange={e => setEditing({...editing, durationDays: +e.target.value})} />
+                </div>
+
+                {/* Range & color presets */}
+                <div className="sm:col-span-2 space-y-2">
+                  <Label className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Dizayn ranglari (Tailwind / CSS gradient)</Label>
+                  <Input className="bg-slate-50 dark:bg-white/5 h-12 rounded-xl border border-slate-100 dark:border-white/10 font-mono text-xs" value={editing.colorAndDesign || ""} onChange={e => setEditing({...editing, colorAndDesign: e.target.value})} placeholder="e.g. bg-gradient-to-r from-purple-500 via-pink-500 to-red-500" />
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    {[
+                      { name: "Neon Sunset", value: "bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" },
+                      { name: "Ocean Breeze", value: "bg-gradient-to-r from-blue-600 via-teal-500 to-emerald-500" },
+                      { name: "Sunset Fire", value: "bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500" },
+                      { name: "Royal Indigo", value: "bg-gradient-to-r from-[#4f46e5] to-[#6366f1]" },
+                      { name: "Amethyst", value: "bg-gradient-to-b from-[#9F86C0] to-[#240046]" },
+                      { name: "Dark Nebula", value: "bg-gradient-to-r from-slate-900 via-purple-950 to-slate-900" }
+                    ].map(preset => (
+                      <Button
+                        key={preset.name}
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className={cn("text-[10px] h-8 rounded-lg", editing.colorAndDesign === preset.value && "border-primary bg-primary/5 text-primary")}
+                        onClick={() => setEditing({...editing, colorAndDesign: preset.value})}
+                      >
+                        <span className={cn("w-3 h-3 rounded-full mr-1.5 inline-block border border-white/20", preset.value)} />
+                        {preset.name}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Icon Selection */}
+                <div className="sm:col-span-2 space-y-2">
+                  <Label className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Paket Ikonkasi</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {["Rocket", "Zap", "Crown", "Gift", "Star", "Sparkles"].map(iconName => {
+                      const IconComponent = ICONS[iconName];
+                      return (
+                        <Button
+                          key={iconName}
+                          type="button"
+                          variant="outline"
+                          className={cn("h-11 px-4 rounded-xl text-xs font-semibold", editing.icon === iconName && "border-primary bg-primary/10 text-primary")}
+                          onClick={() => setEditing({...editing, icon: iconName})}
+                        >
+                          <IconComponent className="h-4 w-4 mr-2" />
+                          {iconName}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Access control settings */}
+                <div className="sm:col-span-2 border-t border-slate-100 dark:border-white/5 pt-4 space-y-4">
+                  <h4 className="text-xs font-black uppercase tracking-wider text-slate-500 flex items-center gap-2">
+                    <ShieldCheck className="h-4 w-4 text-emerald-500" /> Ruxsatlar va Access Nazorati
+                  </h4>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Mock Access switches */}
+                    <div className="p-4 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-white/5 space-y-3">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">MOCK TESTS ACCESS</p>
+                      
+                      <div className="flex items-center justify-between">
+                        <Label className="text-xs font-bold">Barcha Mock Testlarga Ruxsat</Label>
+                        <Switch checked={!!editing.accessAllMocks} onCheckedChange={v => setEditing({...editing, accessAllMocks: v})} />
+                      </div>
+                      
+                      {!editing.accessAllMocks && (
+                        <div className="space-y-2 border-t border-slate-100 dark:border-white/5 pt-2">
+                          <div className="flex items-center justify-between">
+                            <Label className="text-xs font-semibold text-slate-500 dark:text-slate-400">SAT Mock Testlari</Label>
+                            <Switch checked={!!editing.accessSatMocks} onCheckedChange={v => setEditing({...editing, accessSatMocks: v})} />
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <Label className="text-xs font-semibold text-slate-500 dark:text-slate-400">Milliy Sertifikat Mock Testlari</Label>
+                            <Switch checked={!!editing.accessNatMocks} onCheckedChange={v => setEditing({...editing, accessNatMocks: v})} />
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <Label className="text-xs font-semibold text-slate-500 dark:text-slate-400">IELTS Mock Testlari</Label>
+                            <Switch checked={!!editing.accessIeltsMocks} onCheckedChange={v => setEditing({...editing, accessIeltsMocks: v})} />
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <Label className="text-xs font-semibold text-slate-500 dark:text-slate-400">Custom Mock Testlari</Label>
+                            <Switch checked={!!editing.accessCustomMocks} onCheckedChange={v => setEditing({...editing, accessCustomMocks: v})} />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Book Access switches */}
+                    <div className="p-4 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-white/5 space-y-3">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">KUTUBXONA ACCESS</p>
+                      
+                      <div className="flex items-center justify-between">
+                        <Label className="text-xs font-bold">Barcha Kitoblarga Ruxsat</Label>
+                        <Switch checked={!!editing.accessAllBooks} onCheckedChange={v => setEditing({...editing, accessAllBooks: v})} />
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Left side: features list */}
@@ -1119,7 +1278,7 @@ export default function Packs() {
                       <AnimatePresence mode="popLayout">
                         {editFeatures.map((f) => (
                           <motion.div key={f.id} initial={{ opacity: 0, height: 0, x: -10 }} animate={{ opacity: 1, height: "auto", x: 0 }} exit={{ opacity: 0, height: 0, x: 10 }} className="flex gap-3 mb-3">
-                            <Input className="feature-input bg-slate-50 dark:bg-white/5 h-12 rounded-xl border border-slate-100 dark:border-white/10 flex-1 text-sm" value={f.text} onChange={e => updateFeature(f.id, e.target.value)} />
+                            <Input className="feature-input bg-slate-50 dark:bg-white/5 h-12 rounded-xl border border-slate-100 dark:border-white/10 flex-1 text-sm font-semibold" value={f.text} onChange={e => updateFeature(f.id, e.target.value)} />
                             <Button variant="ghost" size="icon" className="h-12 w-12 rounded-xl bg-red-500/5 text-red-500" onClick={() => removeFeature(f.id)}>
                               <X className="h-4 w-4" />
                             </Button>
@@ -1171,6 +1330,49 @@ export default function Packs() {
                         );
                       })}
                     </div>
+                  </div>
+                </div>
+
+                {/* Allowed Books Multi-select List */}
+                <div className="sm:col-span-2 space-y-4 pt-4 border-t border-slate-100 dark:border-white/5">
+                  <Label className="text-[11px] uppercase font-black text-slate-500 dark:text-slate-400 tracking-widest">Ruxsat Beriladigan Kutubxona Materiallari (Faqat tanlangan kitoblar uchun)</Label>
+                  <div className="relative">
+                    <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <Input value={bookSearch} onChange={e => setBookSearch(e.target.value)} placeholder="Kitoblarni qidirish..." className="bg-slate-50 dark:bg-white/5 h-10 pl-9 rounded-xl border-none" />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[220px] overflow-y-auto pr-2 custom-scrollbar py-1">
+                    {libraryBooksList.filter((b: any) => b.title?.toLowerCase().includes(bookSearch.toLowerCase())).map((b: any) => {
+                      const checked = selectedBooks.includes(b.id);
+                      return (
+                        <div
+                          key={b.id}
+                          onClick={() => {
+                            if (selectedBooks.includes(b.id)) {
+                              setSelectedBooks(selectedBooks.filter(id => id !== b.id));
+                            } else {
+                              setSelectedBooks([...selectedBooks, b.id]);
+                            }
+                          }}
+                          className={cn(
+                            "flex items-center justify-between p-3 rounded-xl cursor-pointer border transition-all",
+                            checked 
+                              ? "bg-purple-500/5 border-purple-500 text-purple-650" 
+                              : "bg-slate-50/50 border-slate-100 hover:bg-slate-50 dark:bg-white/5 dark:border-white/5"
+                          )}
+                        >
+                          <div className="min-w-0 flex-1 pr-2">
+                            <p className="text-xs font-bold truncate">{b.title}</p>
+                            <p className="text-[9px] text-slate-400 truncate">{b.author || "Muallif noma'lum"}</p>
+                          </div>
+                          <div className={cn(
+                            "h-5 w-5 rounded-md border flex items-center justify-center transition-colors shrink-0",
+                            checked ? "bg-purple-500 border-purple-500 text-white" : "border-slate-300"
+                          )}>
+                            {checked && <Check className="h-3 w-3" />}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 

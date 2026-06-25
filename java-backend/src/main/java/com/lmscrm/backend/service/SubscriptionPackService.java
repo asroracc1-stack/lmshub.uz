@@ -2,9 +2,11 @@ package com.lmscrm.backend.service;
 
 import com.lmscrm.backend.domain.entity.SubscriptionPack;
 import com.lmscrm.backend.domain.entity.Exam;
+import com.lmscrm.backend.domain.entity.LibraryMaterial;
 import com.lmscrm.backend.dto.admin.SubscriptionPackDto;
 import com.lmscrm.backend.repository.SubscriptionPackRepository;
 import com.lmscrm.backend.repository.ExamRepository;
+import com.lmscrm.backend.repository.LibraryMaterialRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +23,7 @@ public class SubscriptionPackService {
 
     private final SubscriptionPackRepository repository;
     private final ExamRepository examRepository;
+    private final LibraryMaterialRepository libraryMaterialRepository;
     private final TelegramBotService telegramBotService;
 
     @Transactional(readOnly = true)
@@ -62,13 +65,30 @@ public class SubscriptionPackService {
             exams = examRepository.findAllById(dto.getExamIds());
         }
 
+        List<LibraryMaterial> allowedBooks = java.util.Collections.emptyList();
+        if (dto.getAllowedBookIds() != null && !dto.getAllowedBookIds().isEmpty()) {
+            allowedBooks = libraryMaterialRepository.findAllById(dto.getAllowedBookIds());
+        }
+
         SubscriptionPack pack = SubscriptionPack.builder()
                 .code(dto.getCode())
                 .name(dto.getName())
                 .price(dto.getPrice())
-                .duration(dto.getDuration())
+                .oldPrice(dto.getOldPrice())
+                .discountPercent(dto.getDiscountPercent())
+                .duration(dto.getDuration() != null ? dto.getDuration() : 1)
+                .durationDays(dto.getDurationDays() != null ? dto.getDurationDays() : 30)
+                .colorAndDesign(dto.getColorAndDesign())
+                .icon(dto.getIcon())
+                .accessAllMocks(dto.getAccessAllMocks() != null ? dto.getAccessAllMocks() : false)
+                .accessSatMocks(dto.getAccessSatMocks() != null ? dto.getAccessSatMocks() : false)
+                .accessNatMocks(dto.getAccessNatMocks() != null ? dto.getAccessNatMocks() : false)
+                .accessIeltsMocks(dto.getAccessIeltsMocks() != null ? dto.getAccessIeltsMocks() : false)
+                .accessCustomMocks(dto.getAccessCustomMocks() != null ? dto.getAccessCustomMocks() : false)
+                .accessAllBooks(dto.getAccessAllBooks() != null ? dto.getAccessAllBooks() : false)
                 .features(dto.getFeatures())
                 .exams(exams)
+                .allowedBooks(allowedBooks)
                 .isPopular(dto.getIsPopular() != null ? dto.getIsPopular() : false)
                 .type(SubscriptionPack.PackType.valueOf(dto.getType() != null ? dto.getType() : "PRO"))
                 .status(dto.getStatus() != null ? dto.getStatus() : "ACTIVE")
@@ -142,12 +162,29 @@ public class SubscriptionPackService {
             exams = examRepository.findAllById(dto.getExamIds());
         }
 
+        List<LibraryMaterial> allowedBooks = java.util.Collections.emptyList();
+        if (dto.getAllowedBookIds() != null && !dto.getAllowedBookIds().isEmpty()) {
+            allowedBooks = libraryMaterialRepository.findAllById(dto.getAllowedBookIds());
+        }
+
         pack.setCode(dto.getCode());
         pack.setName(dto.getName());
         pack.setPrice(dto.getPrice());
-        pack.setDuration(dto.getDuration());
+        pack.setOldPrice(dto.getOldPrice());
+        pack.setDiscountPercent(dto.getDiscountPercent());
+        pack.setDuration(dto.getDuration() != null ? dto.getDuration() : 1);
+        pack.setDurationDays(dto.getDurationDays() != null ? dto.getDurationDays() : 30);
+        pack.setColorAndDesign(dto.getColorAndDesign());
+        pack.setIcon(dto.getIcon());
+        pack.setAccessAllMocks(dto.getAccessAllMocks() != null ? dto.getAccessAllMocks() : false);
+        pack.setAccessSatMocks(dto.getAccessSatMocks() != null ? dto.getAccessSatMocks() : false);
+        pack.setAccessNatMocks(dto.getAccessNatMocks() != null ? dto.getAccessNatMocks() : false);
+        pack.setAccessIeltsMocks(dto.getAccessIeltsMocks() != null ? dto.getAccessIeltsMocks() : false);
+        pack.setAccessCustomMocks(dto.getAccessCustomMocks() != null ? dto.getAccessCustomMocks() : false);
+        pack.setAccessAllBooks(dto.getAccessAllBooks() != null ? dto.getAccessAllBooks() : false);
         pack.setFeatures(dto.getFeatures());
         pack.setExams(exams);
+        pack.setAllowedBooks(allowedBooks);
         pack.setIsPopular(dto.getIsPopular() != null ? dto.getIsPopular() : false);
         pack.setStatus(dto.getStatus() != null ? dto.getStatus() : "ACTIVE");
         pack.setType(SubscriptionPack.PackType.valueOf(dto.getType() != null ? dto.getType() : "PRO"));
@@ -184,18 +221,34 @@ public class SubscriptionPackService {
         if (sp.getExams() != null) {
             examIds = sp.getExams().stream().map(Exam::getId).collect(Collectors.toList());
         }
+        List<UUID> allowedBookIds = java.util.Collections.emptyList();
+        if (sp.getAllowedBooks() != null) {
+            allowedBookIds = sp.getAllowedBooks().stream().map(LibraryMaterial::getId).collect(Collectors.toList());
+        }
         return SubscriptionPackDto.builder()
                 .id(sp.getId())
                 .code(sp.getCode())
                 .name(sp.getName())
                 .price(sp.getPrice())
+                .oldPrice(sp.getOldPrice())
+                .discountPercent(sp.getDiscountPercent())
                 .duration(sp.getDuration())
+                .durationDays(sp.getDurationDays())
+                .colorAndDesign(sp.getColorAndDesign())
+                .icon(sp.getIcon())
+                .accessAllMocks(sp.getAccessAllMocks())
+                .accessSatMocks(sp.getAccessSatMocks())
+                .accessNatMocks(sp.getAccessNatMocks())
+                .accessIeltsMocks(sp.getAccessIeltsMocks())
+                .accessCustomMocks(sp.getAccessCustomMocks())
+                .accessAllBooks(sp.getAccessAllBooks())
                 .features(sp.getFeatures())
                 .isPopular(sp.getIsPopular())
                 .type(sp.getType().name())
                 .status(sp.getStatus())
                 .totalPurchases(sp.getTotalPurchases())
                 .examIds(examIds)
+                .allowedBookIds(allowedBookIds)
                 .build();
     }
 }

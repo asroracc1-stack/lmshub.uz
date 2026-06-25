@@ -314,7 +314,7 @@ export default function LibraryCategoryDetail({ code: propCode }: LibraryCategor
 
   const handleRedirectToPacks = () => {
     setShowSubscriptionModal(false);
-    const packsPath = role === "student" ? "/student/packs" : `${basePath}/subscriptions`;
+    const packsPath = `${basePath}/packs`;
     navigate(packsPath);
   };
 

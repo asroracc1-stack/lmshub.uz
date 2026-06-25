@@ -146,9 +146,9 @@ public class SubscriptionRequestService {
         packRepository.save(pack);
         log.info("✅ Step 3: totalPurchases incremented for pack: {}", pack.getName());
 
-        int durationMonths = (pack.getDuration() != null && pack.getDuration() > 0) ? pack.getDuration() : 12;
+        int durationDays = (pack.getDurationDays() != null && pack.getDurationDays() > 0) ? pack.getDurationDays() : 30;
         LocalDateTime startsAt = LocalDateTime.now();
-        LocalDateTime expiresAt = startsAt.plusMonths(durationMonths);
+        LocalDateTime expiresAt = startsAt.plusDays(durationDays);
 
         // Use String UUIDs for PostgreSQL compatibility
         String userIdStr = user.getId().toString();
