@@ -63,10 +63,10 @@ public class TelegramBotService {
      *
      * @param targetChatId  Telegram chat ID
      * @param caption       Caption shown under the photo
-     * @param localFilePath Full path to the image file on disk (e.g. "uploads/abc.jpg")
+     * @param photo         Full path to the image file, URL, file ID or Resource
      */
     @Async
-    public void sendPhotoWithButton(String targetChatId, String caption, String photoPathOrUrl) {
+    public void sendPhotoWithButton(String targetChatId, String caption, Object photo) {
         if (botToken == null || botToken.equals("your_bot_token") || targetChatId == null || targetChatId.isBlank()) {
             log.warn("Telegram bot not configured. Photo not sent.");
             return;
@@ -90,25 +90,33 @@ public class TelegramBotService {
             body.add("parse_mode", "HTML");
             body.add("reply_markup", inlineKeyboard);
 
-            if (photoPathOrUrl.startsWith("http")) {
-                // If it's a URL, pass as a String
-                body.add("photo", photoPathOrUrl);
-            } else {
-                // Local file
-                File imageFile = new File(photoPathOrUrl);
-                if (!imageFile.exists()) {
-                    log.warn("Receipt file not found at: {}. Falling back to text message.", photoPathOrUrl);
-                    sendMessageWithButton(targetChatId, caption);
-                    return;
+            if (photo instanceof org.springframework.core.io.Resource) {
+                body.add("photo", photo);
+            } else if (photo instanceof String) {
+                String photoStr = (String) photo;
+                if (photoStr.startsWith("http")) {
+                    body.add("photo", photoStr);
+                } else if (!photoStr.contains("/") && !photoStr.contains("\\") && !photoStr.contains(".")) {
+                    body.add("photo", photoStr); // Telegram fileId
+                } else {
+                    File imageFile = new File(photoStr);
+                    if (!imageFile.exists()) {
+                        log.warn("Receipt file not found at: {}. Falling back to text message.", photoStr);
+                        sendMessageWithButton(targetChatId, caption);
+                        return;
+                    }
+                    body.add("photo", new FileSystemResource(imageFile));
                 }
-                body.add("photo", new org.springframework.core.io.FileSystemResource(imageFile));
+            } else {
+                sendMessageWithButton(targetChatId, caption);
+                return;
             }
 
             HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
             ResponseEntity<String> response = restTemplate.postForEntity(apiUrl, requestEntity, String.class);
 
             if (response.getStatusCode().is2xxSuccessful()) {
-                log.info("Photo with button sent to {} successfully", targetChatId);
+                log.info("Photo sent to {} successfully", targetChatId);
             } else {
                 log.warn("sendPhoto returned non-2xx: {}", response.getStatusCode());
             }
@@ -185,7 +193,7 @@ public class TelegramBotService {
     }
 
     @Async
-    public void sendPhotoWithInlineButtons(String targetChatId, String caption, String photoPathOrUrl, String approveCallback, String rejectCallback) {
+    public void sendPhotoWithInlineButtons(String targetChatId, String caption, Object photo, String approveCallback, String rejectCallback) {
         if (botToken == null || botToken.equals("your_bot_token") || targetChatId == null || targetChatId.isBlank()) {
             log.warn("Telegram bot not configured. Photo not sent.");
             return;
@@ -209,16 +217,26 @@ public class TelegramBotService {
             body.add("parse_mode", "HTML");
             body.add("reply_markup", inlineKeyboard);
 
-            if (photoPathOrUrl.startsWith("http")) {
-                body.add("photo", photoPathOrUrl);
-            } else {
-                File imageFile = new File(photoPathOrUrl);
-                if (!imageFile.exists()) {
-                    log.warn("Photo file not found at: {}. Falling back to text message.", photoPathOrUrl);
-                    sendMessageWithInlineButtons(targetChatId, caption, approveCallback, rejectCallback);
-                    return;
+            if (photo instanceof org.springframework.core.io.Resource) {
+                body.add("photo", photo);
+            } else if (photo instanceof String) {
+                String photoStr = (String) photo;
+                if (photoStr.startsWith("http")) {
+                    body.add("photo", photoStr);
+                } else if (!photoStr.contains("/") && !photoStr.contains("\\") && !photoStr.contains(".")) {
+                    body.add("photo", photoStr); // Telegram fileId
+                } else {
+                    File imageFile = new File(photoStr);
+                    if (!imageFile.exists()) {
+                        log.warn("Photo file not found at: {}. Falling back to text message.", photoStr);
+                        sendMessageWithInlineButtons(targetChatId, caption, approveCallback, rejectCallback);
+                        return;
+                    }
+                    body.add("photo", new FileSystemResource(imageFile));
                 }
-                body.add("photo", new FileSystemResource(imageFile));
+            } else {
+                sendMessageWithInlineButtons(targetChatId, caption, approveCallback, rejectCallback);
+                return;
             }
 
             HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);

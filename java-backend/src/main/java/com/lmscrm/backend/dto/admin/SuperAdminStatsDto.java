@@ -4,8 +4,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
+import java.math.BigDecimal;
 import java.util.List;
-import java.util.Map;
 
 @Data
 @Builder
@@ -16,6 +16,7 @@ public class SuperAdminStatsDto {
     private List<MonthPoint> growth;
     private List<OrgPoint> topOrgs;
     private List<AuditLogItem> recentActivity;
+    private SubscriptionStats subscriptionStats;
 
     @Data
     @Builder
@@ -32,9 +33,22 @@ public class SuperAdminStatsDto {
         private long parents;
         private long groups;
         private long totalSubjects;
-        private java.math.BigDecimal totalRevenue;
+        private BigDecimal totalRevenue;
         private long activeSubscriptions;
         private long pendingRequests;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class SubscriptionStats {
+        private BigDecimal todaySales;
+        private BigDecimal monthlySales;
+        private long activeSubscriptions;
+        private long pendingChecks;
+        private long expiredSubscriptions;
+        private String bestSellingPackage;
     }
 
     @Data

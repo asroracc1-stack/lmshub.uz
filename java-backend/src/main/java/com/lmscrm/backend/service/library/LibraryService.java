@@ -123,6 +123,13 @@ public class LibraryService {
         LibraryMaterial material = materialRepository.findById(materialId)
                 .orElseThrow(() -> new ResourceNotFoundException("Material topilmadi: " + materialId));
 
+        // Premium access check
+        if (!hasAccess(material, currentUser)) {
+            throw new com.lmscrm.backend.exception.BusinessException(
+                "Bu kitob premium paket uchun mavjud. Obuna bo'ling!"
+            );
+        }
+
         // Increment view count
         material.setViewsCount(material.getViewsCount() + 1);
         materialRepository.save(material);

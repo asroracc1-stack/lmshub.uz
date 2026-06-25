@@ -35,6 +35,10 @@ public class SuperAdminService {
     private final com.lmscrm.backend.repository.UserSubscriptionRepository userSubscriptionRepository;
     private final com.lmscrm.backend.repository.SubscriptionRequestRepository subscriptionRequestRepository;
 
+    @jakarta.persistence.PersistenceContext
+    private jakarta.persistence.EntityManager entityManager;
+
+
     @Transactional(readOnly = true)
     public SuperAdminStatsDto getDashboardStats() {
         log.info("📊 Fetching real-time SuperAdmin stats from database...");
@@ -64,7 +68,7 @@ public class SuperAdminService {
             LocalDateTime end = start.plusMonths(1);
             long count = userRepository.countByCreatedAtBefore(end);
             // Using Locale.ROOT to avoid uz locale dependency issues in different environments
-            String monthName = start.getMonth().getDisplayName(TextStyle.SHORT, Locale.ROOT);
+            String monthName = start.getMonth().getDisplayName(java.time.format.TextStyle.SHORT, Locale.ROOT);
             growth.add(new SuperAdminStatsDto.MonthPoint(monthName, (int) count));
         }
 
@@ -92,11 +96,85 @@ public class SuperAdminService {
             );
         }
 
+        // 5. Subscription Statistics
+        SuperAdminStatsDto.SubscriptionStats subscriptionStats = buildSubscriptionStats(now);
+
         return SuperAdminStatsDto.builder()
                 .stats(stats)
                 .growth(growth)
                 .topOrgs(topOrgs)
                 .recentActivity(recentActivity)
+                .subscriptionStats(subscriptionStats)
+                .build();
+    }
+
+    private SuperAdminStatsDto.SubscriptionStats buildSubscriptionStats(LocalDateTime now) {
+        java.math.BigDecimal todaySales = java.math.BigDecimal.ZERO;
+        java.math.BigDecimal monthlySales = java.math.BigDecimal.ZERO;
+        long activeCount = 0;
+        long expiredCount = 0;
+        long pendingCount = 0;
+        String bestPack = "—";
+
+        try {
+            LocalDateTime todayStart = now.toLocalDate().atStartOfDay();
+            LocalDateTime monthStart = now.withDayOfMonth(1).toLocalDate().atStartOfDay();
+
+            // Today's sales: sum of pack prices approved today
+            List<?> todayRows = entityManager.createNativeQuery(
+                "SELECT COALESCE(SUM(sp.price), 0) FROM public.subscription_transactions st " +
+                "JOIN public.subscription_packs sp ON sp.id = st.pack_id " +
+                "WHERE st.status = 'APPROVED' AND st.processed_at >= :start"
+            ).setParameter("start", java.sql.Timestamp.valueOf(todayStart)).getResultList();
+            if (!todayRows.isEmpty() && todayRows.get(0) != null) {
+                todaySales = new java.math.BigDecimal(todayRows.get(0).toString());
+            }
+
+            // Monthly sales
+            List<?> monthRows = entityManager.createNativeQuery(
+                "SELECT COALESCE(SUM(sp.price), 0) FROM public.subscription_transactions st " +
+                "JOIN public.subscription_packs sp ON sp.id = st.pack_id " +
+                "WHERE st.status = 'APPROVED' AND st.processed_at >= :start"
+            ).setParameter("start", java.sql.Timestamp.valueOf(monthStart)).getResultList();
+            if (!monthRows.isEmpty() && monthRows.get(0) != null) {
+                monthlySales = new java.math.BigDecimal(monthRows.get(0).toString());
+            }
+
+            // Active subscriptions
+            activeCount = userSubscriptionRepository.countByIsActiveTrue();
+
+            // Expired subscriptions
+            List<?> expiredRows = entityManager.createNativeQuery(
+                "SELECT COUNT(*) FROM public.user_subscriptions WHERE is_active = false AND status = 'EXPIRED'"
+            ).getResultList();
+            if (!expiredRows.isEmpty() && expiredRows.get(0) != null) {
+                expiredCount = ((Number) expiredRows.get(0)).longValue();
+            }
+
+            // Pending checks
+            pendingCount = subscriptionRequestRepository.countByStatus("PENDING");
+
+            // Best-selling package
+            List<?> bestRows = entityManager.createNativeQuery(
+                "SELECT sp.name FROM public.subscription_transactions st " +
+                "JOIN public.subscription_packs sp ON sp.id = st.pack_id " +
+                "WHERE st.status = 'APPROVED' " +
+                "GROUP BY sp.name ORDER BY COUNT(*) DESC LIMIT 1"
+            ).getResultList();
+            if (!bestRows.isEmpty() && bestRows.get(0) != null) {
+                bestPack = bestRows.get(0).toString();
+            }
+        } catch (Exception e) {
+            log.error("Error calculating subscription stats: {}", e.getMessage());
+        }
+
+        return SuperAdminStatsDto.SubscriptionStats.builder()
+                .todaySales(todaySales)
+                .monthlySales(monthlySales)
+                .activeSubscriptions(activeCount)
+                .expiredSubscriptions(expiredCount)
+                .pendingChecks(pendingCount)
+                .bestSellingPackage(bestPack)
                 .build();
     }
 

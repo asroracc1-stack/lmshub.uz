@@ -5,6 +5,7 @@ import com.lmscrm.backend.domain.entity.SubscriptionRequest;
 import com.lmscrm.backend.domain.entity.User;
 import com.lmscrm.backend.domain.enums.AppRole;
 import com.lmscrm.backend.domain.enums.NotificationType;
+import com.lmscrm.backend.repository.DbStoredFileRepository;
 import com.lmscrm.backend.repository.SubscriptionPackRepository;
 import com.lmscrm.backend.repository.SubscriptionRequestRepository;
 import com.lmscrm.backend.repository.UserRepository;
@@ -29,6 +30,7 @@ public class SubscriptionRequestService {
     private final UserRepository userRepository;
     private final TelegramBotService telegramBotService;
     private final NotificationService notificationService;
+    private final DbStoredFileRepository dbStoredFileRepository;
 
     @jakarta.persistence.PersistenceContext
     private jakarta.persistence.EntityManager entityManager;
@@ -97,14 +99,32 @@ public class SubscriptionRequestService {
 
         String adminChatId = telegramBotService.getDefaultChatId();
         if (receiptUrl != null && !receiptUrl.isBlank()) {
-            String localFilePath = null;
+            boolean sent = false;
             if (receiptUrl.contains("/view/")) {
-                String filename = receiptUrl.substring(receiptUrl.lastIndexOf("/view/") + 6);
-                localFilePath = "uploads/" + filename;
+                String dbKey = receiptUrl.substring(receiptUrl.lastIndexOf("/view/") + 6);
+                java.util.Optional<com.lmscrm.backend.domain.entity.DbStoredFile> optFile = dbStoredFileRepository.findByFilename(dbKey);
+                if (optFile.isPresent()) {
+                    com.lmscrm.backend.domain.entity.DbStoredFile storedFile = optFile.get();
+                    if ("DB".equals(storedFile.getStorageType())) {
+                        org.springframework.core.io.Resource resource = new org.springframework.core.io.ByteArrayResource(storedFile.getData()) {
+                            @Override
+                            public String getFilename() {
+                                return "receipt.jpg"; // Provide a default filename for Telegram
+                            }
+                        };
+                        telegramBotService.sendPhotoWithInlineButtons(adminChatId, message, resource, approveCallback, rejectCallback);
+                        sent = true;
+                    } else {
+                        String localFilePath = storedFile.getPath();
+                        if (localFilePath != null && new java.io.File(localFilePath).exists()) {
+                            telegramBotService.sendPhotoWithInlineButtons(adminChatId, message, localFilePath, approveCallback, rejectCallback);
+                            sent = true;
+                        }
+                    }
+                }
             }
-            if (localFilePath != null && new java.io.File(localFilePath).exists()) {
-                telegramBotService.sendPhotoWithInlineButtons(adminChatId, message, localFilePath, approveCallback, rejectCallback);
-            } else {
+            
+            if (!sent) {
                 String fullUrl = receiptUrl.startsWith("http") ? receiptUrl : (telegramBotService.getSiteUrl() + receiptUrl);
                 telegramBotService.sendPhotoWithInlineButtons(adminChatId, message, fullUrl, approveCallback, rejectCallback);
             }

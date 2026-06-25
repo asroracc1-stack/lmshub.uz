@@ -7,6 +7,7 @@ import com.lmscrm.backend.domain.enums.NotificationType;
 import com.lmscrm.backend.event.PaymentUploadedEvent;
 import com.lmscrm.backend.repository.PaymentTransactionRepository;
 import com.lmscrm.backend.repository.UserRepository;
+import com.lmscrm.backend.repository.DbStoredFileRepository;
 import com.lmscrm.backend.service.TelegramBotService;
 import com.lmscrm.backend.service.communication.NotificationService;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,7 @@ public class PaymentEventListener {
     private final UserRepository userRepository;
     private final TelegramBotService telegramBotService;
     private final NotificationService notificationService;
+    private final DbStoredFileRepository dbStoredFileRepository;
 
     private String escapeHtml(String text) {
         if (text == null) return "";
