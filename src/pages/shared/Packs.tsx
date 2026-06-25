@@ -7,7 +7,7 @@ import {
   Plus, Pencil, Trash2, Settings, ShieldCheck, XCircle, Clock, Zap, Rocket, 
   ChevronRight, Info, Users, BarChart3, Star, Layers, TrendingUp, Infinity,
   MessageCircle, Bell, AlertTriangle, CheckCircle2, RefreshCw, Search, Globe,
-  BookOpen
+  BookOpen, ArrowUpRight
 } from "lucide-react";
 import { api } from "@/lib/axios";
 import { useAuth } from "@/contexts/AuthContext";
@@ -121,6 +121,9 @@ export default function Packs() {
   const [clientName, setClientName] = useState("");
   const [clientPhone, setClientPhone] = useState("");
   const [clientEmail, setClientEmail] = useState("");
+
+  const [customDescription, setCustomDescription] = useState("");
+  const [customImageUrl, setCustomImageUrl] = useState("");
 
   useEffect(() => {
     if (profile) {
@@ -465,6 +468,8 @@ export default function Packs() {
   });
 
   const openNew = () => {
+    setCustomDescription("");
+    setCustomImageUrl("");
     setEditing({
       code: "PRO",
       name: "",
@@ -494,8 +499,35 @@ export default function Packs() {
   };
 
   const openEdit = (p: Pack) => {
-    setEditing({ ...p });
-    setEditFeatures((p.features || [""]).map(f => ({ id: Math.random().toString(36).substr(2, 9), text: f })));
+    const featuresRaw = p.features || [];
+    const descItem = featuresRaw.find(f => f.startsWith("desc::"));
+    setCustomDescription(descItem ? descItem.replace("desc::", "") : "");
+
+    let imgUrl = "";
+    let gradColor = p.colorAndDesign || "bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500";
+    if (p.colorAndDesign && p.colorAndDesign.includes("||")) {
+      const parts = p.colorAndDesign.split("||");
+      const imgPart = parts.find(x => x.startsWith("imageUrl::"));
+      const gradPart = parts.find(x => x.startsWith("gradient::"));
+      if (imgPart) imgUrl = imgPart.replace("imageUrl::", "");
+      if (gradPart) gradColor = gradPart.replace("gradient::", "");
+    } else if (p.colorAndDesign && p.colorAndDesign.startsWith("http")) {
+      imgUrl = p.colorAndDesign;
+    }
+    setCustomImageUrl(imgUrl);
+
+    setEditing({
+      ...p,
+      colorAndDesign: gradColor,
+      features: featuresRaw.filter(f => !f.startsWith("desc::"))
+    });
+    
+    const filteredFeats = featuresRaw.filter(f => !f.startsWith("desc::"));
+    setEditFeatures(
+      filteredFeats.length > 0 
+        ? filteredFeats.map(f => ({ id: Math.random().toString(36).substr(2, 9), text: f }))
+        : [{ id: Math.random().toString(36).substr(2, 9), text: "" }]
+    );
     setSelectedExams(p.examIds || []);
     setSelectedBooks(p.allowedBookIds || []);
     setEditorOpen(true);
@@ -522,9 +554,24 @@ export default function Packs() {
     }
 
     const cleanFeatures = editFeatures.map(f => f.text.trim()).filter(f => f !== "");
+    if (customDescription.trim()) {
+      cleanFeatures.unshift(`desc::${customDescription.trim()}`);
+    }
+    
     if (cleanFeatures.length === 0) {
       toast.error(t("dynamic.packs.kamida_bitta_imkoniyat_kiritishingiz_sha"));
       return;
+    }
+
+    let finalColorAndDesign = editing.colorAndDesign || "bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500";
+    if (customImageUrl.trim()) {
+      let baseGrad = finalColorAndDesign;
+      if (finalColorAndDesign.includes("||")) {
+        const parts = finalColorAndDesign.split("||");
+        const gradPart = parts.find(x => x.startsWith("gradient::"));
+        baseGrad = gradPart ? gradPart.replace("gradient::", "") : "bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500";
+      }
+      finalColorAndDesign = `imageUrl::${customImageUrl.trim()}||gradient::${baseGrad}`;
     }
 
     // Generate unique code: TYPE-timestamp (only on create)
@@ -542,7 +589,7 @@ export default function Packs() {
       discountPercent: editing.type === "FREE" ? 0 : (editing.discountPercent ? Number(editing.discountPercent) : null),
       duration: Number(editing.duration),
       durationDays: Number(editing.durationDays || 30),
-      colorAndDesign: editing.colorAndDesign,
+      colorAndDesign: finalColorAndDesign,
       icon: editing.icon || "Zap",
       accessAllMocks: !!editing.accessAllMocks,
       accessSatMocks: !!editing.accessSatMocks,
@@ -695,13 +742,47 @@ export default function Packs() {
               const isPro = p.type === "PRO";
               const isFree = p.type === "FREE";
 
-              const displayFeatures = p.features.map(f => ({ text: f, active: !f.startsWith("x ") }));
-
               const packSubtitles: Record<string, string> = {
                 FREE: "Boshlang'ich paket",
                 ELITE: "Eng ko'p tanlangan",
                 PRO: "Cheksiz imkoniyatlar"
               };
+
+              // Parse custom image URL
+              let parsedImageUrl = "";
+              if (p.colorAndDesign && p.colorAndDesign.includes("||")) {
+                const parts = p.colorAndDesign.split("||");
+                const imgPart = parts.find(x => x.startsWith("imageUrl::"));
+                if (imgPart) parsedImageUrl = imgPart.replace("imageUrl::", "");
+              } else if (p.colorAndDesign && p.colorAndDesign.startsWith("http")) {
+                parsedImageUrl = p.colorAndDesign;
+              }
+
+              // Fallback default image based on name keywords
+              if (!parsedImageUrl) {
+                const nameLower = (p.name || "").toLowerCase();
+                if (nameLower.includes("writing")) {
+                  parsedImageUrl = "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=600&auto=format&fit=crop&q=80";
+                } else if (nameLower.includes("reading")) {
+                  parsedImageUrl = "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=600&auto=format&fit=crop&q=80";
+                } else if (nameLower.includes("listening")) {
+                  parsedImageUrl = "https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=600&auto=format&fit=crop&q=80";
+                } else if (nameLower.includes("speaking")) {
+                  parsedImageUrl = "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600&auto=format&fit=crop&q=80";
+                } else if (nameLower.includes("sat")) {
+                  parsedImageUrl = "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=600&auto=format&fit=crop&q=80";
+                } else {
+                  parsedImageUrl = "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&auto=format&fit=crop&q=80";
+                }
+              }
+
+              // Parse custom description
+              const parsedDescription = p.features.find(f => f.startsWith("desc::"))?.replace("desc::", "") || 
+                                         packSubtitles[p.type] || 
+                                         "Premium paket imkoniyatlari";
+
+              // Clean features to display (exclude the description item)
+              const cleanFeatures = p.features.filter(f => !f.startsWith("desc::")).map(f => ({ text: f, active: !f.startsWith("x ") }));
 
               return (
                 <motion.div
@@ -742,14 +823,6 @@ export default function Packs() {
                     </div>
                   )}
 
-                  {/* Neon border glow effect */}
-                  <div className={cn(
-                    "absolute inset-0 rounded-[2.5rem] blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500 pointer-events-none",
-                    isFree && "bg-slate-400/20",
-                    isElite && "bg-purple-500/40",
-                    isPro && "bg-indigo-500/40"
-                  )} />
-
                   {/* Elite "MOST POPULAR" centered badge */}
                   {p.isPopular && (
                     <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#9F86C0] text-white text-[9px] font-black tracking-widest uppercase py-1.5 px-4 rounded-full shadow-lg z-10 flex items-center gap-1 border border-purple-450/20 animate-pulse">
@@ -758,155 +831,88 @@ export default function Packs() {
                   )}
 
                   <div className={cn(
-                    "w-full rounded-[2.5rem] border flex flex-col justify-between overflow-hidden relative transition-all duration-500 shadow-2xl bg-white dark:bg-slate-900/60",
-                    isFree && "border-slate-200 dark:border-slate-800",
-                    isElite && "border-2 border-[#9F86C0] dark:border-purple-500/50 shadow-purple-500/5",
-                    isPro && "border-2 border-[#6366f1] dark:border-indigo-500/50 shadow-indigo-500/5"
+                    "w-full rounded-[2.5rem] border flex flex-col justify-between overflow-hidden relative transition-all duration-500 shadow-xl bg-white dark:bg-slate-900/60 border-slate-100 dark:border-slate-800/80 hover:shadow-2xl hover:shadow-slate-150/40 dark:hover:shadow-none"
                   )}>
-                    {/* Top half wrapper */}
-                    <div className={cn(
-                      "p-8 pb-6 relative flex flex-col gap-4 text-white",
-                      p.colorAndDesign ? p.colorAndDesign : (
-                        isFree 
-                          ? "bg-slate-50/50 dark:bg-slate-950/20 border-b border-slate-100 dark:border-slate-800/50 text-slate-900 dark:text-white"
-                          : isElite 
-                            ? "bg-gradient-to-b from-[#9F86C0] to-[#240046]"
-                            : "bg-gradient-to-b from-[#4f46e5] to-[#6366f1]"
-                      )
-                    )}>
-                      {/* Circle icon container */}
-                      <div className={cn(
-                        "w-12 h-12 rounded-full flex items-center justify-center shadow-sm",
-                        (isFree && !p.colorAndDesign)
-                          ? "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
-                          : "bg-white/20 text-white backdrop-blur-md"
-                      )}>
-                        <PackIcon className="h-6 w-6" />
-                      </div>
-
-                      {/* Header Titles */}
-                      <div>
-                        <div className="flex items-center justify-between">
-                          <h3 className={cn(
-                            "text-2xl font-black tracking-tight",
-                            (isFree && !p.colorAndDesign) ? "text-slate-900 dark:text-white" : "text-white"
-                          )}>
-                            {p.name}
-                          </h3>
-                          {isOwn && (
-                            <Badge className={cn(
-                              "px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border",
-                              (isFree && !p.colorAndDesign)
-                                ? "bg-purple-500/10 text-purple-500 border-purple-500/20" 
-                                : "bg-white text-purple-600 border-white/20 shadow-sm"
-                            )}>
-                              Joriy Obuna
-                            </Badge>
-                          )}
+                    {/* Card Cover Image Container */}
+                    <div className="relative w-full aspect-[4/3] overflow-hidden rounded-t-[2.5rem]">
+                      <img 
+                        src={parsedImageUrl} 
+                        alt={p.name} 
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                      
+                      {/* Top-Right Red Discount Badge */}
+                      {p.discountPercent && p.discountPercent > 0 && (
+                        <div className="absolute top-4 right-4 bg-[#FF3B30] text-white text-xs font-black px-3 py-1 rounded-full z-10 shadow-sm">
+                          -{p.discountPercent}%
                         </div>
-                        <p className={cn(
-                          "text-[11px] font-bold mt-1.5",
-                          (isFree && !p.colorAndDesign) ? "text-slate-400 dark:text-slate-500" : "text-white/80"
-                        )}>
-                          {packSubtitles[p.type] || "Premium paket imkoniyatlari"}
-                        </p>
-                      </div>
+                      )}
 
-                      {/* Price Section */}
-                      <div className="mt-1">
+                      {/* Locked/Pricing Badge overlay on the bottom right of the image */}
+                      <div className="absolute bottom-4 right-4 flex items-center gap-1.5 bg-slate-900/85 text-white px-3 py-1.5 rounded-full text-xs font-bold z-10 backdrop-blur-md shadow-md border border-white/5">
+                        <Lock className="h-3.5 w-3.5 text-slate-350" />
                         {p.oldPrice && p.oldPrice > p.price && (
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className={cn(
-                              "text-xs line-through opacity-70",
-                              (isFree && !p.colorAndDesign) ? "text-slate-500" : "text-white/70"
-                            )}>
-                              {p.oldPrice.toLocaleString()} UZS
-                            </span>
-                            {p.discountPercent && p.discountPercent > 0 && (
-                              <Badge className="bg-red-500 text-white border-none rounded-full px-1.5 py-0.5 text-[9px] font-bold">
-                                -{p.discountPercent}%
-                              </Badge>
-                            )}
-                          </div>
-                        )}
-                        <div className="flex items-baseline gap-1">
-                          <span className={cn(
-                            "text-3xl font-black tracking-tight",
-                            (isFree && !p.colorAndDesign) ? "text-slate-950 dark:text-white" : "text-white"
-                          )}>
-                            {p.price === 0 ? "Bepul" : `${p.price.toLocaleString()} UZS`}
+                          <span className="line-through text-slate-450 font-medium mr-1.5">
+                            {p.oldPrice >= 1000 ? `${Math.round(p.oldPrice / 1000)}k` : p.oldPrice.toLocaleString()}
                           </span>
-                        </div>
-                        <div className={cn(
-                          "text-[10px] font-bold mt-0.5",
-                          (isFree && !p.colorAndDesign) ? "text-slate-450" : "text-white/80"
-                        )}>
-                          / {p.durationDays || 30} kun
-                        </div>
+                        )}
+                        <span className="text-white font-black">
+                          {p.price === 0 ? "Bepul" : `${p.price.toLocaleString()} so'm`}
+                        </span>
                       </div>
                     </div>
 
-                    {/* Bottom half container */}
-                    <div className="p-8 flex flex-col gap-6 flex-1 justify-between bg-white dark:bg-slate-900">
-                      {/* Features List */}
-                      <div className="space-y-4">
-                        {displayFeatures.map((f, i) => (
-                          <div key={i} className="flex items-center gap-3">
-                            <div className={cn(
-                              "w-5 h-5 rounded-full flex items-center justify-center shrink-0",
-                              f.active 
-                                ? (isPro 
-                                    ? "bg-indigo-500/10 text-indigo-500 dark:text-indigo-400"
-                                    : "bg-purple-500/10 text-purple-500 dark:text-purple-400")
-                                : "bg-slate-100 dark:bg-slate-800 text-slate-300 dark:text-slate-650"
-                            )}>
-                              {f.active ? (
-                                <Check className="h-3 w-3" strokeWidth={3} />
-                              ) : (
-                                <X className="h-3 w-3" strokeWidth={3} />
-                              )}
-                            </div>
-                            <span className={cn(
-                              "text-xs font-semibold tracking-tight",
-                              f.active 
-                                ? "text-slate-750 dark:text-slate-200" 
-                                : "text-slate-400 dark:text-slate-550 line-through opacity-70"
-                            )}>
-                              {f.text}
-                            </span>
+                    {/* Card Content (Title, Description, Features) */}
+                    <div className="p-6 flex flex-col gap-3 flex-1 justify-between">
+                      <div className="space-y-2">
+                        <h3 className="font-display font-bold text-xl text-slate-900 dark:text-white leading-snug">
+                          {p.name}
+                        </h3>
+                        
+                        <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
+                          {parsedDescription}
+                        </p>
+
+                        {/* Optional Features checkmarks at a smaller style for premium look */}
+                        {cleanFeatures.length > 0 && (
+                          <div className="pt-2.5 space-y-1.5 border-t border-slate-50 dark:border-white/5 mt-3">
+                            {cleanFeatures.slice(0, 4).map((f, idx) => (
+                              <div key={idx} className="flex items-center gap-2">
+                                <Check className="h-3 w-3 text-emerald-500 shrink-0" strokeWidth={3} />
+                                <span className="text-[10px] font-semibold text-slate-650 dark:text-slate-350">{f.text}</span>
+                              </div>
+                            ))}
                           </div>
-                        ))}
+                        )}
                       </div>
 
-                      {/* Action Button & Period Text */}
-                      <div className="flex flex-col items-center gap-2.5 pt-2">
+                      {/* Card Footer (Duration + Buying Action button) */}
+                      <div className="pt-4 border-t border-slate-100 dark:border-slate-800/60 mt-4 flex items-center justify-between">
+                        <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
+                          <Clock className="h-4 w-4 text-slate-400" />
+                          <span className="text-xs font-bold">{p.durationDays || 30} kun</span>
+                        </div>
+
                         {isFree ? (
-                          <>
-                            <Button className="w-full bg-transparent border border-[#9F86C0] hover:bg-purple-500/5 text-[#9F86C0] h-12 rounded-xl font-bold uppercase text-[10px] tracking-widest transition-transform duration-300 hover:scale-[1.02] shadow-none">
-                              Boshlash
-                            </Button>
-                            <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 tracking-wider">{t("dynamic.packs.doimiy_bepul")}</span>
-                          </>
+                          <Button 
+                            className="bg-transparent border border-[#2EC4B6] hover:bg-[#2EC4B6]/5 text-[#2EC4B6] hover:text-[#2EC4B6] h-10 px-4 rounded-xl font-bold uppercase text-[9px] tracking-wider transition-all shadow-none"
+                            onClick={() => toast.success("Tekin paket avtomatik faollashtirilgan!")}
+                          >
+                            Boshlash
+                          </Button>
                         ) : (
-                          <>
-                            <Button
-                              onClick={() => setCheckoutPack(p)}
-                              className={cn(
-                                "w-full h-12 rounded-xl font-bold uppercase text-[10px] tracking-widest shadow-lg transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] text-white border-none",
-                                isElite 
-                                  ? "bg-gradient-to-r from-purple-500 to-violet-500 shadow-purple-500/20 hover:shadow-purple-500/40" 
-                                  : "bg-gradient-to-r from-indigo-500 to-purple-600 shadow-indigo-500/20 hover:shadow-indigo-500/40"
-                              )}
-                            >
-                              {isElite ? "Obuna bo'lish" : "Pro olish"}
-                            </Button>
-                            <span className={cn(
-                              "text-[9px] font-bold tracking-wider flex items-center gap-1",
-                              isElite ? "text-[#9F86C0]" : "text-[#6366f1]"
-                            )}>
-                              <Check className="h-3 w-3" strokeWidth={3} /> 7 kunlik bepul sinov
-                            </span>
-                          </>
+                          <Button
+                            onClick={() => setCheckoutPack(p)}
+                            className={cn(
+                              "h-10 px-4 rounded-xl font-bold uppercase text-[9px] tracking-wider shadow-md transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] text-white border-none flex items-center gap-1.5",
+                              isOwn 
+                                ? "bg-slate-500 hover:bg-slate-600 shadow-slate-500/20" 
+                                : "bg-[#2EC4B6] hover:bg-[#20A39E] shadow-emerald-500/20 hover:shadow-emerald-500/35"
+                            )}
+                          >
+                            {isOwn ? "Mavjud" : "Sotib olish"}
+                            {!isOwn && <ArrowUpRight className="h-3.5 w-3.5" />}
+                          </Button>
                         )}
                       </div>
                     </div>
@@ -1145,6 +1151,16 @@ export default function Packs() {
                 <div className="space-y-2">
                   <Label className="text-[10px] uppercase font-black text-slate-400 tracking-widest">{t("dynamic.packs.paket_nomi")}</Label>
                   <Input className="bg-slate-50 dark:bg-white/5 h-12 rounded-xl border-none font-bold" value={editing.name} onChange={e => setEditing({...editing, name: e.target.value})} />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Paket Rasmi (Image URL)</Label>
+                  <Input className="bg-slate-50 dark:bg-white/5 h-12 rounded-xl border-none font-bold" value={customImageUrl} onChange={e => setCustomImageUrl(e.target.value)} placeholder="e.g. https://images.unsplash.com/... yoki bo'sh qoldiring" />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Paket Tavsifi (Description)</Label>
+                  <Input className="bg-slate-50 dark:bg-white/5 h-12 rounded-xl border-none font-bold" value={customDescription} onChange={e => setCustomDescription(e.target.value)} placeholder="e.g. Ushbu paket orqali premium writing testlaridan foydalana olasiz." />
                 </div>
 
                 <div className="space-y-2">
