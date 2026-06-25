@@ -100,49 +100,33 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     long countByRoleAndOrganizationIdAndActive(AppRole role, UUID orgId, boolean active);
 
     @Query("SELECT u, " +
-           "COALESCE(uts.avatarLevel, 1), " +
-           "COALESCE(ugp.claimedCheckpointIds, ''), " +
            "(SELECT COUNT(sa) FROM StudentAttempt sa WHERE sa.student = u AND sa.finishedAt IS NOT NULL) " +
            "FROM User u " +
-           "LEFT JOIN UserTravelState uts ON uts.user = u " +
-           "LEFT JOIN UserGamificationProgress ugp ON ugp.user = u " +
            "WHERE u.role = :role AND u.active = true " +
            "ORDER BY u.coins DESC, u.xp DESC, u.createdAt ASC")
     Page<Object[]> getLeaderboardAllTimeGlobal(@Param("role") AppRole role, Pageable pageable);
 
     @Query("SELECT u, " +
-           "COALESCE(uts.avatarLevel, 1), " +
-           "COALESCE(ugp.claimedCheckpointIds, ''), " +
            "(SELECT COUNT(sa) FROM StudentAttempt sa WHERE sa.student = u AND sa.finishedAt IS NOT NULL) " +
            "FROM User u " +
-           "LEFT JOIN UserTravelState uts ON uts.user = u " +
-           "LEFT JOIN UserGamificationProgress ugp ON ugp.user = u " +
            "WHERE u.role = :role AND u.active = true AND u.organizationId = :orgId " +
            "ORDER BY u.coins DESC, u.xp DESC, u.createdAt ASC")
     Page<Object[]> getLeaderboardAllTimeByOrg(@Param("role") AppRole role, @Param("orgId") UUID orgId, Pageable pageable);
 
     @Query("SELECT u, " +
-           "COALESCE(uts.avatarLevel, 1), " +
-           "COALESCE(ugp.claimedCheckpointIds, ''), " +
            "(SELECT COUNT(sa) FROM StudentAttempt sa WHERE sa.student = u AND sa.finishedAt IS NOT NULL), " +
            "COALESCE((SELECT SUM(ct.amount) FROM CoinTransaction ct WHERE ct.student = u AND ct.createdAt >= :startDate), 0L) as periodCoins, " +
            "COALESCE((SELECT SUM(xt.amount) FROM XpTransaction xt WHERE xt.user = u AND xt.createdAt >= :startDate), 0L) as periodXp " +
            "FROM User u " +
-           "LEFT JOIN UserTravelState uts ON uts.user = u " +
-           "LEFT JOIN UserGamificationProgress ugp ON ugp.user = u " +
            "WHERE u.role = :role AND u.active = true " +
            "ORDER BY periodCoins DESC, periodXp DESC, u.createdAt ASC")
     Page<Object[]> getLeaderboardPeriodGlobal(@Param("role") AppRole role, @Param("startDate") LocalDateTime startDate, Pageable pageable);
 
     @Query("SELECT u, " +
-           "COALESCE(uts.avatarLevel, 1), " +
-           "COALESCE(ugp.claimedCheckpointIds, ''), " +
            "(SELECT COUNT(sa) FROM StudentAttempt sa WHERE sa.student = u AND sa.finishedAt IS NOT NULL), " +
            "COALESCE((SELECT SUM(ct.amount) FROM CoinTransaction ct WHERE ct.student = u AND ct.createdAt >= :startDate), 0L) as periodCoins, " +
            "COALESCE((SELECT SUM(xt.amount) FROM XpTransaction xt WHERE xt.user = u AND xt.createdAt >= :startDate), 0L) as periodXp " +
            "FROM User u " +
-           "LEFT JOIN UserTravelState uts ON uts.user = u " +
-           "LEFT JOIN UserGamificationProgress ugp ON ugp.user = u " +
            "WHERE u.role = :role AND u.active = true AND u.organizationId = :orgId " +
            "ORDER BY periodCoins DESC, periodXp DESC, u.createdAt ASC")
     Page<Object[]> getLeaderboardPeriodByOrg(@Param("role") AppRole role, @Param("orgId") UUID orgId, @Param("startDate") LocalDateTime startDate, Pageable pageable);
@@ -163,8 +147,8 @@ public interface UserRepository extends JpaRepository<User, UUID> {
            "COALESCE((SELECT SUM(ct.amount) FROM CoinTransaction ct WHERE ct.student = u AND ct.createdAt >= :startDate), 0L) > :periodCoins")
     long countUsersAbovePeriodByOrg(@Param("role") AppRole role, @Param("orgId") UUID orgId, @Param("startDate") LocalDateTime startDate, @Param("periodCoins") Long periodCoins);
 
-    @Query("SELECT COALESCE(SUM(ct.amount), 0) FROM CoinTransaction ct WHERE ct.student.id = :userId AND ct.createdAt >= :startDate")
-    Integer getLeaderboardPeriodCoins(@Param("userId") UUID userId, @Param("startDate") LocalDateTime startDate);
+    @Query("SELECT COALESCE(SUM(ct.amount), 0L) FROM CoinTransaction ct WHERE ct.student.id = :userId AND ct.createdAt >= :startDate")
+    Long getLeaderboardPeriodCoins(@Param("userId") UUID userId, @Param("startDate") LocalDateTime startDate);
 }
 
 

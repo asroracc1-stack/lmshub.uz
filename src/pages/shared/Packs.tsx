@@ -628,22 +628,22 @@ export default function Packs() {
   return (
     <div className="p-2 space-y-6 w-full min-h-screen">
       {/* Premium Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pb-6 border-b border-slate-100 dark:border-white/5">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-6 border-b border-slate-100 dark:border-white/5">
         <div>
-          <Badge className="bg-primary/10 text-primary border-primary/20 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2">
-            Obuna va Tariflar
-          </Badge>
-          <h1 className="text-3xl md:text-5xl font-black tracking-tight text-slate-800 dark:text-white flex items-center gap-3">
-            Ta'lim Paketlari <Crown className="h-8 w-8 text-amber-500 animate-bounce" />
+          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+            Barcha Paketlar
           </h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium">
-            Platformaning barcha premium xizmatlari, mock testlari va o'qish rejalari
+          <p className="text-slate-500 dark:text-slate-450 mt-1 text-sm font-medium">
+            Foydalanuvchilar uchun mavjud obuna paketlarini boshqaring
           </p>
         </div>
 
         {isManager && (
-          <Button onClick={openNew} className="bg-gradient-primary hover:opacity-90 text-white px-6 h-14 rounded-2xl font-black uppercase text-xs tracking-widest shadow-lg shadow-primary/20 flex items-center gap-2">
-            <Plus className="h-4 w-4" /> Yangi Paket Yaratish
+          <Button 
+            onClick={openNew} 
+            className="bg-[#6B28D9] hover:bg-[#581C87] text-white px-5 h-11 rounded-xl font-bold text-xs tracking-wide shadow-md flex items-center gap-1.5"
+          >
+            <Plus className="h-4 w-4" /> Yangi paket yaratish
           </Button>
         )}
       </div>
@@ -735,54 +735,43 @@ export default function Packs() {
           {/* Premium Cards Grid for Client view */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {packs.map((p) => {
-              const PackIcon = ICONS[p.icon || ""] || (p.type === "FREE" ? Gift : p.type === "ELITE" ? Zap : Crown);
               const isOwn = profile?.subscriptionPackCode === p.code || (p.type === "FREE" && !profile?.subscriptionPackCode);
               
               const isElite = p.type === "ELITE";
               const isPro = p.type === "PRO";
               const isFree = p.type === "FREE";
 
-              const packSubtitles: Record<string, string> = {
-                FREE: "Boshlang'ich paket",
-                ELITE: "Eng ko'p tanlangan",
-                PRO: "Cheksiz imkoniyatlar"
+              const oldPriceVal = p.oldPrice || (isPro ? 99000 : isElite ? 199000 : 0);
+              const priceVal = p.price;
+              const discountVal = p.discountPercent !== undefined ? p.discountPercent : (isPro || isElite ? 51 : 0);
+
+              // Background images mapped to locally saved 3D assets
+              const bgImageMap: Record<string, string> = {
+                FREE: "/green_gift_box.png",
+                PRO: "/purple_rocket.png",
+                ELITE: "/gold_diamond.png"
+              };
+              const bgImage = bgImageMap[p.type] || "/placeholder.svg";
+
+              // Color maps to style cards beautifully
+              const badgeBgMap: Record<string, string> = {
+                FREE: "bg-[#52B788] text-white",
+                PRO: "bg-[#7209B7] text-white",
+                ELITE: "bg-[#F77F00] text-white"
               };
 
-              // Parse custom image URL
-              let parsedImageUrl = "";
-              if (p.colorAndDesign && p.colorAndDesign.includes("||")) {
-                const parts = p.colorAndDesign.split("||");
-                const imgPart = parts.find(x => x.startsWith("imageUrl::"));
-                if (imgPart) parsedImageUrl = imgPart.replace("imageUrl::", "");
-              } else if (p.colorAndDesign && p.colorAndDesign.startsWith("http")) {
-                parsedImageUrl = p.colorAndDesign;
-              }
-
-              // Fallback default image based on name keywords
-              if (!parsedImageUrl) {
-                const nameLower = (p.name || "").toLowerCase();
-                if (nameLower.includes("writing")) {
-                  parsedImageUrl = "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=600&auto=format&fit=crop&q=80";
-                } else if (nameLower.includes("reading")) {
-                  parsedImageUrl = "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=600&auto=format&fit=crop&q=80";
-                } else if (nameLower.includes("listening")) {
-                  parsedImageUrl = "https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=600&auto=format&fit=crop&q=80";
-                } else if (nameLower.includes("speaking")) {
-                  parsedImageUrl = "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600&auto=format&fit=crop&q=80";
-                } else if (nameLower.includes("sat")) {
-                  parsedImageUrl = "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=600&auto=format&fit=crop&q=80";
-                } else {
-                  parsedImageUrl = "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&auto=format&fit=crop&q=80";
-                }
-              }
-
-              // Parse custom description
-              const parsedDescription = p.features.find(f => f.startsWith("desc::"))?.replace("desc::", "") || 
-                                         packSubtitles[p.type] || 
-                                         "Premium paket imkoniyatlari";
+              const checkColorMap: Record<string, string> = {
+                FREE: "text-[#52B788]",
+                PRO: "text-[#7209B7]",
+                ELITE: "text-[#F77F00]"
+              };
 
               // Clean features to display (exclude the description item)
-              const cleanFeatures = p.features.filter(f => !f.startsWith("desc::")).map(f => ({ text: f, active: !f.startsWith("x ") }));
+              const cleanFeatures = p.features
+                .filter(f => !f.startsWith("desc::"))
+                .map(f => ({ text: f, active: !f.trim().toLowerCase().startsWith("x ") }));
+
+              const durationText = isFree ? "Cheksiz" : `${p.durationDays || (p.duration ? p.duration * 30 : 30)} kun`;
 
               return (
                 <motion.div
@@ -823,94 +812,117 @@ export default function Packs() {
                     </div>
                   )}
 
-                  {/* Elite "MOST POPULAR" centered badge */}
-                  {p.isPopular && (
-                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#9F86C0] text-white text-[9px] font-black tracking-widest uppercase py-1.5 px-4 rounded-full shadow-lg z-10 flex items-center gap-1 border border-purple-450/20 animate-pulse">
-                      <Star className="h-3 w-3 fill-white text-white animate-spin" /> MOST POPULAR
-                    </div>
-                  )}
-
                   <div className={cn(
                     "w-full rounded-[2.5rem] border flex flex-col justify-between overflow-hidden relative transition-all duration-500 shadow-xl bg-white dark:bg-slate-900/60 border-slate-100 dark:border-slate-800/80 hover:shadow-2xl hover:shadow-slate-150/40 dark:hover:shadow-none"
                   )}>
                     {/* Card Cover Image Container */}
                     <div className="relative w-full aspect-[4/3] overflow-hidden rounded-t-[2.5rem]">
                       <img 
-                        src={parsedImageUrl} 
+                        src={bgImage} 
                         alt={p.name} 
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                       />
                       
-                      {/* Top-Right Red Discount Badge */}
-                      {p.discountPercent && p.discountPercent > 0 && (
-                        <div className="absolute top-4 right-4 bg-[#FF3B30] text-white text-xs font-black px-3 py-1 rounded-full z-10 shadow-sm">
-                          -{p.discountPercent}%
-                        </div>
-                      )}
+                      {/* Dark gradient overlay for typography readability */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/25 to-black/10" />
 
-                      {/* Locked/Pricing Badge overlay on the bottom right of the image */}
-                      <div className="absolute bottom-4 right-4 flex items-center gap-1.5 bg-slate-900/85 text-white px-3 py-1.5 rounded-full text-xs font-bold z-10 backdrop-blur-md shadow-md border border-white/5">
-                        <Lock className="h-3.5 w-3.5 text-slate-350" />
-                        {p.oldPrice && p.oldPrice > p.price && (
-                          <span className="line-through text-slate-450 font-medium mr-1.5">
-                            {p.oldPrice >= 1000 ? `${Math.round(p.oldPrice / 1000)}k` : p.oldPrice.toLocaleString()}
-                          </span>
-                        )}
-                        <span className="text-white font-black">
-                          {p.price === 0 ? "Bepul" : `${p.price.toLocaleString()} so'm`}
+                      {/* Top-Left Category Badge */}
+                      <div className="absolute top-4 left-4 z-10">
+                        <span className={cn("px-3 py-1 text-[10px] font-black tracking-wider uppercase rounded-lg shadow-sm", badgeBgMap[p.type] || "bg-slate-500 text-white")}>
+                          {p.type === "FREE" ? "BEPUL" : p.type}
                         </span>
+                      </div>
+
+                      {/* Top-Right Red Discount Badge */}
+                      <div className="absolute top-4 right-4 z-10">
+                        <span className="bg-[#FF3B30] text-white text-xs font-black px-2.5 py-1 rounded-full shadow-sm">
+                          -{discountVal}%
+                        </span>
+                      </div>
+
+                      {/* Overlaid Price/Duration details on Card Image */}
+                      <div className="absolute left-6 bottom-6 text-white z-10 flex flex-col justify-end">
+                        {isFree ? (
+                          <>
+                            <h3 className="text-3xl font-black tracking-tight leading-none mb-1">FREE</h3>
+                            <p className="text-xs font-semibold text-white/80 mb-3">Boshlang'ich paket</p>
+                            <div className="text-3xl font-black tracking-tight leading-none">
+                              0 <span className="text-xl font-bold">so'm</span>
+                            </div>
+                            <p className="text-xs font-semibold text-white/80 mt-1">Butunlay bepul</p>
+                          </>
+                        ) : (
+                          <>
+                            {oldPriceVal > 0 && (
+                              <p className="line-through text-white/60 text-sm font-semibold mb-1">
+                                {oldPriceVal.toLocaleString()} so'm
+                              </p>
+                            )}
+                            <div className="text-3xl font-black tracking-tight leading-none">
+                              {priceVal.toLocaleString()} <span className="text-xl font-bold">so'm</span>
+                            </div>
+                            <p className="text-xs font-semibold text-white/80 mt-1.5">
+                              {p.durationDays || 30} kun uchun
+                            </p>
+                          </>
+                        )}
                       </div>
                     </div>
 
-                    {/* Card Content (Title, Description, Features) */}
-                    <div className="p-6 flex flex-col gap-3 flex-1 justify-between">
-                      <div className="space-y-2">
-                        <h3 className="font-display font-bold text-xl text-slate-900 dark:text-white leading-snug">
-                          {p.name}
-                        </h3>
-                        
-                        <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
-                          {parsedDescription}
-                        </p>
+                    {/* Card Content (Features list) */}
+                    <div className="p-8 flex flex-col gap-6 flex-1 justify-between">
+                      <div className="space-y-4">
+                        {cleanFeatures.map((f, idx) => {
+                          const isX = f.text.trim().toLowerCase().startsWith("x ");
+                          const displayText = isX ? f.text.trim().substring(2).trim() : f.text;
 
-                        {/* Optional Features checkmarks at a smaller style for premium look */}
-                        {cleanFeatures.length > 0 && (
-                          <div className="pt-2.5 space-y-1.5 border-t border-slate-50 dark:border-white/5 mt-3">
-                            {cleanFeatures.slice(0, 4).map((f, idx) => (
-                              <div key={idx} className="flex items-center gap-2">
-                                <Check className="h-3 w-3 text-emerald-500 shrink-0" strokeWidth={3} />
-                                <span className="text-[10px] font-semibold text-slate-650 dark:text-slate-350">{f.text}</span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
+                          return (
+                            <div key={idx} className="flex items-start gap-3">
+                              {isX ? (
+                                <X className="h-4.5 w-4.5 text-slate-400 shrink-0 mt-0.5" strokeWidth={3} />
+                              ) : (
+                                <Check className={cn("h-4.5 w-4.5 shrink-0 mt-0.5", checkColorMap[p.type] || "text-[#52B788]")} strokeWidth={3} />
+                              )}
+                              <span className={cn(
+                                "text-sm",
+                                isX 
+                                  ? "text-slate-400 font-medium" 
+                                  : "text-slate-800 dark:text-slate-200 font-semibold"
+                              )}>
+                                {displayText}
+                              </span>
+                            </div>
+                          );
+                        })}
                       </div>
 
-                      {/* Card Footer (Duration + Buying Action button) */}
-                      <div className="pt-4 border-t border-slate-100 dark:border-slate-800/60 mt-4 flex items-center justify-between">
-                        <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
-                          <Clock className="h-4 w-4 text-slate-400" />
-                          <span className="text-xs font-bold">{p.durationDays || 30} kun</span>
+                      {/* Card Footer (Duration + Action button) */}
+                      <div className="pt-6 border-t border-slate-100 dark:border-slate-800/60 flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
+                          <Clock className="h-4.5 w-4.5 text-slate-400 shrink-0" />
+                          <span className="text-sm font-semibold">{durationText}</span>
                         </div>
 
                         {isFree ? (
                           <Button 
-                            className="bg-transparent border border-[#2EC4B6] hover:bg-[#2EC4B6]/5 text-[#2EC4B6] hover:text-[#2EC4B6] h-10 px-4 rounded-xl font-bold uppercase text-[9px] tracking-wider transition-all shadow-none"
+                            className="bg-transparent border border-[#52B788] hover:bg-[#52B788]/5 text-[#52B788] hover:text-[#52B788] h-10 px-6 rounded-xl font-extrabold uppercase text-[10px] tracking-wider transition-all shadow-none"
                             onClick={() => toast.success("Tekin paket avtomatik faollashtirilgan!")}
                           >
-                            Boshlash
+                            Tanlash
                           </Button>
                         ) : (
                           <Button
                             onClick={() => setCheckoutPack(p)}
                             className={cn(
-                              "h-10 px-4 rounded-xl font-bold uppercase text-[9px] tracking-wider shadow-md transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] text-white border-none flex items-center gap-1.5",
+                              "h-10 px-6 rounded-xl font-extrabold uppercase text-[10px] tracking-wider shadow-md transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] text-white border-none flex items-center gap-1.5",
                               isOwn 
                                 ? "bg-slate-500 hover:bg-slate-600 shadow-slate-500/20" 
-                                : "bg-[#2EC4B6] hover:bg-[#20A39E] shadow-emerald-500/20 hover:shadow-emerald-500/35"
+                                : isPro
+                                  ? "bg-[#7209B7] hover:bg-[#5E079B] shadow-purple-500/20"
+                                  : "bg-[#F77F00] hover:bg-[#D96E00] shadow-orange-500/20"
                             )}
                           >
-                            {isOwn ? "Mavjud" : "Sotib olish"}
+                            {isOwn ? "Mavjud" : "Tanlash"}
                             {!isOwn && <ArrowUpRight className="h-3.5 w-3.5" />}
                           </Button>
                         )}

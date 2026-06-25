@@ -143,14 +143,14 @@ public class LeaderboardService {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
         for (Object[] row : results) {
-            if (row == null || row.length < 4 || !(row[0] instanceof User)) continue;
+            if (row == null || row.length < 2 || !(row[0] instanceof User)) continue;
 
             User user = (User) row[0];
-            Long completedTests = (Long) row[3];
+            Long completedTests = (Long) row[1];
 
-            // For period queries, row[4] is periodCoins and row[5] is periodXp
-            Long coins = (row.length > 4 && row[4] != null) ? (Long) row[4] : (user.getCoins() != null ? user.getCoins() : 0L);
-            Long xp = (row.length > 5 && row[5] != null) ? (Long) row[5] : (user.getXp() != null ? user.getXp() : 0L);
+            // For period queries, row[2] is periodCoins and row[3] is periodXp
+            Long coins = (row.length > 2 && row[2] != null) ? (Long) row[2] : (user.getCoins() != null ? user.getCoins() : 0L);
+            Long xp = (row.length > 3 && row[3] != null) ? (Long) row[3] : (user.getXp() != null ? user.getXp() : 0L);
 
             // Level formula: 1 + totalXp / 100
             Long totalXp = user.getXp() != null ? user.getXp() : 0L;
@@ -189,18 +189,19 @@ public class LeaderboardService {
         long usersAbove = 0;
         Long coins = currentUser.getCoins() != null ? currentUser.getCoins() : 0L;
         Long xp = currentUser.getXp() != null ? currentUser.getXp() : 0L;
+        LocalDateTime userCreatedAt = currentUser.getCreatedAt() != null ? currentUser.getCreatedAt() : LocalDateTime.now();
 
         if (isAllTime) {
             if (hasOrg) {
-                usersAbove = userRepository.countUsersAboveAllTimeByOrg(role, currentUser.getOrganizationId(), coins, xp, currentUser.getCreatedAt());
+                usersAbove = userRepository.countUsersAboveAllTimeByOrg(role, currentUser.getOrganizationId(), coins, xp, userCreatedAt);
             } else {
-                usersAbove = userRepository.countUsersAboveAllTimeGlobal(role, coins, xp, currentUser.getCreatedAt());
+                usersAbove = userRepository.countUsersAboveAllTimeGlobal(role, coins, xp, userCreatedAt);
             }
         } else {
             long myPeriodCoins = 0;
-            Integer periodSum = userRepository.getLeaderboardPeriodCoins(currentUser.getId(), startDate);
+            Long periodSum = userRepository.getLeaderboardPeriodCoins(currentUser.getId(), startDate);
             if (periodSum != null) {
-                myPeriodCoins = periodSum.longValue();
+                myPeriodCoins = periodSum;
             }
 
             if (hasOrg) {
@@ -215,7 +216,7 @@ public class LeaderboardService {
 
         return LeaderboardResponseDto.CurrentUserStats.builder()
                 .rank(rank)
-                .coins(isAllTime ? coins : (userRepository.getLeaderboardPeriodCoins(currentUser.getId(), startDate) != null ? userRepository.getLeaderboardPeriodCoins(currentUser.getId(), startDate).longValue() : 0L))
+                .coins(isAllTime ? coins : (userRepository.getLeaderboardPeriodCoins(currentUser.getId(), startDate) != null ? userRepository.getLeaderboardPeriodCoins(currentUser.getId(), startDate) : 0L))
                 .usersAbove(usersAbove)
                 .usersBelow(usersBelow)
                 .build();

@@ -435,6 +435,7 @@ const AppRoutes = () => {
           <Route path="dashboard" element={<UserDashboard />} />
           <Route path="profile" element={<UserAccount />} />
           <Route path="subscriptions" element={<Packs />} />
+          <Route path="packs" element={<Packs />} />
           <Route path="mocks" element={<MockTests basePath="/user" />} />
           <Route path="mocks/c/:kind" element={<MockCategory basePath="/user" />} />
           <Route path="mocks/take/:testId" element={<MockTake />} />
