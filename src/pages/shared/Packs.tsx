@@ -7,7 +7,7 @@ import {
   Plus, Pencil, Trash2, Settings, ShieldCheck, XCircle, Clock, Zap, Rocket, 
   ChevronRight, Info, Users, BarChart3, Star, Layers, TrendingUp, Infinity,
   MessageCircle, Bell, AlertTriangle, CheckCircle2, RefreshCw, Search, Globe,
-  BookOpen, ArrowUpRight
+  BookOpen, ArrowUpRight, Lock
 } from "lucide-react";
 import { api } from "@/lib/axios";
 import { useAuth } from "@/contexts/AuthContext";
