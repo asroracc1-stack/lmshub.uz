@@ -95,7 +95,7 @@ public class AdminExamController {
     @GetMapping("/{examId}/questions")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
     public ResponseEntity<List<QuestionDto>> getExamQuestionsForAdmin(@PathVariable UUID examId) {
-        return ResponseEntity.ok(examService.getExamQuestions(examId, false));
+        return ResponseEntity.ok(examService.getExamQuestions(examId, null, false));
     }
 
     @GetMapping
