@@ -1,0 +1,191 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0049-1
+      author: antigravity
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: exams
+        - not:
+            - columnExists:
+                tableName: exams
+                columnName: difficulty
+      changes:
+        - addColumn:
+            tableName: exams
+            columns:
+              - column:
+                  name: difficulty
+                  type: varchar(50)
+
+  - changeSet:
+      id: v0049-2
+      author: antigravity
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: exams
+        - not:
+            - columnExists:
+                tableName: exams
+                columnName: audio_url
+      changes:
+        - addColumn:
+            tableName: exams
+            columns:
+              - column:
+                  name: audio_url
+                  type: varchar(1024)
+
+  - changeSet:
+      id: v0049-3
+      author: antigravity
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: student_attempts
+        - not:
+            - columnExists:
+                tableName: student_attempts
+                columnName: overall_band
+      changes:
+        - addColumn:
+            tableName: student_attempts
+            columns:
+              - column:
+                  name: overall_band
+                  type: numeric
+
+  - changeSet:
+      id: v0049-4
+      author: antigravity
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: student_attempts
+        - not:
+            - columnExists:
+                tableName: student_attempts
+                columnName: ai_coach_feedback
+      changes:
+        - addColumn:
+            tableName: student_attempts
+            columns:
+              - column:
+                  name: ai_coach_feedback
+                  type: text
+
+  - changeSet:
+      id: v0049-5
+      author: antigravity
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: student_attempts
+        - not:
+            - columnExists:
+                tableName: student_attempts
+                columnName: predicted_score
+      changes:
+        - addColumn:
+            tableName: student_attempts
+            columns:
+              - column:
+                  name: predicted_score
+                  type: varchar(255)
+
+  - changeSet:
+      id: v0049-6
+      author: antigravity
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: student_attempts
+        - not:
+            - columnExists:
+                tableName: student_attempts
+                columnName: time_used_seconds
+      changes:
+        - addColumn:
+            tableName: student_attempts
+            columns:
+              - column:
+                  name: time_used_seconds
+                  type: int
+
+  - changeSet:
+      id: v0049-7
+      author: antigravity
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: student_attempts
+        - not:
+            - columnExists:
+                tableName: student_attempts
+                columnName: auto_submitted
+      changes:
+        - addColumn:
+            tableName: student_attempts
+            columns:
+              - column:
+                  name: auto_submitted
+                  type: boolean
+
+  - changeSet:
+      id: v0049-8
+      author: antigravity
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: student_attempts
+        - not:
+            - columnExists:
+                tableName: student_attempts
+                columnName: attempt_seed
+      changes:
+        - addColumn:
+            tableName: student_attempts
+            columns:
+              - column:
+                  name: attempt_seed
+                  type: varchar(255)
+
+  - changeSet:
+      id: v0049-9
+      author: antigravity
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: exam_violations
+      changes:
+        - createTable:
+            tableName: exam_violations
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: attempt_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_exam_violations_attempt
+                    references: student_attempts(id)
+              - column:
+                  name: violation_type
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: timestamp
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: details
+                  type: text
