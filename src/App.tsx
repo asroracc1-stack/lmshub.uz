@@ -168,6 +168,7 @@ const MockTests = lazy(() => import("./pages/shared/MockTests"));
 const MockCategory = lazy(() => import("./pages/shared/MockCategory"));
 const MockTake = lazy(() => import("./pages/shared/MockTake"));
 const MockEditor = lazy(() => import("./pages/shared/MockEditor"));
+const ExamBuilderPage = lazy(() => import("./components/exam/builder/ExamBuilder"));
 const AISpeaking = lazy(() => import("./pages/shared/AISpeaking"));
 const SpeakingHub = lazy(() => import("./pages/shared/SpeakingHub"));
 const SpeakingTopics = lazy(() => import("./pages/shared/SpeakingTopics"));
@@ -240,10 +241,13 @@ const AppRoutes = () => {
           <Route path="sat" element={<MockCategory basePath="/super-admin" forcedKind="sat" />} />
           <Route path="national-cert" element={<MockCategory basePath="/super-admin" forcedKind="national_cert" />} />
           <Route path="sat-mocks" element={<SatMocks />} />
-          <Route path="sat-mocks/new" element={<MockEditor basePath="/super-admin" defaultKind="sat" />} />
-          <Route path="sat-mocks/edit/:testId" element={<MockEditor basePath="/super-admin" defaultKind="sat" />} />
+          <Route path="sat-mocks/new" element={<ExamBuilderPage basePath="/super-admin" defaultKind="sat" />} />
+          <Route path="sat-mocks/edit/:testId" element={<ExamBuilderPage basePath="/super-admin" defaultKind="sat" />} />
           <Route path="milliy-mocks" element={<MockCategory basePath="/super-admin" forcedKind="national_cert" />} />
-          <Route path="milliy-mocks/new" element={<MockEditor basePath="/super-admin" defaultKind="national_cert" />} />
+          <Route path="milliy-mocks/new" element={<ExamBuilderPage basePath="/super-admin" defaultKind="national_cert" />} />
+          {/* Enterprise Exam Builder — universal routes */}
+          <Route path="exam-builder/new" element={<ExamBuilderPage basePath="/super-admin" />} />
+          <Route path="exam-builder/edit/:testId" element={<ExamBuilderPage basePath="/super-admin" />} />
           <Route path="packs" element={<Packs />} />
           <Route path="subscriptions" element={<Subscriptions />} />
           <Route path="subscription-requests" element={<SubscriptionRequests />} />

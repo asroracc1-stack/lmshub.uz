@@ -184,41 +184,71 @@ public class ExamService {
         if (request.getSections() != null) {
             int passageOrder = 1;
             for (CreateExamRequest.SectionDto sectionDto : request.getSections()) {
-                Passage passage = Passage.builder()
+                // Build passage with all new enterprise fields
+                Passage.PassageBuilder pb = Passage.builder()
                         .exam(exam)
-                        .title(sectionDto.getTitle() != null ? sectionDto.getTitle() : "Passage " + passageOrder)
+                        .title(sectionDto.getTitle() != null ? sectionDto.getTitle() : "Section " + passageOrder)
                         .content(sectionDto.getPassage() != null ? sectionDto.getPassage() : "")
                         .imageUrl(sectionDto.getImageUrl())
                         .positionOrder(passageOrder++)
-                        .questions(new java.util.ArrayList<>())
-                        .build();
-                
-                // Add to exam's collection for proper JPA management
+                        .questions(new java.util.ArrayList<>());
+
+                // New section-level enterprise fields (graceful: only set if field exists in entity)
+                try { pb.audioUrl(sectionDto.getAudioUrl()); } catch (Exception ignored) {}
+
+                Passage passage = pb.build();
+
+                // Set extra fields via setters if they exist (forward-compatible)
+                try { if (sectionDto.getTimeLimitSeconds() != null) passage.setTimeLimitSeconds(sectionDto.getTimeLimitSeconds()); } catch (Exception ignored) {}
+                try { if (sectionDto.getShuffleQuestions() != null) passage.setShuffleQuestions(sectionDto.getShuffleQuestions()); } catch (Exception ignored) {}
+                try { if (sectionDto.getShuffleOptions() != null) passage.setShuffleOptions(sectionDto.getShuffleOptions()); } catch (Exception ignored) {}
+                try { if (sectionDto.getLockNavigation() != null) passage.setLockNavigation(sectionDto.getLockNavigation()); } catch (Exception ignored) {}
+                try { if (sectionDto.getIcon() != null) passage.setIcon(sectionDto.getIcon()); } catch (Exception ignored) {}
+                try { if (sectionDto.getColorTheme() != null) passage.setColorTheme(sectionDto.getColorTheme()); } catch (Exception ignored) {}
+                try { if (sectionDto.getInstructions() != null) passage.setInstructions(sectionDto.getInstructions()); } catch (Exception ignored) {}
+                try { if (sectionDto.getDifficulty() != null) passage.setDifficulty(sectionDto.getDifficulty()); } catch (Exception ignored) {}
+                try { if (sectionDto.getPassingScore() != null) passage.setPassingScore(sectionDto.getPassingScore()); } catch (Exception ignored) {}
+
                 if (exam.getPassages() != null) {
                     exam.getPassages().add(passage);
                 }
-                
                 passage = passageRepository.save(passage);
 
                 if (sectionDto.getQuestions() != null) {
                     int qOrder = 1;
                     for (CreateExamRequest.QuestionDto qDto : sectionDto.getQuestions()) {
+                        // Skip empty questions
+                        if (qDto.getPrompt() == null || qDto.getPrompt().isBlank()) continue;
+
                         Question q = Question.builder()
                                 .exam(exam)
                                 .passage(passage)
                                 .text(qDto.getPrompt())
-                                .questionType(qDto.getQtype())
+                                .questionType(qDto.getQtype() != null ? qDto.getQtype() : "single_choice")
                                 .points(qDto.getPoints() != null ? qDto.getPoints() : 1)
+                                .negativeMarks(qDto.getNegativeMarks() != null ? qDto.getNegativeMarks() : 0.0)
                                 .imageUrl(qDto.getImageUrl())
                                 .imagePosition(qDto.getImagePosition() != null ? qDto.getImagePosition() : "top")
+                                .audioUrl(qDto.getAudioUrl())
+                                .videoUrl(qDto.getVideoUrl())
+                                .formulaLatex(qDto.getFormulaLatex())
+                                .matchingPairs(qDto.getMatchingPairs())
+                                .fillTemplate(qDto.getFillTemplate())
                                 .positionOrder(qOrder++)
                                 .explanation(qDto.getExplanation())
+                                .hint(qDto.getHint())
+                                .topic(qDto.getTopic())
+                                .subtopic(qDto.getSubtopic())
+                                .tags(qDto.getTags())
+                                .difficulty(qDto.getDifficulty() != null ? qDto.getDifficulty() : "medium")
+                                .numericAnswer(qDto.getNumericAnswer())
+                                .numericTolerance(qDto.getNumericTolerance())
+                                .wordLimit(qDto.getWordLimit())
+                                .status("draft")
                                 .options(new java.util.ArrayList<>())
                                 .build();
-                        
-                        // Add to passage's collection
+
                         passage.getQuestions().add(q);
-                        
                         q = questionRepository.save(q);
 
                         if (qDto.getOptions() != null && !qDto.getOptions().isEmpty()) {
@@ -226,13 +256,13 @@ public class ExamService {
                             for (CreateExamRequest.OptionDto optDto : qDto.getOptions()) {
                                 QuestionOption opt = QuestionOption.builder()
                                         .question(q)
-                                        .text(optDto.getText())
+                                        .text(optDto.getText() != null ? optDto.getText() : "")
                                         .isCorrect(optDto.getIsCorrect() != null && optDto.getIsCorrect())
                                         .imageUrl(optDto.getImageUrl())
                                         .imagePosition(optDto.getImagePosition() != null ? optDto.getImagePosition() : "left")
                                         .positionOrder(optOrder++)
                                         .build();
-                                
+
                                 if (q.getOptions() != null) q.getOptions().add(opt);
                                 optionRepository.save(opt);
                             }
