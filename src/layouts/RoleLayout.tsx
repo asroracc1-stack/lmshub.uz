@@ -584,23 +584,20 @@ export default function RoleLayout({
                 </kbd>
               </button>
               <div className="flex items-center gap-1 sm:gap-1.5 md:gap-3 pl-1.5 sm:pl-2 md:pl-4 border-l border-border h-8">
-                {/* Mening Paketlarim button */}
                 <button
                   onClick={() => setShowMySubscriptionsModal(true)}
-                  className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full bg-gradient-to-r from-blue-500 to-indigo-650 text-white hover:opacity-90 transition-opacity text-[11px] sm:text-xs font-semibold shadow-sm shadow-indigo-500/20"
+                  className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-indigo-650 text-white hover:opacity-90 transition-opacity shadow-sm shadow-indigo-500/20"
                   title="Mening Paketlarim"
                 >
-                  <Crown className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                  <span className="hidden sm:inline">Paketlarim</span>
+                  <Crown className="h-3.5 w-3.5" />
                 </button>
                 {/* Referral button */}
                 <button
                   onClick={() => navigate(`${basePath}/referral`)}
-                  className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full bg-purple-500 text-white hover:bg-purple-600 transition-colors text-[11px] sm:text-xs font-semibold shadow-sm shadow-purple-500/30"
+                  className="flex items-center justify-center w-8 h-8 rounded-full bg-purple-500 text-white hover:bg-purple-600 transition-colors shadow-sm shadow-purple-500/30"
                   title={t("nav.referral")}
                 >
-                  <Gift className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                  <span className="hidden sm:inline">{t("nav.referral")}</span>
+                  <Gift className="h-3.5 w-3.5" />
                 </button>
                 <NotificationsBell />
                 <ProfileMenu role={role} basePath={basePath} />
