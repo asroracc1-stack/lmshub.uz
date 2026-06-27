@@ -143,6 +143,7 @@ export default function Packs() {
   const [bookSearch, setBookSearch] = useState("");
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [requestSent, setRequestSent] = useState<Pack | null>(null);
+  const [myPacksOpen, setMyPacksOpen] = useState(false);
 
   // Fetch current user active subscriptions
   const { data: mySubscriptions = [] } = useQuery({
@@ -648,14 +649,23 @@ export default function Packs() {
           </p>
         </div>
 
-        {isManager && (
-          <Button 
-            onClick={openNew} 
-            className="bg-[#6B28D9] hover:bg-[#581C87] text-white px-5 h-11 rounded-xl font-bold text-xs tracking-wide shadow-md flex items-center gap-1.5"
+        <div className="flex flex-wrap items-center gap-3 self-stretch md:self-auto">
+          <Button
+            onClick={() => setMyPacksOpen(true)}
+            className="bg-purple-600/15 hover:bg-purple-600/25 text-purple-650 dark:text-purple-400 border border-purple-500/20 hover:border-purple-500/35 px-5 h-11 rounded-xl font-bold text-xs tracking-wide shadow-md flex items-center gap-2 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
           >
-            <Plus className="h-4 w-4" /> Yangi paket yaratish
+            <Layers className="h-4 w-4" /> Mening Paketlarim
           </Button>
-        )}
+
+          {isManager && (
+            <Button 
+              onClick={openNew} 
+              className="bg-[#6B28D9] hover:bg-[#581C87] text-white px-5 h-11 rounded-xl font-bold text-xs tracking-wide shadow-md flex items-center gap-1.5"
+            >
+              <Plus className="h-4 w-4" /> Yangi paket yaratish
+            </Button>
+          )}
+        </div>
       </div>
 
       {loadingPacks ? (
@@ -925,17 +935,29 @@ export default function Packs() {
 
                         {isFree ? (
                           <Button 
-                            className="bg-transparent border border-[#52B788] hover:bg-[#52B788]/5 text-[#52B788] hover:text-[#52B788] h-10 px-6 rounded-xl font-extrabold uppercase text-[10px] tracking-wider transition-all shadow-none"
-                            onClick={() => toast.success("Tekin paket avtomatik faollashtirilgan!")}
+                            className={cn(
+                              "h-10 px-6 rounded-xl font-extrabold uppercase text-[10px] tracking-wider transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] border flex items-center gap-1.5",
+                              isOwn 
+                                ? "bg-emerald-600 hover:bg-emerald-700 border-none text-white shadow-md shadow-emerald-500/20" 
+                                : "bg-transparent border-[#52B788] hover:bg-[#52B788]/5 text-[#52B788] hover:text-[#52B788]"
+                            )}
+                            onClick={() => {
+                              if (isOwn) {
+                                toast.success("Bepul paket faol! 🎁");
+                              } else {
+                                toast.success("Tekin paket avtomatik faollashtirilgan!");
+                              }
+                            }}
                           >
-                            Tanlash
+                            {isOwn ? "Faollashgan" : "Tanlash"}
+                            {isOwn && <Check className="h-3.5 w-3.5" />}
                           </Button>
                         ) : (
                           <Button
                             onClick={() => {
                               if (isOwn) {
-                                toast.error("Sizda allaqachon ushbu obuna mavjud", {
-                                  description: "Boshqa paket tanlang yoki joriy paketingiz tugashini kuting."
+                                toast.success("Ushbu obuna paketingiz hozirda faol! ✅", {
+                                  description: "Obuna muddati tugagach qayta sotib olishingiz mumkin."
                                 });
                                 return;
                               }
@@ -944,14 +966,14 @@ export default function Packs() {
                             className={cn(
                               "h-10 px-6 rounded-xl font-extrabold uppercase text-[10px] tracking-wider shadow-md transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] text-white border-none flex items-center gap-1.5",
                               isOwn 
-                                ? "bg-slate-500 hover:bg-slate-600 shadow-slate-500/20 opacity-80" 
+                                ? "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/20" 
                                 : isPro
                                   ? "bg-[#7209B7] hover:bg-[#5E079B] shadow-purple-500/20"
                                   : "bg-[#F77F00] hover:bg-[#D96E00] shadow-orange-500/20"
                             )}
                           >
-                            {isOwn ? "Mavjud" : "Tanlash"}
-                            {!isOwn && <ArrowUpRight className="h-3.5 w-3.5" />}
+                            {isOwn ? "Faollashgan" : "Tanlash"}
+                            {isOwn ? <Check className="h-3.5 w-3.5" /> : <ArrowUpRight className="h-3.5 w-3.5" />}
                           </Button>
                         )}
                       </div>
@@ -1472,6 +1494,110 @@ export default function Packs() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* My Packages Modal */}
+      <Dialog open={myPacksOpen} onOpenChange={setMyPacksOpen}>
+        <DialogContent className="max-w-lg bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl rounded-[3rem] border-none shadow-2xl p-8 overflow-hidden flex flex-col max-h-[85vh]">
+          <DialogHeader className="relative pb-4 border-b border-slate-100 dark:border-white/5">
+            <DialogTitle className="text-2xl font-black tracking-tight flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center">
+                <Layers className="h-5 w-5 text-purple-500" />
+              </div>
+              Mening Paketlarim
+            </DialogTitle>
+            <p className="text-xs text-slate-400 font-medium mt-1">Siz sotib olgan obuna paketlari ro'yxati</p>
+          </DialogHeader>
+
+          <div className="space-y-4 overflow-y-auto pr-2 custom-scrollbar flex-1 py-4">
+            {mySubscriptions.length === 0 ? (
+              <div className="text-center py-10">
+                <Sparkles className="h-12 w-12 text-slate-400 mx-auto mb-3 animate-pulse" />
+                <p className="text-sm font-bold text-slate-700 dark:text-slate-350">Hozircha sotib olingan paketlar mavjud emas</p>
+                <p className="text-xs text-slate-400 mt-1">O'zingizga ma'qul kelgan tarifni tanlang va faollashtiring.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {mySubscriptions.map((sub: any) => {
+                  const isActive = sub.isActive;
+                  const startsDate = sub.startsAt ? new Date(sub.startsAt).toLocaleDateString("uz-UZ") : "—";
+                  const expiresDate = sub.expiresAt ? new Date(sub.expiresAt).toLocaleDateString("uz-UZ") : "—";
+
+                  return (
+                    <div 
+                      key={sub.id}
+                      className={cn(
+                        "p-5 rounded-2xl border transition-all flex flex-col gap-3 relative overflow-hidden",
+                        isActive 
+                          ? "bg-emerald-500/5 dark:bg-emerald-500/5 border-emerald-500/20" 
+                          : "bg-slate-50 dark:bg-white/5 border-slate-100 dark:border-white/5 opacity-80"
+                      )}
+                    >
+                      {isActive && (
+                        <div className="absolute right-0 top-0 h-16 w-16 bg-emerald-500/10 rounded-bl-full flex items-center justify-center pl-4 pb-4">
+                          <Check className="h-5 w-5 text-emerald-500" />
+                        </div>
+                      )}
+
+                      <div className="flex justify-between items-start pr-6">
+                        <div>
+                          <span className={cn(
+                            "px-2.5 py-0.5 text-[9px] font-black tracking-widest uppercase rounded-md shadow-sm mb-1 inline-block",
+                            sub.packType === "ELITE" && "bg-amber-500 text-white",
+                            sub.packType === "PRO" && "bg-purple-500 text-white",
+                            sub.packType === "FREE" && "bg-slate-500 text-white"
+                          )}>
+                            {sub.packType}
+                          </span>
+                          <h4 className="text-lg font-black text-slate-800 dark:text-white leading-tight">
+                            {sub.packName}
+                          </h4>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4 pt-2 border-t border-slate-100 dark:border-white/5 text-xs">
+                        <div>
+                          <p className="text-[10px] text-slate-450 font-bold uppercase tracking-wider">Boshlanish vaqti</p>
+                          <p className="font-semibold text-slate-700 dark:text-slate-350 mt-0.5">{startsDate}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] text-slate-450 font-bold uppercase tracking-wider">Tugash vaqti</p>
+                          <p className="font-semibold text-slate-700 dark:text-slate-350 mt-0.5">{expiresDate}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between items-center pt-2 mt-1">
+                        <Badge 
+                          className={cn(
+                            "text-[10px] font-black uppercase tracking-wider px-2.5 py-1 border-none",
+                            isActive 
+                              ? "bg-emerald-500/15 text-emerald-500 hover:bg-emerald-500/25" 
+                              : "bg-slate-500/15 text-slate-500 hover:bg-slate-500/25"
+                          )}
+                        >
+                          {isActive ? "Faol" : "Muddati tugagan"}
+                        </Badge>
+
+                        {isActive && sub.remainingDays !== undefined && (
+                          <div className="text-right">
+                            <span className="text-[10px] text-slate-450 font-bold uppercase tracking-wider block">Qolgan muddat</span>
+                            <span className="text-xs font-black text-emerald-500">{sub.remainingDays} kun</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="border-t border-slate-100 dark:border-white/5 pt-4 mt-2">
+            <Button onClick={() => setMyPacksOpen(false)} className="w-full bg-slate-900 dark:bg-white/5 hover:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-2xl h-12 font-bold text-xs uppercase tracking-wider">
+              Yopish
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <style>{`
         .custom-scrollbar::-webkit-scrollbar { width: 5px; }
