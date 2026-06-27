@@ -152,12 +152,22 @@ export default function Packs() {
     }
   }, [searchParams]);
 
-  // Fetch current user active subscriptions
+  // Fetch current user active subscriptions (list - for "My subscriptions" view)
   const { data: mySubscriptions = [] } = useQuery({
     queryKey: ["my-subscriptions-packs"],
     queryFn: async () => {
       const { data } = await api.get("/profile/my-subscriptions");
       return data || [];
+    },
+    enabled: !!user,
+  });
+
+  // Fetch single active subscription (reliable source for isOwn detection)
+  const { data: activeSubscription } = useQuery({
+    queryKey: ["my-active-subscription"],
+    queryFn: async () => {
+      const { data } = await api.get("/profile/my-subscription");
+      return data || null;
     },
     enabled: !!user,
   });
@@ -870,14 +880,35 @@ export default function Packs() {
           {/* Premium Cards Grid for Client view */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {packs.map((p) => {
+              // Primary: use single endpoint (most reliable)
               const now = new Date();
-              const activeSub = mySubscriptions.find((sub: any) => {
-                const packMatch = sub.packId === p.id || sub.packCode === p.code || sub.packType === p.type;
-                const isActive = sub.status === "ACTIVE" || sub.isActive === true;
-                const notExpired = !sub.expiresAt || new Date(sub.expiresAt) > now;
-                return packMatch && isActive && notExpired;
-              });
-              const isOwn = !!activeSub || (p.type === "FREE" && mySubscriptions.length === 0);
+              let isOwn = false;
+              if (activeSubscription?.hasActive === true) {
+                const activePack = activeSubscription.packType || "";
+                const notExpired = !activeSubscription.expiresAt || new Date(activeSubscription.expiresAt) > now;
+                if (notExpired) {
+                  // FREE: always own if hasActive
+                  if (p.type === "FREE" && activePack === "FREE") isOwn = true;
+                  // PRO: user has PRO or higher
+                  if (p.type === "PRO" && (activePack === "PRO" || activePack === "ELITE")) isOwn = true;
+                  // ELITE: user has ELITE
+                  if (p.type === "ELITE" && activePack === "ELITE") isOwn = true;
+                }
+              }
+              // Fallback: check list subscriptions
+              if (!isOwn) {
+                const activeSub = mySubscriptions.find((sub: any) => {
+                  const packMatch = sub.packId === p.id || sub.packCode === p.code || sub.packType === p.type;
+                  const isActive = sub.status === "ACTIVE" || sub.isActive === true;
+                  const notExpired = !sub.expiresAt || new Date(sub.expiresAt) > now;
+                  return packMatch && isActive && notExpired;
+                });
+                isOwn = !!activeSub;
+              }
+              // FREE default if no subscriptions at all
+              if (!isOwn && p.type === "FREE" && mySubscriptions.length === 0 && !activeSubscription?.hasActive) {
+                isOwn = true;
+              }
               
               const isElite = p.type === "ELITE";
               const isPro = p.type === "PRO";
