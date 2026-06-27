@@ -145,7 +145,9 @@ function PodiumCard({ row, cfg, isLoading, onClick }: { row: Row | null; cfg: ty
         }
       }}
       className={cn(
-        "relative flex flex-col items-center gap-2 rounded-[24px] border backdrop-blur-md px-3 py-4 cursor-pointer overflow-hidden",
+        "relative flex flex-col items-center gap-2 rounded-[24px] border backdrop-blur-md px-3 py-4 cursor-pointer",
+        row && isPremiumMasked ? "overflow-hidden" : "overflow-visible",
+        cfg.place === 1 ? "z-20" : "z-0",
         "transition-all duration-300 hover:scale-[1.05] hover:shadow-2xl active:scale-[0.98]",
         cfg.size, cfg.cardBg, cfg.cardBorder, cfg.mt, cfg.glow
       )}
@@ -156,13 +158,6 @@ function PodiumCard({ row, cfg, isLoading, onClick }: { row: Row | null; cfg: ty
           <Crown className="h-7 w-7 text-amber-500 animate-pulse mb-1.5" />
           <p className="text-[10px] font-black text-white uppercase tracking-widest leading-none">Premium</p>
           <p className="text-[8px] text-slate-400 font-bold mt-1">Pro yoki Elite kerak</p>
-        </div>
-      )}
-
-      {/* Crown or Special Element on Rank #1 */}
-      {cfg.place === 1 && !isLoading && row && (
-        <div className="absolute -top-7 left-1/2 -translate-x-1/2 text-3xl select-none animate-bounce" style={{ animationDuration: '3s' }}>
-          👑
         </div>
       )}
 
@@ -229,6 +224,24 @@ function PodiumCard({ row, cfg, isLoading, onClick }: { row: Row | null; cfg: ty
         </div>
       ) : (
         <p className="text-[10px] text-white/10 font-medium mt-2">—</p>
+      )}
+
+      {/* Crown or Special Element on Rank #1 */}
+      {cfg.place === 1 && !isLoading && row && (
+        <motion.div
+          animate={{
+            y: [0, -10, 0],
+            rotate: [-3, 3, -3],
+          }}
+          transition={{
+            duration: 2.5,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+          className="absolute -top-10 left-1/2 -translate-x-1/2 text-4xl select-none drop-shadow-[0_4px_12px_rgba(255,215,0,0.65)] z-50 pointer-events-none"
+        >
+          👑
+        </motion.div>
       )}
     </motion.div>
   );
