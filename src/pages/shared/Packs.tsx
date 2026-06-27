@@ -160,6 +160,9 @@ export default function Packs() {
       return data || [];
     },
     enabled: !!user,
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+    refetchInterval: 60000,
   });
 
   // Fetch single active subscription (reliable source for isOwn detection)
@@ -170,6 +173,9 @@ export default function Packs() {
       return data || null;
     },
     enabled: !!user,
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+    refetchInterval: 60000,
   });
 
   // 1. Fetch available packages via Pack Manager API
@@ -691,7 +697,7 @@ export default function Packs() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {mySubscriptions.map((sub: any) => {
-                const isActive = sub.isActive;
+                const isActive = sub.status === "ACTIVE" || sub.isActive === true;
                 const startsDate = sub.startsAt ? new Date(sub.startsAt).toLocaleDateString("uz-UZ") : "—";
                 const expiresDate = sub.expiresAt ? new Date(sub.expiresAt).toLocaleDateString("uz-UZ") : "—";
 
