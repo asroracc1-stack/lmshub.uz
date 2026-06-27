@@ -972,7 +972,7 @@ export default function Packs() {
                                   : "bg-[#F77F00] hover:bg-[#D96E00] shadow-orange-500/20"
                             )}
                           >
-                            {isOwn ? "Faollashgan" : "Tanlash"}
+                            {isOwn ? "Faollashgan" : "Sotib olish"}
                             {isOwn ? <Check className="h-3.5 w-3.5" /> : <ArrowUpRight className="h-3.5 w-3.5" />}
                           </Button>
                         )}
