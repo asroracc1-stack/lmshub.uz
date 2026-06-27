@@ -3,6 +3,7 @@ package com.lmscrm.backend.service;
 import com.lmscrm.backend.domain.entity.SubscriptionPack;
 import com.lmscrm.backend.domain.entity.SubscriptionRequest;
 import com.lmscrm.backend.domain.entity.User;
+import com.lmscrm.backend.domain.entity.UserSubscription;
 import com.lmscrm.backend.domain.enums.AppRole;
 import com.lmscrm.backend.domain.enums.NotificationType;
 import com.lmscrm.backend.repository.DbStoredFileRepository;
@@ -31,6 +32,7 @@ public class SubscriptionRequestService {
     private final TelegramBotService telegramBotService;
     private final NotificationService notificationService;
     private final DbStoredFileRepository dbStoredFileRepository;
+    private final com.lmscrm.backend.repository.UserSubscriptionRepository userSubscriptionRepository;
 
     @jakarta.persistence.PersistenceContext
     private jakarta.persistence.EntityManager entityManager;
@@ -197,41 +199,37 @@ public class SubscriptionRequestService {
         String packIdStr = pack.getId().toString();
 
         try {
-            List<?> existing = entityManager.createNativeQuery(
-                "SELECT id FROM public.user_subscriptions WHERE user_id = CAST(:userId AS UUID) AND pack_id = CAST(:packId AS UUID)"
-            )
-            .setParameter("userId", userIdStr)
-            .setParameter("packId", packIdStr)
-            .getResultList();
+            // Find existing user subscription via repository to ensure Hibernate cache consistency
+            List<UserSubscription> userSubs = userSubscriptionRepository.findByUserId(user.getId());
+            UserSubscription sub = userSubs.stream()
+                .filter(s -> s.getPack() != null && s.getPack().getId().equals(pack.getId()))
+                .findFirst()
+                .orElse(null);
 
-            if (!existing.isEmpty()) {
-                entityManager.createNativeQuery(
-                    "UPDATE public.user_subscriptions SET starts_at = :startsAt, expires_at = :expiresAt, " +
-                    "is_active = true, status = 'active' " +
-                    "WHERE user_id = CAST(:userId AS UUID) AND pack_id = CAST(:packId AS UUID)"
-                )
-                .setParameter("userId", userIdStr)
-                .setParameter("packId", packIdStr)
-                .setParameter("startsAt", java.sql.Timestamp.valueOf(startsAt))
-                .setParameter("expiresAt", java.sql.Timestamp.valueOf(expiresAt))
-                .executeUpdate();
-                log.info("✅ Step 4: user_subscriptions UPDATED for user {}", user.getUsername());
+            if (sub != null) {
+                // Update existing subscription
+                sub.setStartsAt(startsAt);
+                sub.setExpiresAt(expiresAt);
+                sub.setIsActive(true);
+                sub.setStatus("active");
+                userSubscriptionRepository.save(sub);
+                log.info("✅ Step 4: user_subscriptions UPDATED (JPA) for user {}", user.getUsername());
             } else {
-                entityManager.createNativeQuery(
-                    "INSERT INTO public.user_subscriptions (id, user_id, pack_id, starts_at, expires_at, is_active, status, created_at) " +
-                    "VALUES (CAST(:id AS UUID), CAST(:userId AS UUID), CAST(:packId AS UUID), :startsAt, :expiresAt, true, 'active', :createdAt)"
-                )
-                .setParameter("id", UUID.randomUUID().toString())
-                .setParameter("userId", userIdStr)
-                .setParameter("packId", packIdStr)
-                .setParameter("startsAt", java.sql.Timestamp.valueOf(startsAt))
-                .setParameter("expiresAt", java.sql.Timestamp.valueOf(expiresAt))
-                .setParameter("createdAt", java.sql.Timestamp.valueOf(LocalDateTime.now()))
-                .executeUpdate();
-                log.info("✅ Step 4: user_subscriptions INSERTED for user {}", user.getUsername());
+                // Create new subscription
+                UserSubscription newSub = UserSubscription.builder()
+                    .user(user)
+                    .pack(pack)
+                    .startsAt(startsAt)
+                    .expiresAt(expiresAt)
+                    .isActive(true)
+                    .status("active")
+                    .createdAt(LocalDateTime.now())
+                    .build();
+                userSubscriptionRepository.save(newSub);
+                log.info("✅ Step 4: user_subscriptions INSERTED (JPA) for user {}", user.getUsername());
             }
         } catch (Exception e) {
-            log.error("❌ Step 4 FAILED (user_subscriptions): {}", e.getMessage(), e);
+            log.error("❌ Step 4 FAILED (user_subscriptions JPA): {}", e.getMessage(), e);
             throw new RuntimeException("Obuna jadvaliga yozishda xatolik: " + e.getMessage(), e);
         }
 

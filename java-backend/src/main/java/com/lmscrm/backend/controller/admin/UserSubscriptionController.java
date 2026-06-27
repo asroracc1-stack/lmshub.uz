@@ -43,51 +43,55 @@ public class UserSubscriptionController {
         Map<String, Object> result = new HashMap<>();
 
         try {
-            // Find user id by username
-            List<?> userRows = entityManager.createNativeQuery(
-                "SELECT id FROM public.users WHERE username = :username LIMIT 1"
-            ).setParameter("username", auth.getName()).getResultList();
+            String authName = auth.getName();
+            java.util.Optional<com.lmscrm.backend.domain.entity.User> userOpt = userRepository.findByEmailOrUsername(authName, authName);
 
-            if (userRows.isEmpty()) {
+            if (userOpt.isEmpty()) {
                 result.put("hasActive", false);
                 result.put("packType", "FREE");
                 result.put("status", "NONE");
+                result.put("packageId", null);
+                result.put("expiresAt", null);
+                result.put("remainingDays", 0);
+                result.put("startDate", null);
                 return ResponseEntity.ok(result);
             }
 
-            Object userId = userRows.get(0);
+            com.lmscrm.backend.domain.entity.User user = userOpt.get();
+            List<UserSubscription> subscriptions = userSubscriptionRepository.findByUserId(user.getId());
+            LocalDateTime now = LocalDateTime.now();
 
-            // Find active subscription with full details (packageId, expiresAt, remainingDays, startDate)
-            List<Object[]> subRows = entityManager.createNativeQuery(
-                "SELECT sp.type, us.expires_at, sp.id, us.starts_at " +
-                "FROM public.user_subscriptions us " +
-                "JOIN public.subscription_packs sp ON sp.id = us.pack_id " +
-                "WHERE us.user_id = :userId AND us.is_active = true " +
-                "AND (us.expires_at IS NULL OR us.expires_at > NOW()) " +
-                "ORDER BY CASE sp.type WHEN 'ELITE' THEN 1 WHEN 'PRO' THEN 2 ELSE 3 END LIMIT 1"
-            ).setParameter("userId", userId).getResultList();
+            List<UserSubscription> activeSubs = subscriptions.stream()
+                .filter(sub -> Boolean.TRUE.equals(sub.getIsActive()))
+                .filter(sub -> sub.getExpiresAt() == null || sub.getExpiresAt().isAfter(now))
+                .sorted((a, b) -> {
+                    String typeA = a.getPack() != null && a.getPack().getType() != null ? a.getPack().getType().name() : "FREE";
+                    String typeB = b.getPack() != null && b.getPack().getType() != null ? b.getPack().getType().name() : "FREE";
+                    int valA = typeA.equals("ELITE") ? 1 : (typeA.equals("PRO") ? 2 : 3);
+                    int valB = typeB.equals("ELITE") ? 1 : (typeB.equals("PRO") ? 2 : 3);
+                    return Integer.compare(valA, valB);
+                })
+                .collect(Collectors.toList());
 
-            if (!subRows.isEmpty()) {
-                Object[] row = subRows.get(0);
-                String packType = row[0] != null ? row[0].toString() : "FREE";
-                java.sql.Timestamp expiresAt = (java.sql.Timestamp) row[1];
-                Object packageId = row[2];
-                java.sql.Timestamp startsAt = (java.sql.Timestamp) row[3];
+            if (!activeSubs.isEmpty()) {
+                UserSubscription sub = activeSubs.get(0);
+                String packType = sub.getPack() != null && sub.getPack().getType() != null ? sub.getPack().getType().name() : "FREE";
+                LocalDateTime expiresAt = sub.getExpiresAt();
+                java.util.UUID packageId = sub.getPack() != null ? sub.getPack().getId() : null;
+                LocalDateTime startsAt = sub.getStartsAt();
 
                 result.put("hasActive", true);
                 result.put("packType", packType);
                 result.put("status", "ACTIVE");
                 result.put("packageId", packageId != null ? packageId.toString() : null);
-                result.put("expiresAt", expiresAt != null ? expiresAt.toLocalDateTime().toString() : null);
-                result.put("startDate", startsAt != null ? startsAt.toLocalDateTime().toString() : null);
+                result.put("expiresAt", expiresAt != null ? expiresAt.toString() : null);
+                result.put("startDate", startsAt != null ? startsAt.toString() : null);
 
                 // Calculate remaining days
                 long remainingDays = 0;
                 if (expiresAt != null) {
-                    LocalDateTime expiry = expiresAt.toLocalDateTime();
-                    LocalDateTime now = LocalDateTime.now();
-                    if (expiry.isAfter(now)) {
-                        remainingDays = java.time.temporal.ChronoUnit.DAYS.between(now, expiry);
+                    if (expiresAt.isAfter(now)) {
+                        remainingDays = java.time.temporal.ChronoUnit.DAYS.between(now, expiresAt);
                     }
                 }
                 result.put("remainingDays", remainingDays);
@@ -98,14 +102,18 @@ public class UserSubscriptionController {
                 result.put("packageId", null);
                 result.put("expiresAt", null);
                 result.put("remainingDays", 0);
+                result.put("startDate", null);
             }
         } catch (Exception e) {
+            System.err.println("[my-subscription] ERROR for user " + auth.getName() + ": " + e.getMessage());
+            e.printStackTrace();
             result.put("hasActive", false);
             result.put("packType", "FREE");
             result.put("status", "NONE");
             result.put("packageId", null);
             result.put("expiresAt", null);
             result.put("remainingDays", 0);
+            result.put("startDate", null);
         }
 
         return ResponseEntity.ok(result);
