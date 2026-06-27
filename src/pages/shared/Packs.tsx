@@ -157,26 +157,136 @@ export default function Packs() {
     queryKey: ["my-subscriptions-packs"],
     queryFn: async () => {
       const { data } = await api.get("/profile/my-subscriptions");
-      return data || [];
+      return Array.isArray(data) ? data : (data?.content || data?.items || data?.subscriptions || []);
     },
-    enabled: !!user,
+    enabled: !!user && !isManager,
     staleTime: 0,
     refetchOnWindowFocus: true,
-    refetchInterval: 60000,
+    refetchInterval: 30000,
   });
 
-  // Fetch single active subscription (reliable source for isOwn detection)
+  // Fetch single active subscription — primary source for isOwn
   const { data: activeSubscription } = useQuery({
     queryKey: ["my-active-subscription"],
     queryFn: async () => {
       const { data } = await api.get("/profile/my-subscription");
       return data || null;
     },
-    enabled: !!user,
+    enabled: !!user && !isManager,
     staleTime: 0,
     refetchOnWindowFocus: true,
-    refetchInterval: 60000,
+    refetchInterval: 30000,
   });
+
+  // Fetch pending payment requests
+  const { data: pendingRequests = [] } = useQuery({
+    queryKey: ["my-pending-requests"],
+    queryFn: async () => {
+      const { data } = await api.get("/profile/my-subscription-requests").catch(() => ({ data: [] }));
+      return Array.isArray(data) ? data : [];
+    },
+    enabled: !!user && !isManager,
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+    refetchInterval: 30000,
+  });
+
+  /**
+   * Determines the subscription status for a given pack.
+   * Returns: 'ACTIVE' | 'PENDING' | 'EXPIRED' | 'NONE'
+   * Uses ALL possible backend field variations.
+   */
+  const getPackStatus = (p: Pack): 'ACTIVE' | 'PENDING' | 'EXPIRED' | 'NONE' => {
+    if (isManager) return 'NONE';
+    const now = new Date();
+
+    // 1. Primary: single subscription endpoint (most reliable)
+    if (activeSubscription) {
+      const singlePackType: string = (
+        activeSubscription.packType ||
+        activeSubscription.pack_type ||
+        activeSubscription.packageType ||
+        activeSubscription.type ||
+        ""
+      ).toUpperCase();
+
+      const singleHasActive: boolean =
+        activeSubscription.hasActive === true ||
+        activeSubscription.has_active === true ||
+        activeSubscription.isActive === true ||
+        activeSubscription.is_active === true ||
+        activeSubscription.status === "ACTIVE";
+
+      const singleExpiresAt = activeSubscription.expiresAt ||
+        activeSubscription.expire_date ||
+        activeSubscription.expireDate ||
+        activeSubscription.endDate ||
+        activeSubscription.end_date ||
+        null;
+
+      const singleNotExpired = !singleExpiresAt || new Date(singleExpiresAt) > now;
+
+      if (singleHasActive && singleNotExpired) {
+        const pType = p.type.toUpperCase();
+        if (pType === "FREE" && singlePackType === "FREE") return 'ACTIVE';
+        if (pType === "PRO" && (singlePackType === "PRO" || singlePackType === "ELITE")) return 'ACTIVE';
+        if (pType === "ELITE" && singlePackType === "ELITE") return 'ACTIVE';
+      }
+    }
+
+    // 2. Fallback: scan list subscriptions
+    for (const sub of mySubscriptions) {
+      const subPackType: string = (
+        sub.packType || sub.pack_type || sub.packageType || sub.type || ""
+      ).toUpperCase();
+      const subPackId = sub.packId || sub.pack_id || sub.packageId || sub.package_id || "";
+      const subPackCode = sub.packCode || sub.pack_code || sub.packageCode || sub.code || "";
+
+      const packMatches =
+        subPackId === p.id ||
+        subPackCode === p.code ||
+        subPackType === p.type.toUpperCase();
+
+      if (!packMatches) continue;
+
+      const subStatus: string = (sub.status || "").toUpperCase();
+      const subIsActive =
+        subStatus === "ACTIVE" ||
+        sub.isActive === true ||
+        sub.is_active === true;
+
+      const subExpiry =
+        sub.expiresAt || sub.expire_date || sub.expireDate || sub.endDate || sub.end_date || null;
+      const subNotExpired = !subExpiry || new Date(subExpiry) > now;
+
+      if (subIsActive && subNotExpired) return 'ACTIVE';
+      if (subStatus === 'EXPIRED' || (subExpiry && new Date(subExpiry) <= now)) return 'EXPIRED';
+    }
+
+    // 3. Check pending requests
+    for (const req of pendingRequests) {
+      const reqPackType: string = (
+        req.packType || req.pack_type || req.packageType || req.type || ""
+      ).toUpperCase();
+      const reqPackId = req.packId || req.pack_id || req.packageId || req.package_id || "";
+      const reqPackCode = req.packCode || req.pack_code || req.packageCode || req.code || "";
+      const reqPackName: string = (req.packName || req.pack_name || req.packageName || "").toUpperCase();
+
+      const reqMatches =
+        reqPackId === p.id ||
+        reqPackCode === p.code ||
+        reqPackType === p.type.toUpperCase() ||
+        reqPackName.includes(p.type.toUpperCase());
+
+      const reqStatus: string = (req.status || "").toUpperCase();
+      if (reqMatches && reqStatus === "PENDING") return 'PENDING';
+    }
+
+    // 4. FREE default
+    if (p.type === "FREE") return 'ACTIVE';
+
+    return 'NONE';
+  };
 
   // 1. Fetch available packages via Pack Manager API
   const { data: packs = [], isLoading: loadingPacks } = useQuery<Pack[]>({
@@ -886,36 +996,12 @@ export default function Packs() {
           {/* Premium Cards Grid for Client view */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {packs.map((p) => {
-              // Primary: use single endpoint (most reliable)
+              // Determine subscription status for this pack
               const now = new Date();
-              let isOwn = false;
-              if (activeSubscription?.hasActive === true) {
-                const activePack = activeSubscription.packType || "";
-                const notExpired = !activeSubscription.expiresAt || new Date(activeSubscription.expiresAt) > now;
-                if (notExpired) {
-                  // FREE: always own if hasActive
-                  if (p.type === "FREE" && activePack === "FREE") isOwn = true;
-                  // PRO: user has PRO or higher
-                  if (p.type === "PRO" && (activePack === "PRO" || activePack === "ELITE")) isOwn = true;
-                  // ELITE: user has ELITE
-                  if (p.type === "ELITE" && activePack === "ELITE") isOwn = true;
-                }
-              }
-              // Fallback: check list subscriptions
-              if (!isOwn) {
-                const activeSub = mySubscriptions.find((sub: any) => {
-                  const packMatch = sub.packId === p.id || sub.packCode === p.code || sub.packType === p.type;
-                  const isActive = sub.status === "ACTIVE" || sub.isActive === true;
-                  const notExpired = !sub.expiresAt || new Date(sub.expiresAt) > now;
-                  return packMatch && isActive && notExpired;
-                });
-                isOwn = !!activeSub;
-              }
-              // FREE default if no subscriptions at all
-              if (!isOwn && p.type === "FREE" && mySubscriptions.length === 0 && !activeSubscription?.hasActive) {
-                isOwn = true;
-              }
-              
+              const packStatus = getPackStatus(p);
+              const isOwn = packStatus === 'ACTIVE';
+              const isPending = packStatus === 'PENDING';
+
               const isElite = p.type === "ELITE";
               const isPro = p.type === "PRO";
               const isFree = p.type === "FREE";
@@ -1085,7 +1171,6 @@ export default function Packs() {
                         })}
                       </div>
 
-                      {/* Card Footer (Duration + Action button) */}
                       <div className="pt-6 border-t border-slate-100 dark:border-slate-800/60 flex items-center justify-between gap-4">
                         <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
                           <Clock className="h-4.5 w-4.5 text-slate-400 shrink-0" />
@@ -1093,46 +1178,42 @@ export default function Packs() {
                         </div>
 
                         {isFree ? (
-                          <Button 
-                            className={cn(
-                              "h-10 px-6 rounded-xl font-extrabold uppercase text-[10px] tracking-wider transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] border flex items-center gap-1.5",
-                              isOwn 
-                                ? "bg-emerald-600 hover:bg-emerald-700 border-none text-white shadow-md shadow-emerald-500/20" 
-                                : "bg-transparent border-[#52B788] hover:bg-[#52B788]/5 text-[#52B788] hover:text-[#52B788]"
-                            )}
-                            onClick={() => {
-                              if (isOwn) {
-                                toast.success("Bepul paket faol! 🎁");
-                              } else {
-                                toast.success("Tekin paket avtomatik faollashtirilgan!");
-                              }
-                            }}
+                          <Button
+                            disabled
+                            className="h-10 px-6 rounded-xl font-extrabold uppercase text-[10px] tracking-wider border-none bg-emerald-600 text-white shadow-md shadow-emerald-500/20 flex items-center gap-1.5 cursor-default opacity-100"
                           >
-                            {isOwn ? "Faollashgan" : "Tanlash"}
-                            {isOwn && <Check className="h-3.5 w-3.5" />}
+                            Faollashgan
+                            <Check className="h-3.5 w-3.5" />
+                          </Button>
+                        ) : isOwn ? (
+                          <Button
+                            disabled
+                            className="h-10 px-6 rounded-xl font-extrabold uppercase text-[10px] tracking-wider border-none bg-emerald-600 text-white shadow-md shadow-emerald-500/20 flex items-center gap-1.5 cursor-not-allowed opacity-100"
+                            style={{ cursor: 'not-allowed' }}
+                          >
+                            ✅ Sotib olingan
+                            <Check className="h-3.5 w-3.5" />
+                          </Button>
+                        ) : isPending ? (
+                          <Button
+                            disabled
+                            className="h-10 px-6 rounded-xl font-extrabold uppercase text-[10px] tracking-wider border-none bg-amber-500 text-white shadow-md shadow-amber-500/20 flex items-center gap-1.5 cursor-not-allowed opacity-100"
+                            style={{ cursor: 'not-allowed' }}
+                          >
+                            ⏳ Kutilmoqda
                           </Button>
                         ) : (
                           <Button
-                            onClick={() => {
-                              if (isOwn) {
-                                toast.success("Ushbu obuna paketingiz hozirda faol! ✅", {
-                                  description: "Obuna muddati tugagach qayta sotib olishingiz mumkin."
-                                });
-                                return;
-                              }
-                              setCheckoutPack(p);
-                            }}
+                            onClick={() => setCheckoutPack(p)}
                             className={cn(
                               "h-10 px-6 rounded-xl font-extrabold uppercase text-[10px] tracking-wider shadow-md transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] text-white border-none flex items-center gap-1.5",
-                              isOwn 
-                                ? "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/20" 
-                                : isPro
-                                  ? "bg-[#7209B7] hover:bg-[#5E079B] shadow-purple-500/20"
-                                  : "bg-[#F77F00] hover:bg-[#D96E00] shadow-orange-500/20"
+                              isPro
+                                ? "bg-[#7209B7] hover:bg-[#5E079B] shadow-purple-500/20"
+                                : "bg-[#F77F00] hover:bg-[#D96E00] shadow-orange-500/20"
                             )}
                           >
-                          {isOwn ? "Sotib olingan" : "Sotib olish"}
-                            {isOwn ? <Check className="h-3.5 w-3.5" /> : <ArrowUpRight className="h-3.5 w-3.5" />}
+                            Sotib olish
+                            <ArrowUpRight className="h-3.5 w-3.5" />
                           </Button>
                         )}
                       </div>
