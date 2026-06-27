@@ -757,10 +757,10 @@ export default function Packs() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-6 border-b border-slate-100 dark:border-white/5">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-            Barcha Paketlar
+            Barcha Packlar
           </h1>
           <p className="text-slate-500 dark:text-slate-450 mt-1 text-sm font-medium">
-            Foydalanuvchilar uchun mavjud obuna paketlarini boshqaring
+            Pack sotib olib, barcha testlarga kiring
           </p>
         </div>
 
