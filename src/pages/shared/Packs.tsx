@@ -533,13 +533,16 @@ export default function Packs() {
         receipt_url: proofUrl
       });
 
+      // Invalidate queries to refresh the active subscription state immediately
+      queryClient.invalidateQueries({ queryKey: ["pack-access"] });
+
       // Confetti splash
       import("canvas-confetti").then(({ default: confetti }) => {
         confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
       });
 
-      toast.success("So'rovingiz muvaffaqiyatli yuborildi! ✅", {
-        description: "Admin tekshirib tasdiqlagach, obunangiz faollashtiriladi.",
+      toast.success("Obuna faollashtirildi! 🎉", {
+        description: "Sizning obunangiz avtomatik ravishda faollashtirildi. Endi testlarni ishlashingiz mumkin.",
       });
 
       setRequestSent(checkoutPack);
@@ -585,6 +588,9 @@ export default function Packs() {
         receipt_url: proofUrl
       });
 
+      // Invalidate queries to refresh the active subscription state immediately
+      queryClient.invalidateQueries({ queryKey: ["pack-access"] });
+
       // 3. Open Telegram link
       const messageText = `🚀 Yangi Obuna So'rovi (LMSHub)
 
@@ -601,8 +607,8 @@ export default function Packs() {
         confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
       });
 
-      toast.success("Telegram orqali yuborildi! 🚀", {
-        description: "Telegram ochildi, xabarni yuboring va admin tasdiqlashini kuting.",
+      toast.success("Obuna faollashtirildi! 🎉", {
+        description: "Obuna avtomatik faollashtirildi. Xabarni Telegram orqali ham yuborishingiz mumkin.",
       });
 
       setRequestSent(checkoutPack);

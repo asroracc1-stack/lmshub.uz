@@ -76,16 +76,23 @@ public class SubscriptionRequestService {
 
         SubscriptionRequest saved = repository.save(request);
 
+        // Auto approve subscription request
+        try {
+            approveRequest(saved.getId(), "SYSTEM_AUTO");
+        } catch (Exception e) {
+            log.error("Failed to auto-approve subscription request: {}", e.getMessage(), e);
+        }
+
         // 1. Send Telegram Notification
         String message = String.format(
-            "🚀 <b>Yangi Obuna So'rovi!</b>\n\n" +
+            "🚀 <b>Obuna Avtomatik Faollashtirildi!</b>\n\n" +
             "👤 <b>Foydalanuvchi:</b> %s (@%s)\n" +
             "📧 <b>Gmail:</b> %s\n" +
             "📞 <b>Telefon:</b> %s\n" +
             "📦 <b>Paket:</b> %s (%s)\n" +
             "💰 <b>Narxi:</b> %s UZS\n" +
             "🕒 <b>Vaqt:</b> %s\n\n" +
-            "Tasdiqlash yoki rad etish uchun quyidagi tugmalarni bosing:",
+            "Foydalanuvchining obunasi tizim tomonidan avtomatik faollashtirildi.",
             user.getFullName() != null ? user.getFullName() : user.getUsername(),
             user.getTelegramUsername() != null ? user.getTelegramUsername() : user.getUsername(),
             user.getEmail() != null ? user.getEmail() : "Kiritilmagan",
@@ -95,9 +102,6 @@ public class SubscriptionRequestService {
             pack.getPrice(),
             LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
         );
-
-        String approveCallback = "approve_sub:" + saved.getId();
-        String rejectCallback = "reject_sub:" + saved.getId();
 
         String adminChatId = telegramBotService.getDefaultChatId();
         if (receiptUrl != null && !receiptUrl.isBlank()) {
@@ -114,12 +118,12 @@ public class SubscriptionRequestService {
                                 return "receipt.jpg"; // Provide a default filename for Telegram
                             }
                         };
-                        telegramBotService.sendPhotoWithInlineButtons(adminChatId, message, resource, approveCallback, rejectCallback);
+                        telegramBotService.sendPhotoWithButton(adminChatId, message, resource);
                         sent = true;
                     } else {
                         String localFilePath = storedFile.getPath();
                         if (localFilePath != null && new java.io.File(localFilePath).exists()) {
-                            telegramBotService.sendPhotoWithInlineButtons(adminChatId, message, localFilePath, approveCallback, rejectCallback);
+                            telegramBotService.sendPhotoWithButton(adminChatId, message, localFilePath);
                             sent = true;
                         }
                     }
@@ -128,16 +132,16 @@ public class SubscriptionRequestService {
             
             if (!sent) {
                 String fullUrl = receiptUrl.startsWith("http") ? receiptUrl : (telegramBotService.getSiteUrl() + receiptUrl);
-                telegramBotService.sendPhotoWithInlineButtons(adminChatId, message, fullUrl, approveCallback, rejectCallback);
+                telegramBotService.sendPhotoWithButton(adminChatId, message, fullUrl);
             }
         } else {
-            telegramBotService.sendMessageWithInlineButtons(adminChatId, message, approveCallback, rejectCallback);
+            telegramBotService.sendMessageWithButton(adminChatId, message);
         }
 
         // 2. Send in-app site notifications to all SUPER_ADMIN and PACK_MANAGER users
-        String notifTitle = "📦 Yangi obuna so'rovi";
+        String notifTitle = "📦 Yangi obuna faollashtirildi";
         String notifMsg = String.format(
-            "%s (@%s) – %s paketini sotib olishni so'radi. Tasdiqlang!",
+            "%s (@%s) – %s paketini sotib oldi. Obuna avtomatik faollashtirildi!",
             user.getFullName() != null ? user.getFullName() : user.getUsername(),
             user.getUsername(),
             pack.getName()
@@ -252,20 +256,22 @@ public class SubscriptionRequestService {
 
         log.info("✅ Step 5: Notifications sent");
 
-        // 4. Send Telegram Notification
-        String tgMsg = String.format(
-            "✅ <b>Obuna Faollashtirildi!</b>\n\n" +
-            "👤 <b>Foydalanuvchi:</b> %s (@%s)\n" +
-            "📦 <b>Paket:</b> %s (%s)\n" +
-            "📅 <b>Tugash sanasi:</b> %s\n\n" +
-            "🎉 Foydalanuvchi tizimdan to'liq foydalanishi mumkin!",
-            user.getFullName() != null ? user.getFullName() : user.getUsername(),
-            user.getUsername(),
-            pack.getName(),
-            pack.getType(),
-            expiresAt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-        );
-        telegramBotService.sendMessage(tgMsg);
+        // 4. Send Telegram Notification (only if not system auto-approval to prevent duplicate logs)
+        if (!"SYSTEM_AUTO".equals(adminUsername)) {
+            String tgMsg = String.format(
+                "✅ <b>Obuna Faollashtirildi!</b>\n\n" +
+                "👤 <b>Foydalanuvchi:</b> %s (@%s)\n" +
+                "📦 <b>Paket:</b> %s (%s)\n" +
+                "📅 <b>Tugash sanasi:</b> %s\n\n" +
+                "🎉 Foydalanuvchi tizimdan to'liq foydalanishi mumkin!",
+                user.getFullName() != null ? user.getFullName() : user.getUsername(),
+                user.getUsername(),
+                pack.getName(),
+                pack.getType(),
+                expiresAt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+            );
+            telegramBotService.sendMessage(tgMsg);
+        }
         log.info("▶ approveRequest DONE: user={}, pack={}", user.getUsername(), pack.getName());
     }
 
