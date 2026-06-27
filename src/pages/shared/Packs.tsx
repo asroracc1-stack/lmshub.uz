@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Check, Sparkles, Crown, Gift, Loader2, CreditCard, Copy, Send, X,
   Plus, Pencil, Trash2, Settings, ShieldCheck, XCircle, Clock, Zap, Rocket, 
-  ChevronRight, Info, Users, BarChart3, Star, Layers, TrendingUp, Infinity,
+  ChevronRight, Info, Users, BarChart3, Star, Layers, Package, TrendingUp, Infinity,
   MessageCircle, Bell, AlertTriangle, CheckCircle2, RefreshCw, Search, Globe,
   BookOpen, ArrowUpRight, Lock
 } from "lucide-react";
@@ -143,7 +143,7 @@ export default function Packs() {
   const [bookSearch, setBookSearch] = useState("");
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [requestSent, setRequestSent] = useState<Pack | null>(null);
-  const [myPacksOpen, setMyPacksOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<"all" | "my">("all");
 
   // Fetch current user active subscriptions
   const { data: mySubscriptions = [] } = useQuery({
@@ -638,7 +638,115 @@ export default function Packs() {
 
   return (
     <div className="p-2 space-y-6 w-full min-h-screen">
-      {/* Premium Header */}
+      {viewMode === "my" ? (
+        <div className="space-y-6">
+          {/* Back Link */}
+          <button
+            onClick={() => setViewMode("all")}
+            className="flex items-center gap-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 text-sm font-semibold transition-colors"
+          >
+            <ChevronRight className="h-4 w-4 rotate-180" /> Packlar
+          </button>
+
+          {/* Title */}
+          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+            Mening Packlarim
+          </h1>
+
+          {mySubscriptions.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-24 text-center">
+              {/* Box Icon */}
+              <div className="w-24 h-24 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center text-slate-400 dark:text-slate-500 mb-6 border border-slate-200/50 dark:border-white/5">
+                <Package className="h-12 w-12 text-slate-400" strokeWidth={1.5} />
+              </div>
+              
+              <p className="text-slate-500 dark:text-slate-400 text-sm font-semibold mb-6">
+                Siz hali hech qanday pack sotib olmadingiz.
+              </p>
+
+              <Button
+                onClick={() => setViewMode("all")}
+                className="bg-[#52B788] hover:bg-[#409c6f] text-white px-8 h-12 rounded-xl font-bold text-sm tracking-wide shadow-md"
+              >
+                Barcha packlar
+              </Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {mySubscriptions.map((sub: any) => {
+                const isActive = sub.isActive;
+                const startsDate = sub.startsAt ? new Date(sub.startsAt).toLocaleDateString("uz-UZ") : "—";
+                const expiresDate = sub.expiresAt ? new Date(sub.expiresAt).toLocaleDateString("uz-UZ") : "—";
+
+                return (
+                  <div 
+                    key={sub.id}
+                    className={cn(
+                      "p-6 rounded-[2.5rem] border transition-all flex flex-col gap-4 relative overflow-hidden bg-white dark:bg-slate-900/60 shadow-lg",
+                      isActive 
+                        ? "border-emerald-500/30 shadow-emerald-500/[0.03] dark:shadow-none" 
+                        : "border-slate-100 dark:border-slate-800/80 opacity-85"
+                    )}
+                  >
+                    {isActive && (
+                      <div className="absolute right-0 top-0 h-16 w-16 bg-emerald-500/10 rounded-bl-[2.5rem] flex items-center justify-center pl-4 pb-4">
+                        <Check className="h-5 w-5 text-emerald-500" strokeWidth={3} />
+                      </div>
+                    )}
+
+                    <div className="flex flex-col gap-1.5 pr-6">
+                      <span className={cn(
+                        "px-2.5 py-0.5 text-[9px] font-black tracking-widest uppercase rounded-lg shadow-sm w-fit",
+                        sub.packType === "ELITE" && "bg-amber-500 text-white",
+                        sub.packType === "PRO" && "bg-purple-500 text-white",
+                        sub.packType === "FREE" && "bg-slate-500 text-white"
+                      )}>
+                        {sub.packType}
+                      </span>
+                      <h4 className="text-xl font-black text-slate-800 dark:text-white leading-tight">
+                        {sub.packName}
+                      </h4>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 pt-3 border-t border-slate-100 dark:border-slate-800/50 text-xs">
+                      <div>
+                        <p className="text-[10px] text-slate-450 font-bold uppercase tracking-wider">Boshlanish vaqti</p>
+                        <p className="font-bold text-slate-700 dark:text-slate-300 mt-1">{startsDate}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-slate-450 font-bold uppercase tracking-wider">Tugash vaqti</p>
+                        <p className="font-bold text-slate-700 dark:text-slate-300 mt-1">{expiresDate}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between items-center pt-3 mt-1">
+                      <Badge 
+                        className={cn(
+                          "text-[10px] font-black uppercase tracking-wider px-3 py-1.5 border-none rounded-xl",
+                          isActive 
+                            ? "bg-emerald-500/15 text-emerald-500 hover:bg-emerald-500/25" 
+                            : "bg-slate-500/15 text-slate-500 hover:bg-slate-500/25"
+                        )}
+                      >
+                        {isActive ? "Faol" : "Muddati tugagan"}
+                      </Badge>
+
+                      {isActive && sub.remainingDays !== undefined && (
+                        <div className="text-right">
+                          <span className="text-[10px] text-slate-455 font-bold uppercase tracking-wider block">Qolgan muddat</span>
+                          <span className="text-sm font-black text-emerald-500">{sub.remainingDays} kun</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      ) : (
+        <>
+          {/* Premium Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-6 border-b border-slate-100 dark:border-white/5">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
@@ -651,7 +759,7 @@ export default function Packs() {
 
         <div className="flex flex-wrap items-center gap-3 self-stretch md:self-auto">
           <Button
-            onClick={() => setMyPacksOpen(true)}
+            onClick={() => setViewMode("my")}
             className="bg-purple-600/15 hover:bg-purple-600/25 text-purple-650 dark:text-purple-400 border border-purple-500/20 hover:border-purple-500/35 px-5 h-11 rounded-xl font-bold text-xs tracking-wide shadow-md flex items-center gap-2 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
           >
             <Layers className="h-4 w-4" /> Mening Paketlarim
@@ -1488,116 +1596,11 @@ export default function Packs() {
               Bu paketni butunlay tizimdan o'chirasiz. Bu amalni qaytarib bo'lmaydi.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="mt-8 gap-3">
-            <AlertDialogCancel className="bg-slate-100 dark:bg-white/5 border-none text-slate-500 rounded-2xl h-14 px-8 font-bold">{t("dynamic.pricingplans.bekor_qilish")}</AlertDialogCancel>
-            <AlertDialogAction onClick={deletePack} className="bg-red-500 hover:bg-red-600 text-white rounded-2xl h-14 px-8 font-black uppercase text-xs tracking-widest shadow-lg shadow-red-500/20">{t("dynamic.packs.ha_o_chirilsin")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* My Packages Modal */}
-      <Dialog open={myPacksOpen} onOpenChange={setMyPacksOpen}>
-        <DialogContent className="max-w-lg bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl rounded-[3rem] border-none shadow-2xl p-8 overflow-hidden flex flex-col max-h-[85vh]">
-          <DialogHeader className="relative pb-4 border-b border-slate-100 dark:border-white/5">
-            <DialogTitle className="text-2xl font-black tracking-tight flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center">
-                <Layers className="h-5 w-5 text-purple-500" />
-              </div>
-              Mening Paketlarim
-            </DialogTitle>
-            <p className="text-xs text-slate-400 font-medium mt-1">Siz sotib olgan obuna paketlari ro'yxati</p>
-          </DialogHeader>
-
-          <div className="space-y-4 overflow-y-auto pr-2 custom-scrollbar flex-1 py-4">
-            {mySubscriptions.length === 0 ? (
-              <div className="text-center py-10">
-                <Sparkles className="h-12 w-12 text-slate-400 mx-auto mb-3 animate-pulse" />
-                <p className="text-sm font-bold text-slate-700 dark:text-slate-350">Hozircha sotib olingan paketlar mavjud emas</p>
-                <p className="text-xs text-slate-400 mt-1">O'zingizga ma'qul kelgan tarifni tanlang va faollashtiring.</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {mySubscriptions.map((sub: any) => {
-                  const isActive = sub.isActive;
-                  const startsDate = sub.startsAt ? new Date(sub.startsAt).toLocaleDateString("uz-UZ") : "—";
-                  const expiresDate = sub.expiresAt ? new Date(sub.expiresAt).toLocaleDateString("uz-UZ") : "—";
-
-                  return (
-                    <div 
-                      key={sub.id}
-                      className={cn(
-                        "p-5 rounded-2xl border transition-all flex flex-col gap-3 relative overflow-hidden",
-                        isActive 
-                          ? "bg-emerald-500/5 dark:bg-emerald-500/5 border-emerald-500/20" 
-                          : "bg-slate-50 dark:bg-white/5 border-slate-100 dark:border-white/5 opacity-80"
-                      )}
-                    >
-                      {isActive && (
-                        <div className="absolute right-0 top-0 h-16 w-16 bg-emerald-500/10 rounded-bl-full flex items-center justify-center pl-4 pb-4">
-                          <Check className="h-5 w-5 text-emerald-500" />
-                        </div>
-                      )}
-
-                      <div className="flex justify-between items-start pr-6">
-                        <div>
-                          <span className={cn(
-                            "px-2.5 py-0.5 text-[9px] font-black tracking-widest uppercase rounded-md shadow-sm mb-1 inline-block",
-                            sub.packType === "ELITE" && "bg-amber-500 text-white",
-                            sub.packType === "PRO" && "bg-purple-500 text-white",
-                            sub.packType === "FREE" && "bg-slate-500 text-white"
-                          )}>
-                            {sub.packType}
-                          </span>
-                          <h4 className="text-lg font-black text-slate-800 dark:text-white leading-tight">
-                            {sub.packName}
-                          </h4>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4 pt-2 border-t border-slate-100 dark:border-white/5 text-xs">
-                        <div>
-                          <p className="text-[10px] text-slate-450 font-bold uppercase tracking-wider">Boshlanish vaqti</p>
-                          <p className="font-semibold text-slate-700 dark:text-slate-350 mt-0.5">{startsDate}</p>
-                        </div>
-                        <div>
-                          <p className="text-[10px] text-slate-450 font-bold uppercase tracking-wider">Tugash vaqti</p>
-                          <p className="font-semibold text-slate-700 dark:text-slate-350 mt-0.5">{expiresDate}</p>
-                        </div>
-                      </div>
-
-                      <div className="flex justify-between items-center pt-2 mt-1">
-                        <Badge 
-                          className={cn(
-                            "text-[10px] font-black uppercase tracking-wider px-2.5 py-1 border-none",
-                            isActive 
-                              ? "bg-emerald-500/15 text-emerald-500 hover:bg-emerald-500/25" 
-                              : "bg-slate-500/15 text-slate-500 hover:bg-slate-500/25"
-                          )}
-                        >
-                          {isActive ? "Faol" : "Muddati tugagan"}
-                        </Badge>
-
-                        {isActive && sub.remainingDays !== undefined && (
-                          <div className="text-right">
-                            <span className="text-[10px] text-slate-450 font-bold uppercase tracking-wider block">Qolgan muddat</span>
-                            <span className="text-xs font-black text-emerald-500">{sub.remainingDays} kun</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          <div className="border-t border-slate-100 dark:border-white/5 pt-4 mt-2">
-            <Button onClick={() => setMyPacksOpen(false)} className="w-full bg-slate-900 dark:bg-white/5 hover:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-2xl h-12 font-bold text-xs uppercase tracking-wider">
-              Yopish
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+        </>
+      )}
 
       <style>{`
         .custom-scrollbar::-webkit-scrollbar { width: 5px; }
