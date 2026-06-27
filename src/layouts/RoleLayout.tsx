@@ -584,8 +584,9 @@ export default function RoleLayout({
                 </kbd>
               </button>
               <div className="flex items-center gap-1 sm:gap-1.5 md:gap-3 pl-1.5 sm:pl-2 md:pl-4 border-l border-border h-8">
+                {/* Mening Paketlarim button */}
                 <button
-                  onClick={() => setShowMySubscriptionsModal(true)}
+                  onClick={() => navigate(`${basePath}/packs?view=my`)}
                   className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-indigo-650 text-white hover:opacity-90 transition-opacity shadow-sm shadow-indigo-500/20"
                   title="Mening Paketlarim"
                 >

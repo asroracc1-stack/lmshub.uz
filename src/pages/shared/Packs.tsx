@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useEffect, useState, useMemo, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -144,6 +145,12 @@ export default function Packs() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [requestSent, setRequestSent] = useState<Pack | null>(null);
   const [viewMode, setViewMode] = useState<"all" | "my">("all");
+  const [searchParams] = useSearchParams();
+  useEffect(() => {
+    if (searchParams.get("view") === "my") {
+      setViewMode("my");
+    }
+  }, [searchParams]);
 
   // Fetch current user active subscriptions
   const { data: mySubscriptions = [] } = useQuery({
@@ -863,7 +870,14 @@ export default function Packs() {
           {/* Premium Cards Grid for Client view */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {packs.map((p) => {
-              const isOwn = mySubscriptions.some((sub: any) => sub.packId === p.id && sub.isActive) || (p.type === "FREE" && mySubscriptions.length === 0);
+              const now = new Date();
+              const activeSub = mySubscriptions.find((sub: any) => {
+                const packMatch = sub.packId === p.id || sub.packCode === p.code || sub.packType === p.type;
+                const isActive = sub.status === "ACTIVE" || sub.isActive === true;
+                const notExpired = !sub.expiresAt || new Date(sub.expiresAt) > now;
+                return packMatch && isActive && notExpired;
+              });
+              const isOwn = !!activeSub || (p.type === "FREE" && mySubscriptions.length === 0);
               
               const isElite = p.type === "ELITE";
               const isPro = p.type === "PRO";
@@ -1080,7 +1094,7 @@ export default function Packs() {
                                   : "bg-[#F77F00] hover:bg-[#D96E00] shadow-orange-500/20"
                             )}
                           >
-                            {isOwn ? "Faollashgan" : "Sotib olish"}
+                          {isOwn ? "Sotib olingan" : "Sotib olish"}
                             {isOwn ? <Check className="h-3.5 w-3.5" /> : <ArrowUpRight className="h-3.5 w-3.5" />}
                           </Button>
                         )}
