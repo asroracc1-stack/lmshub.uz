@@ -51,14 +51,16 @@ public class UserSubscriptionController {
             if (userRows.isEmpty()) {
                 result.put("hasActive", false);
                 result.put("packType", "FREE");
+                result.put("status", "NONE");
                 return ResponseEntity.ok(result);
             }
 
             Object userId = userRows.get(0);
 
-            // Find active subscription
-            List<?> subRows = entityManager.createNativeQuery(
-                "SELECT sp.type FROM public.user_subscriptions us " +
+            // Find active subscription with full details (packageId, expiresAt, remainingDays, startDate)
+            List<Object[]> subRows = entityManager.createNativeQuery(
+                "SELECT sp.type, us.expires_at, sp.id, us.starts_at " +
+                "FROM public.user_subscriptions us " +
                 "JOIN public.subscription_packs sp ON sp.id = us.pack_id " +
                 "WHERE us.user_id = :userId AND us.is_active = true " +
                 "AND (us.expires_at IS NULL OR us.expires_at > NOW()) " +
@@ -66,15 +68,44 @@ public class UserSubscriptionController {
             ).setParameter("userId", userId).getResultList();
 
             if (!subRows.isEmpty()) {
+                Object[] row = subRows.get(0);
+                String packType = row[0] != null ? row[0].toString() : "FREE";
+                java.sql.Timestamp expiresAt = (java.sql.Timestamp) row[1];
+                Object packageId = row[2];
+                java.sql.Timestamp startsAt = (java.sql.Timestamp) row[3];
+
                 result.put("hasActive", true);
-                result.put("packType", subRows.get(0).toString());
+                result.put("packType", packType);
+                result.put("status", "ACTIVE");
+                result.put("packageId", packageId != null ? packageId.toString() : null);
+                result.put("expiresAt", expiresAt != null ? expiresAt.toLocalDateTime().toString() : null);
+                result.put("startDate", startsAt != null ? startsAt.toLocalDateTime().toString() : null);
+
+                // Calculate remaining days
+                long remainingDays = 0;
+                if (expiresAt != null) {
+                    LocalDateTime expiry = expiresAt.toLocalDateTime();
+                    LocalDateTime now = LocalDateTime.now();
+                    if (expiry.isAfter(now)) {
+                        remainingDays = java.time.temporal.ChronoUnit.DAYS.between(now, expiry);
+                    }
+                }
+                result.put("remainingDays", remainingDays);
             } else {
                 result.put("hasActive", false);
                 result.put("packType", "FREE");
+                result.put("status", "NONE");
+                result.put("packageId", null);
+                result.put("expiresAt", null);
+                result.put("remainingDays", 0);
             }
         } catch (Exception e) {
             result.put("hasActive", false);
             result.put("packType", "FREE");
+            result.put("status", "NONE");
+            result.put("packageId", null);
+            result.put("expiresAt", null);
+            result.put("remainingDays", 0);
         }
 
         return ResponseEntity.ok(result);

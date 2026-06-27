@@ -166,10 +166,15 @@ export default function Packs() {
     enabled: !!user && !isManager,
     staleTime: 0,
     refetchOnWindowFocus: true,
-    refetchInterval: 30000,
+    refetchOnReconnect: true,
+    refetchInterval: 10000,
   });
 
-  // Fetch single active subscription — primary source for isOwn
+  /**
+   * PRIMARY SOURCE OF TRUTH — backenddan kelgan aktiv subscription.
+   * Polling: har 10 soniyada. Telegram tasdiqlangandan keyin avtomatik yangilanadi.
+   * Button holati FAQAT shu ma'lumot asosida hisoblanadi.
+   */
   const { data: activeSubscription } = useQuery({
     queryKey: ["my-active-subscription"],
     queryFn: async () => {
@@ -179,7 +184,8 @@ export default function Packs() {
     enabled: !!user && !isManager,
     staleTime: 0,
     refetchOnWindowFocus: true,
-    refetchInterval: 30000,
+    refetchOnReconnect: true,
+    refetchInterval: 10000,
   });
 
   // Fetch pending payment requests
@@ -192,119 +198,131 @@ export default function Packs() {
     enabled: !!user && !isManager,
     staleTime: 0,
     refetchOnWindowFocus: true,
-    refetchInterval: 30000,
+    refetchOnReconnect: true,
+    refetchInterval: 10000,
   });
 
   /**
-   * Determines the subscription status for a given pack.
-   * Returns: 'ACTIVE' | 'PENDING' | 'EXPIRED' | 'NONE'
-   * Uses ALL possible backend field variations.
+   * ACTIVE subscription computed once from backend data.
+   * Single source of truth — hech qachon local state ishlatilmaydi.
+   *
+   * activeSubInfo.packType: "PRO" | "ELITE" | "FREE" | null
+   * activeSubInfo.isActive: true/false
+   * activeSubInfo.packageId: string | null
+   * activeSubInfo.expiresAt: string | null
    */
-  const getPackStatus = (p: Pack): 'ACTIVE' | 'PENDING' | 'EXPIRED' | 'NONE' => {
-    if (isManager) return 'NONE';
+  const activeSubInfo = useMemo(() => {
+    if (isManager) return { isActive: false, packType: null as string | null, packageId: null as string | null, expiresAt: null as string | null };
+    if (!activeSubscription) return { isActive: false, packType: null as string | null, packageId: null as string | null, expiresAt: null as string | null };
+
     const now = new Date();
+    const status = (activeSubscription.status || "").toUpperCase();
+    const hasActive: boolean =
+      activeSubscription.hasActive === true ||
+      activeSubscription.has_active === true ||
+      activeSubscription.isActive === true ||
+      status === "ACTIVE";
 
-    // 0. HIGHEST PRIORITY: usePackAccess hook (proven, same as sidebar/MockCategory/Library)
-    if (!packAccess.loading) {
-      const activePack = packAccess.activePack; // "FREE" | "PRO" | "ELITE"
-      const expiresAt = packAccess.expiresAt;
-      const notExpired = !expiresAt || new Date(expiresAt) > now;
-      const pType = p.type.toUpperCase();
+    const expiresAt: string | null =
+      activeSubscription.expiresAt ||
+      activeSubscription.expire_date ||
+      activeSubscription.expireDate ||
+      null;
 
-      if (notExpired && activePack !== "FREE") {
-        // User has a paid subscription
-        if (pType === "FREE") return 'ACTIVE'; // FREE is always active
-        if (pType === "PRO" && (activePack === "PRO" || activePack === "ELITE")) return 'ACTIVE';
-        if (pType === "ELITE" && activePack === "ELITE") return 'ACTIVE';
-      } else if (activePack === "FREE" && pType === "FREE") {
+    const notExpired = !expiresAt || new Date(expiresAt) > now;
+
+    const packType: string | null = hasActive && notExpired
+      ? (activeSubscription.packType ||
+         activeSubscription.pack_type ||
+         activeSubscription.packageType ||
+         activeSubscription.type ||
+         null)
+      : null;
+
+    const packageId: string | null = hasActive && notExpired
+      ? (activeSubscription.packageId ||
+         activeSubscription.packId ||
+         activeSubscription.pack_id ||
+         null)
+      : null;
+
+    return {
+      isActive: hasActive && notExpired,
+      packType: packType ? packType.toUpperCase() : null,
+      packageId,
+      expiresAt,
+    };
+  }, [activeSubscription, isManager]);
+
+  /**
+   * SINGLE SOURCE OF TRUTH — backend activeSubInfo asosida pack holati.
+   * Hech qachon local state yoki cache ishlatilmaydi.
+   *
+   * Returns: 'ACTIVE' | 'PENDING' | 'LOWER_TIER' | 'UPGRADE' | 'NONE'
+   * - 'ACTIVE'     : Bu paket foydalanuvchining hozirgi aktiv paketi
+   * - 'LOWER_TIER' : Foydalanuvchi bundan yuqori paketga ega (masalan PRO ishlatayapti, FREE karta)
+   * - 'UPGRADE'    : Foydalanuvchi bundan pastroq paketda (masalan PRO ishlatayapti, ELITE karta)
+   * - 'PENDING'    : To'lov kutilmoqda
+   * - 'NONE'       : Subscription yo'q
+   */
+  const getPackStatus = (p: Pack): 'ACTIVE' | 'PENDING' | 'LOWER_TIER' | 'UPGRADE' | 'NONE' => {
+    if (isManager) return 'NONE';
+    const pType = p.type.toUpperCase() as "FREE" | "PRO" | "ELITE";
+
+    // FREE pack is always active (no subscription needed)
+    if (pType === "FREE") {
+      // If user has PRO/ELITE, FREE is a lower tier
+      if (activeSubInfo.isActive && activeSubInfo.packType && activeSubInfo.packType !== "FREE") {
+        return 'LOWER_TIER';
+      }
+      return 'ACTIVE';
+    }
+
+    // Tier hierarchy: FREE < PRO < ELITE
+    const tierLevel: Record<string, number> = { FREE: 0, PRO: 1, ELITE: 2 };
+    const userTier = activeSubInfo.isActive && activeSubInfo.packType
+      ? (tierLevel[activeSubInfo.packType] ?? -1)
+      : -1;
+    const cardTier = tierLevel[pType] ?? 0;
+
+    // Check if this exact pack is the user's active subscription
+    if (activeSubInfo.isActive) {
+      // Exact packageId match (most precise)
+      if (activeSubInfo.packageId && activeSubInfo.packageId === p.id) {
         return 'ACTIVE';
       }
-    }
-
-    // 1. Secondary: single subscription endpoint
-    if (activeSubscription) {
-      const singlePackType: string = (
-        activeSubscription.packType ||
-        activeSubscription.pack_type ||
-        activeSubscription.packageType ||
-        activeSubscription.type ||
-        ""
-      ).toUpperCase();
-
-      const singleHasActive: boolean =
-        activeSubscription.hasActive === true ||
-        activeSubscription.has_active === true ||
-        activeSubscription.isActive === true ||
-        activeSubscription.is_active === true ||
-        activeSubscription.status === "ACTIVE";
-
-      const singleExpiresAt = activeSubscription.expiresAt ||
-        activeSubscription.expire_date ||
-        activeSubscription.expireDate ||
-        activeSubscription.endDate ||
-        activeSubscription.end_date ||
-        null;
-
-      const singleNotExpired = !singleExpiresAt || new Date(singleExpiresAt) > now;
-
-      if (singleHasActive && singleNotExpired) {
-        const pType = p.type.toUpperCase();
-        if (pType === "FREE" && singlePackType === "FREE") return 'ACTIVE';
-        if (pType === "PRO" && (singlePackType === "PRO" || singlePackType === "ELITE")) return 'ACTIVE';
-        if (pType === "ELITE" && singlePackType === "ELITE") return 'ACTIVE';
+      // packType match
+      if (activeSubInfo.packType === pType) {
+        return 'ACTIVE';
+      }
+      // User has higher tier — this card is a lower tier
+      if (userTier > cardTier) {
+        return 'LOWER_TIER';
+      }
+      // User has lower tier — this card is an upgrade
+      if (userTier < cardTier) {
+        return 'UPGRADE';
       }
     }
 
-    // 2. Fallback: scan list subscriptions
-    for (const sub of mySubscriptions) {
-      const subPackType: string = (
-        sub.packType || sub.pack_type || sub.packageType || sub.type || ""
-      ).toUpperCase();
-      const subPackId = sub.packId || sub.pack_id || sub.packageId || sub.package_id || "";
-      const subPackCode = sub.packCode || sub.pack_code || sub.packageCode || sub.code || "";
-
-      const packMatches =
-        subPackId === p.id ||
-        subPackCode === p.code ||
-        subPackType === p.type.toUpperCase();
-
-      if (!packMatches) continue;
-
-      const subStatus: string = (sub.status || "").toUpperCase();
-      const subIsActive =
-        subStatus === "ACTIVE" ||
-        sub.isActive === true ||
-        sub.is_active === true;
-
-      const subExpiry =
-        sub.expiresAt || sub.expire_date || sub.expireDate || sub.endDate || sub.end_date || null;
-      const subNotExpired = !subExpiry || new Date(subExpiry) > now;
-
-      if (subIsActive && subNotExpired) return 'ACTIVE';
-      if (subStatus === 'EXPIRED' || (subExpiry && new Date(subExpiry) <= now)) return 'EXPIRED';
-    }
-
-    // 3. Check pending requests
+    // Check pending requests
     for (const req of pendingRequests) {
       const reqPackType: string = (
         req.packType || req.pack_type || req.packageType || req.type || ""
       ).toUpperCase();
-      const reqPackId = req.packId || req.pack_id || req.packageId || req.package_id || "";
-      const reqPackCode = req.packCode || req.pack_code || req.packageCode || req.code || "";
+      const reqPackId: string = (req.packId || req.pack_id || req.packageId || req.package_id || "").toString();
+      const reqPackCode: string = (req.packCode || req.pack_code || req.packageCode || req.code || "").toString();
       const reqPackName: string = (req.packName || req.pack_name || req.packageName || "").toUpperCase();
 
       const reqMatches =
         reqPackId === p.id ||
         reqPackCode === p.code ||
-        reqPackType === p.type.toUpperCase() ||
-        reqPackName.includes(p.type.toUpperCase());
+        reqPackType === pType ||
+        reqPackName.includes(pType);
 
       const reqStatus: string = (req.status || "").toUpperCase();
       if (reqMatches && reqStatus === "PENDING") return 'PENDING';
     }
-
-    // 4. FREE default
-    if (p.type === "FREE") return 'ACTIVE';
 
     return 'NONE';
   };
@@ -1014,54 +1032,153 @@ export default function Packs() {
             </Card>
           )}
 
+          {/* ELITE banner — foydalanuvchi eng yuqori tarifda bo'lsa */}
+          {activeSubInfo.isActive && activeSubInfo.packType === "ELITE" && (
+            <div className="flex items-center gap-3 px-6 py-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 border border-amber-500/25 text-amber-600 dark:text-amber-400 shadow-sm">
+              <Crown className="h-5 w-5 shrink-0 text-amber-500" />
+              <p className="text-sm font-bold">
+                Siz eng yuqori tarifdan — <span className="font-black">ELITE</span> — foydalanmoqdasiz. Barcha imkoniyatlar ochiq! 🎉
+              </p>
+            </div>
+          )}
+
           {/* Premium Cards Grid for Client view */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {packs.map((p) => {
-              // Determine subscription status for this pack
-              const now = new Date();
+              // SINGLE SOURCE OF TRUTH — faqat backend activeSubInfo asosida
               const packStatus = getPackStatus(p);
-              const isOwn = packStatus === 'ACTIVE';
-              const isPending = packStatus === 'PENDING';
+              const isOwn      = packStatus === 'ACTIVE';
+              const isPending  = packStatus === 'PENDING';
+              const isLower    = packStatus === 'LOWER_TIER';   // user has higher plan
+              const isUpgrade  = packStatus === 'UPGRADE';       // user can upgrade
 
               const isElite = p.type === "ELITE";
-              const isPro = p.type === "PRO";
-              const isFree = p.type === "FREE";
+              const isPro   = p.type === "PRO";
+              const isFree  = p.type === "FREE";
 
               const oldPriceVal = p.oldPrice || (isPro ? 99000 : isElite ? 199000 : 0);
-              const priceVal = p.price;
+              const priceVal    = p.price;
               const discountVal = p.discountPercent !== null && p.discountPercent !== undefined && p.discountPercent > 0
                 ? p.discountPercent
-                : (oldPriceVal > priceVal 
-                    ? Math.round(((oldPriceVal - priceVal) / oldPriceVal) * 100) 
+                : (oldPriceVal > priceVal
+                    ? Math.round(((oldPriceVal - priceVal) / oldPriceVal) * 100)
                     : 0);
 
-              // Background images mapped to locally saved 3D assets
               const bgImageMap: Record<string, string> = {
                 FREE: "/green_gift_box.png",
-                PRO: "/purple_rocket.png",
+                PRO:  "/purple_rocket.png",
                 ELITE: "/gold_diamond.png"
               };
               const bgImage = bgImageMap[p.type] || "/placeholder.svg";
 
-              // Color maps to style cards beautifully
               const badgeBgMap: Record<string, string> = {
-                FREE: "bg-[#52B788] text-white",
-                PRO: "bg-[#7209B7] text-white",
+                FREE:  "bg-[#52B788] text-white",
+                PRO:   "bg-[#7209B7] text-white",
                 ELITE: "bg-[#F77F00] text-white"
               };
 
               const checkColorMap: Record<string, string> = {
-                FREE: "text-[#52B788]",
-                PRO: "text-[#7209B7]",
+                FREE:  "text-[#52B788]",
+                PRO:   "text-[#7209B7]",
                 ELITE: "text-[#F77F00]"
               };
 
-              // Clean features to display (exclude the description item)
               const cleanFeatures = p.features
                 .filter(f => !f.startsWith("desc::"))
                 .map(f => ({ text: f, active: !f.trim().toLowerCase().startsWith("x ") }));
 
-              const durationText = isFree ? "Cheksiz" : `${p.durationDays || (p.duration ? p.duration * 30 : 30)} kun`;
+              const durationText = isFree
+                ? "Cheksiz"
+                : `${p.durationDays || (p.duration ? p.duration * 30 : 30)} kun`;
+
+              // ── Button renderer ──────────────────────────────────────────────
+              // RULE: button holati FAQAT backenddan kelgan activeSubInfo asosida.
+              // Hech qachon "Sotib olish" ACTIVE subscription uchun chiqmaydi.
+              const renderActionButton = () => {
+                // FREE pack — always shown as activated (no purchase needed)
+                if (isFree) {
+                  return (
+                    <Button
+                      disabled
+                      className="h-10 px-6 rounded-xl font-extrabold uppercase text-[10px] tracking-wider border-none bg-emerald-600 text-white shadow-md shadow-emerald-500/20 flex items-center gap-1.5 cursor-default opacity-100"
+                    >
+                      Faollashgan <Check className="h-3.5 w-3.5" />
+                    </Button>
+                  );
+                }
+
+                // This card is the user's active subscription
+                if (isOwn) {
+                  return (
+                    <Button
+                      disabled
+                      style={{ cursor: 'not-allowed' }}
+                      className="h-10 px-6 rounded-xl font-extrabold uppercase text-[10px] tracking-wider border-none bg-emerald-600 text-white shadow-md shadow-emerald-500/20 flex items-center gap-1.5 opacity-100"
+                    >
+                      ✅ Sotib olingan <Check className="h-3.5 w-3.5" />
+                    </Button>
+                  );
+                }
+
+                // User already has a HIGHER plan — this card is redundant
+                if (isLower) {
+                  return (
+                    <Button
+                      disabled
+                      style={{ cursor: 'not-allowed' }}
+                      className="h-10 px-6 rounded-xl font-extrabold uppercase text-[10px] tracking-wider border-none bg-slate-400/80 dark:bg-slate-600/80 text-white flex items-center gap-1.5 opacity-100"
+                    >
+                      <Check className="h-3.5 w-3.5" /> Oldingi paket
+                    </Button>
+                  );
+                }
+
+                // Payment pending for this pack
+                if (isPending) {
+                  return (
+                    <Button
+                      disabled
+                      style={{ cursor: 'not-allowed' }}
+                      className="h-10 px-6 rounded-xl font-extrabold uppercase text-[10px] tracking-wider border-none bg-amber-500 text-white shadow-md shadow-amber-500/20 flex items-center gap-1.5 opacity-100"
+                    >
+                      ⏳ Kutilmoqda
+                    </Button>
+                  );
+                }
+
+                // User can upgrade to this higher tier
+                if (isUpgrade) {
+                  return (
+                    <Button
+                      onClick={() => setCheckoutPack(p)}
+                      className={cn(
+                        "h-10 px-6 rounded-xl font-extrabold uppercase text-[10px] tracking-wider shadow-md transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] text-white border-none flex items-center gap-1.5",
+                        isElite
+                          ? "bg-[#F77F00] hover:bg-[#D96E00] shadow-orange-500/20"
+                          : "bg-[#7209B7] hover:bg-[#5E079B] shadow-purple-500/20"
+                      )}
+                    >
+                      ⬆ Yangilash <ArrowUpRight className="h-3.5 w-3.5" />
+                    </Button>
+                  );
+                }
+
+                // No subscription at all — show buy button
+                return (
+                  <Button
+                    onClick={() => setCheckoutPack(p)}
+                    className={cn(
+                      "h-10 px-6 rounded-xl font-extrabold uppercase text-[10px] tracking-wider shadow-md transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] text-white border-none flex items-center gap-1.5",
+                      isPro
+                        ? "bg-[#7209B7] hover:bg-[#5E079B] shadow-purple-500/20"
+                        : "bg-[#F77F00] hover:bg-[#D96E00] shadow-orange-500/20"
+                    )}
+                  >
+                    Sotib olish <ArrowUpRight className="h-3.5 w-3.5" />
+                  </Button>
+                );
+              };
+              // ────────────────────────────────────────────────────────────────
 
               return (
                 <motion.div
@@ -1074,26 +1191,16 @@ export default function Packs() {
                   {isManager && (
                     <div className="absolute top-4 right-4 z-30 flex items-center gap-1.5 bg-slate-900/90 dark:bg-slate-950/90 backdrop-blur-md p-1.5 rounded-full border border-white/10 shadow-xl opacity-80 group-hover:opacity-100 transition-opacity">
                       <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          e.preventDefault();
-                          openEdit(p);
-                        }}
+                        size="icon" variant="ghost"
+                        onClick={(e) => { e.stopPropagation(); e.preventDefault(); openEdit(p); }}
                         className="h-8 w-8 rounded-full text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 transition-colors"
                         title="Tahrirlash"
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
                       <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          e.preventDefault();
-                          setDeleteId(p.id);
-                        }}
+                        size="icon" variant="ghost"
+                        onClick={(e) => { e.stopPropagation(); e.preventDefault(); setDeleteId(p.id); }}
                         className="h-8 w-8 rounded-full text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors"
                         title={t("dynamic.usersmanager.o_chirish")}
                       >
@@ -1103,17 +1210,18 @@ export default function Packs() {
                   )}
 
                   <div className={cn(
-                    "w-full rounded-[2.5rem] border flex flex-col justify-between overflow-hidden relative transition-all duration-500 shadow-xl bg-white dark:bg-slate-900/60 border-slate-100 dark:border-slate-800/80 hover:shadow-2xl hover:shadow-slate-150/40 dark:hover:shadow-none"
+                    "w-full rounded-[2.5rem] border flex flex-col justify-between overflow-hidden relative transition-all duration-500 shadow-xl bg-white dark:bg-slate-900/60 hover:shadow-2xl hover:shadow-slate-150/40 dark:hover:shadow-none",
+                    isOwn
+                      ? "border-emerald-500/50 shadow-emerald-500/10 ring-1 ring-emerald-500/20"
+                      : "border-slate-100 dark:border-slate-800/80"
                   )}>
                     {/* Card Cover Image Container */}
                     <div className="relative w-full aspect-[4/3] overflow-hidden rounded-t-[2.5rem]">
-                      <img 
-                        src={bgImage} 
-                        alt={p.name} 
+                      <img
+                        src={bgImage}
+                        alt={p.name}
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                       />
-                      
-                      {/* Dark gradient overlay for typography readability */}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/25 to-black/10" />
 
                       {/* Top-Left Category Badge */}
@@ -1123,20 +1231,21 @@ export default function Packs() {
                         </span>
                         {isOwn && (
                           <span className="bg-emerald-500 text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow-sm flex items-center gap-1 border border-emerald-400">
-                            <CheckCircle2 className="w-3 h-3" />
-                            Aktiv
+                            <CheckCircle2 className="w-3 h-3" /> Aktiv
                           </span>
                         )}
                       </div>
 
-                      {/* Top-Right Red Discount Badge */}
-                      <div className="absolute top-4 right-4 z-10">
-                        <span className="bg-[#FF3B30] text-white text-xs font-black px-2.5 py-1 rounded-full shadow-sm">
-                          -{discountVal}%
-                        </span>
-                      </div>
+                      {/* Discount badge (only if non-zero) */}
+                      {discountVal > 0 && (
+                        <div className="absolute top-4 right-4 z-10">
+                          <span className="bg-[#FF3B30] text-white text-xs font-black px-2.5 py-1 rounded-full shadow-sm">
+                            -{discountVal}%
+                          </span>
+                        </div>
+                      )}
 
-                      {/* Overlaid Price/Duration details on Card Image */}
+                      {/* Price overlay */}
                       <div className="absolute left-6 bottom-6 text-white z-10 flex flex-col justify-end">
                         {isFree ? (
                           <>
@@ -1165,13 +1274,12 @@ export default function Packs() {
                       </div>
                     </div>
 
-                    {/* Card Content (Features list) */}
+                    {/* Card Content */}
                     <div className="p-8 flex flex-col gap-6 flex-1 justify-between">
                       <div className="space-y-4">
                         {cleanFeatures.map((f, idx) => {
                           const isX = f.text.trim().toLowerCase().startsWith("x ");
                           const displayText = isX ? f.text.trim().substring(2).trim() : f.text;
-
                           return (
                             <div key={idx} className="flex items-start gap-3">
                               {isX ? (
@@ -1181,9 +1289,7 @@ export default function Packs() {
                               )}
                               <span className={cn(
                                 "text-sm",
-                                isX 
-                                  ? "text-slate-400 font-medium" 
-                                  : "text-slate-800 dark:text-slate-200 font-semibold"
+                                isX ? "text-slate-400 font-medium" : "text-slate-800 dark:text-slate-200 font-semibold"
                               )}>
                                 {displayText}
                               </span>
@@ -1198,45 +1304,8 @@ export default function Packs() {
                           <span className="text-sm font-semibold">{durationText}</span>
                         </div>
 
-                        {isFree ? (
-                          <Button
-                            disabled
-                            className="h-10 px-6 rounded-xl font-extrabold uppercase text-[10px] tracking-wider border-none bg-emerald-600 text-white shadow-md shadow-emerald-500/20 flex items-center gap-1.5 cursor-default opacity-100"
-                          >
-                            Faollashgan
-                            <Check className="h-3.5 w-3.5" />
-                          </Button>
-                        ) : isOwn ? (
-                          <Button
-                            disabled
-                            className="h-10 px-6 rounded-xl font-extrabold uppercase text-[10px] tracking-wider border-none bg-emerald-600 text-white shadow-md shadow-emerald-500/20 flex items-center gap-1.5 cursor-not-allowed opacity-100"
-                            style={{ cursor: 'not-allowed' }}
-                          >
-                            ✅ Sotib olingan
-                            <Check className="h-3.5 w-3.5" />
-                          </Button>
-                        ) : isPending ? (
-                          <Button
-                            disabled
-                            className="h-10 px-6 rounded-xl font-extrabold uppercase text-[10px] tracking-wider border-none bg-amber-500 text-white shadow-md shadow-amber-500/20 flex items-center gap-1.5 cursor-not-allowed opacity-100"
-                            style={{ cursor: 'not-allowed' }}
-                          >
-                            ⏳ Kutilmoqda
-                          </Button>
-                        ) : (
-                          <Button
-                            onClick={() => setCheckoutPack(p)}
-                            className={cn(
-                              "h-10 px-6 rounded-xl font-extrabold uppercase text-[10px] tracking-wider shadow-md transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] text-white border-none flex items-center gap-1.5",
-                              isPro
-                                ? "bg-[#7209B7] hover:bg-[#5E079B] shadow-purple-500/20"
-                                : "bg-[#F77F00] hover:bg-[#D96E00] shadow-orange-500/20"
-                            )}
-                          >
-                            Sotib olish
-                            <ArrowUpRight className="h-3.5 w-3.5" />
-                          </Button>
-                        )}
+                        {/* ACTION BUTTON — single source of truth */}
+                        {renderActionButton()}
                       </div>
                     </div>
                   </div>

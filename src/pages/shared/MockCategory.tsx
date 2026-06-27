@@ -295,8 +295,9 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
               const BadgeIconComp = theme.badgeIcon;
               const attempt = attempts.find(a => String(a.examId) === String(test.id));
 
-              // Check if user can access this test based on their subscription
-              const isLocked = !canAccessPack(packAccess, test.required_pack, canManage);
+              // Check if user can access this test based on their subscription.
+              // NOTE: never lock while packAccess is still loading — avoids false-positive blocks.
+              const isLocked = !packAccess.loading && !canAccessPack(packAccess, test.required_pack, canManage);
 
               return (
                 <motion.div

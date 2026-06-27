@@ -56,6 +56,7 @@ public class SubscriptionService {
 
     /**
      * Checks if the user has access to a given mock exam.
+     * Checks: role → free exam → subscription active → access flags → exam list → pack type hierarchy.
      */
     public boolean hasMockAccess(User user, Exam exam) {
         if (user == null || exam == null) return false;
@@ -108,6 +109,21 @@ public class SubscriptionService {
 
         // Case 3: Package allows specific mock tests
         if (pack.getExams() != null && pack.getExams().stream().anyMatch(e -> e.getId().equals(exam.getId()))) {
+            return true;
+        }
+
+        // Case 4: Pack type hierarchy (ELITE > PRO > FREE)
+        // If none of the specific access flags matched, fall back to tier comparison.
+        // ELITE subscribers can access all PRO and FREE mocks.
+        // PRO subscribers can access all PRO and FREE mocks.
+        String requiredPack = exam.getRequiredPack().toUpperCase();
+        String packType = pack.getType() != null ? pack.getType().name() : "FREE";
+
+        if (packType.equals("ELITE")) {
+            // ELITE can access everything
+            return true;
+        }
+        if (packType.equals("PRO") && (requiredPack.equals("PRO") || requiredPack.equals("FREE"))) {
             return true;
         }
 
