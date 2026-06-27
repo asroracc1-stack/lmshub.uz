@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { api } from "@/lib/axios";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePackAccess } from "@/hooks/usePackAccess";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
@@ -108,6 +109,9 @@ export default function Packs() {
   const isSuper = role === "super_admin";
   const isManager = role === "PACK_MANAGER" || role === "payment_manager" || isSuper;
 
+  // This is the proven source of truth — used across the entire app
+  const packAccess = usePackAccess();
+
   // Checkout states
   const [checkoutPack, setCheckoutPack] = useState<Pack | null>(null);
   const [selectedAdmin, setSelectedAdmin] = useState<AdminPaymentInfo | null>(null);
@@ -200,7 +204,24 @@ export default function Packs() {
     if (isManager) return 'NONE';
     const now = new Date();
 
-    // 1. Primary: single subscription endpoint (most reliable)
+    // 0. HIGHEST PRIORITY: usePackAccess hook (proven, same as sidebar/MockCategory/Library)
+    if (!packAccess.loading) {
+      const activePack = packAccess.activePack; // "FREE" | "PRO" | "ELITE"
+      const expiresAt = packAccess.expiresAt;
+      const notExpired = !expiresAt || new Date(expiresAt) > now;
+      const pType = p.type.toUpperCase();
+
+      if (notExpired && activePack !== "FREE") {
+        // User has a paid subscription
+        if (pType === "FREE") return 'ACTIVE'; // FREE is always active
+        if (pType === "PRO" && (activePack === "PRO" || activePack === "ELITE")) return 'ACTIVE';
+        if (pType === "ELITE" && activePack === "ELITE") return 'ACTIVE';
+      } else if (activePack === "FREE" && pType === "FREE") {
+        return 'ACTIVE';
+      }
+    }
+
+    // 1. Secondary: single subscription endpoint
     if (activeSubscription) {
       const singlePackType: string = (
         activeSubscription.packType ||
