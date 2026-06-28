@@ -175,9 +175,7 @@ public class AuthService {
 
             user.setLastLoginAt(LocalDateTime.now());
             user.setIsGoogleUser(true);
-            if (isNew[0] || user.getRole() == null) {
-                user.setRole(AppRole.USER);
-            }
+            user.setRole(AppRole.USER);
             if (finalPicture != null && (user.getAvatarUrl() == null || user.getAvatarUrl().trim().isEmpty() || user.getAvatarUrl().startsWith("https://lh3.googleusercontent.com/"))) {
                 user.setAvatarUrl(finalPicture);
             }
