@@ -128,17 +128,21 @@ public class TelegramWebhookController {
             // ─── REJECT ─────────────────────────────────────────────────────
             } else if (data.startsWith("reject_sub:")) {
                 String reqIdStr = data.substring("reject_sub:".length()).trim();
-                log.info("🔴 REJECT request: {}", reqIdStr);
+                log.info("🔴 REJECT request button clicked: {}", reqIdStr);
 
                 // 1. Immediately acknowledge Telegram button press
-                telegramBotService.answerCallbackQuery(queryId, "⏳ Rad etilmoqda...", false);
+                telegramBotService.answerCallbackQuery(queryId, "⏳ Rad etish boshlandi...", false);
 
                 try {
                     UUID requestId = UUID.fromString(reqIdStr);
-                    subscriptionRequestService.rejectRequest(requestId, "Telegram Bot (Admin)");
-                    log.info("❌ Subscription rejected: {}", requestId);
+                    
+                    // Set admin state to AWAITING_REJECTION_REASON and save request ID
+                    telegramBotDispatcher.setAdminAwaitingRejection(adminChatId, requestId);
+                    
+                    // Ask admin to send the reason text
+                    telegramBotService.sendMessageTo(adminChatId, "✍️ Obunani rad etish sababini (izohni) yozib yuboring (bekor qilish uchun /cancel deb yozing):");
 
-                    // 2. Update message in Telegram to remove buttons and show result
+                    // 2. Update message in Telegram to show rejection is pending comment
                     if (message != null && messageId != null) {
                         @SuppressWarnings("unchecked")
                         Map<String, Object> chat = (Map<String, Object>) message.get("chat");
@@ -146,35 +150,18 @@ public class TelegramWebhookController {
                                 ? ((Number) chat.get("id")).longValue()
                                 : (fromId != null ? fromId.longValue() : Long.parseLong(adminChatId));
                         
-                        String suffix = "\n\n❌ <b>RAD ETILDI</b> ❌\n<i>So'rov bekor qilindi.</i>";
+                        String pendingSuffix = "\n\n⏳ <b>RAD ETISH KUTILMOQDA...</b>\n<i>Admin izoh yozishi kutilmoqda.</i>";
                         if (message.containsKey("caption")) {
                             String caption = (String) message.get("caption");
-                            telegramBotService.editMessageCaption(chatIdLong, messageId, caption + suffix);
+                            telegramBotService.editMessageCaption(chatIdLong, messageId, caption + pendingSuffix);
                         } else if (message.containsKey("text")) {
                             String text = (String) message.get("text");
-                            telegramBotService.editMessageText(chatIdLong, messageId, text + suffix);
+                            telegramBotService.editMessageText(chatIdLong, messageId, text + pendingSuffix);
                         }
                     }
 
                 } catch (Exception e) {
-                    log.error("❌ rejectRequest failed: {}", e.getMessage(), e);
-                    // Update Telegram message to show error
-                    if (message != null && messageId != null) {
-                        @SuppressWarnings("unchecked")
-                        Map<String, Object> chat = (Map<String, Object>) message.get("chat");
-                        long chatIdLong = (chat != null && chat.containsKey("id"))
-                                ? ((Number) chat.get("id")).longValue()
-                                : (fromId != null ? fromId.longValue() : Long.parseLong(adminChatId));
-                        
-                        String errorSuffix = "\n\n❌ <b>XATOLIK:</b>\n<code>" + e.getMessage() + "</code>";
-                        if (message.containsKey("caption")) {
-                            String caption = (String) message.get("caption");
-                            telegramBotService.editMessageCaption(chatIdLong, messageId, caption + errorSuffix);
-                        } else if (message.containsKey("text")) {
-                            String text = (String) message.get("text");
-                            telegramBotService.editMessageText(chatIdLong, messageId, text + errorSuffix);
-                        }
-                    }
+                    log.error("❌ reject initialization failed: {}", e.getMessage(), e);
                 }
 
             } else {

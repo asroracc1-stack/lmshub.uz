@@ -50,7 +50,10 @@ export default function ProtectedRoute({ children, allow }: Props) {
   if (!user) return <Navigate to="/auth" replace state={{ from: location.pathname }} />;
   if (!role) return <Navigate to="/auth" replace />;
   if (!allow.includes(role)) {
-    // Strict RBAC: silently redirect to /unauthorized when roles don't match
+    const homePath = roleHomePath[role];
+    if (homePath) {
+      return <Navigate to={homePath} replace />;
+    }
     return <Navigate to="/unauthorized" replace />;
   }
 

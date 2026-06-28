@@ -35,6 +35,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Student Academic Controller", description = "Endpoints for students to view attendance, grades and dashboard stats")
+@org.springframework.transaction.annotation.Transactional(readOnly = true)
 public class StudentAcademicController {
 
     private final AttendanceService attendanceService;

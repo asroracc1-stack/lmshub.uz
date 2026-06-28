@@ -48,6 +48,7 @@ public class TelegramBotDispatcher {
     private final JwtTokenProvider jwtTokenProvider;
     private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
     private final jakarta.persistence.EntityManager entityManager;
+    private final com.lmscrm.backend.service.SubscriptionRequestService subscriptionRequestService;
     private final RestTemplate restTemplate = new RestTemplate();
 
     @Value("${telegram.bot.token}")
@@ -119,8 +120,9 @@ public class TelegramBotDispatcher {
             return;
         }
 
-        // Before doing anything else, check subscription
-        if (!isSubscribed(chatId)) {
+        // Before doing anything else, check subscription (except for admin chat)
+        boolean isAdmin = chatId.equals(adminChatId);
+        if (!isAdmin && !isSubscribed(chatId)) {
             sendSubscriptionRequired(chatId);
             return;
         }
@@ -141,6 +143,9 @@ public class TelegramBotDispatcher {
                 break;
             case AWAITING_ADMIN_LOGIN:
                 handleAdminLogin(chatId, text, state);
+                break;
+            case AWAITING_REJECTION_REASON:
+                handleRejectionReasonInput(chatId, text, state);
                 break;
             case MAIN_MENU:
                 handleMainMenu(chatId, text, state);
@@ -835,7 +840,7 @@ public class TelegramBotDispatcher {
         sendMessageWithMarkup(chatId, BotConstants.MSG_NOT_SUBSCRIBED, KeyboardFactory.createChannelCheckInline());
     }
 
-    private BotUserState getOrCreateState(String chatId) {
+    public BotUserState getOrCreateState(String chatId) {
         return stateRepository.findByTelegramChatId(chatId)
                 .orElseGet(() -> {
                     BotUserState s = new BotUserState();
@@ -843,6 +848,45 @@ public class TelegramBotDispatcher {
                     s.setState(BotState.START);
                     return stateRepository.save(s);
                 });
+    }
+
+    public void setAdminAwaitingRejection(String adminChatId, java.util.UUID requestId) {
+        BotUserState state = getOrCreateState(adminChatId);
+        state.setState(BotState.AWAITING_REJECTION_REASON);
+        state.setSelectedPackId(requestId.toString());
+        stateRepository.save(state);
+    }
+
+    private void handleRejectionReasonInput(String chatId, String text, BotUserState state) {
+        if ("/cancel".equalsIgnoreCase(text) || "bekor qilish".equalsIgnoreCase(text.toLowerCase())) {
+            state.setState(BotState.MAIN_MENU);
+            state.setSelectedPackId(null);
+            stateRepository.save(state);
+            telegramBotService.sendMessageTo(chatId, "❌ Rad etish bekor qilindi.");
+            return;
+        }
+
+        String reqIdStr = state.getSelectedPackId();
+        if (reqIdStr == null || reqIdStr.isEmpty()) {
+            state.setState(BotState.MAIN_MENU);
+            stateRepository.save(state);
+            telegramBotService.sendMessageTo(chatId, "Xatolik: So'rov topilmadi.");
+            return;
+        }
+
+        try {
+            java.util.UUID requestId = java.util.UUID.fromString(reqIdStr);
+            subscriptionRequestService.rejectRequest(requestId, "Telegram Bot (Admin)", text);
+            
+            state.setState(BotState.MAIN_MENU);
+            state.setSelectedPackId(null);
+            stateRepository.save(state);
+            
+            telegramBotService.sendMessageTo(chatId, "✅ Obuna so'rovi rad etildi va izoh foydalanuvchiga yuborildi.");
+        } catch (Exception e) {
+            log.error("Failed to reject request from bot: {}", e.getMessage(), e);
+            telegramBotService.sendMessageTo(chatId, "❌ Xatolik yuz berdi: " + e.getMessage());
+        }
     }
 
     private boolean isSubscribed(String chatId) {
