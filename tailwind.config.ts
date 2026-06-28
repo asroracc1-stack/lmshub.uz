@@ -130,8 +130,8 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        display: ['"Manrope"', 'system-ui', 'sans-serif'],
-        sans: ['"Manrope"', 'system-ui', 'sans-serif'],
+        display: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+        sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
         mono: ['"JetBrains Mono"', 'monospace'],
       },
       keyframes: {
