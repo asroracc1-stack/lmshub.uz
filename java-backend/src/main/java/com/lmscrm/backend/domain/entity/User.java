@@ -69,7 +69,8 @@ public class User implements UserDetails {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private AppRole role;
+    @Builder.Default
+    private AppRole role = AppRole.USER;
 
     @Column(nullable = false)
     @Builder.Default
