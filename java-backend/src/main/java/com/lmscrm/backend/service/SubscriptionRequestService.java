@@ -171,15 +171,9 @@ public class SubscriptionRequestService {
         repository.save(request);
         log.info("✅ Step 1: Status APPROVED saved");
 
-        // 1. Upgrade user role from USER to STUDENT
+        // 1. Keep user role in their own role (no automatic upgrade to STUDENT)
         User user = request.getUser();
-        if (user.getRole() == AppRole.USER) {
-            user.setRole(AppRole.STUDENT);
-            userRepository.save(user);
-            log.info("✅ Step 2: User role upgraded to STUDENT: {}", user.getUsername());
-        } else {
-            log.info("ℹ Step 2: User {} already has role {}", user.getUsername(), user.getRole());
-        }
+        log.info("ℹ Step 2: User {} remains in role {}", user.getUsername(), user.getRole());
 
         // 2. Insert or update user_subscriptions table
         SubscriptionPack pack = request.getPack();

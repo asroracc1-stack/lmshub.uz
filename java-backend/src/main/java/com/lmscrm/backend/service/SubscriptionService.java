@@ -31,7 +31,6 @@ public class SubscriptionService {
 
         List<UserSubscription> subscriptions = userSubscriptionRepository.findByUserId(user.getId());
         LocalDateTime now = LocalDateTime.now();
-        boolean roleChanged = false;
         boolean hasAnyActive = false;
 
         for (UserSubscription sub : subscriptions) {
@@ -40,17 +39,16 @@ public class SubscriptionService {
                     sub.setIsActive(false);
                     sub.setStatus("EXPIRED");
                     userSubscriptionRepository.save(sub);
-                    roleChanged = true;
                 } else {
                     hasAnyActive = true;
                 }
             }
         }
 
-        if (roleChanged && !hasAnyActive && user.getRole() == AppRole.STUDENT) {
+        if (!hasAnyActive && user.getRole() == AppRole.STUDENT) {
             user.setRole(AppRole.USER);
             userRepository.save(user);
-            log.info("Downgraded user {} to USER role due to subscription expiration", user.getUsername());
+            log.info("Downgraded user {} to USER role due to no active subscriptions", user.getUsername());
         }
     }
 

@@ -1506,7 +1506,7 @@ export default function Packs() {
           </div>
           <h3 className="text-2xl font-black tracking-tight text-slate-800 dark:text-white">To'lov yuborildi! 🎉</h3>
           <p className="text-sm text-slate-400 font-medium mt-3 leading-relaxed">
-            Tez orada mas'ul adminlar to'lovingizni tekshirib <b>{requestSent?.name}</b>{t("dynamic.packs.paketingizni_faollashtiradi_va_profiling")}<b>{t("dynamic.packs.student")}</b> roliga ko'tariladi. Telegram orqali xabar yuborildi!
+            Tez orada mas'ul adminlar to'lovingizni tekshirib <b>{requestSent?.name}</b> paketingizni faollashtiradi. Telegram orqali xabar yuborildi!
           </p>
           <Button onClick={() => setRequestSent(null)} className="w-full mt-8 bg-purple-500 hover:bg-purple-600 text-white rounded-2xl h-14 font-black uppercase text-xs tracking-widest shadow-lg shadow-purple-500/20">
             Tushunarli
