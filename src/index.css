@@ -431,3 +431,8 @@
   transition: background-color 400ms ease, color 400ms ease, border-color 400ms ease, box-shadow 400ms ease, filter 400ms ease, transform 400ms ease !important;
 }
 
+/* Sidebar Navigation Link Font Override */
+.sidebar-nav-link {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif !important;
+}
+

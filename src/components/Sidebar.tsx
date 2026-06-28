@@ -71,11 +71,11 @@ const Sidebar = ({ isCollapsed, isMenuOpen, setIsMenuOpen }: SidebarProps) => {
               onClick={() => handleItemClick(item.path)}
               title={isCollapsed ? item.name : undefined}
               className={`
-                w-full flex items-center rounded-2xl transition-all duration-200 group
+                w-full flex items-center rounded-2xl transition-all duration-200 group sidebar-nav-link
                 ${isCollapsed ? 'md:justify-center md:p-3.5' : 'justify-start px-4 py-3.5'}
                 ${isActive 
-                  ? 'bg-[#4ab658] text-white shadow-md shadow-[#4ab658]/20' 
-                  : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
+                  ? 'bg-[#4ab658] text-white shadow-md shadow-[#4ab658]/20 font-bold' 
+                  : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white font-semibold'
                 }
               `}
             >
@@ -87,7 +87,7 @@ const Sidebar = ({ isCollapsed, isMenuOpen, setIsMenuOpen }: SidebarProps) => {
               
               <span 
                 className={`
-                  font-semibold whitespace-nowrap transition-all duration-300 origin-left text-[15px]
+                  whitespace-nowrap transition-all duration-300 origin-left text-[15px]
                   ${isCollapsed ? 'md:w-0 md:opacity-0 md:hidden md:ml-0' : 'w-auto opacity-100 block ml-4'}
                 `}
               >
