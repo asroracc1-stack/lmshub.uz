@@ -134,6 +134,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
            const userData = JSON.parse(savedUser) as User;
            userData.avatarUrl = mappedProfile.avatar_url || undefined;
            userData.organizationId = mappedProfile.organization_id;
+           if (res.data.role) {
+             userData.role = res.data.role;
+             setRole(mapBackendRole(res.data.role));
+           }
+           setUser(userData);
            localStorage.setItem('user', JSON.stringify(userData));
          }
        } catch (e: any) {
@@ -189,6 +194,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               exam_date: res.data.examDate || null,
             };
             setProfile(refreshedProfile);
+
+            // Sync user and role state with refreshed data from server
+            if (res.data.role) {
+              const updatedRole = mapBackendRole(res.data.role);
+              setRole(updatedRole);
+              
+              const updatedUser: User = {
+                ...userData,
+                role: res.data.role,
+                avatarUrl: refreshedProfile.avatar_url || undefined,
+                organizationId: refreshedProfile.organization_id,
+              };
+              setUser(updatedUser);
+              localStorage.setItem('user', JSON.stringify(updatedUser));
+            }
           } catch (refreshErr: any) {
             const status = refreshErr?.response?.status;
             if (status === 401 || status === 403) {

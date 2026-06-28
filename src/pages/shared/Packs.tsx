@@ -1824,6 +1824,13 @@ export default function Packs() {
               Bu paketni butunlay tizimdan o'chirasiz. Bu amalni qaytarib bo'lmaydi.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <AlertDialogFooter className="mt-6 flex gap-3">
+            <AlertDialogCancel className="rounded-xl border border-slate-100 hover:bg-slate-50 dark:border-white/5 dark:hover:bg-white/5">
+              {t("dynamic.finance.bekor_qilish") || "Bekor qilish"}
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={deletePack} className="bg-rose-500 hover:bg-rose-600 text-white rounded-xl shadow-lg shadow-rose-500/20 border-none">
+              {t("dynamic.finance.o_chirish") || "O'chirish"}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
