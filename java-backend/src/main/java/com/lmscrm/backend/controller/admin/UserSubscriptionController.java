@@ -2,6 +2,7 @@ package com.lmscrm.backend.controller.admin;
 
 import com.lmscrm.backend.domain.entity.User;
 import com.lmscrm.backend.domain.entity.UserSubscription;
+import com.lmscrm.backend.domain.entity.SubscriptionPack;
 import com.lmscrm.backend.repository.UserRepository;
 import com.lmscrm.backend.repository.UserSubscriptionRepository;
 import jakarta.persistence.EntityManager;
