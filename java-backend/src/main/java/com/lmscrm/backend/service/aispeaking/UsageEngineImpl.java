@@ -3,8 +3,10 @@ package com.lmscrm.backend.service.aispeaking;
 import com.lmscrm.backend.domain.entity.SubscriptionPack;
 import com.lmscrm.backend.domain.entity.UserAiUsage;
 import com.lmscrm.backend.domain.entity.UserSubscription;
+import com.lmscrm.backend.domain.enums.AppRole;
 import com.lmscrm.backend.exception.AISubscriptionException;
 import com.lmscrm.backend.repository.UserAiUsageRepository;
+import com.lmscrm.backend.repository.UserRepository;
 import com.lmscrm.backend.repository.UserSubscriptionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,11 +23,24 @@ public class UsageEngineImpl implements UsageEngine {
 
     private final UserSubscriptionRepository userSubscriptionRepository;
     private final UserAiUsageRepository userAiUsageRepository;
+    private final UserRepository userRepository;
+
+    /** SUPER_ADMIN and ADMIN always bypass subscription and usage limits. */
+    private boolean isBypassRole(UUID userId) {
+        return userRepository.findById(userId)
+                .map(u -> u.getRole() == AppRole.SUPER_ADMIN || u.getRole() == AppRole.ADMIN)
+                .orElse(false);
+    }
 
     @Override
     @Transactional(readOnly = true)
     public void checkLimit(UUID userId, String featureCode, int amountToConsume) {
         log.info("[UsageEngine] Checking limit for user: {}, feature: {}, amount: {}", userId, featureCode, amountToConsume);
+        // Admins and super-admins are never restricted by subscription limits
+        if (isBypassRole(userId)) {
+            log.info("[UsageEngine] Bypass: user {} is admin/super_admin, skipping limit check.", userId);
+            return;
+        }
 
         // Find active subscription pack
         List<UserSubscription> subscriptions = userSubscriptionRepository.findByUserId(userId);
@@ -103,6 +118,11 @@ public class UsageEngineImpl implements UsageEngine {
     @Transactional
     public void recordUsage(UUID userId, String featureCode, int amountConsumed) {
         log.info("[UsageEngine] Recording usage for user: {}, feature: {}, amount: {}", userId, featureCode, amountConsumed);
+        // Admins usage is still tracked but limits are never enforced
+        if (isBypassRole(userId)) {
+            log.info("[UsageEngine] Bypass: user {} is admin/super_admin, skipping usage recording.", userId);
+            return;
+        }
         UserAiUsage usage = findOrCreateUsage(userId);
         verifyResetCycle(usage);
 
