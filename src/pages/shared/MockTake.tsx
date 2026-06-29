@@ -24,7 +24,8 @@ import {
   BookOpen, ChevronLeft, ChevronRight, Flag, Play, Pause,
   Volume2, VolumeX, Maximize2, Minimize2, Mic, Calculator, X, PenLine, XCircle,
   Award, Target, ThumbsUp, Lightbulb, BookMarked, Sun, Moon,
-  Shield, Grid, CheckSquare, Menu, ArrowRight, ArrowLeft, Bookmark, GripHorizontal
+  Shield, Grid, CheckSquare, Menu, ArrowRight, ArrowLeft, Bookmark, GripHorizontal,
+  ChevronUp
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
@@ -634,6 +635,247 @@ function CustomAudioPlayer({ src, isExternalPaused }: { src: string, isExternalP
   );
 }
 
+function LineFocusOverlay({ isActive }: { isActive: boolean }) {
+  const [mouseY, setMouseY] = useState(0);
+  const [height, setHeight] = useState(60);
+
+  useEffect(() => {
+    if (!isActive) return;
+    const handleMouseMove = (e: MouseEvent) => {
+      setMouseY(e.clientY);
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, [isActive]);
+
+  if (!isActive) return null;
+
+  return (
+    <div className="fixed inset-0 pointer-events-none z-40 select-none">
+      <div 
+        className="bg-black/50 absolute top-0 left-0 right-0 transition-[height] duration-75"
+        style={{ height: `${Math.max(0, mouseY - height / 2)}px` }}
+      />
+      <div 
+        className="border-y-2 border-yellow-400/80 absolute left-0 right-0 bg-transparent pointer-events-auto cursor-ns-resize shadow-[0_0_15px_rgba(250,204,21,0.2)]"
+        style={{ 
+          top: `${Math.max(0, mouseY - height / 2)}px`, 
+          height: `${height}px` 
+        }}
+        title="O'lchamni o'zgartirish uchun aylantiring (Scroll)"
+        onWheel={(e) => {
+          setHeight(h => Math.max(30, Math.min(200, h + (e.deltaY > 0 ? 10 : -10))));
+        }}
+      />
+      <div 
+        className="bg-black/50 absolute bottom-0 left-0 right-0"
+        style={{ top: `${mouseY + height / 2}px` }}
+      />
+    </div>
+  );
+}
+
+function MathReferenceModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+      <div className="bg-white dark:bg-[#0b1624] border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-4xl max-h-[85vh] overflow-hidden shadow-2xl flex flex-col animate-in fade-in zoom-in-95 duration-200">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 shrink-0">
+          <h3 className="font-bold text-lg text-slate-800 dark:text-white flex items-center gap-2">
+            <BookOpen className="h-5 w-5 text-blue-500" /> Reference Sheet (Matematik Formulalar)
+          </h3>
+          <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+        
+        {/* Content */}
+        <div className="p-6 overflow-y-auto space-y-8 flex-1">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            
+            {/* Circle */}
+            <div className="border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex flex-col items-center text-center bg-slate-50/50 dark:bg-slate-950/10">
+              <svg width="60" height="60" viewBox="0 0 60 60" className="text-slate-750 dark:text-slate-300">
+                <circle cx="30" cy="30" r="22" stroke="currentColor" strokeWidth="2" fill="none" />
+                <line x1="30" y1="30" x2="52" y2="30" stroke="currentColor" strokeWidth="1.5" strokeDasharray="2,2" />
+                <circle cx="30" cy="30" r="2" fill="currentColor" />
+                <text x="40" y="24" fontSize="10" fill="currentColor" fontWeight="bold">r</text>
+              </svg>
+              <div className="mt-2 text-xs font-bold text-slate-800 dark:text-slate-200">
+                <p>A = πr²</p>
+                <p>C = 2πr</p>
+              </div>
+            </div>
+
+            {/* Rectangle */}
+            <div className="border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex flex-col items-center text-center bg-slate-50/50 dark:bg-slate-950/10">
+              <svg width="60" height="60" viewBox="0 0 60 60" className="text-slate-750 dark:text-slate-300">
+                <rect x="10" y="15" width="40" height="30" stroke="currentColor" strokeWidth="2" fill="none" />
+                <text x="30" y="42" fontSize="10" fill="currentColor" textAnchor="middle" fontWeight="bold">l</text>
+                <text x="5" y="33" fontSize="10" fill="currentColor" fontWeight="bold">w</text>
+              </svg>
+              <div className="mt-2 text-xs font-bold text-slate-800 dark:text-slate-200">
+                <p>A = lw</p>
+              </div>
+            </div>
+
+            {/* Triangle */}
+            <div className="border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex flex-col items-center text-center bg-slate-50/50 dark:bg-slate-950/10">
+              <svg width="60" height="60" viewBox="0 0 60 60" className="text-slate-750 dark:text-slate-300">
+                <polygon points="10,45 50,45 35,15" stroke="currentColor" strokeWidth="2" fill="none" />
+                <line x1="35" y1="15" x2="35" y2="45" stroke="currentColor" strokeWidth="1.5" strokeDasharray="2,2" />
+                <rect x="32" y="42" width="3" height="3" stroke="currentColor" strokeWidth="1" fill="none" />
+                <text x="39" y="32" fontSize="9" fill="currentColor" fontWeight="bold">h</text>
+                <text x="25" y="55" fontSize="10" fill="currentColor" fontWeight="bold">b</text>
+              </svg>
+              <div className="mt-2 text-xs font-bold text-slate-800 dark:text-slate-200">
+                <p>A = ½bh</p>
+              </div>
+            </div>
+
+            {/* Pythagorean Theorem */}
+            <div className="border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex flex-col items-center text-center bg-slate-50/50 dark:bg-slate-950/10">
+              <svg width="60" height="60" viewBox="0 0 60 60" className="text-slate-750 dark:text-slate-300">
+                <polygon points="15,15 15,45 45,45" stroke="currentColor" strokeWidth="2" fill="none" />
+                <rect x="15" y="42" width="3" height="3" stroke="currentColor" strokeWidth="1" fill="none" />
+                <text x="8" y="33" fontSize="10" fill="currentColor" fontWeight="bold">a</text>
+                <text x="28" y="55" fontSize="10" fill="currentColor" fontWeight="bold">b</text>
+                <text x="32" y="28" fontSize="10" fill="currentColor" fontWeight="bold">c</text>
+              </svg>
+              <div className="mt-2 text-xs font-bold text-slate-800 dark:text-slate-200">
+                <p>c² = a² + b²</p>
+              </div>
+            </div>
+
+            {/* Special Right Triangle 1 */}
+            <div className="border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex flex-col items-center text-center bg-slate-50/50 dark:bg-slate-950/10">
+              <svg width="60" height="60" viewBox="0 0 60 60" className="text-slate-750 dark:text-slate-300">
+                <polygon points="15,15 15,45 45,45" stroke="currentColor" strokeWidth="2" fill="none" />
+                <rect x="15" y="42" width="3" height="3" stroke="currentColor" strokeWidth="1" fill="none" />
+                <text x="8" y="33" fontSize="10" fill="currentColor" fontWeight="bold">s</text>
+                <text x="28" y="55" fontSize="10" fill="currentColor" fontWeight="bold">s</text>
+                <text x="32" y="28" fontSize="10" fill="currentColor" fontWeight="bold">s√2</text>
+                <text x="18" y="25" fontSize="8" fill="currentColor">45°</text>
+                <text x="33" y="43" fontSize="8" fill="currentColor">45°</text>
+              </svg>
+              <div className="mt-2 text-[10px] font-bold text-slate-800 dark:text-slate-200 leading-tight">
+                <p>45°-45°-90°</p>
+              </div>
+            </div>
+
+            {/* Special Right Triangle 2 */}
+            <div className="border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex flex-col items-center text-center bg-slate-50/50 dark:bg-slate-950/10">
+              <svg width="70" height="60" viewBox="0 0 70 60" className="text-slate-750 dark:text-slate-300">
+                <polygon points="15,10 15,50 65,50" stroke="currentColor" strokeWidth="2" fill="none" />
+                <rect x="15" y="47" width="3" height="3" stroke="currentColor" strokeWidth="1" fill="none" />
+                <text x="5" y="33" fontSize="10" fill="currentColor" fontWeight="bold">x</text>
+                <text x="35" y="58" fontSize="10" fill="currentColor" fontWeight="bold">x√3</text>
+                <text x="42" y="28" fontSize="10" fill="currentColor" fontWeight="bold">2x</text>
+                <text x="18" y="22" fontSize="8" fill="currentColor">60°</text>
+                <text x="48" y="48" fontSize="8" fill="currentColor">30°</text>
+              </svg>
+              <div className="mt-2 text-[10px] font-bold text-slate-800 dark:text-slate-200 leading-tight">
+                <p>30°-60°-90°</p>
+              </div>
+            </div>
+
+            {/* Cylinder */}
+            <div className="border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex flex-col items-center text-center bg-slate-50/50 dark:bg-slate-950/10">
+              <svg width="60" height="60" viewBox="0 0 60 60" className="text-slate-750 dark:text-slate-300">
+                <ellipse cx="30" cy="15" rx="15" ry="5" stroke="currentColor" strokeWidth="2" fill="none" />
+                <ellipse cx="30" cy="45" rx="15" ry="5" stroke="currentColor" strokeWidth="2" fill="none" />
+                <line x1="15" y1="15" x2="15" y2="45" stroke="currentColor" strokeWidth="2" />
+                <line x1="45" y1="15" x2="45" y2="45" stroke="currentColor" strokeWidth="2" />
+                <line x1="30" y1="15" x2="45" y2="15" stroke="currentColor" strokeWidth="1" strokeDasharray="2,2" />
+                <text x="38" y="13" fontSize="8" fill="currentColor">r</text>
+                <text x="48" y="33" fontSize="9" fill="currentColor">h</text>
+              </svg>
+              <div className="mt-2 text-xs font-bold text-slate-800 dark:text-slate-200">
+                <p>V = πr²h</p>
+              </div>
+            </div>
+
+            {/* Prism */}
+            <div className="border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex flex-col items-center text-center bg-slate-50/50 dark:bg-slate-950/10">
+              <svg width="60" height="60" viewBox="0 0 60 60" className="text-slate-750 dark:text-slate-300">
+                <rect x="10" y="20" width="30" height="25" stroke="currentColor" strokeWidth="2" fill="none" />
+                <rect x="20" y="10" width="30" height="25" stroke="currentColor" strokeWidth="2" strokeDasharray="3,3" fill="none" />
+                <line x1="10" y1="20" x2="20" y2="10" stroke="currentColor" strokeWidth="2" />
+                <line x1="40" y1="20" x2="50" y2="10" stroke="currentColor" strokeWidth="2" />
+                <line x1="10" y1="45" x2="20" y2="35" stroke="currentColor" strokeWidth="2" strokeDasharray="3,3" />
+                <line x1="40" y1="45" x2="50" y2="35" stroke="currentColor" strokeWidth="2" />
+                <text x="25" y="54" fontSize="9" fill="currentColor">l</text>
+                <text x="45" y="42" fontSize="9" fill="currentColor">w</text>
+                <text x="5" y="33" fontSize="9" fill="currentColor">h</text>
+              </svg>
+              <div className="mt-2 text-xs font-bold text-slate-800 dark:text-slate-200">
+                <p>V = lwh</p>
+              </div>
+            </div>
+
+            {/* Sphere */}
+            <div className="border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex flex-col items-center text-center bg-slate-50/50 dark:bg-slate-950/10">
+              <svg width="60" height="60" viewBox="0 0 60 60" className="text-slate-750 dark:text-slate-300">
+                <circle cx="30" cy="30" r="22" stroke="currentColor" strokeWidth="2" fill="none" />
+                <ellipse cx="30" cy="30" rx="22" ry="7" stroke="currentColor" strokeWidth="1" strokeDasharray="2,2" fill="none" />
+                <line x1="30" y1="30" x2="52" y2="30" stroke="currentColor" strokeWidth="1.5" strokeDasharray="2,2" />
+                <text x="41" y="25" fontSize="8" fill="currentColor">r</text>
+              </svg>
+              <div className="mt-2 text-xs font-bold text-slate-800 dark:text-slate-200">
+                <p>V = ⁴/₃πr³</p>
+              </div>
+            </div>
+
+            {/* Cone */}
+            <div className="border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex flex-col items-center text-center bg-slate-50/50 dark:bg-slate-950/10">
+              <svg width="60" height="60" viewBox="0 0 60 60" className="text-slate-750 dark:text-slate-300">
+                <ellipse cx="30" cy="45" rx="18" ry="6" stroke="currentColor" strokeWidth="2" fill="none" />
+                <line x1="12" y1="45" x2="30" y2="15" stroke="currentColor" strokeWidth="2" />
+                <line x1="48" y1="45" x2="30" y2="15" stroke="currentColor" strokeWidth="2" />
+                <line x1="30" y1="15" x2="30" y2="45" stroke="currentColor" strokeWidth="1.5" strokeDasharray="2,2" />
+                <line x1="30" y1="45" x2="48" y2="45" stroke="currentColor" strokeWidth="1" strokeDasharray="2,2" />
+                <text x="36" y="42" fontSize="8" fill="currentColor">r</text>
+                <text x="25" y="32" fontSize="8" fill="currentColor">h</text>
+              </svg>
+              <div className="mt-2 text-xs font-bold text-slate-800 dark:text-slate-200">
+                <p>V = ⅓πr²h</p>
+              </div>
+            </div>
+
+            {/* Pyramid */}
+            <div className="border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex flex-col items-center text-center bg-slate-50/50 dark:bg-slate-950/10">
+              <svg width="60" height="60" viewBox="0 0 60 60" className="text-slate-750 dark:text-slate-300">
+                <polygon points="10,40 25,45 50,40 30,15" stroke="currentColor" strokeWidth="1.5" fill="none" />
+                <line x1="10" y1="40" x2="30" y2="30" stroke="currentColor" strokeWidth="1" strokeDasharray="2,2" />
+                <line x1="50" y1="40" x2="30" y2="30" stroke="currentColor" strokeWidth="1" strokeDasharray="2,2" />
+                <line x1="30" y1="15" x2="30" y2="38" stroke="currentColor" strokeWidth="1.5" strokeDasharray="2,2" />
+                <text x="18" y="46" fontSize="8" fill="currentColor">l</text>
+                <text x="38" y="46" fontSize="8" fill="currentColor">w</text>
+                <text x="25" y="28" fontSize="8" fill="currentColor">h</text>
+              </svg>
+              <div className="mt-2 text-xs font-bold text-slate-800 dark:text-slate-200">
+                <p>V = ⅓lwh</p>
+              </div>
+            </div>
+            
+          </div>
+          
+          {/* Bottom text rules */}
+          <div className="border-t border-slate-200 dark:border-slate-800 pt-6 text-sm text-slate-600 dark:text-slate-400 space-y-2">
+            <h4 className="font-bold text-slate-800 dark:text-white text-xs uppercase tracking-wider">Qo'shimcha ma'lumotlar (Additional Information):</h4>
+            <ul className="list-disc pl-5 space-y-1 text-xs">
+              <li>Aylanadagi yoy darajalarining yig'indisi 360° ga teng. (The number of degrees of arc in a circle is 360.)</li>
+              <li>Aylanadagi yoy radianlarining yig'indisi 2π ga teng. (The number of radians of arc in a circle is 2π.)</li>
+              <li>Uchburchak ichki burchaklarining yig'indisi 180° ga teng. (The sum of the measures in degrees of the angles of a triangle is 180.)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function MockTake() {
   const { t } = useTranslation();
   const { theme, toggle } = useTheme();
@@ -666,6 +908,20 @@ export default function MockTake() {
   const [showCalculator, setShowCalculator] = useState(false);
   const [showScratchpad, setShowScratchpad] = useState(false);
   const [grading, setGrading] = useState(false);
+
+  // SAT Specific States
+  const [showTimerText, setShowTimerText] = useState(true);
+  const [strikethroughMode, setStrikethroughMode] = useState(false);
+  const [crossedOut, setCrossedOut] = useState<Record<string, string[]>>({});
+  const [showDirections, setShowDirections] = useState(false);
+  const [showReferenceModal, setShowReferenceModal] = useState(false);
+  const [showLineFocus, setShowLineFocus] = useState(false);
+  const [splitterPos, setSplitterPos] = useState(50);
+  const [showNavigatorMenu, setShowNavigatorMenu] = useState(false);
+  const [alertedFiveMin, setAlertedFiveMin] = useState(false);
+  const [isOnBreak, setIsOnBreak] = useState(false);
+  const [breakTimeLeft, setBreakTimeLeft] = useState(600);
+  const [breakTriggered, setBreakTriggered] = useState(false);
   
   const [cheatingStrikes, setCheatingStrikes] = useState(0);
   const [showCheatingWarning, setShowCheatingWarning] = useState(false);
@@ -940,7 +1196,40 @@ export default function MockTake() {
     return () => clearInterval(interval);
   }, [started, isPaused, result, activeQuestionIndex, questions, showSuccessAnimation]);
 
+  const isCrossed = (qid: string, optText: string) => {
+    return crossedOut[qid]?.includes(optText) ?? false;
+  };
+
+  const toggleCrossOut = (qid: string, optText: string) => {
+    setCrossedOut(prev => {
+      const list = prev[qid] ?? [];
+      const nextList = list.includes(optText) 
+        ? list.filter(t => t !== optText)
+        : [...list, optText];
+      
+      // Clear answer if selected option gets crossed out
+      if (answers[qid] === optText) {
+        setAnswers(p => {
+          const next = { ...p };
+          delete next[qid];
+          try { localStorage.setItem(`lmshub_exam_${testId}`, JSON.stringify(next)); } catch {}
+          return next;
+        });
+      }
+      return { ...prev, [qid]: nextList };
+    });
+  };
+
   const onAnswer = (qid: string, val: string) => {
+    // If it was crossed out, remove it from crossedOut list
+    setCrossedOut(prev => {
+      const list = prev[qid] ?? [];
+      if (list.includes(val)) {
+        return { ...prev, [qid]: list.filter(t => t !== val) };
+      }
+      return prev;
+    });
+
     setAnswers((p) => {
       const next = { ...p, [qid]: val };
       try { localStorage.setItem(`lmshub_exam_${testId}`, JSON.stringify(next)); } catch { /* ignore */ }
@@ -949,6 +1238,67 @@ export default function MockTake() {
   };
 
   const toggleFlag = (qid: string) => setFlagged((p) => { const n = new Set(p); n.has(qid) ? n.delete(qid) : n.add(qid); return n; });
+
+  const isResizing = useRef(false);
+  const startResizing = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    isResizing.current = true;
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+
+    const handleMouseMove = (ev: MouseEvent) => {
+      if (!isResizing.current) return;
+      const newPos = (ev.clientX / window.innerWidth) * 100;
+      setSplitterPos(Math.max(25, Math.min(75, newPos)));
+    };
+
+    const handleMouseUp = () => {
+      isResizing.current = false;
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  }, []);
+
+  const skipBreak = () => {
+    setIsOnBreak(false);
+    setActiveQuestionIndex(i => Math.min(questions.length - 1, i + 1));
+  };
+
+  // 5 Minutes Remaining Timer Alert
+  useEffect(() => {
+    if (started && !result && timeLeft > 0 && timeLeft <= 300 && !alertedFiveMin) {
+      setAlertedFiveMin(true);
+      setShowTimerText(true);
+      toast.warning(
+        isMilliy 
+          ? "Ogohlantirish! Imtihon tugashiga 5 daqiqadan kam vaqt qoldi. Taymer endi yashirilmaydi!" 
+          : "Warning! Less than 5 minutes remaining. The timer cannot be hidden now!", 
+        { duration: 6000 }
+      );
+    }
+  }, [timeLeft, alertedFiveMin, started, result, isMilliy]);
+
+  // Break Screen Countdown Timer
+  useEffect(() => {
+    if (!isOnBreak) return;
+    const interval = setInterval(() => {
+      setBreakTimeLeft(t => {
+        if (t <= 1) {
+          clearInterval(interval);
+          setIsOnBreak(false);
+          setActiveQuestionIndex(i => Math.min(questions.length - 1, i + 1));
+          return 0;
+        }
+        return t - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [isOnBreak, questions.length]);
 
   const submit = async (auto = false) => {
     if (submitting || !exam) return;
@@ -1079,6 +1429,47 @@ export default function MockTake() {
   const handleSubmitRequest = () => {
     setShowReviewScreen(true);
   };
+
+  if (isOnBreak) {
+    return (
+      <div className="min-h-screen w-full flex flex-col items-center justify-center p-6 bg-slate-900 text-white font-sans">
+        <div className="max-w-md w-full bg-slate-950 border border-slate-800 rounded-3xl p-8 text-center shadow-2xl space-y-6">
+          <div className="relative mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-blue-500/10">
+            <Clock className="h-10 w-10 text-blue-500 animate-pulse" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-black tracking-tight">{isMilliy ? "Tanaffus Vaqti! ☕" : "Take a Break! ☕"}</h2>
+            <p className="text-sm text-slate-400 mt-2">
+              {isMilliy 
+                ? "Siz imtihonning birinchi qismini yakunladingiz. Hozir 10 daqiqalik rasmiy tanaffus vaqti." 
+                : "You have completed the first section of the exam. Take an official 10-minute break before starting Math."}
+            </p>
+          </div>
+          
+          <div className="bg-slate-900 border border-slate-850 p-6 rounded-2xl">
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">
+              {isMilliy ? "Qolgan tanaffus vaqti" : "Break Time Remaining"}
+            </span>
+            <span className="text-4xl font-mono font-bold text-blue-400">
+              {Math.floor(breakTimeLeft / 60)}:{String(breakTimeLeft % 60).padStart(2, "0")}
+            </span>
+          </div>
+
+          <div className="space-y-3">
+            <Button
+              onClick={skipBreak}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold h-12 rounded-xl transition-all shadow-lg shadow-blue-500/25 border-none"
+            >
+              {isMilliy ? "Tanaffusni o'tkazib yuborish" : "Skip Break & Continue"}
+            </Button>
+            <p className="text-[10px] text-slate-500">
+              {isMilliy ? "Tayyor bo'lganingizda keyingi bo'limni boshlashingiz mumkin." : "You can proceed to the Math section whenever you are ready."}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-white text-slate-800 font-sans">
@@ -1451,6 +1842,187 @@ export default function MockTake() {
     );
   }
 
+  const renderQuestionArea = (q: NormalQ) => {
+    const isSelected = (text: string) => answers[q.id] === text;
+    const isFlg = flagged.has(q.id);
+
+    return (
+      <div key={q.id} className="w-full animate-in fade-in duration-200">
+        
+        {/* QUESTION HEADER */}
+        <div className={cn("flex items-center justify-between border-b pb-4 mb-6", 
+          isSat 
+            ? "border-slate-200 dark:border-slate-800" 
+            : (isMilliy ? "border-[#10b981]" : "border-[#0f2c59] dark:border-blue-500")
+        )}>
+          <div className="flex items-center gap-2">
+            <div className={cn("h-7 w-7 text-white flex items-center justify-center text-xs font-black rounded-lg", 
+              isSat
+                ? "bg-[#002d62]"
+                : (isMilliy ? "bg-[#0a192f]" : "bg-[#0f2c59] dark:bg-blue-600")
+            )}>
+              {q.position}
+            </div>
+            <span className={cn("text-xs font-black uppercase tracking-wider", 
+              isSat
+                ? "text-[#002d62] dark:text-blue-400"
+                : (isMilliy ? "text-[#059669] dark:text-[#10b981]" : "text-[#0f2c59] dark:text-blue-400")
+            )}>
+              {isMilliy ? `${q.position} - savol` : `Question ${q.position}`}
+            </span>
+          </div>
+
+          <div className="flex items-center">
+            {/* Answer Eliminator button for SAT */}
+            {isSat && q.options && q.options.length > 0 && (
+              <button
+                onClick={() => setStrikethroughMode(!strikethroughMode)}
+                className={cn(
+                  "flex items-center text-[10px] sm:text-xs font-bold uppercase tracking-wider px-3 py-1.5 border-2 transition-colors mr-2 rounded-xl",
+                  strikethroughMode 
+                    ? "border-red-500 bg-red-50/50 dark:bg-red-950/20 text-red-600 dark:text-red-400" 
+                    : "border-slate-200 hover:border-red-400 hover:text-red-500 dark:border-slate-800 dark:hover:border-red-950 text-slate-505"
+                )}
+                title={isMilliy ? "Variantlarni o'chirish" : "Toggle Answer Eliminator"}
+              >
+                <XCircle className="w-3.5 h-3.5 mr-1.5" />
+                <span className="hidden sm:inline">{isMilliy ? "O'chirish" : "Eliminator"}</span>
+              </button>
+            )}
+
+            {/* Bookmark button */}
+            <button 
+              className={cn(
+                "flex items-center text-[10px] sm:text-xs font-bold uppercase tracking-wider px-3 py-1.5 border-2 transition-colors rounded-xl", 
+                isFlg
+                  ? (isSat ? "border-amber-500 bg-amber-50/50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400" : (isMilliy ? "border-amber-500 text-amber-600" : "border-[#ca8a04] text-[#ca8a04]"))
+                  : "border-slate-200 dark:border-slate-800 text-slate-500 hover:border-blue-500 dark:hover:border-blue-800 hover:text-blue-600"
+              )}
+              onClick={() => toggleFlag(q.id)}
+            >
+              <Bookmark className={cn("w-3.5 h-3.5 mr-1.5", isFlg ? "fill-current" : "")} /> 
+              {isMilliy ? (isFlg ? "Belgilandi" : "Belgilash") : (isFlg ? "Marked" : "Mark")}
+            </button>
+          </div>
+        </div>
+
+        {/* PROMPT */}
+        <div className="text-lg md:text-xl font-serif leading-relaxed text-slate-900 dark:text-white mb-6">
+          {formatMathText(q.prompt)}
+        </div>
+
+        {/* MEDIA */}
+        {q.imageUrl && (
+          <img src={getFullImageUrl(q.imageUrl)} className="max-w-full border border-slate-200 dark:border-slate-850 rounded-xl mb-6 shadow-sm" />
+        )}
+
+        {/* OPTIONS */}
+        {q.options && q.options.length > 0 ? (
+          <div className="space-y-3">
+            {q.options.map((opt, oIdx) => {
+              const isSel = answers[q.id] === opt.text;
+              const isCrossedOut = isSat && crossedOut[q.id]?.includes(opt.text);
+              const labels = ['A', 'B', 'C', 'D', 'E', 'F'];
+
+              const handleOptionClick = () => {
+                if (isCrossedOut) {
+                  toggleCrossOut(q.id, opt.text);
+                  onAnswer(q.id, opt.text);
+                } else if (strikethroughMode) {
+                  toggleCrossOut(q.id, opt.text);
+                } else {
+                  onAnswer(q.id, opt.text);
+                }
+              };
+
+              return (
+                <div key={opt.id} className="relative group w-full flex items-center">
+                  <button
+                    onClick={handleOptionClick}
+                    disabled={isCrossedOut && !strikethroughMode}
+                    className={cn(
+                      "w-full text-left p-4 border-2 transition-all flex items-center gap-4 rounded-xl relative",
+                      isSel 
+                        ? (isSat ? "border-[#002d62] bg-[#f0f4f8] dark:bg-blue-950/20 dark:border-blue-500" : (isMilliy ? "border-[#10b981] bg-emerald-500/5 dark:bg-emerald-950/20" : "border-[#0f2c59] dark:border-blue-500 bg-[#f0f4f8] dark:bg-blue-950/20"))
+                        : (isMilliy ? "border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0b1624] hover:border-[#10b981]" : "border-slate-350 dark:border-slate-805 bg-white dark:bg-slate-900/50 hover:border-blue-600 dark:hover:border-blue-650"),
+                      isCrossedOut && "opacity-35 border-slate-100 dark:border-slate-950 pointer-events-none"
+                    )}
+                  >
+                    <div className={cn(
+                      "h-7 w-7 border-2 flex items-center justify-center font-bold text-sm shrink-0 rounded-full relative overflow-hidden",
+                      isSel 
+                        ? (isSat ? "border-[#002d62] bg-[#002d62] text-white dark:border-blue-500 dark:bg-blue-500" : (isMilliy ? "border-[#10b981] bg-[#10b981] text-white" : "border-[#0f2c59] dark:border-blue-500 bg-[#0f2c59] dark:bg-blue-500 text-white"))
+                        : (isMilliy ? "border-slate-300 dark:border-slate-700 text-slate-650 group-hover:border-[#10b981]" : "border-slate-400 dark:border-slate-600 text-slate-600 dark:text-slate-400 group-hover:border-blue-500"),
+                      isCrossedOut && "border-slate-200 text-slate-300 bg-slate-50 dark:border-slate-800 dark:bg-slate-900/10"
+                    )}>
+                      {labels[oIdx]}
+                      {isCrossedOut && <div className="absolute w-[150%] h-[2px] bg-red-500 rotate-45" />}
+                    </div>
+                    <div className="flex-1">
+                      {opt.imageUrl && <img src={getFullImageUrl(opt.imageUrl)} className="h-16 object-contain mb-2 border border-slate-250 dark:border-slate-850 rounded-lg" />}
+                      <span className={cn("text-lg", isCrossedOut && "line-through text-slate-400", isMilliy ? "font-sans text-slate-800 dark:text-slate-200" : "font-serif text-slate-800 dark:text-slate-200")}>
+                        {formatMathText(opt.text)}
+                      </span>
+                    </div>
+                  </button>
+
+                  {/* Strikethrough mini button on hover */}
+                  {isSat && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleCrossOut(q.id, opt.text);
+                      }}
+                      className={cn(
+                        "absolute right-4 p-1.5 rounded-full border border-slate-250 hover:border-red-500 dark:border-slate-750 bg-white dark:bg-slate-855 text-slate-400 hover:text-red-500 transition-all shadow-sm z-10",
+                        isCrossedOut ? "border-red-500 text-red-500 bg-red-50/50 dark:bg-red-950/20" : "opacity-0 group-hover:opacity-100 focus:opacity-100"
+                      )}
+                      title={isCrossedOut ? "Bekor qilish" : "O'chirish (Strikethrough)"}
+                    >
+                      <XCircle className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="w-full">
+            {isSat ? (
+              <div className="space-y-4">
+                <p className="text-sm font-semibold text-slate-505">
+                  {isMilliy ? "Javobingizni quyidagi maydonga kiriting (son yoki kasr ko'rinishida, masalan: 5/2 yoki 2.5):" : "Enter your answer in the box below (e.g., as a fraction like 5/2 or a decimal like 2.5):"}
+                </p>
+                <input
+                  type="text"
+                  className={cn(
+                    "w-full max-w-xs p-4 text-xl font-mono text-center font-bold border-2 rounded-xl focus:border-blue-500 bg-white dark:bg-slate-905 text-slate-900 dark:text-white"
+                  )}
+                  placeholder={isMilliy ? "Javob" : "Answer"}
+                  value={answers[q.id] || ""}
+                  onChange={(e) => onAnswer(q.id, e.target.value)}
+                />
+              </div>
+            ) : (
+              <Textarea 
+                rows={6} 
+                className={cn("w-full p-4 text-lg font-serif rounded-none border-2 resize-none", 
+                  isMilliy 
+                    ? "bg-white dark:bg-[#0b1624] border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:border-[#10b981]" 
+                    : "bg-white dark:bg-slate-900/50 border-slate-300 dark:border-slate-800 text-slate-900 dark:text-white focus:border-[#0f2c59] dark:focus:border-blue-500"
+                )}
+                placeholder={isMilliy ? "Javobingizni shu yerga yozing..." : "Type your response here..."}
+                value={answers[q.id] || ""}
+                onChange={(e) => onAnswer(q.id, e.target.value)}
+              />
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className={cn("w-full min-h-screen flex flex-col font-sans transition-colors", 
       isMilliy ? "bg-[#f1f5f9] dark:bg-[#060b13] text-slate-900 dark:text-slate-105 selection:bg-emerald-250" : "bg-white dark:bg-[#080410] text-slate-900 dark:text-slate-100 selection:bg-blue-200"
@@ -1458,194 +2030,243 @@ export default function MockTake() {
       
       {/* EXAM COMMAND CENTER HEADER - Official Deep Blue/Teal Bar */}
       <header className={cn("h-[60px] shrink-0 text-white flex items-center justify-between px-6 z-40 border-b transition-colors", 
-        isMilliy ? "bg-[#0a192f] border-b-2 border-b-[#10b981]" : "bg-[#0f2c59] dark:bg-[#0b1e3b] border-[#0f2c59] dark:border-[#0b1e3b]"
+        isSat 
+          ? "bg-[#0e1726] border-slate-800"
+          : (isMilliy ? "bg-[#0a192f] border-b-2 border-b-[#10b981]" : "bg-[#0f2c59] dark:bg-[#0b1e3b] border-[#0f2c59] dark:border-[#0b1e3b]")
       )}>
-        <div className="flex items-center gap-4 min-w-0">
-           <h1 className="font-bold text-sm uppercase tracking-widest truncate max-w-[150px] sm:max-w-none">
-             {isMilliy ? "O'ZBEKISTON RESPUBLIKASI MILLIY SERTIFIKAT IMTIHONI" : exam.title}
-           </h1>
-           <span className="text-[10px] bg-white/10 px-2 py-0.5 border border-white/20 uppercase tracking-widest shrink-0">
-             {isMilliy ? "Milliy Sertifikat" : exam.type}
-           </span>
-        </div>
+        {isSat ? (
+          <>
+            <div className="flex items-center gap-3 min-w-0">
+               <h1 className="font-bold text-sm uppercase tracking-wider truncate max-w-[200px] sm:max-w-none text-slate-100">
+                 {currentSectionTitle}
+               </h1>
+               <button 
+                 onClick={() => setShowDirections(true)}
+                 className="px-2.5 py-1 text-xs border border-white/20 hover:bg-white/10 rounded transition-colors text-white/90 font-semibold"
+               >
+                 {isMilliy ? "Ko'rsatmalar" : "Directions"}
+               </button>
+            </div>
 
-        {/* TIMER */}
-        <div className="flex items-center">
-          <span className="text-xs uppercase font-bold tracking-wider mr-2 hidden sm:inline text-white/80">
-            {isMilliy ? "Qolgan vaqt:" : "Time Remaining:"}
-          </span>
-          <div className={cn(
-            "flex items-center justify-center px-6 py-1.5 font-mono text-xl font-bold tracking-[0.1em] border-2",
-            timeLeft < 60 ? "bg-[#991b1b] border-[#ef4444] animate-pulse" :
-            timeLeft < 300 ? "bg-[#ca8a04] border-[#facc15]" :
-            "bg-transparent border-transparent"
-          )}>
-            <Clock className="w-4 h-4 mr-2 opacity-50" />
-            {fmt(timeLeft)}
-          </div>
-        </div>
+            {/* TIMER TOGGLE PILL */}
+            <div className="flex-1 flex justify-center">
+              <button
+                onClick={() => {
+                  if (timeLeft > 300) {
+                    setShowTimerText(!showTimerText);
+                  } else {
+                    toast.info(isMilliy ? "Oxirgi 5 daqiqada taymerni yashirib bo'lmaydi" : "Timer cannot be hidden in the final 5 minutes.");
+                  }
+                }}
+                className={cn(
+                  "flex items-center gap-2 px-5 py-1 rounded-full font-mono text-base font-bold tracking-wider transition-all select-none shadow-sm",
+                  timeLeft < 300 
+                    ? "bg-red-600 text-white border border-red-400 animate-pulse scale-105" 
+                    : "bg-slate-800 hover:bg-slate-700 text-slate-100 border border-slate-750"
+                )}
+              >
+                <Clock className="w-4 h-4 text-slate-300" />
+                {showTimerText ? fmt(timeLeft) : (isMilliy ? "Ko'rsatish" : "Show")}
+              </button>
+            </div>
 
-        <div className="flex items-center gap-4">
-           <Button 
-             variant="ghost" 
-             size="icon" 
-             className="rounded-none hover:bg-white/10" 
-             onClick={toggle}
-             title={theme === "dark" ? (isMilliy ? "Yorug' rejim" : "Light Mode") : (isMilliy ? "Qorong'u rejim" : "Dark Mode")}
-           >
-             {theme === "dark" ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-slate-300" />}
-           </Button>
-           <Button variant="ghost" size="icon" className="rounded-none hover:bg-white/10" onClick={toggleFullscreen}>
-             {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-           </Button>
-           {isMilliy ? (
-             <Button 
-               variant="ghost" 
-               size="icon" 
-               className="rounded-none hover:bg-white/10 text-emerald-400 hover:text-emerald-300" 
-               onClick={() => setShowScratchpad(!showScratchpad)}
-               title="Qoralama daftari (Doska)"
-             >
-               <PenLine className="h-4 w-4" />
-             </Button>
-           ) : (
-             <Button variant="ghost" size="icon" className="rounded-none hover:bg-white/10" onClick={() => setShowCalculator(!showCalculator)}>
-               <Calculator className="h-4 w-4" />
-             </Button>
-           )}
-        </div>
-      </header>
+            {/* TOOLS ROW */}
+            <div className="flex items-center gap-1.5">
+               {/* Line Focus Reader Toggle */}
+               <Button 
+                 variant="ghost" 
+                 size="icon" 
+                 className={cn("rounded-none hover:bg-white/10 text-white h-9 w-9", showLineFocus && "bg-white/10 text-yellow-400")}
+                 onClick={() => setShowLineFocus(!showLineFocus)}
+                 title={isMilliy ? "Satr bo'yicha o'qish" : "Line Focus Reader"}
+               >
+                 <Grid className="h-4 w-4" />
+               </Button>
 
-      {/* QUESTION AREA */}
-      <main className={cn("flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden transition-colors", 
-        isMilliy ? "bg-[#f1f5f9] dark:bg-[#060b13]" : "bg-[#f4f4f4] dark:bg-[#0c0817]"
+               {/* Math Reference Sheet (Only in Math section) */}
+               {isMath && (
+                 <Button 
+                   variant="ghost" 
+                   size="icon" 
+                   className={cn("rounded-none hover:bg-white/10 text-white h-9 w-9", showReferenceModal && "bg-white/10")} 
+                   onClick={() => setShowReferenceModal(true)}
+                   title={isMilliy ? "Matematik Formulalar" : "Reference Sheet"}
+                 >
+                   <BookOpen className="h-4 w-4" />
+                 </Button>
+               )}
+
+               {/* Calculator */}
+               <Button 
+                 variant="ghost" 
+                 size="icon" 
+                 className={cn("rounded-none hover:bg-white/10 text-white h-9 w-9", showCalculator && "bg-white/10")} 
+                 onClick={() => setShowCalculator(!showCalculator)}
+                 title="Calculator"
+               >
+                 <Calculator className="h-4 w-4" />
+               </Button>
+
+               {/* Fullscreen & Theme */}
+               <Button 
+                 variant="ghost" 
+                 size="icon" 
+                 className="rounded-none hover:bg-white/10 text-white h-9 w-9" 
+                 onClick={toggle}
+               >
+                 {theme === "dark" ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-slate-350" />}
+               </Button>
+               <Button variant="ghost" size="icon" className="rounded-none hover:bg-white/10 text-white h-9 w-9" onClick={toggleFullscreen}>
+                 {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+               </Button>
+
+               {/* Save and Exit */}
+               <Button 
+                 variant="outline" 
+                 size="sm" 
+                 className="border-white/20 text-white bg-transparent hover:bg-white/10 hover:text-white rounded-xl px-3 py-1 font-semibold text-xs ml-2 hidden sm:inline-flex border h-8"
+                 onClick={() => {
+                   if (confirm(isMilliy ? "Imtihondan chiqmoqchimisiz? Javoblaringiz saqlanadi." : "Are you sure you want to save and exit? Your progress will be saved.")) {
+                     nav(-1);
+                   }
+                 }}
+               >
+                 {isMilliy ? "Saqlash" : "Save & Exit"}
+               </Button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="flex items-center gap-4 min-w-0">
+               <h1 className="font-bold text-sm uppercase tracking-widest truncate max-w-[150px] sm:max-w-none">
+                 {isMilliy ? "O'ZBEKISTON RESPUBLIKASI MILLIY SERTIFIKAT IMTIHONI" : exam.title}
+               </h1>
+               <span className="text-[10px] bg-white/10 px-2 py-0.5 border border-white/20 uppercase tracking-widest shrink-0">
+                 {isMilliy ? "Milliy Sertifikat" : exam.type}
+               </span>
+            </div>
+
+            {/* TIMER */}
+            <div className="flex items-center">
+              <span className="text-xs uppercase font-bold tracking-wider mr-2 hidden sm:inline text-white/80">
+                {isMilliy ? "Qolgan vaqt:" : "Time Remaining:"}
+              </span>
+              <div className={cn(
+                "flex items-center justify-center px-6 py-1.5 font-mono text-xl font-bold tracking-[0.1em] border-2",
+                timeLeft < 60 ? "bg-[#991b1b] border-[#ef4444] animate-pulse" :
+                timeLeft < 300 ? "bg-[#ca8a04] border-[#facc15]" :
+                "bg-transparent border-transparent"
+              )}>
+                <Clock className="w-4 h-4 mr-2 opacity-50" />
+                {fmt(timeLeft)}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4">
+               <Button 
+                 variant="ghost" 
+                 size="icon" 
+                 className="rounded-none hover:bg-white/10" 
+                 onClick={toggle}
+                 title={theme === "dark" ? (isMilliy ? "Yorug' rejim" : "Light Mode") : (isMilliy ? "Qorong'u rejim" : "Dark Mode")}
+               >
+                 {theme === "dark" ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-slate-300" />}
+               </Button>
+               <Button variant="ghost" size="icon" className="rounded-none hover:bg-white/10" onClick={toggleFullscreen}>
+                 {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+               </Button>
+               {isMilliy ? (
+                 <Button 
+                   variant="ghost" 
+                   size="icon" 
+                   className="rounded-none hover:bg-white/10 text-emerald-400 hover:text-emerald-300" 
+                   onClick={() => setShowScratchpad(!showScratchpad)}
+                   title="Qoralama daftari (Doska)"
+                 >
+                   <PenLine className="h-4 w-4" />
+                 </Button>
+               ) : (
+                 <Button variant="ghost" size="icon" className="rounded-none hover:bg-white/10" onClick={() => setShowCalculator(!showCalculator)}>
+                   <Calculator className="h-4 w-4" />
+                 </Button>
+                    {/* QUESTION AREA */}
+      <main className={cn("flex-1 flex flex-col md:flex-row overflow-hidden transition-colors relative", 
+        isSat 
+          ? "bg-[#fafafa] dark:bg-[#070b19]" 
+          : (isMilliy ? "bg-[#f1f5f9] dark:bg-[#060b13]" : "bg-[#f4f4f4] dark:bg-[#0c0817]")
       )}>
-        {isReading && sections[currentQuestion?.section_index] && (sections[currentQuestion?.section_index].passage || sections[currentQuestion?.section_index].imageUrl) && (
-          <div className={cn("w-full md:w-1/2 h-1/2 md:h-full overflow-y-auto border-b md:border-b-0 md:border-r p-6 md:p-8 xl:p-12 transition-colors", 
-            isMilliy ? "bg-white dark:bg-[#0b1624] border-slate-200 dark:border-slate-805" : "bg-white dark:bg-[#140D23] border-slate-300 dark:border-slate-800"
-          )}>
-            <h2 className={cn("text-xl font-bold mb-6 uppercase tracking-widest border-b-2 pb-2", 
-              isMilliy ? "border-slate-200 dark:border-slate-800 text-[#0a192f] dark:text-white" : "border-slate-880 dark:border-slate-700 text-slate-900 dark:text-white"
-            )}>
-              {sections[currentQuestion.section_index].title}
-            </h2>
-            {sections[currentQuestion.section_index].imageUrl && (
-              <img src={getFullImageUrl(sections[currentQuestion.section_index].imageUrl)} className={cn("max-w-full border mb-6", isMilliy ? "border-slate-200 dark:border-slate-800" : "border-slate-300 dark:border-slate-800")} />
+        {isReadingSection ? (
+          <div className="w-full h-full flex flex-col md:flex-row overflow-hidden relative">
+            {/* LEFT PANEL: Passage */}
+            <div 
+              className={cn("h-1/2 md:h-full overflow-y-auto p-6 md:p-8 xl:p-12 transition-colors border-b md:border-b-0 md:border-r", 
+                isSat 
+                  ? "bg-white dark:bg-[#0b1624] border-slate-200 dark:border-slate-800" 
+                  : (isMilliy ? "bg-white dark:bg-[#0b1624] border-slate-200 dark:border-slate-805" : "bg-white dark:bg-[#140D23] border-slate-300 dark:border-slate-800")
+              )}
+              style={{ width: isFullscreen || window.innerWidth < 768 ? '50%' : `${splitterPos}%` }}
+            >
+              {currentSection && (
+                <>
+                  <h2 className={cn("text-xl font-bold mb-6 uppercase tracking-widest border-b-2 pb-2", 
+                    isSat 
+                      ? "border-slate-200 dark:border-slate-800 text-[#002d62] dark:text-blue-400" 
+                      : (isMilliy ? "border-slate-200 dark:border-slate-800 text-[#0a192f] dark:text-white" : "border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white")
+                  )}>
+                    {currentSection.title}
+                  </h2>
+                  {currentSection.imageUrl && (
+                    <img src={getFullImageUrl(currentSection.imageUrl)} className={cn("max-w-full border mb-6", isMilliy ? "border-slate-200 dark:border-slate-800" : "border-slate-300 dark:border-slate-800")} />
+                  )}
+                  <div className="prose prose-slate dark:prose-invert max-w-none text-slate-800 dark:text-slate-200 font-serif leading-loose text-lg whitespace-pre-wrap">
+                    {formatMathText(currentSection.passage)}
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* DRAGGABLE SPLITTER (Only shown on desktop when isSat is active) */}
+            {isSat && (
+              <div 
+                className="hidden md:flex w-1.5 h-full bg-slate-200 dark:bg-slate-800 hover:bg-blue-600 active:bg-blue-700 cursor-col-resize transition-colors shrink-0 items-center justify-center relative group z-30"
+                onMouseDown={startResizing}
+              >
+                <div className="absolute h-10 w-1 bg-slate-400 dark:bg-slate-600 rounded-full group-hover:bg-blue-400" />
+              </div>
             )}
-            <div className="prose prose-slate dark:prose-invert max-w-none text-slate-800 dark:text-slate-200 font-serif leading-loose text-lg whitespace-pre-wrap">
-              {formatMathText(sections[currentQuestion.section_index].passage)}
+
+            {/* RIGHT PANEL: Question & Options */}
+            <div 
+              className={cn("h-1/2 md:h-full overflow-y-auto flex flex-col p-6 md:p-8 xl:p-12 transition-colors", 
+                isSat 
+                  ? "bg-white dark:bg-[#0b1624]" 
+                  : (isMilliy ? "bg-white dark:bg-[#0b1624]" : "bg-white dark:bg-[#140D23]")
+              )}
+              style={{ width: isFullscreen || window.innerWidth < 768 ? '50%' : `${100 - splitterPos}%` }}
+            >
+              <div className="w-full flex-1 flex flex-col">
+                {currentQuestion && renderQuestionArea(currentQuestion)}
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* SINGLE PANEL: Math or standard single column */
+          <div className="w-full h-full overflow-y-auto flex flex-col p-6 md:p-8">
+            <div className={cn("w-full max-w-3xl mx-auto border rounded-3xl p-8 my-4 shadow-sm flex flex-col min-h-[500px]", 
+              isSat 
+                ? "bg-white dark:bg-[#0b1624] border-slate-200 dark:border-slate-800 shadow-slate-100/50" 
+                : (isMilliy ? "bg-white dark:bg-[#0b1624] border-slate-200 dark:border-slate-850" : "bg-white dark:bg-[#140D23] border-slate-300 dark:border-slate-800")
+            )}>
+              {currentQuestion && renderQuestionArea(currentQuestion)}
             </div>
           </div>
         )}
 
-        <div className={cn("overflow-y-auto flex flex-col p-6 md:p-8 xl:p-12 transition-colors", 
-          isReading ? "w-full md:w-1/2 h-1/2 md:h-full" : "w-full h-full max-w-5xl mx-auto border-x",
-          isMilliy ? "bg-white dark:bg-[#0b1624] border-slate-200 dark:border-slate-850" : "bg-white dark:bg-[#140D23] border-slate-300 dark:border-slate-800"
-        )}>
-          
-          <div className="w-full flex-1 flex flex-col">
-            {currentQuestion && (
-              <div key={currentQuestion.id} className="w-full">
-                
-                {/* QUESTION HEADER */}
-                <div className={cn("flex items-center justify-between border-b-2 pb-4 mb-8", 
-                  isMilliy ? "border-[#10b981]" : "border-[#0f2c59] dark:border-blue-500"
-                )}>
-                  <div className="flex items-center gap-3">
-                    <div className={cn("h-8 w-8 text-white flex items-center justify-center text-sm font-bold", 
-                      isMilliy ? "bg-[#0a192f]" : "bg-[#0f2c59] dark:bg-blue-600"
-                    )}>
-                      {currentQuestion.position}
-                    </div>
-                    <span className={cn("text-xs font-bold uppercase tracking-widest", 
-                      isMilliy ? "text-[#059669] dark:text-[#10b981]" : "text-[#0f2c59] dark:text-blue-400"
-                    )}>
-                      {isMilliy ? `${currentQuestion.position} - savol (jami ${questions.length} ta)` : `Item ${currentQuestion.position} of ${questions.length}`}
-                    </span>
-                  </div>
-                  <button 
-                    className={cn(
-                      "flex items-center text-xs font-bold uppercase tracking-widest px-3 py-1.5 border-2 transition-colors", 
-                      flagged.has(currentQuestion.id)
-                        ? (isMilliy ? "border-amber-500 text-amber-600" : "border-[#ca8a04] text-[#ca8a04]")
-                        : (isMilliy ? "border-slate-200 dark:border-slate-800 text-slate-500 hover:border-[#10b981] hover:text-[#10b981]" : "border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-500 dark:hover:border-slate-500 hover:text-slate-700 dark:hover:text-slate-300")
-                    )}
-                    onClick={() => toggleFlag(currentQuestion.id)}
-                  >
-                    <Bookmark className={cn("w-3 h-3 mr-2", flagged.has(currentQuestion.id) ? "fill-current" : "")} /> 
-                    {isMilliy ? (flagged.has(currentQuestion.id) ? "Belgilandi" : "Belgilash") : (flagged.has(currentQuestion.id) ? "Marked" : "Mark")}
-                  </button>
-                </div>
-
-                {/* PROMPT */}
-                <div className="text-xl md:text-2xl font-serif leading-relaxed text-slate-900 dark:text-white mb-8">
-                  {formatMathText(currentQuestion.prompt)}
-                </div>
-
-                {/* MEDIA */}
-                {currentQuestion.imageUrl && (
-                  <img src={getFullImageUrl(currentQuestion.imageUrl)} className={cn("max-w-full border mb-8", isMilliy ? "border-slate-200 dark:border-slate-805" : "border-slate-300 dark:border-slate-800")} />
-                )}
-
-                {/* OPTIONS */}
-                {currentQuestion.options && currentQuestion.options.length > 0 ? (
-                  <div className="space-y-3">
-                    {currentQuestion.options.map((opt, oIdx) => {
-                      const isSelected = answers[currentQuestion.id] === opt.text;
-                      const labels = ['A', 'B', 'C', 'D', 'E', 'F'];
-                      return (
-                        <button
-                          key={opt.id}
-                          onClick={() => onAnswer(currentQuestion.id, opt.text)}
-                          className={cn(
-                            "w-full text-left p-4 border-2 transition-none flex items-center gap-4 group rounded-none",
-                            isSelected 
-                              ? (isMilliy ? "border-[#10b981] bg-emerald-500/5 dark:bg-emerald-950/20" : "border-[#0f2c59] dark:border-blue-500 bg-[#f0f4f8] dark:bg-blue-950/20")
-                              : (isMilliy ? "border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0b1624] hover:border-[#10b981]" : "border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900/50 hover:border-[#0f2c59] dark:hover:border-blue-500")
-                          )}
-                        >
-                          <div className={cn(
-                            "h-6 w-6 border-2 flex items-center justify-center font-bold text-xs shrink-0 rounded-full",
-                            isSelected 
-                              ? (isMilliy ? "border-[#10b981] bg-[#10b981] text-white" : "border-[#0f2c59] dark:border-blue-500 bg-[#0f2c59] dark:bg-blue-500 text-white")
-                              : (isMilliy ? "border-slate-300 dark:border-slate-700 text-slate-650 group-hover:border-[#10b981] group-hover:text-[#10b981]" : "border-slate-400 dark:border-slate-600 text-slate-600 dark:text-slate-400 group-hover:border-[#0f2c59] dark:group-hover:border-blue-500 group-hover:text-[#0f2c59] dark:group-hover:text-blue-400")
-                          )}>
-                            {labels[oIdx]}
-                          </div>
-                          <div className="flex-1">
-                            {opt.imageUrl && <img src={getFullImageUrl(opt.imageUrl)} className={cn("h-16 object-contain mb-2 border", isMilliy ? "border-slate-200 dark:border-slate-800" : "border-slate-200 dark:border-slate-800")} />}
-                            <span className={cn("text-lg", isMilliy ? "font-sans text-slate-800 dark:text-slate-200" : "font-serif text-slate-800 dark:text-slate-200")}>
-                              {formatMathText(opt.text)}
-                            </span>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="w-full">
-                    <Textarea 
-                      rows={6} 
-                      className={cn("w-full p-4 text-lg font-serif rounded-none border-2 resize-none", 
-                        isMilliy 
-                          ? "bg-white dark:bg-[#0b1624] border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:border-[#10b981]" 
-                          : "bg-white dark:bg-slate-900/50 border-slate-300 dark:border-slate-800 text-slate-900 dark:text-white focus:border-[#0f2c59] dark:focus:border-blue-500"
-                      )}
-                      placeholder={isMilliy ? "Javobingizni shu yerga yozing..." : "Type your response here..."}
-                      value={answers[currentQuestion.id] || ""}
-                      onChange={(e) => onAnswer(currentQuestion.id, e.target.value)}
-                    />
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      </main>
-
       {/* EXAM NAVIGATOR - Formal Status Bar */}
-      <footer className={cn("h-[70px] border-t flex items-center justify-between px-4 sm:px-6 z-40 transition-colors", 
-        isMilliy ? "bg-white dark:bg-[#0a192f] border-slate-200 dark:border-slate-850" : "bg-slate-100 dark:bg-[#140D23] border-t border-slate-300 dark:border-slate-800"
+      <footer className={cn("h-[70px] border-t flex items-center justify-between px-4 sm:px-6 z-40 transition-colors shrink-0", 
+        isSat 
+          ? "bg-white dark:bg-[#0e1726] border-slate-200 dark:border-slate-800 shadow-[0_-4px_20px_rgba(0,0,0,0.03)]"
+          : (isMilliy ? "bg-white dark:bg-[#0a192f] border-slate-200 dark:border-slate-850" : "bg-slate-100 dark:bg-[#140D23] border-t border-slate-300 dark:border-slate-800")
       )}>
         
         <div className="flex items-center gap-2 sm:gap-4 w-1/2 sm:w-1/4">
@@ -1654,50 +2275,174 @@ export default function MockTake() {
             variant="outline" 
             onClick={() => setActiveQuestionIndex(Math.max(0, activeQuestionIndex - 1))}
             disabled={activeQuestionIndex === 0}
-            className={cn("rounded-none border-2 font-bold text-xs uppercase tracking-widest", 
-              isMilliy 
-                ? "border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900" 
-                : "border-slate-400 dark:border-slate-700 text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900"
+            className={cn("border-2 font-bold text-xs uppercase tracking-widest h-10 px-4", 
+              isSat
+                ? "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl"
+                : (isMilliy 
+                    ? "rounded-none border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900" 
+                    : "rounded-none border-slate-400 dark:border-slate-700 text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900")
             )}
           >
-            <ChevronLeft className="w-4 h-4 mr-1 sm:mr-2" /> {isMilliy ? "Oldingi savol" : "Back"}
+            <ChevronLeft className="w-4 h-4 mr-1 sm:mr-2" /> {isMilliy ? "Orqaga" : "Back"}
           </Button>
         </div>
 
-        <div className="hidden md:flex flex-1 justify-center items-center gap-8 text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 font-sans">
-          <span className={isMilliy ? "text-[#059669] dark:text-[#10b981]" : "text-[#166534] dark:text-[#22c55e]"}>
-            {isMilliy ? `Javob berildi: ${answeredCount}` : `Answered: ${answeredCount}`}
-          </span>
-          <span className={isMilliy ? "text-amber-600 dark:text-amber-500" : "text-[#ca8a04] dark:text-[#eab308]"}>
-            {isMilliy ? `Belgilandi: ${flaggedCount}` : `Marked: ${flaggedCount}`}
-          </span>
-          <span className="text-slate-800 dark:text-slate-300">
-            {isMilliy ? `Belgilanmagan: ${questions.length - answeredCount}` : `Unanswered: ${questions.length - answeredCount}`}
-          </span>
-        </div>
+        {isSat ? (
+          <div className="flex-1 flex justify-center items-center">
+            <button 
+              onClick={() => setShowNavigatorMenu(!showNavigatorMenu)}
+              className="px-4 h-10 border border-slate-200 dark:border-slate-750 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2 font-bold text-xs sm:text-sm shadow-sm transition-all"
+            >
+              {isMilliy ? `${activeQuestionIndex + 1}-savol (jami ${questions.length} ta)` : `Question ${activeQuestionIndex + 1} of ${questions.length}`}
+              <ChevronUp className={cn("h-4 w-4 transition-transform text-slate-500", showNavigatorMenu ? "rotate-180" : "")} />
+            </button>
+          </div>
+        ) : (
+          <div className="hidden md:flex flex-1 justify-center items-center gap-8 text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 font-sans">
+            <span className={isMilliy ? "text-[#059669] dark:text-[#10b981]" : "text-[#166534] dark:text-[#22c55e]"}>
+              {isMilliy ? `Javob berildi: ${answeredCount}` : `Answered: ${answeredCount}`}
+            </span>
+            <span className={isMilliy ? "text-amber-600 dark:text-amber-500" : "text-[#ca8a04] dark:text-[#eab308]"}>
+              {isMilliy ? `Belgilandi: ${flaggedCount}` : `Marked: ${flaggedCount}`}
+            </span>
+            <span className="text-slate-800 dark:text-slate-300">
+              {isMilliy ? `Belgilanmagan: ${questions.length - answeredCount}` : `Unanswered: ${questions.length - answeredCount}`}
+            </span>
+          </div>
+        )}
 
         <div className="flex items-center justify-end gap-2 sm:gap-4 w-1/2 sm:w-1/4">
           <Button 
             size="lg" 
             onClick={() => {
+              const currentQ = questions[activeQuestionIndex];
+              const nextQ = questions[activeQuestionIndex + 1];
+              
+              if (isSat && currentQ && nextQ && !breakTriggered) {
+                const currentHasPassage = sections[currentQ.section_index]?.passage?.trim()?.length > 15;
+                const nextHasPassage = sections[nextQ.section_index]?.passage?.trim()?.length > 15;
+                
+                if (currentHasPassage && !nextHasPassage) {
+                  setIsOnBreak(true);
+                  setBreakTriggered(true);
+                  setBreakTimeLeft(600);
+                  return;
+                }
+              }
+
               if (activeQuestionIndex === questions.length - 1) {
                 handleSubmitRequest();
               } else {
                 setActiveQuestionIndex(Math.min(questions.length - 1, activeQuestionIndex + 1));
               }
             }}
-            className={cn("rounded-none font-bold text-xs uppercase tracking-widest text-white border-2 transition-colors", 
-              isMilliy 
-                ? "bg-[#059669] hover:bg-[#047857] border-[#059669] dark:bg-[#10b981] dark:hover:bg-[#059669] dark:border-[#10b981]" 
-                : "bg-[#0f2c59] dark:bg-blue-600 hover:bg-[#1a365d] dark:hover:bg-blue-700 border-[#0f2c59] dark:border-blue-600"
+            className={cn("font-bold text-xs uppercase tracking-widest text-white h-10 px-4", 
+              isSat
+                ? "bg-blue-600 hover:bg-blue-700 rounded-xl border-none shadow-md shadow-blue-500/10"
+                : (isMilliy 
+                    ? "rounded-none bg-[#059669] hover:bg-[#047857] dark:bg-[#10b981] dark:hover:bg-[#059669] border-none shadow-lg shadow-emerald-600/10" 
+                    : "rounded-none bg-[#0f2c59] dark:bg-blue-600 hover:bg-[#1a365d] dark:hover:bg-blue-700 border-none")
             )}
           >
-            {activeQuestionIndex === questions.length - 1 ? (isMilliy ? "Testni yakunlash" : "End Section") : (isMilliy ? "Keyingi savol" : "Next")} <ChevronRight className="w-4 h-4 ml-2" />
+            {activeQuestionIndex === questions.length - 1 ? (isMilliy ? "Tugatish" : "End Section") : (isMilliy ? "Keyingi" : "Next")} <ChevronRight className="w-4 h-4 ml-2" />
           </Button>
         </div>
 
       </footer>
 
+      {/* Popovers and Overlays */}
+      {isSat && showNavigatorMenu && (
+        <div 
+          className="fixed inset-0 bg-black/30 backdrop-blur-[1px] z-[45]" 
+          onClick={() => setShowNavigatorMenu(false)}
+        />
+      )}
+      <AnimatePresence>
+        {isSat && showNavigatorMenu && (
+          <motion.div 
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 50, opacity: 0 }}
+            className="fixed bottom-[85px] left-1/2 -translate-x-1/2 w-[95%] max-w-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl p-6 z-[49] select-none"
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h4 className="font-bold text-sm text-slate-850 dark:text-slate-200 uppercase tracking-wider">
+                {isMilliy ? "Savollar navigatsiyasi" : "Question Navigator"}
+              </h4>
+              <Button size="icon" variant="ghost" className="h-7 w-7 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800" onClick={() => setShowNavigatorMenu(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 gap-2.5 max-h-[220px] overflow-y-auto p-1">
+              {questions.map((q, idx) => {
+                const isCurrent = idx === activeQuestionIndex;
+                const hasAnswer = !!answers[q.id];
+                const isFlg = flagged.has(q.id);
+
+                return (
+                  <button
+                    key={q.id}
+                    onClick={() => {
+                      setActiveQuestionIndex(idx);
+                      setShowNavigatorMenu(false);
+                    }}
+                    className={cn(
+                      "relative aspect-square flex flex-col items-center justify-center text-sm font-bold border rounded-xl transition-all",
+                      isCurrent 
+                        ? "border-[#002d62] dark:border-blue-500 bg-blue-50/50 dark:bg-blue-950/20 text-[#002d62] dark:text-blue-400 border-2 scale-105"
+                        : hasAnswer 
+                          ? "border-emerald-500 bg-emerald-50/20 dark:bg-emerald-950/10 text-emerald-600 dark:text-emerald-400"
+                          : "border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 bg-slate-50/50 dark:bg-slate-950/10"
+                    )}
+                  >
+                    {q.position}
+                    
+                    {/* Flag indicator */}
+                    {isFlg && (
+                      <div className="absolute top-1 right-1 text-rose-500 animate-pulse">
+                        <Flag className="h-2.5 w-2.5 fill-current" />
+                      </div>
+                    )}
+                    
+                    {/* Answer indicator dot */}
+                    {hasAnswer && (
+                      <div className="absolute bottom-1.5 w-2 h-1 bg-emerald-500 rounded-full animate-scale-in" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Legend */}
+            <div className="flex flex-wrap items-center justify-center gap-6 mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 text-xs font-semibold text-slate-500 dark:text-slate-400">
+              <div className="flex items-center gap-2">
+                <div className="w-5 h-5 border-2 border-[#002d62] dark:border-blue-500 bg-blue-50/50 dark:bg-blue-950/20 rounded-md" />
+                <span>{isMilliy ? "Joriy" : "Current"}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-5 h-5 border border-emerald-500 bg-emerald-50/20 dark:bg-emerald-950/10 rounded-md relative flex items-center justify-center">
+                  <div className="w-1.5 h-1 bg-emerald-500 rounded-full absolute bottom-1" />
+                </div>
+                <span>{isMilliy ? "Javob berilgan" : "Answered"}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-5 h-5 border border-slate-200 dark:border-slate-850 bg-slate-50/50 dark:bg-slate-950/10 rounded-md" />
+                <span>{isMilliy ? "Javob berilmagan" : "Unanswered"}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-5 h-5 border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/10 rounded-md relative flex items-center justify-center">
+                  <Flag className="h-3 w-3 text-rose-500 fill-current" />
+                </div>
+                <span>{isMilliy ? "Qayta ko'rish" : "Flagged"}</span>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <MathReferenceModal isOpen={showReferenceModal} onClose={() => setShowReferenceModal(false)} />
+      <LineFocusOverlay isActive={showLineFocus} />
       {showScratchpad && <Scratchpad isOpen={showScratchpad} onClose={() => setShowScratchpad(false)} />}
       <DesmosCalculator isOpen={showCalculator} onClose={() => setShowCalculator(false)} />
 
