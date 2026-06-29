@@ -146,4 +146,15 @@ public class GlobalExceptionHandler {
                 .build();
         return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
     }
+
+    // AI Subscription limits exceptions
+    @ExceptionHandler(AISubscriptionException.class)
+    public ResponseEntity<java.util.Map<String, Object>> handleAISubscriptionException(AISubscriptionException ex) {
+        java.util.Map<String, Object> body = new java.util.HashMap<>();
+        body.put("success", false);
+        body.put("error", ex.getError());
+        body.put("message", ex.getMessage());
+        body.put("upgradeAvailable", ex.isUpgradeAvailable());
+        return new ResponseEntity<>(body, HttpStatus.FORBIDDEN);
+    }
 }

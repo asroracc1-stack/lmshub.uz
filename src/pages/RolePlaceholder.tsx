@@ -8,8 +8,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { roleLabel, AppRole } from "@/lib/auth";
 import ThemeToggle from "@/components/ThemeToggle";
 
-export default function RolePlaceholder({
-  const { t } = useTranslation(); role }: { role: AppRole }) {
+export default function RolePlaceholder({ role }: { role: AppRole }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { signOut, profile } = useAuth();
 

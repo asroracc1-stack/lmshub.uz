@@ -126,6 +126,7 @@ const SuperAdminParents = lazy(() => import("./pages/super-admin/Parents"));
 const StartupPitch = lazy(() => import("./pages/super-admin/StartupPitch"));
 const QuestionBank = lazy(() => import("./pages/super-admin/QuestionBank"));
 const SatMocks = lazy(() => import("./pages/super-admin/SatMocks"));
+const AISpeakingPage = lazy(() => import("./features/ai-speaking/pages/AISpeakingPage"));
 const AdminUsers = lazy(() => import("./pages/admin/Users"));
 const PaymentRequests = lazy(() => import("./pages/admin/PaymentRequests"));
 const SubscriptionRequests = lazy(() => import("./pages/admin/SubscriptionRequests"));
@@ -258,6 +259,7 @@ const AppRoutes = () => {
           <Route path="speaking/topics" element={<SpeakingTopics basePath="/super-admin" />} />
           <Route path="speaking/topics/:slug" element={<SpeakingTopicDetail basePath="/super-admin" />} />
           <Route path="speaking/partners" element={<SpeakingPartners />} />
+          <Route path="ai-speaking" element={<AISpeakingPage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="profile" element={<Profile />} />
           <Route path="achievements" element={<UserAchievements />} />

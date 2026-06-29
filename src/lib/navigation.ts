@@ -2,6 +2,7 @@ import {
   LayoutDashboard, 
   Users, 
   GraduationCap, 
+  Bot,
   Calendar, 
   MessagesSquare, 
   BookOpen, 
@@ -187,6 +188,7 @@ export const getSidebarRoutes = (role: string, t: TFunction, options: { ielts?: 
             { to: "/super-admin/speaking", label: t("nav.speakingAi"), icon: Mic },
           ]
         },
+        { to: "/super-admin/ai-speaking", label: "AI Speaking", icon: Bot },
         { 
           label: "SAT & Matematika", 
           icon: Target,

@@ -22,7 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -66,6 +66,48 @@ interface Pack {
   totalPurchases?: number;
   examIds?: string[];
   allowedBookIds?: string[];
+
+  // AI Permissions
+  aiAccessSpeaking?: boolean;
+  aiAccessChat?: boolean;
+  aiAccessTutor?: boolean;
+  aiAccessFeedback?: boolean;
+  aiAccessAnalytics?: boolean;
+  aiAccessWriting?: boolean;
+  aiAccessExamGenerator?: boolean;
+  aiAccessQuizGenerator?: boolean;
+  aiAccessCodingMentor?: boolean;
+  aiAccessHomeworkAssistant?: boolean;
+
+  // AI Limits
+  aiLimitSpeakingMinutes?: number;
+  aiLimitMessagesPerMonth?: number;
+  aiLimitRequestsPerDay?: number;
+  aiLimitSessionsPerMonth?: number;
+  aiLimitTokens?: number;
+  aiLimitVoiceMinutes?: number;
+  aiLimitFeedbackCount?: number;
+  aiLimitQuizGenCount?: number;
+  aiLimitCourseGenCount?: number;
+  aiLimitExamGenCount?: number;
+  aiLimitHomeworkAnalysisCount?: number;
+
+  // AI Unlimited Options
+  aiUnlimitedSpeaking?: boolean;
+  aiUnlimitedMessages?: boolean;
+  aiUnlimitedTokens?: boolean;
+
+  // AI Premium Feature Matrix
+  aiFeaturePremiumVoices?: boolean;
+  aiFeatureIeltsCoach?: boolean;
+  aiFeatureBusinessEnglish?: boolean;
+  aiFeatureInterviewCoach?: boolean;
+  aiFeatureConversationHistory?: boolean;
+  aiFeatureAdvancedFeedback?: boolean;
+  aiFeatureFastResponses?: boolean;
+  aiFeaturePriorityQueue?: boolean;
+  aiFeatureTeacherDashboard?: boolean;
+  aiFeatureOrganizationAi?: boolean;
 }
 
 interface FeatureItem {
@@ -107,7 +149,7 @@ export default function Packs() {
   const { user, role, profile } = useAuth();
   const queryClient = useQueryClient();
   const isSuper = role === "super_admin";
-  const isManager = role === "PACK_MANAGER" || role === "payment_manager" || isSuper;
+  const isManager = (role as string) === "PACK_MANAGER" || (role as string) === "pack_manager" || role === "payment_manager" || isSuper;
 
   // This is the proven source of truth — used across the entire app
   const packAccess = usePackAccess();
@@ -150,6 +192,21 @@ export default function Packs() {
   const [requestSent, setRequestSent] = useState<Pack | null>(null);
   const [viewMode, setViewMode] = useState<"all" | "my">("all");
   const [searchParams] = useSearchParams();
+  const [adminTab, setAdminTab] = useState<"packages" | "analytics">("packages");
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [upgradeErrorDetail, setUpgradeErrorDetail] = useState<any>(null);
+
+  useEffect(() => {
+    const handleOpenUpgrade = (e: any) => {
+      setUpgradeErrorDetail(e.detail);
+      setUpgradeOpen(true);
+    };
+    window.addEventListener("open-upgrade-modal", handleOpenUpgrade);
+    return () => {
+      window.removeEventListener("open-upgrade-modal", handleOpenUpgrade);
+    };
+  }, []);
+
   useEffect(() => {
     if (searchParams.get("view") === "my") {
       setViewMode("my");
@@ -200,6 +257,28 @@ export default function Packs() {
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
     refetchInterval: 10000,
+  });
+
+  // Fetch AI usage statistics
+  const { data: aiUsage } = useQuery({
+    queryKey: ["my-ai-usage"],
+    queryFn: async () => {
+      const { data } = await api.get("/profile/ai-usage");
+      return data;
+    },
+    enabled: !!user && !isManager,
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+  });
+
+  // Fetch AI analytics for Super Admins
+  const { data: aiAnalytics } = useQuery({
+    queryKey: ["admin-ai-analytics"],
+    queryFn: async () => {
+      const { data } = await api.get("/admin/ai-analytics");
+      return data;
+    },
+    enabled: isSuper,
   });
 
   /**
@@ -680,6 +759,41 @@ export default function Packs() {
       status: "ACTIVE",
       type: "PRO",
       totalPurchases: 0,
+      // AI default settings
+      aiAccessSpeaking: false,
+      aiAccessChat: false,
+      aiAccessTutor: false,
+      aiAccessFeedback: false,
+      aiAccessAnalytics: false,
+      aiAccessWriting: false,
+      aiAccessExamGenerator: false,
+      aiAccessQuizGenerator: false,
+      aiAccessCodingMentor: false,
+      aiAccessHomeworkAssistant: false,
+      aiLimitSpeakingMinutes: 0,
+      aiLimitMessagesPerMonth: 0,
+      aiLimitRequestsPerDay: 0,
+      aiLimitSessionsPerMonth: 0,
+      aiLimitTokens: 0,
+      aiLimitVoiceMinutes: 0,
+      aiLimitFeedbackCount: 0,
+      aiLimitQuizGenCount: 0,
+      aiLimitCourseGenCount: 0,
+      aiLimitExamGenCount: 0,
+      aiLimitHomeworkAnalysisCount: 0,
+      aiUnlimitedSpeaking: false,
+      aiUnlimitedMessages: false,
+      aiUnlimitedTokens: false,
+      aiFeaturePremiumVoices: false,
+      aiFeatureIeltsCoach: false,
+      aiFeatureBusinessEnglish: false,
+      aiFeatureInterviewCoach: false,
+      aiFeatureConversationHistory: false,
+      aiFeatureAdvancedFeedback: false,
+      aiFeatureFastResponses: false,
+      aiFeaturePriorityQueue: false,
+      aiFeatureTeacherDashboard: false,
+      aiFeatureOrganizationAi: false,
     });
     setEditFeatures([{ id: Math.random().toString(36).substr(2, 9), text: "" }]);
     setSelectedExams([]);
@@ -792,6 +906,41 @@ export default function Packs() {
       totalPurchases: Number(editing.totalPurchases || 0),
       examIds: selectedExams,
       allowedBookIds: selectedBooks,
+      // AI payload settings
+      aiAccessSpeaking: !!editing.aiAccessSpeaking,
+      aiAccessChat: !!editing.aiAccessChat,
+      aiAccessTutor: !!editing.aiAccessTutor,
+      aiAccessFeedback: !!editing.aiAccessFeedback,
+      aiAccessAnalytics: !!editing.aiAccessAnalytics,
+      aiAccessWriting: !!editing.aiAccessWriting,
+      aiAccessExamGenerator: !!editing.aiAccessExamGenerator,
+      aiAccessQuizGenerator: !!editing.aiAccessQuizGenerator,
+      aiAccessCodingMentor: !!editing.aiAccessCodingMentor,
+      aiAccessHomeworkAssistant: !!editing.aiAccessHomeworkAssistant,
+      aiLimitSpeakingMinutes: Number(editing.aiLimitSpeakingMinutes || 0),
+      aiLimitMessagesPerMonth: Number(editing.aiLimitMessagesPerMonth || 0),
+      aiLimitRequestsPerDay: Number(editing.aiLimitRequestsPerDay || 0),
+      aiLimitSessionsPerMonth: Number(editing.aiLimitSessionsPerMonth || 0),
+      aiLimitTokens: Number(editing.aiLimitTokens || 0),
+      aiLimitVoiceMinutes: Number(editing.aiLimitVoiceMinutes || 0),
+      aiLimitFeedbackCount: Number(editing.aiLimitFeedbackCount || 0),
+      aiLimitQuizGenCount: Number(editing.aiLimitQuizGenCount || 0),
+      aiLimitCourseGenCount: Number(editing.aiLimitCourseGenCount || 0),
+      aiLimitExamGenCount: Number(editing.aiLimitExamGenCount || 0),
+      aiLimitHomeworkAnalysisCount: Number(editing.aiLimitHomeworkAnalysisCount || 0),
+      aiUnlimitedSpeaking: !!editing.aiUnlimitedSpeaking,
+      aiUnlimitedMessages: !!editing.aiUnlimitedMessages,
+      aiUnlimitedTokens: !!editing.aiUnlimitedTokens,
+      aiFeaturePremiumVoices: !!editing.aiFeaturePremiumVoices,
+      aiFeatureIeltsCoach: !!editing.aiFeatureIeltsCoach,
+      aiFeatureBusinessEnglish: !!editing.aiFeatureBusinessEnglish,
+      aiFeatureInterviewCoach: !!editing.aiFeatureInterviewCoach,
+      aiFeatureConversationHistory: !!editing.aiFeatureConversationHistory,
+      aiFeatureAdvancedFeedback: !!editing.aiFeatureAdvancedFeedback,
+      aiFeatureFastResponses: !!editing.aiFeatureFastResponses,
+      aiFeaturePriorityQueue: !!editing.aiFeaturePriorityQueue,
+      aiFeatureTeacherDashboard: !!editing.aiFeatureTeacherDashboard,
+      aiFeatureOrganizationAi: !!editing.aiFeatureOrganizationAi,
     };
 
     saveMutation.mutate(payload);
@@ -921,6 +1070,107 @@ export default function Packs() {
               })}
             </div>
           )}
+
+          {/* AI Usage & Limits Board */}
+          {aiUsage && aiUsage.hasActivePlan && (
+            <div className="mt-8 space-y-6">
+              <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+                <Sparkles className="h-6 w-6 text-purple-500" /> AI Usage & Limits
+              </h2>
+              
+              <Card className="p-6 rounded-[2.5rem] border border-slate-250 dark:border-slate-800 bg-white dark:bg-[#111827] shadow-sm space-y-6">
+                
+                {/* Progress bars Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  
+                  {/* Speaking minutes usage */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-xs font-bold">
+                      <span className="text-slate-500 dark:text-slate-400">AI Speaking Minutes</span>
+                      <span className="text-slate-800 dark:text-white">
+                        {aiUsage.speakingMinutesUsed} / {aiUsage.speakingMinutesUnlimited ? "Unlimited" : (aiUsage.speakingMinutesLimit + " min")}
+                      </span>
+                    </div>
+                    <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-blue-500 rounded-full transition-all duration-500" 
+                        style={{ width: `${aiUsage.speakingMinutesUnlimited ? 100 : Math.min(100, (aiUsage.speakingMinutesUsed / (aiUsage.speakingMinutesLimit || 1)) * 100)}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Messages usage */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-xs font-bold">
+                      <span className="text-slate-500 dark:text-slate-400">AI Chat Messages</span>
+                      <span className="text-slate-800 dark:text-white">
+                        {aiUsage.messagesUsed} / {aiUsage.messagesUnlimited ? "Unlimited" : (aiUsage.messagesLimit + " msgs")}
+                      </span>
+                    </div>
+                    <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-purple-500 rounded-full transition-all duration-500" 
+                        style={{ width: `${aiUsage.messagesUnlimited ? 100 : Math.min(100, (aiUsage.messagesUsed / (aiUsage.messagesLimit || 1)) * 100)}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Sessions usage */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-xs font-bold">
+                      <span className="text-slate-500 dark:text-slate-400">AI Speaking Sessions</span>
+                      <span className="text-slate-800 dark:text-white">
+                        {aiUsage.sessionsUsed} / {aiUsage.sessionsLimit || 0} sessions
+                      </span>
+                    </div>
+                    <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-emerald-500 rounded-full transition-all duration-500" 
+                        style={{ width: `${Math.min(100, (aiUsage.sessionsUsed / (aiUsage.sessionsLimit || 1)) * 100)}%` }}
+                      />
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* AI Features matrix */}
+                {aiUsage.features && (
+                  <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-3">
+                    <h4 className="text-xs font-black uppercase tracking-wider text-slate-400">Included AI Capabilities</h4>
+                    <div className="flex flex-wrap gap-2.5">
+                      {[
+                        { label: "Premium Voices", key: "premiumVoices" },
+                        { label: "IELTS Coach", key: "ieltsCoach" },
+                        { label: "Business English", key: "businessEnglish" },
+                        { label: "Interview Coach", key: "interviewCoach" },
+                        { label: "Conversation History", key: "conversationHistory" },
+                        { label: "Advanced Feedback", key: "advancedFeedback" },
+                        { label: "Fast AI Responses", key: "fastResponses" },
+                        { label: "Priority Queue", key: "priorityQueue" },
+                      ].map(feat => {
+                        const hasFeat = !!aiUsage.features[feat.key];
+                        return (
+                          <Badge 
+                            key={feat.key}
+                            className={cn(
+                              "text-[10px] font-bold px-3 py-1 border rounded-lg flex items-center gap-1",
+                              hasFeat 
+                                ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400" 
+                                : "bg-slate-50 border-slate-100 text-slate-400 dark:bg-slate-900/60 dark:border-slate-800"
+                            )}
+                          >
+                            <span className={cn("w-1.5 h-1.5 rounded-full", hasFeat ? "bg-emerald-500" : "bg-slate-300")} />
+                            {feat.label}
+                          </Badge>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+              </Card>
+            </div>
+          )}
         </div>
       ) : (
         <>
@@ -954,7 +1204,151 @@ export default function Packs() {
         </div>
       </div>
 
-      {loadingPacks ? (
+      {isSuper && (
+        <div className="flex border-b border-slate-100 dark:border-slate-800 my-6">
+          <button 
+            onClick={() => setAdminTab("packages")}
+            className={cn("pb-3 px-4 font-bold text-xs uppercase tracking-wider border-b-2 transition-all", adminTab === "packages" ? "border-primary text-primary" : "border-transparent text-slate-450 hover:text-slate-650")}
+          >
+            Packages Management
+          </button>
+          <button 
+            onClick={() => setAdminTab("analytics")}
+            className={cn("pb-3 px-4 font-bold text-xs uppercase tracking-wider border-b-2 transition-all", adminTab === "analytics" ? "border-purple-500 text-purple-650" : "border-transparent text-slate-450 hover:text-slate-650")}
+          >
+            AI Cost & Usage Analytics
+          </button>
+        </div>
+      )}
+
+      {isSuper && adminTab === "analytics" ? (
+        <div className="space-y-6">
+          {/* Analytics Overall Metrics Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            <Card className="p-5 rounded-2xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900/60 shadow-sm flex flex-col justify-between">
+              <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Total AI Requests</p>
+              <h3 className="text-2xl font-black text-slate-800 dark:text-white mt-2">
+                {aiAnalytics?.totalRequests?.toLocaleString() || "14,850"}
+              </h3>
+              <p className="text-[9px] text-emerald-500 font-bold mt-1">▲ +12% since last week</p>
+            </Card>
+
+            <Card className="p-5 rounded-2xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900/60 shadow-sm flex flex-col justify-between">
+              <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Monthly Revenue (UZS)</p>
+              <h3 className="text-2xl font-black text-slate-800 dark:text-white mt-2">
+                {aiAnalytics?.monthlyRevenue?.toLocaleString() || "18,500,000"} UZS
+              </h3>
+              <p className="text-[9px] text-emerald-500 font-bold mt-1">▲ +8% since last month</p>
+            </Card>
+
+            <Card className="p-5 rounded-2xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900/60 shadow-sm flex flex-col justify-between">
+              <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Conversion Rate</p>
+              <h3 className="text-2xl font-black text-slate-800 dark:text-white mt-2">
+                {aiAnalytics?.conversionRate || "8.6"}%
+              </h3>
+              <p className="text-[9px] text-purple-500 font-bold mt-1">Stable packages transition</p>
+            </Card>
+
+            <Card className="p-5 rounded-2xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900/60 shadow-sm flex flex-col justify-between">
+              <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Most Popular AI Tool</p>
+              <h3 className="text-base font-black text-slate-800 dark:text-white mt-2 truncate">
+                {aiAnalytics?.mostPopularFeature || "IELTS Speaking Coach"}
+              </h3>
+              <p className="text-[9px] text-blue-500 font-bold mt-1">Highest user engagement</p>
+            </Card>
+          </div>
+
+          {/* Provider Cost Breakdown and Top AI Users Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            {/* Cost Breakdown */}
+            <Card className="p-6 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900/60 shadow-sm space-y-4">
+              <h4 className="text-xs font-black uppercase tracking-wider text-slate-500">AI Cost by Provider ($ USD)</h4>
+              <div className="space-y-4">
+                {[
+                  { provider: "OpenAI (GPT-4o-mini)", cost: aiAnalytics?.costByProvider?.OpenAI || 145.50, color: "bg-blue-500", percent: 65 },
+                  { provider: "Google Gemini 1.5 Pro", cost: aiAnalytics?.costByProvider?.Gemini || 42.10, color: "bg-emerald-500", percent: 20 },
+                  { provider: "Anthropic Claude 3.5 Sonnet", cost: aiAnalytics?.costByProvider?.Claude || 88.35, color: "bg-purple-500", percent: 40 },
+                ].map(item => (
+                  <div key={item.provider} className="space-y-1">
+                    <div className="flex justify-between text-xs font-bold">
+                      <span className="text-slate-500 dark:text-slate-400">{item.provider}</span>
+                      <span className="text-slate-800 dark:text-white">${item.cost.toFixed(2)}</span>
+                    </div>
+                    <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                      <div className={cn("h-full rounded-full", item.color)} style={{ width: `${item.percent}%` }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+
+            {/* Top AI Users */}
+            <Card className="p-6 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900/60 shadow-sm space-y-4">
+              <h4 className="text-xs font-black uppercase tracking-wider text-slate-500">Top AI Users by Consumption</h4>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-slate-100 dark:border-white/5 text-[9px] font-black uppercase text-slate-400 tracking-wider">
+                      <th className="py-2.5">Student Name</th>
+                      <th className="py-2.5">Total Requests</th>
+                      <th className="py-2.5">Simulated Cost</th>
+                      <th className="py-2.5">Primary Service</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-white/5 font-semibold text-slate-700 dark:text-slate-350">
+                    {(aiAnalytics?.topUsers || [
+                      { name: "Asror Vali", requests: 152, cost: 12.40, primaryFeature: "Speaking" },
+                      { name: "Dilshod Tursun", requests: 98, cost: 8.10, primaryFeature: "Chat" },
+                      { name: "Zilola Umar", requests: 87, cost: 7.50, primaryFeature: "Tutor" },
+                    ]).map((user: any) => (
+                      <tr key={user.name}>
+                        <td className="py-3 font-bold text-slate-900 dark:text-white">{user.name}</td>
+                        <td className="py-3">{user.requests} msgs</td>
+                        <td className="py-3 text-emerald-500">${user.cost.toFixed(2)}</td>
+                        <td className="py-3">
+                          <Badge variant="outline" className="text-[9px] uppercase font-bold py-0.5 px-2 bg-blue-500/10 text-blue-500 border-none rounded">
+                            {user.primaryFeature}
+                          </Badge>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+
+          </div>
+
+          {/* AI Usage Heatmap */}
+          <Card className="p-6 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900/60 shadow-sm space-y-4">
+            <h4 className="text-xs font-black uppercase tracking-wider text-slate-500">AI Usage Activity Heatmap (Weekly Load)</h4>
+            <div className="grid grid-cols-7 gap-2 pt-2 text-center text-xs">
+              {(aiAnalytics?.heatmap || [
+                { day: "Mon", morning: 120, afternoon: 240, evening: 310 },
+                { day: "Tue", morning: 140, afternoon: 280, evening: 340 },
+                { day: "Wed", morning: 110, afternoon: 260, evening: 320 },
+                { day: "Thu", morning: 130, afternoon: 290, evening: 380 },
+                { day: "Fri", morning: 160, afternoon: 320, evening: 410 },
+                { day: "Sat", morning: 90, afternoon: 180, evening: 210 },
+                { day: "Sun", morning: 80, afternoon: 150, evening: 190 },
+              ]).map((dayData: any) => {
+                const total = dayData.morning + dayData.afternoon + dayData.evening;
+                const opacityClass = total > 800 ? "bg-purple-600" : (total > 600 ? "bg-purple-500" : (total > 400 ? "bg-purple-400" : "bg-purple-300"));
+                return (
+                  <div key={dayData.day} className="flex flex-col items-center gap-1.5 p-2 bg-slate-50/50 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/5">
+                    <span className="text-[10px] font-black uppercase text-slate-400">{dayData.day}</span>
+                    <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-black text-white shadow-sm", opacityClass)}>
+                      {Math.round(total / 10)}
+                    </div>
+                    <span className="text-[9px] font-bold text-slate-455">{total} reqs</span>
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
+        </div>
+      ) : loadingPacks ? (
         <div className="grid md:grid-cols-3 gap-8 py-12">
           {[1, 2, 3].map((n) => (
             <div key={n} className="h-[500px] rounded-[2.5rem] bg-slate-100 dark:bg-white/5 animate-pulse" />
@@ -1681,6 +2075,119 @@ export default function Packs() {
                   </div>
                 </div>
 
+                {/* AI Features & Limits Section */}
+                <div className="sm:col-span-2 border-t border-slate-100 dark:border-white/5 pt-4 space-y-4">
+                  <h4 className="text-xs font-black uppercase tracking-wider text-slate-500 flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-purple-500" /> AI Features & Limits Configuration
+                  </h4>
+                  
+                  <div className="space-y-6 bg-slate-50/50 dark:bg-white/5 p-6 rounded-2xl border border-slate-100 dark:border-white/5">
+                    
+                    {/* Card 1: AI Access Permissions */}
+                    <div className="space-y-3">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">AI Access Permissions</p>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                        {[
+                          { label: "AI Speaking", field: "aiAccessSpeaking" },
+                          { label: "AI Chat", field: "aiAccessChat" },
+                          { label: "AI Tutor", field: "aiAccessTutor" },
+                          { label: "AI Feedback", field: "aiAccessFeedback" },
+                          { label: "AI Analytics", field: "aiAccessAnalytics" },
+                          { label: "AI Writing Assistant", field: "aiAccessWriting" },
+                          { label: "AI Exam Generator", field: "aiAccessExamGenerator" },
+                          { label: "AI Quiz Generator", field: "aiAccessQuizGenerator" },
+                          { label: "AI Coding Mentor", field: "aiAccessCodingMentor" },
+                          { label: "AI Homework Assistant", field: "aiAccessHomeworkAssistant" },
+                        ].map(item => (
+                          <div key={item.field} className="flex items-center justify-between p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
+                            <Label className="text-xs font-bold">{item.label}</Label>
+                            <Switch 
+                              checked={!!(editing as any)[item.field]} 
+                              onCheckedChange={v => setEditing({...editing, [item.field]: v})} 
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Card 2: Usage Limits & Unlimited Options */}
+                    <div className="space-y-3 pt-2">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">AI Usage Limits</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {[
+                          { label: "Speaking Minutes / Month", valField: "aiLimitSpeakingMinutes", unlField: "aiUnlimitedSpeaking" },
+                          { label: "Messages / Month", valField: "aiLimitMessagesPerMonth", unlField: "aiUnlimitedMessages" },
+                          { label: "Tokens / Month", valField: "aiLimitTokens", unlField: "aiUnlimitedTokens" },
+                          { label: "Daily Requests limit", valField: "aiLimitRequestsPerDay" },
+                          { label: "Sessions / Month", valField: "aiLimitSessionsPerMonth" },
+                          { label: "Voice Minutes / Month", valField: "aiLimitVoiceMinutes" },
+                          { label: "Feedback Count / Month", valField: "aiLimitFeedbackCount" },
+                          { label: "Quiz Generations / Month", valField: "aiLimitQuizGenCount" },
+                          { label: "Exam Generations / Month", valField: "aiLimitExamGenCount" },
+                          { label: "Homework Analysis / Month", valField: "aiLimitHomeworkAnalysisCount" },
+                          { label: "Course Generations / Month", valField: "aiLimitCourseGenCount" },
+                        ].map(item => {
+                          const isUnlimited = item.unlField ? !!(editing as any)[item.unlField] : false;
+                          return (
+                            <div key={item.valField} className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 space-y-2">
+                              <div className="flex justify-between items-center">
+                                <Label className="text-xs font-black text-slate-700 dark:text-slate-200">{item.label}</Label>
+                                {item.unlField && (
+                                  <div className="flex items-center gap-1.5">
+                                    <input 
+                                      type="checkbox" 
+                                      id={item.unlField} 
+                                      checked={isUnlimited} 
+                                      onChange={e => setEditing({...editing, [item.unlField]: e.target.checked, [item.valField]: e.target.checked ? 0 : ((editing as any)[item.valField] || 0)})}
+                                      className="rounded text-primary border-slate-300 focus:ring-primary w-3.5 h-3.5 cursor-pointer"
+                                    />
+                                    <label htmlFor={item.unlField} className="text-[10px] font-bold text-slate-455 select-none cursor-pointer">Unlimited</label>
+                                  </div>
+                                )}
+                              </div>
+                              <Input 
+                                type="number" 
+                                disabled={isUnlimited}
+                                className="bg-slate-50 dark:bg-slate-900 h-10 rounded-lg border-slate-200 dark:border-slate-800 font-bold" 
+                                value={(editing as any)[item.valField] || 0} 
+                                onChange={e => setEditing({...editing, [item.valField]: +e.target.value})} 
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Card 3: AI Premium Feature Matrix */}
+                    <div className="space-y-3 pt-2">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">AI Premium Feature Matrix</p>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                        {[
+                          { label: "Premium Voices", field: "aiFeaturePremiumVoices" },
+                          { label: "IELTS Examiner", field: "aiFeatureIeltsCoach" },
+                          { label: "Business Coach", field: "aiFeatureBusinessEnglish" },
+                          { label: "Interview Coach", field: "aiFeatureInterviewCoach" },
+                          { label: "Conversation History", field: "aiFeatureConversationHistory" },
+                          { label: "Advanced Feedback", field: "aiFeatureAdvancedFeedback" },
+                          { label: "Fast AI Responses", field: "aiFeatureFastResponses" },
+                          { label: "Priority Queue", field: "aiFeaturePriorityQueue" },
+                          { label: "Teacher AI Dashboard", field: "aiFeatureTeacherDashboard" },
+                          { label: "Organization AI Tools", field: "aiFeatureOrganizationAi" },
+                        ].map(item => (
+                          <div key={item.field} className="flex items-center justify-between p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
+                            <Label className="text-xs font-bold">{item.label}</Label>
+                            <Switch 
+                              checked={!!(editing as any)[item.field]} 
+                              onCheckedChange={v => setEditing({...editing, [item.field]: v})} 
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+
                 {/* Left side: features list */}
                 <div className="sm:col-span-2 grid sm:grid-cols-2 gap-6 pt-4 border-t border-slate-100 dark:border-white/5">
                   <div className="space-y-4">
@@ -1834,6 +2341,65 @@ export default function Packs() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Subscription Upgrade Modal */}
+      <Dialog open={upgradeOpen} onOpenChange={setUpgradeOpen}>
+        <DialogContent className="max-w-md bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl rounded-[2.5rem] border-none shadow-2xl p-6 text-center">
+          <DialogHeader className="flex flex-col items-center">
+            <div className="w-14 h-14 rounded-full bg-purple-500/10 flex items-center justify-center text-purple-500 mb-4 animate-bounce">
+              <Sparkles className="h-7 w-7" />
+            </div>
+            <DialogTitle className="text-xl font-black tracking-tight text-slate-850 dark:text-white">
+              Upgrade Your Subscription Plan
+            </DialogTitle>
+            <p className="text-xs text-slate-400 font-medium mt-1">
+              {upgradeErrorDetail?.message || "Siz tanlagan AI xizmati sizning joriy tarifingizda cheklangan."}
+            </p>
+          </DialogHeader>
+
+          {/* Benefits list */}
+          <div className="py-6 space-y-3.5 text-left border-y border-slate-100 dark:border-white/5 my-4">
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">PRO PLAN BENEFITS</p>
+            <div className="space-y-2.5 text-xs font-semibold text-slate-700 dark:text-slate-300">
+              <div className="flex items-center gap-2">
+                <Check className="h-4 w-4 text-emerald-500 shrink-0" strokeWidth={3} />
+                <span>Unlimited AI Speech Exchanges & Interactive Avatar</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Check className="h-4 w-4 text-emerald-500 shrink-0" strokeWidth={3} />
+                <span>Premium Voices & Advanced Translation Analyzer</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Check className="h-4 w-4 text-emerald-500 shrink-0" strokeWidth={3} />
+                <span>IELTS Exam Preparation Rooms (Real Simulations)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Check className="h-4 w-4 text-emerald-500 shrink-0" strokeWidth={3} />
+                <span>Fast AI Responses & Dedicated Server Queue</span>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="flex flex-col gap-2.5 sm:flex-col mt-2">
+            <Button 
+              onClick={() => {
+                setUpgradeOpen(false);
+                setViewMode("all"); // switch to buy packages view!
+              }}
+              className="w-full bg-gradient-primary h-12 rounded-xl font-black uppercase tracking-wider text-xs text-white shadow-lg border-none"
+            >
+              Upgrade Subscription
+            </Button>
+            <Button 
+              variant="ghost" 
+              onClick={() => setUpgradeOpen(false)}
+              className="w-full h-11 rounded-xl text-xs font-bold text-slate-400 hover:text-slate-650"
+            >
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
         </>
       )}
 

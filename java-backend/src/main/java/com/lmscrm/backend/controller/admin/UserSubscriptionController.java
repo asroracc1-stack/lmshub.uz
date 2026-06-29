@@ -33,6 +33,7 @@ public class UserSubscriptionController {
 
     private final UserRepository userRepository;
     private final UserSubscriptionRepository userSubscriptionRepository;
+    private final com.lmscrm.backend.repository.UserAiUsageRepository userAiUsageRepository;
 
     /**
      * Returns the current user's active subscription pack type.
@@ -183,6 +184,96 @@ public class UserSubscriptionController {
             map.put("processedAt", req.getProcessedAt());
             return map;
         }).collect(Collectors.toList());
+
+        return ResponseEntity.ok(result);
+    }
+
+    /**
+     * Returns the current user's AI limits and usage statistics.
+     */
+    @GetMapping("/ai-usage")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Map<String, Object>> getAiUsage(Authentication auth) {
+        Map<String, Object> result = new HashMap<>();
+        User user = userRepository.findByEmailOrUsername(auth.getName(), auth.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        List<UserSubscription> subscriptions = userSubscriptionRepository.findByUserId(user.getId());
+        LocalDateTime now = LocalDateTime.now();
+
+        UserSubscription activeSub = subscriptions.stream()
+                .filter(sub -> Boolean.TRUE.equals(sub.getIsActive()))
+                .filter(sub -> sub.getExpiresAt() == null || sub.getExpiresAt().isAfter(now))
+                .findFirst()
+                .orElse(null);
+
+        if (activeSub == null) {
+            result.put("hasActivePlan", false);
+            result.put("planName", "Free Trial");
+            result.put("packType", "FREE");
+            result.put("speakingMinutesUsed", 0);
+            result.put("speakingMinutesLimit", 0);
+            result.put("speakingMinutesUnlimited", false);
+            result.put("messagesUsed", 0);
+            result.put("messagesLimit", 0);
+            result.put("messagesUnlimited", false);
+            result.put("tokensUsed", 0);
+            result.put("tokensLimit", 0);
+            result.put("tokensUnlimited", false);
+            return ResponseEntity.ok(result);
+        }
+
+        SubscriptionPack pack = activeSub.getPack();
+        com.lmscrm.backend.domain.entity.UserAiUsage usage = userAiUsageRepository.findById(user.getId())
+                .orElseGet(() -> {
+                    com.lmscrm.backend.domain.entity.UserAiUsage nu = com.lmscrm.backend.domain.entity.UserAiUsage.builder()
+                            .userId(user.getId())
+                            .lastResetDate(now)
+                            .build();
+                    return userAiUsageRepository.save(nu);
+                });
+
+        result.put("hasActivePlan", true);
+        result.put("planName", pack.getName());
+        result.put("packType", pack.getType().name());
+        result.put("expiresAt", activeSub.getExpiresAt() != null ? activeSub.getExpiresAt().toString() : null);
+
+        // Speaking Limit
+        result.put("speakingMinutesUsed", usage.getSpeakingMinutesUsed());
+        result.put("speakingMinutesLimit", pack.getAiLimitSpeakingMinutes());
+        result.put("speakingMinutesUnlimited", pack.getAiUnlimitedSpeaking());
+
+        // Messages Limit
+        result.put("messagesUsed", usage.getMessagesUsed());
+        result.put("messagesLimit", pack.getAiLimitMessagesPerMonth());
+        result.put("messagesUnlimited", pack.getAiUnlimitedMessages());
+
+        // Tokens Limit
+        result.put("tokensUsed", usage.getTokensUsed());
+        result.put("tokensLimit", pack.getAiLimitTokens());
+        result.put("tokensUnlimited", pack.getAiUnlimitedTokens());
+
+        // Sessions Limit
+        result.put("sessionsUsed", usage.getSessionsUsed());
+        result.put("sessionsLimit", pack.getAiLimitSessionsPerMonth());
+
+        // Quiz Limit
+        result.put("quizGenerationsUsed", usage.getQuizGenerations());
+        result.put("quizGenerationsLimit", pack.getAiLimitQuizGenCount());
+
+        // Feature Matrix
+        Map<String, Boolean> features = new HashMap<>();
+        features.put("premiumVoices", pack.getAiFeaturePremiumVoices());
+        features.put("ieltsCoach", pack.getAiFeatureIeltsCoach());
+        features.put("businessEnglish", pack.getAiFeatureBusinessEnglish());
+        features.put("interviewCoach", pack.getAiFeatureInterviewCoach());
+        features.put("conversationHistory", pack.getAiFeatureConversationHistory());
+        features.put("advancedFeedback", pack.getAiFeatureAdvancedFeedback());
+        features.put("fastResponses", pack.getAiFeatureFastResponses());
+        features.put("priorityQueue", pack.getAiFeaturePriorityQueue());
+        features.put("teacherDashboard", pack.getAiFeatureTeacherDashboard());
+        features.put("organizationAi", pack.getAiFeatureOrganizationAi());
+        result.put("features", features);
 
         return ResponseEntity.ok(result);
     }

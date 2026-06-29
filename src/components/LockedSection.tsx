@@ -13,8 +13,8 @@ interface Props {
  * Premium locked overlay shown to users who haven't purchased
  * a pack that unlocks this section.
  */
-export default function LockedSection({
-  const { t } = useTranslation(); title, description }: Props) {
+export default function LockedSection({ title, description }: Props) {
+  const { t } = useTranslation();
   return (
     <div className="mx-auto max-w-2xl py-12">
       <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-primary/10 via-background to-accent/10 p-10 text-center shadow-xl">

@@ -93,6 +93,40 @@ public class SubscriptionPackService {
                 .type(SubscriptionPack.PackType.valueOf(dto.getType() != null ? dto.getType() : "PRO"))
                 .status(dto.getStatus() != null ? dto.getStatus() : "ACTIVE")
                 .totalPurchases(dto.getTotalPurchases() != null ? dto.getTotalPurchases() : 0)
+                .aiAccessSpeaking(dto.getAiAccessSpeaking() != null ? dto.getAiAccessSpeaking() : false)
+                .aiAccessChat(dto.getAiAccessChat() != null ? dto.getAiAccessChat() : false)
+                .aiAccessTutor(dto.getAiAccessTutor() != null ? dto.getAiAccessTutor() : false)
+                .aiAccessFeedback(dto.getAiAccessFeedback() != null ? dto.getAiAccessFeedback() : false)
+                .aiAccessAnalytics(dto.getAiAccessAnalytics() != null ? dto.getAiAccessAnalytics() : false)
+                .aiAccessWriting(dto.getAiAccessWriting() != null ? dto.getAiAccessWriting() : false)
+                .aiAccessExamGenerator(dto.getAiAccessExamGenerator() != null ? dto.getAiAccessExamGenerator() : false)
+                .aiAccessQuizGenerator(dto.getAiAccessQuizGenerator() != null ? dto.getAiAccessQuizGenerator() : false)
+                .aiAccessCodingMentor(dto.getAiAccessCodingMentor() != null ? dto.getAiAccessCodingMentor() : false)
+                .aiAccessHomeworkAssistant(dto.getAiAccessHomeworkAssistant() != null ? dto.getAiAccessHomeworkAssistant() : false)
+                .aiLimitSpeakingMinutes(dto.getAiLimitSpeakingMinutes() != null ? dto.getAiLimitSpeakingMinutes() : 0)
+                .aiLimitMessagesPerMonth(dto.getAiLimitMessagesPerMonth() != null ? dto.getAiLimitMessagesPerMonth() : 0)
+                .aiLimitRequestsPerDay(dto.getAiLimitRequestsPerDay() != null ? dto.getAiLimitRequestsPerDay() : 0)
+                .aiLimitSessionsPerMonth(dto.getAiLimitSessionsPerMonth() != null ? dto.getAiLimitSessionsPerMonth() : 0)
+                .aiLimitTokens(dto.getAiLimitTokens() != null ? dto.getAiLimitTokens() : 0)
+                .aiLimitVoiceMinutes(dto.getAiLimitVoiceMinutes() != null ? dto.getAiLimitVoiceMinutes() : 0)
+                .aiLimitFeedbackCount(dto.getAiLimitFeedbackCount() != null ? dto.getAiLimitFeedbackCount() : 0)
+                .aiLimitQuizGenCount(dto.getAiLimitQuizGenCount() != null ? dto.getAiLimitQuizGenCount() : 0)
+                .aiLimitCourseGenCount(dto.getAiLimitCourseGenCount() != null ? dto.getAiLimitCourseGenCount() : 0)
+                .aiLimitExamGenCount(dto.getAiLimitExamGenCount() != null ? dto.getAiLimitExamGenCount() : 0)
+                .aiLimitHomeworkAnalysisCount(dto.getAiLimitHomeworkAnalysisCount() != null ? dto.getAiLimitHomeworkAnalysisCount() : 0)
+                .aiUnlimitedSpeaking(dto.getAiUnlimitedSpeaking() != null ? dto.getAiUnlimitedSpeaking() : false)
+                .aiUnlimitedMessages(dto.getAiUnlimitedMessages() != null ? dto.getAiUnlimitedMessages() : false)
+                .aiUnlimitedTokens(dto.getAiUnlimitedTokens() != null ? dto.getAiUnlimitedTokens() : false)
+                .aiFeaturePremiumVoices(dto.getAiFeaturePremiumVoices() != null ? dto.getAiFeaturePremiumVoices() : false)
+                .aiFeatureIeltsCoach(dto.getAiFeatureIeltsCoach() != null ? dto.getAiFeatureIeltsCoach() : false)
+                .aiFeatureBusinessEnglish(dto.getAiFeatureBusinessEnglish() != null ? dto.getAiFeatureBusinessEnglish() : false)
+                .aiFeatureInterviewCoach(dto.getAiFeatureInterviewCoach() != null ? dto.getAiFeatureInterviewCoach() : false)
+                .aiFeatureConversationHistory(dto.getAiFeatureConversationHistory() != null ? dto.getAiFeatureConversationHistory() : false)
+                .aiFeatureAdvancedFeedback(dto.getAiFeatureAdvancedFeedback() != null ? dto.getAiFeatureAdvancedFeedback() : false)
+                .aiFeatureFastResponses(dto.getAiFeatureFastResponses() != null ? dto.getAiFeatureFastResponses() : false)
+                .aiFeaturePriorityQueue(dto.getAiFeaturePriorityQueue() != null ? dto.getAiFeaturePriorityQueue() : false)
+                .aiFeatureTeacherDashboard(dto.getAiFeatureTeacherDashboard() != null ? dto.getAiFeatureTeacherDashboard() : false)
+                .aiFeatureOrganizationAi(dto.getAiFeatureOrganizationAi() != null ? dto.getAiFeatureOrganizationAi() : false)
                 .build();
 
         return toDto(repository.save(pack));
@@ -192,6 +226,42 @@ public class SubscriptionPackService {
             pack.setTotalPurchases(dto.getTotalPurchases());
         }
 
+        // Set AI properties
+        pack.setAiAccessSpeaking(dto.getAiAccessSpeaking() != null ? dto.getAiAccessSpeaking() : false);
+        pack.setAiAccessChat(dto.getAiAccessChat() != null ? dto.getAiAccessChat() : false);
+        pack.setAiAccessTutor(dto.getAiAccessTutor() != null ? dto.getAiAccessTutor() : false);
+        pack.setAiAccessFeedback(dto.getAiAccessFeedback() != null ? dto.getAiAccessFeedback() : false);
+        pack.setAiAccessAnalytics(dto.getAiAccessAnalytics() != null ? dto.getAiAccessAnalytics() : false);
+        pack.setAiAccessWriting(dto.getAiAccessWriting() != null ? dto.getAiAccessWriting() : false);
+        pack.setAiAccessExamGenerator(dto.getAiAccessExamGenerator() != null ? dto.getAiAccessExamGenerator() : false);
+        pack.setAiAccessQuizGenerator(dto.getAiAccessQuizGenerator() != null ? dto.getAiAccessQuizGenerator() : false);
+        pack.setAiAccessCodingMentor(dto.getAiAccessCodingMentor() != null ? dto.getAiAccessCodingMentor() : false);
+        pack.setAiAccessHomeworkAssistant(dto.getAiAccessHomeworkAssistant() != null ? dto.getAiAccessHomeworkAssistant() : false);
+        pack.setAiLimitSpeakingMinutes(dto.getAiLimitSpeakingMinutes() != null ? dto.getAiLimitSpeakingMinutes() : 0);
+        pack.setAiLimitMessagesPerMonth(dto.getAiLimitMessagesPerMonth() != null ? dto.getAiLimitMessagesPerMonth() : 0);
+        pack.setAiLimitRequestsPerDay(dto.getAiLimitRequestsPerDay() != null ? dto.getAiLimitRequestsPerDay() : 0);
+        pack.setAiLimitSessionsPerMonth(dto.getAiLimitSessionsPerMonth() != null ? dto.getAiLimitSessionsPerMonth() : 0);
+        pack.setAiLimitTokens(dto.getAiLimitTokens() != null ? dto.getAiLimitTokens() : 0);
+        pack.setAiLimitVoiceMinutes(dto.getAiLimitVoiceMinutes() != null ? dto.getAiLimitVoiceMinutes() : 0);
+        pack.setAiLimitFeedbackCount(dto.getAiLimitFeedbackCount() != null ? dto.getAiLimitFeedbackCount() : 0);
+        pack.setAiLimitQuizGenCount(dto.getAiLimitQuizGenCount() != null ? dto.getAiLimitQuizGenCount() : 0);
+        pack.setAiLimitCourseGenCount(dto.getAiLimitCourseGenCount() != null ? dto.getAiLimitCourseGenCount() : 0);
+        pack.setAiLimitExamGenCount(dto.getAiLimitExamGenCount() != null ? dto.getAiLimitExamGenCount() : 0);
+        pack.setAiLimitHomeworkAnalysisCount(dto.getAiLimitHomeworkAnalysisCount() != null ? dto.getAiLimitHomeworkAnalysisCount() : 0);
+        pack.setAiUnlimitedSpeaking(dto.getAiUnlimitedSpeaking() != null ? dto.getAiUnlimitedSpeaking() : false);
+        pack.setAiUnlimitedMessages(dto.getAiUnlimitedMessages() != null ? dto.getAiUnlimitedMessages() : false);
+        pack.setAiUnlimitedTokens(dto.getAiUnlimitedTokens() != null ? dto.getAiUnlimitedTokens() : false);
+        pack.setAiFeaturePremiumVoices(dto.getAiFeaturePremiumVoices() != null ? dto.getAiFeaturePremiumVoices() : false);
+        pack.setAiFeatureIeltsCoach(dto.getAiFeatureIeltsCoach() != null ? dto.getAiFeatureIeltsCoach() : false);
+        pack.setAiFeatureBusinessEnglish(dto.getAiFeatureBusinessEnglish() != null ? dto.getAiFeatureBusinessEnglish() : false);
+        pack.setAiFeatureInterviewCoach(dto.getAiFeatureInterviewCoach() != null ? dto.getAiFeatureInterviewCoach() : false);
+        pack.setAiFeatureConversationHistory(dto.getAiFeatureConversationHistory() != null ? dto.getAiFeatureConversationHistory() : false);
+        pack.setAiFeatureAdvancedFeedback(dto.getAiFeatureAdvancedFeedback() != null ? dto.getAiFeatureAdvancedFeedback() : false);
+        pack.setAiFeatureFastResponses(dto.getAiFeatureFastResponses() != null ? dto.getAiFeatureFastResponses() : false);
+        pack.setAiFeaturePriorityQueue(dto.getAiFeaturePriorityQueue() != null ? dto.getAiFeaturePriorityQueue() : false);
+        pack.setAiFeatureTeacherDashboard(dto.getAiFeatureTeacherDashboard() != null ? dto.getAiFeatureTeacherDashboard() : false);
+        pack.setAiFeatureOrganizationAi(dto.getAiFeatureOrganizationAi() != null ? dto.getAiFeatureOrganizationAi() : false);
+
         SubscriptionPack updated = repository.save(pack);
 
         // Notify via Telegram
@@ -249,6 +319,40 @@ public class SubscriptionPackService {
                 .totalPurchases(sp.getTotalPurchases())
                 .examIds(examIds)
                 .allowedBookIds(allowedBookIds)
+                .aiAccessSpeaking(sp.getAiAccessSpeaking())
+                .aiAccessChat(sp.getAiAccessChat())
+                .aiAccessTutor(sp.getAiAccessTutor())
+                .aiAccessFeedback(sp.getAiAccessFeedback())
+                .aiAccessAnalytics(sp.getAiAccessAnalytics())
+                .aiAccessWriting(sp.getAiAccessWriting())
+                .aiAccessExamGenerator(sp.getAiAccessExamGenerator())
+                .aiAccessQuizGenerator(sp.getAiAccessQuizGenerator())
+                .aiAccessCodingMentor(sp.getAiAccessCodingMentor())
+                .aiAccessHomeworkAssistant(sp.getAiAccessHomeworkAssistant())
+                .aiLimitSpeakingMinutes(sp.getAiLimitSpeakingMinutes())
+                .aiLimitMessagesPerMonth(sp.getAiLimitMessagesPerMonth())
+                .aiLimitRequestsPerDay(sp.getAiLimitRequestsPerDay())
+                .aiLimitSessionsPerMonth(sp.getAiLimitSessionsPerMonth())
+                .aiLimitTokens(sp.getAiLimitTokens())
+                .aiLimitVoiceMinutes(sp.getAiLimitVoiceMinutes())
+                .aiLimitFeedbackCount(sp.getAiLimitFeedbackCount())
+                .aiLimitQuizGenCount(sp.getAiLimitQuizGenCount())
+                .aiLimitCourseGenCount(sp.getAiLimitCourseGenCount())
+                .aiLimitExamGenCount(sp.getAiLimitExamGenCount())
+                .aiLimitHomeworkAnalysisCount(sp.getAiLimitHomeworkAnalysisCount())
+                .aiUnlimitedSpeaking(sp.getAiUnlimitedSpeaking())
+                .aiUnlimitedMessages(sp.getAiUnlimitedMessages())
+                .aiUnlimitedTokens(sp.getAiUnlimitedTokens())
+                .aiFeaturePremiumVoices(sp.getAiFeaturePremiumVoices())
+                .aiFeatureIeltsCoach(sp.getAiFeatureIeltsCoach())
+                .aiFeatureBusinessEnglish(sp.getAiFeatureBusinessEnglish())
+                .aiFeatureInterviewCoach(sp.getAiFeatureInterviewCoach())
+                .aiFeatureConversationHistory(sp.getAiFeatureConversationHistory())
+                .aiFeatureAdvancedFeedback(sp.getAiFeatureAdvancedFeedback())
+                .aiFeatureFastResponses(sp.getAiFeatureFastResponses())
+                .aiFeaturePriorityQueue(sp.getAiFeaturePriorityQueue())
+                .aiFeatureTeacherDashboard(sp.getAiFeatureTeacherDashboard())
+                .aiFeatureOrganizationAi(sp.getAiFeatureOrganizationAi())
                 .build();
     }
 }
