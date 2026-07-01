@@ -7,14 +7,15 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { api } from "@/lib/axios";
 import {
   Flame,
-  Trophy,
   Clock,
   Sparkles,
   Coins,
+  ChevronLeft,
+  ChevronRight,
   BookOpen,
-  ArrowRight,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  Trophy
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -46,448 +47,414 @@ interface ContributionStats {
 export default function LearningContributionGraph() {
   const { t, i18n } = useTranslation();
   const { theme } = useTheme();
-    const isDark = theme === "dark";
+  const isDark = theme === "dark";
 
-    const [data, setData] = useState<ContributionStats | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+  const [data, setData] = useState<ContributionStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
 
-    const fetchContributions = async () => {
-      try {
-        setLoading(true);
-        const res = await api.get("/user/gamification/contributions");
-        const contributionsData = res.data;
-        if (contributionsData && Array.isArray(contributionsData.daily_contributions)) {
-          const todayStr = new Date().toLocaleDateString('en-CA');
-          let foundToday = false;
-          let addedMinutes = 0;
-          let addedXp = 0;
+  const fetchContributions = async () => {
+    try {
+      setLoading(true);
+      const res = await api.get("/user/gamification/contributions");
+      const contributionsData = res.data;
+      
+      // Ensure daily contributions exist and fill with current activity if not present
+      if (contributionsData && Array.isArray(contributionsData.daily_contributions)) {
+        const todayStr = new Date().toLocaleDateString('en-CA');
+        let foundToday = false;
+        let addedMinutes = 0;
+        let addedXp = 0;
 
-          contributionsData.daily_contributions = contributionsData.daily_contributions.map((day: any) => {
-            if (day.date === todayStr) {
-              foundToday = true;
-              if (day.minutes === 0) {
-                addedMinutes = 15;
-                addedXp = 50;
-                return {
-                  ...day,
-                  minutes: 15,
-                  xp: day.xp || 50,
-                };
-              }
-            }
-            return day;
-          });
-
-          if (!foundToday && contributionsData.daily_contributions.length > 0) {
-            const lastIndex = contributionsData.daily_contributions.length - 1;
-            const lastDay = contributionsData.daily_contributions[lastIndex];
-            if (lastDay && lastDay.minutes === 0) {
+        contributionsData.daily_contributions = contributionsData.daily_contributions.map((day: any) => {
+          if (day.date === todayStr) {
+            foundToday = true;
+            if (day.minutes === 0) {
               addedMinutes = 15;
               addedXp = 50;
-              contributionsData.daily_contributions[lastIndex] = {
-                ...lastDay,
+              return {
+                ...day,
                 minutes: 15,
-                xp: lastDay.xp || 50,
+                xp: day.xp || 50,
               };
             }
           }
+          return day;
+        });
 
-          if (addedMinutes > 0) {
-            contributionsData.total_study_hours = (contributionsData.total_study_hours || 0) + (addedMinutes / 60);
-            contributionsData.total_xp = (contributionsData.total_xp || 0) + addedXp;
+        if (!foundToday && contributionsData.daily_contributions.length > 0) {
+          const lastIndex = contributionsData.daily_contributions.length - 1;
+          const lastDay = contributionsData.daily_contributions[lastIndex];
+          if (lastDay && lastDay.minutes === 0) {
+            addedMinutes = 15;
+            addedXp = 50;
+            contributionsData.daily_contributions[lastIndex] = {
+              ...lastDay,
+              minutes: 15,
+              xp: lastDay.xp || 50,
+            };
           }
         }
-        setData(contributionsData);
-        setError(null);
-      } catch (err) {
-        console.error("Failed to load contributions", err);
-        setError("Failed to load contribution data.");
-      } finally {
-        setLoading(false);
+
+        if (addedMinutes > 0) {
+          contributionsData.total_study_hours = (contributionsData.total_study_hours || 0) + (addedMinutes / 60);
+          contributionsData.total_xp = (contributionsData.total_xp || 0) + addedXp;
+        }
       }
-    };
+      setData(contributionsData);
+      setError(null);
+    } catch (err) {
+      console.error("Failed to load contributions", err);
+      setError("Failed to load contribution data.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    useEffect(() => {
-      fetchContributions();
-    }, []);
+  useEffect(() => {
+    fetchContributions();
+  }, []);
 
-    // Map month key to localized string
-    const getLocalizedMonth = (dateStr: string) => {
-      const d = new Date(dateStr);
-      const months = [
-        t("dynamic.learningGraph.months.jan"),
-        t("dynamic.learningGraph.months.feb"),
-        t("dynamic.learningGraph.months.mar"),
-        t("dynamic.learningGraph.months.apr"),
-        t("dynamic.learningGraph.months.may"),
-        t("dynamic.learningGraph.months.jun"),
-        t("dynamic.learningGraph.months.jul"),
-        t("dynamic.learningGraph.months.aug"),
-        t("dynamic.learningGraph.months.sep"),
-        t("dynamic.learningGraph.months.oct"),
-        t("dynamic.learningGraph.months.nov"),
-        t("dynamic.learningGraph.months.dec"),
-      ];
-      return months[d.getMonth()];
-    };
+  const getMonthNameUz = (monthIndex: number) => {
+    const months = [
+      "Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun",
+      "Iyul", "Avgust", "Sentabr", "Oktabr", "Noyabr", "Dekabr"
+    ];
+    return months[monthIndex];
+  };
 
-    // Build a structured 53x7 grid representing the 365 days aligned by day of week
-    const gridData = useMemo(() => {
-      if (!data || !data.daily_contributions || data.daily_contributions.length === 0) return null;
+  const getLocalizedMonth = (date: Date) => {
+    if (i18n.language === "uz") {
+      return getMonthNameUz(date.getMonth());
+    }
+    return date.toLocaleDateString(i18n.language, { month: "long" });
+  };
 
-      const list = data.daily_contributions;
+  const navigateMonth = (direction: "prev" | "next") => {
+    setCurrentMonth(prev => {
+      const year = prev.getFullYear();
+      const month = prev.getMonth();
+      return direction === "prev"
+        ? new Date(year, month - 1, 1)
+        : new Date(year, month + 1, 1);
+    });
+  };
 
-      // Earliest date
-      const firstDay = new Date(list[0].date);
+  // Build the monthly calendar cells
+  const calendarCells = useMemo(() => {
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
 
-      // Day of week offset: Mon=0, Tue=1, ..., Sun=6
-      // Date.getDay(): Sun=0, Mon=1, ..., Sat=6
-      const getWeekdayOffset = (date: Date) => {
-        return (date.getDay() + 6) % 7;
-      };
+    const firstDayOfMonth = new Date(year, month, 1);
+    const lastDayOfMonth = new Date(year, month + 1, 0);
 
-      const startOffset = getWeekdayOffset(firstDay);
+    const daysInMonth = lastDayOfMonth.getDate();
+    
+    // Day of week offset: Monday=0, Tuesday=1, ..., Sunday=6
+    const startWeekdayOffset = (firstDayOfMonth.getDay() + 6) % 7;
 
-      // Generate full list of cells, padded at the beginning
-      const cells: (ContributionDay | null)[] = [];
+    const cells: { dateKey: string; dayNumber: number | null; contribution: ContributionDay | null }[] = [];
 
-      // Prepend padding cells
-      for (let i = 0; i < startOffset; i++) {
-        cells.push(null);
-      }
+    // Padding for days of the previous month
+    for (let i = 0; i < startWeekdayOffset; i++) {
+      cells.push({ dateKey: `pad-${i}`, dayNumber: null, contribution: null });
+    }
 
-      // Add real days
-      list.forEach(day => {
-        cells.push(day);
+    // Days of current month
+    const padNum = (n: number) => String(n).padStart(2, "0");
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateKey = `${year}-${padNum(month + 1)}-${padNum(d)}`;
+      const contribution = data?.daily_contributions?.find(item => item.date === dateKey) || null;
+      cells.push({
+        dateKey,
+        dayNumber: d,
+        contribution
       });
-
-      // Group into 53 columns (weeks), each containing 7 rows (days)
-      const weeks: (ContributionDay | null)[][] = [];
-      for (let i = 0; i < cells.length; i += 7) {
-        const week = cells.slice(i, i + 7);
-        // Pad end of last week if it is incomplete
-        while (week.length < 7) {
-          week.push(null);
-        }
-        weeks.push(week);
-      }
-
-      return weeks;
-    }, [data]);
-
-    // Determine contribution level based on study minutes
-    const getContributionLevel = (minutes: number) => {
-      if (minutes === 0) return 0;
-      if (minutes <= 15) return 1;
-      if (minutes <= 30) return 2;
-      if (minutes <= 60) return 3;
-      return 4;
-    };
-
-    // Helper to get study time text with hours when applicable
-    const getStudyTimeText = (minutes: number) => {
-      const hours = minutes / 60;
-      if (hours >= 1) {
-        return `${hours.toFixed(1)} ${t("dynamic.learningGraph.hours")}`;
-      }
-      return `${minutes.toFixed(0)} ${t("dynamic.learningGraph.studyMinutes")}`;
-    };
-
-    // Color mappings for levels
-    const getCellColorClass = (level: number) => {
-      if (isDark) {
-        switch (level) {
-          case 1: return "bg-emerald-900 border-emerald-850 hover:bg-emerald-800";
-          case 2: return "bg-emerald-700 border-emerald-650 hover:bg-emerald-600";
-          case 3: return "bg-emerald-500 border-emerald-450 hover:bg-emerald-450 hover:shadow-[0_0_8px_rgba(16,185,129,0.6)]";
-          case 4: return "bg-emerald-400 border-emerald-350 hover:bg-emerald-300 hover:shadow-[0_0_12px_rgba(52,211,153,0.8)]";
-          default: return "bg-slate-950/60 border-slate-900/50 hover:bg-slate-800/60";
-        }
-      } else {
-        switch (level) {
-          case 1: return "bg-green-100 border-green-200 hover:bg-green-200";
-          case 2: return "bg-green-300 border-green-400 hover:bg-green-400";
-          case 3: return "bg-green-500 border-green-600 hover:bg-green-650";
-          case 4: return "bg-green-700 border-green-800 hover:bg-green-800";
-          default: return "bg-slate-100/50 border-slate-200/50 hover:bg-slate-200/50";
-        }
-      }
-    };
-
-    if (loading) {
-      return (
-        <Card className={cn(
-          "p-8 sm:p-12 flex flex-col items-center justify-center min-h-[250px] sm:min-h-[350px] rounded-2xl sm:rounded-[2rem] border",
-          isDark ? "bg-slate-900/40 border-white/5 backdrop-blur-md" : "bg-white border-slate-100"
-        )}>
-          <Loader2 className="w-10 h-10 animate-spin text-purple-500 mb-4" />
-          <p className={cn("text-sm font-bold", isDark ? "text-slate-400" : "text-slate-500")}>
-            {t("dynamic.learningWorld.loading")}
-          </p>
-        </Card>
-      );
     }
 
-    if (error || !data) {
-      return (
-        <Card className={cn(
-          "p-6 sm:p-8 flex flex-col items-center justify-center min-h-[250px] sm:min-h-[300px] rounded-2xl sm:rounded-[2rem] border text-center",
-          isDark ? "bg-slate-900/40 border-white/5 backdrop-blur-md" : "bg-white border-slate-100"
-        )}>
-          <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
-          <h4 className={cn("text-lg font-black", isDark ? "text-white" : "text-slate-900")}>
-            Error Loading Progress
-          </h4>
-          <p className="text-sm text-slate-500 mt-2 max-w-md">
-            {error || "We encountered an issue fetching your activity history."}
-          </p>
-          <Button onClick={fetchContributions} className="mt-4 bg-purple-600 hover:bg-purple-700 text-white rounded-full px-6 py-2">
-            Retry
-          </Button>
-        </Card>
-      );
+    // Complete the last week up to Sunday
+    const remaining = 7 - (cells.length % 7);
+    if (remaining < 7) {
+      for (let i = 0; i < remaining; i++) {
+        cells.push({ dateKey: `pad-end-${i}`, dayNumber: null, contribution: null });
+      }
     }
 
+    return cells;
+  }, [currentMonth, data]);
+
+  // Selected Month Summary Stats
+  const monthStats = useMemo(() => {
+    if (!data?.daily_contributions) return { activeDays: 0, totalMinutes: 0, totalXp: 0, totalCoins: 0 };
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
+    const padNum = (n: number) => String(n).padStart(2, "0");
+    const prefix = `${year}-${padNum(month + 1)}`;
+
+    const monthlyData = data.daily_contributions.filter(day => day.date.startsWith(prefix));
+
+    return {
+      activeDays: monthlyData.filter(d => d.minutes > 0).length,
+      totalMinutes: monthlyData.reduce((acc, curr) => acc + curr.minutes, 0),
+      totalXp: monthlyData.reduce((acc, curr) => acc + curr.xp, 0),
+      totalCoins: monthlyData.reduce((acc, curr) => acc + (curr.coins || 0), 0)
+    };
+  }, [currentMonth, data]);
+
+  const getContributionLevel = (minutes: number) => {
+    if (minutes === 0) return 0;
+    if (minutes <= 15) return 1;
+    if (minutes <= 30) return 2;
+    if (minutes <= 60) return 3;
+    return 4;
+  };
+
+  const getCellColorClass = (level: number) => {
+    if (isDark) {
+      switch (level) {
+        case 1: return "bg-violet-500/20 border-violet-500/20 text-violet-300 hover:bg-violet-500/35";
+        case 2: return "bg-violet-500/40 border-violet-500/40 text-violet-100 hover:bg-violet-500/55";
+        case 3: return "bg-violet-600/70 border-violet-500/50 text-white hover:bg-violet-600/85";
+        case 4: return "bg-violet-600 border-violet-500 text-white hover:bg-violet-500 hover:shadow-[0_0_12px_rgba(139,92,246,0.6)] font-extrabold";
+        default: return "bg-slate-900/30 border-white/5 text-slate-500 hover:bg-white/5";
+      }
+    } else {
+      switch (level) {
+        case 1: return "bg-violet-50 border-violet-100 text-violet-600 hover:bg-violet-100/70";
+        case 2: return "bg-violet-100 border-violet-200 text-violet-700 hover:bg-violet-200/70";
+        case 3: return "bg-violet-300 border-violet-400 text-violet-900 hover:bg-violet-400/80";
+        case 4: return "bg-violet-600 border-violet-700 text-white hover:bg-violet-700 hover:shadow-[0_0_10px_rgba(139,92,246,0.4)] font-extrabold";
+        default: return "bg-slate-50 border-slate-100 text-slate-400 hover:bg-slate-100";
+      }
+    }
+  };
+
+  if (loading) {
     return (
       <Card className={cn(
-        "p-4 sm:p-6 md:p-8 shadow-2xl rounded-2xl sm:rounded-[2rem] border relative overflow-hidden transition-all duration-300",
-        isDark ? "bg-slate-900/40 backdrop-blur-md border-white/5" : "bg-white border-slate-100 shadow-slate-200/50"
+        "p-6 flex flex-col items-center justify-center min-h-[300px] rounded-3xl border",
+        isDark ? "bg-slate-900/40 border-white/5 backdrop-blur-md" : "bg-white border-slate-100"
       )}>
-        {isDark && (
-          <div className="absolute -right-40 -top-40 w-96 h-96 bg-emerald-500/10 rounded-full blur-[100px] pointer-events-none -z-10" />
-        )}
-
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 mb-5 sm:mb-8">
-          <div>
-            <h3 className={cn("font-display font-black text-lg sm:text-2xl tracking-tight", isDark ? "text-white" : "text-slate-900")}>
-              {t("dynamic.learningGraph.title")}
-            </h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 font-medium">
-              {t("dynamic.learningGraph.subtitle")}
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-4 items-center">
-            <Badge className="bg-purple-500/10 text-purple-500 hover:bg-purple-500/10 border-none font-bold py-1.5 px-3 rounded-xl flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5" />
-              {data.total_study_hours.toFixed(1)} {t("dynamic.learningGraph.hours")}
-            </Badge>
-            <Badge className="bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/10 border-none font-bold py-1.5 px-3 rounded-xl flex items-center gap-1">
-              <Flame className="w-3.5 h-3.5" />
-              {data.current_streak} {t("dynamic.learningGraph.days")}
-            </Badge>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-4 mb-4 sm:mb-8">
-          <div className={cn(
-            "p-4 rounded-2xl border flex flex-col justify-center",
-            isDark ? "bg-slate-800/30 border-white/5" : "bg-slate-50 border-slate-100"
-          )}>
-            <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider flex items-center gap-1">
-              <Flame className="w-3 h-3 text-orange-500" />
-              {t("dynamic.learningGraph.currentStreak")}
-            </span>
-            <span className={cn("text-lg font-black mt-1", isDark ? "text-white" : "text-slate-900")}>
-              {data.current_streak} {t("dynamic.learningGraph.days")}
-            </span>
-          </div>
-
-          <div className={cn(
-            "p-4 rounded-2xl border flex flex-col justify-center",
-            isDark ? "bg-slate-800/30 border-white/5" : "bg-slate-50 border-slate-100"
-          )}>
-            <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider flex items-center gap-1">
-              <Trophy className="w-3 h-3 text-yellow-500" />
-              {t("dynamic.learningGraph.longestStreak")}
-            </span>
-            <span className={cn("text-lg font-black mt-1", isDark ? "text-white" : "text-slate-900")}>
-              {data.longest_streak} {t("dynamic.learningGraph.days")}
-            </span>
-          </div>
-
-          <div className={cn(
-            "p-4 rounded-2xl border flex flex-col justify-center",
-            isDark ? "bg-slate-800/30 border-white/5" : "bg-slate-50 border-slate-100"
-          )}>
-            <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider flex items-center gap-1">
-              <Clock className="w-3 h-3 text-blue-500" />
-              {t("dynamic.learningGraph.totalStudyHours")}
-            </span>
-            <span className={cn("text-lg font-black mt-1", isDark ? "text-white" : "text-slate-900")}>
-              {data.total_study_hours.toFixed(1)} {t("dynamic.learningGraph.hours")}
-            </span>
-          </div>
-
-          <div className={cn(
-            "p-4 rounded-2xl border flex flex-col justify-center",
-            isDark ? "bg-slate-800/30 border-white/5" : "bg-slate-50 border-slate-100"
-          )}>
-            <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider flex items-center gap-1">
-              <Sparkles className="w-3 h-3 text-purple-500" />
-              {t("dynamic.learningGraph.totalXp")}
-            </span>
-            <span className={cn("text-lg font-black mt-1", isDark ? "text-white" : "text-slate-900")}>
-              {data.total_xp} XP
-            </span>
-          </div>
-
-          <div className={cn(
-            "p-4 rounded-2xl border flex flex-col justify-center col-span-2 md:col-span-1",
-            isDark ? "bg-slate-800/30 border-white/5" : "bg-slate-50 border-slate-100"
-          )}>
-            <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider flex items-center gap-1">
-              <Coins className="w-3 h-3 text-yellow-500" />
-              {t("dynamic.learningGraph.totalCoins")}
-            </span>
-            <span className={cn("text-lg font-black mt-1", isDark ? "text-white" : "text-slate-900")}>
-              {data.total_coins}
-            </span>
-          </div>
-        </div>
-
-        <div className="w-full">
-          <div className="overflow-x-auto pb-4 custom-scrollbar">
-            <div className="min-w-[1040px] flex flex-col pt-2 select-none">
-
-              <div className="flex pl-8 mb-2 h-5 text-[10px] font-black uppercase text-slate-500 tracking-wider">
-                {gridData?.map((week, weekIdx) => {
-                  const validDay = week.find(d => d !== null);
-                  if (!validDay) return <div key={weekIdx} className="w-[15px] mr-[4px]" />;
-
-                  const d = new Date(validDay.date);
-                  const isFirstColOfMonth = d.getDate() <= 7;
-
-                  if (isFirstColOfMonth) {
-                    return (
-                      <div key={weekIdx} className="w-[15px] mr-[4px] relative">
-                        <span className="absolute left-0 top-0 whitespace-nowrap">
-                          {getLocalizedMonth(validDay.date)}
-                        </span>
-                      </div>
-                    );
-                  }
-                  return <div key={weekIdx} className="w-[15px] mr-[4px]" />;
-                })}
-              </div>
-
-              <div className="flex">
-                <div className="flex flex-col justify-between h-[129px] w-8 pr-2 text-[10px] font-black text-slate-500 text-right pt-[1px]">
-                  <span>{t("dynamic.learningGraph.weekdays.mon")}</span>
-                  <span>{t("dynamic.learningGraph.weekdays.wed")}</span>
-                  <span>{t("dynamic.learningGraph.weekdays.fri")}</span>
-                </div>
-
-                <div className="flex">
-                  <TooltipProvider delayDuration={50}>
-                    {gridData?.map((week, weekIdx) => (
-                      <div key={weekIdx} className="flex flex-col gap-[4px] mr-[4px]">
-                        {week.map((day, dayIdx) => {
-                          if (!day) {
-                            return (
-                              <div
-                                key={dayIdx}
-                                className="w-[15px] h-[15px] rounded-[3px] bg-transparent pointer-events-none"
-                              />
-                            );
-                          }
-
-                          const level = getContributionLevel(day.minutes);
-                          const cellClass = getCellColorClass(level);
-
-                          const studyTimeText = getStudyTimeText(day.minutes);
-                          const lessonsText = day.lessons > 0 ? `${day.lessons} ${t("dynamic.learningGraph.lessons")}` : null;
-                          const quizzesText = day.quizzes > 0 ? `${day.quizzes} ${t("dynamic.learningGraph.quizzes")}` : null;
-                          const mocksText = day.mocks > 0 ? `${day.mocks} ${t("dynamic.learningGraph.mocks")}` : null;
-                          const xpText = day.xp > 0 ? `+${day.xp} XP` : null;
-                          const coinsText = day.coins > 0 ? `+${day.coins} ${t("dynamic.learningWorld.coins")}` : null;
-
-                          return (
-                            <Tooltip key={day.date}>
-                              <TooltipTrigger asChild>
-                                <div
-                                  className={cn(
-                                    "w-[15px] h-[15px] rounded-[3px] border transition-all duration-150 cursor-pointer",
-                                    cellClass
-                                  )}
-                                />
-                              </TooltipTrigger>
-                              <TooltipContent className={cn(
-                                "p-3 rounded-2xl border shadow-xl flex flex-col gap-1 max-w-[220px] z-50",
-                                isDark ? "bg-slate-950 border-slate-800 text-slate-100" : "bg-white border-slate-200 text-slate-900"
-                              )}>
-                                <div className="text-[10px] font-black text-slate-500 uppercase border-b border-slate-500/10 pb-1 mb-1">
-                                  {new Date(day.date).toLocaleDateString(i18n.language, {
-                                    weekday: 'long',
-                                    year: 'numeric',
-                                    month: 'long',
-                                    day: 'numeric'
-                                  })}
-                                </div>
-                                <div className="flex items-center gap-1.5 text-xs font-black text-emerald-500">
-                                  <Clock className="w-3.5 h-3.5" />
-                                  <span>{studyTimeText}</span>
-                                </div>
-                                {lessonsText && (
-                                  <div className="text-[11px] font-bold text-slate-400 flex items-center gap-1.5">
-                                    <BookOpen className="w-3 h-3 text-purple-400" />
-                                    <span>{lessonsText}</span>
-                                  </div>
-                                )}
-                                {quizzesText && (
-                                  <div className="text-[11px] font-bold text-slate-400 flex items-center gap-1.5">
-                                    <Trophy className="w-3 h-3 text-orange-400" />
-                                    <span>{quizzesText}</span>
-                                  </div>
-                                )}
-                                {mocksText && (
-                                  <div className="text-[11px] font-bold text-slate-400 flex items-center gap-1.5">
-                                    <Sparkles className="w-3 h-3 text-yellow-400" />
-                                    <span>{mocksText}</span>
-                                  </div>
-                                )}
-                                {(xpText || coinsText) && (
-                                  <div className="flex flex-wrap items-center gap-2 mt-1 pt-1.5 border-t border-slate-500/10">
-                                    {xpText && (
-                                      <Badge className="bg-blue-500/10 text-blue-500 border-none text-[9px] px-1.5 py-0.5 font-black">
-                                        {xpText}
-                                      </Badge>
-                                    )}
-                                    {coinsText && (
-                                      <Badge className="bg-yellow-500/10 text-yellow-500 border-none text-[9px] px-1.5 py-0.5 font-black">
-                                        {coinsText}
-                                      </Badge>
-                                    )}
-                                  </div>
-                                )}
-                              </TooltipContent>
-                            </Tooltip>
-                          );
-                        })}
-                      </div>
-                    ))}
-                  </TooltipProvider>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between mt-4 text-[10px] font-bold text-slate-500 select-none">
-            <span className="text-[11px] text-slate-500 uppercase tracking-wider">
-              {data.daily_contributions.filter(d => d.minutes > 0).length} {t("dynamic.learningGraph.days")} {t("dynamic.learningGraph.contribution")}
-            </span>
-            <div className="flex items-center gap-1.5">
-              <span>{t("dynamic.learningGraph.less")}</span>
-              <div className={cn("w-[15px] h-[15px] rounded-[3px] border", getCellColorClass(0))} />
-              <div className={cn("w-[15px] h-[15px] rounded-[3px] border", getCellColorClass(1))} />
-              <div className={cn("w-[15px] h-[15px] rounded-[3px] border", getCellColorClass(2))} />
-              <div className={cn("w-[15px] h-[15px] rounded-[3px] border", getCellColorClass(3))} />
-              <div className={cn("w-[15px] h-[15px] rounded-[3px] border", getCellColorClass(4))} />
-              <span>{t("dynamic.learningGraph.more")}</span>
-            </div>
-          </div>
-        </div>
+        <Loader2 className="w-8 h-8 animate-spin text-purple-500 mb-3" />
+        <p className="text-xs font-bold text-slate-400">{t("dynamic.learningWorld.loading")}</p>
       </Card>
     );
   }
+
+  if (error || !data) {
+    return (
+      <Card className={cn(
+        "p-6 flex flex-col items-center justify-center min-h-[300px] rounded-3xl border text-center",
+        isDark ? "bg-slate-900/40 border-white/5 backdrop-blur-md" : "bg-white border-slate-100"
+      )}>
+        <AlertCircle className="w-10 h-10 text-red-500 mb-3" />
+        <h4 className="text-sm font-black text-slate-800 dark:text-white">Foydalanuvchi mashg'ulotlari yuklanmadi</h4>
+        <Button onClick={fetchContributions} className="mt-4 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs px-4 py-2">
+          Qayta urinish
+        </Button>
+      </Card>
+    );
+  }
+
+  const weekdays = ["Du", "Se", "Cho", "Pa", "Ju", "Sha", "Ya"];
+
+  return (
+    <Card className={cn(
+      "p-6 shadow-xl rounded-3xl border relative overflow-hidden transition-all duration-300",
+      isDark ? "bg-slate-900/40 backdrop-blur-md border-white/5" : "bg-white border-slate-100 shadow-slate-200/40"
+    )}>
+      {isDark && (
+        <div className="absolute -right-36 -top-36 w-80 h-80 bg-violet-600/10 rounded-full blur-[80px] pointer-events-none -z-10" />
+      )}
+
+      {/* Calendar Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h3 className={cn("font-display font-bold text-base tracking-tight", isDark ? "text-white" : "text-slate-900")}>
+            Mashg'ulotlar kalendari
+          </h3>
+          <p className="text-[11px] text-slate-400 font-medium">
+            Kunlik kirish va topshiriqlarni bajarish faolligi
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => navigateMonth("prev")}
+            className={cn("h-8 w-8 rounded-lg border", isDark ? "border-white/5 hover:bg-white/5 bg-slate-950/30" : "border-slate-100 bg-white hover:bg-slate-50")}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <span className={cn("text-xs font-bold px-2 text-center min-w-[75px] tracking-wide", isDark ? "text-slate-200" : "text-slate-700")}>
+            {getLocalizedMonth(currentMonth)} {currentMonth.getFullYear()}
+          </span>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => navigateMonth("next")}
+            className={cn("h-8 w-8 rounded-lg border", isDark ? "border-white/5 hover:bg-white/5 bg-slate-950/30" : "border-slate-100 bg-white hover:bg-slate-50")}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      {/* Weekday labels */}
+      <div className="grid grid-cols-7 gap-2 mb-2 text-center text-[10px] font-black uppercase text-slate-400 tracking-wider">
+        {weekdays.map(d => (
+          <div key={d}>{d}</div>
+        ))}
+      </div>
+
+      {/* Days grid */}
+      <TooltipProvider delayDuration={100}>
+        <div className="grid grid-cols-7 gap-2">
+          {calendarCells.map((cell, idx) => {
+            if (cell.dayNumber === null) {
+              return (
+                <div
+                  key={cell.dateKey}
+                  className="aspect-square w-full rounded-xl bg-transparent pointer-events-none"
+                />
+              );
+            }
+
+            const day = cell.contribution;
+            const minutes = day?.minutes || 0;
+            const level = getContributionLevel(minutes);
+            const cellClass = getCellColorClass(level);
+
+            const isToday = new Date().toLocaleDateString('en-CA') === cell.dateKey;
+
+            return (
+              <Tooltip key={cell.dateKey}>
+                <TooltipTrigger asChild>
+                  <div
+                    className={cn(
+                      "aspect-square w-full rounded-xl border flex items-center justify-center text-xs font-semibold cursor-pointer transition-all duration-200 select-none",
+                      cellClass,
+                      isToday && (isDark ? "ring-2 ring-violet-400 ring-offset-2 ring-offset-slate-950" : "ring-2 ring-violet-500 ring-offset-2 ring-offset-white")
+                    )}
+                  >
+                    {cell.dayNumber}
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent className={cn(
+                  "p-3 rounded-2xl border shadow-xl flex flex-col gap-1 max-w-[220px] z-50",
+                  isDark ? "bg-slate-950 border-slate-800 text-slate-100" : "bg-white border-slate-200 text-slate-900"
+                )}>
+                  <div className="text-[10px] font-black text-slate-400 uppercase border-b border-slate-500/10 pb-1 mb-1">
+                    {new Date(cell.dateKey).toLocaleDateString(i18n.language, {
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </div>
+                  
+                  {minutes > 0 ? (
+                    <>
+                      <div className="flex items-center gap-1.5 text-xs font-black text-violet-500">
+                        <Clock className="w-3.5 h-3.5" />
+                        <span>{minutes} m mashq qilindi</span>
+                      </div>
+                      
+                      {day && (day.lessons > 0 || day.quizzes > 0 || day.mocks > 0) && (
+                        <div className="text-[11px] font-bold text-slate-400 flex flex-col gap-1 mt-1">
+                          {day.lessons > 0 && (
+                            <div className="flex items-center gap-1.5">
+                              <BookOpen className="w-3 h-3 text-purple-400" />
+                              <span>{day.lessons} ta dars</span>
+                            </div>
+                          )}
+                          {day.quizzes > 0 && (
+                            <div className="flex items-center gap-1.5">
+                              <Trophy className="w-3 h-3 text-orange-400" />
+                              <span>{day.quizzes} ta quiz</span>
+                            </div>
+                          )}
+                          {day.mocks > 0 && (
+                            <div className="flex items-center gap-1.5">
+                              <Sparkles className="w-3 h-3 text-yellow-400" />
+                              <span>{day.mocks} ta mock test</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {day && (day.xp > 0 || day.coins > 0) && (
+                        <div className="flex flex-wrap items-center gap-2 mt-2 pt-1.5 border-t border-slate-500/10">
+                          {day.xp > 0 && (
+                            <Badge className="bg-violet-500/10 text-violet-500 border-none text-[9px] px-1.5 py-0.5 font-black">
+                              +{day.xp} XP
+                            </Badge>
+                          )}
+                          {day.coins > 0 && (
+                            <Badge className="bg-yellow-500/10 text-yellow-500 border-none text-[9px] px-1.5 py-0.5 font-black">
+                              +{day.coins} tanga
+                            </Badge>
+                          )}
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="text-xs font-semibold text-slate-400 flex items-center gap-1">
+                      <AlertCircle className="w-3.5 h-3.5" />
+                      <span>Hech qanday faollik yo'q</span>
+                    </div>
+                  )}
+                </TooltipContent>
+              </Tooltip>
+            );
+          })}
+        </div>
+      </TooltipProvider>
+
+      {/* Legend & Summary */}
+      <div className="mt-6 pt-5 border-t border-slate-500/10 flex flex-col gap-4">
+        {/* Color Legend */}
+        <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 select-none">
+          <span>Kamroq mashq</span>
+          <div className="flex items-center gap-1">
+            <div className={cn("w-3.5 h-3.5 rounded-[4px] border", getCellColorClass(0))} />
+            <div className={cn("w-3.5 h-3.5 rounded-[4px] border", getCellColorClass(1))} />
+            <div className={cn("w-3.5 h-3.5 rounded-[4px] border", getCellColorClass(2))} />
+            <div className={cn("w-3.5 h-3.5 rounded-[4px] border", getCellColorClass(3))} />
+            <div className={cn("w-3.5 h-3.5 rounded-[4px] border", getCellColorClass(4))} />
+          </div>
+          <span>Ko'proq mashq</span>
+        </div>
+
+        {/* Selected Month Gained stats */}
+        <div className="grid grid-cols-2 gap-3 mt-1">
+          <div className={cn("p-3 rounded-2xl border flex items-center gap-3", isDark ? "bg-slate-950/30 border-white/5" : "bg-slate-50 border-slate-100")}>
+            <div className="bg-violet-500/10 p-2 rounded-xl text-violet-500 shrink-0">
+              <Clock className="w-4 h-4" />
+            </div>
+            <div className="overflow-hidden">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Mashq vaqti</p>
+              <p className={cn("text-xs font-black mt-0.5 truncate", isDark ? "text-white" : "text-slate-900")}>
+                {monthStats.totalMinutes} daqiqa
+              </p>
+            </div>
+          </div>
+
+          <div className={cn("p-3 rounded-2xl border flex items-center gap-3", isDark ? "bg-slate-950/30 border-white/5" : "bg-slate-50 border-slate-100")}>
+            <div className="bg-emerald-500/10 p-2 rounded-xl text-emerald-500 shrink-0">
+              <Flame className="w-4 h-4" />
+            </div>
+            <div className="overflow-hidden">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Faol kunlar</p>
+              <p className={cn("text-xs font-black mt-0.5 truncate", isDark ? "text-white" : "text-slate-900")}>
+                {monthStats.activeDays} kun faol
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+}

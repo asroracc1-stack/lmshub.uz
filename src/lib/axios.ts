@@ -48,12 +48,12 @@ api.interceptors.response.use(
           data: {
             access_token: 'mock-dev-token',
             user: {
-              id: 'mock-student-id',
-              email: 'student@lmshub.uz',
-              role: 'STUDENT',
-              username: 'student_dev',
-              firstName: 'Student',
-              lastName: 'Developer',
+              id: 'mock-user-id',
+              email: 'user@lmshub.uz',
+              role: 'USER',
+              username: 'user_dev',
+              firstName: 'Regular',
+              lastName: 'User',
               phone: '+998901234567'
             }
           },
@@ -67,16 +67,41 @@ api.interceptors.response.use(
       if (url.includes('/user/profile')) {
         return {
           data: {
-            id: 'mock-student-id',
-            email: 'student@lmshub.uz',
-            role: 'STUDENT',
-            username: 'student_dev',
-            fullName: 'Student Developer',
-            firstName: 'Student',
-            lastName: 'Developer',
+            id: 'mock-user-id',
+            email: 'user@lmshub.uz',
+            role: 'USER',
+            username: 'user_dev',
+            fullName: 'Regular User',
+            firstName: 'Regular',
+            lastName: 'User',
             phone: '+998901234567',
             coins: 350,
             examDate: '2026-12-31'
+          },
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config
+        } as any;
+      }
+
+      if (url.includes('/user/stats')) {
+        return {
+          data: {
+            totalMinutes: 320.5,
+            streak: 5,
+            targetBand: 7.5,
+            avgScore: 6.8,
+            examDaysLeft: 45,
+            weeklyData: [
+              { day: 'Pa', minutes: 45 },
+              { day: 'Ju', minutes: 30 },
+              { day: 'Sha', minutes: 60 },
+              { day: 'Ya', minutes: 15 },
+              { day: 'Du', minutes: 50 },
+              { day: 'Se', minutes: 40 },
+              { day: 'Cho', minutes: 80 }
+            ]
           },
           status: 200,
           statusText: 'OK',

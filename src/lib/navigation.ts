@@ -132,17 +132,11 @@ export const getSidebarRoutes = (role: string, t: TFunction, options: { ielts?: 
     case "user":
       return [
         { to: "/user/dashboard", label: t("nav.dashboard"), icon: LayoutDashboard },
-        // { to: "/user/mocks", label: t("nav.mocks"), icon: FileText },
         { to: "/user/sat", label: t("nav.sat"), icon: Target },
         { to: "/user/national-cert", label: t("nav.nationalCert"), icon: Landmark },
         { to: "/user/subscriptions", label: t("nav.subscriptions"), icon: Package },
-        { to: "/user/achievements", label: t("nav.achievements"), icon: Award },
         { to: "/user/leaderboard", label: t("nav.leaderboard"), icon: Trophy },
         { to: "/user/library", label: "Kutubxona", badge: "New", icon: BookOpen },
-        { to: "/user/map", label: "Sarguzasht xaritasi", icon: Compass },
-        { to: "/user/messages", label: t("nav.messages"), icon: MessagesSquare },
-        { to: "/user/settings", label: t("nav.settings"), icon: Settings },
-        { to: "/user/referral", label: t("nav.referral"), icon: Gift },
       ];
     case "parent":
       return [

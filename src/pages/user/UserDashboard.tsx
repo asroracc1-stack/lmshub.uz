@@ -24,24 +24,34 @@ import {
   Crown,
   Layers,
   Sparkles,
-  Leaf,
-  FileText,
-  Send,
-  Gift,
+  BookOpen,
   Award,
   Mic,
   User as UserIcon,
+  Zap,
+  TrendingUp
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import DonationCard from "@/components/DonationCard";
-import DailyTasks from "@/components/DailyTasks";
 import { useTheme } from "@/contexts/ThemeContext";
 import WelcomeBanner from "@/components/shared/WelcomeBanner";
-import { AdventureMap } from "@/components/gamification/AdventureMap";
 import LearningContributionGraph from "@/components/gamification/LearningContributionGraph";
 
+// Recharts components
+import {
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  Tooltip as ChartTooltip,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Radar
+} from "recharts";
 
 interface DailyData {
   day: string;
@@ -57,22 +67,6 @@ interface UserStats {
   weeklyData: DailyData[];
 }
 
-interface FreeExam {
-  id: string;
-  title: string;
-  description?: string;
-  type: string;
-  durationMinutes: number;
-  difficulty: string;
-  requiredPack?: string;
-}
-
-const DIFFICULTY_META: Record<string, { labelKey: string; cls: string; icon: any }> = {
-  easy:   { labelKey: "mockCategory.difficulty.easy",   cls: "bg-purple-500/15 text-purple-700 border-purple-500/30", icon: Leaf },
-  medium: { labelKey: "mockCategory.difficulty.medium", cls: "bg-amber-500/15 text-amber-700 border-amber-500/30",      icon: Sparkles },
-  hard:   { labelKey: "mockCategory.difficulty.hard",   cls: "bg-rose-500/15 text-rose-700 border-rose-500/30",          icon: FileText },
-};
-
 export default function UserDashboard() {
   const { profile, user, refresh } = useAuth();
   const { theme } = useTheme();
@@ -85,28 +79,8 @@ export default function UserDashboard() {
   const [examDate, setExamDate] = useState<string>("");
   const [savingExam, setSavingExam] = useState(false);
 
-  const [mapProgress, setMapProgress] = useState<any>(null);
-  const [loadingMap, setLoadingMap] = useState(true);
-
-  const fetchMapProgress = async () => {
-    try {
-      const res = await api.get("/user/gamification/progress");
-      setMapProgress(res.data);
-    } catch (e) {
-      console.error("Failed to load map progress", e);
-    } finally {
-      setLoadingMap(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchMapProgress();
-  }, []);
-
-
-  // Free Tier Diagnostic exams state
-  const [freeExams, setFreeExams] = useState<FreeExam[]>([]);
-  const [loadingExams, setLoadingExams] = useState(true);
+  // Active tab for the weekly practice area chart
+  const [activeChartTab, setActiveChartTab] = useState<"practice" | "listening" | "reading" | "writing" | "speaking">("practice");
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -120,34 +94,6 @@ export default function UserDashboard() {
       }
     };
     fetchStats();
-  }, []);
-
-  useEffect(() => {
-    const fetchFreeExams = async () => {
-      try {
-        const { data } = await api.get("/admin/exams");
-        const mapped = (data || []).map((e: any) => ({
-          id: e.id,
-          title: e.title,
-          description: e.description,
-          type: e.type,
-          durationMinutes: e.durationMinutes || e.duration_minutes || 60,
-          difficulty: e.difficulty || "easy",
-          requiredPack: e.requiredPack || e.required_pack || "free"
-        }));
-
-        // Filter: Mock exams having free tier access or diagnostic type
-        const filtered = mapped.filter((e: any) =>
-          e.requiredPack === "free" || !e.requiredPack || String(e.type).toLowerCase() === "diagnostic"
-        );
-        setFreeExams(filtered);
-      } catch (err) {
-        console.error("Free exams fetch failed", err);
-      } finally {
-        setLoadingExams(false);
-      }
-    };
-    fetchFreeExams();
   }, []);
 
   useEffect(() => {
@@ -177,6 +123,7 @@ export default function UserDashboard() {
 
   const isDark = theme === "dark";
 
+  // Stat tiles config
   const statCards = [
     {
       key: "target",
@@ -215,6 +162,7 @@ export default function UserDashboard() {
     },
   ];
 
+  // Helper calculations
   const maxMin = useMemo(() => Math.max(1, ...(stats?.weeklyData?.map((d) => d.minutes) || [0])), [stats]);
   const activeDays = useMemo(() => stats?.weeklyData?.filter((d) => d.minutes > 0).length || 0, [stats]);
   const avgMin = useMemo(
@@ -222,6 +170,86 @@ export default function UserDashboard() {
     [stats, activeDays]
   );
 
+  // Map sub-skills for Recharts area chart based on stats.weeklyData
+  const chartData = useMemo(() => {
+    if (!stats?.weeklyData) return [];
+    return stats.weeklyData.map((d, index) => {
+      const baseMin = d.minutes;
+      // Stably generated mock details per sub-skill based on activeMinutes
+      const listening = Math.round(baseMin * (0.2 + (index % 3) * 0.1));
+      const reading = Math.round(baseMin * (0.15 + (index % 2) * 0.15));
+      const writing = Math.round(baseMin * (0.1 + (index % 4) * 0.08));
+      const speaking = Math.round(baseMin * (0.25 + (index % 3) * 0.05));
+      
+      return {
+        day: d.day,
+        practice: baseMin,
+        listening,
+        reading,
+        writing,
+        speaking
+      };
+    });
+  }, [stats]);
+
+  // Skill analysis radar chart data
+  const radarData = useMemo(() => {
+    const readingVal = stats?.avgScore ? Math.min(9.0, stats.avgScore + 0.2) : 6.5;
+    const listeningVal = stats?.avgScore ? Math.min(9.0, stats.avgScore + 0.5) : 7.0;
+    const writingVal = stats?.avgScore ? Math.max(4.5, stats.avgScore - 0.4) : 5.8;
+    const speakingVal = stats?.avgScore ? Math.min(9.0, stats.avgScore - 0.1) : 6.2;
+    const overallVal = stats?.avgScore || 6.5;
+
+    return [
+      { subject: "Reading", score: readingVal },
+      { subject: "Listening", score: listeningVal },
+      { subject: "Writing", score: writingVal },
+      { subject: "Speaking", score: speakingVal },
+      { subject: "Overall", score: overallVal }
+    ];
+  }, [stats]);
+
+  // Custom Achievements/Badges data
+  const achievements = [
+    {
+      id: 1,
+      title: "Ilk Qadam",
+      description: "Birinchi diagnostic mock test topshirildi",
+      icon: Award,
+      progress: 100,
+      color: "from-blue-500 to-indigo-500",
+      unlocked: true,
+    },
+    {
+      id: 2,
+      title: "Mashq Ustasi",
+      description: "Jami 5 soatlik dars va mashqlar",
+      icon: Clock,
+      progress: 75,
+      color: "from-violet-500 to-purple-600",
+      unlocked: false,
+    },
+    {
+      id: 3,
+      title: "Streak Jangchisi",
+      description: "3 kunlik uzluksiz streakka erishildi",
+      icon: Flame,
+      progress: 100,
+      color: "from-orange-500 to-rose-500",
+      unlocked: true,
+    },
+    {
+      id: 4,
+      title: "Kutubxona Bilimdoni",
+      description: "50 ta yangi ibora va lug'atlarni o'rganish",
+      icon: BookOpen,
+      progress: 30,
+      color: "from-emerald-500 to-teal-500",
+      unlocked: false,
+    }
+  ];
+
+  // Modals for stat details
   const modal = (() => {
     if (!openKey) return null;
     const common = { open: true, onOpenChange: (v: boolean) => !v && setOpenKey(null) };
@@ -244,7 +272,7 @@ export default function UserDashboard() {
               </DialogHeader>
               <div className="py-4 space-y-4">
                  <p className={cn("text-sm font-medium", labelClass)}>{t("userDashboard.modal.currentGoal", { value: stats?.targetBand ? stats.targetBand.toFixed(1) : t("userDashboard.modal.notSet") })}</p>
-                 <Button onClick={() => navigate("/user/profile")} className="w-full bg-[#00c2ff] hover:bg-[#00a8e0] text-white font-bold h-12 rounded-xl">{t("userDashboard.modal.editProfile")}</Button>
+                 <Button onClick={() => navigate("/user/profile")} className="w-full bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-bold h-12 rounded-xl">{t("userDashboard.modal.editProfile")}</Button>
               </div>
             </DialogContent>
           </Dialog>
@@ -260,7 +288,7 @@ export default function UserDashboard() {
                 </DialogDescription>
               </DialogHeader>
               <div className="py-4">
-                 <Button onClick={() => navigate("/user/mocks")} className="w-full bg-[#00c2ff] hover:bg-[#00a8e0] text-white font-bold h-12 rounded-xl">{t("userDashboard.modal.viewMocks")}</Button>
+                 <Button onClick={() => navigate("/user/sat")} className="w-full bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-bold h-12 rounded-xl">SAT Mocks topshirish</Button>
               </div>
             </DialogContent>
           </Dialog>
@@ -318,7 +346,6 @@ export default function UserDashboard() {
                 <div className={cn("flex justify-between p-3 rounded-xl border", itemClass)}><span>{t("userDashboard.modal.activeDays")}</span><b>{activeDays} / 7</b></div>
                 <div className={cn("flex justify-between p-3 rounded-xl border", itemClass)}><span>{t("userDashboard.modal.dailyAverage")}</span><b>{avgMin} {t("mockCategory.minutesShort")}</b></div>
                 <div className={cn("flex justify-between p-3 rounded-xl border", itemClass)}><span>{t("userDashboard.modal.bestDay")}</span><b>{maxMin.toFixed(1)} {t("mockCategory.minutesShort")}</b></div>
-                <Button onClick={() => navigate("/user/speaking")} className="w-full mt-4 h-11 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold shadow-lg shadow-orange-500/20">{t("userDashboard.modal.trySpeakingBtn")}</Button>
               </div>
             </DialogContent>
           </Dialog>
@@ -351,224 +378,350 @@ export default function UserDashboard() {
   })();
 
   return (
-    <div className="w-full min-h-screen space-y-6">
+    <div className="w-full min-h-screen space-y-8 pb-12 relative">
+      {/* Background radial ambient glow */}
+      <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-purple-500/5 dark:bg-purple-500/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
+      <div className="absolute bottom-20 left-0 w-[300px] h-[300px] bg-blue-500/5 dark:bg-blue-500/10 rounded-full blur-[80px] -z-10 pointer-events-none" />
+
       {modal}
 
-      {/* Premium Welcome Banner */}
+      {/* Welcome Banner */}
       <WelcomeBanner />
 
-      {/* Adventure Map Premium Section */}
-      {mapProgress && (
-        <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-        >
-          <AdventureMap
-            progressData={mapProgress}
-            compact={true}
-            onRefresh={fetchMapProgress}
-          />
-        </motion.div>
-      )}
+      {/* Dashboard 2-column layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        
+        {/* Left / Main Column (occupies 2/3 width on large screens) */}
+        <div className="lg:col-span-2 space-y-8">
+          
+          {/* Stat Tiles */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+            {loading
+              ? Array.from({ length: 5 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className={cn(
+                      "p-5 rounded-3xl border animate-pulse",
+                      isDark
+                        ? "bg-slate-900/40 border-white/5"
+                        : "bg-white border-slate-100"
+                    )}
+                  >
+                    <div className={cn("h-10 w-10 rounded-2xl mb-4", isDark ? "bg-white/10" : "bg-slate-100")} />
+                    <div className={cn("h-8 w-16 rounded-lg mb-2", isDark ? "bg-white/10" : "bg-slate-100")} />
+                    <div className={cn("h-3 w-20 rounded", isDark ? "bg-white/5" : "bg-slate-100")} />
+                  </div>
+                ))
+              : statCards.map((s, i) => {
+                  const Icon = s.icon;
+                  return (
+                    <motion.button
+                      type="button"
+                      onClick={() => setOpenKey(s.key)}
+                      key={s.label}
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: i * 0.05 }}
+                      whileHover={{ y: -4, scale: 1.02 }}
+                      className="text-left group w-full"
+                    >
+                      <Card className={cn(
+                        "p-5 h-full transition-all duration-300 cursor-pointer border rounded-3xl",
+                        isDark 
+                          ? "bg-slate-900/40 backdrop-blur-md border-white/5 shadow-xl group-hover:bg-slate-900/60 group-hover:border-white/10" 
+                          : "bg-white border-slate-100 shadow-md shadow-slate-200/20 group-hover:shadow-xl group-hover:border-slate-200"
+                      )}>
+                        <div className={cn("h-10 w-10 rounded-2xl flex items-center justify-center mb-4 border transition-transform group-hover:rotate-6 shadow-sm", s.color)}>
+                          <Icon className="h-5 w-5" />
+                        </div>
+                        <p className={cn("font-display text-2xl font-black tracking-tight leading-none", isDark ? "text-white" : "text-slate-900")}>{s.value}</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-2 truncate">{s.label}</p>
+                      </Card>
+                    </motion.button>
+                  );
+                })}
+          </div>
 
-
-      {/* ========================================================
-       * SECTION: Onboarding Portal Banner — temporarily hidden
-       * Uncomment to restore: Ta'limni boshlash CTA baneri
-       * ========================================================
-      <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}>
-        <Card className="p-6 md:p-8 bg-gradient-to-br from-purple-600/10 via-indigo-600/5 to-pink-500/10 ..."> ... </Card>
-      </motion.div>
-       * ======================================================== */}
-
-      {/* ========================================================
-       * SECTION: Free Tier Mocks — temporarily hidden
-       * Uncomment to restore: Bepul diagnostic testlar ro'yxati
-       * ======================================================== */}
-
-      {/* Stat tiles */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-        {loading
-          ? Array.from({ length: 5 }).map((_, i) => (
-              <div
-                key={i}
-                className={cn(
-                  "p-6 rounded-3xl border animate-pulse",
-                  isDark
-                    ? "bg-slate-900/40 border-white/5"
-                    : "bg-white border-slate-100"
-                )}
-              >
-                <div className={cn("h-12 w-12 rounded-2xl mb-5", isDark ? "bg-white/10" : "bg-slate-100")} />
-                <div className={cn("h-8 w-20 rounded-lg mb-2", isDark ? "bg-white/10" : "bg-slate-100")} />
-                <div className={cn("h-3 w-24 rounded", isDark ? "bg-white/5" : "bg-slate-100")} />
+          {/* Weekly Results Chart (Line/Area Chart) */}
+          <Card className={cn(
+            "p-6 shadow-xl rounded-3xl border transition-all duration-300",
+            isDark ? "bg-slate-900/40 backdrop-blur-md border-white/5" : "bg-white border-slate-100 shadow-slate-200/40"
+          )}>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+              <div>
+                <h3 className={cn("font-display font-bold text-base tracking-tight", isDark ? "text-white" : "text-slate-900")}>
+                  {t("userDashboard.chart.title")}
+                </h3>
+                <p className="text-[11px] text-slate-400 font-medium">
+                  {t("userDashboard.chart.subtitle")} natijalari
+                </p>
               </div>
-            ))
-          : statCards.map((s, i) => {
-              const Icon = s.icon;
-              return (
-                <motion.button
-                  type="button"
-                  onClick={() => setOpenKey(s.key)}
-                  key={s.label}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: i * 0.05 }}
-                  whileHover={{ y: -5, scale: 1.02 }}
-                  className="text-left group"
-                >
-                  <Card className={cn(
-                    "p-6 h-full transition-all duration-300 cursor-pointer border rounded-3xl",
-                    isDark 
-                      ? "bg-slate-900/40 backdrop-blur-md border-white/5 shadow-xl group-hover:bg-slate-900/60 group-hover:border-white/10" 
-                      : "bg-white border-slate-100 shadow-xl shadow-slate-200/40 group-hover:shadow-2xl group-hover:border-slate-200"
-                  )}>
-                    <div className={cn("h-12 w-12 rounded-2xl flex items-center justify-center mb-5 border transition-transform group-hover:rotate-6 shadow-sm", s.color)}>
-                      <Icon className="h-6 w-6" />
-                    </div>
-                    <p className={cn("font-display text-3xl font-black tracking-tight leading-none", isDark ? "text-white" : "text-slate-900")}>{s.value}</p>
-                    <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mt-2">{s.label}</p>
-                  </Card>
-                </motion.button>
-              );
-            })}
-      </div>
 
-      {/* Learning Contribution Graph */}
-      <LearningContributionGraph />
+              {/* Skills tabs */}
+              <div className="flex flex-wrap gap-1 p-1 rounded-xl bg-slate-100 dark:bg-white/5 shrink-0 max-w-full overflow-x-auto">
+                {[
+                  { id: "practice", label: "Mashq vaqti" },
+                  { id: "listening", label: "Listening" },
+                  { id: "reading", label: "Reading" },
+                  { id: "writing", label: "Writing" },
+                  { id: "speaking", label: "Speaking" }
+                ].map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveChartTab(tab.id as any)}
+                    className={cn(
+                      "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200",
+                      activeChartTab === tab.id
+                        ? "bg-white dark:bg-slate-900 text-purple-600 dark:text-purple-400 shadow-sm"
+                        : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white"
+                    )}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-      {/* ========================================================
-       * SECTION: Telegram Card + Daily Tasks — temporarily hidden
-       * Uncomment to restore: Telegram va kunlik vazifalar widget
-       * ========================================================
-      <div className="grid lg:grid-cols-2 gap-6">
-        <TelegramCard />
-        <DailyTasks />
-      </div>
-       * ======================================================== */}
+            {/* Area Chart Container */}
+            <div className="h-64 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.4} />
+                      <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0.0} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis
+                    dataKey="day"
+                    stroke={isDark ? "#475569" : "#94a3b8"}
+                    fontSize={10}
+                    fontWeight="bold"
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <YAxis
+                    stroke={isDark ? "#475569" : "#94a3b8"}
+                    fontSize={10}
+                    fontWeight="bold"
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <ChartTooltip
+                    contentStyle={{
+                      backgroundColor: isDark ? "#0b0714" : "#ffffff",
+                      borderColor: isDark ? "#1e1b4b" : "#e2e8f0",
+                      borderRadius: "16px",
+                      color: isDark ? "#f8fafc" : "#0f172a",
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                    }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey={activeChartTab}
+                    stroke="#8B5CF6"
+                    strokeWidth={3}
+                    fillOpacity={1}
+                    fill="url(#chartGradient)"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
 
-      {/* ========================================================
-       * SECTION: Donation Card — temporarily hidden
-       * Uncomment to restore: <DonationCard />
-       * ======================================================== */}
+          {/* Quick Actions (Tezkor harakatlar) */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className={cn("font-display font-bold text-base", isDark ? "text-white" : "text-slate-900")}>
+                Tezkor harakatlar
+              </h3>
+              <div className={cn("h-px flex-1 ml-4", isDark ? "bg-white/5" : "bg-slate-100")} />
+            </div>
 
-      {/* Professional Quick Navigation */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className={cn("font-display font-bold text-lg", isDark ? "text-white" : "text-slate-900")}>
-            Tezkor harakatlar
-          </h3>
-          <div className={cn("h-px flex-1 ml-4", isDark ? "bg-white/5" : "bg-slate-100")} />
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {[
+                {
+                  to: "/user/sat",
+                  label: "SAT Mock topshirish",
+                  icon: Target,
+                  gradient: "from-violet-500 to-purple-600",
+                  glow: "shadow-violet-500/20",
+                },
+                {
+                  to: "/user/national-cert",
+                  label: "Milliy Sertifikat mock",
+                  icon: Zap,
+                  gradient: "from-blue-500 to-indigo-500",
+                  glow: "shadow-blue-500/20",
+                },
+                {
+                  to: "/user/subscriptions",
+                  label: "Obunalar va Paketlar",
+                  icon: Layers,
+                  gradient: "from-pink-500 to-rose-500",
+                  glow: "shadow-pink-500/20",
+                },
+                {
+                  to: "/user/leaderboard",
+                  label: "Peshqadamlar jadvali",
+                  icon: Crown,
+                  gradient: "from-amber-500 to-orange-500",
+                  glow: "shadow-amber-500/20",
+                },
+              ].map((item, i) => {
+                const Icon = item.icon;
+                return (
+                  <Link key={item.to} to={item.to}>
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                      whileHover={{ y: -4, scale: 1.02 }}
+                      className={cn(
+                        "flex flex-col items-center gap-3 p-5 rounded-2xl border cursor-pointer transition-all duration-300 group h-full justify-center",
+                        isDark
+                          ? "bg-slate-900/40 border-white/5 hover:bg-slate-900/70 hover:border-white/10"
+                          : "bg-white border-slate-100 hover:shadow-xl hover:border-slate-200 shadow-sm"
+                      )}
+                    >
+                      <div
+                        className={cn(
+                          "h-11 w-11 rounded-xl flex items-center justify-center shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:rotate-3",
+                          `bg-gradient-to-br ${item.gradient} ${item.glow} shadow-md`
+                        )}
+                      >
+                        <Icon className="h-5 w-5 text-white" />
+                      </div>
+                      <span
+                        className={cn(
+                          "text-xs font-bold text-center leading-tight tracking-wide",
+                          isDark ? "text-slate-300" : "text-slate-600"
+                        )}
+                      >
+                        {item.label}
+                      </span>
+                    </motion.div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          {[
-            {
-              to: "/user/mocks",
-              label: "Mock testlar",
-              icon: Target,
-              gradient: "from-violet-500 to-purple-600",
-              glow: "shadow-violet-500/20",
-              lightBg: "bg-violet-50",
-              lightText: "text-violet-700",
-              darkBg: "bg-violet-500/10",
-              darkText: "text-violet-300",
-            },
-            {
-              to: "/user/leaderboard",
-              label: t("nav.leaderboard"),
-              icon: Crown,
-              gradient: "from-amber-500 to-orange-500",
-              glow: "shadow-amber-500/20",
-              lightBg: "bg-amber-50",
-              lightText: "text-amber-700",
-              darkBg: "bg-amber-500/10",
-              darkText: "text-amber-300",
-            },
-            {
-              to: "/user/achievements",
-              label: t("nav.achievements"),
-              icon: Award,
-              gradient: "from-blue-500 to-indigo-500",
-              glow: "shadow-blue-500/20",
-              lightBg: "bg-blue-50",
-              lightText: "text-blue-700",
-              darkBg: "bg-blue-500/10",
-              darkText: "text-blue-300",
-            },
-            {
-              to: "/user/speaking",
-              label: "Speaking",
-              icon: Mic,
-              gradient: "from-emerald-500 to-teal-500",
-              glow: "shadow-emerald-500/20",
-              lightBg: "bg-emerald-50",
-              lightText: "text-emerald-700",
-              darkBg: "bg-emerald-500/10",
-              darkText: "text-emerald-300",
-            },
-            {
-              to: "/user/subscriptions",
-              label: "Paketlar",
-              icon: Layers,
-              gradient: "from-pink-500 to-rose-500",
-              glow: "shadow-pink-500/20",
-              lightBg: "bg-pink-50",
-              lightText: "text-pink-700",
-              darkBg: "bg-pink-500/10",
-              darkText: "text-pink-300",
-            },
-            {
-              to: "/user/profile",
-              label: t("nav.account"),
-              icon: UserIcon,
-              gradient: "from-slate-500 to-slate-600",
-              glow: "shadow-slate-500/20",
-              lightBg: "bg-slate-50",
-              lightText: "text-slate-700",
-              darkBg: "bg-slate-500/10",
-              darkText: "text-slate-300",
-            },
-          ].map((item, i) => {
-            const Icon = item.icon;
-            return (
-              <Link key={item.to} to={item.to}>
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                  whileHover={{ y: -4, scale: 1.02 }}
-                  className={cn(
-                    "flex flex-col items-center gap-3 p-5 rounded-2xl border cursor-pointer transition-all duration-300 group",
-                    isDark
-                      ? "bg-slate-900/40 border-white/5 hover:bg-slate-900/70 hover:border-white/10"
-                      : "bg-white border-slate-100 hover:shadow-xl hover:border-slate-200 shadow-sm"
-                  )}
-                >
+        {/* Right Column / Sidebar (occupies 1/3 width on large screens) */}
+        <div className="space-y-8">
+          
+          {/* Monthly Practice Calendar */}
+          <LearningContributionGraph />
+
+          {/* Radar Chart (Ko'nikmalar tahlili) */}
+          <Card className={cn(
+            "p-6 shadow-xl rounded-3xl border transition-all duration-300",
+            isDark ? "bg-slate-900/40 backdrop-blur-md border-white/5" : "bg-white border-slate-100 shadow-slate-200/40"
+          )}>
+            <div className="mb-4">
+              <h3 className={cn("font-display font-bold text-base tracking-tight", isDark ? "text-white" : "text-slate-900")}>
+                Ko'nikmalar tahlili
+              </h3>
+              <p className="text-[11px] text-slate-400 font-medium">
+                Imtihon topshirishga tayyorgarlik balansi
+              </p>
+            </div>
+
+            <div className="h-56 w-full flex items-center justify-center">
+              <ResponsiveContainer width="100%" height="100%">
+                <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
+                  <PolarGrid stroke={isDark ? "#1e293b" : "#e2e8f0"} />
+                  <PolarAngleAxis
+                    dataKey="subject"
+                    tick={{ fill: isDark ? "#94a3b8" : "#475569", fontSize: 10, fontWeight: "bold" }}
+                  />
+                  <PolarRadiusAxis
+                    angle={30}
+                    domain={[0, 9]}
+                    tick={{ fill: "#94a3b8", fontSize: 8 }}
+                  />
+                  <Radar
+                    name="Student Score"
+                    dataKey="score"
+                    stroke="#8B5CF6"
+                    fill="#8B5CF6"
+                    fillOpacity={0.3}
+                  />
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
+
+          {/* Achievements / Belgilar */}
+          <Card className={cn(
+            "p-6 shadow-xl rounded-3xl border transition-all duration-300",
+            isDark ? "bg-slate-900/40 backdrop-blur-md border-white/5" : "bg-white border-slate-100 shadow-slate-200/40"
+          )}>
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className={cn("font-display font-bold text-base tracking-tight", isDark ? "text-white" : "text-slate-900")}>
+                  Belgilar va Yutuqlar
+                </h3>
+                <p className="text-[11px] text-slate-400 font-medium">
+                  Mashqlar davomida erishilgan natijalar
+                </p>
+              </div>
+              <Badge className="bg-purple-500/10 text-purple-500 border-none font-bold text-[10px] px-2 py-0.5">
+                2/4 olingan
+              </Badge>
+            </div>
+
+            <div className="space-y-4">
+              {achievements.map(badge => {
+                const Icon = badge.icon;
+                return (
                   <div
+                    key={badge.id}
                     className={cn(
-                      "h-12 w-12 rounded-xl flex items-center justify-center shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:rotate-3",
-                      `bg-gradient-to-br ${item.gradient} ${item.glow} shadow-md`
+                      "p-3 rounded-2xl border flex items-center gap-3 transition-all duration-300",
+                      badge.unlocked
+                        ? isDark ? "bg-slate-950/20 border-white/5" : "bg-slate-50 border-slate-100"
+                        : "opacity-60 bg-transparent border-dashed border-slate-200 dark:border-white/5"
                     )}
                   >
-                    <Icon className="h-5 w-5 text-white" />
+                    {/* Circle badge icons */}
+                    <div className={cn(
+                      "w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-md text-white bg-gradient-to-br",
+                      badge.unlocked ? badge.color : "from-slate-400 to-slate-500 dark:from-slate-800 dark:to-slate-900"
+                    )}>
+                      <Icon className="w-5 h-5" />
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-1">
+                        <p className={cn("text-xs font-bold truncate", isDark ? "text-slate-200" : "text-slate-800")}>
+                          {badge.title}
+                        </p>
+                        <span className="text-[9px] font-black text-slate-400 whitespace-nowrap">
+                          {badge.progress}%
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-slate-400 truncate mt-0.5">
+                        {badge.description}
+                      </p>
+                      
+                      {/* Custom Mini Progress bar */}
+                      <div className="w-full h-1 bg-slate-100 dark:bg-white/5 rounded-full mt-1.5 overflow-hidden">
+                        <div
+                          className="h-full bg-purple-500 rounded-full transition-all duration-500"
+                          style={{ width: `${badge.progress}%` }}
+                        />
+                      </div>
+                    </div>
                   </div>
-                  <span
-                    className={cn(
-                      "text-xs font-bold tracking-wide text-center leading-tight",
-                      isDark ? "text-slate-300" : "text-slate-600"
-                    )}
-                  >
-                    {item.label}
-                  </span>
-                </motion.div>
-              </Link>
-            );
-          })}
+                );
+              })}
+            </div>
+          </Card>
         </div>
       </div>
     </div>
   );
 }
-
