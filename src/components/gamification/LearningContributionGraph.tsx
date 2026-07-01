@@ -213,19 +213,19 @@ export default function LearningContributionGraph() {
   const getCellColorClass = (level: number) => {
     if (isDark) {
       switch (level) {
-        case 1: return "bg-violet-500/20 border-violet-500/20 text-violet-300 hover:bg-violet-500/35";
-        case 2: return "bg-violet-500/40 border-violet-500/40 text-violet-100 hover:bg-violet-500/55";
-        case 3: return "bg-violet-600/70 border-violet-500/50 text-white hover:bg-violet-600/85";
-        case 4: return "bg-violet-600 border-violet-500 text-white hover:bg-violet-500 hover:shadow-[0_0_12px_rgba(139,92,246,0.6)] font-extrabold";
-        default: return "bg-slate-900/30 border-white/5 text-slate-500 hover:bg-white/5";
+        case 1: return "bg-violet-500/10 border-violet-500/20 text-violet-300 hover:bg-violet-500/25";
+        case 2: return "bg-violet-500/30 border-violet-500/30 text-violet-100 hover:bg-violet-500/45 shadow-sm shadow-violet-500/10";
+        case 3: return "bg-violet-600/60 border-violet-500/40 text-white hover:bg-violet-600/75 shadow-md shadow-violet-600/20";
+        case 4: return "bg-gradient-to-br from-violet-600 to-indigo-600 border-violet-500 text-white hover:shadow-[0_0_15px_rgba(139,92,246,0.8)] shadow-lg shadow-violet-600/40 font-black";
+        default: return "bg-slate-950/40 border-white/5 text-slate-500 hover:bg-white/5";
       }
     } else {
       switch (level) {
-        case 1: return "bg-violet-50 border-violet-100 text-violet-600 hover:bg-violet-100/70";
-        case 2: return "bg-violet-100 border-violet-200 text-violet-700 hover:bg-violet-200/70";
-        case 3: return "bg-violet-300 border-violet-400 text-violet-900 hover:bg-violet-400/80";
-        case 4: return "bg-violet-600 border-violet-700 text-white hover:bg-violet-700 hover:shadow-[0_0_10px_rgba(139,92,246,0.4)] font-extrabold";
-        default: return "bg-slate-50 border-slate-100 text-slate-400 hover:bg-slate-100";
+        case 1: return "bg-violet-50 border-violet-100 text-violet-600 hover:bg-violet-100/50";
+        case 2: return "bg-violet-100/80 border-violet-200 text-violet-700 hover:bg-violet-200 shadow-sm shadow-violet-200/10";
+        case 3: return "bg-violet-300 border-violet-400 text-violet-900 hover:bg-violet-400 shadow-md shadow-violet-300/20";
+        case 4: return "bg-gradient-to-br from-violet-600 to-indigo-600 border-violet-700 text-white hover:shadow-[0_0_12px_rgba(139,92,246,0.5)] shadow-lg shadow-violet-500/30 font-black";
+        default: return "bg-slate-50 border-slate-100 text-slate-400 hover:bg-slate-100/70";
       }
     }
   };
@@ -317,7 +317,7 @@ export default function LearningContributionGraph() {
               return (
                 <div
                   key={cell.dateKey}
-                  className="aspect-square w-full rounded-xl bg-transparent pointer-events-none"
+                  className="aspect-square w-full rounded-full bg-transparent pointer-events-none"
                 />
               );
             }
@@ -334,9 +334,9 @@ export default function LearningContributionGraph() {
                 <TooltipTrigger asChild>
                   <div
                     className={cn(
-                      "aspect-square w-full rounded-xl border flex items-center justify-center text-xs font-semibold cursor-pointer transition-all duration-200 select-none",
+                      "aspect-square w-full rounded-full border flex items-center justify-center text-xs font-semibold cursor-pointer transition-all duration-200 select-none",
                       cellClass,
-                      isToday && (isDark ? "ring-2 ring-violet-400 ring-offset-2 ring-offset-slate-950" : "ring-2 ring-violet-500 ring-offset-2 ring-offset-white")
+                      isToday && (isDark ? "ring-2 ring-violet-500 ring-offset-2 ring-offset-slate-950 shadow-[0_0_15px_rgba(139,92,246,0.5)]" : "ring-2 ring-violet-500 ring-offset-2 ring-offset-white shadow-[0_0_10px_rgba(139,92,246,0.3)]")
                     )}
                   >
                     {cell.dayNumber}

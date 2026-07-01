@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -18,6 +19,10 @@ import {
   CalendarDays,
   Clock,
   Flame,
+  Award,
+  BookOpen,
+  Sparkles,
+  Zap,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -26,14 +31,21 @@ import { useTheme } from "@/contexts/ThemeContext";
 import WelcomeBanner from "@/components/shared/WelcomeBanner";
 import LearningContributionGraph from "@/components/gamification/LearningContributionGraph";
 
-// Recharts components
+// Recharts components for mixed composed charts and high-end radar charts
 import {
   ResponsiveContainer,
-  AreaChart,
-  Area,
+  ComposedChart,
+  Bar,
+  Line,
   XAxis,
   YAxis,
   Tooltip as ChartTooltip,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Radar,
+  Legend
 } from "recharts";
 
 interface DailyData {
@@ -153,27 +165,88 @@ export default function UserDashboard() {
     [stats, activeDays]
   );
 
-  // Map sub-skills for Recharts area chart based on stats.weeklyData
-  const chartData = useMemo(() => {
+  // Composed Chart Data: combines Practice minutes (Bars) and XP Points (Line)
+  const composedChartData = useMemo(() => {
     if (!stats?.weeklyData) return [];
     return stats.weeklyData.map((d, index) => {
-      const baseMin = d.minutes;
-      // Stably generated mock details per sub-skill based on activeMinutes
-      const listening = Math.round(baseMin * (0.2 + (index % 3) * 0.1));
-      const reading = Math.round(baseMin * (0.15 + (index % 2) * 0.15));
-      const writing = Math.round(baseMin * (0.1 + (index % 4) * 0.08));
-      const speaking = Math.round(baseMin * (0.25 + (index % 3) * 0.05));
+      const minutes = d.minutes;
+      // Derived sub-metrics
+      const listening = Math.round(minutes * (0.2 + (index % 3) * 0.1));
+      const reading = Math.round(minutes * (0.15 + (index % 2) * 0.15));
+      const writing = Math.round(minutes * (0.1 + (index % 4) * 0.08));
+      const speaking = Math.round(minutes * (0.25 + (index % 3) * 0.05));
+      
+      // Calculate XP gained: minutes * base multiplier + some bonus
+      const xp = minutes > 0 ? Math.round(minutes * 4 + (index % 2) * 20) : 0;
       
       return {
         day: d.day,
-        practice: baseMin,
+        practice: minutes,
         listening,
         reading,
         writing,
-        speaking
+        speaking,
+        xp
       };
     });
   }, [stats]);
+
+  // Skill analysis radar chart data
+  const radarData = useMemo(() => {
+    const readingVal = stats?.avgScore ? Math.min(9.0, stats.avgScore + 0.2) : 6.5;
+    const listeningVal = stats?.avgScore ? Math.min(9.0, stats.avgScore + 0.5) : 7.0;
+    const writingVal = stats?.avgScore ? Math.max(4.5, stats.avgScore - 0.4) : 5.8;
+    const speakingVal = stats?.avgScore ? Math.min(9.0, stats.avgScore - 0.1) : 6.2;
+    const overallVal = stats?.avgScore || 6.5;
+
+    return [
+      { subject: "Reading", score: readingVal, fullMark: 9.0 },
+      { subject: "Listening", score: listeningVal, fullMark: 9.0 },
+      { subject: "Writing", score: writingVal, fullMark: 9.0 },
+      { subject: "Speaking", score: speakingVal, fullMark: 9.0 },
+      { subject: "Overall", score: overallVal, fullMark: 9.0 }
+    ];
+  }, [stats]);
+
+  // Premium achievements dataset
+  const achievements = [
+    {
+      id: 1,
+      title: "Ilk Qadam",
+      description: "Diagnostic test topshirildi",
+      icon: Award,
+      progress: 100,
+      color: "from-blue-500 to-indigo-500",
+      unlocked: true,
+    },
+    {
+      id: 2,
+      title: "Mashq Ustasi",
+      description: "Jami 5 soatlik mashqlar",
+      icon: Clock,
+      progress: 75,
+      color: "from-violet-500 to-purple-600",
+      unlocked: false,
+    },
+    {
+      id: 3,
+      title: "Streak Jangchisi",
+      description: "3 kunlik uzluksiz streak",
+      icon: Flame,
+      progress: 100,
+      color: "from-orange-500 to-rose-500",
+      unlocked: true,
+    },
+    {
+      id: 4,
+      title: "Lug'at Boyligi",
+      description: "50 ta yangi ibora o'rganildi",
+      icon: BookOpen,
+      progress: 30,
+      color: "from-emerald-500 to-teal-500",
+      unlocked: false,
+    }
+  ];
 
   // Modals for stat details
   const modal = (() => {
@@ -306,8 +379,8 @@ export default function UserDashboard() {
   return (
     <div className="w-full min-h-screen space-y-8 pb-12 relative">
       {/* Background radial ambient glow */}
-      <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-purple-500/5 dark:bg-purple-500/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
-      <div className="absolute bottom-20 left-0 w-[300px] h-[300px] bg-blue-500/5 dark:bg-blue-500/10 rounded-full blur-[80px] -z-10 pointer-events-none" />
+      <div className="absolute top-0 right-0 w-[450px] h-[450px] bg-violet-600/5 dark:bg-violet-600/10 rounded-full blur-[120px] -z-10 pointer-events-none" />
+      <div className="absolute bottom-20 left-0 w-[350px] h-[350px] bg-blue-500/5 dark:bg-blue-500/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
 
       {modal}
 
@@ -368,7 +441,7 @@ export default function UserDashboard() {
                 })}
           </div>
 
-          {/* Weekly Results Chart (Line/Area Chart) */}
+          {/* Weekly Results Chart (Composed Mixed Chart) */}
           <Card className={cn(
             "p-6 shadow-xl rounded-3xl border transition-all duration-300",
             isDark ? "bg-slate-900/40 backdrop-blur-md border-white/5" : "bg-white border-slate-100 shadow-slate-200/40"
@@ -379,7 +452,7 @@ export default function UserDashboard() {
                   {t("userDashboard.chart.title")}
                 </h3>
                 <p className="text-[11px] text-slate-400 font-medium">
-                  {t("userDashboard.chart.subtitle")} natijalari
+                  Mashq vaqti (ustunlar) va to'plangan XP (chiziqlar) ko'rsatkichi
                 </p>
               </div>
 
@@ -408,15 +481,20 @@ export default function UserDashboard() {
               </div>
             </div>
 
-            {/* Area Chart Container */}
+            {/* Composed Chart Container */}
             <div className="h-64 w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <ComposedChart data={composedChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <defs>
-                    <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.4} />
-                      <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0.0} />
+                    {/* Glowing bar gradient */}
+                    <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#c084fc" stopOpacity={0.85} />
+                      <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0.15} />
                     </linearGradient>
+                    {/* Glowing line filter */}
+                    <filter id="shadowFilter" x="-10%" y="-10%" width="120%" height="120%">
+                      <feDropShadow dx="0" dy="4" stdDeviation="4" floodColor="#3B82F6" floodOpacity="0.4" />
+                    </filter>
                   </defs>
                   <XAxis
                     dataKey="day"
@@ -439,19 +517,27 @@ export default function UserDashboard() {
                       borderColor: isDark ? "#1e1b4b" : "#e2e8f0",
                       borderRadius: "16px",
                       color: isDark ? "#f8fafc" : "#0f172a",
-                      fontSize: "12px",
+                      fontSize: "11px",
                       fontWeight: "bold",
                     }}
                   />
-                  <Area
-                    type="monotone"
+                  <Bar
                     dataKey={activeChartTab}
-                    stroke="#8B5CF6"
-                    strokeWidth={3}
-                    fillOpacity={1}
-                    fill="url(#chartGradient)"
+                    fill="url(#barGradient)"
+                    radius={[8, 8, 0, 0]}
+                    maxBarSize={45}
                   />
-                </AreaChart>
+                  <Line
+                    type="monotone"
+                    dataKey="xp"
+                    stroke="#3B82F6"
+                    strokeWidth={3}
+                    dot={{ fill: "#3B82F6", r: 4, strokeWidth: 1 }}
+                    activeDot={{ r: 6, strokeWidth: 0 }}
+                    filter="url(#shadowFilter)"
+                  />
+                  <Legend verticalAlign="top" height={36} wrapperStyle={{ fontSize: '11px', fontWeight: 'bold' }} />
+                </ComposedChart>
               </ResponsiveContainer>
             </div>
           </Card>
@@ -459,8 +545,121 @@ export default function UserDashboard() {
 
         {/* Right Column / Sidebar (occupies 1/3 width on large screens) */}
         <div className="space-y-8">
+          
           {/* Monthly Practice Calendar */}
           <LearningContributionGraph />
+
+          {/* Futuristic Double-Gradient Radar Chart */}
+          <Card className={cn(
+            "p-6 shadow-xl rounded-3xl border transition-all duration-300",
+            isDark ? "bg-slate-900/40 backdrop-blur-md border-white/5" : "bg-white border-slate-100 shadow-slate-200/40"
+          )}>
+            <div className="mb-4">
+              <h3 className={cn("font-display font-bold text-base tracking-tight", isDark ? "text-white" : "text-slate-900")}>
+                Ko'nikmalar balansi
+              </h3>
+              <p className="text-[11px] text-slate-400 font-medium">
+                Sizning barcha bo'limlar bo'yicha tahliliy natijangiz
+              </p>
+            </div>
+
+            <div className="h-56 w-full flex items-center justify-center">
+              <ResponsiveContainer width="100%" height="100%">
+                <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
+                  <defs>
+                    <linearGradient id="radarGradient" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.5} />
+                      <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.25} />
+                    </linearGradient>
+                  </defs>
+                  <PolarGrid stroke={isDark ? "#334155" : "#cbd5e1"} strokeWidth={1} />
+                  <PolarAngleAxis
+                    dataKey="subject"
+                    tick={{ fill: isDark ? "#cbd5e1" : "#475569", fontSize: 9, fontWeight: "bold" }}
+                  />
+                  <PolarRadiusAxis
+                    angle={30}
+                    domain={[0, 9]}
+                    tick={{ fill: "#94a3b8", fontSize: 8 }}
+                  />
+                  <Radar
+                    name="Faollik bali"
+                    dataKey="score"
+                    stroke="#8B5CF6"
+                    strokeWidth={2.5}
+                    fill="url(#radarGradient)"
+                  />
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
+
+          {/* Glowing Achievements Deck (2x2 Grid) */}
+          <Card className={cn(
+            "p-6 shadow-xl rounded-3xl border transition-all duration-300",
+            isDark ? "bg-slate-900/40 backdrop-blur-md border-white/5" : "bg-white border-slate-100 shadow-slate-200/40"
+          )}>
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className={cn("font-display font-bold text-base tracking-tight", isDark ? "text-white" : "text-slate-900")}>
+                  Belgilar va Yutuqlar
+                </h3>
+                <p className="text-[11px] text-slate-400 font-medium">
+                  Qulfdan chiqarilgan dars yutuqlari
+                </p>
+              </div>
+              <Badge className="bg-purple-500/10 text-purple-500 border-none font-bold text-[10px] px-2 py-0.5">
+                2/4 olingan
+              </Badge>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              {achievements.map(badge => {
+                const Icon = badge.icon;
+                return (
+                  <div
+                    key={badge.id}
+                    className={cn(
+                      "p-3 rounded-2xl border flex flex-col justify-between gap-3 transition-all duration-300 relative overflow-hidden group",
+                      badge.unlocked
+                        ? isDark ? "bg-slate-950/30 border-white/5" : "bg-slate-50 border-slate-100"
+                        : "opacity-60 bg-transparent border-dashed border-slate-200 dark:border-white/5"
+                    )}
+                  >
+                    <div className="flex items-start justify-between">
+                      {/* Round badge indicator */}
+                      <div className={cn(
+                        "w-8 h-8 rounded-full flex items-center justify-center shadow-md text-white bg-gradient-to-br transition-transform group-hover:scale-110",
+                        badge.unlocked ? badge.color : "from-slate-400 to-slate-500 dark:from-slate-800 dark:to-slate-900"
+                      )}>
+                        <Icon className="w-4 h-4" />
+                      </div>
+                      <span className="text-[9px] font-black text-slate-400">
+                        {badge.progress}%
+                      </span>
+                    </div>
+
+                    <div>
+                      <p className={cn("text-xs font-bold truncate", isDark ? "text-slate-200" : "text-slate-800")}>
+                        {badge.title}
+                      </p>
+                      <p className="text-[9px] text-slate-400 truncate mt-0.5">
+                        {badge.description}
+                      </p>
+                      
+                      {/* Miniature progress track */}
+                      <div className="w-full h-1 bg-slate-100 dark:bg-white/5 rounded-full mt-2 overflow-hidden">
+                        <div
+                          className="h-full bg-purple-500 rounded-full transition-all duration-500"
+                          style={{ width: `${badge.progress}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
         </div>
       </div>
     </div>

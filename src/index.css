@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -125,8 +125,8 @@
   }
   body { 
     @apply bg-background text-foreground antialiased selection:bg-primary/20;
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-    letter-spacing: -0.02em;
+    font-family: 'Outfit', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    letter-spacing: -0.015em;
     line-height: 1.5;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
@@ -136,63 +136,63 @@
   
   /* Typography Hierarchy System */
   .text-display {
-    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-family: 'Outfit', 'Plus Jakarta Sans', system-ui, sans-serif;
     font-size: clamp(2.25rem, 5vw, 4rem);
     font-weight: 800;
     line-height: 1.15;
     letter-spacing: -0.03em;
   }
   .text-h1 {
-    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-family: 'Outfit', 'Plus Jakarta Sans', system-ui, sans-serif;
     font-size: clamp(1.75rem, 4vw, 2.5rem);
     font-weight: 800;
     line-height: 1.2;
     letter-spacing: -0.025em;
   }
   .text-h2 {
-    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-family: 'Outfit', 'Plus Jakarta Sans', system-ui, sans-serif;
     font-size: clamp(1.35rem, 3vw, 1.875rem);
     font-weight: 700;
     line-height: 1.25;
     letter-spacing: -0.02em;
   }
   .text-h3 {
-    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-family: 'Outfit', 'Plus Jakarta Sans', system-ui, sans-serif;
     font-size: clamp(1.15rem, 2vw, 1.5rem);
     font-weight: 600;
     line-height: 1.3;
     letter-spacing: -0.015em;
   }
   .text-subtitle {
-    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-family: 'Outfit', 'Plus Jakarta Sans', system-ui, sans-serif;
     font-size: clamp(0.95rem, 1.5vw, 1.125rem);
     font-weight: 500;
     line-height: 1.45;
     letter-spacing: -0.010em;
   }
   .text-body {
-    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-family: 'Outfit', 'Plus Jakarta Sans', system-ui, sans-serif;
     font-size: 0.9375rem;
     font-weight: 400;
     line-height: 1.5;
     letter-spacing: -0.015em;
   }
   .text-small {
-    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-family: 'Outfit', 'Plus Jakarta Sans', system-ui, sans-serif;
     font-size: 0.8125rem;
     font-weight: 400;
     line-height: 1.5;
     letter-spacing: -0.010em;
   }
   .text-caption {
-    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-family: 'Outfit', 'Plus Jakarta Sans', system-ui, sans-serif;
     font-size: 0.75rem;
     font-weight: 500;
     line-height: 1.4;
     letter-spacing: -0.005em;
   }
   .text-btn {
-    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-family: 'Outfit', 'Plus Jakarta Sans', system-ui, sans-serif;
     font-size: 0.875rem;
     font-weight: 600;
     line-height: 1.5;
