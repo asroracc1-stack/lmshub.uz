@@ -646,6 +646,7 @@ export default function MockTake() {
   const [exam, setExam] = useState<ExamData | null>(null);
   const isMilliy = exam?.type ? (exam.type.toLowerCase() === "national_cert" || exam.type.toLowerCase() === "milliy") : false;
   const isSat = exam?.type ? (exam.type.toLowerCase() === "sat") : false;
+  const kind = (exam?.type ?? "").toLowerCase();
   const [isFullscreen, setIsFullscreen] = useState(false);
   
   const [sections, setSections] = useState<{ title: string; passage: string; imageUrl: string }[]>([]);
@@ -1179,8 +1180,6 @@ export default function MockTake() {
       <Button variant="outline" className="rounded-none border-2 border-slate-800" onClick={() => nav(-1)}>Return to Menu</Button>
     </div>
   );
-
-  const kind = (exam.type ?? "").toLowerCase();
 
   if (showSuccessAnimation) {
     const isMilliyVal = exam?.type ? (exam.type.toLowerCase() === "national_cert" || exam.type.toLowerCase() === "milliy") : false;
