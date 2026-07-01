@@ -430,6 +430,15 @@
     ]
   },
   "userDashboard": {
+    "stats": {
+      "targetBand": "Target score",
+      "avgScore": "Average score",
+      "daysLeft": "Until exam",
+      "daysValue": "{{count}} days",
+      "practiceTime": "Practice time",
+      "minutesValue": "{{count}} min",
+      "dailyStreak": "Streak active"
+    },
     "chart": {
       "trendsTitle": "Analysis & Trends",
       "trendsDesc": "Practice intensity and score trends over the last 7 days",

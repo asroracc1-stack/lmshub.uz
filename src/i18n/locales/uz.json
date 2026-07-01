@@ -430,6 +430,15 @@
     ]
   },
   "userDashboard": {
+    "stats": {
+      "targetBand": "Maqsadli ball",
+      "avgScore": "O'rtacha ball",
+      "daysLeft": "Imtihongacha",
+      "daysValue": "{{count}} kun",
+      "practiceTime": "Mashq vaqti",
+      "minutesValue": "{{count}} daq",
+      "dailyStreak": "Streak faollik"
+    },
     "chart": {
       "trendsTitle": "Tahlil va Trendlar",
       "trendsDesc": "So'nggi 7 kunlik mashq intensivligi va natija o'zgarishlari",

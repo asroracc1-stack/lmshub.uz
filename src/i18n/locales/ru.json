@@ -423,6 +423,15 @@
     ]
   },
   "userDashboard": {
+    "stats": {
+      "targetBand": "Целевой балл",
+      "avgScore": "Средний балл",
+      "daysLeft": "До экзамена",
+      "daysValue": "{{count}} дн.",
+      "practiceTime": "Время практики",
+      "minutesValue": "{{count}} мин",
+      "dailyStreak": "Дней подряд"
+    },
     "chart": {
       "trendsTitle": "Анализ и Тренды",
       "trendsDesc": "Интенсивность практики и тренды баллов за последние 7 дней",
