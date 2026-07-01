@@ -194,7 +194,7 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={() => nav(`${basePath}/mocks`)}
+          <Button variant="ghost" size="sm" onClick={() => nav(`${basePath}/practice`)}
             className="rounded-xl hover:bg-slate-100 dark:hover:bg-white/5">
             <ArrowLeft className="h-4 w-4" />
           </Button>
