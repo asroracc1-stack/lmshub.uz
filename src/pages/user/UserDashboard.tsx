@@ -213,31 +213,58 @@ export default function UserDashboard() {
     }
   }, [activeChartTab]);
 
-  // Dynamic theme colors for the chart based on the active tab
+  // Dynamic theme colors and CSS classes for the chart based on the active tab
   const chartTheme = useMemo(() => {
     switch (activeChartTab) {
       case "practice":
         return {
           stroke: "#10b981", // Emerald Green
-          fillGradientId: "emeraldGrad"
+          bgBadge: "bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20",
+          activeTabClass: "bg-emerald-500 text-white shadow-lg shadow-emerald-500/25 hover:bg-emerald-600"
         };
       case "sat":
         return {
           stroke: "#3b82f6", // Blue
-          fillGradientId: "blueGrad"
+          bgBadge: "bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/20",
+          activeTabClass: "bg-blue-500 text-white shadow-lg shadow-blue-500/25 hover:bg-blue-600"
         };
       case "national_cert":
         return {
           stroke: "#f59e0b", // Amber
-          fillGradientId: "amberGrad"
+          bgBadge: "bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/20",
+          activeTabClass: "bg-amber-500 text-white shadow-lg shadow-amber-500/25 hover:bg-amber-600"
         };
       default:
         return {
           stroke: "#8b5cf6", // Violet/Purple
-          fillGradientId: "violetGrad"
+          bgBadge: "bg-purple-500/10 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/20",
+          activeTabClass: "bg-purple-500 text-white shadow-lg shadow-purple-500/25 hover:bg-purple-600"
         };
     }
   }, [activeChartTab]);
+
+  // Compute sum or average for the selected tab to display as "Jami"
+  const activeTabTotal = useMemo(() => {
+    if (!composedChartData.length) return "0";
+    const sum = composedChartData.reduce((acc, curr) => {
+      const val = curr[activeChartTab];
+      return acc + (typeof val === "number" ? val : 0);
+    }, 0);
+    
+    switch (activeChartTab) {
+      case "sat":
+        return Math.round(sum / composedChartData.length).toString() + " score";
+      case "national_cert":
+        return Math.round(sum / composedChartData.length).toString() + " ball";
+      case "reading":
+      case "listening":
+      case "writing":
+      case "speaking":
+        return (sum / composedChartData.length).toFixed(1) + " band";
+      default:
+        return sum.toFixed(1) + " daq";
+    }
+  }, [composedChartData, activeChartTab]);
 
   // Custom dots matching IELTS Hub style (white/dark filled circle with themed stroke border)
   const renderCustomDot = (props: any) => {
@@ -448,72 +475,70 @@ export default function UserDashboard() {
                 })}
           </div>
 
-          {/* Weekly Results Chart (Clean, Spacious single AreaChart Layout) */}
+          {/* Weekly Results Chart (Clean, Spacious, Floating Pills Layout similar to IELTS Hub) */}
           <Card className={cn(
-            "p-4 shadow-md rounded-2xl border transition-all duration-300 overflow-hidden relative",
+            "p-5 shadow-lg rounded-[24px] border transition-all duration-300 overflow-hidden relative",
             isDark ? "bg-slate-900/30 border-white/5" : "bg-white border-slate-200/60 shadow-slate-200/10"
           )}>
-            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3 mb-5">
+            {/* Header Row: Title & Total Badge */}
+            <div className="flex items-center justify-between gap-4">
               <div>
-                <div className="flex items-center gap-1.5">
-                  <TrendingUp className="w-4 h-4 text-emerald-500" />
-                  <h3 className={cn("font-display font-black text-sm tracking-tight", isDark ? "text-white" : "text-slate-900")}>
-                    {t("userDashboard.chart.trendsTitle", "Tahlil va Trendlar")}
-                  </h3>
-                </div>
-                <p className="text-[10px] text-slate-400 font-semibold mt-0.5">
-                  {t("userDashboard.chart.trendsDesc", "So'nggi 7 kunlik mashq intensivligi va natija o'zgarishlari")}
+                <h3 className={cn("font-display font-black text-base tracking-tight", isDark ? "text-white" : "text-slate-900")}>
+                  {t("userDashboard.chart.trendsTitle", "Haftalik natija")}
+                </h3>
+                <p className="text-[11px] text-slate-400 font-bold tracking-wide mt-0.5">
+                  {t("userDashboard.chart.trendsDesc", "so'nggi 7 kun")}
                 </p>
               </div>
 
-              {/* 7 tabs buttons system */}
-              <div className="flex flex-wrap gap-1 p-0.5 rounded-lg bg-slate-100 dark:bg-white/5 shrink-0 max-w-full overflow-x-auto select-none">
-                {[
-                  { id: "practice", label: t("userDashboard.tabs.practice", "Mashq vaqti") },
-                  { id: "reading", label: t("userDashboard.tabs.reading", "Reading") },
-                  { id: "listening", label: t("userDashboard.tabs.listening", "Listening") },
-                  { id: "writing", label: t("userDashboard.tabs.writing", "Writing") },
-                  { id: "speaking", label: t("userDashboard.tabs.speaking", "Speaking") },
-                  { id: "sat", label: t("userDashboard.tabs.sat", "SAT") },
-                  { id: "national_cert", label: t("userDashboard.tabs.national_cert", "Milliy Sertifikat") }
-                ].map(tab => (
+              {/* Total Badge */}
+              <div className={cn("px-3 py-1.5 rounded-full text-[11px] font-black border flex items-center gap-1.5 select-none transition-all duration-300", chartTheme.bgBadge)}>
+                <span className="opacity-85">{t("userDashboard.calendar.total", "Jami")}:</span>
+                <span>{activeTabTotal}</span>
+              </div>
+            </div>
+
+            {/* Row 2: Floating Pill Buttons */}
+            <div className="mt-4 mb-5 flex flex-wrap gap-2 select-none">
+              {[
+                { id: "practice", label: t("userDashboard.tabs.practice", "Mashq vaqti") },
+                { id: "reading", label: t("userDashboard.tabs.reading", "Reading") },
+                { id: "listening", label: t("userDashboard.tabs.listening", "Listening") },
+                { id: "writing", label: t("userDashboard.tabs.writing", "Writing") },
+                { id: "speaking", label: t("userDashboard.tabs.speaking", "Speaking") },
+                { id: "sat", label: t("userDashboard.tabs.sat", "SAT") },
+                { id: "national_cert", label: t("userDashboard.tabs.national_cert", "Milliy Sertifikat") }
+              ].map(tab => {
+                const isActive = activeChartTab === tab.id;
+                return (
                   <button
                     key={tab.id}
                     onClick={() => setActiveChartTab(tab.id as any)}
                     className={cn(
-                      "px-2.5 py-1.5 rounded-md text-[11px] font-bold transition-all duration-200 whitespace-nowrap",
-                      activeChartTab === tab.id
-                        ? isDark 
-                          ? "bg-white/10 text-white shadow-sm"
-                          : "bg-white text-slate-900 shadow-sm border border-slate-200/40"
-                        : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white"
+                      "px-3.5 py-1.5 rounded-full text-[11px] font-black transition-all duration-200 whitespace-nowrap",
+                      isActive
+                        ? chartTheme.activeTabClass
+                        : "bg-slate-100/70 hover:bg-slate-200/80 dark:bg-white/5 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300"
                     )}
                   >
                     {tab.label}
                   </button>
-                ))}
-              </div>
+                );
+              })}
             </div>
 
-            {/* UPPER CHART: Main Trading Trend Chart (Full Card Height) */}
+            {/* Row 3: Crisp, Professional Line Chart */}
             <div className="h-52 w-full relative">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={composedChartData} margin={{ top: 10, right: 10, left: -15, bottom: 10 }}>
+                <AreaChart data={composedChartData} margin={{ top: 10, right: 10, left: -15, bottom: 5 }}>
                   <defs>
                     <linearGradient id="chartFillGradient" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor={chartTheme.stroke} stopOpacity={0.25} />
-                      <stop offset="95%" stopColor={chartTheme.stroke} stopOpacity={0.01} />
+                      <stop offset="95%" stopColor={chartTheme.stroke} stopOpacity={0.005} />
                     </linearGradient>
-                    <filter id="glowEffect" x="-10%" y="-10%" width="120%" height="120%">
-                      <feGaussianBlur stdDeviation="3" result="blur" />
-                      <feMerge>
-                        <feMergeNode in="blur" />
-                        <feMergeNode in="SourceGraphic" />
-                      </feMerge>
-                    </filter>
                   </defs>
                   {/* Clean, high-fidelity soft grid lines */}
-                  <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "#1e293b" : "#f1f5f9"} opacity={0.6} vertical={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "#1e293b" : "#f1f5f9"} opacity={0.5} vertical={false} />
                   <XAxis
                     dataKey="day"
                     stroke="#94a3b8"
@@ -547,12 +572,11 @@ export default function UserDashboard() {
                     type="monotone"
                     dataKey={activeChartTab}
                     stroke={chartTheme.stroke}
-                    strokeWidth={3}
+                    strokeWidth={2}
                     dot={renderCustomDot}
                     fillOpacity={1}
                     fill="url(#chartFillGradient)"
-                    filter="url(#glowEffect)"
-                    activeDot={{ r: 5, stroke: chartTheme.stroke, strokeWidth: 2, fill: isDark ? "#0f0c1b" : "#ffffff" }}
+                    activeDot={{ r: 5, stroke: chartTheme.stroke, strokeWidth: 1.5, fill: isDark ? "#0f0c1b" : "#ffffff" }}
                   />
                 </AreaChart>
               </ResponsiveContainer>
