@@ -38,6 +38,8 @@ export interface NavItem {
   label: string;
   icon: any;
   badge?: string;
+  badgeColor?: string;
+  miniBadgeColor?: string;
   children?: NavItem[];
 }
 
@@ -115,7 +117,7 @@ export const getSidebarRoutes = (role: string, t: TFunction, options: { ielts?: 
     case "student":
       return [
         { to: "/student/dashboard", label: t("nav.dashboard"), icon: LayoutDashboard },
-        { to: "/student/practice", label: t("nav.practice"), icon: GraduationCap },
+        { to: "/student/practice", label: t("nav.practice"), badge: "New", badgeColor: "bg-gradient-to-r from-purple-600 to-indigo-500 shadow-purple-500/20", miniBadgeColor: "bg-purple-500", icon: GraduationCap },
         { to: "/student/lessons", label: t("nav.myLessonsStudent"), icon: CalendarClock },
         { to: "/student/grades", label: t("nav.results"), icon: Award },
         { to: "/student/calendar", label: t("nav.schedule"), icon: Calendar },
@@ -133,7 +135,7 @@ export const getSidebarRoutes = (role: string, t: TFunction, options: { ielts?: 
     case "user":
       return [
         { to: "/user/dashboard", label: t("nav.dashboard"), icon: LayoutDashboard },
-        { to: "/user/practice", label: t("nav.practice"), icon: GraduationCap },
+        { to: "/user/practice", label: t("nav.practice"), badge: "New", badgeColor: "bg-gradient-to-r from-purple-600 to-indigo-500 shadow-purple-500/20", miniBadgeColor: "bg-purple-500", icon: GraduationCap },
         { to: "/user/sat", label: t("nav.sat"), icon: Target },
         { to: "/user/national-cert", label: t("nav.nationalCert"), icon: Landmark },
         { to: "/user/subscriptions", label: t("nav.subscriptions"), icon: Package },

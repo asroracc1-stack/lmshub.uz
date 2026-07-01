@@ -2,20 +2,11 @@ import React, { useEffect, useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { useTheme } from "@/contexts/ThemeContext";
 import { api } from "@/lib/axios";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { 
-  Headphones, 
-  BookOpen, 
-  PenTool, 
-  MessageSquare, 
-  ArrowLeft,
-  ChevronRight,
-  TrendingUp
-} from "lucide-react";
+import { ArrowLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface StudentAttempt {
@@ -30,7 +21,7 @@ interface StudentAttempt {
 }
 
 export default function UserPractice() {
-  const { t } = useTranslation();
+  const { i18n } = useTranslation();
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const navigate = useNavigate();
@@ -59,127 +50,232 @@ export default function UserPractice() {
   const writingCount = useMemo(() => attempts.filter(a => a.exam?.type === "WRITING").length, [attempts]);
   const speakingCount = useMemo(() => attempts.filter(a => a.exam?.type === "SPEAKING").length, [attempts]);
 
-  // Skill items list
+  // Safe Multi-language Translation dictionary
+  const lang = i18n.language || "uz";
+  const translations = {
+    uz: {
+      title: "Amaliyot bo'limi",
+      subtitle: "IELTS ko'nikmalarini tizimli va interaktiv tarzda rivojlantiring.",
+      startBtn: "Amaliyotni boshlash",
+      completed: "yakunlandi",
+      lessons: "ta dars",
+      noActivity: "Faollik yo'q",
+      listeningTitle: "Listening",
+      listeningDesc: "Audio mashqlar orqali tinglab tushunish ko'nikmangizni oshiring.",
+      readingTitle: "Reading",
+      readingDesc: "Matnlarni o'qing, tahlil qiling va lug'at boyligingizni sinab ko'ring.",
+      writingTitle: "Writing",
+      writingDesc: "Fikrlarni aniq bayon qilish va insho yozishni mashq qiling.",
+      speakingTitle: "Speaking",
+      speakingDesc: "Sun'iy intellekt murabbiyi bilan gaplashishni mashq qiling.",
+      practiceActivity: "Amaliyot foalligi",
+      dashboard: "Bosh sahifa",
+    },
+    en: {
+      title: "Practice Section",
+      subtitle: "Develop your IELTS skills systematically and interactively.",
+      startBtn: "Start practice",
+      completed: "completed",
+      lessons: "lessons",
+      noActivity: "No activity",
+      listeningTitle: "Listening",
+      listeningDesc: "Improve your listening capability through audio practices.",
+      readingTitle: "Reading",
+      readingDesc: "Read passages, analyze arguments, and test your vocabulary.",
+      writingTitle: "Writing",
+      writingDesc: "Express arguments clearly and practice structural essay composition.",
+      speakingTitle: "Speaking",
+      speakingDesc: "Practice active speech dialogue with live AI coach feedback.",
+      practiceActivity: "Practice activity",
+      dashboard: "Dashboard",
+    },
+    ru: {
+      title: "Раздел практики",
+      subtitle: "Развивайте свои навыки IELTS систематически и интерактивно.",
+      startBtn: "Начать практику",
+      completed: "завершено",
+      lessons: "уроков",
+      noActivity: "Нет активности",
+      listeningTitle: "Listening",
+      listeningDesc: "Улучшайте навыки аудирования с помощью аудио-практик.",
+      readingTitle: "Reading",
+      readingDesc: "Читайте тексты, анализируйте аргументы и проверяйте словарный запас.",
+      writingTitle: "Writing",
+      writingDesc: "Учитесь четко излагать мысли и писать эссе.",
+      speakingTitle: "Speaking",
+      speakingDesc: "Практикуйте устную речь с обратной связью от ИИ.",
+      practiceActivity: "Активность практики",
+      dashboard: "Главная",
+    }
+  };
+
+  const currentText = translations[lang as keyof typeof translations] || translations.uz;
+
+  // Skill items list with premium SVGs matching target layout
   const skills = [
     {
       id: "listening",
-      title: "Listening",
+      title: currentText.listeningTitle,
       emoji: "🎧",
-      desc: "Improve your listening capability through audio practices.",
+      desc: currentText.listeningDesc,
       completed: listeningCount,
       total: 12,
       path: "/student/mocks/c/listening",
-      color: "from-blue-500/10 to-indigo-500/10",
-      glow: "shadow-blue-500/10",
-      badgeColor: "bg-blue-500/10 text-blue-500 dark:bg-blue-500/20",
-      btnClass: "bg-blue-600 hover:bg-blue-700 shadow-blue-500/25",
+      badgeColor: "bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400",
+      btnClass: "bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20",
       svg: (
-        <svg viewBox="0 0 200 200" className="w-full h-full">
+        <svg viewBox="0 0 200 160" className="w-full h-full object-contain">
           <defs>
-            <linearGradient id="listeningGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#3b82f6" />
+            <linearGradient id="headphoneGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#4f46e5" />
               <stop offset="100%" stopColor="#6366f1" />
             </linearGradient>
+            <linearGradient id="skinGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#ffdbb5" />
+              <stop offset="100%" stopColor="#fca5a5" />
+            </linearGradient>
           </defs>
-          <circle cx="100" cy="100" r="50" fill="url(#listeningGrad)" opacity="0.15" className="animate-pulse" />
-          <path d="M70,90 C70,50 130,50 130,90" fill="none" stroke="url(#listeningGrad)" strokeWidth="6" strokeLinecap="round" />
-          <rect x="62" y="90" rx="8" ry="8" width="16" height="30" fill="url(#listeningGrad)" />
-          <rect x="122" y="90" rx="8" ry="8" width="16" height="30" fill="url(#listeningGrad)" />
-          <circle cx="100" cy="105" r="8" fill="url(#listeningGrad)" />
-          <path d="M100,105 L100,140" stroke="url(#listeningGrad)" strokeWidth="3" />
-          {/* Pulsing sound waves */}
-          <circle cx="100" cy="105" r="70" fill="none" stroke="url(#listeningGrad)" strokeWidth="2" opacity="0.4" strokeDasharray="5 5" className="animate-spin" style={{ animationDuration: '20s' }} />
+          {/* Background soft circular blur ring */}
+          <circle cx="100" cy="80" r="60" fill="#e0f2fe" opacity="0.4" className="dark:opacity-10" />
+          
+          {/* Sitting student character body */}
+          <path d="M60,160 C60,115 75,100 100,100 C125,100 140,115 140,160" fill="#1e293b" className="dark:fill-slate-700" />
+          
+          {/* Neck & Head */}
+          <rect x="94" y="85" width="12" height="20" rx="3" fill="url(#skinGrad)" />
+          <circle cx="100" cy="75" r="22" fill="url(#skinGrad)" />
+          
+          {/* Hair */}
+          <path d="M78,70 C78,50 122,50 122,70 C122,55 110,55 100,55 C90,55 78,55 78,70 Z" fill="#0f172a" />
+          
+          {/* Headphones */}
+          <path d="M74,75 C74,48 126,48 126,75" fill="none" stroke="url(#headphoneGrad)" strokeWidth="5" strokeLinecap="round" />
+          <rect x="70" y="70" width="10" height="20" rx="5" fill="#4f46e5" />
+          <rect x="120" y="70" width="10" height="20" rx="5" fill="#4f46e5" />
+
+          {/* Phone in hand */}
+          <rect x="135" y="115" width="15" height="28" rx="2" fill="#0f172a" stroke="#ffffff" strokeWidth="1" transform="rotate(15, 142, 129)" />
+          <line x1="120" y1="90" x2="135" y2="120" stroke="#4f46e5" strokeWidth="2" strokeDasharray="3 3" opacity="0.6" />
+          
+          {/* Sound waves floating */}
+          <path d="M140,65 Q150,55 155,65" fill="none" stroke="#4f46e5" strokeWidth="2" strokeLinecap="round" className="animate-pulse" />
+          <path d="M145,55 Q160,45 165,55" fill="none" stroke="#6366f1" strokeWidth="2" strokeLinecap="round" className="animate-pulse" style={{ animationDelay: "0.2s" }} />
         </svg>
       )
     },
     {
       id: "reading",
-      title: "Reading",
+      title: currentText.readingTitle,
       emoji: "📖",
-      desc: "Read passages, analyze arguments, and test your vocabulary.",
+      desc: currentText.readingDesc,
       completed: readingCount,
       total: 24,
       path: "/student/mocks/c/reading",
-      color: "from-emerald-500/10 to-teal-500/10",
-      glow: "shadow-emerald-500/10",
-      badgeColor: "bg-emerald-500/10 text-emerald-500 dark:bg-emerald-500/20",
-      btnClass: "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/25",
+      badgeColor: "bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400",
+      btnClass: "bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20",
       svg: (
-        <svg viewBox="0 0 200 200" className="w-full h-full">
+        <svg viewBox="0 0 200 160" className="w-full h-full object-contain">
           <defs>
-            <linearGradient id="readingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <linearGradient id="bookGrad" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#10b981" />
-              <stop offset="100%" stopColor="#14b8a6" />
+              <stop offset="100%" stopColor="#059669" />
             </linearGradient>
           </defs>
-          <path d="M50,130 C75,120 100,135 100,135 C100,135 125,120 150,130 L150,70 C125,60 100,75 100,75 C100,75 75,60 50,70 Z" fill="url(#readingGrad)" opacity="0.15" />
-          <path d="M100,75 L100,135" stroke="url(#readingGrad)" strokeWidth="3" />
-          <path d="M50,70 L50,130" stroke="url(#readingGrad)" strokeWidth="3" />
-          <path d="M150,70 L150,130" stroke="url(#readingGrad)" strokeWidth="3" />
-          <path d="M60,85 L85,80" stroke="url(#readingGrad)" strokeWidth="3" strokeLinecap="round" opacity="0.7" />
-          <path d="M60,100 L85,95" stroke="url(#readingGrad)" strokeWidth="3" strokeLinecap="round" opacity="0.7" />
-          <path d="M115,80 L140,85" stroke="url(#readingGrad)" strokeWidth="3" strokeLinecap="round" opacity="0.7" />
-          <path d="M115,95 L140,100" stroke="url(#readingGrad)" strokeWidth="3" strokeLinecap="round" opacity="0.7" />
+          <circle cx="100" cy="80" r="60" fill="#f0fdf4" opacity="0.6" className="dark:opacity-10" />
+          
+          {/* Sitting Girl Character body */}
+          <path d="M60,160 C60,120 75,105 100,105 C125,105 140,120 140,160" fill="#047857" />
+          
+          {/* Neck & Head */}
+          <rect x="94" y="88" width="12" height="20" rx="3" fill="#ffd7b5" />
+          <circle cx="100" cy="78" r="22" fill="#ffd7b5" />
+          
+          {/* Hair (Long) */}
+          <path d="M78,78 C78,45 122,45 122,78 C122,95 125,115 125,120 C125,120 120,120 115,115 L100,85 L85,115 C80,120 75,120 75,120 C75,115 78,95 78,78 Z" fill="#0f172a" />
+
+          {/* Giant Book in Hand */}
+          <path d="M70,140 C85,125 100,135 100,135 C100,135 115,125 130,140 L130,110 C115,95 100,105 100,105 C100,105 85,95 70,110 Z" fill="url(#bookGrad)" />
+          <path d="M100,105 L100,135" stroke="#ffffff" strokeWidth="2" />
+          <line x1="78" y1="118" x2="92" y2="114" stroke="#ffffff" strokeWidth="1.5" opacity="0.6" />
+          <line x1="78" y1="126" x2="92" y2="122" stroke="#ffffff" strokeWidth="1.5" opacity="0.6" />
+          <line x1="108" y1="114" x2="122" y2="118" stroke="#ffffff" strokeWidth="1.5" opacity="0.6" />
+          <line x1="108" y1="122" x2="122" y2="126" stroke="#ffffff" strokeWidth="1.5" opacity="0.6" />
         </svg>
       )
     },
     {
       id: "writing",
-      title: "Writing",
+      title: currentText.writingTitle,
       emoji: "✍️",
-      desc: "Express arguments clearly and practice structural essay composition.",
+      desc: currentText.writingDesc,
       completed: writingCount,
       total: 10,
       path: "/student/mocks/c/writing",
-      color: "from-orange-500/10 to-amber-500/10",
-      glow: "shadow-orange-500/10",
-      badgeColor: "bg-orange-500/10 text-orange-500 dark:bg-orange-500/20",
-      btnClass: "bg-orange-600 hover:bg-orange-700 shadow-orange-500/25",
+      badgeColor: "bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400",
+      btnClass: "bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20",
       svg: (
-        <svg viewBox="0 0 200 200" className="w-full h-full">
+        <svg viewBox="0 0 200 160" className="w-full h-full object-contain">
           <defs>
-            <linearGradient id="writingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#f97316" />
-              <stop offset="100%" stopColor="#f59e0b" />
+            <linearGradient id="lampGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
             </linearGradient>
           </defs>
-          <rect x="60" y="50" width="80" height="100" rx="8" fill="url(#writingGrad)" opacity="0.15" />
-          <line x1="75" y1="75" x2="125" y2="75" stroke="url(#writingGrad)" strokeWidth="3" strokeLinecap="round" opacity="0.8" />
-          <line x1="75" y1="95" x2="125" y2="95" stroke="url(#writingGrad)" strokeWidth="3" strokeLinecap="round" opacity="0.8" />
-          <line x1="75" y1="115" x2="110" y2="115" stroke="url(#writingGrad)" strokeWidth="3" strokeLinecap="round" opacity="0.8" />
-          <path d="M115,130 L135,110 L140,115 L120,135 Z" fill="url(#writingGrad)" />
-          <circle cx="140" cy="110" r="2" fill="url(#writingGrad)" />
+          <circle cx="100" cy="80" r="60" fill="#fffbeb" opacity="0.6" className="dark:opacity-10" />
+          
+          {/* Table Surface */}
+          <line x1="40" y1="140" x2="160" y2="140" stroke="#94a3b8" strokeWidth="4" strokeLinecap="round" />
+          
+          {/* Sitting Character body */}
+          <path d="M55,160 C55,125 70,110 95,110 C120,110 135,125 135,160" fill="#1e3a8a" />
+          <rect x="89" y="93" width="12" height="20" rx="3" fill="#ffd7b5" />
+          <circle cx="95" cy="83" r="22" fill="#ffd7b5" />
+          <path d="M73,83 C73,50 117,50 117,83 C117,70 105,70 95,70 C85,70 73,70 73,83 Z" fill="#1e293b" />
+
+          {/* Lamp casting light gradient */}
+          <path d="M150,140 L150,85 L135,85" fill="none" stroke="#475569" strokeWidth="3" strokeLinecap="round" />
+          <path d="M125,85 L145,85 L140,75 L130,75 Z" fill="#f59e0b" />
+          <polygon points="120,140 150,140 140,85 130,85" fill="url(#lampGrad)" />
+
+          {/* Paper and Pen */}
+          <rect x="75" y="125" width="30" height="22" rx="1" fill="#ffffff" stroke="#cbd5e1" strokeWidth="1" transform="skewX(-10)" />
+          <line x1="85" y1="130" x2="100" y2="130" stroke="#94a3b8" strokeWidth="1.5" />
+          <line x1="83" y1="136" x2="98" y2="136" stroke="#94a3b8" strokeWidth="1.5" />
+          <line x1="102" y1="120" x2="95" y2="130" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round" />
         </svg>
       )
     },
     {
       id: "speaking",
-      title: "Speaking",
+      title: currentText.speakingTitle,
       emoji: "🗣️",
-      desc: "Practice active speech dialogue with live AI coach feedback.",
+      desc: currentText.speakingDesc,
       completed: speakingCount,
       total: 9,
       isBeta: true,
       path: "/student/speaking",
-      color: "from-purple-500/10 to-pink-500/10",
-      glow: "shadow-purple-500/10",
-      badgeColor: "bg-purple-500/10 text-purple-500 dark:bg-purple-500/20",
-      btnClass: "bg-purple-600 hover:bg-purple-700 shadow-purple-500/25",
+      badgeColor: "bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400",
+      btnClass: "bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20",
       svg: (
-        <svg viewBox="0 0 200 200" className="w-full h-full">
-          <defs>
-            <linearGradient id="speakingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#a855f7" />
-              <stop offset="100%" stopColor="#ec4899" />
-            </linearGradient>
-          </defs>
-          <path d="M60,110 C60,70 140,70 140,110 C140,125 125,135 100,135 C95,135 90,145 80,150 C80,150 82,140 80,135 C68,130 60,122 60,110 Z" fill="url(#speakingGrad)" opacity="0.15" />
-          <circle cx="100" cy="110" r="15" fill="none" stroke="url(#speakingGrad)" strokeWidth="3" />
-          <path d="M92,110 A8,8 0 0,1 108,110" fill="none" stroke="url(#speakingGrad)" strokeWidth="3" />
-          <circle cx="93" cy="100" r="2.5" fill="url(#speakingGrad)" />
-          <circle cx="107" cy="100" r="2.5" fill="url(#speakingGrad)" />
-          <path d="M125,95 Q145,85 160,95" fill="none" stroke="url(#speakingGrad)" strokeWidth="2.5" strokeLinecap="round" />
-          <path d="M130,80 Q150,70 165,80" fill="none" stroke="url(#speakingGrad)" strokeWidth="1.5" strokeLinecap="round" />
+        <svg viewBox="0 0 200 160" className="w-full h-full object-contain">
+          <circle cx="100" cy="80" r="60" fill="#faf5ff" opacity="0.6" className="dark:opacity-10" />
+          
+          {/* Sitting Character body */}
+          <path d="M60,160 C60,120 75,105 100,105 C125,105 140,120 140,160" fill="#6b21a8" />
+          
+          {/* Neck & Head */}
+          <rect x="94" y="88" width="12" height="20" rx="3" fill="#ffd7b5" />
+          <circle cx="100" cy="78" r="22" fill="#ffd7b5" />
+          <path d="M78,78 C78,45 122,45 122,78 C122,70 110,70 100,70 C90,70 78,70 78,78 Z" fill="#0f172a" />
+
+          {/* Dual speech bubbles floating */}
+          <path d="M130,70 C130,55 145,45 160,45 C175,45 185,55 185,70 C185,80 178,88 170,91 L175,98 L162,93 C160,94 158,94 156,94 C141,94 130,83 130,70 Z" fill="#a855f7" opacity="0.9" />
+          <path d="M142,65 L173,65" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" />
+          <path d="M148,73 L167,73" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" />
+
+          {/* Mic Stand */}
+          <line x1="100" y1="120" x2="100" y2="145" stroke="#475569" strokeWidth="3" />
+          <circle cx="100" cy="115" r="6" fill="#1e293b" />
         </svg>
       )
     }
@@ -192,34 +288,34 @@ export default function UserPractice() {
       <div className="absolute bottom-20 left-0 w-[300px] h-[300px] bg-emerald-500/5 dark:bg-emerald-500/10 rounded-full blur-[90px] -z-10 pointer-events-none" />
 
       {/* Breadcrumb Navigation Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-slate-500/10">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-slate-200/60 dark:border-white/5">
         <div className="space-y-1">
           <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
             <button onClick={() => navigate("/user/dashboard")} className="hover:text-purple-500 flex items-center gap-1 transition-colors">
-              <ArrowLeft className="h-3 w-3" /> Dashboard
+              <ArrowLeft className="h-3 w-3" /> {currentText.dashboard}
             </button>
             <span>/</span>
             <span className="text-slate-500 dark:text-slate-300">Amaliyot</span>
           </div>
           <h2 className={cn("text-2xl font-black tracking-tight", isDark ? "text-white" : "text-slate-900")}>
-            Amaliyot bo'limi (Mock Practice)
+            {currentText.title}
           </h2>
           <p className="text-xs text-slate-400 font-bold leading-relaxed">
-            IELTS ko'nikmalarini tizimli va interaktiv tarzda rivojlantiring.
+            {currentText.subtitle}
           </p>
         </div>
       </div>
 
       {loading ? (
         // Grid loaders
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {Array.from({ length: 4 }).map((_, i) => (
             <Card key={i} className={cn("p-6 rounded-[28px] border animate-pulse min-h-[220px]", isDark ? "bg-slate-900/40 border-white/5" : "bg-white border-slate-100")} />
           ))}
         </div>
       ) : (
-        // 4 Skill Practice Cards grid
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        // 4 Skill Practice Cards grid matching IELTS Hub perfectly
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {skills.map((skill, index) => {
             const progressPercent = Math.min(100, Math.round((skill.completed / skill.total) * 100));
             return (
@@ -228,72 +324,72 @@ export default function UserPractice() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: index * 0.1 }}
-                whileHover={{ y: -6 }}
-                className="w-full h-full"
+                className="w-full"
               >
                 <Card className={cn(
-                  "p-6 rounded-[28px] border relative overflow-hidden transition-all duration-300 h-full flex flex-col justify-between shadow-md hover:shadow-xl group",
+                  "p-6 rounded-[28px] border relative overflow-hidden transition-all duration-300 flex flex-col justify-between shadow-md hover:shadow-lg group",
                   isDark 
                     ? "bg-slate-900/30 border-white/5 shadow-slate-950/20" 
-                    : "bg-white border-slate-200/60 shadow-slate-200/5 hover:border-slate-350"
+                    : "bg-white border-slate-200/60 shadow-slate-200/5 hover:border-slate-300"
                 )}>
-                  {/* Skill Card Header Info */}
-                  <div className="flex justify-between items-start gap-4 mb-4">
-                    <div className="space-y-2 flex-1">
-                      {/* Top Completed progress capsule */}
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className={cn("text-[9px] font-black uppercase px-2 py-0.5 rounded-full select-none leading-none", skill.badgeColor)}>
-                          {skill.completed}/{skill.total} Lessons Completed
-                        </span>
-                        {skill.isBeta && (
-                          <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-blue-500 text-white select-none leading-none">
-                            BETA
+                  {/* Two column layout inside card */}
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+                    {/* Left Column: text content & capsule button */}
+                    <div className="space-y-4 flex-1 w-full text-left">
+                      <div className="space-y-2">
+                        {/* Top Completed progress capsule */}
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className={cn("text-[9px] font-black uppercase px-2.5 py-0.5 rounded-full select-none leading-none", skill.badgeColor)}>
+                            {skill.completed}/{skill.total} {currentText.lessons}
                           </span>
-                        )}
+                          {skill.isBeta && (
+                            <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-blue-500 text-white select-none leading-none">
+                              BETA
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Main Title & Emoji */}
+                        <h3 className={cn("text-xl font-black tracking-tight flex items-center gap-1.5 leading-none", isDark ? "text-white" : "text-slate-800")}>
+                          {skill.title} <span className="text-lg">{skill.emoji}</span>
+                        </h3>
+
+                        {/* Description text */}
+                        <p className="text-[11px] text-slate-400 font-bold leading-normal min-h-[32px]">
+                          {skill.desc}
+                        </p>
                       </div>
 
-                      {/* Main Title & Emoji */}
-                      <h3 className={cn("text-xl font-black tracking-tight flex items-center gap-1.5 leading-none", isDark ? "text-white" : "text-slate-800")}>
-                        {skill.title} <span className="text-lg">{skill.emoji}</span>
-                      </h3>
+                      {/* Small Progress Line indicator */}
+                      <div className="space-y-1 select-none">
+                        <div className="flex justify-between text-[9px] font-bold text-slate-400 leading-none">
+                          <span>{currentText.practiceActivity}</span>
+                          <span>{progressPercent}%</span>
+                        </div>
+                        <div className={cn("h-1.5 w-full rounded-full overflow-hidden", isDark ? "bg-white/5" : "bg-slate-100")}>
+                          <div 
+                            className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-700" 
+                            style={{ width: `${progressPercent}%` }}
+                          />
+                        </div>
+                      </div>
 
-                      {/* Description text */}
-                      <p className="text-[11px] text-slate-400 font-bold leading-normal">
-                        {skill.desc}
-                      </p>
+                      {/* Compact Start Practice Button (Not full-width, aligned left) */}
+                      <Button
+                        onClick={() => navigate(skill.path)}
+                        className={cn(
+                          "h-10 rounded-xl text-xs font-black text-white px-5 py-2 flex items-center gap-1.5 transition-all duration-300 w-fit",
+                          skill.btnClass
+                        )}
+                      >
+                        {currentText.startBtn} <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                      </Button>
                     </div>
 
-                    {/* Styled illustration box */}
-                    <div className="w-20 h-20 rounded-2xl flex items-center justify-center shrink-0 p-1 relative overflow-hidden bg-gradient-to-br from-slate-950/10 to-slate-950/5 dark:from-white/5 dark:to-white/1">
+                    {/* Right Column: large illustration */}
+                    <div className="w-40 h-36 flex items-center justify-center shrink-0 p-1 relative overflow-hidden">
                       {skill.svg}
                     </div>
-                  </div>
-
-                  {/* Card Bottom Progress & Action Button */}
-                  <div className="space-y-4 pt-3 border-t border-slate-500/10">
-                    <div className="space-y-1.5">
-                      <div className="flex justify-between text-[9px] font-bold text-slate-400 select-none">
-                        <span>Mashg'ulot foalligi</span>
-                        <span>{progressPercent}%</span>
-                      </div>
-                      {/* Completion Progress Bar */}
-                      <div className={cn("h-1.5 w-full rounded-full overflow-hidden", isDark ? "bg-white/5" : "bg-slate-100")}>
-                        <div 
-                          className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-700" 
-                          style={{ width: `${progressPercent}%` }}
-                        />
-                      </div>
-                    </div>
-
-                    <Button
-                      onClick={() => navigate(skill.path)}
-                      className={cn(
-                        "w-full h-11 rounded-xl text-xs font-black text-white flex items-center justify-center gap-1.5 transition-all duration-300",
-                        skill.btnClass
-                      )}
-                    >
-                      Start practice <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                    </Button>
                   </div>
                 </Card>
               </motion.div>

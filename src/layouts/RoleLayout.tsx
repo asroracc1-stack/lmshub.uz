@@ -392,7 +392,7 @@ export default function RoleLayout({
                     />
                     {mini && item.badge && (
                       <span className="absolute -top-1 -right-1 flex h-2 w-2">
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
+                        <span className={cn("relative inline-flex rounded-full h-2 w-2", item.miniBadgeColor || "bg-orange-500")}></span>
                       </span>
                     )}
                   </div>
@@ -400,7 +400,10 @@ export default function RoleLayout({
                     <>
                       <span className="flex-1 truncate">{item.label}</span>
                       {item.badge && (
-                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-[6px] text-[10px] font-bold text-white bg-gradient-to-r from-orange-500 to-amber-500 shadow-sm leading-none ml-auto shrink-0 select-none">
+                        <span className={cn(
+                          "inline-flex items-center px-1.5 py-0.5 rounded-[6px] text-[10px] font-bold text-white shadow-sm leading-none ml-auto shrink-0 select-none",
+                          item.badgeColor || "bg-gradient-to-r from-orange-500 to-amber-500"
+                        )}>
                           {item.badge}
                         </span>
                       )}
