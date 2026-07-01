@@ -30,19 +30,19 @@ export default function WelcomeBanner() {
     if (currentHour >= 6 && currentHour < 12) {
       return { 
         text: t("welcomeBanner.greeting.morning"), 
-        emoji: "🌅", 
+        emoji: "👋", 
         sub: t("welcomeBanner.sub.morning") 
       };
     } else if (currentHour >= 12 && currentHour < 18) {
       return { 
         text: t("welcomeBanner.greeting.afternoon"), 
-        emoji: "☀️", 
+        emoji: "👋", 
         sub: t("welcomeBanner.sub.afternoon") 
       };
     } else {
       return { 
         text: t("welcomeBanner.greeting.evening"), 
-        emoji: "🌙", 
+        emoji: "👋", 
         sub: t("welcomeBanner.sub.evening") 
       };
     }
@@ -54,6 +54,25 @@ export default function WelcomeBanner() {
     if (full) return full.split(" ")[0]; // only first name
     return profile.username || t("welcomeBanner.defaultName");
   }, [profile, t]);
+
+  const welcomeTitle = useMemo(() => {
+    const raw = t("welcomeBanner.title", { name: "__NAME__" });
+    const parts = raw.split("__NAME__");
+    if (parts.length === 2) {
+      return (
+        <>
+          {parts[0]}
+          <span className="text-yellow-300 drop-shadow-sm">{displayName}</span>
+          {parts[1]}
+        </>
+      );
+    }
+    return (
+      <>
+        Xush kelibsiz, <span className="text-yellow-300 drop-shadow-sm">{displayName}</span>!
+      </>
+    );
+  }, [t, displayName]);
 
   const motivation = useMemo(() => {
     const index = new Date().getDay() % 4;
@@ -101,7 +120,7 @@ export default function WelcomeBanner() {
               {greeting.text}
             </span>
             <span
-              className="text-xl origin-bottom-right inline-block animate-wave select-none"
+              className="text-xl origin-[70%_70%] inline-block animate-wave select-none"
               aria-hidden
             >
               {greeting.emoji}
@@ -110,8 +129,7 @@ export default function WelcomeBanner() {
 
           {/* Main welcome headline */}
           <h2 className="font-display text-2xl md:text-3xl lg:text-4xl font-extrabold text-white leading-tight tracking-tight">
-            {t("welcomeBanner.title", { name: "" })}
-            <span className="text-yellow-300 drop-shadow-sm">{displayName}!</span>
+            {welcomeTitle}
           </h2>
 
           {/* Sub text */}
