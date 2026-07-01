@@ -22,7 +22,7 @@ interface StudentAttempt {
    LISTENING — headphone guy with pulsing equalizer + floating notes
    ============================================================ */
 function ListeningIllustration({ isDark }: { isDark: boolean }) {
-  const glowColor = isDark ? "#10b981" : "#dcfce7";
+  const glowColor = isDark ? "#8b5cf6" : "#ede9fe";
   const glowOpacity = isDark ? "0.15" : "0.75";
 
   return (
@@ -48,8 +48,8 @@ function ListeningIllustration({ isDark }: { isDark: boolean }) {
         @keyframes ll-sway { 0%,100%{transform:rotate(-1.5deg)} 50%{transform:rotate(1.5deg)} }
         @keyframes ll-tilt { 0%,100%{transform:rotate(-5deg)} 50%{transform:rotate(5deg)} }
         @keyframes ll-glow {
-          0%,100%{fill:#22c55e; filter:drop-shadow(0 0 0 rgba(34,197,94,0))}
-          50%{fill:#4ade80; filter:drop-shadow(0 0 8px rgba(34,197,94,.9))}
+          0%,100%{fill:#8b5cf6; filter:drop-shadow(0 0 0 rgba(139,92,246,0))}
+          50%{fill:#a78bfa; filter:drop-shadow(0 0 8px rgba(139,92,246,.9))}
         }
         @keyframes ll-float {
           0%{transform:translateY(30px) rotate(-10deg);opacity:0}
@@ -76,14 +76,14 @@ function ListeningIllustration({ isDark }: { isDark: boolean }) {
       <circle cx="200" cy="200" r="180" fill="url(#ll-bg)" />
 
       {/* left pulse rings */}
-      <g fill="none" stroke="#22c55e" strokeWidth="3">
+      <g fill="none" stroke="#8b5cf6" strokeWidth="3">
         <circle className="ll-ring" cx="105" cy="210" r="20" />
         <circle className="ll-ring d1" cx="105" cy="210" r="20" />
         <circle className="ll-ring d2" cx="105" cy="210" r="20" />
       </g>
 
       {/* floating notes */}
-      <g fill="#16a34a">
+      <g fill="#7c3aed">
         <g className="ll-note">
           <circle cx="320" cy="140" r="10" />
           <rect x="329" y="95" width="4" height="48" />
@@ -108,7 +108,7 @@ function ListeningIllustration({ isDark }: { isDark: boolean }) {
       </g>
 
       {/* equalizer bars near ear */}
-      <g className="ll-eq" fill="#22c55e">
+      <g className="ll-eq" fill="#8b5cf6">
         <rect x="60" y="180" width="7" height="35" rx="2" />
         <rect x="72" y="170" width="7" height="45" rx="2" />
         <rect x="84" y="160" width="7" height="55" rx="2" />
@@ -132,8 +132,8 @@ function ListeningIllustration({ isDark }: { isDark: boolean }) {
         {/* cups */}
         <rect x="118" y="145" width="28" height="48" rx="9" fill="#0f172a" />
         <rect x="254" y="145" width="28" height="48" rx="9" fill="#0f172a" />
-        <rect className="ll-cup-l" x="122" y="155" width="7" height="28" rx="3" fill="#22c55e" />
-        <rect className="ll-cup-r" x="269" y="155" width="7" height="28" rx="3" fill="#22c55e" />
+        <rect className="ll-cup-l" x="122" y="155" width="7" height="28" rx="3" fill="#8b5cf6" />
+        <rect className="ll-cup-r" x="269" y="155" width="7" height="28" rx="3" fill="#8b5cf6" />
 
         {/* left arm */}
         <path d="M118 280 Q95 320 140 335 L160 325 Q135 315 138 280 Z" fill="#111827" />
@@ -144,7 +144,7 @@ function ListeningIllustration({ isDark }: { isDark: boolean }) {
         <circle cx="285" cy="340" r="16" fill="#f5b8a0" />
         <g className="ll-phone">
           <rect x="268" y="228" width="40" height="62" rx="7" fill="#0f172a" />
-          <rect x="272" y="232" width="32" height="52" rx="4" fill="#22c55e" opacity=".95" />
+          <rect x="272" y="232" width="32" height="52" rx="4" fill="#8b5cf6" opacity=".95" />
           <circle cx="288" cy="255" r="8" fill="#fff" />
           <rect x="278" y="270" width="20" height="3" rx="1" fill="#fff" opacity=".7" />
         </g>
@@ -157,7 +157,7 @@ function ListeningIllustration({ isDark }: { isDark: boolean }) {
    READING — girl reading with page flip + floating letters
    ============================================================ */
 function ReadingIllustration({ isDark }: { isDark: boolean }) {
-  const glowColor = isDark ? "#10b981" : "#dcfce7";
+  const glowColor = isDark ? "#8b5cf6" : "#ede9fe";
   const glowOpacity = isDark ? "0.15" : "0.75";
 
   return (
@@ -199,10 +199,10 @@ function ReadingIllustration({ isDark }: { isDark: boolean }) {
       </defs>
       <circle cx="200" cy="200" r="180" fill="url(#rr-bg)" />
 
-      <circle className="rr-blob" cx="290" cy="150" r="100" fill={isDark ? "rgba(30, 41, 59, 0.3)" : "#e5e7eb"} />
+      <circle className="rr-blob" cx="290" cy="150" r="100" fill={isDark ? "rgba(139, 92, 246, 0.12)" : "#f5f3ff"} />
 
       {/* rising letters */}
-      <g fill="#16a34a" fontSize="22" fontWeight="700" fontFamily="Georgia, serif">
+      <g fill="#7c3aed" fontSize="22" fontWeight="700" fontFamily="Georgia, serif">
         <text className="rr-letter" x="90" y="290">A</text>
         <text className="rr-letter d1" x="130" y="270">b</text>
         <text className="rr-letter d2" x="260" y="290">c</text>
@@ -211,7 +211,7 @@ function ReadingIllustration({ isDark }: { isDark: boolean }) {
       </g>
 
       {/* sparkles */}
-      <g fill="#22c55e">
+      <g fill="#8b5cf6">
         <g className="rr-sparkle" transform="translate(80,110)">
           <path d="M0 -12 L4 -4 L12 0 L4 4 L0 12 L-4 4 L-12 0 L-4 -4 Z" />
         </g>
@@ -234,9 +234,9 @@ function ReadingIllustration({ isDark }: { isDark: boolean }) {
       <path d="M188 178 Q200 186 212 178" stroke="#0f172a" strokeWidth="2.5" fill="none" strokeLinecap="round" />
 
       {/* body */}
-      <path d="M95 395 L95 290 Q95 230 200 230 Q305 230 305 290 L305 395 Z" fill="#22c55e" />
-      <path d="M95 290 Q70 320 115 340 L160 320 Z" fill="#22c55e" />
-      <path d="M305 290 Q330 320 285 340 L240 320 Z" fill="#22c55e" />
+      <path d="M95 395 L95 290 Q95 230 200 230 Q305 230 305 290 L305 395 Z" fill="#8b5cf6" />
+      <path d="M95 290 Q70 320 115 340 L160 320 Z" fill="#8b5cf6" />
+      <path d="M305 290 Q330 320 285 340 L240 320 Z" fill="#8b5cf6" />
       <circle cx="120" cy="335" r="16" fill="#f5b8a0" />
       <circle cx="280" cy="335" r="16" fill="#f5b8a0" />
 
@@ -264,7 +264,7 @@ function ReadingIllustration({ isDark }: { isDark: boolean }) {
    WRITING — desk lamp + writing hand + drawing lines + ink
    ============================================================ */
 function WritingIllustration({ isDark }: { isDark: boolean }) {
-  const glowColor = isDark ? "#10b981" : "#dcfce7";
+  const glowColor = isDark ? "#8b5cf6" : "#ede9fe";
   const glowOpacity = isDark ? "0.15" : "0.75";
 
   return (
@@ -320,11 +320,11 @@ function WritingIllustration({ isDark }: { isDark: boolean }) {
 
       {/* idea bulb */}
       <g className="ww-idea" transform="translate(300,80)">
-        <circle r="16" fill="#fde68a" stroke="#f59e0b" strokeWidth="2.5" />
-        <path d="M-4 4 L4 4 L2 10 L-2 10 Z" fill="#f59e0b" />
-        <line x1="0" y1="-24" x2="0" y2="-30" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round" />
-        <line x1="18" y1="-12" x2="24" y2="-16" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round" />
-        <line x1="-18" y1="-12" x2="-24" y2="-16" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round" />
+        <circle r="16" fill="#ede9fe" stroke="#8b5cf6" strokeWidth="2.5" />
+        <path d="M-4 4 L4 4 L2 10 L-2 10 Z" fill="#8b5cf6" />
+        <line x1="0" y1="-24" x2="0" y2="-30" stroke="#8b5cf6" strokeWidth="2.5" strokeLinecap="round" />
+        <line x1="18" y1="-12" x2="24" y2="-16" stroke="#8b5cf6" strokeWidth="2.5" strokeLinecap="round" />
+        <line x1="-18" y1="-12" x2="-24" y2="-16" stroke="#8b5cf6" strokeWidth="2.5" strokeLinecap="round" />
       </g>
 
       {/* head */}
@@ -335,7 +335,7 @@ function WritingIllustration({ isDark }: { isDark: boolean }) {
       <path d="M218 152 Q230 158 242 152" stroke="#0f172a" strokeWidth="2.5" fill="none" strokeLinecap="round" />
 
       {/* body */}
-      <path d="M140 395 L140 285 Q140 220 230 220 Q320 220 320 285 L320 395 Z" fill="#22c55e" />
+      <path d="M140 395 L140 285 Q140 220 230 220 Q320 220 320 285 L320 395 Z" fill="#8b5cf6" />
       <circle cx="230" cy="255" r="3.5" fill="#0f172a" />
       <circle cx="230" cy="280" r="3.5" fill="#0f172a" />
       <circle cx="230" cy="305" r="3.5" fill="#0f172a" />
@@ -347,12 +347,12 @@ function WritingIllustration({ isDark }: { isDark: boolean }) {
       <line className="ww-line d2" x1="125" y1="366" x2="255" y2="366" stroke="#9ca3af" strokeWidth="3" strokeLinecap="round" />
 
       {/* left arm resting */}
-      <path d="M140 290 Q112 325 148 350 L180 335 Z" fill="#22c55e" />
+      <path d="M140 290 Q112 325 148 350 L180 335 Z" fill="#8b5cf6" />
       <circle cx="160" cy="340" r="15" fill="#f5b8a0" />
 
       {/* right arm + pencil */}
       <g className="ww-hand">
-        <path d="M320 285 Q340 310 285 318 L255 305 Z" fill="#22c55e" />
+        <path d="M320 285 Q340 310 285 318 L255 305 Z" fill="#8b5cf6" />
         <circle cx="272" cy="313" r="16" fill="#f5b8a0" />
         <rect x="278" y="265" width="6" height="50" rx="1.5" fill="#facc15" stroke="#0f172a" strokeWidth="1.5" transform="rotate(32 281 290)" />
         <polygon points="306 254 316 268 300 272" fill="#0f172a" transform="rotate(32 308 263)" />
@@ -367,7 +367,7 @@ function WritingIllustration({ isDark }: { isDark: boolean }) {
    SPEAKING — person + typing speech bubbles + soundwaves + avatar
    ============================================================ */
 function SpeakingIllustration({ isDark }: { isDark: boolean }) {
-  const glowColor = isDark ? "#10b981" : "#dcfce7";
+  const glowColor = isDark ? "#8b5cf6" : "#ede9fe";
   const glowOpacity = isDark ? "0.15" : "0.75";
 
   return (
@@ -413,7 +413,7 @@ function SpeakingIllustration({ isDark }: { isDark: boolean }) {
       <circle cx="200" cy="200" r="180" fill="url(#ss-bg)" />
 
       {/* sound waves near mouth */}
-      <g stroke="#22c55e" strokeWidth="5" fill="none" strokeLinecap="round">
+      <g stroke="#8b5cf6" strokeWidth="5" fill="none" strokeLinecap="round">
         <path className="ss-wave" d="M105 185 Q90 200 105 215" />
         <path className="ss-wave d1" d="M88 170 Q65 200 88 230" />
         <path className="ss-wave d2" d="M70 155 Q40 200 70 245" />
@@ -434,33 +434,33 @@ function SpeakingIllustration({ isDark }: { isDark: boolean }) {
       {/* speech bubbles */}
       <g>
         <g className="ss-b1">
-          <rect x="220" y="80" width="100" height="46" rx="23" fill={isDark ? "rgba(34, 197, 94, 0.15)" : "#dcfce7"} stroke="#22c55e" strokeWidth="3" />
-          <path d="M230 122 L222 138 L240 128 Z" fill={isDark ? "rgba(34, 197, 94, 0.15)" : "#dcfce7"} stroke="#22c55e" strokeWidth="3" />
-          <circle className="ss-dot" cx="245" cy="103" r="4" fill="#22c55e" />
-          <circle className="ss-dot d1" cx="265" cy="103" r="4" fill="#22c55e" />
-          <circle className="ss-dot d2" cx="285" cy="103" r="4" fill="#22c55e" />
+          <rect x="220" y="80" width="100" height="46" rx="23" fill={isDark ? "rgba(139, 92, 246, 0.15)" : "#ede9fe"} stroke="#8b5cf6" strokeWidth="3" />
+          <path d="M230 122 L222 138 L240 128 Z" fill={isDark ? "rgba(139, 92, 246, 0.15)" : "#ede9fe"} stroke="#8b5cf6" strokeWidth="3" />
+          <circle className="ss-dot" cx="245" cy="103" r="4" fill="#8b5cf6" />
+          <circle className="ss-dot d1" cx="265" cy="103" r="4" fill="#8b5cf6" />
+          <circle className="ss-dot d2" cx="285" cy="103" r="4" fill="#8b5cf6" />
         </g>
         <g className="ss-b2">
-          <rect x="255" y="150" width="95" height="46" rx="23" fill="#22c55e" />
-          <path d="M265 192 L258 208 L275 198 Z" fill="#22c55e" />
+          <rect x="255" y="150" width="95" height="46" rx="23" fill="#8b5cf6" />
+          <path d="M265 192 L258 208 L275 198 Z" fill="#8b5cf6" />
           <rect x="270" y="167" width="65" height="4" rx="2" fill="#fff" />
           <rect x="270" y="178" width="45" height="4" rx="2" fill="#fff" opacity=".85" />
         </g>
         <g className="ss-b3">
-          <rect x="225" y="220" width="85" height="42" rx="21" fill={isDark ? "rgba(34, 197, 94, 0.15)" : "#dcfce7"} stroke="#22c55e" strokeWidth="3" />
-          <path d="M235 258 L228 274 L245 264 Z" fill={isDark ? "rgba(34, 197, 94, 0.15)" : "#dcfce7"} stroke="#22c55e" strokeWidth="3" />
-          <rect x="240" y="234" width="55" height="4" rx="2" fill="#22c55e" />
-          <rect x="240" y="245" width="38" height="4" rx="2" fill="#22c55e" opacity=".7" />
+          <rect x="225" y="220" width="85" height="42" rx="21" fill={isDark ? "rgba(139, 92, 246, 0.15)" : "#ede9fe"} stroke="#8b5cf6" strokeWidth="3" />
+          <path d="M235 258 L228 274 L245 264 Z" fill={isDark ? "rgba(139, 92, 246, 0.15)" : "#ede9fe"} stroke="#8b5cf6" strokeWidth="3" />
+          <rect x="240" y="234" width="55" height="4" rx="2" fill="#8b5cf6" />
+          <rect x="240" y="245" width="38" height="4" rx="2" fill="#8b5cf6" opacity=".7" />
         </g>
       </g>
 
       {/* other person avatar */}
       <g>
-        <circle className="ss-ring" cx="350" cy="110" r="26" fill="none" stroke="#22c55e" strokeWidth="2.5" />
+        <circle className="ss-ring" cx="350" cy="110" r="26" fill="none" stroke="#8b5cf6" strokeWidth="2.5" />
         <g className="ss-avatar">
-          <circle cx="350" cy="110" r="26" fill={isDark ? "#1e293b" : "#fff"} stroke="#22c55e" strokeWidth="3" />
+          <circle cx="350" cy="110" r="26" fill={isDark ? "#1e293b" : "#fff"} stroke="#8b5cf6" strokeWidth="3" />
           <circle cx="350" cy="103" r="9" fill="#f5b8a0" />
-          <path d="M333 128 Q350 112 367 128 Z" fill="#22c55e" />
+          <path d="M333 128 Q350 112 367 128 Z" fill="#8b5cf6" />
         </g>
       </g>
     </svg>
@@ -532,17 +532,23 @@ export default function UserPractice() {
   return (
     <div className="w-full select-none font-sans py-4 sm:py-6 text-left">
       {/* Background ambient glowing spheres */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-500/5 dark:bg-emerald-500/10 rounded-full blur-[120px] -z-10 pointer-events-none" />
-      <div className="absolute bottom-20 left-0 w-[400px] h-[400px] bg-purple-500/5 dark:bg-purple-500/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-purple-500/5 dark:bg-purple-500/10 rounded-full blur-[120px] -z-10 pointer-events-none" />
+      <div className="absolute bottom-20 left-0 w-[400px] h-[400px] bg-indigo-500/5 dark:bg-indigo-500/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
+
       {loading ? (
-        // Skeleton Loader
+        // Skeleton Loader styled perfectly to match the cards
         <div className="mx-auto max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-8">
           {Array.from({ length: 4 }).map((_, i) => (
-            <Card key={i} className={cn("rounded-[32px] border animate-pulse min-h-[320px]", isDark ? "bg-slate-900/40 border-white/5" : "bg-white border-slate-100")} />
+            <Card key={i} className={cn(
+              "rounded-[32px] border animate-pulse min-h-[320px]",
+              isDark 
+                ? "bg-slate-900/40 border-white/5" 
+                : "bg-white/80 border-slate-200/60 shadow-slate-200/5 backdrop-blur-md"
+            )} />
           ))}
         </div>
       ) : (
-        // Grid cards
+        // Grid cards aligned with purple theme
         <div className="mx-auto max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-8">
           {skills.map((skill, index) => {
             return (
@@ -559,6 +565,9 @@ export default function UserPractice() {
                     ? "bg-slate-900/40 border-white/5 shadow-slate-950/20" 
                     : "bg-white/80 border-slate-200/60 shadow-slate-200/5 hover:border-slate-350 backdrop-blur-md"
                 )}>
+                  {/* Subtle background glow highlight behind illustrations */}
+                  <div className="absolute top-10 right-10 w-28 h-28 rounded-full bg-gradient-to-br from-purple-500/10 to-indigo-500/5 blur-xl -z-10 group-hover:scale-125 transition-transform duration-500" />
+
                   {/* BETA Badge */}
                   {skill.isBeta && (
                     <span className="absolute right-6 top-6 z-20 rounded-md bg-blue-600 px-2.5 py-1 text-[10px] font-bold tracking-wider text-white shadow-md select-none">
@@ -579,10 +588,10 @@ export default function UserPractice() {
                   {/* Left Content Column */}
                   <div className="relative z-10 flex min-h-[260px] flex-col justify-between">
                     <div>
-                      {/* tag capsule */}
+                      {/* tag capsule with purple highlights */}
                       <span className={cn(
                         "inline-block rounded-full px-3 py-1 text-xs font-bold leading-none select-none tracking-wider uppercase",
-                        isDark ? "bg-emerald-500/10 text-emerald-400" : "bg-green-50 text-green-700"
+                        isDark ? "bg-purple-500/15 text-purple-400" : "bg-purple-50 text-purple-700"
                       )}>
                         {skill.tag}
                       </span>
@@ -601,11 +610,11 @@ export default function UserPractice() {
                       </p>
                     </div>
 
-                    {/* Start practice 3D green button */}
+                    {/* Start practice 3D Purple/Violet Button matching LMSHub Theme */}
                     <div className="mt-auto pt-6">
                       <button
                         onClick={() => navigate(skill.path)}
-                        className="group relative inline-flex items-center gap-2 overflow-hidden rounded-2xl bg-gradient-to-b from-green-400 via-green-500 to-emerald-600 px-7 py-3.5 font-bold text-white shadow-[0_7px_0_0_#166534,0_10px_20px_-5px_rgba(22,101,52,.5)] ring-1 ring-inset ring-white/20 transition-all duration-150 hover:translate-y-1 hover:shadow-[0_3px_0_0_#166534,0_5px_10px_-2px_rgba(22,101,52,.4)] active:translate-y-[6px] active:shadow-[0_1px_0_0_#166534]"
+                        className="group relative inline-flex items-center gap-2 overflow-hidden rounded-2xl bg-gradient-to-b from-purple-500 via-purple-600 to-indigo-700 px-7 py-3.5 font-bold text-white shadow-[0_7px_0_0_#4c1d95,0_10px_20px_-5px_rgba(109,40,217,0.5)] ring-1 ring-inset ring-white/20 transition-all duration-150 hover:translate-y-1 hover:shadow-[0_3px_0_0_#4c1d95,0_5px_10px_-2px_rgba(109,40,217,0.4)] active:translate-y-[6px] active:shadow-[0_1px_0_0_#4c1d95]"
                       >
                         <span className="pointer-events-none absolute inset-x-0 top-0 h-1/2 rounded-t-2xl bg-gradient-to-b from-white/30 to-transparent" />
                         <span className="pointer-events-none absolute inset-0 -translate-x-full skew-x-12 bg-gradient-to-r from-transparent via-white/50 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
