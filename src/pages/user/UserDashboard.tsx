@@ -38,6 +38,7 @@ import {
   LineChart,
   Line,
   ReferenceLine,
+  CartesianGrid,
 } from "recharts";
 
 interface DailyData {
@@ -157,31 +158,48 @@ export default function UserDashboard() {
     [stats, activeDays]
   );
 
-  // Compute stats for all 7 modules
+  // Compute stats for all 7 modules. Fallback to default 7 days of the week if weeklyData is empty/null.
   const composedChartData = useMemo(() => {
-    if (!stats?.weeklyData) return [];
+    const days = ["Du", "Se", "Cho", "Pa", "Ju", "Sha", "Ya"];
+    const rawWeekly = stats?.weeklyData || [];
+    const weekly = rawWeekly.length > 0 ? rawWeekly : days.map(d => ({ day: d, minutes: 0 }));
     
-    return stats.weeklyData.map((d, index) => {
+    return weekly.map((d, index) => {
       const minutes = d.minutes;
       const practice = minutes;
       
-      // IELTS bands (0 - 9)
-      const avgBand = stats.avgScore || 6.5;
-      const reading = minutes > 0 ? Math.min(9.0, Number((avgBand - 0.2 + (index % 3) * 0.3).toFixed(1))) : 0.0;
-      const listening = minutes > 0 ? Math.min(9.0, Number((avgBand + 0.1 + (index % 2) * 0.4).toFixed(1))) : 0.0;
-      const writing = minutes > 0 ? Math.min(9.0, Number((avgBand - 0.5 + (index % 4) * 0.2).toFixed(1))) : 0.0;
-      const speaking = minutes > 0 ? Math.min(9.0, Number((avgBand - 0.1 + (index % 3) * 0.2).toFixed(1))) : 0.0;
+      // Target/Baseline indicators
+      const avgBand = stats?.avgScore || stats?.targetBand || 6.5;
+      const reading = minutes > 0 
+        ? Math.min(9.0, Number((avgBand - 0.2 + (index % 3) * 0.3).toFixed(1))) 
+        : Number((avgBand - 0.5 + (index % 3) * 0.2).toFixed(1));
       
-      // SAT (400 - 1600)
-      const baseSat = stats.avgScore ? Math.round(stats.avgScore * 180 + 300) : 1250;
-      const sat = minutes > 0 ? Math.min(1600, Math.max(400, baseSat - 50 + (index % 3) * 60)) : 0;
+      const listening = minutes > 0 
+        ? Math.min(9.0, Number((avgBand + 0.1 + (index % 2) * 0.4).toFixed(1))) 
+        : Number((avgBand - 0.3 + (index % 2) * 0.3).toFixed(1));
       
-      // Milliy Cert (0 - 75)
-      const baseCert = stats.avgScore ? Math.round(stats.avgScore * 7 + 10) : 52;
-      const national_cert = minutes > 0 ? Math.min(75, Math.max(0, baseCert - 4 + (index % 2) * 6)) : 0;
+      const writing = minutes > 0 
+        ? Math.min(9.0, Number((avgBand - 0.5 + (index % 4) * 0.2).toFixed(1))) 
+        : Number((avgBand - 0.8 + (index % 4) * 0.15).toFixed(1));
       
-      // Activity intensity (RSI equivalent: 0 - 100)
-      const rsi = minutes > 0 ? Math.min(100, Math.round((minutes / 90) * 80 + 20)) : 0;
+      const speaking = minutes > 0 
+        ? Math.min(9.0, Number((avgBand - 0.1 + (index % 3) * 0.2).toFixed(1))) 
+        : Number((avgBand - 0.4 + (index % 3) * 0.2).toFixed(1));
+      
+      const baseSat = stats?.avgScore ? Math.round(stats.avgScore * 180 + 300) : 1250;
+      const sat = minutes > 0 
+        ? Math.min(1600, Math.max(400, baseSat - 50 + (index % 3) * 60)) 
+        : baseSat - 80 + (index % 3) * 40;
+      
+      const baseCert = stats?.avgScore ? Math.round(stats.avgScore * 7 + 10) : 52;
+      const national_cert = minutes > 0 
+        ? Math.min(75, Math.max(0, baseCert - 4 + (index % 2) * 6)) 
+        : baseCert - 5 + (index % 2) * 4;
+      
+      // Activity intensity (RSI equivalent)
+      const rsi = minutes > 0 
+        ? Math.min(100, Math.round((minutes / 90) * 80 + 20)) 
+        : Math.round(15 + (index % 3) * 10); // soft baseline activity
       
       return {
         day: d.day,
@@ -363,7 +381,7 @@ export default function UserDashboard() {
   })();
 
   return (
-    <div className="w-full min-h-screen space-y-8 pb-12 relative">
+    <div className="w-full min-h-screen space-y-4 pb-6 relative">
       {/* Background radial ambient glow */}
       <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-purple-500/5 dark:bg-purple-500/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
       <div className="absolute bottom-20 left-0 w-[300px] h-[300px] bg-blue-500/5 dark:bg-blue-500/10 rounded-full blur-[80px] -z-10 pointer-events-none" />
@@ -373,28 +391,28 @@ export default function UserDashboard() {
       {/* Welcome Banner */}
       <WelcomeBanner />
 
-      {/* Dashboard 2-column layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+      {/* Dashboard 2-column layout (reduced spacing for fit without scrolling) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
         
         {/* Left / Main Column (occupies 2/3 width on large screens) */}
-        <div className="lg:col-span-2 space-y-8">
+        <div className="lg:col-span-2 space-y-4">
           
-          {/* Stat Tiles */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+          {/* Stat Tiles (reduced card padding) */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             {loading
               ? Array.from({ length: 5 }).map((_, i) => (
                   <div
                     key={i}
                     className={cn(
-                      "p-5 rounded-3xl border animate-pulse",
+                      "p-3.5 rounded-2xl border animate-pulse",
                       isDark
                         ? "bg-slate-900/40 border-white/5"
                         : "bg-white border-slate-100"
                     )}
                   >
-                    <div className={cn("h-10 w-10 rounded-2xl mb-4", isDark ? "bg-white/10" : "bg-slate-100")} />
-                    <div className={cn("h-8 w-16 rounded-lg mb-2", isDark ? "bg-white/10" : "bg-slate-100")} />
-                    <div className={cn("h-3 w-20 rounded", isDark ? "bg-white/5" : "bg-slate-100")} />
+                    <div className={cn("h-8 w-8 rounded-xl mb-3", isDark ? "bg-white/10" : "bg-slate-100")} />
+                    <div className={cn("h-6 w-12 rounded-lg mb-1.5", isDark ? "bg-white/10" : "bg-slate-100")} />
+                    <div className={cn("h-2.5 w-16 rounded", isDark ? "bg-white/5" : "bg-slate-100")} />
                   </div>
                 ))
               : statCards.map((s, i) => {
@@ -407,50 +425,47 @@ export default function UserDashboard() {
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: i * 0.05 }}
-                      whileHover={{ y: -4, scale: 1.02 }}
+                      whileHover={{ y: -3, scale: 1.02 }}
                       className="text-left group w-full"
                     >
                       <Card className={cn(
-                        "p-5 h-full transition-all duration-300 cursor-pointer border rounded-3xl",
+                        "p-3.5 h-full transition-all duration-300 cursor-pointer border rounded-2xl",
                         isDark 
                           ? "bg-slate-900/40 backdrop-blur-md border-white/5 shadow-xl group-hover:bg-slate-900/60 group-hover:border-white/10" 
-                          : "bg-white border-slate-100 shadow-md shadow-slate-200/20 group-hover:shadow-xl group-hover:border-slate-200"
+                          : "bg-white border-slate-100 shadow-md shadow-slate-200/10 group-hover:shadow-xl group-hover:border-slate-200"
                       )}>
-                        <div className={cn("h-10 w-10 rounded-2xl flex items-center justify-center mb-4 border transition-transform group-hover:rotate-6 shadow-sm", s.color)}>
-                          <Icon className="h-5 w-5" />
+                        <div className={cn("h-8 w-8 rounded-xl flex items-center justify-center mb-2 border transition-transform group-hover:rotate-6 shadow-sm", s.color)}>
+                          <Icon className="h-4.5 w-4.5" />
                         </div>
-                        <p className={cn("font-display text-2xl font-black tracking-tight leading-none", isDark ? "text-white" : "text-slate-900")}>{s.value}</p>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-2 truncate">{s.label}</p>
+                        <p className={cn("font-display text-xl font-black tracking-tight leading-none", isDark ? "text-white" : "text-slate-900")}>{s.value}</p>
+                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-1.5 truncate">{s.label}</p>
                       </Card>
                     </motion.button>
                   );
                 })}
           </div>
 
-          {/* Weekly Results Chart (Trading-Style Mixed Composed Chart) */}
+          {/* Weekly Results Chart (Trading-Style Mixed Composed Chart with fallback support) */}
           <Card className={cn(
-            "p-6 shadow-xl rounded-3xl border transition-all duration-300 overflow-hidden relative",
-            isDark ? "bg-slate-950/95 border-purple-500/20" : "bg-white border-slate-200/80 shadow-slate-200/40"
+            "p-4 shadow-md rounded-2xl border transition-all duration-300 overflow-hidden relative",
+            isDark ? "bg-slate-950/95 border-purple-500/20" : "bg-white border-slate-200/80 shadow-slate-200/20"
           )}>
             {/* Ambient trading glow overlay */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 dark:bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
             <div className="absolute bottom-0 left-0 w-24 h-24 bg-purple-500/5 dark:bg-purple-500/10 rounded-full blur-2xl pointer-events-none" />
 
-            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 mb-6">
+            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3 mb-4">
               <div>
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-emerald-500" />
-                  <h3 className={cn("font-display font-black text-base tracking-tight", isDark ? "text-white" : "text-slate-900")}>
+                <div className="flex items-center gap-1.5">
+                  <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
+                  <h3 className={cn("font-display font-black text-sm tracking-tight", isDark ? "text-white" : "text-slate-900")}>
                     Tahlil va Trendlar
                   </h3>
                 </div>
-                <p className="text-[11px] text-slate-400 font-medium">
-                  So'nggi 7 kunlik mashq intensivligi va natija o'zgarishlari
-                </p>
               </div>
 
               {/* 7 tabs buttons system */}
-              <div className="flex flex-wrap gap-1 p-1 rounded-xl bg-slate-100 dark:bg-white/5 shrink-0 max-w-full overflow-x-auto">
+              <div className="flex flex-wrap gap-1 p-0.5 rounded-lg bg-slate-100 dark:bg-white/5 shrink-0 max-w-full overflow-x-auto">
                 {[
                   { id: "practice", label: "Mashq vaqti" },
                   { id: "reading", label: "Reading" },
@@ -464,9 +479,9 @@ export default function UserDashboard() {
                     key={tab.id}
                     onClick={() => setActiveChartTab(tab.id as any)}
                     className={cn(
-                      "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 whitespace-nowrap",
+                      "px-2 py-1 rounded-md text-[11px] font-semibold transition-all duration-200 whitespace-nowrap",
                       activeChartTab === tab.id
-                        ? "bg-white dark:bg-slate-900 text-purple-600 dark:text-purple-400 shadow-sm"
+                        ? "bg-white dark:bg-slate-900 text-purple-600 dark:text-purple-400 shadow-xs"
                         : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white"
                     )}
                   >
@@ -476,13 +491,13 @@ export default function UserDashboard() {
               </div>
             </div>
 
-            {/* UPPER CHART: Main Trading Trend Chart */}
-            <div className="h-56 w-full relative">
-              <div className="absolute left-2 top-2 text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest pointer-events-none">
+            {/* UPPER CHART: Main Trading Trend Chart (Height reduced to h-40 to fit viewport) */}
+            <div className="h-40 w-full relative">
+              <div className="absolute left-2 top-2 text-[8px] font-black text-slate-500/80 dark:text-slate-500 uppercase tracking-widest pointer-events-none">
                 Main Market Trend
               </div>
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={composedChartData} margin={{ top: 15, right: 10, left: -25, bottom: 0 }}>
+                <AreaChart data={composedChartData} margin={{ top: 12, right: 10, left: -25, bottom: 0 }}>
                   <defs>
                     <linearGradient id="tradingGradient" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.25} />
@@ -496,18 +511,19 @@ export default function UserDashboard() {
                       </feMerge>
                     </filter>
                   </defs>
-                  {/* Dotted grid lines inspired by trading platforms */}
+                  {/* Grid lines display for high fidelity */}
+                  <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "#1e293b" : "#f1f5f9"} opacity={0.4} />
                   <XAxis
                     dataKey="day"
-                    stroke={isDark ? "#334155" : "#cbd5e1"}
-                    fontSize={10}
+                    stroke={isDark ? "#475569" : "#94a3b8"}
+                    fontSize={9}
                     fontWeight="bold"
                     tickLine={false}
                     axisLine={false}
                   />
                   <YAxis
-                    stroke={isDark ? "#334155" : "#cbd5e1"}
-                    fontSize={10}
+                    stroke={isDark ? "#475569" : "#94a3b8"}
+                    fontSize={9}
                     fontWeight="bold"
                     tickLine={false}
                     axisLine={false}
@@ -517,9 +533,9 @@ export default function UserDashboard() {
                     contentStyle={{
                       backgroundColor: isDark ? "#0b0714" : "#ffffff",
                       borderColor: isDark ? "#1e1b4b" : "#e2e8f0",
-                      borderRadius: "16px",
+                      borderRadius: "12px",
                       color: isDark ? "#f8fafc" : "#0f172a",
-                      fontSize: "11px",
+                      fontSize: "10px",
                       fontWeight: "bold",
                     }}
                   />
@@ -527,7 +543,7 @@ export default function UserDashboard() {
                     type="monotone"
                     dataKey={activeChartTab}
                     stroke="#8b5cf6"
-                    strokeWidth={3}
+                    strokeWidth={2.5}
                     dot={renderCustomDot}
                     fillOpacity={1}
                     fill="url(#tradingGradient)"
@@ -538,29 +554,30 @@ export default function UserDashboard() {
             </div>
 
             {/* Separator Line */}
-            <div className="my-4 border-t border-dashed border-slate-200 dark:border-slate-800" />
+            <div className="my-3 border-t border-dashed border-slate-200 dark:border-slate-800" />
 
             {/* LOWER CHART: RSI Activity Index equivalent */}
             <div className="relative">
-              <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">
+              <div className="flex justify-between items-center text-[8px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1.5">
                 <span>RSI Faollik Indeksi (Practice Intensity)</span>
                 <span className="text-emerald-500">MOMENTUM INDEX</span>
               </div>
               
-              <div className="h-16 w-full">
+              <div className="h-12 w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={composedChartData} margin={{ top: 5, right: 10, left: -25, bottom: 0 }}>
+                  <LineChart data={composedChartData} margin={{ top: 2, right: 10, left: -25, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "#1e293b" : "#f1f5f9"} opacity={0.2} />
                     <XAxis dataKey="day" hide={true} />
                     <YAxis domain={[0, 100]} hide={true} />
-                    <ReferenceLine y={70} stroke={isDark ? "#ef4444/30" : "#ef4444/20"} strokeDasharray="3 3" label={{ value: '70% OVERSTUDIED', fill: '#94a3b8', fontSize: 7, fontWeight: 'bold', position: 'insideRight' }} />
-                    <ReferenceLine y={30} stroke={isDark ? "#3b82f6/30" : "#3b82f6/20"} strokeDasharray="3 3" label={{ value: '30% OVERSLEPT', fill: '#94a3b8', fontSize: 7, fontWeight: 'bold', position: 'insideRight' }} />
+                    <ReferenceLine y={70} stroke={isDark ? "#ef4444/30" : "#ef4444/20"} strokeDasharray="3 3" label={{ value: '70% OVERSTUDIED', fill: '#94a3b8', fontSize: 6, fontWeight: 'bold', position: 'insideRight' }} />
+                    <ReferenceLine y={30} stroke={isDark ? "#3b82f6/30" : "#3b82f6/20"} strokeDasharray="3 3" label={{ value: '30% OVERSLEPT', fill: '#94a3b8', fontSize: 6, fontWeight: 'bold', position: 'insideRight' }} />
                     <Line
                       type="monotone"
                       dataKey="rsi"
                       stroke="#06b6d4"
                       strokeWidth={1.5}
                       dot={false}
-                      activeDot={{ r: 4 }}
+                      activeDot={{ r: 3 }}
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -570,7 +587,7 @@ export default function UserDashboard() {
         </div>
 
         {/* Right Column / Sidebar (occupies 1/3 width on large screens) */}
-        <div className="space-y-8">
+        <div className="space-y-4">
           {/* Monthly Practice Calendar */}
           <LearningContributionGraph />
         </div>
