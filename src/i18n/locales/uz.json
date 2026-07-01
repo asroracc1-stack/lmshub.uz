@@ -2065,5 +2065,43 @@
     "hoursAndMins": "{{hours}} soat {{mins}} daqiqa",
     "hoursCount": "{{count}} soat",
     "minsCount": "{{count}} daqiqa"
+  },
+  "practice": {
+    "title": "Amaliyot",
+    "desc": "IELTS ko'nikmalarini tizimli va interaktiv tarzda rivojlantiring.",
+    "difficulty": "Qiyinlik",
+    "estTime": "Muddati",
+    "minsPerLesson": "daqiqa",
+    "lessonsCompleted": "dars yakunlangan",
+    "lessonsRemaining": "dars qolgan",
+    "startBtn": "Boshlash",
+    "continueBtn": "Davom ettirish",
+    "heroTitle": "O'quv safaringizni boshlang! 🚀",
+    "heroDesc": "Hali birorta ham mashg'ulotni yakunlamabsiz. Keling, birinchi tinglash yoki o'qish testidan boshlaymiz!",
+    "heroCta": "Birinchi mashqni boshlash",
+    "listening": {
+      "tag": "LISTENING",
+      "title": "Eshitish 🎧",
+      "desc": "Eshitish ko'nikmalaringizni rivojlantiring",
+      "diff": "O'rta"
+    },
+    "reading": {
+      "tag": "READING",
+      "title": "O'qish 📖",
+      "desc": "Matnlarni tushunish va tahlil qilish",
+      "diff": "O'rta"
+    },
+    "writing": {
+      "tag": "WRITING",
+      "title": "Yozish ✍️",
+      "desc": "Yozma ifoda va grammatikani mukammallashtiring",
+      "diff": "Qiyin"
+    },
+    "speaking": {
+      "tag": "SPEAKING",
+      "title": "Gapirish 🗣️",
+      "desc": "Og'zaki nutq va talaffuzni rivojlantiring",
+      "diff": "Murakkab"
+    }
   }
 }
