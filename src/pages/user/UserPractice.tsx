@@ -21,7 +21,10 @@ interface StudentAttempt {
 /* ============================================================
    LISTENING — headphone guy with pulsing equalizer + floating notes
    ============================================================ */
-function ListeningIllustration() {
+function ListeningIllustration({ isDark }: { isDark: boolean }) {
+  const glowColor = isDark ? "#10b981" : "#dcfce7";
+  const glowOpacity = isDark ? "0.15" : "0.75";
+
   return (
     <svg viewBox="0 0 400 400" className="h-full w-full" preserveAspectRatio="xMidYMid meet">
       <style>{`
@@ -66,8 +69,8 @@ function ListeningIllustration() {
       {/* soft radial backdrop */}
       <defs>
         <radialGradient id="ll-bg" cx="50%" cy="45%" r="60%">
-          <stop offset="0%" stopColor="#dcfce7" stopOpacity="0.8" />
-          <stop offset="100%" stopColor="#dcfce7" stopOpacity="0" />
+          <stop offset="0%" stopColor={glowColor} stopOpacity={glowOpacity} />
+          <stop offset="100%" stopColor={glowColor} stopOpacity="0" />
         </radialGradient>
       </defs>
       <circle cx="200" cy="200" r="180" fill="url(#ll-bg)" />
@@ -153,7 +156,10 @@ function ListeningIllustration() {
 /* ============================================================
    READING — girl reading with page flip + floating letters
    ============================================================ */
-function ReadingIllustration() {
+function ReadingIllustration({ isDark }: { isDark: boolean }) {
+  const glowColor = isDark ? "#10b981" : "#dcfce7";
+  const glowOpacity = isDark ? "0.15" : "0.75";
+
   return (
     <svg viewBox="0 0 400 400" className="h-full w-full" preserveAspectRatio="xMidYMid meet">
       <style>{`
@@ -187,13 +193,13 @@ function ReadingIllustration() {
 
       <defs>
         <radialGradient id="rr-bg" cx="50%" cy="45%" r="60%">
-          <stop offset="0%" stopColor="#dcfce7" stopOpacity="0.8" />
-          <stop offset="100%" stopColor="#dcfce7" stopOpacity="0" />
+          <stop offset="0%" stopColor={glowColor} stopOpacity={glowOpacity} />
+          <stop offset="100%" stopColor={glowColor} stopOpacity="0" />
         </radialGradient>
       </defs>
       <circle cx="200" cy="200" r="180" fill="url(#rr-bg)" />
 
-      <circle className="rr-blob" cx="290" cy="150" r="100" fill="#e5e7eb" className="dark:fill-slate-800/40" />
+      <circle className="rr-blob" cx="290" cy="150" r="100" fill={isDark ? "rgba(30, 41, 59, 0.3)" : "#e5e7eb"} />
 
       {/* rising letters */}
       <g fill="#16a34a" fontSize="22" fontWeight="700" fontFamily="Georgia, serif">
@@ -235,7 +241,7 @@ function ReadingIllustration() {
       <circle cx="280" cy="335" r="16" fill="#f5b8a0" />
 
       {/* book */}
-      <path d="M85 285 L200 305 L315 285 L315 370 L200 390 L85 370 Z" fill="#fff" stroke="#0f172a" strokeWidth="3.5" />
+      <path d="M85 285 L200 305 L315 285 L315 370 L200 390 L85 370 Z" fill={isDark ? "#f1f5f9" : "#fff"} stroke="#0f172a" strokeWidth="3.5" />
       <line x1="200" y1="305" x2="200" y2="390" stroke="#0f172a" strokeWidth="3" />
       {/* left page lines */}
       <g stroke="#d1d5db" strokeWidth="2.5">
@@ -245,7 +251,7 @@ function ReadingIllustration() {
       </g>
       {/* flipping right page */}
       <g className="rr-page">
-        <path d="M200 305 L315 285 L315 370 L200 390 Z" fill="#f9fafb" stroke="#0f172a" strokeWidth="3" />
+        <path d="M200 305 L315 285 L315 370 L200 390 Z" fill={isDark ? "#f8fafc" : "#f9fafb"} stroke="#0f172a" strokeWidth="3" />
         <line x1="220" y1="318" x2="295" y2="308" stroke="#d1d5db" strokeWidth="2.5" />
         <line x1="220" y1="335" x2="295" y2="325" stroke="#d1d5db" strokeWidth="2.5" />
         <line x1="220" y1="352" x2="280" y2="342" stroke="#d1d5db" strokeWidth="2.5" />
@@ -257,7 +263,10 @@ function ReadingIllustration() {
 /* ============================================================
    WRITING — desk lamp + writing hand + drawing lines + ink
    ============================================================ */
-function WritingIllustration() {
+function WritingIllustration({ isDark }: { isDark: boolean }) {
+  const glowColor = isDark ? "#10b981" : "#dcfce7";
+  const glowOpacity = isDark ? "0.15" : "0.75";
+
   return (
     <svg viewBox="0 0 400 400" className="h-full w-full" preserveAspectRatio="xMidYMid meet">
       <style>{`
@@ -293,14 +302,14 @@ function WritingIllustration() {
 
       <defs>
         <radialGradient id="ww-bg" cx="50%" cy="45%" r="60%">
-          <stop offset="0%" stopColor="#dcfce7" stopOpacity="0.8" />
-          <stop offset="100%" stopColor="#dcfce7" stopOpacity="0" />
+          <stop offset="0%" stopColor={glowColor} stopOpacity={glowOpacity} />
+          <stop offset="100%" stopColor={glowColor} stopOpacity="0" />
         </radialGradient>
       </defs>
       <circle cx="200" cy="200" r="180" fill="url(#ww-bg)" />
 
       {/* lamp glow */}
-      <circle className="ww-glow" cx="80" cy="105" r="60" fill="#fde68a" />
+      <circle className="ww-glow" cx="80" cy="105" r="60" fill={isDark ? "rgba(253, 230, 138, 0.12)" : "#fde68a"} />
 
       {/* lamp */}
       <g>
@@ -332,7 +341,7 @@ function WritingIllustration() {
       <circle cx="230" cy="305" r="3.5" fill="#0f172a" />
 
       {/* paper */}
-      <rect x="105" y="295" width="220" height="90" rx="5" fill="#fff" stroke="#0f172a" strokeWidth="3" />
+      <rect x="105" y="295" width="220" height="90" rx="5" fill={isDark ? "#f1f5f9" : "#fff"} stroke="#0f172a" strokeWidth="3" />
       <line className="ww-line" x1="125" y1="318" x2="305" y2="318" stroke="#9ca3af" strokeWidth="3" strokeLinecap="round" />
       <line className="ww-line d1" x1="125" y1="342" x2="305" y2="342" stroke="#9ca3af" strokeWidth="3" strokeLinecap="round" />
       <line className="ww-line d2" x1="125" y1="366" x2="255" y2="366" stroke="#9ca3af" strokeWidth="3" strokeLinecap="round" />
@@ -357,7 +366,10 @@ function WritingIllustration() {
 /* ============================================================
    SPEAKING — person + typing speech bubbles + soundwaves + avatar
    ============================================================ */
-function SpeakingIllustration() {
+function SpeakingIllustration({ isDark }: { isDark: boolean }) {
+  const glowColor = isDark ? "#10b981" : "#dcfce7";
+  const glowOpacity = isDark ? "0.15" : "0.75";
+
   return (
     <svg viewBox="0 0 400 400" className="h-full w-full" preserveAspectRatio="xMidYMid meet">
       <style>{`
@@ -394,8 +406,8 @@ function SpeakingIllustration() {
 
       <defs>
         <radialGradient id="ss-bg" cx="50%" cy="45%" r="60%">
-          <stop offset="0%" stopColor="#dcfce7" stopOpacity="0.8" />
-          <stop offset="100%" stopColor="#dcfce7" stopOpacity="0" />
+          <stop offset="0%" stopColor={glowColor} stopOpacity={glowOpacity} />
+          <stop offset="100%" stopColor={glowColor} stopOpacity="0" />
         </radialGradient>
       </defs>
       <circle cx="200" cy="200" r="180" fill="url(#ss-bg)" />
@@ -422,8 +434,8 @@ function SpeakingIllustration() {
       {/* speech bubbles */}
       <g>
         <g className="ss-b1">
-          <rect x="220" y="80" width="100" height="46" rx="23" fill="#dcfce7" stroke="#22c55e" strokeWidth="3" />
-          <path d="M230 122 L222 138 L240 128 Z" fill="#dcfce7" stroke="#22c55e" strokeWidth="3" />
+          <rect x="220" y="80" width="100" height="46" rx="23" fill={isDark ? "rgba(34, 197, 94, 0.15)" : "#dcfce7"} stroke="#22c55e" strokeWidth="3" />
+          <path d="M230 122 L222 138 L240 128 Z" fill={isDark ? "rgba(34, 197, 94, 0.15)" : "#dcfce7"} stroke="#22c55e" strokeWidth="3" />
           <circle className="ss-dot" cx="245" cy="103" r="4" fill="#22c55e" />
           <circle className="ss-dot d1" cx="265" cy="103" r="4" fill="#22c55e" />
           <circle className="ss-dot d2" cx="285" cy="103" r="4" fill="#22c55e" />
@@ -435,8 +447,8 @@ function SpeakingIllustration() {
           <rect x="270" y="178" width="45" height="4" rx="2" fill="#fff" opacity=".85" />
         </g>
         <g className="ss-b3">
-          <rect x="225" y="220" width="85" height="42" rx="21" fill="#dcfce7" stroke="#22c55e" strokeWidth="3" />
-          <path d="M235 258 L228 274 L245 264 Z" fill="#dcfce7" stroke="#22c55e" strokeWidth="3" />
+          <rect x="225" y="220" width="85" height="42" rx="21" fill={isDark ? "rgba(34, 197, 94, 0.15)" : "#dcfce7"} stroke="#22c55e" strokeWidth="3" />
+          <path d="M235 258 L228 274 L245 264 Z" fill={isDark ? "rgba(34, 197, 94, 0.15)" : "#dcfce7"} stroke="#22c55e" strokeWidth="3" />
           <rect x="240" y="234" width="55" height="4" rx="2" fill="#22c55e" />
           <rect x="240" y="245" width="38" height="4" rx="2" fill="#22c55e" opacity=".7" />
         </g>
@@ -446,7 +458,7 @@ function SpeakingIllustration() {
       <g>
         <circle className="ss-ring" cx="350" cy="110" r="26" fill="none" stroke="#22c55e" strokeWidth="2.5" />
         <g className="ss-avatar">
-          <circle cx="350" cy="110" r="26" fill="#fff" stroke="#22c55e" strokeWidth="3" />
+          <circle cx="350" cy="110" r="26" fill={isDark ? "#1e293b" : "#fff"} stroke="#22c55e" strokeWidth="3" />
           <circle cx="350" cy="103" r="9" fill="#f5b8a0" />
           <path d="M333 128 Q350 112 367 128 Z" fill="#22c55e" />
         </g>
@@ -488,7 +500,7 @@ export default function UserPractice() {
       title: t("practice.listening.title", "Eshitish 🎧"),
       desc: t("practice.listening.desc", "Improve your listening"),
       path: `${basePath}/mocks/c/listening`,
-      illustration: <ListeningIllustration />
+      illustration: <ListeningIllustration isDark={isDark} />
     },
     {
       id: "reading",
@@ -496,7 +508,7 @@ export default function UserPractice() {
       title: t("practice.reading.title", "O'qish 📖"),
       desc: t("practice.reading.desc", "Read smarter"),
       path: `${basePath}/mocks/c/reading`,
-      illustration: <ReadingIllustration />
+      illustration: <ReadingIllustration isDark={isDark} />
     },
     {
       id: "writing",
@@ -504,7 +516,7 @@ export default function UserPractice() {
       title: t("practice.writing.title", "Yozish ✍️"),
       desc: t("practice.writing.desc", "Write confidently"),
       path: `${basePath}/mocks/c/writing`,
-      illustration: <WritingIllustration />
+      illustration: <WritingIllustration isDark={isDark} />
     },
     {
       id: "speaking",
@@ -513,34 +525,35 @@ export default function UserPractice() {
       desc: t("practice.speaking.desc", "Speak naturally"),
       isBeta: true,
       path: `${basePath}/speaking`,
-      illustration: <SpeakingIllustration />
+      illustration: <SpeakingIllustration isDark={isDark} />
     }
   ];
 
   return (
-    <div className={cn(
-      "w-full min-h-screen px-4 py-10 sm:px-6 select-none font-sans transition-colors duration-300",
-      isDark ? "bg-slate-950 text-white" : "bg-[#eef5ef] text-slate-800"
-    )}>
-      {/* Page Header */}
-      <div className="mx-auto max-w-6xl mb-10 pb-4 border-b border-slate-200/40 dark:border-white/5 text-left">
-        <h2 className={cn("text-4xl font-extrabold tracking-tight", isDark ? "text-white" : "text-emerald-700")}>
+    <div className="w-full select-none font-sans py-4 sm:py-6 text-left">
+      {/* Background ambient glowing spheres */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-500/5 dark:bg-emerald-500/10 rounded-full blur-[120px] -z-10 pointer-events-none" />
+      <div className="absolute bottom-20 left-0 w-[400px] h-[400px] bg-purple-500/5 dark:bg-purple-500/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
+
+      {/* Page Header - aligned perfectly with general dashboard style */}
+      <div className="mx-auto max-w-6xl mb-10 pb-4 border-b border-slate-200/40 dark:border-white/5">
+        <h2 className={cn("text-3xl font-extrabold tracking-tight", isDark ? "text-white" : "text-slate-900")}>
           {t("practice.title", "Amaliyot")}
         </h2>
-        <p className="text-sm font-medium text-slate-400 mt-1.5">
+        <p className="text-sm font-medium text-slate-400 mt-1">
           {t("practice.desc", "Improve your skills through systematic interactive practice models.")}
         </p>
       </div>
 
       {loading ? (
-        // Premium Skeleton Loader layout
+        // Skeleton Loader
         <div className="mx-auto max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-8">
           {Array.from({ length: 4 }).map((_, i) => (
             <Card key={i} className={cn("rounded-[32px] border animate-pulse min-h-[320px]", isDark ? "bg-slate-900/40 border-white/5" : "bg-white border-slate-100")} />
           ))}
         </div>
       ) : (
-        // Minimalist Premium Cards grid with absolute custom SVGs
+        // Grid cards
         <div className="mx-auto max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-8">
           {skills.map((skill, index) => {
             return (
@@ -552,19 +565,19 @@ export default function UserPractice() {
                 className="w-full h-full"
               >
                 <div className={cn(
-                  "group relative overflow-hidden rounded-[32px] p-6 shadow-sm border transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl flex flex-col justify-between min-h-[320px] text-left",
+                  "group relative overflow-hidden rounded-[32px] p-8 border transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl flex flex-col justify-between min-h-[320px] text-left",
                   isDark 
                     ? "bg-slate-900/40 border-white/5 shadow-slate-950/20" 
-                    : "bg-white border-slate-100 shadow-slate-200/5 hover:border-slate-350"
+                    : "bg-white/80 border-slate-200/60 shadow-slate-200/5 hover:border-slate-350 backdrop-blur-md"
                 )}>
                   {/* BETA Badge */}
                   {skill.isBeta && (
-                    <span className="absolute right-4 top-4 z-20 rounded-md bg-blue-600 px-2.5 py-1 text-[10px] font-bold tracking-wider text-white shadow-md select-none">
+                    <span className="absolute right-6 top-6 z-20 rounded-md bg-blue-600 px-2.5 py-1 text-[10px] font-bold tracking-wider text-white shadow-md select-none">
                       BETA
                     </span>
                   )}
 
-                  {/* Big illustration filling right side of card with float and hover scale/tilt */}
+                  {/* SVG Illustration wrapper */}
                   <motion.div 
                     animate={{ y: [0, -6, 0] }}
                     transition={{ repeat: Infinity, duration: 4.5 + index, ease: "easeInOut" }}
@@ -574,32 +587,32 @@ export default function UserPractice() {
                     {skill.illustration}
                   </motion.div>
 
-                  {/* Left content block */}
-                  <div className="relative z-10 flex min-h-[270px] flex-col justify-between">
+                  {/* Left Content Column */}
+                  <div className="relative z-10 flex min-h-[260px] flex-col justify-between">
                     <div>
-                      {/* Top tag */}
+                      {/* tag capsule */}
                       <span className={cn(
-                        "inline-block rounded-full px-3 py-1 text-xs font-bold leading-none select-none tracking-wider",
-                        isDark ? "bg-emerald-500/10 text-emerald-400" : "bg-green-100 text-green-800"
+                        "inline-block rounded-full px-3 py-1 text-xs font-bold leading-none select-none tracking-wider uppercase",
+                        isDark ? "bg-emerald-500/10 text-emerald-400" : "bg-green-50 text-green-700"
                       )}>
                         {skill.tag}
                       </span>
 
-                      {/* Main Title */}
+                      {/* Heading */}
                       <h2 className={cn(
                         "mt-6 text-4xl font-extrabold leading-tight tracking-tight",
-                        isDark ? "text-white" : "text-green-600"
+                        isDark ? "text-white" : "text-slate-900"
                       )}>
                         {skill.title}
                       </h2>
 
-                      {/* Subtitle */}
-                      <p className="mt-2 max-w-[55%] text-sm font-medium text-slate-500 dark:text-slate-400 leading-relaxed">
+                      {/* Description */}
+                      <p className="mt-2 max-w-[55%] text-sm font-medium text-slate-400 dark:text-slate-400 leading-relaxed">
                         {skill.desc}
                       </p>
                     </div>
 
-                    {/* Start practice 3D green button with bounce/shine */}
+                    {/* Start practice 3D green button */}
                     <div className="mt-auto pt-6">
                       <button
                         onClick={() => navigate(skill.path)}
