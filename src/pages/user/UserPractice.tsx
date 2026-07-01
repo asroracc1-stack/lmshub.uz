@@ -534,17 +534,6 @@ export default function UserPractice() {
       {/* Background ambient glowing spheres */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-500/5 dark:bg-emerald-500/10 rounded-full blur-[120px] -z-10 pointer-events-none" />
       <div className="absolute bottom-20 left-0 w-[400px] h-[400px] bg-purple-500/5 dark:bg-purple-500/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
-
-      {/* Page Header - aligned perfectly with general dashboard style */}
-      <div className="mx-auto max-w-6xl mb-10 pb-4 border-b border-slate-200/40 dark:border-white/5">
-        <h2 className={cn("text-3xl font-extrabold tracking-tight", isDark ? "text-white" : "text-slate-900")}>
-          {t("practice.title", "Amaliyot")}
-        </h2>
-        <p className="text-sm font-medium text-slate-400 mt-1">
-          {t("practice.desc", "Improve your skills through systematic interactive practice models.")}
-        </p>
-      </div>
-
       {loading ? (
         // Skeleton Loader
         <div className="mx-auto max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-8">
