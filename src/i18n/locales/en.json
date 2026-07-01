@@ -440,8 +440,8 @@
       "dailyStreak": "Streak active"
     },
     "chart": {
-      "trendsTitle": "Analysis & Trends",
-      "trendsDesc": "Practice intensity and score trends over the last 7 days",
+      "trendsTitle": "Weekly results",
+      "trendsDesc": "last 7 days",
       "mainMarketTrend": "Main Market Trend",
       "rsiActivityIndex": "RSI Activity Index (Practice Intensity)",
       "momentumIndex": "MOMENTUM INDEX",

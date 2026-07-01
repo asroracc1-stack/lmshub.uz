@@ -440,8 +440,8 @@
       "dailyStreak": "Streak faollik"
     },
     "chart": {
-      "trendsTitle": "Tahlil va Trendlar",
-      "trendsDesc": "So'nggi 7 kunlik mashq intensivligi va natija o'zgarishlari",
+      "trendsTitle": "Haftalik natija",
+      "trendsDesc": "so'nggi 7 kun",
       "mainMarketTrend": "Asosiy faollik trendi",
       "rsiActivityIndex": "RSI Faollik Indeksi (Mashq jadalligi)",
       "momentumIndex": "MOMENTUM INDEX",
