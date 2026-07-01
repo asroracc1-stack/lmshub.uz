@@ -46,16 +46,16 @@ interface DailyData {
   writing?: number | null;
   speaking?: number | null;
   sat?: number | null;
-  nationalCert?: number | null;
+  national_cert?: number | null;
 }
 
 interface UserStats {
-  totalMinutes: number;
+  total_minutes: number;
   streak: number;
-  targetBand: number | null;
-  avgScore: number | null;
-  examDaysLeft: number | null;
-  weeklyData: DailyData[];
+  target_band: number | null;
+  avg_score: number | null;
+  exam_days_left: number | null;
+  weekly_data: DailyData[];
 }
 
 export default function UserDashboard() {
@@ -119,28 +119,28 @@ export default function UserDashboard() {
     {
       key: "target",
       label: t("userDashboard.stats.targetBand"),
-      value: stats?.targetBand ? stats.targetBand.toFixed(1) : "--",
+      value: stats?.target_band ? stats.target_band.toFixed(1) : "--",
       icon: Target,
       color: isDark ? "bg-blue-500/10 text-blue-400 border-blue-500/20" : "bg-blue-50 text-blue-600 border-blue-100",
     },
     {
       key: "avg",
       label: t("userDashboard.stats.avgScore"),
-      value: stats?.avgScore ? stats.avgScore.toFixed(1) : "--",
+      value: stats?.avg_score ? stats.avg_score.toFixed(1) : "--",
       icon: Activity,
       color: isDark ? "bg-violet-500/10 text-violet-400 border-violet-500/20" : "bg-violet-50 text-violet-600 border-violet-100",
     },
     {
       key: "exam",
       label: t("userDashboard.stats.daysLeft"),
-      value: (stats?.examDaysLeft !== null && stats?.examDaysLeft !== undefined) ? t("userDashboard.stats.daysValue", { count: stats?.examDaysLeft }) : "--",
+      value: (stats?.exam_days_left !== null && stats?.exam_days_left !== undefined) ? t("userDashboard.stats.daysValue", { count: stats?.exam_days_left }) : "--",
       icon: CalendarDays,
       color: isDark ? "bg-rose-500/10 text-rose-400 border-rose-500/20" : "bg-rose-50 text-rose-600 border-rose-100",
     },
     {
       key: "minutes",
       label: t("userDashboard.stats.practiceTime"),
-      value: t("userDashboard.stats.minutesValue", { count: (stats?.totalMinutes || 0).toFixed(1) }),
+      value: t("userDashboard.stats.minutesValue", { count: (stats?.total_minutes || 0).toFixed(1) }),
       icon: Clock,
       color: isDark ? "bg-orange-500/10 text-orange-400 border-orange-500/20" : "bg-orange-50 text-orange-600 border-orange-100",
     },
@@ -166,16 +166,16 @@ export default function UserDashboard() {
     return day;
   };
 
-  const maxMin = useMemo(() => Math.max(1, ...(stats?.weeklyData?.map((d) => d.minutes) || [0])), [stats]);
-  const activeDays = useMemo(() => stats?.weeklyData?.filter((d) => d.minutes > 0).length || 0, [stats]);
+  const maxMin = useMemo(() => Math.max(1, ...(stats?.weekly_data?.map((d) => d.minutes) || [0])), [stats]);
+  const activeDays = useMemo(() => stats?.weekly_data?.filter((d) => d.minutes > 0).length || 0, [stats]);
   const avgMin = useMemo(
-    () => ((stats?.totalMinutes || 0) / Math.max(1, activeDays || 1)).toFixed(1),
+    () => ((stats?.total_minutes || 0) / Math.max(1, activeDays || 1)).toFixed(1),
     [stats, activeDays]
   );
 
   // Compute stats for all 7 modules based on real database records
   const composedChartData = useMemo(() => {
-    const rawWeekly = stats?.weeklyData || [];
+    const rawWeekly = stats?.weekly_data || [];
     if (rawWeekly.length === 0) {
       const days = ["Du", "Se", "Cho", "Pa", "Ju", "Sha", "Ya"];
       return days.map((day) => ({
@@ -200,7 +200,7 @@ export default function UserDashboard() {
         writing: item.writing ?? null,
         speaking: item.speaking ?? null,
         sat: item.sat ?? null,
-        national_cert: item.nationalCert ?? null
+        national_cert: item.national_cert ?? null
       };
     });
   }, [stats]);
@@ -327,7 +327,7 @@ export default function UserDashboard() {
                 </DialogDescription>
               </DialogHeader>
               <div className="py-4 space-y-4">
-                <p className={cn("text-sm font-medium", labelClass)}>{t("userDashboard.modal.currentGoal", { value: stats?.targetBand ? stats.targetBand.toFixed(1) : t("userDashboard.modal.notSet") })}</p>
+                <p className={cn("text-sm font-medium", labelClass)}>{t("userDashboard.modal.currentGoal", { value: stats?.target_band ? stats.target_band.toFixed(1) : t("userDashboard.modal.notSet") })}</p>
                 <Button onClick={() => navigate("/user/profile")} className="w-full bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-bold h-12 rounded-xl">{t("userDashboard.modal.editProfile")}</Button>
               </div>
             </DialogContent>
@@ -360,11 +360,11 @@ export default function UserDashboard() {
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
-                {stats?.examDaysLeft !== null && (
+                {stats?.exam_days_left !== null && (
                   <div className="rounded-2xl bg-gradient-to-br from-rose-500 to-orange-500 text-white p-6 text-center shadow-lg shadow-rose-500/20">
                     <p className="text-xs uppercase tracking-widest opacity-80 font-bold">{t("userDashboard.modal.timeLeft")}</p>
                     <p className="font-display text-4xl font-bold mt-2">
-                      {stats?.examDaysLeft} <span className="text-lg opacity-80 font-normal">{t("userDashboard.modal.days")}</span>
+                      {stats?.exam_days_left} <span className="text-lg opacity-80 font-normal">{t("userDashboard.modal.days")}</span>
                     </p>
                   </div>
                 )}
@@ -398,7 +398,7 @@ export default function UserDashboard() {
                 <DialogDescription className={descClass}>{t("userDashboard.modal.practiceDesc")}</DialogDescription>
               </DialogHeader>
               <div className="space-y-3 py-4 text-sm">
-                <div className={cn("flex justify-between p-3 rounded-xl border", itemClass)}><span>{t("userDashboard.modal.total")}</span><b>{(stats?.totalMinutes || 0).toFixed(1)} {t("mockCategory.minutesShort")}</b></div>
+                <div className={cn("flex justify-between p-3 rounded-xl border", itemClass)}><span>{t("userDashboard.modal.total")}</span><b>{(stats?.total_minutes || 0).toFixed(1)} {t("mockCategory.minutesShort")}</b></div>
                 <div className={cn("flex justify-between p-3 rounded-xl border", itemClass)}><span>{t("userDashboard.modal.activeDays")}</span><b>{activeDays} / 7</b></div>
                 <div className={cn("flex justify-between p-3 rounded-xl border", itemClass)}><span>{t("userDashboard.modal.dailyAverage")}</span><b>{avgMin} {t("mockCategory.minutesShort")}</b></div>
                 <div className={cn("flex justify-between p-3 rounded-xl border", itemClass)}><span>{t("userDashboard.modal.bestDay")}</span><b>{maxMin.toFixed(1)} {t("mockCategory.minutesShort")}</b></div>
@@ -417,7 +417,7 @@ export default function UserDashboard() {
                 </DialogDescription>
               </DialogHeader>
               <div className="flex flex-wrap gap-2 py-4">
-                {stats?.weeklyData?.map((d) => (
+                {stats?.weekly_data?.map((d) => (
                   <span
                     key={d.day}
                     className={`px-3 py-1.5 rounded-lg text-xs font-bold ${d.minutes > 0 ? "bg-purple-500 text-white" : isDark ? "bg-white/5 text-slate-500" : "bg-slate-100 text-slate-400"}`}
