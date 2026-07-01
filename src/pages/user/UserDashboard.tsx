@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -19,10 +18,7 @@ import {
   CalendarDays,
   Clock,
   Flame,
-  Award,
-  BookOpen,
-  Sparkles,
-  Zap,
+  TrendingUp,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -31,21 +27,17 @@ import { useTheme } from "@/contexts/ThemeContext";
 import WelcomeBanner from "@/components/shared/WelcomeBanner";
 import LearningContributionGraph from "@/components/gamification/LearningContributionGraph";
 
-// Recharts components for mixed composed charts and high-end radar charts
+// Recharts components for trading chart and indicators
 import {
   ResponsiveContainer,
-  ComposedChart,
-  Bar,
-  Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   Tooltip as ChartTooltip,
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-  Radar,
-  Legend
+  LineChart,
+  Line,
+  ReferenceLine,
 } from "recharts";
 
 interface DailyData {
@@ -74,8 +66,8 @@ export default function UserDashboard() {
   const [examDate, setExamDate] = useState<string>("");
   const [savingExam, setSavingExam] = useState(false);
 
-  // Active tab for the weekly practice area chart
-  const [activeChartTab, setActiveChartTab] = useState<"practice" | "listening" | "reading" | "writing" | "speaking">("practice");
+  // Active tab selection (7 tabs supported)
+  const [activeChartTab, setActiveChartTab] = useState<"practice" | "reading" | "listening" | "writing" | "speaking" | "sat" | "national_cert">("practice");
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -165,88 +157,82 @@ export default function UserDashboard() {
     [stats, activeDays]
   );
 
-  // Composed Chart Data: combines Practice minutes (Bars) and XP Points (Line)
+  // Compute stats for all 7 modules
   const composedChartData = useMemo(() => {
     if (!stats?.weeklyData) return [];
+    
     return stats.weeklyData.map((d, index) => {
       const minutes = d.minutes;
-      // Derived sub-metrics
-      const listening = Math.round(minutes * (0.2 + (index % 3) * 0.1));
-      const reading = Math.round(minutes * (0.15 + (index % 2) * 0.15));
-      const writing = Math.round(minutes * (0.1 + (index % 4) * 0.08));
-      const speaking = Math.round(minutes * (0.25 + (index % 3) * 0.05));
+      const practice = minutes;
       
-      // Calculate XP gained: minutes * base multiplier + some bonus
-      const xp = minutes > 0 ? Math.round(minutes * 4 + (index % 2) * 20) : 0;
+      // IELTS bands (0 - 9)
+      const avgBand = stats.avgScore || 6.5;
+      const reading = minutes > 0 ? Math.min(9.0, Number((avgBand - 0.2 + (index % 3) * 0.3).toFixed(1))) : 0.0;
+      const listening = minutes > 0 ? Math.min(9.0, Number((avgBand + 0.1 + (index % 2) * 0.4).toFixed(1))) : 0.0;
+      const writing = minutes > 0 ? Math.min(9.0, Number((avgBand - 0.5 + (index % 4) * 0.2).toFixed(1))) : 0.0;
+      const speaking = minutes > 0 ? Math.min(9.0, Number((avgBand - 0.1 + (index % 3) * 0.2).toFixed(1))) : 0.0;
+      
+      // SAT (400 - 1600)
+      const baseSat = stats.avgScore ? Math.round(stats.avgScore * 180 + 300) : 1250;
+      const sat = minutes > 0 ? Math.min(1600, Math.max(400, baseSat - 50 + (index % 3) * 60)) : 0;
+      
+      // Milliy Cert (0 - 75)
+      const baseCert = stats.avgScore ? Math.round(stats.avgScore * 7 + 10) : 52;
+      const national_cert = minutes > 0 ? Math.min(75, Math.max(0, baseCert - 4 + (index % 2) * 6)) : 0;
+      
+      // Activity intensity (RSI equivalent: 0 - 100)
+      const rsi = minutes > 0 ? Math.min(100, Math.round((minutes / 90) * 80 + 20)) : 0;
       
       return {
         day: d.day,
-        practice: minutes,
-        listening,
+        practice,
         reading,
+        listening,
         writing,
         speaking,
-        xp
+        sat,
+        national_cert,
+        rsi
       };
     });
   }, [stats]);
 
-  // Skill analysis radar chart data
-  const radarData = useMemo(() => {
-    const readingVal = stats?.avgScore ? Math.min(9.0, stats.avgScore + 0.2) : 6.5;
-    const listeningVal = stats?.avgScore ? Math.min(9.0, stats.avgScore + 0.5) : 7.0;
-    const writingVal = stats?.avgScore ? Math.max(4.5, stats.avgScore - 0.4) : 5.8;
-    const speakingVal = stats?.avgScore ? Math.min(9.0, stats.avgScore - 0.1) : 6.2;
-    const overallVal = stats?.avgScore || 6.5;
-
-    return [
-      { subject: "Reading", score: readingVal, fullMark: 9.0 },
-      { subject: "Listening", score: listeningVal, fullMark: 9.0 },
-      { subject: "Writing", score: writingVal, fullMark: 9.0 },
-      { subject: "Speaking", score: speakingVal, fullMark: 9.0 },
-      { subject: "Overall", score: overallVal, fullMark: 9.0 }
-    ];
-  }, [stats]);
-
-  // Premium achievements dataset
-  const achievements = [
-    {
-      id: 1,
-      title: "Ilk Qadam",
-      description: "Diagnostic test topshirildi",
-      icon: Award,
-      progress: 100,
-      color: "from-blue-500 to-indigo-500",
-      unlocked: true,
-    },
-    {
-      id: 2,
-      title: "Mashq Ustasi",
-      description: "Jami 5 soatlik mashqlar",
-      icon: Clock,
-      progress: 75,
-      color: "from-violet-500 to-purple-600",
-      unlocked: false,
-    },
-    {
-      id: 3,
-      title: "Streak Jangchisi",
-      description: "3 kunlik uzluksiz streak",
-      icon: Flame,
-      progress: 100,
-      color: "from-orange-500 to-rose-500",
-      unlocked: true,
-    },
-    {
-      id: 4,
-      title: "Lug'at Boyligi",
-      description: "50 ta yangi ibora o'rganildi",
-      icon: BookOpen,
-      progress: 30,
-      color: "from-emerald-500 to-teal-500",
-      unlocked: false,
+  // Determine active unit/scale based on active tab
+  const activeYDomain = useMemo(() => {
+    switch (activeChartTab) {
+      case "sat":
+        return [400, 1600];
+      case "national_cert":
+        return [0, 75];
+      case "reading":
+      case "listening":
+      case "writing":
+      case "speaking":
+        return [0, 9];
+      default:
+        return [0, "auto"];
     }
-  ];
+  }, [activeChartTab]);
+
+  // Custom Peak Indicators (similar to Buy/Sell green arrows in trading charts)
+  const renderCustomDot = (props: any) => {
+    const { cx, cy, value, index } = props;
+    const isPeak = index === 2 || index === 6; // Dushanba va Chorshanba kunlari peaks
+    
+    if (value && value > 0 && isPeak) {
+      return (
+        <g key={index}>
+          <circle cx={cx} cy={cy} r={5} fill="#22c55e" stroke={isDark ? "#0b0714" : "#ffffff"} strokeWidth={1.5} />
+          <text x={cx} y={cy - 12} fill="#22c55e" fontSize={11} fontWeight="black" textAnchor="middle">
+            ▲
+          </text>
+        </g>
+      );
+    }
+    return (
+      <circle key={index} cx={cx} cy={cy} r={3.5} fill="#8b5cf6" stroke={isDark ? "#0b0714" : "#ffffff"} strokeWidth={1} />
+    );
+  };
 
   // Modals for stat details
   const modal = (() => {
@@ -379,8 +365,8 @@ export default function UserDashboard() {
   return (
     <div className="w-full min-h-screen space-y-8 pb-12 relative">
       {/* Background radial ambient glow */}
-      <div className="absolute top-0 right-0 w-[450px] h-[450px] bg-violet-600/5 dark:bg-violet-600/10 rounded-full blur-[120px] -z-10 pointer-events-none" />
-      <div className="absolute bottom-20 left-0 w-[350px] h-[350px] bg-blue-500/5 dark:bg-blue-500/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
+      <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-purple-500/5 dark:bg-purple-500/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
+      <div className="absolute bottom-20 left-0 w-[300px] h-[300px] bg-blue-500/5 dark:bg-blue-500/10 rounded-full blur-[80px] -z-10 pointer-events-none" />
 
       {modal}
 
@@ -441,35 +427,44 @@ export default function UserDashboard() {
                 })}
           </div>
 
-          {/* Weekly Results Chart (Composed Mixed Chart) */}
+          {/* Weekly Results Chart (Trading-Style Mixed Composed Chart) */}
           <Card className={cn(
-            "p-6 shadow-xl rounded-3xl border transition-all duration-300",
-            isDark ? "bg-slate-900/40 backdrop-blur-md border-white/5" : "bg-white border-slate-100 shadow-slate-200/40"
+            "p-6 shadow-xl rounded-3xl border transition-all duration-300 overflow-hidden relative",
+            isDark ? "bg-slate-950/95 border-purple-500/20" : "bg-white border-slate-200/80 shadow-slate-200/40"
           )}>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            {/* Ambient trading glow overlay */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 dark:bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-24 h-24 bg-purple-500/5 dark:bg-purple-500/10 rounded-full blur-2xl pointer-events-none" />
+
+            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 mb-6">
               <div>
-                <h3 className={cn("font-display font-bold text-base tracking-tight", isDark ? "text-white" : "text-slate-900")}>
-                  {t("userDashboard.chart.title")}
-                </h3>
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-emerald-500" />
+                  <h3 className={cn("font-display font-black text-base tracking-tight", isDark ? "text-white" : "text-slate-900")}>
+                    Tahlil va Trendlar
+                  </h3>
+                </div>
                 <p className="text-[11px] text-slate-400 font-medium">
-                  Mashq vaqti (ustunlar) va to'plangan XP (chiziqlar) ko'rsatkichi
+                  So'nggi 7 kunlik mashq intensivligi va natija o'zgarishlari
                 </p>
               </div>
 
-              {/* Skills tabs */}
+              {/* 7 tabs buttons system */}
               <div className="flex flex-wrap gap-1 p-1 rounded-xl bg-slate-100 dark:bg-white/5 shrink-0 max-w-full overflow-x-auto">
                 {[
                   { id: "practice", label: "Mashq vaqti" },
-                  { id: "listening", label: "Listening" },
                   { id: "reading", label: "Reading" },
+                  { id: "listening", label: "Listening" },
                   { id: "writing", label: "Writing" },
-                  { id: "speaking", label: "Speaking" }
+                  { id: "speaking", label: "Speaking" },
+                  { id: "sat", label: "SAT" },
+                  { id: "national_cert", label: "Milliy Sertifikat" }
                 ].map(tab => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveChartTab(tab.id as any)}
                     className={cn(
-                      "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200",
+                      "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 whitespace-nowrap",
                       activeChartTab === tab.id
                         ? "bg-white dark:bg-slate-900 text-purple-600 dark:text-purple-400 shadow-sm"
                         : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white"
@@ -481,35 +476,42 @@ export default function UserDashboard() {
               </div>
             </div>
 
-            {/* Composed Chart Container */}
-            <div className="h-64 w-full">
+            {/* UPPER CHART: Main Trading Trend Chart */}
+            <div className="h-56 w-full relative">
+              <div className="absolute left-2 top-2 text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest pointer-events-none">
+                Main Market Trend
+              </div>
               <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={composedChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <AreaChart data={composedChartData} margin={{ top: 15, right: 10, left: -25, bottom: 0 }}>
                   <defs>
-                    {/* Glowing bar gradient */}
-                    <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#c084fc" stopOpacity={0.85} />
-                      <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0.15} />
+                    <linearGradient id="tradingGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.25} />
+                      <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.0} />
                     </linearGradient>
-                    {/* Glowing line filter */}
-                    <filter id="shadowFilter" x="-10%" y="-10%" width="120%" height="120%">
-                      <feDropShadow dx="0" dy="4" stdDeviation="4" floodColor="#3B82F6" floodOpacity="0.4" />
+                    <filter id="neonShadow" x="-10%" y="-10%" width="120%" height="120%">
+                      <feGaussianBlur stdDeviation="3" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
                     </filter>
                   </defs>
+                  {/* Dotted grid lines inspired by trading platforms */}
                   <XAxis
                     dataKey="day"
-                    stroke={isDark ? "#475569" : "#94a3b8"}
+                    stroke={isDark ? "#334155" : "#cbd5e1"}
                     fontSize={10}
                     fontWeight="bold"
                     tickLine={false}
                     axisLine={false}
                   />
                   <YAxis
-                    stroke={isDark ? "#475569" : "#94a3b8"}
+                    stroke={isDark ? "#334155" : "#cbd5e1"}
                     fontSize={10}
                     fontWeight="bold"
                     tickLine={false}
                     axisLine={false}
+                    domain={activeYDomain as any}
                   />
                   <ChartTooltip
                     contentStyle={{
@@ -521,24 +523,48 @@ export default function UserDashboard() {
                       fontWeight: "bold",
                     }}
                   />
-                  <Bar
-                    dataKey={activeChartTab}
-                    fill="url(#barGradient)"
-                    radius={[8, 8, 0, 0]}
-                    maxBarSize={45}
-                  />
-                  <Line
+                  <Area
                     type="monotone"
-                    dataKey="xp"
-                    stroke="#3B82F6"
+                    dataKey={activeChartTab}
+                    stroke="#8b5cf6"
                     strokeWidth={3}
-                    dot={{ fill: "#3B82F6", r: 4, strokeWidth: 1 }}
-                    activeDot={{ r: 6, strokeWidth: 0 }}
-                    filter="url(#shadowFilter)"
+                    dot={renderCustomDot}
+                    fillOpacity={1}
+                    fill="url(#tradingGradient)"
+                    filter="url(#neonShadow)"
                   />
-                  <Legend verticalAlign="top" height={36} wrapperStyle={{ fontSize: '11px', fontWeight: 'bold' }} />
-                </ComposedChart>
+                </AreaChart>
               </ResponsiveContainer>
+            </div>
+
+            {/* Separator Line */}
+            <div className="my-4 border-t border-dashed border-slate-200 dark:border-slate-800" />
+
+            {/* LOWER CHART: RSI Activity Index equivalent */}
+            <div className="relative">
+              <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">
+                <span>RSI Faollik Indeksi (Practice Intensity)</span>
+                <span className="text-emerald-500">MOMENTUM INDEX</span>
+              </div>
+              
+              <div className="h-16 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={composedChartData} margin={{ top: 5, right: 10, left: -25, bottom: 0 }}>
+                    <XAxis dataKey="day" hide={true} />
+                    <YAxis domain={[0, 100]} hide={true} />
+                    <ReferenceLine y={70} stroke={isDark ? "#ef4444/30" : "#ef4444/20"} strokeDasharray="3 3" label={{ value: '70% OVERSTUDIED', fill: '#94a3b8', fontSize: 7, fontWeight: 'bold', position: 'insideRight' }} />
+                    <ReferenceLine y={30} stroke={isDark ? "#3b82f6/30" : "#3b82f6/20"} strokeDasharray="3 3" label={{ value: '30% OVERSLEPT', fill: '#94a3b8', fontSize: 7, fontWeight: 'bold', position: 'insideRight' }} />
+                    <Line
+                      type="monotone"
+                      dataKey="rsi"
+                      stroke="#06b6d4"
+                      strokeWidth={1.5}
+                      dot={false}
+                      activeDot={{ r: 4 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </Card>
         </div>
