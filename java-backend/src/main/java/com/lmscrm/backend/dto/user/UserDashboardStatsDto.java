@@ -32,5 +32,6 @@ public class UserDashboardStatsDto {
         private Double speaking;
         private Double sat;
         private Double nationalCert;
+        private Integer attemptsCount;
     }
 }

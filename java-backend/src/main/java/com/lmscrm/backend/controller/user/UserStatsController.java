@@ -132,6 +132,7 @@ public class UserStatsController {
                     .speaking(speakingVal)
                     .sat(satVal)
                     .nationalCert(nationalCertVal)
+                    .attemptsCount(dayAttempts.size())
                     .build());
         }
 

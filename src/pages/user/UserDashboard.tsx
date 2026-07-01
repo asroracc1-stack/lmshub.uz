@@ -20,7 +20,7 @@ import {
   Flame,
   TrendingUp,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -46,7 +46,8 @@ interface DailyData {
   writing?: number | null;
   speaking?: number | null;
   sat?: number | null;
-  national_cert?: number | null;
+  nationalCert?: number | null;
+  attemptsCount?: number | null;
 }
 
 interface UserStats {
@@ -174,6 +175,9 @@ export default function UserDashboard() {
   );
 
   // Compute stats for all 7 modules based on real database records
+  const location = useLocation();
+  const basePath = location.pathname.startsWith("/student") ? "/student" : "/user";
+
   const composedChartData = useMemo(() => {
     const rawWeekly = stats?.weekly_data || [];
     if (rawWeekly.length === 0) {
@@ -186,7 +190,9 @@ export default function UserDashboard() {
         writing: null,
         speaking: null,
         sat: null,
-        national_cert: null
+        national_cert: null,
+        attempts: 0,
+        timeSpent: 0
       }));
     }
 
@@ -200,7 +206,9 @@ export default function UserDashboard() {
         writing: item.writing ?? null,
         speaking: item.speaking ?? null,
         sat: item.sat ?? null,
-        national_cert: item.national_cert ?? null
+        national_cert: item.nationalCert ?? null,
+        attempts: item.attemptsCount ?? 0,
+        timeSpent: item.minutes || 0
       };
     });
   }, [stats]);
@@ -233,25 +241,49 @@ export default function UserDashboard() {
     switch (activeChartTab) {
       case "practice":
         return {
-          stroke: "#10b981", // Emerald Green
-          bgBadge: "bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20",
-          activeTabClass: "bg-emerald-500 text-white shadow-lg shadow-emerald-500/25 hover:bg-emerald-600"
+          stroke: "#22c55e",
+          bgBadge: "bg-green-500/10 dark:bg-green-500/20 text-green-600 dark:text-green-400 border border-green-500/20",
+          activeTabClass: "bg-green-500 text-white shadow-lg shadow-green-500/25 hover:bg-green-600"
         };
-      case "sat":
+      case "reading":
         return {
-          stroke: "#3b82f6", // Blue
+          stroke: "#f97316",
+          bgBadge: "bg-orange-500/10 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400 border border-orange-500/20",
+          activeTabClass: "bg-orange-500 text-white shadow-lg shadow-orange-500/25 hover:bg-orange-600"
+        };
+      case "listening":
+        return {
+          stroke: "#3b82f6",
           bgBadge: "bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/20",
           activeTabClass: "bg-blue-500 text-white shadow-lg shadow-blue-500/25 hover:bg-blue-600"
         };
-      case "national_cert":
+      case "writing":
         return {
-          stroke: "#f59e0b", // Amber
+          stroke: "#f59e0b",
           bgBadge: "bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/20",
           activeTabClass: "bg-amber-500 text-white shadow-lg shadow-amber-500/25 hover:bg-amber-600"
         };
+      case "speaking":
+        return {
+          stroke: "#8b5cf6",
+          bgBadge: "bg-purple-500/10 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/20",
+          activeTabClass: "bg-purple-500 text-white shadow-lg shadow-purple-500/25 hover:bg-purple-600"
+        };
+      case "sat":
+        return {
+          stroke: "#06b6d4",
+          bgBadge: "bg-cyan-500/10 dark:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20",
+          activeTabClass: "bg-cyan-500 text-white shadow-lg shadow-cyan-500/25 hover:bg-cyan-600"
+        };
+      case "national_cert":
+        return {
+          stroke: "#ef4444",
+          bgBadge: "bg-red-500/10 dark:bg-red-500/20 text-red-600 dark:text-red-400 border border-red-500/20",
+          activeTabClass: "bg-red-500 text-white shadow-lg shadow-red-500/25 hover:bg-red-600"
+        };
       default:
         return {
-          stroke: "#8b5cf6", // Violet/Purple
+          stroke: "#8b5cf6",
           bgBadge: "bg-purple-500/10 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/20",
           activeTabClass: "bg-purple-500 text-white shadow-lg shadow-purple-500/25 hover:bg-purple-600"
         };
@@ -263,11 +295,8 @@ export default function UserDashboard() {
     if (!composedChartData.length) return "--";
 
     if (activeChartTab === "practice") {
-      const sum = composedChartData.reduce((acc, curr) => {
-        const val = curr.practice;
-        return acc + (typeof val === "number" ? val : 0);
-      }, 0);
-      return sum.toFixed(1) + " daq";
+      const sum = composedChartData.reduce((acc, curr) => acc + (curr.practice || 0), 0);
+      return Math.round(sum) + " mins";
     }
 
     const nonNullPoints = composedChartData.filter(d => d[activeChartTab] !== null && d[activeChartTab] !== undefined);
@@ -281,11 +310,11 @@ export default function UserDashboard() {
 
     switch (activeChartTab) {
       case "sat":
-        return Math.round(avg).toString() + " score";
+        return Math.round(avg).toString();
       case "national_cert":
-        return Math.round(avg).toString() + " ball";
+        return Math.round(avg).toString();
       default:
-        return avg.toFixed(1) + " band";
+        return avg.toFixed(1);
     }
   }, [composedChartData, activeChartTab]);
 
@@ -303,6 +332,66 @@ export default function UserDashboard() {
         strokeWidth={2}
       />
     );
+  };
+
+  const CustomTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+      const value = payload[0].value;
+      
+      const moduleName = activeChartTab === "practice" ? t("userDashboard.tabs.practice", "Practice Time") :
+        activeChartTab === "reading" ? "Reading" :
+        activeChartTab === "listening" ? "Listening" :
+        activeChartTab === "writing" ? "Writing" :
+        activeChartTab === "speaking" ? "Speaking" :
+        activeChartTab === "sat" ? "SAT" : "National Certificate";
+        
+      let formattedValue = "";
+      if (value !== null && value !== undefined) {
+        if (activeChartTab === "practice") {
+          formattedValue = `${value} mins`;
+        } else if (activeChartTab === "sat") {
+          formattedValue = `${value} score`;
+        } else if (activeChartTab === "national_cert") {
+          formattedValue = `${value} ball`;
+        } else {
+          formattedValue = `Band ${value}`;
+        }
+      } else {
+        formattedValue = "--";
+      }
+
+      const attempts = data.attempts ?? 0;
+      const time = data.timeSpent ?? 0;
+
+      return (
+        <div className={cn(
+          "p-4 rounded-2xl border shadow-xl backdrop-blur-md text-left text-xs font-semibold space-y-1.5 min-w-[150px] transition-all duration-300",
+          isDark ? "bg-[#0f0c1b]/95 border-purple-500/20 text-slate-200" : "bg-white/95 border-slate-200 text-slate-800"
+        )}>
+          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{data.day}</p>
+          <div className="border-t border-slate-500/10 pt-1.5 space-y-1">
+            <p className="flex items-center justify-between gap-4">
+              <span className="text-slate-400">{t("userDashboard.chart.module", "Modul")}:</span>
+              <span className="font-extrabold">{moduleName}</span>
+            </p>
+            <p className="flex items-center justify-between gap-4">
+              <span className="text-slate-400">{t("userDashboard.chart.value", "Natija")}:</span>
+              <span className="font-extrabold" style={{ color: chartTheme.stroke }}>{formattedValue}</span>
+            </p>
+            <p className="flex items-center justify-between gap-4">
+              <span className="text-slate-400">{t("userDashboard.chart.attempts", "Urinishlar")}:</span>
+              <span className="font-extrabold">{attempts}</span>
+            </p>
+            <p className="flex items-center justify-between gap-4">
+              <span className="text-slate-400">{t("userDashboard.chart.time", "Vaqt")}:</span>
+              <span className="font-extrabold">{time} mins</span>
+            </p>
+          </div>
+        </div>
+      );
+    }
+    return null;
   };
 
   // Modals for stat details
@@ -507,18 +596,28 @@ export default function UserDashboard() {
             <div className="flex items-center justify-between gap-4">
               <div>
                 <h3 className={cn("font-display font-black text-base tracking-tight", isDark ? "text-white" : "text-slate-900")}>
-                  {t("userDashboard.chart.trendsTitle", "Haftalik natija")}
+                  {t("userDashboard.chart.trendsTitle", "Weekly results")}
                 </h3>
                 <p className="text-[11px] text-slate-400 font-bold tracking-wide mt-0.5">
-                  {t("userDashboard.chart.trendsDesc", "so'nggi 7 kun")}
+                  {t("userDashboard.chart.trendsDesc", "last 7 days")}
                 </p>
               </div>
               {/* Total / Average Badge */}
               <div className={cn("px-3 py-1.5 rounded-full text-[11px] font-black border flex items-center gap-1.5 select-none transition-all duration-300", chartTheme.bgBadge)}>
                 <span className="opacity-85">
                   {activeChartTab === "practice"
-                    ? t("userDashboard.calendar.total", "Jami")
-                    : t("userDashboard.chart.average", "O'rtacha")}
+                    ? t("userDashboard.chart.totalPractice", "Total practice minutes this week")
+                    : activeChartTab === "reading"
+                    ? t("userDashboard.chart.avgReading", "Average Reading Score")
+                    : activeChartTab === "listening"
+                    ? t("userDashboard.chart.avgListening", "Average Listening Score")
+                    : activeChartTab === "writing"
+                    ? t("userDashboard.chart.avgWriting", "Average Writing Band")
+                    : activeChartTab === "speaking"
+                    ? t("userDashboard.chart.avgSpeaking", "Average Speaking Band")
+                    : activeChartTab === "sat"
+                    ? t("userDashboard.chart.avgSat", "Average SAT Score")
+                    : t("userDashboard.chart.avgNC", "Average Score")}
                   :
                 </span>
                 <span>{activeTabTotal}</span>
@@ -528,13 +627,13 @@ export default function UserDashboard() {
             {/* Row 2: Floating Pill Buttons */}
             <div className="mt-4 mb-5 flex flex-wrap gap-2 select-none">
               {[
-                { id: "practice", label: t("userDashboard.tabs.practice", "Mashq vaqti") },
+                { id: "practice", label: t("userDashboard.tabs.practice", "Practice Time") },
                 { id: "reading", label: t("userDashboard.tabs.reading", "Reading") },
                 { id: "listening", label: t("userDashboard.tabs.listening", "Listening") },
                 { id: "writing", label: t("userDashboard.tabs.writing", "Writing") },
                 { id: "speaking", label: t("userDashboard.tabs.speaking", "Speaking") },
                 { id: "sat", label: t("userDashboard.tabs.sat", "SAT") },
-                { id: "national_cert", label: t("userDashboard.tabs.national_cert", "Milliy Sertifikat") }
+                { id: "national_cert", label: t("userDashboard.tabs.national_cert", "National Certificate") }
               ].map(tab => {
                 const isActive = activeChartTab === tab.id;
                 return (
@@ -560,13 +659,13 @@ export default function UserDashboard() {
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={composedChartData} margin={{ top: 10, right: 10, left: -15, bottom: 5 }}>
                     <defs>
-                      <linearGradient id="chartFillGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor={chartTheme.stroke} stopOpacity={0.25} />
-                        <stop offset="95%" stopColor={chartTheme.stroke} stopOpacity={0.005} />
+                      <linearGradient id={`chartFillGradient-${activeChartTab}`} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={chartTheme.stroke} stopOpacity={isDark ? 0.35 : 0.2} />
+                        <stop offset="95%" stopColor={chartTheme.stroke} stopOpacity={0.0} />
                       </linearGradient>
                     </defs>
                     {/* Clean, high-fidelity soft grid lines */}
-                    <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "#1e293b" : "#f1f5f9"} opacity={0.5} vertical={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "rgba(255,255,255,0.05)" : "#f1f5f9"} opacity={0.5} vertical={false} />
                     <XAxis
                       dataKey="day"
                       stroke="#94a3b8"
@@ -586,16 +685,7 @@ export default function UserDashboard() {
                       width={35}
                       dx={-2}
                     />
-                    <ChartTooltip
-                      contentStyle={{
-                        backgroundColor: isDark ? "#0f0c1b" : "#ffffff",
-                        borderColor: isDark ? "#2a224a" : "#e2e8f0",
-                        borderRadius: "12px",
-                        color: isDark ? "#f8fafc" : "#0f172a",
-                        fontSize: "10px",
-                        fontWeight: "bold",
-                      }}
-                    />
+                    <ChartTooltip content={<CustomTooltip />} />
                     <Area
                       type="monotone"
                       dataKey={activeChartTab}
@@ -603,8 +693,11 @@ export default function UserDashboard() {
                       strokeWidth={2}
                       dot={renderCustomDot}
                       fillOpacity={1}
-                      fill="url(#chartFillGradient)"
+                      fill={`url(#chartFillGradient-${activeChartTab})`}
                       activeDot={{ r: 5, stroke: chartTheme.stroke, strokeWidth: 1.5, fill: isDark ? "#0f0c1b" : "#ffffff" }}
+                      isAnimationActive={true}
+                      animationDuration={500}
+                      animationEasing="ease-in-out"
                     />
                   </AreaChart>
                 </ResponsiveContainer>
@@ -612,48 +705,51 @@ export default function UserDashboard() {
                 <div className="flex flex-col items-center justify-center text-center space-y-3.5 py-4 animate-fade-in select-none">
                   {/* Wave icon inside soft themed circular background */}
                   <div className={cn("h-14 w-14 rounded-2xl flex items-center justify-center shadow-inner transition-transform duration-300 hover:scale-105",
+                    activeChartTab === "practice" ? "bg-green-500/10 text-green-500" :
+                    activeChartTab === "reading" ? "bg-orange-500/10 text-orange-500" :
                     activeChartTab === "listening" ? "bg-blue-500/10 text-blue-500" :
-                      activeChartTab === "reading" ? "bg-violet-500/10 text-violet-500" :
-                        activeChartTab === "writing" ? "bg-orange-500/10 text-orange-500" :
-                          activeChartTab === "speaking" ? "bg-purple-500/10 text-purple-500" :
-                            activeChartTab === "sat" ? "bg-indigo-500/10 text-indigo-500" : "bg-amber-500/10 text-amber-500"
+                    activeChartTab === "writing" ? "bg-amber-500/10 text-amber-500" :
+                    activeChartTab === "speaking" ? "bg-purple-500/10 text-purple-500" :
+                    activeChartTab === "sat" ? "bg-cyan-500/10 text-cyan-500" : "bg-red-500/10 text-red-500"
                   )}>
-                    {/* Nice soft wave icon (trending-up/activity style pulse) */}
+                    {/* Nice soft wave icon */}
                     <TrendingUp className="h-6 w-6 animate-pulse" />
                   </div>
                   <div className="space-y-1">
                     <p className={cn("text-xs font-semibold tracking-tight", isDark ? "text-slate-200" : "text-slate-700")}>
-                      {t(`userDashboard.empty.${activeChartTab}.title`, `${t(`userDashboard.tabs.${activeChartTab}`, activeChartTab)} natijalari bu yerda ko'rinadi.`)}
+                      {t(`userDashboard.empty.${activeChartTab}.title`, "No activity yet")}
                     </p>
                     <p className="text-[10px] text-slate-400 font-bold max-w-[280px] leading-relaxed mx-auto">
-                      {t(`userDashboard.empty.${activeChartTab}.desc`, `Ushbu modul bo'yicha ko'rsatkichlaringizni bilish uchun birinchi testni topshiring.`)}
+                      {t(`userDashboard.empty.${activeChartTab}.desc`, "Start practicing to see your weekly progress.")}
                     </p>
                   </div>
                   <Button
                     onClick={() => {
                       const pathMap: Record<string, string> = {
-                        reading: "/user/mocks/c/reading",
-                        listening: "/user/mocks/c/listening",
-                        writing: "/user/mocks/c/writing",
-                        speaking: "/user/mocks/c/speaking",
-                        sat: "/user/mocks/c/sat",
-                        national_cert: "/user/mocks/c/national_cert"
+                        reading: `${basePath}/mocks/c/reading`,
+                        listening: `${basePath}/mocks/c/listening`,
+                        writing: `${basePath}/mocks/c/writing`,
+                        speaking: `${basePath}/speaking`,
+                        sat: `${basePath}/mocks/c/sat`,
+                        national_cert: `${basePath}/mocks/c/national_cert`
                       };
-                      navigate(pathMap[activeChartTab] || "/user/mocks");
+                      navigate(pathMap[activeChartTab] || `${basePath}/practice`);
                     }}
                     className={cn(
                       "px-5 py-1.5 h-auto rounded-xl text-[10px] font-black shadow-md transition-all duration-300 hover:scale-105 hover:shadow-lg text-white",
-                      activeChartTab === "listening" ? "bg-blue-500 hover:bg-blue-600 shadow-blue-500/20" :
-                        activeChartTab === "reading" ? "bg-violet-500 hover:bg-violet-600 shadow-violet-500/20" :
-                          activeChartTab === "writing" ? "bg-orange-500 hover:bg-orange-600 shadow-orange-500/20" :
-                            activeChartTab === "speaking" ? "bg-purple-500 hover:bg-purple-600 shadow-purple-500/20" :
-                              activeChartTab === "sat" ? "bg-indigo-500 hover:bg-indigo-600 shadow-indigo-500/20" : "bg-amber-500 hover:bg-amber-600 shadow-amber-500/20"
+                      activeChartTab === "practice" ? "bg-green-600 hover:bg-green-700 shadow-green-500/20" :
+                      activeChartTab === "reading" ? "bg-orange-600 hover:bg-orange-700 shadow-orange-500/20" :
+                      activeChartTab === "listening" ? "bg-blue-600 hover:bg-blue-700 shadow-blue-500/20" :
+                      activeChartTab === "writing" ? "bg-amber-600 hover:bg-amber-700 shadow-amber-500/20" :
+                      activeChartTab === "speaking" ? "bg-purple-600 hover:bg-purple-700 shadow-purple-500/20" :
+                      activeChartTab === "sat" ? "bg-cyan-600 hover:bg-cyan-700 shadow-cyan-500/20" : "bg-red-600 hover:bg-red-700 shadow-red-500/20"
                     )}
                   >
-                    {t(`userDashboard.empty.${activeChartTab}.btn`, `${t(`userDashboard.tabs.${activeChartTab}`, activeChartTab)} boshlash`)}
+                    {t("practice.startBtn", "Start Practice")}
                   </Button>
                 </div>
-              )}            </div>
+              )}
+            </div>
           </Card>
         </div>
 
