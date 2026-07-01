@@ -94,13 +94,13 @@ api.interceptors.response.use(
             avgScore: 6.8,
             examDaysLeft: 45,
             weeklyData: [
-              { day: 'Pa', minutes: 45 },
-              { day: 'Ju', minutes: 30 },
-              { day: 'Sha', minutes: 60 },
-              { day: 'Ya', minutes: 15 },
-              { day: 'Du', minutes: 50 },
-              { day: 'Se', minutes: 40 },
-              { day: 'Cho', minutes: 80 }
+              { day: 'Pa', minutes: 45, reading: 6.5, listening: null, writing: null, speaking: null, sat: null, nationalCert: null },
+              { day: 'Ju', minutes: 30, reading: null, listening: 7.0, writing: null, speaking: null, sat: null, nationalCert: null },
+              { day: 'Sha', minutes: 60, reading: 7.0, listening: null, writing: null, speaking: null, sat: null, nationalCert: null },
+              { day: 'Ya', minutes: 15, reading: null, listening: 6.5, writing: null, speaking: null, sat: null, nationalCert: null },
+              { day: 'Du', minutes: 50, reading: 6.0, listening: null, writing: null, speaking: null, sat: null, nationalCert: null },
+              { day: 'Se', minutes: 40, reading: null, listening: 7.5, writing: null, speaking: null, sat: null, nationalCert: null },
+              { day: 'Cho', minutes: 80, reading: 7.5, listening: null, writing: null, speaking: null, sat: null, nationalCert: null }
             ]
           },
           status: 200,

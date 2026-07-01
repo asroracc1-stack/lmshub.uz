@@ -3,6 +3,7 @@ package com.lmscrm.backend.controller.user;
 import com.lmscrm.backend.domain.entity.PracticeSession;
 import com.lmscrm.backend.domain.entity.StudentAttempt;
 import com.lmscrm.backend.domain.entity.User;
+import com.lmscrm.backend.domain.enums.ExamType;
 import com.lmscrm.backend.dto.user.UserDashboardStatsDto;
 import com.lmscrm.backend.repository.PracticeSessionRepository;
 import com.lmscrm.backend.repository.StudentAttemptRepository;
@@ -49,16 +50,89 @@ public class UserStatsController {
                         Collectors.summingDouble(PracticeSession::getMinutes)
                 ));
 
+        List<StudentAttempt> attempts = studentAttemptRepository.findAllByStudentId(user.getId());
         List<UserDashboardStatsDto.DailyDataDto> weeklyData = new ArrayList<>();
         for (int i = 6; i >= 0; i--) {
             LocalDate date = LocalDate.now().minusDays(i);
             String dayName = date.getDayOfWeek().getDisplayName(TextStyle.SHORT, Locale.ENGLISH).toUpperCase();
             double mins = dailyMinutes.getOrDefault(date, 0.0);
-            if (dayName.equals("MON") && mins == 0.0) {
-                mins = 3.4; // Mocking Monday data as requested
-                dailyMinutes.put(date, mins);
-            }
-            weeklyData.add(new UserDashboardStatsDto.DailyDataDto(dayName, mins));
+
+            // Filter attempts finished on this date
+            LocalDate finalDate = date;
+            List<StudentAttempt> dayAttempts = attempts.stream()
+                    .filter(a -> a.getFinishedAt() != null && a.getFinishedAt().toLocalDate().equals(finalDate))
+                    .collect(Collectors.toList());
+
+            Double readingVal = dayAttempts.stream()
+                    .filter(a -> a.getExam() != null && a.getExam().getType() == ExamType.READING && a.getOverallBand() != null)
+                    .mapToDouble(StudentAttempt::getOverallBand)
+                    .average()
+                    .isPresent() ? Math.round(dayAttempts.stream()
+                            .filter(a -> a.getExam() != null && a.getExam().getType() == ExamType.READING && a.getOverallBand() != null)
+                            .mapToDouble(StudentAttempt::getOverallBand)
+                            .average()
+                            .getAsDouble() * 10.0) / 10.0 : null;
+
+            Double listeningVal = dayAttempts.stream()
+                    .filter(a -> a.getExam() != null && a.getExam().getType() == ExamType.LISTENING && a.getOverallBand() != null)
+                    .mapToDouble(StudentAttempt::getOverallBand)
+                    .average()
+                    .isPresent() ? Math.round(dayAttempts.stream()
+                            .filter(a -> a.getExam() != null && a.getExam().getType() == ExamType.LISTENING && a.getOverallBand() != null)
+                            .mapToDouble(StudentAttempt::getOverallBand)
+                            .average()
+                            .getAsDouble() * 10.0) / 10.0 : null;
+
+            Double writingVal = dayAttempts.stream()
+                    .filter(a -> a.getExam() != null && a.getExam().getType() == ExamType.WRITING && a.getOverallBand() != null)
+                    .mapToDouble(StudentAttempt::getOverallBand)
+                    .average()
+                    .isPresent() ? Math.round(dayAttempts.stream()
+                            .filter(a -> a.getExam() != null && a.getExam().getType() == ExamType.WRITING && a.getOverallBand() != null)
+                            .mapToDouble(StudentAttempt::getOverallBand)
+                            .average()
+                            .getAsDouble() * 10.0) / 10.0 : null;
+
+            Double speakingVal = dayAttempts.stream()
+                    .filter(a -> a.getExam() != null && a.getExam().getType() == ExamType.SPEAKING && a.getOverallBand() != null)
+                    .mapToDouble(StudentAttempt::getOverallBand)
+                    .average()
+                    .isPresent() ? Math.round(dayAttempts.stream()
+                            .filter(a -> a.getExam() != null && a.getExam().getType() == ExamType.SPEAKING && a.getOverallBand() != null)
+                            .mapToDouble(StudentAttempt::getOverallBand)
+                            .average()
+                            .getAsDouble() * 10.0) / 10.0 : null;
+
+            Double satVal = dayAttempts.stream()
+                    .filter(a -> a.getExam() != null && a.getExam().getType() == ExamType.SAT && a.getTotalScore() != null)
+                    .mapToDouble(StudentAttempt::getTotalScore)
+                    .average()
+                    .isPresent() ? (double) Math.round(dayAttempts.stream()
+                            .filter(a -> a.getExam() != null && a.getExam().getType() == ExamType.SAT && a.getTotalScore() != null)
+                            .mapToDouble(StudentAttempt::getTotalScore)
+                            .average()
+                            .getAsDouble()) : null;
+
+            Double nationalCertVal = dayAttempts.stream()
+                    .filter(a -> a.getExam() != null && a.getExam().getType() == ExamType.NATIONAL_CERT && a.getTotalScore() != null)
+                    .mapToDouble(StudentAttempt::getTotalScore)
+                    .average()
+                    .isPresent() ? (double) Math.round(dayAttempts.stream()
+                            .filter(a -> a.getExam() != null && a.getExam().getType() == ExamType.NATIONAL_CERT && a.getTotalScore() != null)
+                            .mapToDouble(StudentAttempt::getTotalScore)
+                            .average()
+                            .getAsDouble()) : null;
+
+            weeklyData.add(UserDashboardStatsDto.DailyDataDto.builder()
+                    .day(dayName)
+                    .minutes(mins)
+                    .reading(readingVal)
+                    .listening(listeningVal)
+                    .writing(writingVal)
+                    .speaking(speakingVal)
+                    .sat(satVal)
+                    .nationalCert(nationalCertVal)
+                    .build());
         }
 
         int streak = 0;
@@ -77,25 +151,25 @@ public class UserStatsController {
             if (daysLeft < 0) daysLeft = 0L;
         }
 
-        List<StudentAttempt> attempts = studentAttemptRepository.findAllByStudentId(user.getId());
         Double avgScore = attempts.stream()
                 .filter(a -> a.getOverallBand() != null)
                 .mapToDouble(StudentAttempt::getOverallBand)
                 .average()
-                .orElse(0.0);
+                .isPresent() ? Math.round(attempts.stream()
+                        .filter(a -> a.getOverallBand() != null)
+                        .mapToDouble(StudentAttempt::getOverallBand)
+                        .average()
+                        .getAsDouble() * 10.0) / 10.0 : null;
 
         Double totalMinutes = dailyMinutes.values().stream().mapToDouble(Double::doubleValue).sum();
-
         Double targetBand = user.getTargetBand() != null ? user.getTargetBand() : 7.5;
-        Double totalMinutesMock = totalMinutes > 0 ? totalMinutes : 3.7;
-        Double avgScoreMock = avgScore > 0 ? avgScore : 6.5;
 
         return ResponseEntity.ok(UserDashboardStatsDto.builder()
-                .totalMinutes(totalMinutesMock)
-                .streak(streak > 0 ? streak : 3)
+                .totalMinutes(totalMinutes)
+                .streak(streak)
                 .targetBand(targetBand)
-                .avgScore(avgScoreMock)
-                .examDaysLeft(daysLeft != null ? daysLeft : 45L)
+                .avgScore(avgScore)
+                .examDaysLeft(daysLeft)
                 .weeklyData(weeklyData)
                 .build());
     }

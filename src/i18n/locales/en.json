@@ -442,6 +442,7 @@
     "chart": {
       "trendsTitle": "Weekly results",
       "trendsDesc": "last 7 days",
+      "average": "Average",
       "mainMarketTrend": "Main Market Trend",
       "rsiActivityIndex": "RSI Activity Index (Practice Intensity)",
       "momentumIndex": "MOMENTUM INDEX",
@@ -456,6 +457,38 @@
       "speaking": "Speaking",
       "sat": "SAT",
       "national_cert": "National Certificate"
+    },
+    "empty": {
+      "reading": {
+        "title": "Reading results will appear here.",
+        "desc": "Take your first test to see your performance in this module.",
+        "btn": "Start Reading"
+      },
+      "listening": {
+        "title": "Listening results will appear here.",
+        "desc": "Take your first test to see your performance in this module.",
+        "btn": "Start Listening"
+      },
+      "writing": {
+        "title": "Writing results will appear here.",
+        "desc": "Take your first test to see your performance in this module.",
+        "btn": "Start Writing"
+      },
+      "speaking": {
+        "title": "Speaking results will appear here.",
+        "desc": "Take your first test to see your performance in this module.",
+        "btn": "Start Speaking"
+      },
+      "sat": {
+        "title": "SAT results will appear here.",
+        "desc": "Take your first test to see your performance in this module.",
+        "btn": "Start SAT"
+      },
+      "national_cert": {
+        "title": "National Certificate results will appear here.",
+        "desc": "Take your first test to see your performance in this module.",
+        "btn": "Start National Certificate"
+      }
     },
     "calendar": {
       "title": "Practice Calendar",

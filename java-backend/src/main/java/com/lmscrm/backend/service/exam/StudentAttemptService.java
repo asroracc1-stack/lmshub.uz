@@ -34,6 +34,7 @@ public class StudentAttemptService {
     private final UserRepository userRepository;
     private final ExamMapper mapper;
     private final SubscriptionService subscriptionService;
+    private final PracticeSessionRepository practiceSessionRepository;
 
     @Transactional
     public StudentAttemptDto startExam(UUID examId, User student) {
@@ -132,6 +133,22 @@ public class StudentAttemptService {
 
         boolean isPassed = totalScore >= attempt.getExam().getPassingScore();
         attempt.setIsPassed(isPassed);
+
+        // Calculate and save practice session minutes based on exam attempt time
+        int secondsUsed = attempt.getTimeUsedSeconds() != null ? attempt.getTimeUsedSeconds() : 0;
+        if (secondsUsed == 0 && attempt.getStartedAt() != null) {
+            secondsUsed = (int) java.time.Duration.between(attempt.getStartedAt(), attempt.getFinishedAt()).toSeconds();
+            attempt.setTimeUsedSeconds(secondsUsed);
+        }
+        double minutesUsed = secondsUsed / 60.0;
+        if (minutesUsed > 0.0) {
+            PracticeSession session = PracticeSession.builder()
+                    .user(student)
+                    .minutes(Math.round(minutesUsed * 10.0) / 10.0)
+                    .createdAt(attempt.getFinishedAt())
+                    .build();
+            practiceSessionRepository.save(session);
+        }
 
         attemptRepository.save(attempt);
 

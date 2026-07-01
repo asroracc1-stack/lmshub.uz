@@ -442,6 +442,7 @@
     "chart": {
       "trendsTitle": "Haftalik natija",
       "trendsDesc": "so'nggi 7 kun",
+      "average": "O'rtacha",
       "mainMarketTrend": "Asosiy faollik trendi",
       "rsiActivityIndex": "RSI Faollik Indeksi (Mashq jadalligi)",
       "momentumIndex": "MOMENTUM INDEX",
@@ -456,6 +457,38 @@
       "speaking": "Speaking",
       "sat": "SAT",
       "national_cert": "Milliy Sertifikat"
+    },
+    "empty": {
+      "reading": {
+        "title": "Reading natijalari bu yerda ko'rinadi.",
+        "desc": "Ushbu modul bo'yicha ko'rsatkichlaringizni bilish uchun birinchi testni topshiring.",
+        "btn": "Reading boshlash"
+      },
+      "listening": {
+        "title": "Listening natijalari bu yerda ko'rinadi.",
+        "desc": "Ushbu modul bo'yicha ko'rsatkichlaringizni bilish uchun birinchi testni topshiring.",
+        "btn": "Listening boshlash"
+      },
+      "writing": {
+        "title": "Writing natijalari bu yerda ko'rinadi.",
+        "desc": "Ushbu modul bo'yicha ko'rsatkichlaringizni bilish uchun birinchi testni topshiring.",
+        "btn": "Writing boshlash"
+      },
+      "speaking": {
+        "title": "Speaking natijalari bu yerda ko'rinadi.",
+        "desc": "Ushbu modul bo'yicha ko'rsatkichlaringizni bilish uchun birinchi testni topshiring.",
+        "btn": "Speaking boshlash"
+      },
+      "sat": {
+        "title": "SAT natijalari bu yerda ko'rinadi.",
+        "desc": "Ushbu modul bo'yicha ko'rsatkichlaringizni bilish uchun birinchi testni topshiring.",
+        "btn": "SAT boshlash"
+      },
+      "national_cert": {
+        "title": "Milliy Sertifikat natijalari bu yerda ko'rinadi.",
+        "desc": "Ushbu modul bo'yicha ko'rsatkichlaringizni bilish uchun birinchi testni topshiring.",
+        "btn": "Milliy Sertifikat boshlash"
+      }
     },
     "calendar": {
       "title": "Mashg'ulotlar kalendari",

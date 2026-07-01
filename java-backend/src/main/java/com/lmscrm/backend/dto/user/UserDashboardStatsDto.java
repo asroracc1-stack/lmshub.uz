@@ -20,10 +20,17 @@ public class UserDashboardStatsDto {
     private List<DailyDataDto> weeklyData;
 
     @Data
+    @Builder
     @AllArgsConstructor
     @NoArgsConstructor
     public static class DailyDataDto {
         private String day;
         private Double minutes;
+        private Double reading;
+        private Double listening;
+        private Double writing;
+        private Double speaking;
+        private Double sat;
+        private Double nationalCert;
     }
 }

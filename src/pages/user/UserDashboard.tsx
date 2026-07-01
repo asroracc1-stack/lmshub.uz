@@ -41,6 +41,12 @@ import {
 interface DailyData {
   day: string;
   minutes: number;
+  reading?: number | null;
+  listening?: number | null;
+  writing?: number | null;
+  speaking?: number | null;
+  sat?: number | null;
+  nationalCert?: number | null;
 }
 
 interface UserStats {
@@ -148,6 +154,18 @@ export default function UserDashboard() {
   ];
 
   // Helper calculations
+  const mapDay = (day: string) => {
+    const d = day.toUpperCase();
+    if (d === "MON" || d === "DU") return "Du";
+    if (d === "TUE" || d === "SE") return "Se";
+    if (d === "WED" || d === "CHO") return "Cho";
+    if (d === "THU" || d === "PA") return "Pa";
+    if (d === "FRI" || d === "JU") return "Ju";
+    if (d === "SAT" || d === "SHA") return "Sha";
+    if (d === "SUN" || d === "YA") return "Ya";
+    return day;
+  };
+
   const maxMin = useMemo(() => Math.max(1, ...(stats?.weeklyData?.map((d) => d.minutes) || [0])), [stats]);
   const activeDays = useMemo(() => stats?.weeklyData?.filter((d) => d.minutes > 0).length || 0, [stats]);
   const avgMin = useMemo(
@@ -155,46 +173,43 @@ export default function UserDashboard() {
     [stats, activeDays]
   );
 
-  // Compute stats for all 7 modules. Generates simulated learning curve if database stats are 0
+  // Compute stats for all 7 modules based on real database records
   const composedChartData = useMemo(() => {
-    const days = ["Du", "Se", "Cho", "Pa", "Ju", "Sha", "Ya"];
     const rawWeekly = stats?.weeklyData || [];
-    const hasRealData = rawWeekly.length > 0 && rawWeekly.some(d => d.minutes > 0);
-    
-    // Seed practice time if no real study minutes yet
-    const seedMinutes = [15, 30, 20, 45, 15, 60, 35];
-    
-    return days.map((day, index) => {
-      const realMinutes = hasRealData ? (rawWeekly.find(w => w.day === day)?.minutes || 0) : seedMinutes[index];
-      const practice = realMinutes;
-      
-      // Dynamic IELTS band trend based on target or average band
-      const baseBand = stats?.avgScore || stats?.targetBand || 6.5;
-      const reading = Number((baseBand - 0.3 + (index % 3) * 0.2 + (practice > 0 ? 0.2 : 0)).toFixed(1));
-      const listening = Number((baseBand - 0.2 + (index % 2) * 0.3 + (practice > 0 ? 0.3 : 0)).toFixed(1));
-      const writing = Number((baseBand - 0.6 + (index % 4) * 0.15 + (practice > 0 ? 0.1 : 0)).toFixed(1));
-      const speaking = Number((baseBand - 0.4 + (index % 3) * 0.25 + (practice > 0 ? 0.2 : 0)).toFixed(1));
-      
-      // Dynamic SAT score trend
-      const baseSat = stats?.avgScore ? Math.round(stats.avgScore * 180 + 300) : 1220;
-      const sat = Math.min(1600, Math.max(400, baseSat - 40 + (index % 3) * 50 + (practice > 0 ? 30 : 0)));
-      
-      // Dynamic Milliy Cert score trend
-      const baseCert = stats?.avgScore ? Math.round(stats.avgScore * 7 + 10) : 50;
-      const national_cert = Math.min(75, Math.max(0, baseCert - 3 + (index % 2) * 5 + (practice > 0 ? 4 : 0)));
-      
-      return {
+    if (rawWeekly.length === 0) {
+      const days = ["Du", "Se", "Cho", "Pa", "Ju", "Sha", "Ya"];
+      return days.map((day) => ({
         day,
-        practice,
-        reading,
-        listening,
-        writing,
-        speaking,
-        sat,
-        national_cert
+        practice: 0,
+        reading: null,
+        listening: null,
+        writing: null,
+        speaking: null,
+        sat: null,
+        national_cert: null
+      }));
+    }
+    
+    return rawWeekly.map((item) => {
+      const dayName = mapDay(item.day);
+      return {
+        day: dayName,
+        practice: item.minutes || 0,
+        reading: item.reading ?? null,
+        listening: item.listening ?? null,
+        writing: item.writing ?? null,
+        speaking: item.speaking ?? null,
+        sat: item.sat ?? null,
+        national_cert: item.nationalCert ?? null
       };
     });
   }, [stats]);
+
+  // Check if there is data for the selected chart tab
+  const hasDataForActiveTab = useMemo(() => {
+    if (activeChartTab === "practice") return true;
+    return composedChartData.some(d => d[activeChartTab] !== null && d[activeChartTab] !== undefined);
+  }, [composedChartData, activeChartTab]);
 
   // Determine active unit/scale based on active tab
   const activeYDomain = useMemo(() => {
@@ -243,26 +258,34 @@ export default function UserDashboard() {
     }
   }, [activeChartTab]);
 
-  // Compute sum or average for the selected tab to display as "Jami"
+  // Compute sum or average for the selected tab to display as "Jami" / "O'rtacha"
   const activeTabTotal = useMemo(() => {
-    if (!composedChartData.length) return "0";
-    const sum = composedChartData.reduce((acc, curr) => {
+    if (!composedChartData.length) return "--";
+    
+    if (activeChartTab === "practice") {
+      const sum = composedChartData.reduce((acc, curr) => {
+        const val = curr.practice;
+        return acc + (typeof val === "number" ? val : 0);
+      }, 0);
+      return sum.toFixed(1) + " daq";
+    }
+
+    const nonNullPoints = composedChartData.filter(d => d[activeChartTab] !== null && d[activeChartTab] !== undefined);
+    if (nonNullPoints.length === 0) return "--";
+
+    const sum = nonNullPoints.reduce((acc, curr) => {
       const val = curr[activeChartTab];
       return acc + (typeof val === "number" ? val : 0);
     }, 0);
-    
+    const avg = sum / nonNullPoints.length;
+
     switch (activeChartTab) {
       case "sat":
-        return Math.round(sum / composedChartData.length).toString() + " score";
+        return Math.round(avg).toString() + " score";
       case "national_cert":
-        return Math.round(sum / composedChartData.length).toString() + " ball";
-      case "reading":
-      case "listening":
-      case "writing":
-      case "speaking":
-        return (sum / composedChartData.length).toFixed(1) + " band";
+        return Math.round(avg).toString() + " ball";
       default:
-        return sum.toFixed(1) + " daq";
+        return avg.toFixed(1) + " band";
     }
   }, [composedChartData, activeChartTab]);
 
@@ -489,11 +512,14 @@ export default function UserDashboard() {
                 <p className="text-[11px] text-slate-400 font-bold tracking-wide mt-0.5">
                   {t("userDashboard.chart.trendsDesc", "so'nggi 7 kun")}
                 </p>
-              </div>
-
-              {/* Total Badge */}
+                  {/* Total / Average Badge */}
               <div className={cn("px-3 py-1.5 rounded-full text-[11px] font-black border flex items-center gap-1.5 select-none transition-all duration-300", chartTheme.bgBadge)}>
-                <span className="opacity-85">{t("userDashboard.calendar.total", "Jami")}:</span>
+                <span className="opacity-85">
+                  {activeChartTab === "practice" 
+                    ? t("userDashboard.calendar.total", "Jami") 
+                    : t("userDashboard.chart.average", "O'rtacha")}
+                  :
+                </span>
                 <span>{activeTabTotal}</span>
               </div>
             </div>
@@ -527,60 +553,106 @@ export default function UserDashboard() {
               })}
             </div>
 
-            {/* Row 3: Crisp, Professional Line Chart */}
-            <div className="h-52 w-full relative">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={composedChartData} margin={{ top: 10, right: 10, left: -15, bottom: 5 }}>
-                  <defs>
-                    <linearGradient id="chartFillGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={chartTheme.stroke} stopOpacity={0.25} />
-                      <stop offset="95%" stopColor={chartTheme.stroke} stopOpacity={0.005} />
-                    </linearGradient>
-                  </defs>
-                  {/* Clean, high-fidelity soft grid lines */}
-                  <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "#1e293b" : "#f1f5f9"} opacity={0.5} vertical={false} />
-                  <XAxis
-                    dataKey="day"
-                    stroke="#94a3b8"
-                    fontSize={10}
-                    fontWeight="bold"
-                    tickLine={false}
-                    axisLine={false}
-                    dy={8}
-                  />
-                  <YAxis
-                    stroke="#94a3b8"
-                    fontSize={10}
-                    fontWeight="bold"
-                    tickLine={false}
-                    axisLine={false}
-                    domain={activeYDomain as any}
-                    width={35}
-                    dx={-2}
-                  />
-                  <ChartTooltip
-                    contentStyle={{
-                      backgroundColor: isDark ? "#0f0c1b" : "#ffffff",
-                      borderColor: isDark ? "#2a224a" : "#e2e8f0",
-                      borderRadius: "12px",
-                      color: isDark ? "#f8fafc" : "#0f172a",
-                      fontSize: "10px",
-                      fontWeight: "bold",
+            {/* Row 3: Crisp, Professional Line Chart OR Empty State */}
+            <div className="h-52 w-full relative flex items-center justify-center">
+              {hasDataForActiveTab ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={composedChartData} margin={{ top: 10, right: 10, left: -15, bottom: 5 }}>
+                    <defs>
+                      <linearGradient id="chartFillGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={chartTheme.stroke} stopOpacity={0.25} />
+                        <stop offset="95%" stopColor={chartTheme.stroke} stopOpacity={0.005} />
+                      </linearGradient>
+                    </defs>
+                    {/* Clean, high-fidelity soft grid lines */}
+                    <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "#1e293b" : "#f1f5f9"} opacity={0.5} vertical={false} />
+                    <XAxis
+                      dataKey="day"
+                      stroke="#94a3b8"
+                      fontSize={10}
+                      fontWeight="bold"
+                      tickLine={false}
+                      axisLine={false}
+                      dy={8}
+                    />
+                    <YAxis
+                      stroke="#94a3b8"
+                      fontSize={10}
+                      fontWeight="bold"
+                      tickLine={false}
+                      axisLine={false}
+                      domain={activeYDomain as any}
+                      width={35}
+                      dx={-2}
+                    />
+                    <ChartTooltip
+                      contentStyle={{
+                        backgroundColor: isDark ? "#0f0c1b" : "#ffffff",
+                        borderColor: isDark ? "#2a224a" : "#e2e8f0",
+                        borderRadius: "12px",
+                        color: isDark ? "#f8fafc" : "#0f172a",
+                        fontSize: "10px",
+                        fontWeight: "bold",
+                      }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey={activeChartTab}
+                      stroke={chartTheme.stroke}
+                      strokeWidth={2}
+                      dot={renderCustomDot}
+                      fillOpacity={1}
+                      fill="url(#chartFillGradient)"
+                      activeDot={{ r: 5, stroke: chartTheme.stroke, strokeWidth: 1.5, fill: isDark ? "#0f0c1b" : "#ffffff" }}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex flex-col items-center justify-center text-center space-y-3.5 py-4 animate-fade-in select-none">
+                  {/* Wave icon inside soft themed circular background */}
+                  <div className={cn("h-14 w-14 rounded-2xl flex items-center justify-center shadow-inner transition-transform duration-300 hover:scale-105", 
+                    activeChartTab === "listening" ? "bg-blue-500/10 text-blue-500" :
+                    activeChartTab === "reading" ? "bg-violet-500/10 text-violet-500" :
+                    activeChartTab === "writing" ? "bg-orange-500/10 text-orange-500" :
+                    activeChartTab === "speaking" ? "bg-purple-500/10 text-purple-500" :
+                    activeChartTab === "sat" ? "bg-indigo-500/10 text-indigo-500" : "bg-amber-500/10 text-amber-500"
+                  )}>
+                    {/* Nice soft wave icon (trending-up/activity style pulse) */}
+                    <TrendingUp className="h-6 w-6 animate-pulse" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className={cn("text-xs font-semibold tracking-tight", isDark ? "text-slate-200" : "text-slate-700")}>
+                      {t(`userDashboard.empty.${activeChartTab}.title`, `${t(`userDashboard.tabs.${activeChartTab}`, activeChartTab)} natijalari bu yerda ko'rinadi.`)}
+                    </p>
+                    <p className="text-[10px] text-slate-400 font-bold max-w-[280px] leading-relaxed mx-auto">
+                      {t(`userDashboard.empty.${activeChartTab}.desc`, `Ushbu modul bo'yicha ko'rsatkichlaringizni bilish uchun birinchi testni topshiring.`)}
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => {
+                      const pathMap: Record<string, string> = {
+                        reading: "/user/mocks/c/reading",
+                        listening: "/user/mocks/c/listening",
+                        writing: "/user/mocks/c/writing",
+                        speaking: "/user/mocks/c/speaking",
+                        sat: "/user/mocks/c/sat",
+                        national_cert: "/user/mocks/c/national_cert"
+                      };
+                      navigate(pathMap[activeChartTab] || "/user/mocks");
                     }}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey={activeChartTab}
-                    stroke={chartTheme.stroke}
-                    strokeWidth={2}
-                    dot={renderCustomDot}
-                    fillOpacity={1}
-                    fill="url(#chartFillGradient)"
-                    activeDot={{ r: 5, stroke: chartTheme.stroke, strokeWidth: 1.5, fill: isDark ? "#0f0c1b" : "#ffffff" }}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
+                    className={cn(
+                      "px-5 py-1.5 h-auto rounded-xl text-[10px] font-black shadow-md transition-all duration-300 hover:scale-105 hover:shadow-lg text-white",
+                      activeChartTab === "listening" ? "bg-blue-500 hover:bg-blue-600 shadow-blue-500/20" :
+                      activeChartTab === "reading" ? "bg-violet-500 hover:bg-violet-600 shadow-violet-500/20" :
+                      activeChartTab === "writing" ? "bg-orange-500 hover:bg-orange-600 shadow-orange-500/20" :
+                      activeChartTab === "speaking" ? "bg-purple-500 hover:bg-purple-600 shadow-purple-500/20" :
+                      activeChartTab === "sat" ? "bg-indigo-500 hover:bg-indigo-600 shadow-indigo-500/20" : "bg-amber-500 hover:bg-amber-600 shadow-amber-500/20"
+                    )}
+                  >
+                    {t(`userDashboard.empty.${activeChartTab}.btn`, `${t(`userDashboard.tabs.${activeChartTab}`, activeChartTab)} boshlash`)}
+                  </Button>
+                </div>
+              )}            </div>
           </Card>
         </div>
 
