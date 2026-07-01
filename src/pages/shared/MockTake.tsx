@@ -734,6 +734,18 @@ export default function MockTake() {
     const text = answers[currentQuestion.id] || "";
     return text.trim() ? text.trim().split(/\s+/).length : 0;
   }, [answers, currentQuestion]);
+
+  // fmt moved to top-level to be accessible from all early-return blocks
+  const fmt = (s: number) => {
+    const total = Math.max(0, Math.round(s));
+    const h = Math.floor(total / 3600);
+    const m = Math.floor((total % 3600) / 60);
+    const sec = total % 60;
+    if (h > 0) {
+      return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${sec.toString().padStart(2, "0")}`;
+    }
+    return `${m.toString().padStart(2, "0")}:${sec.toString().padStart(2, "0")}`;
+  };
   
   const startedAt = useRef<number>(0);
   const questionStartRef = useRef<Record<string, number>>({});
@@ -1487,8 +1499,6 @@ export default function MockTake() {
     );
   }
 
-  const fmt = (s: number) => `${Math.floor(s / 60).toString().padStart(2, "0")}:${(s % 60).toString().padStart(2, "0")}`;
-
   const answeredCount = Object.values(answers).filter(Boolean).length;
   const flaggedCount = flagged.size;
 
@@ -1596,8 +1606,8 @@ export default function MockTake() {
   }
 
   return (
-    <div className={cn("w-full min-h-screen flex flex-col font-sans transition-colors", 
-      isMilliy ? "bg-[#f1f5f9] dark:bg-[#060b13] text-slate-900 dark:text-slate-105 selection:bg-emerald-250" : "bg-white dark:bg-[#080410] text-slate-900 dark:text-slate-100 selection:bg-blue-200"
+    <div className={cn("w-full h-screen flex flex-col font-sans transition-colors",
+      isMilliy ? "bg-[#f1f5f9] dark:bg-[#060b13] text-slate-900 dark:text-slate-100 selection:bg-emerald-200" : "bg-white dark:bg-[#080410] text-slate-900 dark:text-slate-100 selection:bg-blue-200"
     )}>
       
       {/* EXAM COMMAND CENTER HEADER - Official Deep Blue/Teal Bar */}
@@ -1660,19 +1670,23 @@ export default function MockTake() {
         </div>
       </header>
 
-      {/* QUESTION AREA */}
-      <main className={cn("flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden transition-colors relative", 
+      {/* QUESTION AREA — both panels scroll independently */}
+      <main className={cn(
+        "flex-1 flex flex-col md:flex-row overflow-hidden transition-colors relative",
         isMilliy ? "bg-[#f1f5f9] dark:bg-[#060b13]" : "bg-[#f4f4f4] dark:bg-[#0c0817]"
       )}>
         {(isReading || kind === "writing") && sections[currentQuestion?.section_index] && (sections[currentQuestion?.section_index].passage || sections[currentQuestion?.section_index].imageUrl) && (
-          <div 
-            style={{ width: `${leftWidth}%` }}
-            className={cn("w-full h-1/2 md:h-full overflow-y-auto border-b md:border-b-0 md:border-r p-6 md:p-8 xl:p-12 transition-colors", 
-              isMilliy ? "bg-white dark:bg-[#0b1624] border-slate-200 dark:border-slate-805" : "bg-white dark:bg-[#140D23] border-slate-300 dark:border-slate-800"
+          <div
+            style={{ width: `${leftWidth}%`, flexShrink: 0 }}
+            className={cn(
+              "h-full overflow-y-auto border-b md:border-b-0 md:border-r p-6 md:p-8 xl:p-12 transition-colors",
+              isMilliy
+                ? "bg-white dark:bg-[#0b1624] border-slate-200 dark:border-slate-800"
+                : "bg-white dark:bg-[#140D23] border-slate-300 dark:border-slate-800"
             )}
           >
-            <h2 className={cn("text-xl font-bold mb-6 uppercase tracking-widest border-b-2 pb-2", 
-              isMilliy ? "border-slate-200 dark:border-slate-800 text-[#0a192f] dark:text-white" : "border-slate-880 dark:border-slate-700 text-slate-900 dark:text-white"
+            <h2 className={cn("text-xl font-bold mb-6 uppercase tracking-widest border-b-2 pb-2",
+              isMilliy ? "border-slate-200 dark:border-slate-800 text-[#0a192f] dark:text-white" : "border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white"
             )}>
               {sections[currentQuestion.section_index].title}
             </h2>
@@ -1686,9 +1700,9 @@ export default function MockTake() {
         )}
 
         {(isReading || kind === "writing") && (
-          <div 
+          <div
             onMouseDown={startResizing}
-            className="hidden md:flex w-1 hover:w-2 bg-slate-200 hover:bg-blue-500 dark:bg-slate-800 dark:hover:bg-blue-600 cursor-col-resize self-stretch transition-all duration-150 relative z-20 items-center justify-center group"
+            className="hidden md:flex w-1 hover:w-2 bg-slate-200 hover:bg-blue-500 dark:bg-slate-800 dark:hover:bg-blue-600 cursor-col-resize shrink-0 transition-all duration-150 relative z-20 items-center justify-center group"
           >
             <div className="absolute h-8 w-8 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg shadow-md flex items-center justify-center pointer-events-none select-none">
               <GripHorizontal className="h-4 w-4 text-slate-400 group-hover:text-blue-500 rotate-90" />
@@ -1696,11 +1710,14 @@ export default function MockTake() {
           </div>
         )}
 
-        <div 
+        <div
           style={{ width: (isReading || kind === "writing") ? `${100 - leftWidth}%` : "100%" }}
-          className={cn("overflow-y-auto flex flex-col p-6 md:p-8 xl:p-12 transition-colors relative", 
-            (isReading || kind === "writing") ? "h-1/2 md:h-full" : "w-full h-full max-w-5xl mx-auto border-x",
-            isMilliy ? "bg-white dark:bg-[#0b1624] border-slate-200 dark:border-slate-850" : "bg-white dark:bg-[#140D23] border-slate-300 dark:border-slate-800"
+          className={cn(
+            "h-full overflow-y-auto flex flex-col p-6 md:p-8 xl:p-12 transition-colors relative",
+            !(isReading || kind === "writing") && "max-w-5xl mx-auto border-x",
+            isMilliy
+              ? "bg-white dark:bg-[#0b1624] border-slate-200 dark:border-slate-800"
+              : "bg-white dark:bg-[#140D23] border-slate-300 dark:border-slate-800"
           )}
         >
           {/* Listening Headphones overlay prompt */}
