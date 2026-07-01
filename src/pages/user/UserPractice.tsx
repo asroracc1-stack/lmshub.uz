@@ -226,69 +226,6 @@ export default function UserPractice() {
         </div>
       ) : (
         <div className="space-y-8">
-          {/* Introductory Hero Banner for zero progress state */}
-          <AnimatePresence>
-            {showHero && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: -20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: -20 }}
-                transition={{ duration: 0.4 }}
-                className={cn(
-                  "p-8 rounded-[32px] border relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8 shadow-sm backdrop-blur-md",
-                  isDark 
-                    ? "bg-slate-900/40 border-white/5 shadow-slate-950/20" 
-                    : "bg-gradient-to-r from-emerald-50/50 via-white to-purple-50/30 border-slate-200/60 shadow-slate-200/5"
-                )}
-              >
-                {/* Decorative blob in banner */}
-                <div className="absolute top-0 right-0 w-[200px] h-[200px] bg-gradient-to-br from-emerald-500/10 to-purple-500/10 rounded-full blur-[40px] -z-10" />
-                
-                {/* Motivational Content */}
-                <div className="space-y-4 flex-1 text-left relative z-10">
-                  <span className="text-[10px] font-bold text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-950/40 px-3 py-1 rounded-full uppercase tracking-widest leading-none select-none">
-                    {t("practice.startJourney", "Start Journey")}
-                  </span>
-                  <h3 className={cn("text-2xl md:text-3xl font-extrabold tracking-tight", isDark ? "text-white" : "text-slate-800")}>
-                    {t("practice.heroTitle", "O'quv safaringizni boshlang! 🚀")}
-                  </h3>
-                  <p className="text-xs text-slate-400 font-medium max-w-xl leading-relaxed">
-                    {t("practice.heroDesc", "Hali birorta ham mashg'ulotni yakunlamabsiz. Keling, birinchi tinglash yoki o'qish testidan boshlaymiz!")}
-                  </p>
-                  <Button
-                    onClick={() => navigate("/student/mocks/c/listening")}
-                    className="h-11 rounded-xl text-xs font-semibold text-white px-6 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 shadow-md shadow-emerald-500/20 transition-all duration-300"
-                  >
-                    {t("practice.heroCta", "Birinchi mashqni boshlash")}
-                  </Button>
-                </div>
-                
-                {/* Illustration with Floating Animation */}
-                <motion.div
-                  animate={{ y: [0, -8, 0] }}
-                  transition={{ repeat: Infinity, duration: 4.5, ease: "easeInOut" }}
-                  className="w-40 h-40 shrink-0 relative z-10 flex items-center justify-center"
-                >
-                  <svg viewBox="0 0 200 200" className="w-full h-full object-contain">
-                    <defs>
-                      <linearGradient id="rocketGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="#10b981" />
-                        <stop offset="100%" stopColor="#6366f1" />
-                      </linearGradient>
-                    </defs>
-                    <circle cx="100" cy="100" r="70" fill="url(#rocketGrad)" opacity="0.1" />
-                    <path d="M100,40 L125,90 L100,78 L75,90 Z" fill="url(#rocketGrad)" />
-                    <path d="M100,40 L112,90 L100,78 Z" fill="#4f46e5" opacity="0.8" />
-                    <path d="M85,86 L70,115 L90,95 Z" fill="#ef4444" />
-                    <path d="M115,86 L130,115 L110,95 Z" fill="#ef4444" />
-                    <circle cx="100" cy="120" r="15" fill="#f59e0b" opacity="0.3" className="animate-ping" />
-                    <circle cx="100" cy="120" r="8" fill="#f59e0b" />
-                  </svg>
-                </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
           {/* Practice Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10">
             {skills.map((skill, index) => {
