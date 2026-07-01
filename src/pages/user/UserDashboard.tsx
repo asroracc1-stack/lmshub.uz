@@ -35,9 +35,6 @@ import {
   XAxis,
   YAxis,
   Tooltip as ChartTooltip,
-  LineChart,
-  Line,
-  ReferenceLine,
   CartesianGrid,
 } from "recharts";
 
@@ -158,59 +155,43 @@ export default function UserDashboard() {
     [stats, activeDays]
   );
 
-  // Compute stats for all 7 modules. Fallback to default 7 days of the week if weeklyData is empty/null.
+  // Compute stats for all 7 modules. Generates simulated learning curve if database stats are 0
   const composedChartData = useMemo(() => {
     const days = ["Du", "Se", "Cho", "Pa", "Ju", "Sha", "Ya"];
     const rawWeekly = stats?.weeklyData || [];
-    const weekly = rawWeekly.length > 0 ? rawWeekly : days.map(d => ({ day: d, minutes: 0 }));
+    const hasRealData = rawWeekly.length > 0 && rawWeekly.some(d => d.minutes > 0);
     
-    return weekly.map((d, index) => {
-      const minutes = d.minutes;
-      const practice = minutes;
+    // Seed practice time if no real study minutes yet
+    const seedMinutes = [15, 30, 20, 45, 15, 60, 35];
+    
+    return days.map((day, index) => {
+      const realMinutes = hasRealData ? (rawWeekly.find(w => w.day === day)?.minutes || 0) : seedMinutes[index];
+      const practice = realMinutes;
       
-      // Target/Baseline indicators
-      const avgBand = stats?.avgScore || stats?.targetBand || 6.5;
-      const reading = minutes > 0 
-        ? Math.min(9.0, Number((avgBand - 0.2 + (index % 3) * 0.3).toFixed(1))) 
-        : Number((avgBand - 0.5 + (index % 3) * 0.2).toFixed(1));
+      // Dynamic IELTS band trend based on target or average band
+      const baseBand = stats?.avgScore || stats?.targetBand || 6.5;
+      const reading = Number((baseBand - 0.3 + (index % 3) * 0.2 + (practice > 0 ? 0.2 : 0)).toFixed(1));
+      const listening = Number((baseBand - 0.2 + (index % 2) * 0.3 + (practice > 0 ? 0.3 : 0)).toFixed(1));
+      const writing = Number((baseBand - 0.6 + (index % 4) * 0.15 + (practice > 0 ? 0.1 : 0)).toFixed(1));
+      const speaking = Number((baseBand - 0.4 + (index % 3) * 0.25 + (practice > 0 ? 0.2 : 0)).toFixed(1));
       
-      const listening = minutes > 0 
-        ? Math.min(9.0, Number((avgBand + 0.1 + (index % 2) * 0.4).toFixed(1))) 
-        : Number((avgBand - 0.3 + (index % 2) * 0.3).toFixed(1));
+      // Dynamic SAT score trend
+      const baseSat = stats?.avgScore ? Math.round(stats.avgScore * 180 + 300) : 1220;
+      const sat = Math.min(1600, Math.max(400, baseSat - 40 + (index % 3) * 50 + (practice > 0 ? 30 : 0)));
       
-      const writing = minutes > 0 
-        ? Math.min(9.0, Number((avgBand - 0.5 + (index % 4) * 0.2).toFixed(1))) 
-        : Number((avgBand - 0.8 + (index % 4) * 0.15).toFixed(1));
-      
-      const speaking = minutes > 0 
-        ? Math.min(9.0, Number((avgBand - 0.1 + (index % 3) * 0.2).toFixed(1))) 
-        : Number((avgBand - 0.4 + (index % 3) * 0.2).toFixed(1));
-      
-      const baseSat = stats?.avgScore ? Math.round(stats.avgScore * 180 + 300) : 1250;
-      const sat = minutes > 0 
-        ? Math.min(1600, Math.max(400, baseSat - 50 + (index % 3) * 60)) 
-        : baseSat - 80 + (index % 3) * 40;
-      
-      const baseCert = stats?.avgScore ? Math.round(stats.avgScore * 7 + 10) : 52;
-      const national_cert = minutes > 0 
-        ? Math.min(75, Math.max(0, baseCert - 4 + (index % 2) * 6)) 
-        : baseCert - 5 + (index % 2) * 4;
-      
-      // Activity intensity (RSI equivalent)
-      const rsi = minutes > 0 
-        ? Math.min(100, Math.round((minutes / 90) * 80 + 20)) 
-        : Math.round(15 + (index % 3) * 10); // soft baseline activity
+      // Dynamic Milliy Cert score trend
+      const baseCert = stats?.avgScore ? Math.round(stats.avgScore * 7 + 10) : 50;
+      const national_cert = Math.min(75, Math.max(0, baseCert - 3 + (index % 2) * 5 + (practice > 0 ? 4 : 0)));
       
       return {
-        day: d.day,
+        day,
         practice,
         reading,
         listening,
         writing,
         speaking,
         sat,
-        national_cert,
-        rsi
+        national_cert
       };
     });
   }, [stats]);
@@ -232,23 +213,49 @@ export default function UserDashboard() {
     }
   }, [activeChartTab]);
 
+  // Dynamic theme colors for the chart based on the active tab
+  const chartTheme = useMemo(() => {
+    switch (activeChartTab) {
+      case "practice":
+        return {
+          stroke: "#10b981", // Emerald Green
+          fillGradientId: "emeraldGrad"
+        };
+      case "sat":
+        return {
+          stroke: "#3b82f6", // Blue
+          fillGradientId: "blueGrad"
+        };
+      case "national_cert":
+        return {
+          stroke: "#f59e0b", // Amber
+          fillGradientId: "amberGrad"
+        };
+      default:
+        return {
+          stroke: "#8b5cf6", // Violet/Purple
+          fillGradientId: "violetGrad"
+        };
+    }
+  }, [activeChartTab]);
+
   // Custom Peak Indicators (similar to Buy/Sell green arrows in trading charts)
   const renderCustomDot = (props: any) => {
     const { cx, cy, value, index } = props;
-    const isPeak = index === 2 || index === 6; // Dushanba va Chorshanba kunlari peaks
+    const isPeak = index === 2 || index === 6; // Peaks on Wednesday and Sunday
     
     if (value && value > 0 && isPeak) {
       return (
         <g key={index}>
-          <circle cx={cx} cy={cy} r={5} fill="#22c55e" stroke={isDark ? "#0b0714" : "#ffffff"} strokeWidth={1.5} />
-          <text x={cx} y={cy - 12} fill="#22c55e" fontSize={11} fontWeight="black" textAnchor="middle">
+          <circle cx={cx} cy={cy} r={5} fill={chartTheme.stroke} stroke={isDark ? "#0b0714" : "#ffffff"} strokeWidth={1.5} />
+          <text x={cx} y={cy - 12} fill={chartTheme.stroke} fontSize={11} fontWeight="black" textAnchor="middle">
             ▲
           </text>
         </g>
       );
     }
     return (
-      <circle key={index} cx={cx} cy={cy} r={3.5} fill="#8b5cf6" stroke={isDark ? "#0b0714" : "#ffffff"} strokeWidth={1} />
+      <circle key={index} cx={cx} cy={cy} r={3.5} fill={chartTheme.stroke} stroke={isDark ? "#0b0714" : "#ffffff"} strokeWidth={1} />
     );
   };
 
@@ -391,13 +398,13 @@ export default function UserDashboard() {
       {/* Welcome Banner */}
       <WelcomeBanner />
 
-      {/* Dashboard 2-column layout (reduced spacing for fit without scrolling) */}
+      {/* Dashboard 2-column layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
         
         {/* Left / Main Column (occupies 2/3 width on large screens) */}
         <div className="lg:col-span-2 space-y-4">
           
-          {/* Stat Tiles (reduced card padding) */}
+          {/* Stat Tiles */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             {loading
               ? Array.from({ length: 5 }).map((_, i) => (
@@ -445,27 +452,26 @@ export default function UserDashboard() {
                 })}
           </div>
 
-          {/* Weekly Results Chart (Trading-Style Mixed Composed Chart with fallback support) */}
+          {/* Weekly Results Chart (Clean, Spacious single AreaChart Layout) */}
           <Card className={cn(
             "p-4 shadow-md rounded-2xl border transition-all duration-300 overflow-hidden relative",
-            isDark ? "bg-slate-950/95 border-purple-500/20" : "bg-white border-slate-200/80 shadow-slate-200/20"
+            isDark ? "bg-slate-900/30 border-white/5" : "bg-white border-slate-200/60 shadow-slate-200/10"
           )}>
-            {/* Ambient trading glow overlay */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 dark:bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-24 h-24 bg-purple-500/5 dark:bg-purple-500/10 rounded-full blur-2xl pointer-events-none" />
-
-            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3 mb-4">
+            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3 mb-5">
               <div>
                 <div className="flex items-center gap-1.5">
-                  <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
+                  <TrendingUp className="w-4 h-4 text-emerald-500" />
                   <h3 className={cn("font-display font-black text-sm tracking-tight", isDark ? "text-white" : "text-slate-900")}>
                     {t("userDashboard.chart.trendsTitle", "Tahlil va Trendlar")}
                   </h3>
                 </div>
+                <p className="text-[10px] text-slate-400 font-semibold mt-0.5">
+                  {t("userDashboard.chart.trendsDesc", "So'nggi 7 kunlik mashq intensivligi va natija o'zgarishlari")}
+                </p>
               </div>
 
               {/* 7 tabs buttons system */}
-              <div className="flex flex-wrap gap-1 p-0.5 rounded-lg bg-slate-100 dark:bg-white/5 shrink-0 max-w-full overflow-x-auto">
+              <div className="flex flex-wrap gap-1 p-0.5 rounded-lg bg-slate-100 dark:bg-white/5 shrink-0 max-w-full overflow-x-auto select-none">
                 {[
                   { id: "practice", label: t("userDashboard.tabs.practice", "Mashq vaqti") },
                   { id: "reading", label: t("userDashboard.tabs.reading", "Reading") },
@@ -479,9 +485,11 @@ export default function UserDashboard() {
                     key={tab.id}
                     onClick={() => setActiveChartTab(tab.id as any)}
                     className={cn(
-                      "px-2 py-1 rounded-md text-[11px] font-semibold transition-all duration-200 whitespace-nowrap",
+                      "px-2.5 py-1.5 rounded-md text-[11px] font-bold transition-all duration-200 whitespace-nowrap",
                       activeChartTab === tab.id
-                        ? "bg-white dark:bg-slate-900 text-purple-600 dark:text-purple-400 shadow-xs"
+                        ? isDark 
+                          ? "bg-white/10 text-white shadow-sm"
+                          : "bg-white text-slate-900 shadow-sm border border-slate-200/40"
                         : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white"
                     )}
                   >
@@ -491,19 +499,28 @@ export default function UserDashboard() {
               </div>
             </div>
 
-            {/* UPPER CHART: Main Trading Trend Chart (Height reduced to h-40 to fit viewport) */}
-            <div className="h-40 w-full relative">
-              <div className="absolute left-2 top-2 text-[8px] font-black text-slate-500/80 dark:text-slate-500 uppercase tracking-widest pointer-events-none">
-                {t("userDashboard.chart.mainMarketTrend", "Asosiy faollik trendi")}
-              </div>
+            {/* UPPER CHART: Main Trading Trend Chart (Full Card Height) */}
+            <div className="h-52 w-full relative">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={composedChartData} margin={{ top: 12, right: 10, left: -25, bottom: 0 }}>
+                <AreaChart data={composedChartData} margin={{ top: 15, right: 10, left: -25, bottom: 0 }}>
                   <defs>
-                    <linearGradient id="tradingGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.25} />
+                    <linearGradient id="emeraldGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0.0} />
+                    </linearGradient>
+                    <linearGradient id="violetGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.2} />
                       <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.0} />
                     </linearGradient>
-                    <filter id="neonShadow" x="-10%" y="-10%" width="120%" height="120%">
+                    <linearGradient id="blueGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2} />
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.0} />
+                    </linearGradient>
+                    <linearGradient id="amberGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.2} />
+                      <stop offset="95%" stopColor="#f59e0b" stopOpacity={0.0} />
+                    </linearGradient>
+                    <filter id="glowEffect" x="-10%" y="-10%" width="120%" height="120%">
                       <feGaussianBlur stdDeviation="3" result="blur" />
                       <feMerge>
                         <feMergeNode in="blur" />
@@ -511,28 +528,30 @@ export default function UserDashboard() {
                       </feMerge>
                     </filter>
                   </defs>
-                  {/* Grid lines display for high fidelity */}
-                  <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "#1e293b" : "#f1f5f9"} opacity={0.4} />
+                  {/* Clean, high-fidelity soft grid lines */}
+                  <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "#1e293b" : "#f1f5f9"} opacity={0.6} vertical={false} />
                   <XAxis
                     dataKey="day"
-                    stroke={isDark ? "#475569" : "#94a3b8"}
-                    fontSize={9}
+                    stroke="#94a3b8"
+                    fontSize={10}
                     fontWeight="bold"
                     tickLine={false}
                     axisLine={false}
+                    dy={5}
                   />
                   <YAxis
-                    stroke={isDark ? "#475569" : "#94a3b8"}
-                    fontSize={9}
+                    stroke="#94a3b8"
+                    fontSize={10}
                     fontWeight="bold"
                     tickLine={false}
                     axisLine={false}
                     domain={activeYDomain as any}
+                    dx={-5}
                   />
                   <ChartTooltip
                     contentStyle={{
-                      backgroundColor: isDark ? "#0b0714" : "#ffffff",
-                      borderColor: isDark ? "#1e1b4b" : "#e2e8f0",
+                      backgroundColor: isDark ? "#0f0c1b" : "#ffffff",
+                      borderColor: isDark ? "#2a224a" : "#e2e8f0",
                       borderRadius: "12px",
                       color: isDark ? "#f8fafc" : "#0f172a",
                       fontSize: "10px",
@@ -542,46 +561,15 @@ export default function UserDashboard() {
                   <Area
                     type="monotone"
                     dataKey={activeChartTab}
-                    stroke="#8b5cf6"
-                    strokeWidth={2.5}
+                    stroke={chartTheme.stroke}
+                    strokeWidth={3}
                     dot={renderCustomDot}
                     fillOpacity={1}
-                    fill="url(#tradingGradient)"
-                    filter="url(#neonShadow)"
+                    fill={`url(#${chartTheme.fillGradientId})`}
+                    filter="url(#glowEffect)"
                   />
                 </AreaChart>
               </ResponsiveContainer>
-            </div>
-
-            {/* Separator Line */}
-            <div className="my-3 border-t border-dashed border-slate-200 dark:border-slate-800" />
-
-            {/* LOWER CHART: RSI Activity Index equivalent */}
-            <div className="relative">
-              <div className="flex justify-between items-center text-[8px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1.5">
-                <span>{t("userDashboard.chart.rsiActivityIndex", "RSI Faollik Indeksi (Mashq jadalligi)")}</span>
-                <span className="text-emerald-500">{t("userDashboard.chart.momentumIndex", "MOMENTUM INDEX")}</span>
-              </div>
-              
-              <div className="h-12 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={composedChartData} margin={{ top: 2, right: 10, left: -25, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "#1e293b" : "#f1f5f9"} opacity={0.2} />
-                    <XAxis dataKey="day" hide={true} />
-                    <YAxis domain={[0, 100]} hide={true} />
-                    <ReferenceLine y={70} stroke={isDark ? "#ef4444/30" : "#ef4444/20"} strokeDasharray="3 3" label={{ value: t("userDashboard.chart.overstudied", "70% O'ta ko'p shug'ullanilgan"), fill: '#94a3b8', fontSize: 6, fontWeight: 'bold', position: 'insideRight' }} />
-                    <ReferenceLine y={30} stroke={isDark ? "#3b82f6/30" : "#3b82f6/20"} strokeDasharray="3 3" label={{ value: t("userDashboard.chart.overslept", "30% Kam shug'ullanilgan"), fill: '#94a3b8', fontSize: 6, fontWeight: 'bold', position: 'insideRight' }} />
-                    <Line
-                      type="monotone"
-                      dataKey="rsi"
-                      stroke="#06b6d4"
-                      strokeWidth={1.5}
-                      dot={false}
-                      activeDot={{ r: 3 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
             </div>
           </Card>
         </div>
