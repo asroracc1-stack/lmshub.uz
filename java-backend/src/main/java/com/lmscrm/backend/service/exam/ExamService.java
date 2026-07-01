@@ -446,6 +446,22 @@ public class ExamService {
             attempt.setAutoSubmitted(request.getAuto_submitted() != null ? request.getAuto_submitted() : false);
             attempt = studentAttemptRepository.save(attempt);
 
+            // Calculate and save practice session minutes based on exam attempt time
+            int secondsUsed = attempt.getTimeUsedSeconds() != null ? attempt.getTimeUsedSeconds() : 0;
+            if (secondsUsed == 0 && attempt.getStartedAt() != null) {
+                secondsUsed = (int) java.time.Duration.between(attempt.getStartedAt(), attempt.getFinishedAt()).toSeconds();
+                attempt.setTimeUsedSeconds(secondsUsed);
+            }
+            double minutesUsed = secondsUsed / 60.0;
+            if (minutesUsed > 0.0) {
+                PracticeSession session = PracticeSession.builder()
+                        .user(user)
+                        .minutes(Math.round(minutesUsed * 10.0) / 10.0)
+                        .createdAt(attempt.getFinishedAt())
+                        .build();
+                practiceSessionRepository.save(session);
+            }
+
             if (request.getViolations() != null && !request.getViolations().isEmpty()) {
                 for (ExamViolationDto vDto : request.getViolations()) {
                     ExamViolation v = ExamViolation.builder()
