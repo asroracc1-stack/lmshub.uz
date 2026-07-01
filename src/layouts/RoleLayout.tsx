@@ -279,12 +279,13 @@ export default function RoleLayout({
                     "w-full flex items-center gap-4 rounded-2xl text-[15px] transition-all duration-200 group sidebar-nav-link",
                     mini ? "justify-center h-11 w-11 mx-auto px-0" : "px-4 py-3.5",
                     isExpanded || hasActiveChild
-                      ? "bg-primary/10 text-primary font-bold"
-                      : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white font-semibold"
+                      ? "bg-primary/10 text-primary font-extrabold"
+                      : "text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white font-bold"
                   )}
                 >
                   <item.icon
                     size={22}
+                    strokeWidth={isExpanded || hasActiveChild ? 2.8 : 2.4}
                     className={cn(
                       "shrink-0 transition-colors",
                       isExpanded || hasActiveChild
@@ -326,8 +327,8 @@ export default function RoleLayout({
                               cn(
                                 "relative flex items-center gap-4 pl-7 pr-3.5 py-2.5 rounded-xl text-[13px] transition-all duration-200 sidebar-nav-link",
                                 isActive
-                                  ? "bg-primary/10 text-primary font-bold"
-                                  : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/5 font-semibold"
+                                  ? "bg-primary/10 text-primary font-extrabold"
+                                  : "text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/5 font-bold"
                               )
                             }
                           >
@@ -341,6 +342,7 @@ export default function RoleLayout({
                                 )}
                                 <child.icon
                                   size={17}
+                                  strokeWidth={isActive ? 2.5 : 2.2}
                                   className={cn(isActive ? "text-primary" : "text-slate-400")}
                                 />
                                 <span className="truncate">{child.label}</span>
@@ -370,8 +372,8 @@ export default function RoleLayout({
                   "group flex items-center gap-4 rounded-2xl text-[15px] transition-all duration-200 sidebar-nav-link",
                   mini ? "justify-center h-11 w-11 mx-auto px-0" : "px-4 py-3.5",
                   isActive
-                    ? "bg-primary text-white shadow-glow-purple font-bold"
-                    : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white font-semibold"
+                    ? "bg-primary text-white shadow-glow-purple font-extrabold"
+                    : "text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white font-bold"
                 )
               }
             >
@@ -380,6 +382,7 @@ export default function RoleLayout({
                   <div className="relative flex items-center">
                     <item.icon
                       size={22}
+                      strokeWidth={isActive ? 2.8 : 2.4}
                       className={cn(
                         "shrink-0 transition-colors",
                         isActive

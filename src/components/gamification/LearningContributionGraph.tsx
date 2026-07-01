@@ -233,7 +233,7 @@ export default function LearningContributionGraph() {
   if (loading) {
     return (
       <Card className={cn(
-        "p-6 flex flex-col items-center justify-center min-h-[300px] rounded-3xl border",
+        "p-4 flex flex-col items-center justify-center min-h-[220px] rounded-2xl border",
         isDark ? "bg-slate-900/40 border-white/5 backdrop-blur-md" : "bg-white border-slate-100"
       )}>
         <Loader2 className="w-8 h-8 animate-spin text-purple-500 mb-3" />
@@ -245,65 +245,73 @@ export default function LearningContributionGraph() {
   if (error || !data) {
     return (
       <Card className={cn(
-        "p-6 flex flex-col items-center justify-center min-h-[300px] rounded-3xl border text-center",
+        "p-4 flex flex-col items-center justify-center min-h-[220px] rounded-2xl border text-center",
         isDark ? "bg-slate-900/40 border-white/5 backdrop-blur-md" : "bg-white border-slate-100"
       )}>
-        <AlertCircle className="w-10 h-10 text-red-500 mb-3" />
-        <h4 className="text-sm font-black text-slate-800 dark:text-white">Foydalanuvchi mashg'ulotlari yuklanmadi</h4>
-        <Button onClick={fetchContributions} className="mt-4 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs px-4 py-2">
-          Qayta urinish
+        <AlertCircle className="w-8 h-8 text-red-500 mb-2" />
+        <h4 className="text-xs font-black text-slate-800 dark:text-white">{t("userDashboard.calendar.errorTitle", "Faollik yuklanmadi")}</h4>
+        <Button onClick={fetchContributions} className="mt-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-[10px] px-3 py-1.5">
+          {t("userDashboard.calendar.retry", "Qayta urinish")}
         </Button>
       </Card>
     );
   }
 
-  const weekdays = ["Du", "Se", "Cho", "Pa", "Ju", "Sha", "Ya"];
+  const weekdays = [
+    t("userDashboard.calendar.days.mon", "Du"),
+    t("userDashboard.calendar.days.tue", "Se"),
+    t("userDashboard.calendar.days.wed", "Cho"),
+    t("userDashboard.calendar.days.thu", "Pa"),
+    t("userDashboard.calendar.days.fri", "Ju"),
+    t("userDashboard.calendar.days.sat", "Sha"),
+    t("userDashboard.calendar.days.sun", "Ya")
+  ];
 
   return (
     <Card className={cn(
-      "p-6 shadow-xl rounded-3xl border relative overflow-hidden transition-all duration-300",
-      isDark ? "bg-slate-900/40 backdrop-blur-md border-white/5" : "bg-white border-slate-100 shadow-slate-200/40"
+      "p-4 shadow-md rounded-2xl border relative overflow-hidden transition-all duration-300",
+      isDark ? "bg-slate-900/40 backdrop-blur-md border-white/5" : "bg-white border-slate-100 shadow-slate-200/20"
     )}>
       {isDark && (
         <div className="absolute -right-36 -top-36 w-80 h-80 bg-violet-600/10 rounded-full blur-[80px] pointer-events-none -z-10" />
       )}
 
       {/* Calendar Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className={cn("font-display font-bold text-base tracking-tight", isDark ? "text-white" : "text-slate-900")}>
-            Mashg'ulotlar kalendari
+          <h3 className={cn("font-display font-bold text-xs tracking-tight", isDark ? "text-white" : "text-slate-900")}>
+            {t("userDashboard.calendar.title", "Mashg'ulotlar kalendari")}
           </h3>
-          <p className="text-[11px] text-slate-400 font-medium">
-            Kunlik kirish va topshiriqlarni bajarish faolligi
+          <p className="text-[9px] text-slate-400 font-medium">
+            {t("userDashboard.calendar.desc", "Kunlik kirish va topshiriqlarni bajarish faolligi")}
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 shrink-0">
           <Button
             variant="outline"
             size="icon"
             onClick={() => navigateMonth("prev")}
-            className={cn("h-8 w-8 rounded-lg border", isDark ? "border-white/5 hover:bg-white/5 bg-slate-950/30" : "border-slate-100 bg-white hover:bg-slate-50")}
+            className={cn("h-7 w-7 rounded-md border", isDark ? "border-white/5 hover:bg-white/5 bg-slate-950/30" : "border-slate-100 bg-white hover:bg-slate-50")}
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-3.5 w-3.5" />
           </Button>
-          <span className={cn("text-xs font-bold px-2 text-center min-w-[75px] tracking-wide", isDark ? "text-slate-200" : "text-slate-700")}>
+          <span className={cn("text-[10px] font-bold px-1 text-center min-w-[65px] tracking-tight", isDark ? "text-slate-200" : "text-slate-700")}>
             {getLocalizedMonth(currentMonth)} {currentMonth.getFullYear()}
           </span>
           <Button
             variant="outline"
             size="icon"
             onClick={() => navigateMonth("next")}
-            className={cn("h-8 w-8 rounded-lg border", isDark ? "border-white/5 hover:bg-white/5 bg-slate-950/30" : "border-slate-100 bg-white hover:bg-slate-50")}
+            className={cn("h-7 w-7 rounded-md border", isDark ? "border-white/5 hover:bg-white/5 bg-slate-950/30" : "border-slate-100 bg-white hover:bg-slate-50")}
           >
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-3.5 w-3.5" />
           </Button>
         </div>
       </div>
 
       {/* Weekday labels */}
-      <div className="grid grid-cols-7 gap-2 mb-2 text-center text-[10px] font-black uppercase text-slate-400 tracking-wider">
+      <div className="grid grid-cols-7 gap-1.5 mb-1.5 text-center text-[9px] font-black uppercase text-slate-400 tracking-wider">
         {weekdays.map(d => (
           <div key={d}>{d}</div>
         ))}
@@ -311,7 +319,7 @@ export default function LearningContributionGraph() {
 
       {/* Days grid */}
       <TooltipProvider delayDuration={100}>
-        <div className="grid grid-cols-7 gap-2">
+        <div className="grid grid-cols-7 gap-1.5">
           {calendarCells.map((cell, idx) => {
             if (cell.dayNumber === null) {
               return (
@@ -334,7 +342,7 @@ export default function LearningContributionGraph() {
                 <TooltipTrigger asChild>
                   <div
                     className={cn(
-                      "aspect-square w-full rounded-full border flex items-center justify-center text-xs font-semibold cursor-pointer transition-all duration-200 select-none",
+                      "aspect-square w-full rounded-full border flex items-center justify-center text-[10px] font-semibold cursor-pointer transition-all duration-200 select-none",
                       cellClass,
                       isToday && (isDark ? "ring-2 ring-violet-500 ring-offset-2 ring-offset-slate-950 shadow-[0_0_15px_rgba(139,92,246,0.5)]" : "ring-2 ring-violet-500 ring-offset-2 ring-offset-white shadow-[0_0_10px_rgba(139,92,246,0.3)]")
                     )}
@@ -359,7 +367,7 @@ export default function LearningContributionGraph() {
                     <>
                       <div className="flex items-center gap-1.5 text-xs font-black text-violet-500">
                         <Clock className="w-3.5 h-3.5" />
-                        <span>{minutes} m mashq qilindi</span>
+                        <span>{minutes} {t("userDashboard.calendar.minutesStudied", "m mashq qilindi")}</span>
                       </div>
                       
                       {day && (day.lessons > 0 || day.quizzes > 0 || day.mocks > 0) && (
@@ -367,19 +375,19 @@ export default function LearningContributionGraph() {
                           {day.lessons > 0 && (
                             <div className="flex items-center gap-1.5">
                               <BookOpen className="w-3 h-3 text-purple-400" />
-                              <span>{day.lessons} ta dars</span>
+                              <span>{day.lessons} {t("userDashboard.calendar.lessonsCount", "ta dars")}</span>
                             </div>
                           )}
                           {day.quizzes > 0 && (
                             <div className="flex items-center gap-1.5">
                               <Trophy className="w-3 h-3 text-orange-400" />
-                              <span>{day.quizzes} ta quiz</span>
+                              <span>{day.quizzes} {t("userDashboard.calendar.quizzesCount", "ta quiz")}</span>
                             </div>
                           )}
                           {day.mocks > 0 && (
                             <div className="flex items-center gap-1.5">
                               <Sparkles className="w-3 h-3 text-yellow-400" />
-                              <span>{day.mocks} ta mock test</span>
+                              <span>{day.mocks} {t("userDashboard.calendar.mocksCount", "ta mock test")}</span>
                             </div>
                           )}
                         </div>
@@ -394,7 +402,7 @@ export default function LearningContributionGraph() {
                           )}
                           {day.coins > 0 && (
                             <Badge className="bg-yellow-500/10 text-yellow-500 border-none text-[9px] px-1.5 py-0.5 font-black">
-                              +{day.coins} tanga
+                              +{day.coins} {t("userDashboard.calendar.coins", "tanga")}
                             </Badge>
                           )}
                         </div>
@@ -403,7 +411,7 @@ export default function LearningContributionGraph() {
                   ) : (
                     <div className="text-xs font-semibold text-slate-400 flex items-center gap-1">
                       <AlertCircle className="w-3.5 h-3.5" />
-                      <span>Hech qanday faollik yo'q</span>
+                      <span>{t("userDashboard.calendar.noActivity", "Faollik yo'q")}</span>
                     </div>
                   )}
                 </TooltipContent>
@@ -413,43 +421,39 @@ export default function LearningContributionGraph() {
         </div>
       </TooltipProvider>
 
-      {/* Legend & Summary */}
-      <div className="mt-6 pt-5 border-t border-slate-500/10 flex flex-col gap-4">
+      {/* Legend & Summary (Compact space alignment) */}
+      <div className="mt-4 pt-3 border-t border-slate-500/10 flex flex-col gap-3">
         {/* Color Legend */}
-        <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 select-none">
-          <span>Kamroq mashq</span>
+        <div className="flex items-center justify-between text-[9px] font-bold text-slate-400 select-none">
+          <span>{t("userDashboard.calendar.less", "Kamroq")}</span>
           <div className="flex items-center gap-1">
-            <div className={cn("w-3.5 h-3.5 rounded-[4px] border", getCellColorClass(0))} />
-            <div className={cn("w-3.5 h-3.5 rounded-[4px] border", getCellColorClass(1))} />
-            <div className={cn("w-3.5 h-3.5 rounded-[4px] border", getCellColorClass(2))} />
-            <div className={cn("w-3.5 h-3.5 rounded-[4px] border", getCellColorClass(3))} />
-            <div className={cn("w-3.5 h-3.5 rounded-[4px] border", getCellColorClass(4))} />
+            <div className={cn("w-3 h-3 rounded-[3px] border", getCellColorClass(0))} />
+            <div className={cn("w-3 h-3 rounded-[3px] border", getCellColorClass(1))} />
+            <div className={cn("w-3 h-3 rounded-[3px] border", getCellColorClass(2))} />
+            <div className={cn("w-3 h-3 rounded-[3px] border", getCellColorClass(3))} />
+            <div className={cn("w-3 h-3 rounded-[3px] border", getCellColorClass(4))} />
           </div>
-          <span>Ko'proq mashq</span>
+          <span>{t("userDashboard.calendar.more", "Ko'proq")}</span>
         </div>
 
-        {/* Selected Month Gained stats */}
-        <div className="grid grid-cols-2 gap-3 mt-1">
-          <div className={cn("p-3 rounded-2xl border flex items-center gap-3", isDark ? "bg-slate-950/30 border-white/5" : "bg-slate-50 border-slate-100")}>
-            <div className="bg-violet-500/10 p-2 rounded-xl text-violet-500 shrink-0">
-              <Clock className="w-4 h-4" />
-            </div>
+        {/* Selected Month Gained stats (Tightened layout) */}
+        <div className="grid grid-cols-2 gap-2 mt-0.5">
+          <div className={cn("p-2 rounded-xl border flex items-center gap-2", isDark ? "bg-slate-950/20 border-white/5" : "bg-slate-50 border-slate-100")}>
+            <Clock className="w-3.5 h-3.5 text-violet-500 shrink-0" />
             <div className="overflow-hidden">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Mashq vaqti</p>
-              <p className={cn("text-xs font-black mt-0.5 truncate", isDark ? "text-white" : "text-slate-900")}>
-                {monthStats.totalMinutes} daqiqa
+              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide leading-none">{t("userDashboard.calendar.practiceTime", "Mashq vaqti")}</p>
+              <p className={cn("text-[11px] font-black mt-1 truncate leading-none", isDark ? "text-white" : "text-slate-900")}>
+                {monthStats.totalMinutes} {t("userDashboard.calendar.minutesShort", "daq")}
               </p>
             </div>
           </div>
 
-          <div className={cn("p-3 rounded-2xl border flex items-center gap-3", isDark ? "bg-slate-950/30 border-white/5" : "bg-slate-50 border-slate-100")}>
-            <div className="bg-emerald-500/10 p-2 rounded-xl text-emerald-500 shrink-0">
-              <Flame className="w-4 h-4" />
-            </div>
+          <div className={cn("p-2 rounded-xl border flex items-center gap-2", isDark ? "bg-slate-950/20 border-white/5" : "bg-slate-50 border-slate-100")}>
+            <Flame className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
             <div className="overflow-hidden">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Faol kunlar</p>
-              <p className={cn("text-xs font-black mt-0.5 truncate", isDark ? "text-white" : "text-slate-900")}>
-                {monthStats.activeDays} kun faol
+              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide leading-none">{t("userDashboard.calendar.activeDays", "Faol kunlar")}</p>
+              <p className={cn("text-[11px] font-black mt-1 truncate leading-none", isDark ? "text-white" : "text-slate-900")}>
+                {monthStats.activeDays} {t("userDashboard.calendar.activeDaysCount", "kun")}
               </p>
             </div>
           </div>

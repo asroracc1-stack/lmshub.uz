@@ -459,7 +459,7 @@ export default function UserDashboard() {
                 <div className="flex items-center gap-1.5">
                   <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
                   <h3 className={cn("font-display font-black text-sm tracking-tight", isDark ? "text-white" : "text-slate-900")}>
-                    Tahlil va Trendlar
+                    {t("userDashboard.chart.trendsTitle", "Tahlil va Trendlar")}
                   </h3>
                 </div>
               </div>
@@ -467,13 +467,13 @@ export default function UserDashboard() {
               {/* 7 tabs buttons system */}
               <div className="flex flex-wrap gap-1 p-0.5 rounded-lg bg-slate-100 dark:bg-white/5 shrink-0 max-w-full overflow-x-auto">
                 {[
-                  { id: "practice", label: "Mashq vaqti" },
-                  { id: "reading", label: "Reading" },
-                  { id: "listening", label: "Listening" },
-                  { id: "writing", label: "Writing" },
-                  { id: "speaking", label: "Speaking" },
-                  { id: "sat", label: "SAT" },
-                  { id: "national_cert", label: "Milliy Sertifikat" }
+                  { id: "practice", label: t("userDashboard.tabs.practice", "Mashq vaqti") },
+                  { id: "reading", label: t("userDashboard.tabs.reading", "Reading") },
+                  { id: "listening", label: t("userDashboard.tabs.listening", "Listening") },
+                  { id: "writing", label: t("userDashboard.tabs.writing", "Writing") },
+                  { id: "speaking", label: t("userDashboard.tabs.speaking", "Speaking") },
+                  { id: "sat", label: t("userDashboard.tabs.sat", "SAT") },
+                  { id: "national_cert", label: t("userDashboard.tabs.national_cert", "Milliy Sertifikat") }
                 ].map(tab => (
                   <button
                     key={tab.id}
@@ -494,7 +494,7 @@ export default function UserDashboard() {
             {/* UPPER CHART: Main Trading Trend Chart (Height reduced to h-40 to fit viewport) */}
             <div className="h-40 w-full relative">
               <div className="absolute left-2 top-2 text-[8px] font-black text-slate-500/80 dark:text-slate-500 uppercase tracking-widest pointer-events-none">
-                Main Market Trend
+                {t("userDashboard.chart.mainMarketTrend", "Asosiy faollik trendi")}
               </div>
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={composedChartData} margin={{ top: 12, right: 10, left: -25, bottom: 0 }}>
@@ -559,8 +559,8 @@ export default function UserDashboard() {
             {/* LOWER CHART: RSI Activity Index equivalent */}
             <div className="relative">
               <div className="flex justify-between items-center text-[8px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1.5">
-                <span>RSI Faollik Indeksi (Practice Intensity)</span>
-                <span className="text-emerald-500">MOMENTUM INDEX</span>
+                <span>{t("userDashboard.chart.rsiActivityIndex", "RSI Faollik Indeksi (Mashq jadalligi)")}</span>
+                <span className="text-emerald-500">{t("userDashboard.chart.momentumIndex", "MOMENTUM INDEX")}</span>
               </div>
               
               <div className="h-12 w-full">
@@ -569,8 +569,8 @@ export default function UserDashboard() {
                     <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "#1e293b" : "#f1f5f9"} opacity={0.2} />
                     <XAxis dataKey="day" hide={true} />
                     <YAxis domain={[0, 100]} hide={true} />
-                    <ReferenceLine y={70} stroke={isDark ? "#ef4444/30" : "#ef4444/20"} strokeDasharray="3 3" label={{ value: '70% OVERSTUDIED', fill: '#94a3b8', fontSize: 6, fontWeight: 'bold', position: 'insideRight' }} />
-                    <ReferenceLine y={30} stroke={isDark ? "#3b82f6/30" : "#3b82f6/20"} strokeDasharray="3 3" label={{ value: '30% OVERSLEPT', fill: '#94a3b8', fontSize: 6, fontWeight: 'bold', position: 'insideRight' }} />
+                    <ReferenceLine y={70} stroke={isDark ? "#ef4444/30" : "#ef4444/20"} strokeDasharray="3 3" label={{ value: t("userDashboard.chart.overstudied", "70% O'ta ko'p shug'ullanilgan"), fill: '#94a3b8', fontSize: 6, fontWeight: 'bold', position: 'insideRight' }} />
+                    <ReferenceLine y={30} stroke={isDark ? "#3b82f6/30" : "#3b82f6/20"} strokeDasharray="3 3" label={{ value: t("userDashboard.chart.overslept", "30% Kam shug'ullanilgan"), fill: '#94a3b8', fontSize: 6, fontWeight: 'bold', position: 'insideRight' }} />
                     <Line
                       type="monotone"
                       dataKey="rsi"
