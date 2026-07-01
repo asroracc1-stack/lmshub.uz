@@ -381,7 +381,7 @@ export default function UserDashboard() {
   })();
 
   return (
-    <div className="w-full min-h-screen space-y-4 pb-6 relative">
+    <div className="w-full space-y-3 relative pb-1">
       {/* Background radial ambient glow */}
       <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-purple-500/5 dark:bg-purple-500/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
       <div className="absolute bottom-20 left-0 w-[300px] h-[300px] bg-blue-500/5 dark:bg-blue-500/10 rounded-full blur-[80px] -z-10 pointer-events-none" />
