@@ -6,7 +6,6 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { api } from "@/lib/axios";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface StudentAttempt {
@@ -44,27 +43,101 @@ export default function UserPractice() {
     fetchAttempts();
   }, []);
 
-  // Filter attempts per category
-  const listeningCount = useMemo(() => attempts.filter(a => a.exam?.type === "LISTENING").length, [attempts]);
-  const readingCount = useMemo(() => attempts.filter(a => a.exam?.type === "READING").length, [attempts]);
-  const writingCount = useMemo(() => attempts.filter(a => a.exam?.type === "WRITING").length, [attempts]);
-  const speakingCount = useMemo(() => attempts.filter(a => a.exam?.type === "SPEAKING").length, [attempts]);
+  // Filter attempts per category (case-insensitive search for robust mapping)
+  const listeningCount = useMemo(() => attempts.filter(a => a.exam?.type?.toLowerCase() === "listening").length, [attempts]);
+  const readingCount = useMemo(() => attempts.filter(a => a.exam?.type?.toLowerCase() === "reading").length, [attempts]);
+  const writingCount = useMemo(() => attempts.filter(a => a.exam?.type?.toLowerCase() === "writing").length, [attempts]);
+  const speakingCount = useMemo(() => attempts.filter(a => a.exam?.type?.toLowerCase() === "speaking").length, [attempts]);
 
-  // Page title translation map
+  // Page translation dictionary matching the screenshot exactly
   const lang = i18n.language || "uz";
   const translations = {
-    uz: { title: "Amaliyot" },
-    en: { title: "Practice" },
-    ru: { title: "Практика" }
+    uz: {
+      title: "Amaliyot",
+      completedText: "dars yakunlangan",
+      boshlash: "Boshlash",
+      listening: {
+        tag: "LISTENING",
+        title: "Eshitish 🎧",
+        desc: "Eshitish ko'nikmalaringizni rivojlantiring"
+      },
+      reading: {
+        tag: "READING",
+        title: "O'qish 📖",
+        desc: "Matnlarni tushunish va tahlil qilish"
+      },
+      writing: {
+        tag: "WRITING",
+        title: "Yozish ✍️",
+        desc: "Yozma ifoda va grammatikani mukammallashtiring"
+      },
+      speaking: {
+        tag: "SPEAKING",
+        title: "Gapirish 🗣️",
+        desc: "Og'zaki nutq va talaffuzni rivojlantiring"
+      }
+    },
+    en: {
+      title: "Practice",
+      completedText: "lessons completed",
+      boshlash: "Start",
+      listening: {
+        tag: "LISTENING",
+        title: "Listening 🎧",
+        desc: "Improve your listening capability through audio practices."
+      },
+      reading: {
+        tag: "READING",
+        title: "Reading 📖",
+        desc: "Read passages, analyze arguments, and test your vocabulary."
+      },
+      writing: {
+        tag: "WRITING",
+        title: "Writing ✍️",
+        desc: "Express arguments clearly and practice structural essay composition."
+      },
+      speaking: {
+        tag: "SPEAKING",
+        title: "Speaking 🗣️",
+        desc: "Practice active speech dialogue with live AI coach feedback."
+      }
+    },
+    ru: {
+      title: "Практика",
+      completedText: "уроков завершено",
+      boshlash: "Начать",
+      listening: {
+        tag: "LISTENING",
+        title: "Аудирование 🎧",
+        desc: "Улучшайте навыки аудирования с помощью аудио-практик."
+      },
+      reading: {
+        tag: "READING",
+        title: "Чтение 📖",
+        desc: "Читайте тексты, анализируйте аргументы и проверяйте словарный запас."
+      },
+      writing: {
+        tag: "WRITING",
+        title: "Письмо ✍️",
+        desc: "Учитесь четко излагать мысли и писать эссе."
+      },
+      speaking: {
+        tag: "SPEAKING",
+        title: "Говорение 🗣️",
+        desc: "Практикуйте устную речь с обратной связью от ИИ."
+      }
+    }
   };
+
   const currentText = translations[lang as keyof typeof translations] || translations.uz;
 
   // Skill items list with premium SVGs matching target layout
   const skills = [
     {
       id: "listening",
-      title: "Listening",
-      desc: "Improve your listening",
+      tag: currentText.listening.tag,
+      title: currentText.listening.title,
+      desc: currentText.listening.desc,
       completed: listeningCount,
       total: 12,
       path: "/student/mocks/c/listening",
@@ -80,10 +153,10 @@ export default function UserPractice() {
               <stop offset="100%" stopColor="#fca5a5" />
             </linearGradient>
           </defs>
-          <circle cx="100" cy="80" r="55" fill="#f1f5f9" className="dark:fill-slate-800/40" />
+          <circle cx="100" cy="80" r="55" fill="#f0fdf4" className="dark:fill-slate-800/40" />
           
           {/* Sitting student character body */}
-          <path d="M65,160 C65,120 78,105 100,105 C122,105 135,120 135,160" fill="#1e293b" className="dark:fill-slate-700" />
+          <path d="M65,160 C65,120 78,105 100,105 C122,105 135,120 135,160" fill="#2d7a5f" className="dark:fill-emerald-800" />
           
           {/* Neck & Head */}
           <rect x="94" y="90" width="12" height="15" rx="2" fill="url(#skinGrad)" />
@@ -97,20 +170,19 @@ export default function UserPractice() {
           <rect x="72" y="75" width="8" height="18" rx="4" fill="#4f46e5" />
           <rect x="120" y="75" width="8" height="18" rx="4" fill="#4f46e5" />
 
-          {/* Phone in hand */}
-          <rect x="132" y="120" width="14" height="25" rx="2" fill="#0f172a" stroke="#ffffff" strokeWidth="1" transform="rotate(15, 139, 132)" />
-          <line x1="120" y1="95" x2="132" y2="122" stroke="#4f46e5" strokeWidth="1.5" strokeDasharray="3 3" opacity="0.6" />
-          
           {/* Sound waves floating */}
-          <path d="M138,70 Q146,62 150,70" fill="none" stroke="#4f46e5" strokeWidth="1.5" strokeLinecap="round" className="animate-pulse" />
-          <path d="M142,62 Q154,54 158,62" fill="none" stroke="#6366f1" strokeWidth="1.5" strokeLinecap="round" className="animate-pulse" style={{ animationDelay: "0.2s" }} />
+          <path d="M40,80 Q45,65 50,80" fill="none" stroke="#22c55e" strokeWidth="1.5" strokeLinecap="round" className="animate-pulse" />
+          <path d="M35,90 Q45,75 55,90" fill="none" stroke="#22c55e" strokeWidth="1.5" strokeLinecap="round" className="animate-pulse" />
+          <path d="M150,70 Q158,62 162,70" fill="none" stroke="#22c55e" strokeWidth="1.5" strokeLinecap="round" className="animate-pulse" />
+          <path d="M155,80 Q167,72 171,80" fill="none" stroke="#22c55e" strokeWidth="1.5" strokeLinecap="round" className="animate-pulse" />
         </svg>
       )
     },
     {
       id: "reading",
-      title: "Reading",
-      desc: "Read, understand, succeed",
+      tag: currentText.reading.tag,
+      title: currentText.reading.title,
+      desc: currentText.reading.desc,
       completed: readingCount,
       total: 24,
       path: "/student/mocks/c/reading",
@@ -122,10 +194,10 @@ export default function UserPractice() {
               <stop offset="100%" stopColor="#059669" />
             </linearGradient>
           </defs>
-          <circle cx="100" cy="80" r="55" fill="#f1f5f9" className="dark:fill-slate-800/40" />
+          <circle cx="100" cy="80" r="55" fill="#f0fdf4" className="dark:fill-slate-800/40" />
           
           {/* Sitting Girl Character body */}
-          <path d="M65,160 C65,123 78,110 100,110 C122,110 135,123 135,160" fill="#047857" />
+          <path d="M65,160 C65,123 78,110 100,110 C122,110 135,123 135,160" fill="#2d7a5f" className="dark:fill-emerald-800" />
           
           {/* Neck & Head */}
           <rect x="94" y="93" width="12" height="15" rx="2" fill="#ffd7b5" />
@@ -146,8 +218,9 @@ export default function UserPractice() {
     },
     {
       id: "writing",
-      title: "Writing",
-      desc: "Master your writing",
+      tag: currentText.writing.tag,
+      title: currentText.writing.title,
+      desc: currentText.writing.desc,
       completed: writingCount,
       total: 10,
       path: "/student/mocks/c/writing",
@@ -155,17 +228,17 @@ export default function UserPractice() {
         <svg viewBox="0 0 200 160" className="w-full h-full object-contain">
           <defs>
             <linearGradient id="lampGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.3" />
+              <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.25" />
               <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
             </linearGradient>
           </defs>
-          <circle cx="100" cy="80" r="55" fill="#f1f5f9" className="dark:fill-slate-800/40" />
+          <circle cx="100" cy="80" r="55" fill="#f0fdf4" className="dark:fill-slate-800/40" />
           
           {/* Table Surface */}
           <line x1="45" y1="140" x2="155" y2="140" stroke="#94a3b8" strokeWidth="3.5" strokeLinecap="round" />
           
           {/* Sitting Character body */}
-          <path d="M60,160 C60,128 73,115 95,115 C117,115 130,128 130,160" fill="#1e3a8a" />
+          <path d="M60,160 C60,128 73,115 95,115 C117,115 130,128 130,160" fill="#2d7a5f" className="dark:fill-emerald-800" />
           <rect x="89" y="97" width="12" height="15" rx="2" fill="#ffd7b5" />
           <circle cx="95" cy="87" r="20" fill="#ffd7b5" />
           <path d="M75,87 C75,57 115,57 115,87 C115,75 105,75 95,75 C85,75 75,75 75,87 Z" fill="#1e293b" />
@@ -185,32 +258,31 @@ export default function UserPractice() {
     },
     {
       id: "speaking",
-      title: "Speaking",
-      desc: "Your voice, your power",
+      tag: currentText.speaking.tag,
+      title: currentText.speaking.title,
+      desc: currentText.speaking.desc,
       completed: speakingCount,
       total: 9,
       isBeta: true,
       path: "/student/speaking",
       svg: (
         <svg viewBox="0 0 200 160" className="w-full h-full object-contain">
-          <circle cx="100" cy="80" r="55" fill="#f1f5f9" className="dark:fill-slate-800/40" />
+          <circle cx="100" cy="80" r="55" fill="#f0fdf4" className="dark:fill-slate-800/40" />
           
           {/* Sitting Character body */}
-          <path d="M65,160 C65,123 78,110 100,110 C122,110 135,123 135,160" fill="#6b21a8" />
+          <path d="M65,160 C65,123 78,110 100,110 C122,110 135,123 135,160" fill="#2d7a5f" className="dark:fill-emerald-800" />
           
           {/* Neck & Head */}
           <rect x="94" y="93" width="12" height="15" rx="2" fill="#ffd7b5" />
           <circle cx="100" cy="83" r="20" fill="#ffd7b5" />
           <path d="M80,83 C80,53 120,53 120,83 C120,75 110,75 100,75 C90,75 80,75 80,83 Z" fill="#0f172a" />
 
-          {/* Dual speech bubbles floating */}
-          <path d="M125,73 C125,60 138,51 152,51 C166,51 175,60 175,73 C175,82 169,89 162,91 L166,97 L155,93 C153,94 151,94 149,94 C136,94 125,84 125,73 Z" fill="#a855f7" opacity="0.9" />
-          <path d="M136,68 L164,68" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" />
-          <path d="M141,75 L158,75" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" />
-
           {/* Mic Stand */}
-          <line x1="100" y1="123" x2="100" y2="145" stroke="#475569" strokeWidth="2.5" />
-          <circle cx="100" cy="119" r="5" fill="#1e293b" />
+          <line x1="80" y1="123" x2="80" y2="145" stroke="#475569" strokeWidth="2.5" />
+          <circle cx="80" cy="119" r="5" fill="#1e293b" />
+          
+          {/* Speech bubble */}
+          <path d="M125,73 C125,60 138,51 152,51 C166,51 175,60 175,73 C175,82 169,89 162,91 L166,97 L155,93 C153,94 151,94 149,94 C136,94 125,84 125,73 Z" fill="#22c55e" opacity="0.15" />
         </svg>
       )
     }
@@ -237,9 +309,10 @@ export default function UserPractice() {
           ))}
         </div>
       ) : (
-        // 4 Skill Practice Cards grid matching IELTS Hub perfectly
+        // 4 Skill Practice Cards grid matching the provided layout screenshot perfectly
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {skills.map((skill, index) => {
+            const progressPercent = Math.min(100, Math.round((skill.completed / skill.total) * 100));
             return (
               <motion.div
                 key={skill.id}
@@ -252,42 +325,63 @@ export default function UserPractice() {
                   "p-6 rounded-[24px] border relative overflow-hidden transition-all duration-300 flex flex-col justify-between shadow-md hover:shadow-lg group",
                   isDark 
                     ? "bg-slate-900/30 border-white/5 shadow-slate-950/20" 
-                    : "bg-white border-slate-200/60 shadow-slate-200/5 hover:border-slate-300"
+                    : "bg-white border-slate-100 shadow-slate-200/5 hover:border-slate-350"
                 )}>
                   {/* Two column layout inside card */}
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
                     {/* Left Column: text content & capsule button */}
                     <div className="space-y-4 flex-1 w-full text-left">
                       <div className="space-y-2">
-                        {/* Top Completed progress capsule */}
+                        {/* Top Category Tag */}
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-100 dark:border-transparent px-2.5 py-0.5 rounded-full select-none leading-none">
-                            {skill.completed}/{skill.total} Lessons Completed
+                          <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 tracking-wider uppercase">
+                            {skill.tag}
                           </span>
                           {skill.isBeta && (
-                            <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-blue-500 text-white select-none leading-none">
+                            <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-purple-500 text-white select-none leading-none">
                               BETA
                             </span>
                           )}
                         </div>
 
                         {/* Main Title */}
-                        <h3 className={cn("text-xl font-black tracking-tight flex items-center leading-none", isDark ? "text-white" : "text-slate-800")}>
+                        <h3 className={cn("text-2xl font-extrabold tracking-tight flex items-center leading-none", isDark ? "text-white" : "text-slate-800")}>
                           {skill.title}
                         </h3>
 
                         {/* Description text */}
-                        <p className="text-[11px] text-slate-400 font-bold leading-normal min-h-[16px]">
+                        <p className="text-[12px] text-slate-400 font-bold leading-normal min-h-[16px]">
                           {skill.desc}
                         </p>
                       </div>
 
-                      {/* Compact Start Practice Button (Not full-width, styled in consistent green theme) */}
+                      {/* Dynamic Completed lesson count & progress bar */}
+                      <div className="space-y-2 w-full max-w-[280px]">
+                        <div className={cn("text-[11px] font-bold", isDark ? "text-slate-400" : "text-slate-500")}>
+                          {skill.completed} / {skill.total} {currentText.completedText}
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                          {/* Progress line */}
+                          <div className={cn("h-2.5 flex-1 rounded-full overflow-hidden", isDark ? "bg-white/5" : "bg-slate-100")}>
+                            <div 
+                              className="h-full bg-emerald-500 rounded-full transition-all duration-700" 
+                              style={{ width: `${progressPercent}%` }}
+                            />
+                          </div>
+                          {/* Percentage text */}
+                          <span className="text-xs font-bold text-emerald-600 shrink-0 select-none">
+                            {progressPercent}%
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Boshlash > Button */}
                       <Button
                         onClick={() => navigate(skill.path)}
-                        className="h-10 rounded-xl text-xs font-semibold text-white px-5 py-2 bg-[#10b981] hover:bg-[#0ea5e9] transition-all duration-300 w-fit flex items-center gap-1"
+                        className="h-9 rounded-lg text-xs font-semibold text-white px-5 py-2 bg-[#2d7a5f] hover:bg-[#225c48] transition-all duration-300 w-fit flex items-center gap-1 shadow-md shadow-emerald-500/10"
                       >
-                        Start practice
+                        {currentText.boshlash} <span className="ml-1 text-[10px] font-bold">&gt;</span>
                       </Button>
                     </div>
 
