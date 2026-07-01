@@ -239,23 +239,19 @@ export default function UserDashboard() {
     }
   }, [activeChartTab]);
 
-  // Custom Peak Indicators (similar to Buy/Sell green arrows in trading charts)
+  // Custom dots matching IELTS Hub style (white/dark filled circle with themed stroke border)
   const renderCustomDot = (props: any) => {
-    const { cx, cy, value, index } = props;
-    const isPeak = index === 2 || index === 6; // Peaks on Wednesday and Sunday
-    
-    if (value && value > 0 && isPeak) {
-      return (
-        <g key={index}>
-          <circle cx={cx} cy={cy} r={5} fill={chartTheme.stroke} stroke={isDark ? "#0b0714" : "#ffffff"} strokeWidth={1.5} />
-          <text x={cx} y={cy - 12} fill={chartTheme.stroke} fontSize={11} fontWeight="black" textAnchor="middle">
-            ▲
-          </text>
-        </g>
-      );
-    }
+    const { cx, cy, index } = props;
     return (
-      <circle key={index} cx={cx} cy={cy} r={3.5} fill={chartTheme.stroke} stroke={isDark ? "#0b0714" : "#ffffff"} strokeWidth={1} />
+      <circle
+        key={index}
+        cx={cx}
+        cy={cy}
+        r={3.5}
+        fill={isDark ? "#120c1e" : "#ffffff"}
+        stroke={chartTheme.stroke}
+        strokeWidth={2}
+      />
     );
   };
 
@@ -502,23 +498,11 @@ export default function UserDashboard() {
             {/* UPPER CHART: Main Trading Trend Chart (Full Card Height) */}
             <div className="h-52 w-full relative">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={composedChartData} margin={{ top: 15, right: 10, left: -25, bottom: 0 }}>
+                <AreaChart data={composedChartData} margin={{ top: 10, right: 10, left: -15, bottom: 10 }}>
                   <defs>
-                    <linearGradient id="emeraldGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
-                      <stop offset="95%" stopColor="#10b981" stopOpacity={0.0} />
-                    </linearGradient>
-                    <linearGradient id="violetGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.2} />
-                      <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.0} />
-                    </linearGradient>
-                    <linearGradient id="blueGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2} />
-                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.0} />
-                    </linearGradient>
-                    <linearGradient id="amberGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.2} />
-                      <stop offset="95%" stopColor="#f59e0b" stopOpacity={0.0} />
+                    <linearGradient id="chartFillGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={chartTheme.stroke} stopOpacity={0.25} />
+                      <stop offset="95%" stopColor={chartTheme.stroke} stopOpacity={0.01} />
                     </linearGradient>
                     <filter id="glowEffect" x="-10%" y="-10%" width="120%" height="120%">
                       <feGaussianBlur stdDeviation="3" result="blur" />
@@ -537,7 +521,7 @@ export default function UserDashboard() {
                     fontWeight="bold"
                     tickLine={false}
                     axisLine={false}
-                    dy={5}
+                    dy={8}
                   />
                   <YAxis
                     stroke="#94a3b8"
@@ -546,7 +530,8 @@ export default function UserDashboard() {
                     tickLine={false}
                     axisLine={false}
                     domain={activeYDomain as any}
-                    dx={-5}
+                    width={35}
+                    dx={-2}
                   />
                   <ChartTooltip
                     contentStyle={{
@@ -565,8 +550,9 @@ export default function UserDashboard() {
                     strokeWidth={3}
                     dot={renderCustomDot}
                     fillOpacity={1}
-                    fill={`url(#${chartTheme.fillGradientId})`}
+                    fill="url(#chartFillGradient)"
                     filter="url(#glowEffect)"
+                    activeDot={{ r: 5, stroke: chartTheme.stroke, strokeWidth: 2, fill: isDark ? "#0f0c1b" : "#ffffff" }}
                   />
                 </AreaChart>
               </ResponsiveContainer>
