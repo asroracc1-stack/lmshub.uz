@@ -189,7 +189,7 @@ export default function UserDashboard() {
         national_cert: null
       }));
     }
-    
+
     return rawWeekly.map((item) => {
       const dayName = mapDay(item.day);
       return {
@@ -261,7 +261,7 @@ export default function UserDashboard() {
   // Compute sum or average for the selected tab to display as "Jami" / "O'rtacha"
   const activeTabTotal = useMemo(() => {
     if (!composedChartData.length) return "--";
-    
+
     if (activeChartTab === "practice") {
       const sum = composedChartData.reduce((acc, curr) => {
         const val = curr.practice;
@@ -327,8 +327,8 @@ export default function UserDashboard() {
                 </DialogDescription>
               </DialogHeader>
               <div className="py-4 space-y-4">
-                 <p className={cn("text-sm font-medium", labelClass)}>{t("userDashboard.modal.currentGoal", { value: stats?.targetBand ? stats.targetBand.toFixed(1) : t("userDashboard.modal.notSet") })}</p>
-                 <Button onClick={() => navigate("/user/profile")} className="w-full bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-bold h-12 rounded-xl">{t("userDashboard.modal.editProfile")}</Button>
+                <p className={cn("text-sm font-medium", labelClass)}>{t("userDashboard.modal.currentGoal", { value: stats?.targetBand ? stats.targetBand.toFixed(1) : t("userDashboard.modal.notSet") })}</p>
+                <Button onClick={() => navigate("/user/profile")} className="w-full bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-bold h-12 rounded-xl">{t("userDashboard.modal.editProfile")}</Button>
               </div>
             </DialogContent>
           </Dialog>
@@ -344,7 +344,7 @@ export default function UserDashboard() {
                 </DialogDescription>
               </DialogHeader>
               <div className="py-4">
-                 <Button onClick={() => navigate("/user/sat")} className="w-full bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-bold h-12 rounded-xl">SAT Mocks topshirish</Button>
+                <Button onClick={() => navigate("/user/sat")} className="w-full bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-bold h-12 rounded-xl">SAT Mocks topshirish</Button>
               </div>
             </DialogContent>
           </Dialog>
@@ -446,56 +446,56 @@ export default function UserDashboard() {
 
       {/* Dashboard 2-column layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
-        
+
         {/* Left / Main Column (occupies 2/3 width on large screens) */}
         <div className="lg:col-span-2 space-y-4">
-          
+
           {/* Stat Tiles */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             {loading
               ? Array.from({ length: 5 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className={cn(
-                      "p-3.5 rounded-2xl border animate-pulse",
-                      isDark
-                        ? "bg-slate-900/40 border-white/5"
-                        : "bg-white border-slate-100"
-                    )}
-                  >
-                    <div className={cn("h-8 w-8 rounded-xl mb-3", isDark ? "bg-white/10" : "bg-slate-100")} />
-                    <div className={cn("h-6 w-12 rounded-lg mb-1.5", isDark ? "bg-white/10" : "bg-slate-100")} />
-                    <div className={cn("h-2.5 w-16 rounded", isDark ? "bg-white/5" : "bg-slate-100")} />
-                  </div>
-                ))
+                <div
+                  key={i}
+                  className={cn(
+                    "p-3.5 rounded-2xl border animate-pulse",
+                    isDark
+                      ? "bg-slate-900/40 border-white/5"
+                      : "bg-white border-slate-100"
+                  )}
+                >
+                  <div className={cn("h-8 w-8 rounded-xl mb-3", isDark ? "bg-white/10" : "bg-slate-100")} />
+                  <div className={cn("h-6 w-12 rounded-lg mb-1.5", isDark ? "bg-white/10" : "bg-slate-100")} />
+                  <div className={cn("h-2.5 w-16 rounded", isDark ? "bg-white/5" : "bg-slate-100")} />
+                </div>
+              ))
               : statCards.map((s, i) => {
-                  const Icon = s.icon;
-                  return (
-                    <motion.button
-                      type="button"
-                      onClick={() => setOpenKey(s.key)}
-                      key={s.label}
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: i * 0.05 }}
-                      whileHover={{ y: -3, scale: 1.02 }}
-                      className="text-left group w-full"
-                    >
-                      <Card className={cn(
-                        "p-3.5 h-full transition-all duration-300 cursor-pointer border rounded-2xl",
-                        isDark 
-                          ? "bg-slate-900/40 backdrop-blur-md border-white/5 shadow-xl group-hover:bg-slate-900/60 group-hover:border-white/10" 
-                          : "bg-white border-slate-100 shadow-md shadow-slate-200/10 group-hover:shadow-xl group-hover:border-slate-200"
-                      )}>
-                        <div className={cn("h-8 w-8 rounded-xl flex items-center justify-center mb-2 border transition-transform group-hover:rotate-6 shadow-sm", s.color)}>
-                          <Icon className="h-4.5 w-4.5" />
-                        </div>
-                        <p className={cn("font-display text-xl font-black tracking-tight leading-none", isDark ? "text-white" : "text-slate-900")}>{s.value}</p>
-                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-1.5 truncate">{s.label}</p>
-                      </Card>
-                    </motion.button>
-                  );
-                })}
+                const Icon = s.icon;
+                return (
+                  <motion.button
+                    type="button"
+                    onClick={() => setOpenKey(s.key)}
+                    key={s.label}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: i * 0.05 }}
+                    whileHover={{ y: -3, scale: 1.02 }}
+                    className="text-left group w-full"
+                  >
+                    <Card className={cn(
+                      "p-3.5 h-full transition-all duration-300 cursor-pointer border rounded-2xl",
+                      isDark
+                        ? "bg-slate-900/40 backdrop-blur-md border-white/5 shadow-xl group-hover:bg-slate-900/60 group-hover:border-white/10"
+                        : "bg-white border-slate-100 shadow-md shadow-slate-200/10 group-hover:shadow-xl group-hover:border-slate-200"
+                    )}>
+                      <div className={cn("h-8 w-8 rounded-xl flex items-center justify-center mb-2 border transition-transform group-hover:rotate-6 shadow-sm", s.color)}>
+                        <Icon className="h-4.5 w-4.5" />
+                      </div>
+                      <p className={cn("font-display text-xl font-black tracking-tight leading-none", isDark ? "text-white" : "text-slate-900")}>{s.value}</p>
+                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-1.5 truncate">{s.label}</p>
+                    </Card>
+                  </motion.button>
+                );
+              })}
           </div>
 
           {/* Weekly Results Chart (Clean, Spacious, Floating Pills Layout similar to IELTS Hub) */}
@@ -512,11 +512,12 @@ export default function UserDashboard() {
                 <p className="text-[11px] text-slate-400 font-bold tracking-wide mt-0.5">
                   {t("userDashboard.chart.trendsDesc", "so'nggi 7 kun")}
                 </p>
-                  {/* Total / Average Badge */}
+              </div>
+              {/* Total / Average Badge */}
               <div className={cn("px-3 py-1.5 rounded-full text-[11px] font-black border flex items-center gap-1.5 select-none transition-all duration-300", chartTheme.bgBadge)}>
                 <span className="opacity-85">
-                  {activeChartTab === "practice" 
-                    ? t("userDashboard.calendar.total", "Jami") 
+                  {activeChartTab === "practice"
+                    ? t("userDashboard.calendar.total", "Jami")
                     : t("userDashboard.chart.average", "O'rtacha")}
                   :
                 </span>
@@ -610,12 +611,12 @@ export default function UserDashboard() {
               ) : (
                 <div className="flex flex-col items-center justify-center text-center space-y-3.5 py-4 animate-fade-in select-none">
                   {/* Wave icon inside soft themed circular background */}
-                  <div className={cn("h-14 w-14 rounded-2xl flex items-center justify-center shadow-inner transition-transform duration-300 hover:scale-105", 
+                  <div className={cn("h-14 w-14 rounded-2xl flex items-center justify-center shadow-inner transition-transform duration-300 hover:scale-105",
                     activeChartTab === "listening" ? "bg-blue-500/10 text-blue-500" :
-                    activeChartTab === "reading" ? "bg-violet-500/10 text-violet-500" :
-                    activeChartTab === "writing" ? "bg-orange-500/10 text-orange-500" :
-                    activeChartTab === "speaking" ? "bg-purple-500/10 text-purple-500" :
-                    activeChartTab === "sat" ? "bg-indigo-500/10 text-indigo-500" : "bg-amber-500/10 text-amber-500"
+                      activeChartTab === "reading" ? "bg-violet-500/10 text-violet-500" :
+                        activeChartTab === "writing" ? "bg-orange-500/10 text-orange-500" :
+                          activeChartTab === "speaking" ? "bg-purple-500/10 text-purple-500" :
+                            activeChartTab === "sat" ? "bg-indigo-500/10 text-indigo-500" : "bg-amber-500/10 text-amber-500"
                   )}>
                     {/* Nice soft wave icon (trending-up/activity style pulse) */}
                     <TrendingUp className="h-6 w-6 animate-pulse" />
@@ -643,10 +644,10 @@ export default function UserDashboard() {
                     className={cn(
                       "px-5 py-1.5 h-auto rounded-xl text-[10px] font-black shadow-md transition-all duration-300 hover:scale-105 hover:shadow-lg text-white",
                       activeChartTab === "listening" ? "bg-blue-500 hover:bg-blue-600 shadow-blue-500/20" :
-                      activeChartTab === "reading" ? "bg-violet-500 hover:bg-violet-600 shadow-violet-500/20" :
-                      activeChartTab === "writing" ? "bg-orange-500 hover:bg-orange-600 shadow-orange-500/20" :
-                      activeChartTab === "speaking" ? "bg-purple-500 hover:bg-purple-600 shadow-purple-500/20" :
-                      activeChartTab === "sat" ? "bg-indigo-500 hover:bg-indigo-600 shadow-indigo-500/20" : "bg-amber-500 hover:bg-amber-600 shadow-amber-500/20"
+                        activeChartTab === "reading" ? "bg-violet-500 hover:bg-violet-600 shadow-violet-500/20" :
+                          activeChartTab === "writing" ? "bg-orange-500 hover:bg-orange-600 shadow-orange-500/20" :
+                            activeChartTab === "speaking" ? "bg-purple-500 hover:bg-purple-600 shadow-purple-500/20" :
+                              activeChartTab === "sat" ? "bg-indigo-500 hover:bg-indigo-600 shadow-indigo-500/20" : "bg-amber-500 hover:bg-amber-600 shadow-amber-500/20"
                     )}
                   >
                     {t(`userDashboard.empty.${activeChartTab}.btn`, `${t(`userDashboard.tabs.${activeChartTab}`, activeChartTab)} boshlash`)}
