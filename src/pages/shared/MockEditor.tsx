@@ -439,12 +439,72 @@ export default function MockEditor({
   }
 
   return (
-    <div className="w-full space-y-5">
-      <div className="flex items-center justify-between flex-wrap gap-2">
+    <div className="w-full space-y-6">
+      <div className="flex items-center justify-between flex-wrap gap-4 border-b pb-4 border-slate-200 dark:border-slate-800">
+        <div className="flex items-center gap-3">
+          <Button variant="outline" size="icon" onClick={() => nav(-1)} className="rounded-xl h-10 w-10">
+            <ChevronLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <h1 className="text-2xl md:text-3xl font-display font-black tracking-tight text-slate-900 dark:text-white">
+              {isEdit ? "Mock testni tahrirlash" : "Yangi mock test"}
+            </h1>
+            <p className="text-xs text-muted-foreground mt-0.5">Manage and configure computer-based IELTS examinations</p>
+          </div>
+        </div>
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={() => nav(-1)}><ChevronLeft className="h-4 w-4" /></Button>
-          <h1 className="text-3xl font-display font-bold">{isEdit ? "Mock testni tahrirlash" : "Yangi mock test"}</h1>
-          <Badge variant="outline" className="capitalize">{kind}</Badge>
+          <Badge className="bg-indigo-500/10 text-indigo-500 border-none font-bold uppercase tracking-wider text-[10px] px-3 py-1 rounded-full">
+            {kind}
+          </Badge>
+          {isPublished ? (
+            <Badge className="bg-emerald-500/10 text-emerald-500 border-none font-bold uppercase tracking-wider text-[10px] px-3 py-1 rounded-full">
+              Published
+            </Badge>
+          ) : (
+            <Badge className="bg-amber-500/10 text-amber-500 border-none font-bold uppercase tracking-wider text-[10px] px-3 py-1 rounded-full">
+              Draft
+            </Badge>
+          )}
+        </div>
+      </div>
+
+      {/* Admin stats dashboard */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="p-4 bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-2xl flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0">
+            <FileText className="h-5 w-5" />
+          </div>
+          <div>
+            <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Passages / Parts</p>
+            <p className="text-lg font-bold text-slate-800 dark:text-white">{sections.length}</p>
+          </div>
+        </div>
+        <div className="p-4 bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-2xl flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center shrink-0">
+            <BrainCircuit className="h-5 w-5" />
+          </div>
+          <div>
+            <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Total Questions</p>
+            <p className="text-lg font-bold text-slate-800 dark:text-white">{totalQuestions}</p>
+          </div>
+        </div>
+        <div className="p-4 bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-2xl flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0">
+            <Sparkles className="h-5 w-5 animate-pulse" />
+          </div>
+          <div>
+            <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Difficulty Level</p>
+            <p className="text-sm font-extrabold text-slate-800 dark:text-white uppercase tracking-widest mt-0.5">{difficulty}</p>
+          </div>
+        </div>
+        <div className="p-4 bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-2xl flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0">
+            <Save className="h-5 w-5" />
+          </div>
+          <div>
+            <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Access Tier</p>
+            <p className="text-sm font-extrabold text-slate-800 dark:text-white uppercase tracking-widest mt-0.5">{requiredPack}</p>
+          </div>
         </div>
       </div>
 

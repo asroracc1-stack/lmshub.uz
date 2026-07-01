@@ -687,6 +687,38 @@ export default function MockTake() {
   };
   
   const [cheatingStrikes, setCheatingStrikes] = useState(0);
+  const [leftWidth, setLeftWidth] = useState(50);
+  const isResizingRef = useRef(false);
+  const [audioStarted, setAudioStarted] = useState(false);
+
+  const startResizing = useCallback(() => {
+    isResizingRef.current = true;
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+  }, []);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isResizingRef.current) return;
+      const percentage = (e.clientX / window.innerWidth) * 100;
+      if (percentage > 20 && percentage < 80) {
+        setLeftWidth(percentage);
+      }
+    };
+    const handleMouseUp = () => {
+      if (isResizingRef.current) {
+        isResizingRef.current = false;
+        document.body.style.cursor = "default";
+        document.body.style.userSelect = "auto";
+      }
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, []);
   const [showCheatingWarning, setShowCheatingWarning] = useState(false);
   const [showCheatingLocked, setShowCheatingLocked] = useState(false);
   
@@ -1454,6 +1486,12 @@ export default function MockTake() {
   const answeredCount = Object.values(answers).filter(Boolean).length;
   const flaggedCount = flagged.size;
 
+  const wordCount = useMemo(() => {
+    if (!currentQuestion) return 0;
+    const text = answers[currentQuestion.id] || "";
+    return text.trim() ? text.trim().split(/\s+/).length : 0;
+  }, [answers, currentQuestion]);
+
   // REVIEW SCREEN - Clinical
   if (showReviewScreen) {
     return (
@@ -1623,13 +1661,16 @@ export default function MockTake() {
       </header>
 
       {/* QUESTION AREA */}
-      <main className={cn("flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden transition-colors", 
+      <main className={cn("flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden transition-colors relative", 
         isMilliy ? "bg-[#f1f5f9] dark:bg-[#060b13]" : "bg-[#f4f4f4] dark:bg-[#0c0817]"
       )}>
-        {isReading && sections[currentQuestion?.section_index] && (sections[currentQuestion?.section_index].passage || sections[currentQuestion?.section_index].imageUrl) && (
-          <div className={cn("w-full md:w-1/2 h-1/2 md:h-full overflow-y-auto border-b md:border-b-0 md:border-r p-6 md:p-8 xl:p-12 transition-colors", 
-            isMilliy ? "bg-white dark:bg-[#0b1624] border-slate-200 dark:border-slate-805" : "bg-white dark:bg-[#140D23] border-slate-300 dark:border-slate-800"
-          )}>
+        {(isReading || kind === "writing") && sections[currentQuestion?.section_index] && (sections[currentQuestion?.section_index].passage || sections[currentQuestion?.section_index].imageUrl) && (
+          <div 
+            style={{ width: `${leftWidth}%` }}
+            className={cn("w-full h-1/2 md:h-full overflow-y-auto border-b md:border-b-0 md:border-r p-6 md:p-8 xl:p-12 transition-colors", 
+              isMilliy ? "bg-white dark:bg-[#0b1624] border-slate-200 dark:border-slate-805" : "bg-white dark:bg-[#140D23] border-slate-300 dark:border-slate-800"
+            )}
+          >
             <h2 className={cn("text-xl font-bold mb-6 uppercase tracking-widest border-b-2 pb-2", 
               isMilliy ? "border-slate-200 dark:border-slate-800 text-[#0a192f] dark:text-white" : "border-slate-880 dark:border-slate-700 text-slate-900 dark:text-white"
             )}>
@@ -1644,10 +1685,48 @@ export default function MockTake() {
           </div>
         )}
 
-        <div className={cn("overflow-y-auto flex flex-col p-6 md:p-8 xl:p-12 transition-colors", 
-          isReading ? "w-full md:w-1/2 h-1/2 md:h-full" : "w-full h-full max-w-5xl mx-auto border-x",
-          isMilliy ? "bg-white dark:bg-[#0b1624] border-slate-200 dark:border-slate-850" : "bg-white dark:bg-[#140D23] border-slate-300 dark:border-slate-800"
-        )}>
+        {(isReading || kind === "writing") && (
+          <div 
+            onMouseDown={startResizing}
+            className="hidden md:flex w-1 hover:w-2 bg-slate-200 hover:bg-blue-500 dark:bg-slate-800 dark:hover:bg-blue-600 cursor-col-resize self-stretch transition-all duration-150 relative z-20 items-center justify-center group"
+          >
+            <div className="absolute h-8 w-8 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg shadow-md flex items-center justify-center pointer-events-none select-none">
+              <GripHorizontal className="h-4 w-4 text-slate-400 group-hover:text-blue-500 rotate-90" />
+            </div>
+          </div>
+        )}
+
+        <div 
+          style={{ width: (isReading || kind === "writing") ? `${100 - leftWidth}%` : "100%" }}
+          className={cn("overflow-y-auto flex flex-col p-6 md:p-8 xl:p-12 transition-colors relative", 
+            (isReading || kind === "writing") ? "h-1/2 md:h-full" : "w-full h-full max-w-5xl mx-auto border-x",
+            isMilliy ? "bg-white dark:bg-[#0b1624] border-slate-200 dark:border-slate-850" : "bg-white dark:bg-[#140D23] border-slate-300 dark:border-slate-800"
+          )}
+        >
+          {/* Listening Headphones overlay prompt */}
+          {kind === "listening" && exam.audioUrl && !audioStarted && (
+            <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md flex flex-col items-center justify-center p-8 text-center text-white z-30">
+              <div className="relative mx-auto mb-8 flex h-40 w-40 items-center justify-center rounded-full border border-white/10 bg-white/5 shadow-inner">
+                <Headphones className="h-16 w-16 text-blue-500 animate-bounce" />
+              </div>
+              <p className="max-w-md text-sm font-semibold leading-relaxed mb-6 text-slate-300">
+                You will be listening to an audio clip during this test. You will not be permitted to pause or rewind the audio while answering the questions. To continue, click Play.
+              </p>
+              <Button 
+                onClick={() => setAudioStarted(true)} 
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-3 rounded-xl flex items-center gap-2 shadow-lg shadow-blue-500/20"
+              >
+                <Play className="h-4 w-4 fill-current" /> Play
+              </Button>
+            </div>
+          )}
+
+          {/* Listening Sticky player */}
+          {kind === "listening" && exam.audioUrl && audioStarted && (
+            <div className="mb-6 z-20">
+              <CustomAudioPlayer src={exam.audioUrl} />
+            </div>
+          )}
           
           <div className="w-full flex-1 flex flex-col">
             {currentQuestion && (
@@ -1731,16 +1810,20 @@ export default function MockTake() {
                 ) : (
                   <div className="w-full">
                     <Textarea 
-                      rows={6} 
-                      className={cn("w-full p-4 text-lg font-serif rounded-none border-2 resize-none", 
+                      rows={12}
+                      className={cn("w-full p-6 text-lg font-serif rounded-none border-2 resize-none h-[400px] focus:ring-0 focus:outline-none", 
                         isMilliy 
                           ? "bg-white dark:bg-[#0b1624] border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:border-[#10b981]" 
-                          : "bg-white dark:bg-slate-900/50 border-slate-300 dark:border-slate-800 text-slate-900 dark:text-white focus:border-[#0f2c59] dark:focus:border-blue-500"
+                          : "bg-white dark:bg-slate-950/30 border-slate-300 dark:border-slate-800 text-slate-900 dark:text-white focus:border-slate-500 dark:focus:border-slate-400"
                       )}
-                      placeholder={isMilliy ? "Javobingizni shu yerga yozing..." : "Type your response here..."}
+                      placeholder={isMilliy ? "Javobingizni shu yerga yozing..." : "Start typing your response here..."}
                       value={answers[currentQuestion.id] || ""}
                       onChange={(e) => onAnswer(currentQuestion.id, e.target.value)}
                     />
+                    <div className="flex justify-between items-center text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-2 px-1">
+                      <span>Words: {wordCount}</span>
+                      <span>Characters: {(answers[currentQuestion.id] || "").length}</span>
+                    </div>
                   </div>
                 )}
               </div>
