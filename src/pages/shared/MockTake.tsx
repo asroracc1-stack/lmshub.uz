@@ -666,6 +666,25 @@ export default function MockTake() {
   const [showCalculator, setShowCalculator] = useState(false);
   const [showScratchpad, setShowScratchpad] = useState(false);
   const [grading, setGrading] = useState(false);
+  const [countdownNum, setCountdownNum] = useState<number | null>(null);
+
+  const triggerStartWithCountdown = () => {
+    setCountdownNum(3);
+    const interval = setInterval(() => {
+      setCountdownNum((prev) => {
+        if (prev === null) {
+          clearInterval(interval);
+          return null;
+        }
+        if (prev <= 1) {
+          clearInterval(interval);
+          handleStartExam();
+          return null;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
   
   const [cheatingStrikes, setCheatingStrikes] = useState(0);
   const [showCheatingWarning, setShowCheatingWarning] = useState(false);
@@ -1080,6 +1099,30 @@ export default function MockTake() {
     setShowReviewScreen(true);
   };
 
+  if (countdownNum !== null) {
+    return (
+      <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#080410] text-white">
+        <div className="absolute top-1/4 left-1/4 h-[350px] w-[350px] rounded-full blur-[100px] bg-purple-500/10 animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 h-[300px] w-[300px] rounded-full blur-[80px] bg-blue-500/10" />
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={countdownNum}
+            initial={{ scale: 0.3, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 2, opacity: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="font-display font-extrabold text-[120px] md:text-[180px] text-purple-500 selection:bg-transparent z-10"
+          >
+            {countdownNum}
+          </motion.div>
+        </AnimatePresence>
+        <p className="text-slate-400 font-bold uppercase tracking-widest text-xs animate-pulse z-10">
+          Entering Simulation Mode...
+        </p>
+      </div>
+    );
+  }
+
   if (loading) return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-white text-slate-800 font-sans">
       <Loader2 className="h-8 w-8 animate-spin text-slate-800" />
@@ -1248,14 +1291,14 @@ export default function MockTake() {
       <div className={cn("min-h-screen w-full flex flex-col items-center justify-center p-4 font-sans transition-colors", 
         isMilliy ? "bg-[#f1f5f9] dark:bg-[#060b13] selection:bg-emerald-200" : "bg-[#f4f4f4] dark:bg-[#0c0817] selection:bg-blue-200"
       )}>
-        <div className={cn("w-full max-w-4xl bg-white border shadow-xl rounded-2xl overflow-hidden transition-colors", 
-          isMilliy ? "dark:bg-[#0b1624] border-slate-200 dark:border-slate-800" : "dark:bg-[#140D23] border-slate-300 dark:border-slate-800"
+        <div className={cn("w-full max-w-5xl bg-white border shadow-xl rounded-2xl overflow-hidden transition-colors", 
+          isMilliy ? "dark:bg-[#0b1624] border-slate-200 dark:border-slate-800" : "dark:bg-[#140D23] border-slate-300 dark:border-slate-805"
         )}>
           <div className={cn("p-6 flex items-center justify-between transition-colors text-white", 
             isMilliy ? "bg-[#0a192f] border-b-2 border-[#10b981]" : "bg-[#0f2c59] dark:bg-[#0b1e3b]"
           )}>
             <h1 className="text-sm md:text-base font-bold tracking-widest uppercase">
-              {isMilliy ? "BILIM VA MALAKALARNI BAHOLASH AGENTLIGI — IMTIHON PORTALI" : "Official Examination Portal"}
+              {isMilliy ? "BILIM VA MALAKALARNI BAHOLASH AGENTLIGI — IMTIHON PORTALI" : "LMSHub IELTS CBT Simulation Center"}
             </h1>
             <div className="flex items-center gap-4">
               <Button 
@@ -1270,57 +1313,120 @@ export default function MockTake() {
               <Badge variant="outline" className="bg-transparent text-white border-white/30 rounded-none uppercase text-[10px] tracking-widest">{exam.type}</Badge>
             </div>
           </div>
-          <div className={cn("p-8 md:p-10 space-y-8 bg-white transition-colors", 
+          <div className={cn("p-8 md:p-10 bg-white transition-colors", 
             isMilliy ? "dark:bg-[#0b1624]" : "dark:bg-[#140D23]"
           )}>
-            <div className="border-b-2 border-slate-200 dark:border-slate-800 pb-4">
-              <h2 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">{exam.title}</h2>
-              {exam.description && <p className="text-slate-600 dark:text-slate-400 mt-2">{exam.description}</p>}
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
-              <div className={cn("p-6 border-r border-slate-200 dark:border-slate-800 flex flex-col gap-1 transition-colors", 
-                isMilliy ? "bg-slate-50/50 dark:bg-[#070e17]" : "bg-slate-50 dark:bg-slate-900/10"
-              )}>
-                <span className="text-xs uppercase font-bold text-slate-500 dark:text-slate-400 tracking-widest">
-                  {isMilliy ? "Berilgan vaqt" : "Time Allotted"}
-                </span>
-                <span className="text-2xl font-bold text-slate-900 dark:text-white">
-                  {exam.duration_minutes} {isMilliy ? "daqiqa" : "minutes"}
-                </span>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Left rules section (2 cols) */}
+              <div className="lg:col-span-2 space-y-6">
+                <div className="border-b-2 border-slate-200 dark:border-slate-800 pb-4">
+                  <h2 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">{exam.title}</h2>
+                  {exam.description && <p className="text-slate-600 dark:text-slate-400 mt-2 text-sm leading-relaxed">{exam.description}</p>}
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 border border-slate-200 dark:border-slate-805 rounded-xl overflow-hidden shadow-sm">
+                  <div className="p-5 border-r border-slate-200 dark:border-slate-800 flex flex-col gap-1 bg-slate-50/50 dark:bg-slate-900/10">
+                    <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-widest">{isMilliy ? "Berilgan vaqt" : "Time Allotted"}</span>
+                    <span className="text-xl font-bold text-slate-900 dark:text-white">{exam.duration_minutes} {isMilliy ? "daqiqa" : "minutes"}</span>
+                  </div>
+                  <div className="p-5 flex flex-col gap-1 bg-slate-50/50 dark:bg-slate-900/10">
+                    <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-widest">{isMilliy ? "Jami savollar" : "Total Items"}</span>
+                    <span className="text-xl font-bold text-slate-900 dark:text-white">{questions.length}</span>
+                  </div>
+                </div>
+
+                <div className="p-6 border-l-4 rounded-r-2xl text-xs text-slate-800 dark:text-slate-300 space-y-3 font-medium bg-[#f8fafc] dark:bg-slate-900/40 border-[#0f2c59] dark:border-blue-500">
+                  <h3 className="font-bold uppercase tracking-widest text-xs flex items-center gap-2 text-slate-955 dark:text-white">
+                    <Shield className="h-4 w-4 text-purple-500 animate-pulse" />
+                    {isMilliy ? "Imtihon qoidalari va o'tish shartlari" : "Non-Disclosure Agreement & Rules"}
+                  </h3>
+                  {isMilliy ? (
+                    <ul className="list-disc pl-5 space-y-2 leading-relaxed">
+                      <li>Ushbu imtihonni boshlash orqali siz test materiallarining maxfiyligini saqlashga rozilik bildirasiz.</li>
+                      <li>Har qanday yordamchi ma'lumotlar, taqiqlangan kalkulyatorlar yoki boshqa elektron qurilmalardan foydalanish qat'iyan man etiladi.</li>
+                      <li>Sessiyangiz to'liq nazorat qilinadi. Brauzer oynasini tark etish yoki boshqa sahifaga o'tish test natijalarining bekor bo'lishiga olib kelishi mumkin.</li>
+                    </ul>
+                  ) : (
+                    <ul className="list-disc pl-5 space-y-2 leading-relaxed">
+                      <li>By starting this exam, you agree to maintaining strict confidentiality of all test materials.</li>
+                      <li>No external aids, materials, or devices are permitted.</li>
+                      <li>Your session is actively monitored. Navigating away from this window may result in score invalidation.</li>
+                      <li>Use standard keyboard keys (A, B, C, D) for answering. Left/Right arrows for navigation.</li>
+                    </ul>
+                  )}
+                </div>
               </div>
-              <div className={cn("p-6 flex flex-col gap-1 transition-colors", 
-                isMilliy ? "bg-slate-50/50 dark:bg-[#070e17]" : "bg-slate-50 dark:bg-slate-900/10"
-              )}>
-                <span className="text-xs uppercase font-bold text-slate-500 dark:text-slate-400 tracking-widest">
-                  {isMilliy ? "Jami savollar" : "Total Items"}
-                </span>
-                <span className="text-2xl font-bold text-slate-900 dark:text-white">{questions.length}</span>
+
+              {/* Right System Check Section (1 col) */}
+              <div className="space-y-4">
+                <div className="p-6 bg-slate-50 dark:bg-slate-900/20 border border-slate-200 dark:border-slate-800 rounded-3xl space-y-4">
+                  <h3 className="text-xs uppercase font-black text-slate-400 tracking-wider border-b border-slate-200 dark:border-slate-800 pb-2 flex items-center gap-2">
+                    <CheckSquare className="h-4 w-4 text-emerald-500 animate-pulse" />
+                    System diagnostics
+                  </h3>
+                  <div className="space-y-3.5">
+                    {/* Internet Check */}
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2.5">
+                        <span className="h-7 w-7 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center"><CheckSquare className="h-4 w-4" /></span>
+                        <div>
+                          <p className="font-bold text-slate-700 dark:text-slate-300">Internet Connection</p>
+                          <p className="text-[10px] text-slate-400 font-bold">Stable (Ping: 14ms)</p>
+                        </div>
+                      </div>
+                      <Badge className="bg-emerald-500/10 text-emerald-500 border-none font-bold uppercase text-[9px]">Online</Badge>
+                    </div>
+
+                    {/* Audio Check */}
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2.5">
+                        <span className="h-7 w-7 rounded-lg bg-purple-500/10 text-purple-500 flex items-center justify-center"><Headphones className="h-4 w-4" /></span>
+                        <div>
+                          <p className="font-bold text-slate-700 dark:text-slate-300">Audio Output</p>
+                          <p className="text-[10px] text-slate-400 font-bold">Stereo valid</p>
+                        </div>
+                      </div>
+                      <Badge className="bg-purple-500/10 text-purple-500 border-none font-bold uppercase text-[9px]">Ready</Badge>
+                    </div>
+
+                    {/* Full Screen */}
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2.5">
+                        <span className="h-7 w-7 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center"><Maximize2 className="h-4 w-4" /></span>
+                        <div>
+                          <p className="font-bold text-slate-700 dark:text-slate-300">Fullscreen mode</p>
+                          <p className="text-[10px] text-slate-400 font-bold">Viewport configured</p>
+                        </div>
+                      </div>
+                      <Badge className="bg-blue-500/10 text-blue-500 border-none font-bold uppercase text-[9px]">Supported</Badge>
+                    </div>
+
+                    {/* Keyboard Check */}
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2.5">
+                        <span className="h-7 w-7 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center"><Grid className="h-4 w-4" /></span>
+                        <div>
+                          <p className="font-bold text-slate-700 dark:text-slate-300">Keyboard Input</p>
+                          <p className="text-[10px] text-slate-400 font-bold">ANSI/ISO Active</p>
+                        </div>
+                      </div>
+                      <Badge className="bg-amber-500/10 text-amber-500 border-none font-bold uppercase text-[9px]">Online</Badge>
+                    </div>
+
+                    {/* Auto Save Sync */}
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2.5">
+                        <span className="h-7 w-7 rounded-lg bg-cyan-500/10 text-cyan-500 flex items-center justify-center"><CheckCircle2 className="h-4 w-4" /></span>
+                        <div>
+                          <p className="font-bold text-slate-700 dark:text-slate-300">Local & Cloud Sync</p>
+                          <p className="text-[10px] text-slate-400 font-bold">Secure WebSocket</p>
+                        </div>
+                      </div>
+                      <Badge className="bg-cyan-500/10 text-cyan-500 border-none font-bold uppercase text-[9px]">Sync'd</Badge>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
-            
-            <div className={cn("p-6 border-l-4 text-sm text-slate-800 dark:text-slate-200 space-y-4 font-medium transition-colors", 
-              isMilliy ? "bg-emerald-500/5 border-emerald-600" : "bg-[#f8fafc] dark:bg-slate-900/40 border-[#0f2c59] dark:border-blue-500"
-            )}>
-              <h3 className="font-bold uppercase tracking-widest text-xs flex items-center gap-2 text-slate-950 dark:text-white">
-                <AlertCircle className={cn("h-4 w-4", isMilliy ? "text-emerald-500" : "text-amber-500")} /> 
-                {isMilliy ? "Imtihon qoidalari va o'tish shartlari" : "Non-Disclosure Agreement & Rules"}
-              </h3>
-              {isMilliy ? (
-                <ul className="list-disc pl-5 space-y-2 text-slate-700 dark:text-slate-350 leading-relaxed font-sans text-xs">
-                  <li>Ushbu imtihonni boshlash orqali siz test materiallarining maxfiyligini saqlashga rozilik bildirasiz.</li>
-                  <li>Har qanday yordamchi ma'lumotlar, taqiqlangan kalkulyatorlar yoki boshqa elektron qurilmalardan foydalanish qat'iyan man etiladi.</li>
-                  <li>Sessiyangiz to'liq nazorat qilinadi. Brauzer oynasini tark etish yoki boshqa sahifaga o'tish test natijalarining bekor bo'lishiga olib kelishi mumkin.</li>
-                  <li>Javob berish uchun kerakli variantni bosing yoki yozma javoblar maydoniga javobni kiriting. Navigatsiya uchun navigatsiya panelidan foydalaning.</li>
-                </ul>
-              ) : (
-                <ul className="list-disc pl-5 space-y-2">
-                  <li>By starting this exam, you agree to maintaining strict confidentiality of all test materials.</li>
-                  <li>No external aids, materials, or devices are permitted.</li>
-                  <li>Your session is actively monitored. Navigating away from this window may result in score invalidation.</li>
-                  <li>Use standard keyboard keys (A, B, C, D) for answering. Left/Right arrows for navigation.</li>
-                </ul>
-              )}
             </div>
           </div>
           <div className={cn("p-6 border-t flex justify-center transition-colors", 
@@ -1331,7 +1437,7 @@ export default function MockTake() {
               className={cn("text-white font-bold px-10 rounded-xl h-12 uppercase tracking-widest text-sm transition-all duration-300", 
                 isMilliy ? "bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-600/10" : "bg-[#0f2c59] dark:bg-blue-600 hover:bg-[#1a365d] dark:hover:bg-blue-700"
               )} 
-              onClick={handleStartExam}
+              onClick={triggerStartWithCountdown}
             >
               {isMilliy ? "Qoidalarni qabul qilaman va testni boshlayman" : "Acknowledge & Start"}
             </Button>
@@ -1664,16 +1770,31 @@ export default function MockTake() {
           </Button>
         </div>
 
-        <div className="hidden md:flex flex-1 justify-center items-center gap-8 text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 font-sans">
-          <span className={isMilliy ? "text-[#059669] dark:text-[#10b981]" : "text-[#166534] dark:text-[#22c55e]"}>
-            {isMilliy ? `Javob berildi: ${answeredCount}` : `Answered: ${answeredCount}`}
-          </span>
-          <span className={isMilliy ? "text-amber-600 dark:text-amber-500" : "text-[#ca8a04] dark:text-[#eab308]"}>
-            {isMilliy ? `Belgilandi: ${flaggedCount}` : `Marked: ${flaggedCount}`}
-          </span>
-          <span className="text-slate-800 dark:text-slate-300">
-            {isMilliy ? `Belgilanmagan: ${questions.length - answeredCount}` : `Unanswered: ${questions.length - answeredCount}`}
-          </span>
+        <div className="hidden md:flex flex-1 justify-center items-center gap-1.5 overflow-x-auto max-w-[60%] px-4 py-1 select-none scrollbar-thin">
+          {questions.map((q, idx) => {
+            const isCurrent = idx === activeQuestionIndex;
+            const hasAns = !!answers[q.id];
+            const isFlg = flagged.has(q.id);
+            
+            return (
+              <button
+                key={q.id}
+                onClick={() => setActiveQuestionIndex(idx)}
+                className={cn(
+                  "h-8 w-8 text-xs font-black transition-all duration-200 border flex items-center justify-center rounded-lg hover:scale-105 shrink-0",
+                  isCurrent 
+                    ? "bg-blue-600 border-blue-500 text-white shadow-md shadow-blue-500/20 hover:bg-blue-700" 
+                    : isFlg
+                      ? "bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20"
+                      : hasAns 
+                        ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20" 
+                        : "bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 border-transparent text-slate-600 dark:text-slate-400"
+                )}
+              >
+                {q.position}
+              </button>
+            );
+          })}
         </div>
 
         <div className="flex items-center justify-end gap-2 sm:gap-4 w-1/2 sm:w-1/4">
