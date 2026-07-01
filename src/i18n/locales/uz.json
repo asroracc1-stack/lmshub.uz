@@ -429,6 +429,53 @@
       "Muvaffaqiyat — bu har kuni bir oz yaxshilanishdir."
     ]
   },
+  "userDashboard": {
+    "chart": {
+      "trendsTitle": "Tahlil va Trendlar",
+      "trendsDesc": "So'nggi 7 kunlik mashq intensivligi va natija o'zgarishlari",
+      "mainMarketTrend": "Asosiy faollik trendi",
+      "rsiActivityIndex": "RSI Faollik Indeksi (Mashq jadalligi)",
+      "momentumIndex": "MOMENTUM INDEX",
+      "overstudied": "70% O'ta ko'p shug'ullanilgan",
+      "overslept": "30% Kam shug'ullanilgan"
+    },
+    "tabs": {
+      "practice": "Mashq vaqti",
+      "reading": "Reading",
+      "listening": "Listening",
+      "writing": "Writing",
+      "speaking": "Speaking",
+      "sat": "SAT",
+      "national_cert": "Milliy Sertifikat"
+    },
+    "calendar": {
+      "title": "Mashg'ulotlar kalendari",
+      "desc": "Kunlik kirish va topshiriqlarni bajarish faolligi",
+      "less": "Kamroq",
+      "more": "Ko'proq",
+      "practiceTime": "Mashq vaqti",
+      "activeDays": "Faol kunlar",
+      "minutesShort": "daq",
+      "activeDaysCount": "kun",
+      "errorTitle": "Faollik yuklanmadi",
+      "retry": "Qayta urinish",
+      "noActivity": "Faollik yo'q",
+      "minutesStudied": "m mashq qilindi",
+      "lessonsCount": "ta dars",
+      "quizzesCount": "ta quiz",
+      "mocksCount": "ta mock test",
+      "coins": "tanga",
+      "days": {
+        "mon": "Du",
+        "tue": "Se",
+        "wed": "Cho",
+        "thu": "Pa",
+        "fri": "Ju",
+        "sat": "Sha",
+        "sun": "Ya"
+      }
+    }
+  },
   "dynamic": {
     "addmembermodal": {
       "promise": "Promise",

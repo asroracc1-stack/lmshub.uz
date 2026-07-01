@@ -422,6 +422,53 @@
       "Успех — это улучшение понемногу каждый день."
     ]
   },
+  "userDashboard": {
+    "chart": {
+      "trendsTitle": "Анализ и Тренды",
+      "trendsDesc": "Интенсивность практики и тренды баллов за последние 7 дней",
+      "mainMarketTrend": "Основной тренд активности",
+      "rsiActivityIndex": "Индекс активности RSI (Интенсивность практики)",
+      "momentumIndex": "ИНДЕКС МОМЕНТУМА",
+      "overstudied": "70% Очень активная учеба",
+      "overslept": "30% Малоактивная учеба"
+    },
+    "tabs": {
+      "practice": "Время практики",
+      "reading": "Reading",
+      "listening": "Listening",
+      "writing": "Writing",
+      "speaking": "Speaking",
+      "sat": "SAT",
+      "national_cert": "Национальный Сертификат"
+    },
+    "calendar": {
+      "title": "Календарь занятий",
+      "desc": "Ежедневная активность входа и выполнения заданий",
+      "less": "Меньше",
+      "more": "Больше",
+      "practiceTime": "Время практики",
+      "activeDays": "Активные дни",
+      "minutesShort": "мин",
+      "activeDaysCount": "дн.",
+      "errorTitle": "Активность не загрузилась",
+      "retry": "Повторить попытку",
+      "noActivity": "Активности нет",
+      "minutesStudied": "м пройдено",
+      "lessonsCount": "урока(ов)",
+      "quizzesCount": "квиза(ов)",
+      "mocksCount": "пробных теста(ов)",
+      "coins": "монет",
+      "days": {
+        "mon": "Пн",
+        "tue": "Вт",
+        "wed": "Ср",
+        "thu": "Чт",
+        "fri": "Пт",
+        "sat": "Сб",
+        "sun": "Вс"
+      }
+    }
+  },
   "dynamic": {
     "addmembermodal": {
       "promise": "Promise",

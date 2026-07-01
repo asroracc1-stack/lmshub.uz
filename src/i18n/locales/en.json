@@ -429,6 +429,53 @@
       "Success is improving a little bit every day."
     ]
   },
+  "userDashboard": {
+    "chart": {
+      "trendsTitle": "Analysis & Trends",
+      "trendsDesc": "Practice intensity and score trends over the last 7 days",
+      "mainMarketTrend": "Main Market Trend",
+      "rsiActivityIndex": "RSI Activity Index (Practice Intensity)",
+      "momentumIndex": "MOMENTUM INDEX",
+      "overstudied": "70% Highly active study",
+      "overslept": "30% Inactive study"
+    },
+    "tabs": {
+      "practice": "Practice time",
+      "reading": "Reading",
+      "listening": "Listening",
+      "writing": "Writing",
+      "speaking": "Speaking",
+      "sat": "SAT",
+      "national_cert": "National Certificate"
+    },
+    "calendar": {
+      "title": "Practice Calendar",
+      "desc": "Daily login and task completion activity",
+      "less": "Less",
+      "more": "More",
+      "practiceTime": "Practice time",
+      "activeDays": "Active days",
+      "minutesShort": "min",
+      "activeDaysCount": "days",
+      "errorTitle": "Activity loading failed",
+      "retry": "Retry",
+      "noActivity": "No activity",
+      "minutesStudied": "m studied",
+      "lessonsCount": "lessons",
+      "quizzesCount": "quizzes",
+      "mocksCount": "mocks",
+      "coins": "coins",
+      "days": {
+        "mon": "Mon",
+        "tue": "Tue",
+        "wed": "Wed",
+        "thu": "Thu",
+        "fri": "Fri",
+        "sat": "Sat",
+        "sun": "Sun"
+      }
+    }
+  },
   "dynamic": {
     "addmembermodal": {
       "promise": "Promise",
