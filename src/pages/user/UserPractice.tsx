@@ -1,9 +1,10 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
 import { useTheme } from "@/contexts/ThemeContext";
 import { api } from "@/lib/axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface StudentAttempt {
@@ -459,6 +460,8 @@ export default function UserPractice() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const navigate = useNavigate();
+  const location = useLocation();
+  const basePath = location.pathname.startsWith("/student") ? "/student" : "/user";
 
   const [, setAttempts] = useState<StudentAttempt[]>([]);
   const [loading, setLoading] = useState(true);
@@ -484,7 +487,7 @@ export default function UserPractice() {
       tag: t("practice.listening.tag", "LISTENING"),
       title: t("practice.listening.title", "Eshitish 🎧"),
       desc: t("practice.listening.desc", "Improve your listening"),
-      path: "/student/mocks/c/listening",
+      path: `${basePath}/mocks/c/listening`,
       illustration: <ListeningIllustration />
     },
     {
@@ -492,7 +495,7 @@ export default function UserPractice() {
       tag: t("practice.reading.tag", "READING"),
       title: t("practice.reading.title", "O'qish 📖"),
       desc: t("practice.reading.desc", "Read smarter"),
-      path: "/student/mocks/c/reading",
+      path: `${basePath}/mocks/c/reading`,
       illustration: <ReadingIllustration />
     },
     {
@@ -500,7 +503,7 @@ export default function UserPractice() {
       tag: t("practice.writing.tag", "WRITING"),
       title: t("practice.writing.title", "Yozish ✍️"),
       desc: t("practice.writing.desc", "Write confidently"),
-      path: "/student/mocks/c/writing",
+      path: `${basePath}/mocks/c/writing`,
       illustration: <WritingIllustration />
     },
     {
@@ -509,7 +512,7 @@ export default function UserPractice() {
       title: t("practice.speaking.title", "Gapirish 🎙️"),
       desc: t("practice.speaking.desc", "Speak naturally"),
       isBeta: true,
-      path: "/student/speaking",
+      path: `${basePath}/speaking`,
       illustration: <SpeakingIllustration />
     }
   ];
