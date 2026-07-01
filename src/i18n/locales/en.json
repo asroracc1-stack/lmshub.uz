@@ -2067,39 +2067,26 @@
   "practice": {
     "title": "Practice",
     "desc": "Improve your skills through systematic interactive practice models.",
-    "difficulty": "Difficulty",
-    "estTime": "Est. Time",
-    "minsPerLesson": "mins",
-    "lessonsCompleted": "lessons completed",
-    "lessonsRemaining": "lessons remaining",
-    "startBtn": "Start",
-    "continueBtn": "Continue",
-    "heroTitle": "Kickstart your learning! 🚀",
-    "heroDesc": "You haven't completed any practice sessions yet. Let's tackle your first listening or reading test!",
-    "heroCta": "Start First Practice",
+    "startBtn": "Start Practice",
     "listening": {
       "tag": "LISTENING",
       "title": "Listening 🎧",
-      "desc": "Improve your listening capability through audio practices.",
-      "diff": "Medium"
+      "desc": "Improve your listening"
     },
     "reading": {
       "tag": "READING",
       "title": "Reading 📖",
-      "desc": "Read passages, analyze arguments, and test your vocabulary.",
-      "diff": "Medium"
+      "desc": "Read smarter"
     },
     "writing": {
       "tag": "WRITING",
       "title": "Writing ✍️",
-      "desc": "Express arguments clearly and practice structural essay composition.",
-      "diff": "Hard"
+      "desc": "Write confidently"
     },
     "speaking": {
       "tag": "SPEAKING",
-      "title": "Speaking 🗣️",
-      "desc": "Practice active speech dialogue with live AI coach feedback.",
-      "diff": "Expert"
+      "title": "Speaking 🎙️",
+      "desc": "Speak naturally"
     }
   }
 }

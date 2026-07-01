@@ -1,12 +1,12 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/contexts/ThemeContext";
 import { api } from "@/lib/axios";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import { ChevronRight, Flame, Hourglass, BarChart3, Layers, BookOpen, Headphones, PenTool, Mic } from "lucide-react";
+import { motion } from "framer-motion";
+import { ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface StudentAttempt {
@@ -21,15 +21,15 @@ interface StudentAttempt {
 }
 
 export default function UserPractice() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const navigate = useNavigate();
 
-  const [attempts, setAttempts] = useState<StudentAttempt[]>([]);
+  const [, setAttempts] = useState<StudentAttempt[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch student mock attempts dynamically
+  // Keep API integration active to ensure no functionality breaks
   useEffect(() => {
     const fetchAttempts = async () => {
       try {
@@ -44,32 +44,16 @@ export default function UserPractice() {
     fetchAttempts();
   }, []);
 
-  // Filter attempts per category
-  const listeningCount = useMemo(() => attempts.filter(a => a.exam?.type?.toLowerCase() === "listening").length, [attempts]);
-  const readingCount = useMemo(() => attempts.filter(a => a.exam?.type?.toLowerCase() === "reading").length, [attempts]);
-  const writingCount = useMemo(() => attempts.filter(a => a.exam?.type?.toLowerCase() === "writing").length, [attempts]);
-  const speakingCount = useMemo(() => attempts.filter(a => a.exam?.type?.toLowerCase() === "speaking").length, [attempts]);
-
-  // Calculate total progress
-  const totalCompleted = listeningCount + readingCount + writingCount + speakingCount;
-  const showHero = totalCompleted === 0;
-
-  // Premium modules data matching requirements
+  // Simplified practice modules data matching design objectives
   const skills = [
     {
       id: "listening",
       tag: t("practice.listening.tag", "LISTENING"),
       title: t("practice.listening.title", "Eshitish 🎧"),
-      desc: t("practice.listening.desc", "Eshitish ko'nikmalaringizni rivojlantiring"),
-      completed: listeningCount,
-      total: 12,
+      desc: t("practice.listening.desc", "Improve your listening"),
       path: "/student/mocks/c/listening",
-      difficulty: t("practice.listening.diff", "O'rta"),
-      difficultyColor: "text-emerald-500 bg-emerald-500/10 dark:text-emerald-400 dark:bg-emerald-500/20",
-      estTime: 25, // 25 mins
-      icon: Headphones,
-      gradient: "from-blue-500/20 via-indigo-500/5 to-purple-500/10",
-      glowColor: "group-hover:border-blue-500/40",
+      blobColor: "from-blue-500/10 to-indigo-500/5",
+      btnClass: "from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-blue-500/20",
       svg: (
         <svg viewBox="0 0 200 160" className="w-full h-full object-contain">
           <defs>
@@ -82,7 +66,7 @@ export default function UserPractice() {
               <stop offset="100%" stopColor="#fca5a5" />
             </linearGradient>
           </defs>
-          <circle cx="100" cy="80" r="55" fill="#f0fdf4" className="dark:fill-slate-800/40" />
+          <circle cx="100" cy="80" r="55" fill="#f8fafc" className="dark:fill-slate-800/20" />
           <path d="M65,160 C65,120 78,105 100,105 C122,105 135,120 135,160" fill="#2d7a5f" className="dark:fill-emerald-800" />
           <rect x="94" y="90" width="12" height="15" rx="2" fill="url(#skinGrad)" />
           <circle cx="100" cy="80" r="20" fill="url(#skinGrad)" />
@@ -101,16 +85,10 @@ export default function UserPractice() {
       id: "reading",
       tag: t("practice.reading.tag", "READING"),
       title: t("practice.reading.title", "O'qish 📖"),
-      desc: t("practice.reading.desc", "Matnlarni tushunish va tahlil qilish"),
-      completed: readingCount,
-      total: 24,
+      desc: t("practice.reading.desc", "Read smarter"),
       path: "/student/mocks/c/reading",
-      difficulty: t("practice.reading.diff", "O'rta"),
-      difficultyColor: "text-emerald-500 bg-emerald-500/10 dark:text-emerald-400 dark:bg-emerald-500/20",
-      estTime: 30, // 30 mins
-      icon: BookOpen,
-      gradient: "from-emerald-500/20 via-teal-500/5 to-emerald-500/10",
-      glowColor: "group-hover:border-emerald-500/40",
+      blobColor: "from-emerald-500/10 to-teal-500/5",
+      btnClass: "from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-emerald-500/20",
       svg: (
         <svg viewBox="0 0 200 160" className="w-full h-full object-contain">
           <defs>
@@ -119,7 +97,7 @@ export default function UserPractice() {
               <stop offset="100%" stopColor="#059669" />
             </linearGradient>
           </defs>
-          <circle cx="100" cy="80" r="55" fill="#f0fdf4" className="dark:fill-slate-800/40" />
+          <circle cx="100" cy="80" r="55" fill="#f8fafc" className="dark:fill-slate-800/20" />
           <path d="M65,160 C65,123 78,110 100,110 C122,110 135,123 135,160" fill="#2d7a5f" className="dark:fill-emerald-800" />
           <rect x="94" y="93" width="12" height="15" rx="2" fill="#ffd7b5" />
           <circle cx="100" cy="83" r="20" fill="#ffd7b5" />
@@ -136,17 +114,11 @@ export default function UserPractice() {
     {
       id: "writing",
       tag: t("practice.writing.tag", "WRITING"),
-      title: t("practice.writing.title", "O'qish ✍️"),
-      desc: t("practice.writing.desc", "Yozma ifoda va grammatikani mukammallashtiring"),
-      completed: writingCount,
-      total: 10,
+      title: t("practice.writing.title", "Yozish ✍️"),
+      desc: t("practice.writing.desc", "Write confidently"),
       path: "/student/mocks/c/writing",
-      difficulty: t("practice.writing.diff", "Qiyin"),
-      difficultyColor: "text-amber-500 bg-amber-500/10 dark:text-amber-400 dark:bg-amber-500/20",
-      estTime: 40, // 40 mins
-      icon: PenTool,
-      gradient: "from-amber-500/20 via-orange-500/5 to-amber-500/10",
-      glowColor: "group-hover:border-amber-500/40",
+      blobColor: "from-amber-500/10 to-orange-500/5",
+      btnClass: "from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 shadow-amber-500/20",
       svg: (
         <svg viewBox="0 0 200 160" className="w-full h-full object-contain">
           <defs>
@@ -155,7 +127,7 @@ export default function UserPractice() {
               <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
             </linearGradient>
           </defs>
-          <circle cx="100" cy="80" r="55" fill="#f0fdf4" className="dark:fill-slate-800/40" />
+          <circle cx="100" cy="80" r="55" fill="#f8fafc" className="dark:fill-slate-800/20" />
           <line x1="45" y1="140" x2="155" y2="140" stroke="#94a3b8" strokeWidth="3.5" strokeLinecap="round" />
           <path d="M60,160 C60,128 73,115 95,115 C117,115 130,128 130,160" fill="#2d7a5f" className="dark:fill-emerald-800" />
           <rect x="89" y="97" width="12" height="15" rx="2" fill="#ffd7b5" />
@@ -174,21 +146,15 @@ export default function UserPractice() {
     {
       id: "speaking",
       tag: t("practice.speaking.tag", "SPEAKING"),
-      title: t("practice.speaking.title", "Gapirish 🗣️"),
-      desc: t("practice.speaking.desc", "Og'zaki nutq va talaffuzni rivojlantiring"),
-      completed: speakingCount,
-      total: 9,
+      title: t("practice.speaking.title", "Gapirish 🎙️"),
+      desc: t("practice.speaking.desc", "Speak naturally"),
       isBeta: true,
       path: "/student/speaking",
-      difficulty: t("practice.speaking.diff", "Murakkab"),
-      difficultyColor: "text-purple-500 bg-purple-500/10 dark:text-purple-400 dark:bg-purple-500/20",
-      estTime: 15, // 15 mins
-      icon: Mic,
-      gradient: "from-purple-500/20 via-pink-500/5 to-purple-500/10",
-      glowColor: "group-hover:border-purple-500/40",
+      blobColor: "from-purple-500/10 to-pink-500/5",
+      btnClass: "from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 shadow-purple-500/20",
       svg: (
         <svg viewBox="0 0 200 160" className="w-full h-full object-contain">
-          <circle cx="100" cy="80" r="55" fill="#f0fdf4" className="dark:fill-slate-800/40" />
+          <circle cx="100" cy="80" r="55" fill="#f8fafc" className="dark:fill-slate-800/20" />
           <path d="M65,160 C65,123 78,110 100,110 C122,110 135,123 135,160" fill="#2d7a5f" className="dark:fill-emerald-800" />
           <rect x="94" y="93" width="12" height="15" rx="2" fill="#ffd7b5" />
           <circle cx="100" cy="83" r="20" fill="#ffd7b5" />
@@ -202,151 +168,106 @@ export default function UserPractice() {
   ];
 
   return (
-    <div className="w-full space-y-6 relative pb-10 font-sans select-none">
+    <div className="w-full space-y-8 relative pb-16 font-sans select-none">
       {/* Background ambient glowing spheres */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-purple-500/5 dark:bg-purple-500/10 rounded-full blur-[120px] -z-10 pointer-events-none" />
       <div className="absolute bottom-20 left-0 w-[400px] h-[400px] bg-emerald-500/5 dark:bg-emerald-500/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
 
-      {/* Page Header (Simple elegant layout) */}
-      <div className="flex flex-col gap-1 text-left pb-2 border-b border-slate-200/40 dark:border-white/5">
-        <h2 className={cn("text-3xl font-extrabold tracking-tight", isDark ? "text-white" : "text-slate-900")}>
+      {/* Page Header (Minimal title, Vercel layout style) */}
+      <div className="flex flex-col gap-1 text-left pb-4 border-b border-slate-200/40 dark:border-white/5">
+        <h2 className={cn("text-4xl font-extrabold tracking-tight", isDark ? "text-white" : "text-slate-900")}>
           {t("practice.title", "Amaliyot")}
         </h2>
-        <p className="text-xs font-medium text-slate-400">
-          {t("practice.desc", "IELTS ko'nikmalarini tizimli va interaktiv tarzda rivojlantiring.")}
+        <p className="text-sm font-medium text-slate-400">
+          {t("practice.desc", "Improve your skills through systematic interactive practice models.")}
         </p>
       </div>
 
       {loading ? (
-        // Premium Skeleton Loader layout
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        // Grid loaders
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-10">
           {Array.from({ length: 4 }).map((_, i) => (
-            <Card key={i} className={cn("p-8 rounded-[32px] border animate-pulse min-h-[250px]", isDark ? "bg-slate-900/40 border-white/5" : "bg-white border-slate-100")} />
+            <Card key={i} className={cn("rounded-[32px] border animate-pulse min-h-[260px]", isDark ? "bg-slate-900/40 border-white/5" : "bg-white border-slate-100")} />
           ))}
         </div>
       ) : (
-        <div className="space-y-8">
-          {/* Practice Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10">
-            {skills.map((skill, index) => {
-              const progressPercent = Math.min(100, Math.round((skill.completed / skill.total) * 100));
-              const remainingCount = Math.max(0, skill.total - skill.completed);
-              const SkillIcon = skill.icon;
-              
-              return (
-                <motion.div
-                  key={skill.id}
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.45, delay: index * 0.1 }}
-                  whileHover={{ y: -6 }}
-                  className="w-full h-full"
-                >
-                  <Card className={cn(
-                    "p-8 rounded-[32px] border relative overflow-hidden transition-all duration-300 flex flex-col justify-between shadow-md hover:shadow-xl group backdrop-blur-md min-h-[280px]",
-                    isDark 
-                      ? "bg-slate-900/30 border-white/5 shadow-slate-950/20" 
-                      : "bg-white border-slate-200/50 shadow-slate-200/5 hover:border-slate-350"
-                  )}>
-                    {/* Background glowing blob */}
-                    <div className="absolute top-10 right-10 w-28 h-28 rounded-full bg-gradient-to-br from-emerald-500/10 to-teal-500/5 blur-xl -z-10 group-hover:scale-125 transition-transform duration-500" />
-                    
-                    <div className="flex flex-col sm:flex-row items-start justify-between gap-6">
-                      {/* Left Column: Metadata & Contents */}
-                      <div className="space-y-4 flex-1 w-full text-left">
-                        
-                        {/* Upper Info row */}
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/5 dark:bg-emerald-500/10 px-2 py-0.5 rounded-md uppercase tracking-wider leading-none select-none">
-                              {skill.tag}
+        // Minimalist Premium Cards grid
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-10">
+          {skills.map((skill, index) => {
+            return (
+              <motion.div
+                key={skill.id}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1, ease: [0.16, 1, 0.3, 1] }}
+                whileHover={{ y: -6 }}
+                className="w-full h-full"
+              >
+                <Card className={cn(
+                  "p-8 rounded-[32px] border relative overflow-hidden transition-all duration-300 flex flex-col justify-between shadow-md hover:shadow-xl group backdrop-blur-md min-h-[250px]",
+                  isDark 
+                    ? "bg-slate-900/30 border-white/5 shadow-slate-950/20" 
+                    : "bg-white border-slate-200/50 shadow-slate-200/5 hover:border-slate-350"
+                )}>
+                  {/* Subtle decorative mesh / background gradient blob */}
+                  <div className={cn("absolute inset-0 bg-gradient-to-br opacity-[0.03] pointer-events-none -z-10", skill.blobColor)} />
+                  <div className="absolute top-10 right-10 w-28 h-28 rounded-full bg-gradient-to-br from-emerald-500/10 to-teal-500/5 blur-xl -z-10 group-hover:scale-125 transition-transform duration-500" />
+                  
+                  {/* Two column flex layout. Ensuring illustration does not wrap below on mobile */}
+                  <div className="flex flex-row items-center justify-between gap-4 sm:gap-6 h-full w-full">
+                    {/* Left Column: text content & capsule button */}
+                    <div className="space-y-6 flex-1 text-left">
+                      <div className="space-y-3">
+                        {/* Top Module Badge */}
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 bg-emerald-500/5 dark:bg-emerald-500/10 px-2 py-0.5 rounded-md uppercase tracking-widest leading-none select-none">
+                            {skill.tag}
+                          </span>
+                          {skill.isBeta && (
+                            <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-purple-500 text-white select-none leading-none select-none">
+                              BETA
                             </span>
-                            {skill.isBeta && (
-                              <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-purple-500 text-white select-none leading-none select-none">
-                                BETA
-                              </span>
-                            )}
-                          </div>
-
-                          <h3 className={cn("text-2xl font-extrabold tracking-tight flex items-center leading-none", isDark ? "text-white" : "text-slate-800")}>
-                            {skill.title}
-                          </h3>
-
-                          <p className="text-[12px] text-slate-400 font-medium leading-relaxed min-h-[36px]">
-                            {skill.desc}
-                          </p>
+                          )}
                         </div>
 
-                        {/* Badges details grid */}
-                        <div className="grid grid-cols-2 gap-3 max-w-[280px]">
-                          {/* Difficulty badge */}
-                          <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-400 dark:text-slate-300">
-                            <BarChart3 className="w-3.5 h-3.5 shrink-0 text-emerald-500" />
-                            <span>{t("practice.difficulty", "Qiyinlik")}:</span>
-                            <span className={cn("px-1.5 py-0.5 rounded text-[10px] uppercase font-bold", skill.difficultyColor)}>
-                              {skill.difficulty}
-                            </span>
-                          </div>
+                        {/* Title */}
+                        <h3 className={cn("text-2xl font-extrabold tracking-tight leading-none", isDark ? "text-white" : "text-slate-800")}>
+                          {skill.title}
+                        </h3>
 
-                          {/* Est Time badge */}
-                          <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-400 dark:text-slate-300">
-                            <Hourglass className="w-3.5 h-3.5 shrink-0 text-emerald-500" />
-                            <span>{t("practice.estTime", "Muddati")}:</span>
-                            <span className="text-slate-600 dark:text-slate-200">
-                              {skill.estTime} {t("practice.minsPerLesson", "daqiqa")}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Completed & Remaining counter details */}
-                        <div className="grid grid-cols-2 gap-3 max-w-[280px] border-t border-slate-500/10 pt-2 select-none">
-                          <div className="text-[11px] font-medium text-slate-400">
-                            <span className="font-bold text-slate-600 dark:text-slate-200">{skill.completed}</span> {t("practice.lessonsCompleted", "dars yakunlangan")}
-                          </div>
-                          <div className="text-[11px] font-medium text-slate-400">
-                            <span className="font-bold text-slate-600 dark:text-slate-200">{remainingCount}</span> {t("practice.lessonsRemaining", "dars qolgan")}
-                          </div>
-                        </div>
-
-                        {/* Premium custom progress bar line */}
-                        <div className="space-y-1.5 w-full max-w-[280px] select-none">
-                          <div className="flex items-center gap-3">
-                            <div className={cn("h-2 w-full rounded-full overflow-hidden", isDark ? "bg-white/5" : "bg-slate-100")}>
-                              <div 
-                                className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-700" 
-                                style={{ width: `${progressPercent}%` }}
-                              />
-                            </div>
-                            <span className="text-xs font-bold text-emerald-500 dark:text-emerald-400 shrink-0 leading-none">
-                              {progressPercent}%
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Action Continue Button */}
-                        <Button
-                          onClick={() => navigate(skill.path)}
-                          className="h-10 rounded-xl text-xs font-semibold text-white px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-md shadow-emerald-500/10 transition-all duration-300 w-fit flex items-center gap-1.5 transform active:scale-95"
-                        >
-                          {progressPercent > 0 ? t("practice.continueBtn", "Davom ettirish") : t("practice.startBtn", "Boshlash")} 
-                          <ChevronRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
-                        </Button>
+                        {/* Subtitle */}
+                        <p className="text-[13px] text-slate-400 font-medium leading-relaxed max-w-[200px] sm:max-w-none">
+                          {skill.desc}
+                        </p>
                       </div>
 
-                      {/* Right Column: Premium Custom floating vector illustration */}
-                      <motion.div
-                        animate={{ y: [0, -6, 0] }}
-                        transition={{ repeat: Infinity, duration: 4 + index, ease: "easeInOut" }}
-                        className="w-36 h-36 flex items-center justify-center shrink-0 p-1 relative z-10 select-none group-hover:scale-105 transition-transform duration-300"
+                      {/* Start Practice Button */}
+                      <Button
+                        onClick={() => navigate(skill.path)}
+                        className={cn(
+                          "h-10 rounded-full text-xs font-semibold text-white px-6 bg-gradient-to-r shadow-md transition-all duration-300 w-fit flex items-center gap-1.5 transform active:scale-95",
+                          skill.btnClass
+                        )}
                       >
-                        {skill.svg}
-                      </motion.div>
+                        {t("practice.startBtn", "Start Practice")}
+                        <ArrowUpRight className="w-3.5 h-3.5" />
+                      </Button>
                     </div>
-                  </Card>
-                </motion.div>
-              );
-            })}
-          </div>
+
+                    {/* Right Column: Premium Custom floating vector illustration (Scaled side-by-side) */}
+                    <motion.div
+                      animate={{ y: [0, -6, 0] }}
+                      transition={{ repeat: Infinity, duration: 4.5 + index, ease: "easeInOut" }}
+                      whileHover={{ scale: 1.03, rotate: 1 }}
+                      className="w-24 h-24 sm:w-32 sm:h-32 md:w-36 md:h-36 flex items-center justify-center shrink-0 p-1 relative z-10 select-none transition-transform duration-300"
+                    >
+                      {skill.svg}
+                    </motion.div>
+                  </div>
+                </Card>
+              </motion.div>
+            );
+          })}
         </div>
       )}
     </div>
