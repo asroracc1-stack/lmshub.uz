@@ -83,7 +83,8 @@
     "subscriptionManagement": "Subscription Management",
     "securityCenter": "Security Center",
     "systemLogs": "System Logs",
-    "notifications": "Notifications"
+    "notifications": "Notifications",
+    "practice": "Practice"
   },
   "common": {
     "hello": "Hello",

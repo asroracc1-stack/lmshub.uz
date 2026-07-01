@@ -179,6 +179,7 @@ const NotificationsPage = lazy(() => import("./pages/shared/NotificationsPage"))
 const ReferralPage = lazy(() => import("./pages/shared/ReferralPage"));
 const UserChat = lazy(() => import("./pages/user/UserChat"));
 const UserDashboard = lazy(() => import("./pages/user/UserDashboard"));
+const UserPractice = lazy(() => import("./pages/user/UserPractice"));
 const UserAccount = lazy(() => import("./pages/user/Account"));
 const UserAchievements = lazy(() => import("./pages/user/Achievements"));
 const UserLeaderboard = lazy(() => import("./pages/user/UserLeaderboard"));
@@ -399,6 +400,7 @@ const AppRoutes = () => {
         <Route path="/student" element={<ProtectedRoute allow={["student"]}><RoleLayout role="student" basePath="/student" /></ProtectedRoute>}>
           <Route index element={<StudentDashboard />} />
           <Route path="dashboard" element={<StudentDashboard />} />
+          <Route path="practice" element={<UserPractice />} />
           <Route path="teachers" element={<MembersList role="teacher" title={t("nav.myTeachers")} description="" />} />
           <Route path="lessons" element={<StudentMyCourses />} />
           <Route path="grades" element={<StudentGrades />} />
@@ -439,6 +441,7 @@ const AppRoutes = () => {
         <Route path="/user" element={<ProtectedRoute allow={["user"]}><RoleLayout role="user" basePath="/user" /></ProtectedRoute>}>
           <Route index element={<UserDashboard />} />
           <Route path="dashboard" element={<UserDashboard />} />
+          <Route path="practice" element={<UserPractice />} />
           <Route path="profile" element={<UserAccount />} />
           <Route path="subscriptions" element={<Packs />} />
           <Route path="packs" element={<Packs />} />

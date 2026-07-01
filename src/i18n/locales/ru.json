@@ -83,7 +83,8 @@
     "subscriptionManagement": "Управление подписками",
     "securityCenter": "Центр безопасности",
     "systemLogs": "Системные логи",
-    "notifications": "Уведомления"
+    "notifications": "Уведомления",
+    "practice": "Практика"
   },
   "common": {
     "hello": "Привет",
