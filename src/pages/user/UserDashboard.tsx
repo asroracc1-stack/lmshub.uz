@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -19,19 +18,8 @@ import {
   CalendarDays,
   Clock,
   Flame,
-  ArrowRight,
-  ChevronRight,
-  Crown,
-  Layers,
-  Sparkles,
-  BookOpen,
-  Award,
-  Mic,
-  User as UserIcon,
-  Zap,
-  TrendingUp
 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -46,11 +34,6 @@ import {
   XAxis,
   YAxis,
   Tooltip as ChartTooltip,
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-  Radar
 } from "recharts";
 
 interface DailyData {
@@ -191,63 +174,6 @@ export default function UserDashboard() {
       };
     });
   }, [stats]);
-
-  // Skill analysis radar chart data
-  const radarData = useMemo(() => {
-    const readingVal = stats?.avgScore ? Math.min(9.0, stats.avgScore + 0.2) : 6.5;
-    const listeningVal = stats?.avgScore ? Math.min(9.0, stats.avgScore + 0.5) : 7.0;
-    const writingVal = stats?.avgScore ? Math.max(4.5, stats.avgScore - 0.4) : 5.8;
-    const speakingVal = stats?.avgScore ? Math.min(9.0, stats.avgScore - 0.1) : 6.2;
-    const overallVal = stats?.avgScore || 6.5;
-
-    return [
-      { subject: "Reading", score: readingVal },
-      { subject: "Listening", score: listeningVal },
-      { subject: "Writing", score: writingVal },
-      { subject: "Speaking", score: speakingVal },
-      { subject: "Overall", score: overallVal }
-    ];
-  }, [stats]);
-
-  // Custom Achievements/Badges data
-  const achievements = [
-    {
-      id: 1,
-      title: "Ilk Qadam",
-      description: "Birinchi diagnostic mock test topshirildi",
-      icon: Award,
-      progress: 100,
-      color: "from-blue-500 to-indigo-500",
-      unlocked: true,
-    },
-    {
-      id: 2,
-      title: "Mashq Ustasi",
-      description: "Jami 5 soatlik dars va mashqlar",
-      icon: Clock,
-      progress: 75,
-      color: "from-violet-500 to-purple-600",
-      unlocked: false,
-    },
-    {
-      id: 3,
-      title: "Streak Jangchisi",
-      description: "3 kunlik uzluksiz streakka erishildi",
-      icon: Flame,
-      progress: 100,
-      color: "from-orange-500 to-rose-500",
-      unlocked: true,
-    },
-    {
-      id: 4,
-      title: "Kutubxona Bilimdoni",
-      description: "50 ta yangi ibora va lug'atlarni o'rganish",
-      icon: BookOpen,
-      progress: 30,
-      color: "from-emerald-500 to-teal-500",
-      unlocked: false,
-    }
-  ];
 
   // Modals for stat details
   const modal = (() => {
@@ -529,197 +455,12 @@ export default function UserDashboard() {
               </ResponsiveContainer>
             </div>
           </Card>
-
-          {/* Quick Actions (Tezkor harakatlar) */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className={cn("font-display font-bold text-base", isDark ? "text-white" : "text-slate-900")}>
-                Tezkor harakatlar
-              </h3>
-              <div className={cn("h-px flex-1 ml-4", isDark ? "bg-white/5" : "bg-slate-100")} />
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {[
-                {
-                  to: "/user/sat",
-                  label: "SAT Mock topshirish",
-                  icon: Target,
-                  gradient: "from-violet-500 to-purple-600",
-                  glow: "shadow-violet-500/20",
-                },
-                {
-                  to: "/user/national-cert",
-                  label: "Milliy Sertifikat mock",
-                  icon: Zap,
-                  gradient: "from-blue-500 to-indigo-500",
-                  glow: "shadow-blue-500/20",
-                },
-                {
-                  to: "/user/subscriptions",
-                  label: "Obunalar va Paketlar",
-                  icon: Layers,
-                  gradient: "from-pink-500 to-rose-500",
-                  glow: "shadow-pink-500/20",
-                },
-                {
-                  to: "/user/leaderboard",
-                  label: "Peshqadamlar jadvali",
-                  icon: Crown,
-                  gradient: "from-amber-500 to-orange-500",
-                  glow: "shadow-amber-500/20",
-                },
-              ].map((item, i) => {
-                const Icon = item.icon;
-                return (
-                  <Link key={item.to} to={item.to}>
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.05 }}
-                      whileHover={{ y: -4, scale: 1.02 }}
-                      className={cn(
-                        "flex flex-col items-center gap-3 p-5 rounded-2xl border cursor-pointer transition-all duration-300 group h-full justify-center",
-                        isDark
-                          ? "bg-slate-900/40 border-white/5 hover:bg-slate-900/70 hover:border-white/10"
-                          : "bg-white border-slate-100 hover:shadow-xl hover:border-slate-200 shadow-sm"
-                      )}
-                    >
-                      <div
-                        className={cn(
-                          "h-11 w-11 rounded-xl flex items-center justify-center shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:rotate-3",
-                          `bg-gradient-to-br ${item.gradient} ${item.glow} shadow-md`
-                        )}
-                      >
-                        <Icon className="h-5 w-5 text-white" />
-                      </div>
-                      <span
-                        className={cn(
-                          "text-xs font-bold text-center leading-tight tracking-wide",
-                          isDark ? "text-slate-300" : "text-slate-600"
-                        )}
-                      >
-                        {item.label}
-                      </span>
-                    </motion.div>
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
         </div>
 
         {/* Right Column / Sidebar (occupies 1/3 width on large screens) */}
         <div className="space-y-8">
-          
           {/* Monthly Practice Calendar */}
           <LearningContributionGraph />
-
-          {/* Radar Chart (Ko'nikmalar tahlili) */}
-          <Card className={cn(
-            "p-6 shadow-xl rounded-3xl border transition-all duration-300",
-            isDark ? "bg-slate-900/40 backdrop-blur-md border-white/5" : "bg-white border-slate-100 shadow-slate-200/40"
-          )}>
-            <div className="mb-4">
-              <h3 className={cn("font-display font-bold text-base tracking-tight", isDark ? "text-white" : "text-slate-900")}>
-                Ko'nikmalar tahlili
-              </h3>
-              <p className="text-[11px] text-slate-400 font-medium">
-                Imtihon topshirishga tayyorgarlik balansi
-              </p>
-            </div>
-
-            <div className="h-56 w-full flex items-center justify-center">
-              <ResponsiveContainer width="100%" height="100%">
-                <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
-                  <PolarGrid stroke={isDark ? "#1e293b" : "#e2e8f0"} />
-                  <PolarAngleAxis
-                    dataKey="subject"
-                    tick={{ fill: isDark ? "#94a3b8" : "#475569", fontSize: 10, fontWeight: "bold" }}
-                  />
-                  <PolarRadiusAxis
-                    angle={30}
-                    domain={[0, 9]}
-                    tick={{ fill: "#94a3b8", fontSize: 8 }}
-                  />
-                  <Radar
-                    name="Student Score"
-                    dataKey="score"
-                    stroke="#8B5CF6"
-                    fill="#8B5CF6"
-                    fillOpacity={0.3}
-                  />
-                </RadarChart>
-              </ResponsiveContainer>
-            </div>
-          </Card>
-
-          {/* Achievements / Belgilar */}
-          <Card className={cn(
-            "p-6 shadow-xl rounded-3xl border transition-all duration-300",
-            isDark ? "bg-slate-900/40 backdrop-blur-md border-white/5" : "bg-white border-slate-100 shadow-slate-200/40"
-          )}>
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className={cn("font-display font-bold text-base tracking-tight", isDark ? "text-white" : "text-slate-900")}>
-                  Belgilar va Yutuqlar
-                </h3>
-                <p className="text-[11px] text-slate-400 font-medium">
-                  Mashqlar davomida erishilgan natijalar
-                </p>
-              </div>
-              <Badge className="bg-purple-500/10 text-purple-500 border-none font-bold text-[10px] px-2 py-0.5">
-                2/4 olingan
-              </Badge>
-            </div>
-
-            <div className="space-y-4">
-              {achievements.map(badge => {
-                const Icon = badge.icon;
-                return (
-                  <div
-                    key={badge.id}
-                    className={cn(
-                      "p-3 rounded-2xl border flex items-center gap-3 transition-all duration-300",
-                      badge.unlocked
-                        ? isDark ? "bg-slate-950/20 border-white/5" : "bg-slate-50 border-slate-100"
-                        : "opacity-60 bg-transparent border-dashed border-slate-200 dark:border-white/5"
-                    )}
-                  >
-                    {/* Circle badge icons */}
-                    <div className={cn(
-                      "w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-md text-white bg-gradient-to-br",
-                      badge.unlocked ? badge.color : "from-slate-400 to-slate-500 dark:from-slate-800 dark:to-slate-900"
-                    )}>
-                      <Icon className="w-5 h-5" />
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-1">
-                        <p className={cn("text-xs font-bold truncate", isDark ? "text-slate-200" : "text-slate-800")}>
-                          {badge.title}
-                        </p>
-                        <span className="text-[9px] font-black text-slate-400 whitespace-nowrap">
-                          {badge.progress}%
-                        </span>
-                      </div>
-                      <p className="text-[10px] text-slate-400 truncate mt-0.5">
-                        {badge.description}
-                      </p>
-                      
-                      {/* Custom Mini Progress bar */}
-                      <div className="w-full h-1 bg-slate-100 dark:bg-white/5 rounded-full mt-1.5 overflow-hidden">
-                        <div
-                          className="h-full bg-purple-500 rounded-full transition-all duration-500"
-                          style={{ width: `${badge.progress}%` }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </Card>
         </div>
       </div>
     </div>
