@@ -724,6 +724,15 @@ export default function MockTake() {
   
   const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
   const [successAnimPhase, setSuccessAnimPhase] = useState<'idle' | 'loading' | 'success'>('idle');
+
+  const currentQuestion = questions[activeQuestionIndex];
+  const isReading = kind === "reading";
+
+  const wordCount = useMemo(() => {
+    if (!currentQuestion) return 0;
+    const text = answers[currentQuestion.id] || "";
+    return text.trim() ? text.trim().split(/\s+/).length : 0;
+  }, [answers, currentQuestion]);
   
   const startedAt = useRef<number>(0);
   const questionStartRef = useRef<Record<string, number>>({});
@@ -1481,16 +1490,8 @@ export default function MockTake() {
 
   const fmt = (s: number) => `${Math.floor(s / 60).toString().padStart(2, "0")}:${(s % 60).toString().padStart(2, "0")}`;
 
-  const currentQuestion = questions[activeQuestionIndex];
-  const isReading = kind === "reading";
   const answeredCount = Object.values(answers).filter(Boolean).length;
   const flaggedCount = flagged.size;
-
-  const wordCount = useMemo(() => {
-    if (!currentQuestion) return 0;
-    const text = answers[currentQuestion.id] || "";
-    return text.trim() ? text.trim().split(/\s+/).length : 0;
-  }, [answers, currentQuestion]);
 
   // REVIEW SCREEN - Clinical
   if (showReviewScreen) {
