@@ -2092,5 +2092,48 @@
       "title": "Gapirish 🎙️",
       "desc": "Tabiiy va ravon gapiring"
     }
+  },
+  "aiAttendance": {
+    "title": "AI Davomat Boshqaruv Paneli",
+    "subtitle": "Kameralar, anti-spoofing sezgirligi va neyron tarmoq modellarini boshqarish paneli.",
+    "diagnostics": "Diagnostika",
+    "discovery": "ONVIF Discovery",
+    "tabs": {
+      "cameras": "Kameralar monitoringi",
+      "config": "AI Sozlamalar",
+      "rules": "Davomat Qoidalari",
+      "unknowns": "Notanish shaxslar"
+    },
+    "camera": {
+      "stream": "Stream",
+      "latency": "Ping kechikishi",
+      "packetLoss": "Paket yo'qotilishi"
+    },
+    "config": {
+      "title": "Neyron Tarmoq Sezgirlik Sozlamalari",
+      "confidence": "Yuz o'xshashlik chegarasi (Cosine Similarity)",
+      "confidenceHelp": "Ushbu ko'rsatkichdan yuqori bo'lgan yuzlar darsda ishtirok etayotgan sifatida avtomatik belgilanadi.",
+      "interval": "Kadr snapshotlarini tahlil qilish oralig'i (soniya)",
+      "liveness": "Liveness (Anti-Spoofing) Sezgirlik Darajasi",
+      "livenessLow": "PAST (Faqat tekstura)",
+      "livenessMedium": "O'RTA (Tekstura + moiré refleksi)",
+      "livenessHigh": "YUQORI (Tekstura + moiré + specularity check)",
+      "save": "Sezgirlik qoidalarini saqlash"
+    },
+    "rules": {
+      "title": "Davomat Qoidalari Sozlamalari",
+      "lateThreshold": "Kechikish vaqti chegarasi (daqiqalarda)",
+      "lateHelp": "Kechikish vaqti chegarasidan o'tgan o'quvchilar KECHIKKAN deb belgilanadi.",
+      "absentThreshold": "Darsda umuman ishtirok etmaslik chegarasi (daqiqalarda)",
+      "minPresence": "Minimal ishtirok darajasi foizi",
+      "save": "Davomat cheklovlarini qo'llash"
+    },
+    "unknowns": {
+      "detected": "Begona yoki Noma'lum Shaxs Aniqlangan Holatlar",
+      "matchedScore": "Moslik darajasi",
+      "time": "Vaqt",
+      "verify": "Talabani Tasdiqlash",
+      "alert": "Xavfsizlik Ogohlantirishi"
+    }
   }
 }

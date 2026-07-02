@@ -2090,5 +2090,48 @@
       "title": "Speaking 🎙️",
       "desc": "Speak naturally"
     }
+  },
+  "aiAttendance": {
+    "title": "AI Attendance Administration Panel",
+    "subtitle": "Enterprise management dashboard for cameras, liveness settings, and neural models.",
+    "diagnostics": "Diagnostics",
+    "discovery": "ONVIF Discovery",
+    "tabs": {
+      "cameras": "Camera Monitor",
+      "config": "AI Config",
+      "rules": "Attendance Rules",
+      "unknowns": "Unknown Persons"
+    },
+    "camera": {
+      "stream": "Stream",
+      "latency": "Ping Latency",
+      "packetLoss": "Packet Loss"
+    },
+    "config": {
+      "title": "Neural Network Sensitivity Config",
+      "confidence": "Cosine Similarity Confidence Match",
+      "confidenceHelp": "Above this score, matching vector is auto-marked as present.",
+      "interval": "Snapshot Processing Interval (seconds)",
+      "liveness": "Liveness Sensitivity Level",
+      "livenessLow": "LOW (Texture only)",
+      "livenessMedium": "MEDIUM (Texture + moiré check)",
+      "livenessHigh": "HIGH (Texture + moiré + specularity check)",
+      "save": "Save Sensitivity Rules"
+    },
+    "rules": {
+      "title": "Attendance Rule Engine Settings",
+      "lateThreshold": "Late Arrival Minutes Threshold",
+      "lateHelp": "Check-in time after this limit will mark the student as LATE.",
+      "absentThreshold": "Absence Minutes Threshold",
+      "minPresence": "Minimum Presence score percentage",
+      "save": "Apply Attendance Limits"
+    },
+    "unknowns": {
+      "detected": "Incident Detected: Unknown Person",
+      "matchedScore": "Matched Score",
+      "time": "Time",
+      "verify": "Verify Student",
+      "alert": "Security Alert"
+    }
   }
 }
