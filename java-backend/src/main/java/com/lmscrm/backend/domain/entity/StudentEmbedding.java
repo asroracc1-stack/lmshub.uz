@@ -1,51 +1,54 @@
 package com.lmscrm.backend.domain.entity;
 
-import com.lmscrm.backend.domain.enums.AttendanceStatus;
 import jakarta.persistence.*;
 import lombok.*;
-
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "old_attendance_backup", schema = "public")
+@Table(name = "student_embeddings", schema = "public", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"student_id", "model_version"})
+})
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Attendance {
+public class StudentEmbedding {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "lesson_id", nullable = false)
-    private Lesson lesson;
-
-    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "student_id", nullable = false)
     private User student;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private AttendanceStatus status;
-
-    private String note;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "marked_by")
-    private User markedBy;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "organization_id", nullable = false)
     private Organization organization;
 
+    @Column(name = "model_version", nullable = false, length = 50)
+    private String modelVersion;
+
+    @Column(name = "embedding_vector", nullable = false)
+    private byte[] embeddingVector;
+
+    @Column(name = "embedding_hash", nullable = false, length = 64)
+    private String embeddingHash;
+
+    @Column(name = "quality_score", nullable = false, precision = 4, scale = 3)
+    private BigDecimal qualityScore;
+
+    @Column(name = "is_active", nullable = false)
+    @Builder.Default
+    private Boolean isActive = true;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at")
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
     @PrePersist

@@ -130,6 +130,8 @@ const AISpeakingPage = lazy(() => import("./features/ai-speaking/pages/AISpeakin
 const AdminUsers = lazy(() => import("./pages/admin/Users"));
 const PaymentRequests = lazy(() => import("./pages/admin/PaymentRequests"));
 const SubscriptionRequests = lazy(() => import("./pages/admin/SubscriptionRequests"));
+const AIAttendanceDashboard = lazy(() => import("./pages/admin/AIAttendanceDashboard"));
+const FaceRegistration = lazy(() => import("./pages/student/FaceRegistration"));
 
 const AdminDashboard = lazy(() => import("./pages/admin/Dashboard"));
 const Library = lazy(() => import("./pages/shared/Library"));
@@ -316,6 +318,7 @@ const AppRoutes = () => {
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="referral" element={<ReferralPage />} />
           <Route path="gamification" element={<GamificationAdmin />} />
+          <Route path="ai-attendance" element={<AIAttendanceDashboard />} />
           <Route path="library" element={<Library />} />
           <Route path="library/adabiy-kitoblar" element={<LibraryCategoryDetail code="adabiy_kitoblar" />} />
           <Route path="library/maktab-darsliklari" element={<LibraryCategoryDetail code="maktab_darsliklari" />} />
@@ -353,6 +356,7 @@ const AppRoutes = () => {
           <Route path="settings" element={<SettingsPage />} />
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="referral" element={<ReferralPage />} />
+          <Route path="ai-attendance" element={<AIAttendanceDashboard />} />
           <Route path="library" element={<Library />} />
           <Route path="library/adabiy-kitoblar" element={<LibraryCategoryDetail code="adabiy_kitoblar" />} />
           <Route path="library/maktab-darsliklari" element={<LibraryCategoryDetail code="maktab_darsliklari" />} />
@@ -428,6 +432,7 @@ const AppRoutes = () => {
           <Route path="settings" element={<SettingsPage />} />
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="referral" element={<ReferralPage />} />
+          <Route path="face-registration" element={<FaceRegistration />} />
           <Route path="map" element={<AdventureMapFull />} />
           <Route path="library" element={<Library />} />
           <Route path="library/adabiy-kitoblar" element={<LibraryCategoryDetail code="adabiy_kitoblar" />} />

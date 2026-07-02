@@ -76,4 +76,6 @@ public interface LessonRepository extends JpaRepository<Lesson, UUID> {
             @org.springframework.data.repository.query.Param("startsAt") LocalDateTime startsAt,
             @org.springframework.data.repository.query.Param("endsAt") LocalDateTime endsAt
     );
+
+    java.util.Optional<Lesson> findFirstByGroupIdAndStartsAtBeforeAndEndsAtAfter(UUID groupId, LocalDateTime now1, LocalDateTime now2);
 }

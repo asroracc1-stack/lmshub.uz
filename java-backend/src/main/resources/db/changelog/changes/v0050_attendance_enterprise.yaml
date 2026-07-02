@@ -1,0 +1,1328 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0050-1
+      author: antigravity
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: campuses
+      changes:
+        - createTable:
+            tableName: campuses
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: organization_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_campuses_organization
+                    references: organizations(id)
+              - column:
+                  name: name
+                  type: varchar(150)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: address
+                  type: text
+              - column:
+                  name: city
+                  type: varchar(100)
+              - column:
+                  name: phone
+                  type: varchar(20)
+              - column:
+                  name: is_active
+                  type: boolean
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: NOW()
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp
+                  defaultValueComputed: NOW()
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: v0050-2
+      author: antigravity
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: classrooms
+      changes:
+        - createTable:
+            tableName: classrooms
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: campus_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_classrooms_campus
+                    references: campuses(id)
+              - column:
+                  name: organization_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_classrooms_organization
+                    references: organizations(id)
+              - column:
+                  name: name
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: code
+                  type: varchar(20)
+              - column:
+                  name: capacity
+                  type: int
+              - column:
+                  name: has_camera
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: camera_stream_url
+                  type: text
+              - column:
+                  name: camera_type
+                  type: varchar(50)
+                  defaultValue: NONE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: camera_username
+                  type: varchar(100)
+              - column:
+                  name: camera_password_enc
+                  type: text
+              - column:
+                  name: is_active
+                  type: boolean
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: NOW()
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp
+                  defaultValueComputed: NOW()
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: v0050-3
+      author: antigravity
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: lessons
+        - not:
+            - columnExists:
+                tableName: lessons
+                columnName: campus_id
+      changes:
+        - addColumn:
+            tableName: lessons
+            columns:
+              - column:
+                  name: campus_id
+                  type: uuid
+                  constraints:
+                    foreignKeyName: fk_lessons_campus
+                    references: campuses(id)
+
+  - changeSet:
+      id: v0050-4
+      author: antigravity
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: lessons
+        - not:
+            - columnExists:
+                tableName: lessons
+                columnName: classroom_id
+      changes:
+        - addColumn:
+            tableName: lessons
+            columns:
+              - column:
+                  name: classroom_id
+                  type: uuid
+                  constraints:
+                    foreignKeyName: fk_lessons_classroom
+                    references: classrooms(id)
+
+  - changeSet:
+      id: v0050-5
+      author: antigravity
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: camera_groups
+      changes:
+        - createTable:
+            tableName: camera_groups
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: organization_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_cam_groups_organization
+                    references: organizations(id)
+              - column:
+                  name: name
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: text
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: NOW()
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: v0050-6
+      author: antigravity
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: camera_devices
+      changes:
+        - createTable:
+            tableName: camera_devices
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: organization_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_cam_dev_organization
+                    references: organizations(id)
+              - column:
+                  name: campus_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_cam_dev_campus
+                    references: campuses(id)
+              - column:
+                  name: classroom_id
+                  type: uuid
+                  constraints:
+                    foreignKeyName: fk_cam_dev_classroom
+                    references: classrooms(id)
+              - column:
+                  name: group_id
+                  type: uuid
+                  constraints:
+                    foreignKeyName: fk_cam_dev_group
+                    references: camera_groups(id)
+              - column:
+                  name: name
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: model
+                  type: varchar(100)
+              - column:
+                  name: manufacturer
+                  type: varchar(100)
+              - column:
+                  name: serial_number
+                  type: varchar(100)
+                  constraints:
+                    unique: true
+              - column:
+                  name: mac_address
+                  type: varchar(30)
+              - column:
+                  name: protocol
+                  type: varchar(30)
+                  defaultValue: RTSP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: ip_address
+                  type: varchar(45)
+              - column:
+                  name: port
+                  type: int
+                  defaultValueNumeric: 554
+              - column:
+                  name: stream_path
+                  type: text
+              - column:
+                  name: stream_url_enc
+                  type: text
+                  constraints:
+                    nullable: false
+              - column:
+                  name: username_enc
+                  type: text
+              - column:
+                  name: password_enc
+                  type: text
+              - column:
+                  name: position
+                  type: varchar(30)
+                  defaultValue: FRONT
+              - column:
+                  name: resolution_width
+                  type: int
+                  defaultValueNumeric: 1920
+              - column:
+                  name: resolution_height
+                  type: int
+                  defaultValueNumeric: 1080
+              - column:
+                  name: max_fps
+                  type: int
+                  defaultValueNumeric: 30
+              - column:
+                  name: status
+                  type: varchar(30)
+                  defaultValue: UNKNOWN
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_seen_at
+                  type: timestamp
+              - column:
+                  name: last_fps
+                  type: numeric(5,2)
+              - column:
+                  name: last_bitrate_kbps
+                  type: int
+              - column:
+                  name: last_latency_ms
+                  type: int
+              - column:
+                  name: is_active
+                  type: boolean
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: record_enabled
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: motion_detection
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: frame_interval_sec
+                  type: int
+                  defaultValueNumeric: 20
+                  constraints:
+                    nullable: false
+              - column:
+                  name: notes
+                  type: text
+              - column:
+                  name: recording_policy
+                  type: varchar(30)
+                  defaultValue: ON_SCHEDULE
+              - column:
+                  name: snapshot_policy
+                  type: varchar(30)
+                  defaultValue: DURING_LESSON
+              - column:
+                  name: firmware_version
+                  type: varchar(100)
+              - column:
+                  name: onvif_profile
+                  type: varchar(50)
+              - column:
+                  name: ping_latency_ms
+                  type: int
+              - column:
+                  name: packet_loss_pct
+                  type: numeric(5,2)
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: NOW()
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp
+                  defaultValueComputed: NOW()
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: v0050-7
+      author: antigravity
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: camera_permissions
+      changes:
+        - createTable:
+            tableName: camera_permissions
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_cam_perm_user
+                    references: users(id)
+              - column:
+                  name: camera_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_cam_perm_camera
+                    references: camera_devices(id)
+              - column:
+                  name: can_view_live
+                  type: boolean
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: can_trigger_rec
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: NOW()
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: v0050-8
+      author: antigravity
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: ai_attendance_snapshots
+      changes:
+        - createTable:
+            tableName: ai_attendance_snapshots
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: lesson_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_ai_snap_lesson
+                    references: lessons(id)
+              - column:
+                  name: classroom_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_ai_snap_classroom
+                    references: classrooms(id)
+              - column:
+                  name: organization_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_ai_snap_organization
+                    references: organizations(id)
+              - column:
+                  name: image_url
+                  type: text
+              - column:
+                  name: video_clip_url
+                  type: text
+              - column:
+                  name: detected_faces
+                  type: text
+              - column:
+                  name: ai_model_version
+                  type: varchar(50)
+              - column:
+                  name: processing_status
+                  type: varchar(30)
+                  defaultValue: PENDING
+                  constraints:
+                    nullable: false
+              - column:
+                  name: total_detected
+                  type: int
+                  defaultValueNumeric: 0
+              - column:
+                  name: matched_count
+                  type: int
+                  defaultValueNumeric: 0
+              - column:
+                  name: unmatched_count
+                  type: int
+                  defaultValueNumeric: 0
+              - column:
+                  name: error_message
+                  type: text
+              - column:
+                  name: captured_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: processed_at
+                  type: timestamp
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: NOW()
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp
+                  defaultValueComputed: NOW()
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: v0050-9
+      author: antigravity
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: attendance
+      changes:
+        - renameTable:
+            oldTableName: attendance
+            newTableName: old_attendance_backup
+
+  - changeSet:
+      id: v0050-10
+      author: antigravity
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: attendance_records
+      changes:
+        - createTable:
+            tableName: attendance_records
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: lesson_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_att_rec_lesson
+                    references: lessons(id)
+              - column:
+                  name: student_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_att_rec_student
+                    references: users(id)
+              - column:
+                  name: organization_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_att_rec_organization
+                    references: organizations(id)
+              - column:
+                  name: campus_id
+                  type: uuid
+                  constraints:
+                    foreignKeyName: fk_att_rec_campus
+                    references: campuses(id)
+              - column:
+                  name: classroom_id
+                  type: uuid
+                  constraints:
+                    foreignKeyName: fk_att_rec_classroom
+                    references: classrooms(id)
+              - column:
+                  name: status
+                  type: varchar(30)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: method
+                  type: varchar(30)
+                  defaultValue: MANUAL
+                  constraints:
+                    nullable: false
+              - column:
+                  name: marked_by
+                  type: uuid
+                  constraints:
+                    foreignKeyName: fk_att_rec_marked_by
+                    references: users(id)
+              - column:
+                  name: note
+                  type: text
+              - column:
+                  name: late_minutes
+                  type: int
+                  defaultValueNumeric: 0
+              - column:
+                  name: check_in_time
+                  type: timestamp
+              - column:
+                  name: check_out_time
+                  type: timestamp
+              - column:
+                  name: ai_snapshot_id
+                  type: uuid
+                  constraints:
+                    foreignKeyName: fk_att_rec_ai_snapshot
+                    references: ai_attendance_snapshots(id)
+              - column:
+                  name: ai_confidence_score
+                  type: numeric(5,4)
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: NOW()
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp
+                  defaultValueComputed: NOW()
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: v0050-11
+      author: antigravity
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: attendance_engine_sessions
+      changes:
+        - createTable:
+            tableName: attendance_engine_sessions
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: lesson_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_att_eng_lesson
+                    references: lessons(id)
+              - column:
+                  name: organization_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_att_eng_organization
+                    references: organizations(id)
+              - column:
+                  name: state
+                  type: varchar(30)
+                  defaultValue: INITIALIZING
+                  constraints:
+                    nullable: false
+              - column:
+                  name: started_at
+                  type: timestamp
+                  defaultValueComputed: NOW()
+                  constraints:
+                    nullable: false
+              - column:
+                  name: first_snapshot_at
+                  type: timestamp
+              - column:
+                  name: completed_at
+                  type: timestamp
+              - column:
+                  name: snapshot_interval_sec
+                  type: int
+                  defaultValueNumeric: 20
+                  constraints:
+                    nullable: false
+              - column:
+                  name: min_presence_score
+                  type: numeric(3,2)
+                  defaultValueNumeric: 0.60
+                  constraints:
+                    nullable: false
+              - column:
+                  name: late_threshold_min
+                  type: int
+                  defaultValueNumeric: 10
+                  constraints:
+                    nullable: false
+              - column:
+                  name: left_early_threshold_min
+                  type: int
+                  defaultValueNumeric: 15
+                  constraints:
+                    nullable: false
+              - column:
+                  name: decision_window_min
+                  type: int
+                  defaultValueNumeric: 5
+                  constraints:
+                    nullable: false
+              - column:
+                  name: total_snapshots
+                  type: int
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: students_tracked
+                  type: int
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: NOW()
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: v0050-12
+      author: antigravity
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: student_presence_scores
+      changes:
+        - createTable:
+            tableName: student_presence_scores
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: session_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_pres_score_session
+                    references: attendance_engine_sessions(id)
+              - column:
+                  name: lesson_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_pres_score_lesson
+                    references: lessons(id)
+              - column:
+                  name: student_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_pres_score_student
+                    references: users(id)
+              - column:
+                  name: organization_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_pres_score_organization
+                    references: organizations(id)
+              - column:
+                  name: snapshots_present
+                  type: int
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: snapshots_total
+                  type: int
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: presence_score
+                  type: numeric(5,4)
+                  defaultValueNumeric: 0.0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: first_seen_at
+                  type: timestamp
+              - column:
+                  name: last_seen_at
+                  type: timestamp
+              - column:
+                  name: first_seen_offset_min
+                  type: int
+              - column:
+                  name: last_seen_offset_min
+                  type: int
+              - column:
+                  name: avg_confidence
+                  type: numeric(5,4)
+              - column:
+                  name: min_confidence
+                  type: numeric(5,4)
+              - column:
+                  name: final_status
+                  type: varchar(30)
+              - column:
+                  name: decision_method
+                  type: varchar(30)
+              - column:
+                  name: decided_at
+                  type: timestamp
+
+  - changeSet:
+      id: v0050-13
+      author: antigravity
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: tenant_attendance_rules
+      changes:
+        - createTable:
+            tableName: tenant_attendance_rules
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: organization_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_rules_organization
+                    references: organizations(id)
+              - column:
+                  name: late_minutes_limit
+                  type: int
+                  defaultValueNumeric: 10
+                  constraints:
+                    nullable: false
+              - column:
+                  name: absent_minutes_limit
+                  type: int
+                  defaultValueNumeric: 20
+                  constraints:
+                    nullable: false
+              - column:
+                  name: min_score_present
+                  type: numeric(3,2)
+                  defaultValueNumeric: 0.60
+                  constraints:
+                    nullable: false
+              - column:
+                  name: early_leave_limit
+                  type: int
+                  defaultValueNumeric: 15
+                  constraints:
+                    nullable: false
+              - column:
+                  name: allow_teacher_override
+                  type: boolean
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: NOW()
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp
+                  defaultValueComputed: NOW()
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: v0050-14
+      author: antigravity
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: student_rfid_cards
+      changes:
+        - createTable:
+            tableName: student_rfid_cards
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: student_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_rfid_student
+                    references: users(id)
+              - column:
+                  name: card_uid
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: is_active
+                  type: boolean
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: issued_at
+                  type: timestamp
+                  defaultValueComputed: NOW()
+                  constraints:
+                    nullable: false
+              - column:
+                  name: expires_at
+                  type: timestamp
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: NOW()
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: v0050-15
+      author: antigravity
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: dynamic_lesson_qr_codes
+      changes:
+        - createTable:
+            tableName: dynamic_lesson_qr_codes
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: lesson_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_qr_lesson
+                    references: lessons(id)
+              - column:
+                  name: qr_token
+                  type: varchar(128)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: expires_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: NOW()
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: v0050-16
+      author: antigravity
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: classroom_desk_maps
+      changes:
+        - createTable:
+            tableName: classroom_desk_maps
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: classroom_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_desks_classroom
+                    references: classrooms(id)
+              - column:
+                  name: grid_rows
+                  type: int
+                  defaultValueNumeric: 5
+                  constraints:
+                    nullable: false
+              - column:
+                  name: grid_cols
+                  type: int
+                  defaultValueNumeric: 5
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: NOW()
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: v0050-17
+      author: antigravity
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: classroom_seats
+      changes:
+        - createTable:
+            tableName: classroom_seats
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: desk_map_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_seats_desk_map
+                    references: classroom_desk_maps(id)
+              - column:
+                  name: student_id
+                  type: uuid
+                  constraints:
+                    foreignKeyName: fk_seats_student
+                    references: users(id)
+              - column:
+                  name: row_index
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: col_index
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: roi_polygon
+                  type: text
+              - column:
+                  name: is_active
+                  type: boolean
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: v0050-18
+      author: antigravity
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: offline_sync_logs
+      changes:
+        - createTable:
+            tableName: offline_sync_logs
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: organization_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_sync_organization
+                    references: organizations(id)
+              - column:
+                  name: campus_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_sync_campus
+                    references: campuses(id)
+              - column:
+                  name: record_type
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: payload
+                  type: text
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: varchar(30)
+                  defaultValue: PENDING
+                  constraints:
+                    nullable: false
+              - column:
+                  name: retry_count
+                  type: int
+                  defaultValueNumeric: 0
+              - column:
+                  name: vector_clock
+                  type: bigint
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: synced_at
+                  type: timestamp
+
+  - changeSet:
+      id: v0050-19
+      author: antigravity
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: attendance_audit_logs
+      changes:
+        - createTable:
+            tableName: attendance_audit_logs
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: attendance_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_audit_attendance
+                    references: attendance_records(id)
+              - column:
+                  name: changed_by
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_audit_changed_by
+                    references: users(id)
+              - column:
+                  name: organization_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_audit_organization
+                    references: organizations(id)
+              - column:
+                  name: old_status
+                  type: varchar(30)
+              - column:
+                  name: new_status
+                  type: varchar(30)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: old_method
+                  type: varchar(30)
+              - column:
+                  name: new_method
+                  type: varchar(30)
+              - column:
+                  name: change_reason
+                  type: text
+              - column:
+                  name: ip_address
+                  type: varchar(45)
+              - column:
+                  name: user_agent
+                  type: text
+              - column:
+                  name: metadata
+                  type: text
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: NOW()
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: v0050-20
+      author: antigravity
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: student_embeddings
+      changes:
+        - createTable:
+            tableName: student_embeddings
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: student_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_emb_student
+                    references: users(id)
+              - column:
+                  name: organization_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_emb_organization
+                    references: organizations(id)
+              - column:
+                  name: model_version
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: embedding_vector
+                  type: bytea
+                  constraints:
+                    nullable: false
+              - column:
+                  name: embedding_hash
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: quality_score
+                  type: numeric(4,3)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: is_active
+                  type: boolean
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: NOW()
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp
+                  defaultValueComputed: NOW()
+                  constraints:
+                    nullable: false

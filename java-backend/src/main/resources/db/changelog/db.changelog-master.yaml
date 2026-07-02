@@ -97,5 +97,7 @@ databaseChangeLog:
       file: db/changelog/changes/v0048_subscription_improvements.yaml
   - include:
       file: db/changelog/changes/v0049_exam_violations_and_attempts_fields.yaml
+  - include:
+      file: db/changelog/changes/v0050_attendance_enterprise.yaml
 
 

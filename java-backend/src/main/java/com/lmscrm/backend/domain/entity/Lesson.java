@@ -37,6 +37,14 @@ public class Lesson {
     @JoinColumn(name = "teacher_id")
     private User teacher;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "campus_id")
+    private Campus campus;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "classroom_id")
+    private Classroom classroom;
+
     private String room;
 
     @Column(name = "attachment_url")
