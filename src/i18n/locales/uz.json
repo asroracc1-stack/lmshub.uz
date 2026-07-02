@@ -84,7 +84,9 @@
     "securityCenter": "Xavfsizlik markazi",
     "systemLogs": "Tizim loglari",
     "notifications": "Bildirishnomalar",
-    "practice": "Amaliyot"
+    "practice": "Amaliyot",
+    "aiAttendance": "AI Attendance",
+    "faceRegistration": "Yuzni ro'yxatdan o'tkazish"
   },
   "common": {
     "hello": "Salom",

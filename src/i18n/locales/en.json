@@ -84,7 +84,9 @@
     "securityCenter": "Security Center",
     "systemLogs": "System Logs",
     "notifications": "Notifications",
-    "practice": "Practice"
+    "practice": "Practice",
+    "aiAttendance": "AI Attendance",
+    "faceRegistration": "Face Registration"
   },
   "common": {
     "hello": "Hello",

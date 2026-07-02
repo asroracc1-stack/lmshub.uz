@@ -84,7 +84,9 @@
     "securityCenter": "Центр безопасности",
     "systemLogs": "Системные логи",
     "notifications": "Уведомления",
-    "practice": "Практика"
+    "practice": "Практика",
+    "aiAttendance": "AI Attendance",
+    "faceRegistration": "Регистрация лица"
   },
   "common": {
     "hello": "Привет",
