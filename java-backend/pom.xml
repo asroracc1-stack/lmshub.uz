@@ -114,6 +114,11 @@
             <artifactId>aws-java-sdk-s3</artifactId>
             <version>1.12.600</version>
         </dependency>
+        <!-- Spring Boot RabbitMQ Starter for AI messaging pipeline -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-amqp</artifactId>
+        </dependency>
         <!-- Google OAuth Client -->
         <dependency>
             <groupId>com.google.auth</groupId>
