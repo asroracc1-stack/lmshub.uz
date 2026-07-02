@@ -29,7 +29,9 @@ import {
   Compass,
   Database,
   PlusCircle,
-  ListChecks
+  ListChecks,
+  Camera,
+  Cpu
 } from "lucide-react";
 import { TFunction } from "i18next";
 
@@ -70,6 +72,7 @@ export const getSidebarRoutes = (role: string, t: TFunction, options: { ielts?: 
         { to: "/admin/library", label: "Kutubxona", badge: "New", icon: BookOpen },
         // { to: "/admin/packs", label: t("nav.packs"), icon: Package },
         { to: "/admin/gamification", label: "Gamification", icon: Compass },
+        { to: "/admin/ai-attendance", label: t("nav.aiAttendance", "AI Attendance"), icon: Camera },
         { to: "/admin/referral", label: t("nav.referral"), icon: Gift },
       ];
     case "administrator":
@@ -94,6 +97,7 @@ export const getSidebarRoutes = (role: string, t: TFunction, options: { ielts?: 
         { to: "/administrator/leaderboard", label: t("nav.leaderboard"), icon: Trophy },
         { to: "/administrator/library", label: "Kutubxona", badge: "New", icon: BookOpen },
         // { to: "/administrator/packs", label: t("nav.packs"), icon: Package },
+        { to: "/administrator/ai-attendance", label: t("nav.aiAttendance", "AI Attendance"), icon: Camera },
         { to: "/administrator/referral", label: t("nav.referral"), icon: Gift },
       ];
     case "teacher":
@@ -130,6 +134,7 @@ export const getSidebarRoutes = (role: string, t: TFunction, options: { ielts?: 
         { to: "/student/map", label: "Sarguzasht xaritasi", icon: Compass },
         { to: "/student/account", label: t("nav.account"), icon: User },
         { to: "/student/settings", label: t("nav.settings"), icon: Settings },
+        { to: "/student/face-registration", label: t("nav.faceRegistration", "Yuzni ro'yxatdan o'tkazish"), icon: UserCog },
         { to: "/student/referral", label: t("nav.referral"), icon: Gift },
       ];
     case "user":
