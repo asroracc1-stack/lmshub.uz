@@ -6,7 +6,7 @@ import {
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import api from "@/lib/api"; // Axios wrapper
+import { api } from "@/lib/axios"; // Axios wrapper
 
 interface CameraDevice {
   id: string; name: string; ipAddress: string; status: "ONLINE" | "OFFLINE" | "UNKNOWN";
