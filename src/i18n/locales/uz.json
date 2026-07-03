@@ -86,7 +86,9 @@
     "notifications": "Bildirishnomalar",
     "practice": "Amaliyot",
     "aiAttendance": "AI Attendance",
-    "faceRegistration": "Yuzni ro'yxatdan o'tkazish"
+    "faceRegistration": "Yuzni ro'yxatdan o'tkazish",
+    "events": "Tadbirlar",
+    "activeSubscriptions": "Faol Obunalar"
   },
   "common": {
     "hello": "Salom",

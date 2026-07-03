@@ -48,7 +48,7 @@ import WelcomeBanner from "@/components/shared/WelcomeBanner";
 export default function AdminDashboard() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { profile } = useAuth();
+  const { profile, role } = useAuth();
   const { data: stats, isLoading: statsLoading, isError: statsError } = useAdminDashboard();
   const { data: realStats, isLoading: realStatsLoading } = useAdminDashboardStats();
   const { data: events, isLoading: eventsLoading } = useUpcomingEvents();
@@ -75,16 +75,22 @@ export default function AdminDashboard() {
   const [invoiceStudentName, setInvoiceStudentName] = useState<string | null>(null);
   const [invoiceDownloading, setInvoiceDownloading] = useState(false);
 
+  const subscriptionPath = useMemo(() => {
+    if (role === "super_admin") return "/super-admin/subscription-requests";
+    if (role === "pack_manager") return "/pack-manager/subscription-requests";
+    return `/${role || "admin"}/packs`;
+  }, [role]);
+
   const statCards = useMemo(() => [
-    { label: "O'qituvchilar", value: realStats?.totalTeachers ?? 0, growth: stats?.teacherGrowth ?? 0, icon: GraduationCap, color: "text-blue-500", bg: "bg-blue-500/10", to: "/admin/teachers", accent: "#3b82f6" },
-    { label: "Talabalar",     value: realStats?.totalStudents ?? 0, growth: stats?.studentGrowth  ?? 0, icon: Users,         color: "text-purple-500", bg: "bg-purple-500/10", to: "/admin/students",  accent: "#9F86C0" },
-    { label: "Ota-onalar",   value: realStats?.totalParents ?? 0, growth: 0,                          icon: Heart,         color: "text-pink-500",    bg: "bg-pink-500/10",    to: "/admin/parents",   accent: "#ec4899" },
-    { label: "Administratorlar", value: realStats?.totalAdministrators ?? 0, growth: stats?.orgAdminGrowth ?? 0, icon: UserCog,   color: "text-indigo-500", bg: "bg-indigo-500/10", to: "/admin/administrators", accent: "#6366f1" },
-    { label: t("dynamic.startuppitch.guruhlar"),     value: realStats?.totalGroups ?? 0, growth: 0,                          icon: Users2,        color: "text-fuchsia-500",   bg: "bg-fuchsia-500/10",    to: "/admin/groups",         accent: "#06b6d4" },
-    { label: "Tadbirlar",    value: realStats?.totalEvents    ?? 0, growth: stats?.eventGrowth     ?? 0, icon: CalendarIcon,  color: "text-amber-500",  bg: "bg-amber-500/10",  to: "/admin/calendar",  accent: "#f59e0b" },
-    { label: "Fanlar",       value: realStats?.totalSubjects ?? 0, growth: 0,                          icon: BookOpen,      color: "text-violet-500",    bg: "bg-violet-500/10",    to: "/admin/subjects",  accent: "#7C3AED" },
-    { label: "Faol Obunalar",  value: realStats?.totalActiveSubscriptions ?? 0, growth: 0,                          icon: Crown,      color: "text-emerald-500",    bg: "bg-emerald-500/10",    to: "/admin/subscription-requests",  accent: "#10b981" },
-  ], [stats, realStats]);
+    { label: t("nav.teachers", "O'qituvchilar"), value: realStats?.totalTeachers ?? 0, growth: stats?.teacherGrowth ?? 0, icon: GraduationCap, color: "text-blue-500", bg: "bg-blue-500/10", to: `/${role || "admin"}/teachers`, accent: "#3b82f6" },
+    { label: t("nav.students", "Talabalar"),     value: realStats?.totalStudents ?? 0, growth: stats?.studentGrowth  ?? 0, icon: Users,         color: "text-purple-500", bg: "bg-purple-500/10", to: `/${role || "admin"}/students`,  accent: "#9F86C0" },
+    { label: t("nav.parents", "Ota-onalar"),   value: realStats?.totalParents ?? 0, growth: 0,                          icon: Heart,         color: "text-pink-500",    bg: "bg-pink-500/10",    to: `/${role || "admin"}/parents`,   accent: "#ec4899" },
+    { label: t("nav.administrators", "Administratorlar"), value: realStats?.totalAdministrators ?? 0, growth: stats?.orgAdminGrowth ?? 0, icon: UserCog,   color: "text-indigo-500", bg: "bg-indigo-500/10", to: `/${role || "admin"}/administrators`, accent: "#6366f1" },
+    { label: t("nav.groups", "Guruhlar"),     value: realStats?.totalGroups ?? 0, growth: 0,                          icon: Users2,        color: "text-fuchsia-500",   bg: "bg-fuchsia-500/10",    to: `/${role || "admin"}/groups`,         accent: "#06b6d4" },
+    { label: t("nav.events", "Tadbirlar"),    value: realStats?.totalEvents    ?? 0, growth: stats?.eventGrowth     ?? 0, icon: CalendarIcon,  color: "text-amber-500",  bg: "bg-amber-500/10",  to: `/${role || "admin"}/calendar`,  accent: "#f59e0b" },
+    { label: t("nav.subjects", "Fanlar"),       value: realStats?.totalSubjects ?? 0, growth: 0,                          icon: BookOpen,      color: "text-violet-500",    bg: "bg-violet-500/10",    to: `/${role || "admin"}/subjects`,  accent: "#7C3AED" },
+    { label: t("nav.activeSubscriptions", "Faol Obunalar"),  value: realStats?.totalActiveSubscriptions ?? 0, growth: 0,                          icon: Crown,      color: "text-emerald-500",    bg: "bg-emerald-500/10",    to: subscriptionPath,  accent: "#10b981" },
+  ], [stats, realStats, role, subscriptionPath, t]);
 
   const isExpiring = stats?.subscriptionStatus === "EXPIRING" || overview?.subscription?.status === "EXPIRING";
 
@@ -197,7 +203,7 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="p-6 lg:p-10 space-y-6 bg-slate-50 dark:bg-slate-950 min-h-screen lg:min-h-0 lg:h-screen transition-colors duration-500 font-sans relative overflow-hidden flex flex-col justify-start lg:justify-center">
+    <div className="p-4 md:p-6 lg:p-6 xl:p-8 space-y-4 lg:space-y-5 bg-slate-50 dark:bg-slate-950 min-h-screen lg:min-h-0 lg:h-screen transition-colors duration-500 font-sans relative overflow-hidden flex flex-col justify-start">
 
       <AddMemberModal 
         isOpen={activeModal === "O'qituvchi qo'shish" || activeModal === "Talaba qo'shish"}
@@ -389,7 +395,7 @@ export default function AdminDashboard() {
       {isStatsLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {Array.from({ length: 8 }).map((_, i) => (
-            <Card key={i} className="flex flex-col justify-between p-5 min-h-[145px] bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 animate-pulse relative overflow-hidden">
+            <Card key={i} className="flex flex-col justify-between p-4 xl:p-5 min-h-[120px] lg:min-h-[130px] xl:min-h-[145px] bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 animate-pulse relative overflow-hidden">
               <div className="flex items-start justify-between mb-3">
                 <Skeleton className="h-10 w-10 rounded-lg bg-slate-200 dark:bg-slate-700" />
               </div>
@@ -412,7 +418,7 @@ export default function AdminDashboard() {
               className="cursor-pointer"
               onClick={() => navigate(s.to)}
             >
-              <Card className="flex flex-col justify-between p-5 min-h-[145px] bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 group hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 relative overflow-hidden h-full">
+              <Card className="flex flex-col justify-between p-4 xl:p-5 min-h-[120px] lg:min-h-[130px] xl:min-h-[145px] bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 group hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 relative overflow-hidden h-full">
                 {/* colored top line */}
                 <div className="absolute top-0 left-0 right-0 h-0.5 rounded-t-xl opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: s.accent }} />
 

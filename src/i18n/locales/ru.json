@@ -86,7 +86,9 @@
     "notifications": "Уведомления",
     "practice": "Практика",
     "aiAttendance": "AI Attendance",
-    "faceRegistration": "Регистрация лица"
+    "faceRegistration": "Регистрация лица",
+    "events": "Мероприятия",
+    "activeSubscriptions": "Активные подписки"
   },
   "common": {
     "hello": "Привет",

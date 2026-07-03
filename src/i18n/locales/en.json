@@ -86,7 +86,9 @@
     "notifications": "Notifications",
     "practice": "Practice",
     "aiAttendance": "AI Attendance",
-    "faceRegistration": "Face Registration"
+    "faceRegistration": "Face Registration",
+    "events": "Events",
+    "activeSubscriptions": "Active Subscriptions"
   },
   "common": {
     "hello": "Hello",
