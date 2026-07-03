@@ -332,7 +332,7 @@ export default function ParentsPage() {
       <div className="glass rounded-2xl overflow-hidden">
         {isLoading ? (
           <div className="animate-pulse">
-            <Table>
+            <Table className="min-w-[900px]">
               <TableHeader>
                 <TableRow className="hover:bg-transparent border-slate-200 dark:border-white/5">
                   <TableHead><Skeleton className="h-4 w-28" /></TableHead>
@@ -391,7 +391,7 @@ export default function ParentsPage() {
             <p className="text-slate-500 dark:text-slate-400 font-medium">{t("dynamic.parents.otaona_topilmadi")}</p>
           </div>
         ) : (
-          <Table>
+          <Table className="min-w-[900px]">
             <TableHeader>
               <TableRow className="hover:bg-transparent border-slate-200 dark:border-white/5">
                 <TableHead className="font-bold text-slate-900 dark:text-slate-200">{t("dynamic.profile.fio")}</TableHead>
