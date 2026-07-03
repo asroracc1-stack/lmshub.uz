@@ -21,10 +21,25 @@ const WATERMARKS = [
 ];
 
 export default function WelcomeBanner() {
-  const { profile } = useAuth();
+  const { profile, role } = useAuth();
   const { t } = useTranslation();
 
   const currentHour = new Date().getHours();
+
+  const roleLabelText = useMemo(() => {
+    if (!role) return "";
+    const roleLabels: Record<string, string> = {
+      super_admin: "Super Admin",
+      admin: "Admin",
+      administrator: "Administrator",
+      teacher: "O'qituvchi",
+      student: "Talaba",
+      user: "Foydalanuvchi",
+      parent: "Ota-ona",
+      payment_manager: "Menejer",
+    };
+    return roleLabels[role] || role;
+  }, [role]);
 
   const greeting = useMemo(() => {
     if (currentHour >= 6 && currentHour < 12) {
@@ -139,8 +154,12 @@ export default function WelcomeBanner() {
 
           {/* Quick badges */}
           <div className="mt-4 flex flex-wrap gap-2">
-            <span className="inline-flex items-center gap-1.5 bg-white/15 hover:bg-white/25 transition-colors text-white text-xs font-semibold px-3 py-1.5 rounded-full backdrop-blur-sm cursor-default select-none">
-              <Zap className="h-3.5 w-3.5 text-yellow-300" />{t("dynamic.superadminlayout.super_admin")}</span>
+            {roleLabelText && (
+              <span className="inline-flex items-center gap-1.5 bg-white/15 hover:bg-white/25 transition-colors text-white text-xs font-semibold px-3 py-1.5 rounded-full backdrop-blur-sm cursor-default select-none">
+                <Zap className="h-3.5 w-3.5 text-yellow-300" />
+                {roleLabelText}
+              </span>
+            )}
             <span className="inline-flex items-center gap-1.5 bg-white/15 hover:bg-white/25 transition-colors text-white text-xs font-semibold px-3 py-1.5 rounded-full backdrop-blur-sm cursor-default select-none">
               <Star className="h-3.5 w-3.5 text-yellow-300" /> LMSHub Platform
             </span>
