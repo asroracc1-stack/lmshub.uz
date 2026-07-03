@@ -81,9 +81,9 @@ export default function AdminDashboard() {
     { label: "Ota-onalar",   value: realStats?.totalParents ?? 0, growth: 0,                          icon: Heart,         color: "text-pink-500",    bg: "bg-pink-500/10",    to: "/admin/parents",   accent: "#ec4899" },
     { label: "Administratorlar", value: realStats?.totalAdministrators ?? 0, growth: stats?.orgAdminGrowth ?? 0, icon: UserCog,   color: "text-indigo-500", bg: "bg-indigo-500/10", to: "/admin/administrators", accent: "#6366f1" },
     { label: t("dynamic.startuppitch.guruhlar"),     value: realStats?.totalGroups ?? 0, growth: 0,                          icon: Users2,        color: "text-fuchsia-500",   bg: "bg-fuchsia-500/10",    to: "/admin/groups",         accent: "#06b6d4" },
-    { label: "Tadbirlar",    value: stats?.eventsCount    ?? 0, growth: stats?.eventGrowth     ?? 0, icon: CalendarIcon,  color: "text-amber-500",  bg: "bg-amber-500/10",  to: "/admin/calendar",  accent: "#f59e0b" },
+    { label: "Tadbirlar",    value: realStats?.totalEvents    ?? 0, growth: stats?.eventGrowth     ?? 0, icon: CalendarIcon,  color: "text-amber-500",  bg: "bg-amber-500/10",  to: "/admin/calendar",  accent: "#f59e0b" },
     { label: "Fanlar",       value: realStats?.totalSubjects ?? 0, growth: 0,                          icon: BookOpen,      color: "text-violet-500",    bg: "bg-violet-500/10",    to: "/admin/subjects",  accent: "#7C3AED" },
-    { label: "Faol Obunalar",  value: stats?.activeSubscriptions ?? 0, growth: 0,                          icon: Crown,      color: "text-emerald-500",    bg: "bg-emerald-500/10",    to: "/admin/subscription-requests",  accent: "#10b981" },
+    { label: "Faol Obunalar",  value: realStats?.totalActiveSubscriptions ?? 0, growth: 0,                          icon: Crown,      color: "text-emerald-500",    bg: "bg-emerald-500/10",    to: "/admin/subscription-requests",  accent: "#10b981" },
   ], [stats, realStats]);
 
   const isExpiring = stats?.subscriptionStatus === "EXPIRING" || overview?.subscription?.status === "EXPIRING";

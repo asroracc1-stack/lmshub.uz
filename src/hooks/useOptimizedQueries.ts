@@ -121,6 +121,8 @@ export interface AdminDashboardStatsDto {
   totalAdministrators: number;
   totalGroups: number;
   totalSubjects: number;
+  totalEvents: number;
+  totalActiveSubscriptions: number;
 }
 
 export function useAdminDashboardStats() {

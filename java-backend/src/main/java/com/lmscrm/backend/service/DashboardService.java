@@ -26,6 +26,7 @@ public class DashboardService {
     private final CalendarEventRepository eventRepository;
     private final com.lmscrm.backend.repository.GroupRepository groupRepository;
     private final com.lmscrm.backend.repository.SubjectRepository subjectRepository;
+    private final com.lmscrm.backend.repository.UserSubscriptionRepository userSubscriptionRepository;
 
     public DashboardStatsResponse getStats(User currentUser) {
         try {
@@ -109,7 +110,7 @@ public class DashboardService {
         try {
             UUID orgId = currentUser.getOrganizationId();
             
-            long teachers, students, parents, administrators, groups, subjects;
+            long teachers, students, parents, administrators, groups, subjects, events, activeSubs;
             if (orgId == null) {
                 teachers = userRepository.countByRole(AppRole.TEACHER);
                 students = userRepository.countByRole(AppRole.STUDENT);
@@ -117,6 +118,8 @@ public class DashboardService {
                 administrators = userRepository.countByRole(AppRole.ADMINISTRATOR);
                 groups = groupRepository.count();
                 subjects = subjectRepository.count();
+                events = eventRepository.count();
+                activeSubs = userSubscriptionRepository.countByIsActiveTrue();
             } else {
                 teachers = userRepository.countByOrganizationIdAndRole(orgId, AppRole.TEACHER);
                 students = userRepository.countByOrganizationIdAndRole(orgId, AppRole.STUDENT);
@@ -124,6 +127,8 @@ public class DashboardService {
                 administrators = userRepository.countByOrganizationIdAndRole(orgId, AppRole.ADMINISTRATOR);
                 groups = groupRepository.countByOrganizationId(orgId);
                 subjects = subjectRepository.countByOrganizationId(orgId);
+                events = eventRepository.countByOrganizationId(orgId);
+                activeSubs = userSubscriptionRepository.countActiveByOrganizationId(orgId);
             }
 
             return com.lmscrm.backend.dto.response.AdminDashboardStatsDto.builder()
@@ -133,6 +138,8 @@ public class DashboardService {
                     .totalAdministrators(administrators)
                     .totalGroups(groups)
                     .totalSubjects(subjects)
+                    .totalEvents(events)
+                    .totalActiveSubscriptions(activeSubs)
                     .build();
         } catch (Exception e) {
             log.error("Error generating admin dashboard stats", e);
