@@ -69,11 +69,11 @@ export const getSidebarRoutes = (role: string, t: TFunction, options: { ielts?: 
         { to: "/admin/calendar", label: t("nav.calendar"), icon: Calendar },
         { to: "/admin/messages", label: t("nav.messages"), icon: MessagesSquare },
         { to: "/admin/leaderboard", label: t("nav.leaderboard"), icon: Trophy },
-        { to: "/admin/library", label: "Kutubxona", badge: "New", icon: BookOpen },
+        // { to: "/admin/library", label: "Kutubxona", badge: "New", icon: BookOpen },
         // { to: "/admin/packs", label: t("nav.packs"), icon: Package },
-        { to: "/admin/gamification", label: "Gamification", icon: Compass },
+        // { to: "/admin/gamification", label: "Gamification", icon: Compass },
         { to: "/admin/ai-attendance", label: t("nav.aiAttendance", "AI Attendance"), icon: Camera },
-        { to: "/admin/referral", label: t("nav.referral"), icon: Gift },
+        // { to: "/admin/referral", label: t("nav.referral"), icon: Gift },
       ];
     case "administrator":
       return [
@@ -95,10 +95,10 @@ export const getSidebarRoutes = (role: string, t: TFunction, options: { ielts?: 
         { to: "/administrator/calendar", label: t("nav.calendar"), icon: Calendar },
         { to: "/administrator/messages", label: t("nav.messages"), icon: MessagesSquare },
         { to: "/administrator/leaderboard", label: t("nav.leaderboard"), icon: Trophy },
-        { to: "/administrator/library", label: "Kutubxona", badge: "New", icon: BookOpen },
+        // { to: "/administrator/library", label: "Kutubxona", badge: "New", icon: BookOpen },
         // { to: "/administrator/packs", label: t("nav.packs"), icon: Package },
         { to: "/administrator/ai-attendance", label: t("nav.aiAttendance", "AI Attendance"), icon: Camera },
-        { to: "/administrator/referral", label: t("nav.referral"), icon: Gift },
+        // { to: "/administrator/referral", label: t("nav.referral"), icon: Gift },
       ];
     case "teacher":
       return [
