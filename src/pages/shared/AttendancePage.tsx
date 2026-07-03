@@ -19,15 +19,15 @@ interface Lesson {
 interface Student { id: string; full_name: string | null; username: string; }
 interface Row { student_id: string; status: Status; note: string; existingId?: string; }
 
-const STATUS: { value: Status; label: string; icon: typeof CheckCircle2; color: string }[] = [
-  { value: "present", label: t("dynamic.mycourses.keldi"), icon: CheckCircle2, color: "success" },
-  { value: "late", label: "Kech keldi", icon: Clock, color: "warning" },
-  { value: "absent", label: t("dynamic.mycourses.kelmadi"), icon: XCircle, color: "destructive" },
-  { value: "excused", label: t("dynamic.mycourses.sababli"), icon: FileText, color: "muted-foreground" },
-];
-
 export default function AttendancePage() {
   const { t } = useTranslation();
+
+  const STATUS: { value: Status; label: string; icon: typeof CheckCircle2; color: string }[] = [
+    { value: "present", label: t("dynamic.mycourses.keldi"), icon: CheckCircle2, color: "success" },
+    { value: "late", label: "Kech keldi", icon: Clock, color: "warning" },
+    { value: "absent", label: t("dynamic.mycourses.kelmadi"), icon: XCircle, color: "destructive" },
+    { value: "excused", label: t("dynamic.mycourses.sababli"), icon: FileText, color: "muted-foreground" },
+  ];
   const { lessonId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
