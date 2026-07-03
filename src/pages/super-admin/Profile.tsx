@@ -25,6 +25,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { api } from "@/lib/axios";
 import AvatarUpload from "@/components/AvatarUpload";
 import SuccessModal from "@/components/SuccessModal";
+import { formatPhoneNumber } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -323,7 +324,11 @@ export default function Profile() {
               <div className="grid gap-2">
                 <Label className="text-xs">{t("dynamic.profile.telefon")}</Label>
                 <Input
-                  {...profileForm.register("phone")}
+                  {...profileForm.register("phone", {
+                    onChange: (e) => {
+                      e.target.value = formatPhoneNumber(e.target.value);
+                    }
+                  })}
                   placeholder="+998..."
                   className="h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 transition-all duration-500"
                 />

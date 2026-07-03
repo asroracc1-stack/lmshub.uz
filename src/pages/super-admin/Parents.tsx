@@ -47,7 +47,7 @@ import {
 import {
   Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,
 } from "@/components/ui/command";
-import { cn } from "@/lib/utils";
+import { cn, formatPhoneNumber } from "@/lib/utils";
 
 interface Child {
   id: string;
@@ -587,7 +587,13 @@ export default function ParentsPage() {
                   type={type}
                   placeholder={placeholder}
                   value={(form as any)[id]}
-                  onChange={e => setForm(f => ({ ...f, [id]: e.target.value }))}
+                  onChange={e => {
+                    let val = e.target.value;
+                    if (id === "phoneOrUsername" && (val.startsWith("+") || /^\d/.test(val))) {
+                      val = formatPhoneNumber(val);
+                    }
+                    setForm(f => ({ ...f, [id]: val }));
+                  }}
                   className="bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10
                              text-slate-900 dark:text-white rounded-xl h-10"
                 />

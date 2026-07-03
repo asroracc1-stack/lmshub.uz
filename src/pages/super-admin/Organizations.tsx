@@ -38,6 +38,7 @@ import {
 import { Building2, Plus, Pencil, Trash2, MapPin, Mail, Phone, Loader2, Search, Badge } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import LogoUpload from "@/components/LogoUpload";
+import { formatPhoneNumber } from "@/lib/utils";
 
 interface Organization {
   id: string;
@@ -288,7 +289,7 @@ export default function Organizations() {
                   <Label>{t("dynamic.profile.telefon")}</Label>
                   <Input
                     value={form.phone}
-                    onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+                    onChange={(e) => setForm((f) => ({ ...f, phone: formatPhoneNumber(e.target.value) }))}
                     placeholder="+998..."
                   />
                 </div>

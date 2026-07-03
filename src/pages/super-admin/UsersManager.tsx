@@ -9,6 +9,7 @@ import { api } from "@/lib/axios";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AppRole, roleLabel } from "@/lib/auth";
+import { formatPhoneNumber } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -673,7 +674,7 @@ export default function UsersManager({
                   <Label>{t("dynamic.usersmanager.telefon_")}</Label>
                   <Input
                     value={form.phone_number}
-                    onChange={(e) => setForm((f) => ({ ...f, phone_number: e.target.value }))}
+                    onChange={(e) => setForm((f) => ({ ...f, phone_number: formatPhoneNumber(e.target.value) }))}
                     placeholder="+998..."
                   />
                 </div>
