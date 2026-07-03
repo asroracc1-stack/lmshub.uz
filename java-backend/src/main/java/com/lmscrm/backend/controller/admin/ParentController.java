@@ -35,6 +35,7 @@ public class ParentController {
     // ─── GET all parents (paginated) ─────────────────────────────────────────
     @GetMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'ADMINISTRATOR', 'TEACHER')")
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     @Operation(summary = "Get all parents with pagination")
     public ResponseEntity<Page<ParentDto>> getAll(
             @RequestParam(required = false) String query,
@@ -62,10 +63,12 @@ public class ParentController {
     // ─── GET children of a parent ─────────────────────────────────────────────
     @GetMapping("/{parentId}/children")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'ADMINISTRATOR', 'TEACHER', 'PARENT')")
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     @Operation(summary = "Get children linked to a parent")
     public ResponseEntity<List<ChildDto>> getChildren(@PathVariable UUID parentId) {
         List<ParentStudentLink> links = linkRepository.findAllByParentId(parentId);
         List<ChildDto> children = links.stream()
+                .filter(l -> l != null && l.getStudent() != null)
                 .map(l -> ChildDto.from(l.getStudent()))
                 .collect(Collectors.toList());
         return ResponseEntity.ok(children);
@@ -74,10 +77,12 @@ public class ParentController {
     // ─── GET my children (for PARENT role) ───────────────────────────────────
     @GetMapping("/my-children")
     @PreAuthorize("hasRole('PARENT')")
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     @Operation(summary = "Get my children (self)")
     public ResponseEntity<List<ChildDto>> getMyChildren(@AuthenticationPrincipal User currentUser) {
         List<ParentStudentLink> links = linkRepository.findAllByParentId(currentUser.getId());
         List<ChildDto> children = links.stream()
+                .filter(l -> l != null && l.getStudent() != null)
                 .map(l -> ChildDto.from(l.getStudent()))
                 .collect(Collectors.toList());
         return ResponseEntity.ok(children);
@@ -333,10 +338,12 @@ public class ParentController {
     private ParentDto toDto(User u) {
         List<ParentStudentLink> links = linkRepository.findAllByParentId(u.getId());
         List<String> childrenNames = links.stream()
+                .filter(l -> l != null && l.getStudent() != null)
                 .map(l -> l.getStudent().getFullName() != null
                         ? l.getStudent().getFullName() : l.getStudent().getUsername())
                 .collect(Collectors.toList());
         List<ChildDto> children = links.stream()
+                .filter(l -> l != null && l.getStudent() != null)
                 .map(l -> ChildDto.from(l.getStudent()))
                 .collect(Collectors.toList());
         return new ParentDto(u.getId(), u.getFullName(), u.getUsername(),

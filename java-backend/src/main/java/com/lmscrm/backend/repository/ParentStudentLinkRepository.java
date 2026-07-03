@@ -15,10 +15,10 @@ import java.util.UUID;
 @Repository
 public interface ParentStudentLinkRepository extends JpaRepository<ParentStudentLink, UUID> {
 
-    @Query("SELECT l FROM ParentStudentLink l WHERE l.parent.id = :parentId")
+    @Query("SELECT l FROM ParentStudentLink l LEFT JOIN FETCH l.student WHERE l.parent.id = :parentId")
     List<ParentStudentLink> findAllByParentId(@Param("parentId") UUID parentId);
 
-    @Query("SELECT l FROM ParentStudentLink l WHERE l.student.id = :studentId")
+    @Query("SELECT l FROM ParentStudentLink l LEFT JOIN FETCH l.parent WHERE l.student.id = :studentId")
     List<ParentStudentLink> findAllByStudentId(@Param("studentId") UUID studentId);
 
     @Query("SELECT COUNT(l) > 0 FROM ParentStudentLink l WHERE l.parent.id = :parentId AND l.student.id = :studentId")
