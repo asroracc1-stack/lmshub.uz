@@ -82,6 +82,7 @@ export default function AIAttendanceDashboard() {
   // Form submission and action loading states
   const [isActionLoading, setIsActionLoading] = useState<string | null>(null);
   const [isAttendanceRunning, setIsAttendanceRunning] = useState(false);
+  const [isDiscovering, setIsDiscovering] = useState(false);
 
   // Load production-aligned mock data
   useEffect(() => {
@@ -136,6 +137,15 @@ export default function AIAttendanceDashboard() {
   // Helper for role access
   const hasAccess = (allowedRoles: UserRole[]): boolean => {
     return allowedRoles.includes(currentRole);
+  };
+
+  const runCameraDiscovery = async () => {
+    setIsDiscovering(true);
+    toast.info("ONVIF Local Subnet Auto-Discovery probe started...");
+    setTimeout(() => {
+      setIsDiscovering(false);
+      toast.success("Discovery complete! 0 new cameras detected.");
+    }, 2000);
   };
 
   // API triggers simulation
