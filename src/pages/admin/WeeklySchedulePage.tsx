@@ -51,6 +51,20 @@ const STANDARD_SLOTS = [
   { start: "16:30", end: "17:15", label: "8-Para (16:30 - 17:15)" },
 ];
 
+const mapWeeklySchedule = (x: any): WeeklySchedule => ({
+  id: x.id,
+  groupId: x.groupId || x.group_id,
+  groupName: x.groupName || x.group_name,
+  subjectId: x.subjectId || x.subject_id,
+  subjectName: x.subjectName || x.subject_name,
+  teacherId: x.teacherId || x.teacher_id || null,
+  teacherName: x.teacherName || x.teacher_name || null,
+  room: x.room || null,
+  dayOfWeek: x.dayOfWeek !== undefined ? x.dayOfWeek : x.day_of_week,
+  startTime: x.startTime || x.start_time,
+  endTime: x.endTime || x.end_time,
+});
+
 export default function WeeklySchedulePage({ canManage = true }: { canManage?: boolean }) {
   const { t } = useTranslation();
   const [schedules, setSchedules] = useState<WeeklySchedule[]>([]);
@@ -95,11 +109,11 @@ export default function WeeklySchedulePage({ canManage = true }: { canManage?: b
       // Map teacher structure from api response
       const teacherList = (tRes.data || []).map((user: any) => ({
         id: user.id,
-        fullName: user.fullName || user.email
+        fullName: user.fullName || user.full_name || user.email
       }));
       setTeachers(teacherList);
 
-      setSchedules(schRes.data || []);
+      setSchedules((schRes.data || []).map(mapWeeklySchedule));
 
       if (rawGroups.length > 0 && !selectedGroupId) {
         setSelectedGroupId(rawGroups[0].id);
@@ -184,11 +198,11 @@ export default function WeeklySchedulePage({ canManage = true }: { canManage?: b
       if (editingSlot) {
         const res = await api.put(`/admin/weekly-schedules/${editingSlot.id}`, payload);
         toast.success("Dars jadvali muvaffaqiyatli yangilandi!");
-        setSchedules(prev => prev.map(s => s.id === editingSlot.id ? res.data : s));
+        setSchedules(prev => prev.map(s => s.id === editingSlot.id ? mapWeeklySchedule(res.data) : s));
       } else {
         const res = await api.post("/admin/weekly-schedules", payload);
         toast.success("Dars jadvali muvaffaqiyatli qo'shildi!");
-        setSchedules(prev => [...prev, res.data]);
+        setSchedules(prev => [...prev, mapWeeklySchedule(res.data)]);
       }
       setEditorOpen(false);
     } catch (err: any) {
