@@ -59,7 +59,12 @@ public class WeeklyScheduleService {
         }
 
         // 1. Group overlap check
-        List<WeeklySchedule> groupOverlap = weeklyScheduleRepository.findOverlappingForGroup(orgId, groupId, dayOfWeek, startTime, endTime, excludeId);
+        List<WeeklySchedule> groupOverlap;
+        if (excludeId == null) {
+            groupOverlap = weeklyScheduleRepository.findOverlappingForGroupWithoutExcludeId(orgId, groupId, dayOfWeek, startTime, endTime);
+        } else {
+            groupOverlap = weeklyScheduleRepository.findOverlappingForGroup(orgId, groupId, dayOfWeek, startTime, endTime, excludeId);
+        }
         if (!groupOverlap.isEmpty()) {
             throw new ResponseStatusException(
                 HttpStatus.CONFLICT, "Guruhning ushbu vaqtda boshqa darsi bor! Guruh: " + groupOverlap.get(0).getGroup().getName() + 
@@ -69,7 +74,12 @@ public class WeeklyScheduleService {
 
         // 2. Teacher overlap check
         if (teacherId != null) {
-            List<WeeklySchedule> teacherOverlap = weeklyScheduleRepository.findOverlappingForTeacher(orgId, teacherId, dayOfWeek, startTime, endTime, excludeId);
+            List<WeeklySchedule> teacherOverlap;
+            if (excludeId == null) {
+                teacherOverlap = weeklyScheduleRepository.findOverlappingForTeacherWithoutExcludeId(orgId, teacherId, dayOfWeek, startTime, endTime);
+            } else {
+                teacherOverlap = weeklyScheduleRepository.findOverlappingForTeacher(orgId, teacherId, dayOfWeek, startTime, endTime, excludeId);
+            }
             if (!teacherOverlap.isEmpty()) {
                 throw new ResponseStatusException(
                     HttpStatus.CONFLICT, "O'qituvchining ushbu vaqtda boshqa darsi bor! O'qituvchi: " + teacherOverlap.get(0).getTeacher().getFullName() + 
@@ -80,7 +90,12 @@ public class WeeklyScheduleService {
 
         // 3. Room/Classroom overlap check
         if (classroomId != null || (room != null && !room.trim().isEmpty())) {
-            List<WeeklySchedule> roomOverlap = weeklyScheduleRepository.findOverlappingForRoom(orgId, classroomId, room != null ? room.trim() : null, dayOfWeek, startTime, endTime, excludeId);
+            List<WeeklySchedule> roomOverlap;
+            if (excludeId == null) {
+                roomOverlap = weeklyScheduleRepository.findOverlappingForRoomWithoutExcludeId(orgId, classroomId, room != null ? room.trim() : null, dayOfWeek, startTime, endTime);
+            } else {
+                roomOverlap = weeklyScheduleRepository.findOverlappingForRoom(orgId, classroomId, room != null ? room.trim() : null, dayOfWeek, startTime, endTime, excludeId);
+            }
             if (!roomOverlap.isEmpty()) {
                 String overlapRoomName = roomOverlap.get(0).getClassroom() != null ? roomOverlap.get(0).getClassroom().getName() : roomOverlap.get(0).getRoom();
                 throw new ResponseStatusException(

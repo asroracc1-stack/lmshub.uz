@@ -17,8 +17,9 @@ public interface WeeklyScheduleRepository extends JpaRepository<WeeklySchedule, 
     
     List<WeeklySchedule> findByGroupId(UUID groupId);
 
+    // Overlap checks for existing schedules (with excludeId)
     @Query("SELECT ws FROM WeeklySchedule ws WHERE ws.organization.id = :orgId AND ws.teacher.id = :teacherId AND ws.dayOfWeek = :dayOfWeek AND " +
-           "((ws.startTime < :endTime AND ws.endTime > :startTime)) AND (:excludeId IS NULL OR ws.id <> :excludeId)")
+           "((ws.startTime < :endTime AND ws.endTime > :startTime)) AND ws.id <> :excludeId")
     List<WeeklySchedule> findOverlappingForTeacher(
             @Param("orgId") UUID orgId,
             @Param("teacherId") UUID teacherId,
@@ -29,7 +30,7 @@ public interface WeeklyScheduleRepository extends JpaRepository<WeeklySchedule, 
     );
 
     @Query("SELECT ws FROM WeeklySchedule ws WHERE ws.organization.id = :orgId AND ws.group.id = :groupId AND ws.dayOfWeek = :dayOfWeek AND " +
-           "((ws.startTime < :endTime AND ws.endTime > :startTime)) AND (:excludeId IS NULL OR ws.id <> :excludeId)")
+           "((ws.startTime < :endTime AND ws.endTime > :startTime)) AND ws.id <> :excludeId")
     List<WeeklySchedule> findOverlappingForGroup(
             @Param("orgId") UUID orgId,
             @Param("groupId") UUID groupId,
@@ -42,7 +43,7 @@ public interface WeeklyScheduleRepository extends JpaRepository<WeeklySchedule, 
     @Query("SELECT ws FROM WeeklySchedule ws WHERE ws.organization.id = :orgId AND " +
            "((ws.classroom.id = :classroomId AND :classroomId IS NOT NULL) OR (LOWER(ws.room) = LOWER(:room) AND :room IS NOT NULL AND :room <> '')) AND " +
            "ws.dayOfWeek = :dayOfWeek AND " +
-           "((ws.startTime < :endTime AND ws.endTime > :startTime)) AND (:excludeId IS NULL OR ws.id <> :excludeId)")
+           "((ws.startTime < :endTime AND ws.endTime > :startTime)) AND ws.id <> :excludeId")
     List<WeeklySchedule> findOverlappingForRoom(
             @Param("orgId") UUID orgId,
             @Param("classroomId") UUID classroomId,
@@ -51,5 +52,39 @@ public interface WeeklyScheduleRepository extends JpaRepository<WeeklySchedule, 
             @Param("startTime") LocalTime startTime,
             @Param("endTime") LocalTime endTime,
             @Param("excludeId") UUID excludeId
+    );
+
+    // Overlap checks for new schedules (without excludeId)
+    @Query("SELECT ws FROM WeeklySchedule ws WHERE ws.organization.id = :orgId AND ws.teacher.id = :teacherId AND ws.dayOfWeek = :dayOfWeek AND " +
+           "((ws.startTime < :endTime AND ws.endTime > :startTime))")
+    List<WeeklySchedule> findOverlappingForTeacherWithoutExcludeId(
+            @Param("orgId") UUID orgId,
+            @Param("teacherId") UUID teacherId,
+            @Param("dayOfWeek") Integer dayOfWeek,
+            @Param("startTime") LocalTime startTime,
+            @Param("endTime") LocalTime endTime
+    );
+
+    @Query("SELECT ws FROM WeeklySchedule ws WHERE ws.organization.id = :orgId AND ws.group.id = :groupId AND ws.dayOfWeek = :dayOfWeek AND " +
+           "((ws.startTime < :endTime AND ws.endTime > :startTime))")
+    List<WeeklySchedule> findOverlappingForGroupWithoutExcludeId(
+            @Param("orgId") UUID orgId,
+            @Param("groupId") UUID groupId,
+            @Param("dayOfWeek") Integer dayOfWeek,
+            @Param("startTime") LocalTime startTime,
+            @Param("endTime") LocalTime endTime
+    );
+
+    @Query("SELECT ws FROM WeeklySchedule ws WHERE ws.organization.id = :orgId AND " +
+           "((ws.classroom.id = :classroomId AND :classroomId IS NOT NULL) OR (LOWER(ws.room) = LOWER(:room) AND :room IS NOT NULL AND :room <> '')) AND " +
+           "ws.dayOfWeek = :dayOfWeek AND " +
+           "((ws.startTime < :endTime AND ws.endTime > :startTime))")
+    List<WeeklySchedule> findOverlappingForRoomWithoutExcludeId(
+            @Param("orgId") UUID orgId,
+            @Param("classroomId") UUID classroomId,
+            @Param("room") String room,
+            @Param("dayOfWeek") Integer dayOfWeek,
+            @Param("startTime") LocalTime startTime,
+            @Param("endTime") LocalTime endTime
     );
 }
