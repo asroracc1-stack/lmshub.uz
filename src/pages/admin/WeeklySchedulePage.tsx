@@ -66,7 +66,8 @@ import {
   BookOpenCheck,
   Award,
   Building2,
-  Edit
+  Edit,
+  GraduationCap
 } from "lucide-react";
 
 import { api } from "@/lib/axios";
