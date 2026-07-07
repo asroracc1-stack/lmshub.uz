@@ -63,7 +63,7 @@ export const getSidebarRoutes = (role: string, t: TFunction, options: { ielts?: 
         },
         { to: "/admin/subjects", label: t("nav.subjects"), icon: BookOpen },
         { to: "/admin/groups", label: t("nav.groups"), icon: Users2 },
-        { to: "/admin/lessons", label: t("nav.lessons"), icon: CalendarClock },
+        { to: "/admin/timetable", label: t("nav.timetable", "Dars jadvali"), icon: CalendarClock },
         { to: "/admin/payments", label: t("nav.payments"), icon: Wallet },
         // { to: "/admin/payment-requests", label: t("nav.paymentRequests", "To'lov so'rovlari"), icon: Wallet },
         { to: "/admin/calendar", label: t("nav.calendar"), icon: Calendar },
@@ -72,7 +72,7 @@ export const getSidebarRoutes = (role: string, t: TFunction, options: { ielts?: 
         // { to: "/admin/library", label: "Kutubxona", badge: "New", icon: BookOpen },
         // { to: "/admin/packs", label: t("nav.packs"), icon: Package },
         // { to: "/admin/gamification", label: "Gamification", icon: Compass },
-        { to: "/admin/ai-attendance", label: t("nav.aiAttendance", "AI Attendance"), icon: Camera },
+        // { to: "/admin/ai-attendance", label: t("nav.aiAttendance", "AI Attendance"), icon: Camera },
         // { to: "/admin/referral", label: t("nav.referral"), icon: Gift },
       ];
     case "administrator":
@@ -89,7 +89,7 @@ export const getSidebarRoutes = (role: string, t: TFunction, options: { ielts?: 
         },
         { to: "/administrator/subjects", label: t("nav.subjects"), icon: BookOpen },
         { to: "/administrator/groups", label: t("nav.groups"), icon: Users2 },
-        { to: "/administrator/lessons", label: t("nav.lessons"), icon: CalendarClock },
+        { to: "/administrator/timetable", label: t("nav.timetable", "Dars jadvali"), icon: CalendarClock },
         { to: "/administrator/payments", label: t("nav.payments"), icon: Wallet },
         // { to: "/administrator/payment-requests", label: t("nav.paymentRequests", "To'lov so'rovlari"), icon: Wallet },
         { to: "/administrator/calendar", label: t("nav.calendar"), icon: Calendar },
@@ -97,7 +97,7 @@ export const getSidebarRoutes = (role: string, t: TFunction, options: { ielts?: 
         { to: "/administrator/leaderboard", label: t("nav.leaderboard"), icon: Trophy },
         // { to: "/administrator/library", label: "Kutubxona", badge: "New", icon: BookOpen },
         // { to: "/administrator/packs", label: t("nav.packs"), icon: Package },
-        { to: "/administrator/ai-attendance", label: t("nav.aiAttendance", "AI Attendance"), icon: Camera },
+        // { to: "/administrator/ai-attendance", label: t("nav.aiAttendance", "AI Attendance"), icon: Camera },
         // { to: "/administrator/referral", label: t("nav.referral"), icon: Gift },
       ];
     case "teacher":

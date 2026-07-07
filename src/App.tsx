@@ -158,6 +158,7 @@ const StudentPayment = lazy(() => import("./pages/student/Payment"));
 const OrgSubjects = lazy(() => import("./pages/shared/OrgSubjects"));
 const OrgGroups = lazy(() => import("./pages/shared/OrgGroups"));
 const OrgLessons = lazy(() => import("./pages/shared/OrgLessons"));
+const WeeklySchedulePage = lazy(() => import("./pages/admin/WeeklySchedulePage"));
 const AttendancePage = lazy(() => import("./pages/shared/AttendancePage"));
 const TeacherGrades = lazy(() => import("./pages/teacher/Grades"));
 const StudentGrades = lazy(() => import("./pages/student/Grades"));
@@ -299,6 +300,7 @@ const AppRoutes = () => {
           <Route path="subjects" element={<OrgSubjects />} />
           <Route path="groups" element={<OrgGroups />} />
           <Route path="lessons" element={<OrgLessons canManage basePath="/admin" />} />
+          <Route path="timetable" element={<WeeklySchedulePage canManage />} />
           <Route path="attendance/:lessonId" element={<AttendancePage />} />
           <Route path="calendar" element={<OrgEvents canManage />} />
           <Route path="messages" element={<OrgMessages />} />
@@ -339,6 +341,7 @@ const AppRoutes = () => {
           <Route path="subjects" element={<OrgSubjects />} />
           <Route path="groups" element={<OrgGroups />} />
           <Route path="lessons" element={<OrgLessons canManage basePath="/administrator" />} />
+          <Route path="timetable" element={<WeeklySchedulePage canManage />} />
           <Route path="attendance/:lessonId" element={<AttendancePage />} />
           <Route path="calendar" element={<OrgEvents canManage />} />
           <Route path="messages" element={<OrgMessages />} />

@@ -1,0 +1,104 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0051-1
+      author: ai
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: weekly_schedules
+      changes:
+        - createTable:
+            tableName: weekly_schedules
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: organization_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: group_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: subject_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: teacher_id
+                  type: uuid
+              - column:
+                  name: classroom_id
+                  type: uuid
+              - column:
+                  name: room
+                  type: varchar(255)
+              - column:
+                  name: day_of_week
+                  type: integer
+                  constraints:
+                    nullable: false
+              - column:
+                  name: start_time
+                  type: time
+                  constraints:
+                    nullable: false
+              - column:
+                  name: end_time
+                  type: time
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: weekly_schedules
+            baseColumnNames: organization_id
+            constraintName: fk_weekly_sched_org
+            referencedTableName: organizations
+            referencedColumnNames: id
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: weekly_schedules
+            baseColumnNames: group_id
+            constraintName: fk_weekly_sched_group
+            referencedTableName: groups
+            referencedColumnNames: id
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: weekly_schedules
+            baseColumnNames: subject_id
+            constraintName: fk_weekly_sched_subject
+            referencedTableName: subjects
+            referencedColumnNames: id
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: weekly_schedules
+            baseColumnNames: teacher_id
+            constraintName: fk_weekly_sched_teacher
+            referencedTableName: users
+            referencedColumnNames: id
+            onDelete: SET NULL
+        - addForeignKeyConstraint:
+            baseTableName: weekly_schedules
+            baseColumnNames: classroom_id
+            constraintName: fk_weekly_sched_classroom
+            referencedTableName: classrooms
+            referencedColumnNames: id
+            onDelete: SET NULL

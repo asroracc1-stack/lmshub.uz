@@ -43,4 +43,15 @@ public interface AcademicMapper {
     @Mapping(source = "subject.name", target = "subjectName")
     @Mapping(source = "lesson.id", target = "lessonId")
     GradeDto toGradeDto(Grade grade);
+
+    @Mapping(source = "group.id", target = "groupId")
+    @Mapping(source = "group.name", target = "groupName")
+    @Mapping(source = "subject.id", target = "subjectId")
+    @Mapping(source = "subject.name", target = "subjectName")
+    @Mapping(source = "teacher.id", target = "teacherId")
+    @Mapping(source = "teacher.fullName", target = "teacherName")
+    @Mapping(source = "classroom.id", target = "classroomId")
+    @Mapping(source = "classroom.name", target = "classroomName")
+    @Mapping(source = "organization.id", target = "organizationId")
+    WeeklyScheduleDto toWeeklyScheduleDto(WeeklySchedule weeklySchedule);
 }

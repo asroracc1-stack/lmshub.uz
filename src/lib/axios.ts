@@ -211,6 +211,95 @@ api.interceptors.response.use(
           config
         } as any;
       }
+
+      if (url.includes('/admin/weekly-schedules/generate')) {
+        return {
+          data: {
+            message: "Darslar muvaffaqiyatli generatsiya qilindi!",
+            count: 12
+          },
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config
+        } as any;
+      }
+
+      if (url.includes('/admin/weekly-schedules')) {
+        return {
+          data: [
+            {
+              id: "ws-mock-1",
+              groupId: "mock-group-1",
+              groupName: "9 A uz",
+              subjectId: "mock-subject-1",
+              subjectName: "Java",
+              teacherId: "mock-teacher-1",
+              teacherName: "Nurmamatov B",
+              room: "102",
+              dayOfWeek: 1,
+              startTime: "09:00:00",
+              endTime: "09:45:00"
+            },
+            {
+              id: "ws-mock-2",
+              groupId: "mock-group-1",
+              groupName: "9 A uz",
+              subjectId: "mock-subject-1",
+              subjectName: "Java",
+              teacherId: "mock-teacher-1",
+              teacherName: "Nurmamatov B",
+              room: "102",
+              dayOfWeek: 2,
+              startTime: "09:00:00",
+              endTime: "09:45:00"
+            },
+            {
+              id: "ws-mock-3",
+              groupId: "mock-group-1",
+              groupName: "9 A uz",
+              subjectId: "mock-subject-2",
+              subjectName: "Ingliz tili",
+              teacherId: "mock-teacher-2",
+              teacherName: "Normamatov D",
+              room: "204",
+              dayOfWeek: 3,
+              startTime: "09:00:00",
+              endTime: "09:45:00"
+            },
+            {
+              id: "ws-mock-4",
+              groupId: "mock-group-1",
+              groupName: "9 A uz",
+              subjectId: "mock-subject-1",
+              subjectName: "Java",
+              teacherId: "mock-teacher-1",
+              teacherName: "Nurmamatov B",
+              room: "102",
+              dayOfWeek: 4,
+              startTime: "09:00:00",
+              endTime: "09:45:00"
+            },
+            {
+              id: "ws-mock-5",
+              groupId: "mock-group-1",
+              groupName: "9 A uz",
+              subjectId: "mock-subject-3",
+              subjectName: "F of BD",
+              teacherId: "mock-teacher-3",
+              teacherName: "Tojiqulov J",
+              room: "305",
+              dayOfWeek: 5,
+              startTime: "09:00:00",
+              endTime: "09:45:00"
+            }
+          ],
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config
+        } as any;
+      }
     }
 
     // Agar 401 Unauthorized xatosi kelsa, foydalanuvchini tizimdan chiqarish mumkin
