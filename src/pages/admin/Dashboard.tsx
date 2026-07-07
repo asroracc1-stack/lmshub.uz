@@ -203,7 +203,11 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="p-4 md:p-6 lg:p-6 xl:p-8 space-y-4 lg:space-y-5 bg-slate-50 dark:bg-slate-950 min-h-screen lg:min-h-0 lg:h-screen transition-colors duration-500 font-sans relative overflow-hidden flex flex-col justify-start">
+    <div className="w-full space-y-4 relative pb-2">
+      {/* Background radial ambient glow */}
+      <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-purple-500/5 dark:bg-purple-500/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
+      <div className="absolute bottom-20 left-0 w-[300px] h-[300px] bg-blue-500/5 dark:bg-blue-500/10 rounded-full blur-[80px] -z-10 pointer-events-none" />
+
 
       <AddMemberModal 
         isOpen={activeModal === "O'qituvchi qo'shish" || activeModal === "Talaba qo'shish"}
@@ -386,8 +390,6 @@ export default function AdminDashboard() {
           </Dialog>
         )}
       </AnimatePresence>
-      
-      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/5 dark:bg-primary/20 rounded-full blur-[120px] -z-10 pointer-events-none" />
       
       <WelcomeBanner />
 
