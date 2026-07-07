@@ -134,8 +134,8 @@ export const getSidebarRoutes = (role: string, t: TFunction, options: { ielts?: 
         // { to: "/student/map", label: "Sarguzasht xaritasi", icon: Compass },
         // { to: "/student/account", label: t("nav.account"), icon: User },
         // { to: "/student/settings", label: t("nav.settings"), icon: Settings },
-        { to: "/student/face-registration", label: t("nav.faceRegistration", "Yuzni ro'yxatdan o'tkazish"), icon: UserCog },
-        { to: "/student/referral", label: t("nav.referral"), icon: Gift },
+        // { to: "/student/face-registration", label: t("nav.faceRegistration", "Yuzni ro'yxatdan o'tkazish"), icon: UserCog },
+        // { to: "/student/referral", label: t("nav.referral"), icon: Gift },
       ];
     case "user":
       return [
