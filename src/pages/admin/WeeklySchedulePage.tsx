@@ -88,7 +88,8 @@ export default function WeeklySchedulePage({ canManage = true }: { canManage?: b
         api.get("/admin/weekly-schedules")
       ]);
 
-      setGroups(gRes.data || []);
+      const rawGroups = gRes.data?.content || gRes.data || [];
+      setGroups(rawGroups);
       setSubjects(sRes.data || []);
       
       // Map teacher structure from api response
@@ -100,8 +101,8 @@ export default function WeeklySchedulePage({ canManage = true }: { canManage?: b
 
       setSchedules(schRes.data || []);
 
-      if ((gRes.data || []).length > 0 && !selectedGroupId) {
-        setSelectedGroupId(gRes.data[0].id);
+      if (rawGroups.length > 0 && !selectedGroupId) {
+        setSelectedGroupId(rawGroups[0].id);
       }
     } catch (err) {
       console.error(err);
