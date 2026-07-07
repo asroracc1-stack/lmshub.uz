@@ -32,7 +32,7 @@ interface PaymentTransaction {
   createdAt: string;
 }
 
-const statusMeta = (s: string) => {
+const statusMeta = (s: string, t: any) => {
   const status = s.toLowerCase();
   switch (status) {
     case "pending":
@@ -275,7 +275,7 @@ export default function OrgPayments() {
         <div className="grid gap-4">
           <AnimatePresence mode="popLayout">
             {filtered.map((p, idx) => {
-              const m = statusMeta(p.status);
+              const m = statusMeta(p.status, t);
               const StatusIcon = m.icon;
               return (
                 <motion.div
