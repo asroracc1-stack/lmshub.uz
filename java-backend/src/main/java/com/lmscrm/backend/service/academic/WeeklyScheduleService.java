@@ -88,13 +88,29 @@ public class WeeklyScheduleService {
             }
         }
 
-        // 3. Room/Classroom overlap check
-        if (classroomId != null || (room != null && !room.trim().isEmpty())) {
+        // 3. Classroom overlap check (database classroom reference)
+        if (classroomId != null) {
+            List<WeeklySchedule> classroomOverlap;
+            if (excludeId == null) {
+                classroomOverlap = weeklyScheduleRepository.findOverlappingForClassroomWithoutExcludeId(orgId, classroomId, dayOfWeek, startTime, endTime);
+            } else {
+                classroomOverlap = weeklyScheduleRepository.findOverlappingForClassroom(orgId, classroomId, dayOfWeek, startTime, endTime, excludeId);
+            }
+            if (!classroomOverlap.isEmpty()) {
+                throw new ResponseStatusException(
+                    HttpStatus.CONFLICT, "Sinf xonasi ushbu vaqtda band! Xona: " + classroomOverlap.get(0).getClassroom().getName() + 
+                    ", Guruh: " + classroomOverlap.get(0).getGroup().getName()
+                );
+            }
+        }
+
+        // 4. Room text name overlap check (fallback manual room entry)
+        if (room != null && !room.trim().isEmpty()) {
             List<WeeklySchedule> roomOverlap;
             if (excludeId == null) {
-                roomOverlap = weeklyScheduleRepository.findOverlappingForRoomWithoutExcludeId(orgId, classroomId, room != null ? room.trim() : null, dayOfWeek, startTime, endTime);
+                roomOverlap = weeklyScheduleRepository.findOverlappingForRoomNameWithoutExcludeId(orgId, room.trim(), dayOfWeek, startTime, endTime);
             } else {
-                roomOverlap = weeklyScheduleRepository.findOverlappingForRoom(orgId, classroomId, room != null ? room.trim() : null, dayOfWeek, startTime, endTime, excludeId);
+                roomOverlap = weeklyScheduleRepository.findOverlappingForRoomName(orgId, room.trim(), dayOfWeek, startTime, endTime, excludeId);
             }
             if (!roomOverlap.isEmpty()) {
                 String overlapRoomName = roomOverlap.get(0).getClassroom() != null ? roomOverlap.get(0).getClassroom().getName() : roomOverlap.get(0).getRoom();
