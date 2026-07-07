@@ -70,13 +70,26 @@ public class AdminUserService {
                 users = userRepository.findAll();
             }
         }
-        return users.stream().map(u -> UserSummaryDto.builder()
-                .id(u.getId())
-                .fullName(u.getFullName())
-                .email(u.getEmail())
-                .username(u.getUsername())
-                .organizationId(u.getOrganizationId())
-                .build()).collect(Collectors.toList());
+        return users.stream().map(u -> {
+            String name = u.getFullName();
+            if ((name == null || name.trim().isEmpty()) && u.getProfile() != null) {
+                String first = u.getProfile().getFirstName();
+                String last = u.getProfile().getLastName();
+                if (first != null || last != null) {
+                    name = ((first != null ? first : "") + " " + (last != null ? last : "")).trim();
+                }
+            }
+            if (name == null || name.trim().isEmpty()) {
+                name = u.getEmail() != null ? u.getEmail() : u.getUsername();
+            }
+            return UserSummaryDto.builder()
+                    .id(u.getId())
+                    .fullName(name)
+                    .email(u.getEmail())
+                    .username(u.getUsername())
+                    .organizationId(u.getOrganizationId())
+                    .build();
+        }).collect(Collectors.toList());
     }
 
     public Page<User> getUsersByRole(String roleName, String search, UUID organizationId, Pageable pageable, User currentUser) {

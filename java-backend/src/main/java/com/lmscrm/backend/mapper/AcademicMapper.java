@@ -49,9 +49,25 @@ public interface AcademicMapper {
     @Mapping(source = "subject.id", target = "subjectId")
     @Mapping(source = "subject.name", target = "subjectName")
     @Mapping(source = "teacher.id", target = "teacherId")
-    @Mapping(source = "teacher.fullName", target = "teacherName")
+    @Mapping(source = "teacher", target = "teacherName")
     @Mapping(source = "classroom.id", target = "classroomId")
     @Mapping(source = "classroom.name", target = "classroomName")
     @Mapping(source = "organization.id", target = "organizationId")
     WeeklyScheduleDto toWeeklyScheduleDto(WeeklySchedule weeklySchedule);
+
+    default String mapTeacherName(User teacher) {
+        if (teacher == null) return null;
+        String name = teacher.getFullName();
+        if ((name == null || name.trim().isEmpty()) && teacher.getProfile() != null) {
+            String first = teacher.getProfile().getFirstName();
+            String last = teacher.getProfile().getLastName();
+            if (first != null || last != null) {
+                name = ((first != null ? first : "") + " " + (last != null ? last : "")).trim();
+            }
+        }
+        if (name == null || name.trim().isEmpty()) {
+            name = teacher.getEmail() != null ? teacher.getEmail() : teacher.getUsername();
+        }
+        return name;
+    }
 }

@@ -246,8 +246,10 @@ public class WeeklyScheduleService {
                         .anyMatch(l -> l.getStartsAt().equals(lessonStart) && l.getSubject().getId().equals(ws.getSubject().getId()));
 
                 if (!exists) {
+                    String teacherName = ws.getTeacher() != null ? mapper.mapTeacherName(ws.getTeacher()) : "";
+                    String lessonTitle = ws.getSubject().getName() + (teacherName != null && !teacherName.isEmpty() ? " - " + teacherName : "");
                     Lesson lesson = Lesson.builder()
-                            .title(ws.getSubject().getName())
+                            .title(lessonTitle)
                             .description("Haftalik dars jadvalidan avtomatik yaratildi")
                             .group(ws.getGroup())
                             .subject(ws.getSubject())
