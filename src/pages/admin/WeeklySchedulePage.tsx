@@ -1835,7 +1835,7 @@ export default function WeeklySchedulePage() {
       <Dialog open={!!selectedConflict} onOpenChange={(open) => !open && setSelectedConflict(null)}>
         <DialogContent className="max-w-md bg-white dark:bg-slate-950 rounded-3xl p-6">
           <DialogHeader>
-            <DialogTitle className="text-red-650 font-bold flex items-center gap-2">
+            <DialogTitle className="text-red-600 font-bold flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 animate-bounce" /> {dict.conflictDetected}
             </DialogTitle>
             <DialogDescription className="text-xs mt-1.5">{selectedConflict?.reason}</DialogDescription>

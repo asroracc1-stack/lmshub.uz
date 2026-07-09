@@ -1977,7 +1977,7 @@ export default function LibraryManage() {
                               <button
                                 type="button"
                                 onClick={() => setFormPdfUrl("")}
-                                className="text-red-500 hover:text-red-650"
+                                className="text-red-500 hover:text-red-700"
                               >
                                 <X className="h-4 w-4" />
                               </button>

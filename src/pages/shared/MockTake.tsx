@@ -1660,7 +1660,7 @@ export default function MockTake() {
     // Header
     headerBg: isBW ? "bg-white" : "bg-black",
     headerBorder: isBW ? "border-slate-200" : isWB ? "border-slate-800" : "border-[#333300]",
-    logoText: isBW ? "text-red-650" : isWB ? "text-red-500" : "text-[#ffff00]",
+    logoText: isBW ? "text-[#e11d48]" : isWB ? "text-red-500" : "text-[#ffff00]",
     
     // Timer Box
     timerBox: isBW 
@@ -1964,7 +1964,7 @@ export default function MockTake() {
 
     return (
       <div
-        style={{ width: (isReading || kind === "writing") ? `${100 - leftWidth}%` : "100%" }}
+        style={{ width: "100%" }}
         className={cn("h-full overflow-hidden flex flex-col transition-colors relative", isBW ? "bg-[#f7f8fa]" : "bg-black")}
       >
         <div className="flex-1 overflow-y-auto p-6 md:p-8 xl:p-12 pb-32 animate-fade-in">
