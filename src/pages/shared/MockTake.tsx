@@ -675,6 +675,7 @@ export default function MockTake() {
   const [result, setResult] = useState<any>(null);
   const [showCorrectAnswers, setShowCorrectAnswers] = useState(false);
   const [isAnalyzeMode, setIsAnalyzeMode] = useState(false);
+  const isReviewOrAnalyze = isReviewMode || isAnalyzeMode;
 
   const ieltsDetails = useMemo(() => {
     if (!result) return [];
@@ -1787,7 +1788,7 @@ export default function MockTake() {
             </h1>
             <div className="flex items-center gap-2 text-[10px] mt-0.5 font-bold uppercase tracking-wider opacity-85">
               <BookOpen className="w-3.5 h-3.5" />
-              <span>{isReviewMode ? "Review | " : ""}{kind} mode</span>
+              <span>{isReviewOrAnalyze ? "Review | " : ""}{kind} mode</span>
             </div>
           </div>
         </div>
@@ -1795,7 +1796,7 @@ export default function MockTake() {
         {/* Center: Timer Box */}
         <div className={cn("flex items-center justify-center border rounded-md px-5 py-1.5 shadow-sm font-sans font-bold text-lg select-none", cStyle.timerBox)}>
           <Clock className="w-5 h-5 mr-2 opacity-80" />
-          {isReviewMode ? "FINISHED" : fmt(timeLeft)}
+          {isReviewOrAnalyze ? "FINISHED" : fmt(timeLeft)}
         </div>
 
         {/* Right: Actions */}
@@ -1909,7 +1910,7 @@ export default function MockTake() {
   };
 
   const renderIeltsListeningControls = () => {
-    if (kind !== "listening" || !exam?.audioUrl || isReviewMode) return null;
+    if (kind !== "listening" || !exam?.audioUrl || isReviewOrAnalyze) return null;
     return (
       <div className="max-w-3xl mx-auto mb-6 px-4 md:px-0">
         {!audioStarted ? (
@@ -1946,7 +1947,7 @@ export default function MockTake() {
         <button
           onClick={() => {
             if (activeQuestionIndex === questions.length - 1) {
-              if (isReviewMode) return;
+              if (isReviewOrAnalyze) return;
               handleSubmitRequest();
             } else {
               setActiveQuestionIndex(i => Math.min(questions.length - 1, i + 1));
@@ -2007,19 +2008,18 @@ export default function MockTake() {
                       }
                     }}
                   >
-                    {/* Badge & Flag Button */}
-                    <div className={cn("flex items-center justify-between border-b pb-3 mb-4", isYB ? "border-[#333300]" : "border-slate-100 dark:border-slate-800")}>
+                                        <div className={cn("flex items-center justify-between border-b pb-3 mb-4", isYB ? "border-[#333300]" : "border-slate-100 dark:border-slate-800")}>
                       <span className="font-extrabold text-sm">
                         Question {q.position}
                       </span>
-                      {!isReviewMode && (
+                      {!isReviewOrAnalyze && (
                         <button 
                           className={cn(
                             "flex items-center text-xs font-bold uppercase tracking-widest px-2.5 py-1 border transition-colors rounded-sm cursor-pointer", 
                             flagged.has(q.id)
                               ? isYB 
                                 ? "border-[#ffff00] text-[#ffff00] bg-yellow-955/20" 
-                                : "border-amber-500 text-amber-600 bg-amber-50/50 dark:bg-amber-950/20"
+                                : "border-amber-500 text-amber-600 bg-amber-50/50 dark:bg-amber-955/20"
                               : isYB 
                                 ? "border-[#ffff00] text-[#ffff00] hover:bg-[#222200]" 
                                 : "border-slate-205 dark:border-slate-750 text-slate-400 hover:border-slate-400 hover:text-slate-655"
@@ -2033,7 +2033,7 @@ export default function MockTake() {
                           {flagged.has(q.id) ? "Flagged" : "Flag"}
                         </button>
                       )}
-                      {isReviewMode && (
+                      {isReviewOrAnalyze && (
                         <span className={cn("text-xs font-bold px-2 py-0.5 rounded-sm border", 
                           detailForQ?.ok 
                             ? "bg-emerald-500/10 border-emerald-500/35 text-emerald-600 dark:text-emerald-400" 
@@ -2066,12 +2066,12 @@ export default function MockTake() {
                           const isUserSelected = submittedAns === opt.text;
                           const isCorrectOption = opt.isCorrect || opt.is_correct || detailForQ?.correctAns === opt.text;
 
-                          const isSelectedState = isReviewMode ? isUserSelected : isSelected;
+                          const isSelectedState = isReviewOrAnalyze ? isUserSelected : isSelected;
                           const labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
 
                           // Options colors for Review vs Exam Mode
                           let optBgHighlight = "";
-                          if (isReviewMode) {
+                          if (isReviewOrAnalyze) {
                             if (isCorrectOption) {
                               optBgHighlight = isYB 
                                 ? "bg-[#002b00] border-[#ffff00] text-[#ffff00]" 
@@ -2086,7 +2086,7 @@ export default function MockTake() {
                           return (
                             <button
                               key={opt.id}
-                              disabled={isReviewMode}
+                              disabled={isReviewOrAnalyze}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 onAnswer(q.id, opt.text);
@@ -2123,7 +2123,7 @@ export default function MockTake() {
                       </div>
                     ) : (
                       <div className="w-full mt-3">
-                        {isReviewMode ? (
+                        {isReviewOrAnalyze ? (
                           <div className="space-y-3 font-semibold text-xs leading-relaxed select-text mt-3">
                             <div className="flex flex-col gap-1.5">
                               <span className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Your answer</span>
@@ -2208,7 +2208,7 @@ export default function MockTake() {
             const isFlg = flagged.has(q.id);
             
             let btnStyle = cStyle.pagUnanswered;
-            if (isReviewMode) {
+            if (isReviewOrAnalyze) {
               const qDetail = ieltsDetails.find((d: any) => String(d.questionId) === String(q.id));
               const isQCorrect = qDetail ? !!qDetail.ok : false;
               const wasQAnswered = qDetail && qDetail.userAns !== undefined && String(qDetail.userAns).trim() !== "";
@@ -2259,9 +2259,15 @@ export default function MockTake() {
 
         {/* Right side: Checkmark or Back Button */}
         <div className="flex items-center justify-end w-1/4">
-          {isReviewMode ? (
+          {isReviewOrAnalyze ? (
             <Button
-              onClick={() => setSearchParams({ attemptId: result?.id || attemptId, review: "false" })}
+              onClick={() => {
+                if (isAnalyzeMode) {
+                  setIsAnalyzeMode(false);
+                } else {
+                  setSearchParams({ attemptId: result?.id || attemptId, review: "false" });
+                }
+              }}
               className={cn("h-10 px-6 rounded-sm font-bold text-xs uppercase tracking-widest cursor-pointer border-none text-white", isYB ? "bg-[#ffff00] !text-black hover:bg-[#dddd00]" : "bg-slate-700 hover:bg-slate-800")}
             >
               Back
@@ -2684,7 +2690,7 @@ export default function MockTake() {
   };
 
   if (result && isIeltsLayout) {
-    if (isReviewMode) {
+    if (isReviewOrAnalyze) {
       return renderIeltsLayout();
     } else {
       return renderIeltsResultDashboard();

@@ -342,6 +342,28 @@
     "tabSwitchWarning": "Tab switching detected! Cheating is not allowed.",
     "returnToDashboard": "Return to Dashboard"
   },
+
+  "welcomeBanner": {
+    "greeting": {
+      "morning": "Good morning",
+      "afternoon": "Good afternoon",
+      "evening": "Good evening"
+    },
+    "sub": {
+      "morning": "A new day — new opportunities await you!",
+      "afternoon": "Good luck achieving today's goals!",
+      "evening": "You did a lot today. Rest well!"
+    },
+    "title": "Welcome, {{name}}!",
+    "defaultName": "User",
+    "motivationTitle": "Inspiration of the day",
+    "motivations": [
+      "Every day small steps lead to big results.",
+      "Knowledge is the most reliable source of wealth.",
+      "What you learn today is your strength tomorrow.",
+      "Success is improving a little bit every day."
+    ]
+  },
   "userDashboard": {
     "toast": {
       "examDateSaved": "Exam date saved ✅",
@@ -349,13 +371,13 @@
       "errorOccurred": "An error occurred"
     },
     "stats": {
-      "targetBand": "Target Band",
-      "avgScore": "Average Score",
-      "daysLeft": "Days Until Exam",
+      "targetBand": "Target score",
+      "avgScore": "Average score",
+      "daysLeft": "Until exam",
       "daysValue": "{{count}} days",
-      "practiceTime": "Practice Time",
+      "practiceTime": "Practice time",
       "minutesValue": "{{count}} min",
-      "dailyStreak": "Daily Streak"
+      "dailyStreak": "Streak active"
     },
     "modal": {
       "targetDesc": "Set your target IELTS band.",
@@ -392,7 +414,22 @@
     "chart": {
       "title": "Weekly Progress",
       "subtitle": "last 7 days",
-      "totalMinutes": "Total: {{count}} min"
+      "totalMinutes": "Total: {{count}} min",
+      "trendsTitle": "Weekly results",
+      "trendsDesc": "last 7 days",
+      "average": "Average",
+      "mainMarketTrend": "Main Market Trend",
+      "rsiActivityIndex": "RSI Activity Index (Practice Intensity)",
+      "momentumIndex": "MOMENTUM INDEX",
+      "overstudied": "70% Highly active study",
+      "overslept": "30% Inactive study",
+      "totalPractice": "Total practice minutes this week",
+      "avgReading": "Average Reading Score",
+      "avgListening": "Average Listening Score",
+      "avgWriting": "Average Writing Band",
+      "avgSpeaking": "Average Speaking Band",
+      "avgSat": "Average SAT Score",
+      "avgNC": "Average Score"
     },
     "telegram": {
       "title": "Our Telegram Channel",
@@ -411,48 +448,6 @@
       "desc": "Your donation or premium purchase helps develop the platform.",
       "cardNumber": "CARD NUMBER",
       "cardOwner": "CARD HOLDER"
-    }
-  },
-  "welcomeBanner": {
-    "greeting": {
-      "morning": "Good morning",
-      "afternoon": "Good afternoon",
-      "evening": "Good evening"
-    },
-    "sub": {
-      "morning": "A new day — new opportunities await you!",
-      "afternoon": "Good luck achieving today's goals!",
-      "evening": "You did a lot today. Rest well!"
-    },
-    "title": "Welcome, {{name}}!",
-    "defaultName": "User",
-    "motivationTitle": "Inspiration of the day",
-    "motivations": [
-      "Every day small steps lead to big results.",
-      "Knowledge is the most reliable source of wealth.",
-      "What you learn today is your strength tomorrow.",
-      "Success is improving a little bit every day."
-    ]
-  },
-  "userDashboard": {
-    "stats": {
-      "targetBand": "Target score",
-      "avgScore": "Average score",
-      "daysLeft": "Until exam",
-      "daysValue": "{{count}} days",
-      "practiceTime": "Practice time",
-      "minutesValue": "{{count}} min",
-      "dailyStreak": "Streak active"
-    },
-    "chart": {
-      "trendsTitle": "Weekly results",
-      "trendsDesc": "last 7 days",
-      "average": "Average",
-      "mainMarketTrend": "Main Market Trend",
-      "rsiActivityIndex": "RSI Activity Index (Practice Intensity)",
-      "momentumIndex": "MOMENTUM INDEX",
-      "overstudied": "70% Highly active study",
-      "overslept": "30% Inactive study"
     },
     "tabs": {
       "practice": "Practice time",

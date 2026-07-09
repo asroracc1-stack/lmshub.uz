@@ -46,8 +46,8 @@ interface DailyData {
   writing?: number | null;
   speaking?: number | null;
   sat?: number | null;
-  nationalCert?: number | null;
-  attemptsCount?: number | null;
+  national_cert?: number | null;
+  attempts_count?: number | null;
 }
 
 interface UserStats {
@@ -276,8 +276,8 @@ export default function UserDashboard() {
         writing: item.writing ?? null,
         speaking: item.speaking ?? null,
         sat: item.sat ?? null,
-        national_cert: item.nationalCert ?? null,
-        attempts: item.attemptsCount ?? 0,
+        national_cert: item.national_cert ?? null,
+        attempts: item.attempts_count ?? 0,
         timeSpent: item.minutes || 0
       };
     });
@@ -487,12 +487,6 @@ export default function UserDashboard() {
                   </div>
                   <DialogTitle className="font-extrabold text-lg">Target Band</DialogTitle>
                 </div>
-                <button 
-                  onClick={() => setOpenKey(null)}
-                  className="absolute right-0 top-0.5 h-7 w-7 rounded-full flex items-center justify-center bg-slate-100 dark:bg-white/5 hover:opacity-80 transition-opacity cursor-pointer text-slate-500 dark:text-slate-450 border-none"
-                >
-                  <span className="text-xs font-sans font-bold">✕</span>
-                </button>
               </DialogHeader>
               <div className="space-y-6">
                 <div className="grid grid-cols-3 gap-3">
@@ -552,12 +546,6 @@ export default function UserDashboard() {
                   </div>
                   <DialogTitle className="font-extrabold text-lg">O'rtacha ball</DialogTitle>
                 </div>
-                <button 
-                  onClick={() => setOpenKey(null)}
-                  className="absolute right-0 top-0.5 h-7 w-7 rounded-full flex items-center justify-center bg-slate-100 dark:bg-white/5 hover:opacity-80 transition-opacity cursor-pointer text-slate-500 dark:text-slate-450 border-none"
-                >
-                  <span className="text-xs font-sans font-bold">✕</span>
-                </button>
               </DialogHeader>
               <div className="space-y-6">
                 {loadingAttempts ? (
@@ -639,12 +627,6 @@ export default function UserDashboard() {
                   </div>
                   <DialogTitle className="font-extrabold text-lg">Imtihon sanasi</DialogTitle>
                 </div>
-                <button 
-                  onClick={() => setOpenKey(null)}
-                  className="absolute right-0 top-0.5 h-7 w-7 rounded-full flex items-center justify-center bg-slate-100 dark:bg-white/5 hover:opacity-80 transition-opacity cursor-pointer text-slate-500 dark:text-slate-450 border-none"
-                >
-                  <span className="text-xs font-sans font-bold">✕</span>
-                </button>
               </DialogHeader>
               <div className="space-y-6">
                 <div className="space-y-2">
@@ -679,12 +661,6 @@ export default function UserDashboard() {
                   </div>
                   <DialogTitle className="font-extrabold text-lg">{t("userDashboard.stats.practiceTime")}</DialogTitle>
                 </div>
-                <button 
-                  onClick={() => setOpenKey(null)}
-                  className="absolute right-0 top-0.5 h-7 w-7 rounded-full flex items-center justify-center bg-slate-100 dark:bg-white/5 hover:opacity-80 transition-opacity cursor-pointer text-slate-500 dark:text-slate-450 border-none"
-                >
-                  <span className="text-xs font-sans font-bold">✕</span>
-                </button>
               </DialogHeader>
               <div className="space-y-3 text-sm">
                 <div className={cn("flex justify-between p-3.5 rounded-xl border font-bold text-xs", itemClass)}>
@@ -718,12 +694,6 @@ export default function UserDashboard() {
                   </div>
                   <DialogTitle className="font-extrabold text-lg">{t("userDashboard.stats.dailyStreak")}</DialogTitle>
                 </div>
-                <button 
-                  onClick={() => setOpenKey(null)}
-                  className="absolute right-0 top-0.5 h-7 w-7 rounded-full flex items-center justify-center bg-slate-100 dark:bg-white/5 hover:opacity-80 transition-opacity cursor-pointer text-slate-500 dark:text-slate-450 border-none"
-                >
-                  <span className="text-xs font-sans font-bold">✕</span>
-                </button>
               </DialogHeader>
               <div className="space-y-4">
                 <p className="text-xs text-slate-450 dark:text-slate-400 font-bold leading-normal">
@@ -886,7 +856,7 @@ export default function UserDashboard() {
             <div className="h-52 w-full relative flex items-center justify-center">
               {hasDataForActiveTab ? (
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={composedChartData} margin={{ top: 10, right: 10, left: -15, bottom: 5 }}>
+                  <AreaChart data={composedChartData} margin={{ top: 10, right: 10, left: -15, bottom: 20 }}>
                     <defs>
                       <linearGradient id={`chartFillGradient-${activeChartTab}`} x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor={chartTheme.stroke} stopOpacity={isDark ? 0.35 : 0.2} />
@@ -897,17 +867,14 @@ export default function UserDashboard() {
                     <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "rgba(255,255,255,0.05)" : "#f1f5f9"} opacity={0.5} vertical={false} />
                     <XAxis
                       dataKey="day"
-                      stroke="#94a3b8"
-                      fontSize={10}
-                      fontWeight="bold"
+                      tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: "bold" }}
                       tickLine={false}
                       axisLine={false}
                       dy={8}
+                      height={30}
                     />
                     <YAxis
-                      stroke="#94a3b8"
-                      fontSize={10}
-                      fontWeight="bold"
+                      tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: "bold" }}
                       tickLine={false}
                       axisLine={false}
                       domain={activeYDomain as any}

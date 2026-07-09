@@ -342,6 +342,28 @@
     "tabSwitchWarning": "Boshqa oynaga o'tish aniqlandi! Shpargalka qilish taqiqlanadi.",
     "returnToDashboard": "Dashboardga Qaytish"
   },
+
+  "welcomeBanner": {
+    "greeting": {
+      "morning": "Xayrli tong",
+      "afternoon": "Xayrli kun",
+      "evening": "Xayrli kech"
+    },
+    "sub": {
+      "morning": "Yangi kun — yangi imkoniyatlar sizi kutmoqda!",
+      "afternoon": "Bugungi maqsadlaringizga erishishda omad!",
+      "evening": "Bugun ko'p narsa qildingiz. Yaxshi dam oling!"
+    },
+    "title": "Xush kelibsiz, {{name}}!",
+    "defaultName": "Foydalanuvchi",
+    "motivationTitle": "Bugungi ilhom",
+    "motivations": [
+      "Har kuni kichik qadamlar katta natijalarga olib boradi.",
+      "Bilim — bu boylikning eng ishonchli manbai.",
+      "Bugun o'rgangan narsang ertangi kuchingdir.",
+      "Muvaffaqiyat — bu har kuni bir oz yaxshilanishdir."
+    ]
+  },
   "userDashboard": {
     "toast": {
       "examDateSaved": "Imtihon sanasi saqlandi ✅",
@@ -349,13 +371,13 @@
       "errorOccurred": "Xatolik yuz berdi"
     },
     "stats": {
-      "targetBand": "Target Band",
+      "targetBand": "Maqsadli ball",
       "avgScore": "O'rtacha ball",
       "daysLeft": "Imtihongacha",
       "daysValue": "{{count}} kun",
       "practiceTime": "Mashq vaqti",
-      "minutesValue": "{{count}} m",
-      "dailyStreak": "Kunlik streak"
+      "minutesValue": "{{count}} daq",
+      "dailyStreak": "Streak faollik"
     },
     "modal": {
       "targetDesc": "O'zingizga maqsadli IELTS bandini belgilang.",
@@ -392,7 +414,22 @@
     "chart": {
       "title": "Haftalik natija",
       "subtitle": "so'nggi 7 kun",
-      "totalMinutes": "Jami: {{count}} min"
+      "totalMinutes": "Jami: {{count}} min",
+      "trendsTitle": "Haftalik natija",
+      "trendsDesc": "so'nggi 7 kun",
+      "average": "O'rtacha",
+      "mainMarketTrend": "Asosiy faollik trendi",
+      "rsiActivityIndex": "RSI Faollik Indeksi (Mashq jadalligi)",
+      "momentumIndex": "MOMENTUM INDEX",
+      "overstudied": "70% O'ta ko'p shug'ullanilgan",
+      "overslept": "30% Kam shug'ullanilgan",
+      "totalPractice": "Jami haftalik mashq vaqti",
+      "avgReading": "O'rtacha Reading balli",
+      "avgListening": "O'rtacha Listening balli",
+      "avgWriting": "O'rtacha Writing balli",
+      "avgSpeaking": "O'rtacha Speaking balli",
+      "avgSat": "O'rtacha SAT balli",
+      "avgNC": "O'rtacha ball"
     },
     "telegram": {
       "title": "Telegram kanalimiz",
@@ -411,48 +448,6 @@
       "desc": "Sizning donat yoki premium xaridingiz platformani rivojlantirishga yordam beradi.",
       "cardNumber": "KARTA RAQAMI",
       "cardOwner": "KARTA EGASI"
-    }
-  },
-  "welcomeBanner": {
-    "greeting": {
-      "morning": "Xayrli tong",
-      "afternoon": "Xayrli kun",
-      "evening": "Xayrli kech"
-    },
-    "sub": {
-      "morning": "Yangi kun — yangi imkoniyatlar sizi kutmoqda!",
-      "afternoon": "Bugungi maqsadlaringizga erishishda omad!",
-      "evening": "Bugun ko'p narsa qildingiz. Yaxshi dam oling!"
-    },
-    "title": "Xush kelibsiz, {{name}}!",
-    "defaultName": "Foydalanuvchi",
-    "motivationTitle": "Bugungi ilhom",
-    "motivations": [
-      "Har kuni kichik qadamlar katta natijalarga olib boradi.",
-      "Bilim — bu boylikning eng ishonchli manbai.",
-      "Bugun o'rgangan narsang ertangi kuchingdir.",
-      "Muvaffaqiyat — bu har kuni bir oz yaxshilanishdir."
-    ]
-  },
-  "userDashboard": {
-    "stats": {
-      "targetBand": "Maqsadli ball",
-      "avgScore": "O'rtacha ball",
-      "daysLeft": "Imtihongacha",
-      "daysValue": "{{count}} kun",
-      "practiceTime": "Mashq vaqti",
-      "minutesValue": "{{count}} daq",
-      "dailyStreak": "Streak faollik"
-    },
-    "chart": {
-      "trendsTitle": "Haftalik natija",
-      "trendsDesc": "so'nggi 7 kun",
-      "average": "O'rtacha",
-      "mainMarketTrend": "Asosiy faollik trendi",
-      "rsiActivityIndex": "RSI Faollik Indeksi (Mashq jadalligi)",
-      "momentumIndex": "MOMENTUM INDEX",
-      "overstudied": "70% O'ta ko'p shug'ullanilgan",
-      "overslept": "30% Kam shug'ullanilgan"
     },
     "tabs": {
       "practice": "Mashq vaqti",
