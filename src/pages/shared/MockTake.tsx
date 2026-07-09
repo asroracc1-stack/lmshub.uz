@@ -664,6 +664,16 @@ export default function MockTake() {
   const [ieltsContrast, setIeltsContrast] = useState<"black-on-white" | "white-on-black" | "yellow-on-black">("black-on-white");
   const [ieltsTextSize, setIeltsTextSize] = useState<"regular" | "large" | "extra-large">("regular");
 
+  const [sections, setSections] = useState<{ title: string; passage: string; imageUrl: string }[]>([]);
+  const [questions, setQuestions] = useState<NormalQ[]>([]);
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [flagged, setFlagged] = useState<Set<string>>(new Set());
+  const [writingAnswer, setWritingAnswer] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [result, setResult] = useState<any>(null);
+
   const ieltsDetails = useMemo(() => {
     if (!result) return [];
     const rawDetails = result.detail || result.details || [];
@@ -674,16 +684,6 @@ export default function MockTake() {
       ok: d.ok !== undefined ? d.ok : d.ok,
     }));
   }, [result]);
-  
-  const [sections, setSections] = useState<{ title: string; passage: string; imageUrl: string }[]>([]);
-  const [questions, setQuestions] = useState<NormalQ[]>([]);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [flagged, setFlagged] = useState<Set<string>>(new Set());
-  const [writingAnswer, setWritingAnswer] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [result, setResult] = useState<any>(null);
   const [sectionIdx, setSectionIdx] = useState(0);
   const [activeQuestionIndex, setActiveQuestionIndex] = useState(0);
   const [showReviewScreen, setShowReviewScreen] = useState(false);
