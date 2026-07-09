@@ -71,6 +71,76 @@ export default function UserDashboard() {
   const [examDate, setExamDate] = useState<string>("");
   const [savingExam, setSavingExam] = useState(false);
 
+  const [attempts, setAttempts] = useState<any[]>([]);
+  const [loadingAttempts, setLoadingAttempts] = useState(false);
+  const [selectedTargetBand, setSelectedTargetBand] = useState<number>(7.0);
+  const [savingTarget, setSavingTarget] = useState(false);
+
+  useEffect(() => {
+    if (openKey === "avg") {
+      const fetchAttempts = async () => {
+        setLoadingAttempts(true);
+        try {
+          const res = await api.get("/student/exams/attempts");
+          setAttempts(res.data || []);
+        } catch (e) {
+          console.error("Failed to load attempts for breakdown", e);
+        } finally {
+          setLoadingAttempts(false);
+        }
+      };
+      fetchAttempts();
+    }
+  }, [openKey]);
+
+  useEffect(() => {
+    if (openKey === "target" && stats?.target_band) {
+      setSelectedTargetBand(stats.target_band);
+    }
+  }, [openKey, stats?.target_band]);
+
+  const breakdown = useMemo(() => {
+    const modules = [
+      { id: "listening", label: "Listening", icon: "🎧" },
+      { id: "reading", label: "Reading", icon: "📖" },
+      { id: "speaking", label: "Speaking", icon: "🗣️" },
+      { id: "writing", label: "Writing", icon: "✍️" },
+      { id: "mock", label: "Mock Test", icon: "🏆" },
+    ];
+
+    const statsMap = modules.map(m => {
+      const filtered = attempts.filter(a => {
+        const type = (a.exam?.type || "").toLowerCase();
+        if (m.id === "mock") {
+          return type.includes("mock") || type === "ielts";
+        }
+        return type === m.id;
+      });
+
+      const count = filtered.length;
+      const scores = filtered
+        .map(a => a.overallBand ?? a.totalScore ?? a.score)
+        .filter((s): s is number => typeof s === "number" && s > 0);
+      
+      const sum = scores.reduce((acc, s) => acc + s, 0);
+      const avg = scores.length > 0 ? sum / scores.length : null;
+
+      return {
+        ...m,
+        count,
+        avg,
+      };
+    });
+
+    const validAvgs = statsMap.map(s => s.avg).filter((a): a is number => a !== null);
+    const overallAvg = validAvgs.length > 0 ? validAvgs.reduce((acc, a) => acc + a, 0) / validAvgs.length : null;
+
+    return {
+      modules: statsMap,
+      overallAvg,
+    };
+  }, [attempts]);
+
   // Active tab selection (7 tabs supported)
   const [activeChartTab, setActiveChartTab] = useState<"practice" | "reading" | "listening" | "writing" | "speaking" | "sat" | "national_cert">("practice");
 
@@ -398,99 +468,241 @@ export default function UserDashboard() {
   const modal = (() => {
     if (!openKey) return null;
     const common = { open: true, onOpenChange: (v: boolean) => !v && setOpenKey(null) };
-    const dialogClass = isDark ? "bg-slate-950 border-white/10 text-white" : "bg-white border-slate-200 text-slate-900";
+    const dialogClass = isDark ? "bg-[#0c0d12] border-white/10 text-white" : "bg-white border-slate-200 text-slate-900";
     const descClass = isDark ? "text-slate-400" : "text-slate-500";
     const labelClass = isDark ? "text-slate-300" : "text-slate-600";
     const inputClass = isDark ? "bg-white/5 border-white/10 text-white" : "bg-slate-50 border-slate-200 text-slate-900";
     const itemClass = isDark ? "bg-white/5 border-white/5" : "bg-slate-50 border-slate-100";
 
     switch (openKey) {
-      case "target":
+      case "target": {
+        const bands = [5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0];
         return (
           <Dialog {...common}>
-            <DialogContent className={cn(dialogClass, "shadow-2xl rounded-2xl")}>
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">🎯 {t("userDashboard.stats.targetBand")}</DialogTitle>
-                <DialogDescription className={descClass}>
-                  {t("userDashboard.modal.targetDesc")}
-                </DialogDescription>
-              </DialogHeader>
-              <div className="py-4 space-y-4">
-                <p className={cn("text-sm font-medium", labelClass)}>{t("userDashboard.modal.currentGoal", { value: stats?.target_band ? stats.target_band.toFixed(1) : t("userDashboard.modal.notSet") })}</p>
-                <Button onClick={() => navigate("/user/profile")} className="w-full bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-bold h-12 rounded-xl">{t("userDashboard.modal.editProfile")}</Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-        );
-      case "avg":
-        return (
-          <Dialog {...common}>
-            <DialogContent className={cn(dialogClass, "shadow-2xl rounded-2xl")}>
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">📊 {t("userDashboard.stats.avgScore")}</DialogTitle>
-                <DialogDescription className={descClass}>
-                  {t("userDashboard.modal.avgDesc")}
-                </DialogDescription>
-              </DialogHeader>
-              <div className="py-4">
-                <Button onClick={() => navigate("/user/sat")} className="w-full bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-bold h-12 rounded-xl">SAT Mocks topshirish</Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-        );
-      case "exam":
-        return (
-          <Dialog {...common}>
-            <DialogContent className={cn(dialogClass, "shadow-2xl rounded-2xl")}>
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">🗓️ {t("userDashboard.modal.examDateTitle")}</DialogTitle>
-                <DialogDescription className={descClass}>
-                  {t("userDashboard.modal.examDateDesc")}
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                {stats?.exam_days_left !== null && (
-                  <div className="rounded-2xl bg-gradient-to-br from-rose-500 to-orange-500 text-white p-6 text-center shadow-lg shadow-rose-500/20">
-                    <p className="text-xs uppercase tracking-widest opacity-80 font-bold">{t("userDashboard.modal.timeLeft")}</p>
-                    <p className="font-display text-4xl font-bold mt-2">
-                      {stats?.exam_days_left} <span className="text-lg opacity-80 font-normal">{t("userDashboard.modal.days")}</span>
-                    </p>
+            <DialogContent className={cn(dialogClass, "shadow-2xl rounded-2xl max-w-sm p-6")}>
+              <DialogHeader className="flex flex-row items-center justify-between border-b pb-4 mb-4 dark:border-white/5 border-slate-100 relative">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 bg-blue-50 dark:bg-blue-950/20 text-blue-500 border border-blue-100 rounded-xl flex items-center justify-center shadow-sm">
+                    <Target className="h-5 w-5" />
                   </div>
-                )}
-                <div className="space-y-2">
-                  <label className={cn("text-sm font-semibold", labelClass)}>{t("userDashboard.modal.examDateLabel")}</label>
-                  <input
-                    type="date"
-                    value={examDate}
-                    min={new Date().toISOString().slice(0, 10)}
-                    onChange={(e) => setExamDate(e.target.value)}
-                    className={cn("w-full h-11 px-3 rounded-md border outline-none focus:ring-2 focus:ring-rose-500 transition-all", inputClass)}
-                  />
+                  <DialogTitle className="font-extrabold text-lg">Target Band</DialogTitle>
+                </div>
+                <button 
+                  onClick={() => setOpenKey(null)}
+                  className="absolute right-0 top-0.5 h-7 w-7 rounded-full flex items-center justify-center bg-slate-100 dark:bg-white/5 hover:opacity-80 transition-opacity cursor-pointer text-slate-500 dark:text-slate-450 border-none"
+                >
+                  <span className="text-xs font-sans font-bold">✕</span>
+                </button>
+              </DialogHeader>
+              <div className="space-y-6">
+                <div className="grid grid-cols-3 gap-3">
+                  {bands.map((band) => {
+                    const isSelected = selectedTargetBand === band;
+                    return (
+                      <button
+                        key={band}
+                        type="button"
+                        onClick={() => setSelectedTargetBand(band)}
+                        className={cn(
+                          "py-3 text-center text-sm font-bold rounded-xl transition-all border cursor-pointer",
+                          isSelected
+                            ? "bg-blue-50 dark:bg-blue-950/20 border-blue-500 text-blue-600 dark:text-blue-400 border-2 font-black shadow-md shadow-blue-500/10"
+                            : "bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 border-transparent hover:bg-slate-100 dark:hover:bg-slate-800"
+                        )}
+                      >
+                        {band.toFixed(1)}
+                      </button>
+                    );
+                  })}
                 </div>
                 <Button
-                  onClick={saveExamDate}
-                  disabled={!examDate || savingExam}
-                  className="w-full h-12 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold transition-all shadow-lg shadow-rose-500/20"
+                  onClick={async () => {
+                    setSavingTarget(true);
+                    try {
+                      await api.put("/user/profile", { targetBand: selectedTargetBand, target_band: selectedTargetBand });
+                      toast.success(t("userDashboard.toast.targetBandSaved", "Maqsadli ball saqlandi"));
+                      await refresh();
+                      const res = await api.get("/user/stats");
+                      setStats(res.data);
+                      setOpenKey(null);
+                    } catch (e: any) {
+                      toast.error(e.response?.data?.message || "Xatolik yuz berdi");
+                    } finally {
+                      setSavingTarget(false);
+                    }
+                  }}
+                  disabled={savingTarget}
+                  className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/20 transition-all border-none cursor-pointer"
                 >
-                  {savingExam ? t("userDashboard.modal.saving") : t("userDashboard.modal.save")}
+                  {savingTarget ? t("userDashboard.modal.saving", "Saqlanmoqda...") : "Saqlash"}
                 </Button>
               </div>
             </DialogContent>
           </Dialog>
         );
+      }
+      case "avg": {
+        return (
+          <Dialog {...common}>
+            <DialogContent className={cn(dialogClass, "shadow-2xl rounded-2xl max-w-md p-6")}>
+              <DialogHeader className="flex flex-row items-center justify-between border-b pb-4 mb-4 dark:border-white/5 border-slate-100 relative">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 bg-violet-50 dark:bg-violet-950/20 text-violet-500 border border-violet-100 rounded-xl flex items-center justify-center shadow-sm">
+                    <Activity className="h-5 w-5" />
+                  </div>
+                  <DialogTitle className="font-extrabold text-lg">O'rtacha ball</DialogTitle>
+                </div>
+                <button 
+                  onClick={() => setOpenKey(null)}
+                  className="absolute right-0 top-0.5 h-7 w-7 rounded-full flex items-center justify-center bg-slate-100 dark:bg-white/5 hover:opacity-80 transition-opacity cursor-pointer text-slate-500 dark:text-slate-450 border-none"
+                >
+                  <span className="text-xs font-sans font-bold">✕</span>
+                </button>
+              </DialogHeader>
+              <div className="space-y-6">
+                {loadingAttempts ? (
+                  <div className="py-12 flex items-center justify-center">
+                    <span className="animate-spin text-2xl">⏳</span>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {breakdown.modules.map((m) => {
+                      const hasTests = m.count > 0;
+                      const scoreStr = m.avg !== null ? m.avg.toFixed(1) : "--";
+                      const testsText = hasTests 
+                        ? `${m.count} test` 
+                        : (m.id === "mock" ? "urinish yo'q" : "test yo'q");
+                      
+                      const pct = m.avg !== null ? (m.avg / 9.0) * 100 : 0;
+                      
+                      // Progress bar colors matching module themes
+                      let barColor = "bg-blue-500";
+                      if (m.id === "reading") barColor = "bg-emerald-500";
+                      if (m.id === "speaking") barColor = "bg-orange-500";
+                      if (m.id === "writing") barColor = "bg-purple-500";
+                      if (m.id === "mock") barColor = "bg-cyan-500";
+
+                      return (
+                        <div key={m.id} className="flex items-center gap-4 text-xs font-bold">
+                          <span className="w-20 text-slate-500 dark:text-slate-400 capitalize flex items-center gap-1.5 shrink-0">
+                            <span>{m.icon}</span> <span>{m.label}</span>
+                          </span>
+                          <div className="flex-1 h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                            <div className={cn("h-full rounded-full transition-all duration-500", barColor)} style={{ width: `${pct}%` }} />
+                          </div>
+                          <div className="w-20 text-right flex flex-col shrink-0">
+                            <span className="text-slate-900 dark:text-white font-extrabold text-sm">{scoreStr}</span>
+                            <span className="text-[10px] text-slate-400 font-semibold mt-0.5">{testsText}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                    <div className="flex items-center justify-between border-t pt-4 dark:border-white/5 border-slate-100 mt-6 font-bold">
+                      <span className="text-slate-800 dark:text-slate-350">Umumiy</span>
+                      <span className="text-2xl font-black text-[#8B5CF6] dark:text-[#A855F7]">
+                        {breakdown.overallAvg !== null ? breakdown.overallAvg.toFixed(1) : "--"}
+                      </span>
+                    </div>
+
+                    <div className="bg-slate-50 dark:bg-slate-900/50 p-4 border dark:border-white/5 border-slate-100 rounded-xl space-y-1.5 mt-4">
+                      <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Qanday hisoblanadi?</h4>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold leading-relaxed">
+                        Har bir sectionning o'rtacha bali (% → band) hisoblanib, mavjudlarining o'rtachasi olinadi.
+                      </p>
+                    </div>
+
+                    <Button
+                      onClick={() => {
+                        setOpenKey(null);
+                        navigate(`${basePath}/practice`);
+                      }}
+                      className="w-full py-3.5 bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-purple-500/20 mt-4 transition-all duration-200 cursor-pointer border-none"
+                    >
+                      Mashq qilish <span className="text-sm font-sans font-black">➔</span>
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
+        );
+      }
+      case "exam": {
+        return (
+          <Dialog {...common}>
+            <DialogContent className={cn(dialogClass, "shadow-2xl rounded-2xl max-w-sm p-6")}>
+              <DialogHeader className="flex flex-row items-center justify-between border-b pb-4 mb-4 dark:border-white/5 border-slate-100 relative">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 bg-rose-50 dark:bg-rose-955/20 text-rose-500 border border-rose-100 rounded-xl flex items-center justify-center shadow-sm">
+                    <CalendarDays className="h-5 w-5" />
+                  </div>
+                  <DialogTitle className="font-extrabold text-lg">Imtihon sanasi</DialogTitle>
+                </div>
+                <button 
+                  onClick={() => setOpenKey(null)}
+                  className="absolute right-0 top-0.5 h-7 w-7 rounded-full flex items-center justify-center bg-slate-100 dark:bg-white/5 hover:opacity-80 transition-opacity cursor-pointer text-slate-500 dark:text-slate-450 border-none"
+                >
+                  <span className="text-xs font-sans font-bold">✕</span>
+                </button>
+              </DialogHeader>
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <input
+                    type="date"
+                    value={examDate}
+                    min={new Date().toISOString().slice(0, 10)}
+                    onChange={(e) => setExamDate(e.target.value)}
+                    className="w-full h-12 px-4 rounded-xl border border-slate-200 dark:border-slate-800 outline-none focus:ring-2 focus:ring-rose-500 bg-slate-50/50 dark:bg-slate-900 font-bold text-slate-800 dark:text-slate-200 transition-all cursor-pointer"
+                  />
+                </div>
+                <Button
+                  onClick={saveExamDate}
+                  disabled={!examDate || savingExam}
+                  className="w-full py-3.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl shadow-lg shadow-rose-500/20 transition-all border-none cursor-pointer"
+                >
+                  {savingExam ? t("userDashboard.modal.saving", "Saqlanmoqda...") : "Saqlash"}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        );
+      }
       case "minutes":
         return (
           <Dialog {...common}>
-            <DialogContent className={cn(dialogClass, "shadow-2xl rounded-2xl")}>
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">⏱️ {t("userDashboard.stats.practiceTime")}</DialogTitle>
-                <DialogDescription className={descClass}>{t("userDashboard.modal.practiceDesc")}</DialogDescription>
+            <DialogContent className={cn(dialogClass, "shadow-2xl rounded-2xl max-w-sm p-6")}>
+              <DialogHeader className="flex flex-row items-center justify-between border-b pb-4 mb-4 dark:border-white/5 border-slate-100 relative">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 bg-orange-50 dark:bg-orange-955/20 text-orange-500 border border-orange-100 rounded-xl flex items-center justify-center shadow-sm">
+                    <Clock className="h-5 w-5" />
+                  </div>
+                  <DialogTitle className="font-extrabold text-lg">{t("userDashboard.stats.practiceTime")}</DialogTitle>
+                </div>
+                <button 
+                  onClick={() => setOpenKey(null)}
+                  className="absolute right-0 top-0.5 h-7 w-7 rounded-full flex items-center justify-center bg-slate-100 dark:bg-white/5 hover:opacity-80 transition-opacity cursor-pointer text-slate-500 dark:text-slate-450 border-none"
+                >
+                  <span className="text-xs font-sans font-bold">✕</span>
+                </button>
               </DialogHeader>
-              <div className="space-y-3 py-4 text-sm">
-                <div className={cn("flex justify-between p-3 rounded-xl border", itemClass)}><span>{t("userDashboard.modal.total")}</span><b>{(stats?.total_minutes || 0).toFixed(1)} {t("mockCategory.minutesShort")}</b></div>
-                <div className={cn("flex justify-between p-3 rounded-xl border", itemClass)}><span>{t("userDashboard.modal.activeDays")}</span><b>{activeDays} / 7</b></div>
-                <div className={cn("flex justify-between p-3 rounded-xl border", itemClass)}><span>{t("userDashboard.modal.dailyAverage")}</span><b>{avgMin} {t("mockCategory.minutesShort")}</b></div>
-                <div className={cn("flex justify-between p-3 rounded-xl border", itemClass)}><span>{t("userDashboard.modal.bestDay")}</span><b>{maxMin.toFixed(1)} {t("mockCategory.minutesShort")}</b></div>
+              <div className="space-y-3 text-sm">
+                <div className={cn("flex justify-between p-3.5 rounded-xl border font-bold text-xs", itemClass)}>
+                  <span className="text-slate-450 dark:text-slate-400">{t("userDashboard.modal.total")}</span>
+                  <span className="text-slate-850 dark:text-white font-extrabold">{(stats?.total_minutes || 0).toFixed(1)} {t("mockCategory.minutesShort")}</span>
+                </div>
+                <div className={cn("flex justify-between p-3.5 rounded-xl border font-bold text-xs", itemClass)}>
+                  <span className="text-slate-450 dark:text-slate-400">{t("userDashboard.modal.activeDays")}</span>
+                  <span className="text-slate-850 dark:text-white font-extrabold">{activeDays} / 7</span>
+                </div>
+                <div className={cn("flex justify-between p-3.5 rounded-xl border font-bold text-xs", itemClass)}>
+                  <span className="text-slate-450 dark:text-slate-400">{t("userDashboard.modal.dailyAverage")}</span>
+                  <span className="text-slate-850 dark:text-white font-extrabold">{avgMin} {t("mockCategory.minutesShort")}</span>
+                </div>
+                <div className={cn("flex justify-between p-3.5 rounded-xl border font-bold text-xs", itemClass)}>
+                  <span className="text-slate-450 dark:text-slate-400">{t("userDashboard.modal.bestDay")}</span>
+                  <span className="text-slate-850 dark:text-white font-extrabold">{maxMin.toFixed(1)} {t("mockCategory.minutesShort")}</span>
+                </div>
               </div>
             </DialogContent>
           </Dialog>
@@ -498,22 +710,39 @@ export default function UserDashboard() {
       case "streak":
         return (
           <Dialog {...common}>
-            <DialogContent className={cn(dialogClass, "shadow-2xl rounded-2xl")}>
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2 text-white">🔥 {t("userDashboard.stats.dailyStreak")}</DialogTitle>
-                <DialogDescription className={descClass}>
-                  {t("userDashboard.modal.streakDesc", { count: stats?.streak })}
-                </DialogDescription>
+            <DialogContent className={cn(dialogClass, "shadow-2xl rounded-2xl max-w-sm p-6")}>
+              <DialogHeader className="flex flex-row items-center justify-between border-b pb-4 mb-4 dark:border-white/5 border-slate-100 relative">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 bg-purple-50 dark:bg-purple-955/20 text-purple-500 border border-purple-100 rounded-xl flex items-center justify-center shadow-sm">
+                    <Flame className="h-5 w-5" />
+                  </div>
+                  <DialogTitle className="font-extrabold text-lg">{t("userDashboard.stats.dailyStreak")}</DialogTitle>
+                </div>
+                <button 
+                  onClick={() => setOpenKey(null)}
+                  className="absolute right-0 top-0.5 h-7 w-7 rounded-full flex items-center justify-center bg-slate-100 dark:bg-white/5 hover:opacity-80 transition-opacity cursor-pointer text-slate-500 dark:text-slate-450 border-none"
+                >
+                  <span className="text-xs font-sans font-bold">✕</span>
+                </button>
               </DialogHeader>
-              <div className="flex flex-wrap gap-2 py-4">
-                {stats?.weekly_data?.map((d) => (
-                  <span
-                    key={d.day}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold ${d.minutes > 0 ? "bg-purple-500 text-white" : isDark ? "bg-white/5 text-slate-500" : "bg-slate-100 text-slate-400"}`}
-                  >
-                    {d.day}
-                  </span>
-                ))}
+              <div className="space-y-4">
+                <p className="text-xs text-slate-450 dark:text-slate-400 font-bold leading-normal">
+                  {t("userDashboard.modal.streakDesc", { count: stats?.streak })}
+                </p>
+                <div className="flex flex-wrap gap-2.5">
+                  {stats?.weekly_data?.map((d) => (
+                    <span
+                      key={d.day}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-black ${
+                        d.minutes > 0 
+                          ? "bg-purple-650 text-white shadow-sm shadow-purple-500/10" 
+                          : isDark ? "bg-white/5 text-slate-555 border border-white/5" : "bg-slate-100 text-slate-400 border border-transparent"
+                      }`}
+                    >
+                      {d.day}
+                    </span>
+                  ))}
+                </div>
               </div>
             </DialogContent>
           </Dialog>
