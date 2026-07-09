@@ -673,6 +673,8 @@ export default function MockTake() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<any>(null);
+  const [showCorrectAnswers, setShowCorrectAnswers] = useState(false);
+  const [isAnalyzeMode, setIsAnalyzeMode] = useState(false);
 
   const ieltsDetails = useMemo(() => {
     if (!result) return [];
@@ -2288,7 +2290,7 @@ export default function MockTake() {
       return detail ? !!detail.ok : false;
     }).length;
     
-    const pctAccuracy = Math.round((correctAns / totalQ) * 100);
+    const pctAccuracy = (correctAns / totalQ) * 100;
     
     // Format duration spent
     const elapsedSeconds = result.timeUsedSeconds ?? result.elapsedSec ?? 0;
@@ -2296,90 +2298,62 @@ export default function MockTake() {
     const elapsedSecondsRem = elapsedSeconds % 60;
     const durationStr = elapsedMinutes > 0 ? `${elapsedMinutes}m ${elapsedSecondsRem}s` : `${elapsedSeconds}s`;
 
-    // Convert raw correct count to Band score (or get final score)
-    const bandScoreVal = result.score || rawToBand(kind, correctAns, totalQ);
+    // Convert raw correct count to Band score
+    const bandScoreVal = result.score !== undefined ? Number(result.score).toFixed(1) : Number(rawToBand(kind, correctAns, totalQ)).toFixed(1);
 
-    // Performance analysis feedback & stars
-    let scoreFeedback = "This score needs serious improvement. Dedicate more time to reading and vocabulary.";
-    let starsCount = 1;
-    if (bandScoreVal >= 7.5) {
-      scoreFeedback = "Outstanding score! You have shown excellent language proficiency.";
-      starsCount = 3;
-    } else if (bandScoreVal >= 5.5) {
-      scoreFeedback = "Good effort. You have a solid grasp but keep practicing for higher bands.";
-      starsCount = 2;
+    // Performance feedback message
+    let scoreFeedback = "You need to put in much more work — start from the basics and practice daily. 📚";
+    if (Number(bandScoreVal) >= 7.5) {
+      scoreFeedback = "Outstanding score! You have shown excellent language proficiency. 🏆";
+    } else if (Number(bandScoreVal) >= 5.5) {
+      scoreFeedback = "Good effort. You have a solid grasp but keep practicing for higher bands. 💪";
     }
 
-    // Modal theme configurations matching active Contrast theme
-    const resultBg = isYB ? "bg-black text-[#ffff00]" : isWB ? "bg-[#0b0c10] text-white" : "bg-[#f4f7f6] text-slate-800";
-    const cardContainerBg = isYB ? "bg-black border-[#ffff00]" : isWB ? "bg-[#161a22] border-slate-850" : "bg-white border-slate-200 shadow-xl";
-    const innerCardBg = isYB ? "bg-black border-[#ffff00]" : isWB ? "bg-[#251212] border-rose-950/30 text-rose-300" : "bg-[#fff5f5] border-rose-100 text-rose-800";
-    
-    const metricCardBg = isYB ? "bg-black border-[#ffff00]" : isWB ? "bg-[#1c2331] border-slate-800" : "bg-[#fcfdfd] border-slate-200 shadow-xs";
-    const metricText = isYB ? "text-[#ffff00]" : isWB ? "text-white" : "text-slate-800";
+    const resultBg = isYB ? "bg-black text-[#ffff00]" : isWB ? "bg-[#0b0c10] text-white" : "bg-[#f4f7f6] dark:bg-[#0c0d12] text-slate-800 dark:text-white";
+    const cardContainerBg = isYB ? "bg-black border-[#ffff00]" : isWB ? "bg-[#161a22] border-slate-850" : "bg-white dark:bg-[#141c2e] border-slate-200 dark:border-slate-800 shadow-xl";
+    const innerCardBg = isYB ? "bg-black border-[#ffff00]" : isWB ? "bg-[#251212] border-rose-950/30 text-rose-300" : "bg-[#fff1f2] dark:bg-[#2e1018]/50 border-rose-100 dark:border-rose-950/30 text-rose-800 dark:text-rose-300";
+    const metricCardBg = isYB ? "bg-black border-[#ffff00]" : isWB ? "bg-[#1c2331] border-slate-800" : "bg-[#fcfdfd] dark:bg-[#1b253b] border-slate-200 dark:border-slate-850 shadow-xs";
+    const metricText = isYB ? "text-[#ffff00]" : isWB ? "text-white" : "text-slate-800 dark:text-white";
 
     return (
       <div className={cn("min-h-screen w-full flex flex-col items-center justify-center p-4 md:p-8 font-sans transition-colors", resultBg)}>
-        {/* White Centered Container Card */}
         <div className={cn("w-full max-w-3xl border rounded-2xl overflow-hidden p-8 md:p-12 text-center", cardContainerBg)}>
           
           {/* Checkmark circular logo */}
-          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-950/20 border-4 border-emerald-500 shadow-inner text-emerald-500">
+          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500 shadow-inner">
             <span className="text-3xl font-extrabold select-none">✓</span>
           </div>
 
           <h2 className="text-2xl md:text-3xl font-black tracking-tight mb-1">
-            {kind.charAt(0).toUpperCase() + kind.slice(1)} Test Complete!
+            Test Complete!
           </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-8">
+          <p className="text-xs text-slate-500 dark:text-slate-450 font-bold uppercase tracking-wider mb-8">
             Here are your results
           </p>
 
-          {/* Large evaluations card (light red / custom) */}
+          {/* Evaluations card */}
           <div className={cn("border rounded-2xl p-6 md:p-8 text-center max-w-2xl mx-auto mb-8 relative", innerCardBg)}>
-            <span className="block font-extrabold text-xs uppercase tracking-widest text-emerald-650 dark:text-emerald-400">
+            <span className="block font-extrabold text-[11px] uppercase tracking-wider text-rose-500 dark:text-rose-400">
               IELTS Band Score
             </span>
             
-            {/* Score digit */}
-            <span className="block text-7xl md:text-8xl font-black text-rose-600 dark:text-rose-400 my-4 tracking-tighter drop-shadow-sm select-none">
+            <span className="block text-7xl md:text-8xl font-black text-[#e11d48] my-3 drop-shadow-sm select-none">
               {bandScoreVal}
             </span>
             
-            <span className="block text-xs font-bold text-slate-500 dark:text-slate-400">
+            <span className="block text-xs font-bold text-slate-400 dark:text-slate-500">
               out of 9.0
             </span>
 
-            {/* score feedback */}
-            <p className="text-rose-600 dark:text-rose-400 font-bold text-xs max-w-md mx-auto my-4 leading-relaxed">
+            <p className="text-rose-600 dark:text-rose-455 font-bold text-xs max-w-md mx-auto my-4 leading-relaxed">
               {scoreFeedback}
             </p>
-
-            {/* lightbulb */}
-            <div className="flex justify-center mb-5 opacity-90">
-              <span className="text-lg">💡</span>
-            </div>
-
-            {/* Stars evaluation */}
-            <div className="flex items-center justify-center gap-1.5 mb-8 select-none">
-              {[1, 2, 3].map((starIdx) => {
-                const isFilled = starIdx <= starsCount;
-                return (
-                  <span 
-                    key={starIdx} 
-                    className={cn("text-3xl transition-transform", isFilled ? "text-amber-500 animate-scale-up" : "text-slate-350 dark:text-slate-700")}
-                  >
-                    ★
-                  </span>
-                );
-              })}
-            </div>
 
             {/* Progress bar correct answers */}
             <div className="w-full text-left mt-6">
               <div className="flex justify-between items-center text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">
                 <span>Correct answers</span>
-                <span className="text-emerald-650 dark:text-emerald-400 font-extrabold">{correctAns} / {totalQ}</span>
+                <span className="text-[#10b981] font-black text-sm">{correctAns} / {totalQ}</span>
               </div>
               <div className="w-full h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                 <div 
@@ -2393,17 +2367,17 @@ export default function MockTake() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
               {/* Accuracy Card */}
               <div className={cn("border p-4 rounded-xl text-left", metricCardBg)}>
-                <span className="text-[9px] font-black text-emerald-650 dark:text-emerald-400 uppercase tracking-widest block">
+                <span className="text-[9px] font-black text-[#10B981] dark:text-[#34D399] uppercase tracking-widest block">
                   Accuracy
                 </span>
                 <span className={cn("text-xl font-extrabold block mt-1", metricText)}>
-                  {pctAccuracy}%
+                  {pctAccuracy.toFixed(1)}%
                 </span>
               </div>
 
               {/* Correct/Total Card */}
               <div className={cn("border p-4 rounded-xl text-left", metricCardBg)}>
-                <span className="text-[9px] font-black text-emerald-650 dark:text-emerald-400 uppercase tracking-widest block">
+                <span className="text-[9px] font-black text-[#10B981] dark:text-[#34D399] uppercase tracking-widest block">
                   Correct / Total
                 </span>
                 <span className={cn("text-xl font-extrabold block mt-1", metricText)}>
@@ -2413,7 +2387,7 @@ export default function MockTake() {
 
               {/* Time Spent Card */}
               <div className={cn("border p-4 rounded-xl text-left", metricCardBg)}>
-                <span className="text-[9px] font-black text-emerald-650 dark:text-emerald-400 uppercase tracking-widest block">
+                <span className="text-[9px] font-black text-[#10B981] dark:text-[#34D399] uppercase tracking-widest block">
                   Time Spent
                 </span>
                 <span className={cn("text-xl font-extrabold block mt-1", metricText)}>
@@ -2421,26 +2395,124 @@ export default function MockTake() {
                 </span>
               </div>
             </div>
+          </div>
 
+          {/* Answer Sheet Container */}
+          <div className="mt-8 border dark:border-white/5 border-slate-200 rounded-2xl p-6 text-left bg-white dark:bg-[#141c2e] shadow-sm">
+            <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
+              <h3 className="text-2xl font-black text-slate-900 dark:text-white">Answer Sheet</h3>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Show Correct Answers</span>
+                <button
+                  type="button"
+                  onClick={() => setShowCorrectAnswers(!showCorrectAnswers)}
+                  className={cn(
+                    "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
+                    showCorrectAnswers ? "bg-[#10b981]" : "bg-slate-200 dark:bg-slate-800"
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-xs ring-0 transition duration-200 ease-in-out",
+                      showCorrectAnswers ? "translate-x-5" : "translate-x-0"
+                    )}
+                  />
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {questions.map((q) => {
+                const detail = ieltsDetails.find((d: any) => String(d.questionId) === String(q.id));
+                const isCorrect = detail ? !!detail.ok : false;
+                const userAns = detail ? (detail.userAns || "-") : "-";
+                const qCorrectAns = detail ? (detail.correctAns || q.correct_answer || "") : (q.correct_answer || "");
+
+                return (
+                  <div
+                    key={q.id}
+                    className={cn(
+                      "flex items-center justify-between p-3.5 border rounded-xl font-semibold text-xs",
+                      isCorrect 
+                        ? "bg-[#f4fbf7] dark:bg-[#122820]/30 border-emerald-100 dark:border-emerald-950/20 text-emerald-800 dark:text-emerald-400" 
+                        : "bg-[#fff5f5] dark:bg-[#2d1519]/30 border-rose-100 dark:border-rose-950/20 text-rose-800 dark:text-rose-400"
+                    )}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span className={cn(
+                        "h-6 w-6 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 text-white",
+                        isCorrect ? "bg-emerald-500 shadow-sm shadow-emerald-500/10" : "bg-rose-500 shadow-sm shadow-rose-500/10"
+                      )}>
+                        {q.position}
+                      </span>
+                      <span className="truncate max-w-[120px] font-extrabold">{userAns}</span>
+                      {showCorrectAnswers && !isCorrect && (
+                        <span className="text-slate-400 dark:text-slate-500 font-bold shrink-0">
+                          ➔ {qCorrectAns}
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-sm font-sans font-black shrink-0">
+                      {isCorrect ? "✓" : "✕"}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
           {/* Action buttons below */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center select-none mt-6">
-            <Button
+          <div className="flex flex-wrap gap-3 justify-center items-center select-none mt-8">
+            <button
               onClick={() => {
-                setSearchParams({ attemptId: result.id || attemptId, review: "true" });
+                if (navigator.share) {
+                  navigator.share({
+                    title: exam?.title,
+                    text: `My score is ${bandScoreVal} out of 9.0!`,
+                    url: window.location.href
+                  }).catch(() => {});
+                } else {
+                  navigator.clipboard.writeText(window.location.href);
+                  toast.success("Link copied to clipboard!");
+                }
               }}
-              className={cn("w-full sm:w-auto px-8 py-3 rounded-lg font-bold text-xs uppercase tracking-widest transition-opacity cursor-pointer border-none text-white", isYB ? "bg-[#ffff00] !text-black hover:bg-[#dddd00]" : "bg-gradient-to-r from-violet-600 to-indigo-600 hover:opacity-90 shadow-md")}
+              className="flex items-center gap-2 px-5 py-3 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors cursor-pointer bg-transparent"
             >
-              Review Answers
-            </Button>
-            <Button
+              <span>📤</span> Share
+            </button>
+            <button
+              onClick={() => setIsAnalyzeMode(true)}
+              className="px-5 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-opacity cursor-pointer border-none text-white bg-[#1e293b] hover:bg-[#0f172a] shadow-md"
+            >
+              Analyze
+            </button>
+            <button
+              onClick={() => {
+                setResult(null);
+                setAnswers({});
+                setFlagged(new Set());
+                setWritingAnswer("");
+                setStarted(false);
+                setShowReviewScreen(false);
+                setTimeLeft(exam ? exam.duration_minutes * 60 : 3600);
+                setIsAnalyzeMode(false);
+              }}
+              className="px-5 py-3 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors cursor-pointer bg-transparent"
+            >
+              Retry
+            </button>
+            <button
+              onClick={() => toast.success("Feedback panel coming soon!")}
+              className="px-5 py-3 rounded-xl border border-emerald-500/50 text-emerald-600 dark:text-emerald-400 font-bold text-xs uppercase tracking-wider hover:bg-emerald-50 dark:hover:bg-emerald-950/10 transition-colors cursor-pointer bg-transparent"
+            >
+              Leave a feedback
+            </button>
+            <button
               onClick={() => nav(-1)}
-              variant="outline"
-              className={cn("w-full sm:w-auto px-8 py-3 rounded-lg font-bold text-xs uppercase tracking-widest cursor-pointer border-2 bg-transparent", isYB ? "border-[#ffff00] text-[#ffff00] hover:bg-[#222200]" : "border-slate-350 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-900")}
+              className="px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-opacity cursor-pointer border-none text-white bg-[#10b981] hover:bg-[#059669] shadow-md"
             >
-              Back to Practice
-            </Button>
+              Back to practice
+            </button>
           </div>
 
         </div>
