@@ -45,9 +45,10 @@ public class UserStatsController {
         List<PracticeSession> sessions = practiceSessionRepository.findAllByUserIdAndCreatedAtAfter(user.getId(), since);
         
         Map<LocalDate, Double> dailyMinutes = sessions.stream()
+                .filter(s -> s.getCreatedAt() != null)
                 .collect(Collectors.groupingBy(
                         s -> s.getCreatedAt().toLocalDate(),
-                        Collectors.summingDouble(PracticeSession::getMinutes)
+                        Collectors.summingDouble(s -> s.getMinutes() != null ? s.getMinutes() : 0.0)
                 ));
 
         List<StudentAttempt> attempts = studentAttemptRepository.findAllByStudentId(user.getId());
@@ -185,7 +186,7 @@ public class UserStatsController {
                 .count();
 
         List<PracticeSession> sessions = practiceSessionRepository.findAllByUserIdAndCreatedAtAfter(currentUser.getId(), startOfDay);
-        double speakingMinutes = sessions.stream().mapToDouble(PracticeSession::getMinutes).sum();
+        double speakingMinutes = sessions.stream().mapToDouble(s -> s.getMinutes() != null ? s.getMinutes() : 0.0).sum();
 
         List<DailyTask> tasks = new ArrayList<>();
         tasks.add(new DailyTask("Reading", readingCount, 1, "test"));

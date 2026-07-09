@@ -82,7 +82,7 @@ public class GamificationService {
         // 1. Calculate stats
         // Practice minutes
         double practiceMinutes = practiceSessionRepository.findAllByUserId(freshUser.getId()).stream()
-                .mapToDouble(PracticeSession::getMinutes)
+                .mapToDouble(s -> s.getMinutes() != null ? s.getMinutes() : 0.0)
                 .sum();
 
         // Attendance / Lessons completed
@@ -108,9 +108,10 @@ public class GamificationService {
         LocalDateTime since = LocalDateTime.now().minusDays(30).truncatedTo(java.time.temporal.ChronoUnit.DAYS);
         List<PracticeSession> sessions = practiceSessionRepository.findAllByUserIdAndCreatedAtAfter(freshUser.getId(), since);
         Map<LocalDate, Double> dailyMinutes = sessions.stream()
+                .filter(s -> s.getCreatedAt() != null)
                 .collect(Collectors.groupingBy(
                         s -> s.getCreatedAt().toLocalDate(),
-                        Collectors.summingDouble(PracticeSession::getMinutes)
+                        Collectors.summingDouble(s -> s.getMinutes() != null ? s.getMinutes() : 0.0)
                 ));
 
         int streak = 0;
@@ -387,9 +388,10 @@ public class GamificationService {
 
         // Group by LocalDate
         Map<LocalDate, Double> dailyPracticeMins = sessions.stream()
+                .filter(s -> s.getCreatedAt() != null)
                 .collect(Collectors.groupingBy(
                         s -> s.getCreatedAt().toLocalDate(),
-                        Collectors.summingDouble(PracticeSession::getMinutes)
+                        Collectors.summingDouble(s -> s.getMinutes() != null ? s.getMinutes() : 0.0)
                 ));
 
         Map<LocalDate, Long> dailyLessons = attendanceList.stream()
