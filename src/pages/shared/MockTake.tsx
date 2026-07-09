@@ -24,7 +24,8 @@ import {
   BookOpen, ChevronLeft, ChevronRight, Flag, Play, Pause,
   Volume2, VolumeX, Maximize2, Minimize2, Mic, Calculator, X, PenLine, XCircle,
   Award, Target, ThumbsUp, Lightbulb, BookMarked, Sun, Moon,
-  Shield, Grid, CheckSquare, Menu, ArrowRight, ArrowLeft, Bookmark, GripHorizontal
+  Shield, Grid, CheckSquare, Menu, ArrowRight, ArrowLeft, Bookmark, GripHorizontal,
+  BarChart3, Bell, ChevronsLeftRight
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
@@ -647,7 +648,32 @@ export default function MockTake() {
   const isMilliy = exam?.type ? (exam.type.toLowerCase() === "national_cert" || exam.type.toLowerCase() === "milliy") : false;
   const isSat = exam?.type ? (exam.type.toLowerCase() === "sat") : false;
   const kind = (exam?.type ?? "").toLowerCase();
+  
+  const isIeltsLayout = useMemo(() => {
+    if (!exam?.type) return false;
+    if (isMilliy || isSat) return false;
+    const lowerType = exam.type.toLowerCase();
+    return lowerType.includes("reading") || lowerType.includes("listening") || lowerType.includes("writing") || lowerType.includes("ielts");
+  }, [exam, isMilliy, isSat]);
+
+  const questionRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const [showOptionsModal, setShowOptionsModal] = useState(false);
+  const [optionsPanel, setOptionsPanel] = useState<"main" | "contrast" | "text-size">("main");
+  const [ieltsContrast, setIeltsContrast] = useState<"black-on-white" | "white-on-black" | "yellow-on-black">("black-on-white");
+  const [ieltsTextSize, setIeltsTextSize] = useState<"regular" | "large" | "extra-large">("regular");
+
+  const ieltsDetails = useMemo(() => {
+    if (!result) return [];
+    const rawDetails = result.detail || result.details || [];
+    return rawDetails.map((d: any) => ({
+      questionId: d.questionId || d.question_id || d.id,
+      userAns: d.userAns !== undefined ? d.userAns : (d.user_ans !== undefined ? d.user_ans : ""),
+      correctAns: d.correctAns !== undefined ? d.correctAns : (d.correct_ans !== undefined ? d.correct_ans : ""),
+      ok: d.ok !== undefined ? d.ok : d.ok,
+    }));
+  }, [result]);
   
   const [sections, setSections] = useState<{ title: string; passage: string; imageUrl: string }[]>([]);
   const [questions, setQuestions] = useState<NormalQ[]>([]);
@@ -924,6 +950,21 @@ export default function MockTake() {
     return () => window.removeEventListener("keydown", handler);
   }, [started, result, activeQuestionIndex, questions, showReviewScreen, showSuccessAnimation]);
 
+  // Scroll active question into view (IELTS layout only)
+  useEffect(() => {
+    if (!isIeltsLayout) return;
+    const activeQ = questions[activeQuestionIndex];
+    if (activeQ) {
+      const el = questionRefs.current[activeQ.id];
+      if (el) {
+        el.scrollIntoView({
+          behavior: "smooth",
+          block: "center"
+        });
+      }
+    }
+  }, [activeQuestionIndex, questions, isIeltsLayout]);
+ 
   // Timer
   useEffect(() => {
     if (!started || result || isPaused || showSuccessAnimation) return;
@@ -1597,12 +1638,989 @@ export default function MockTake() {
               )} 
               onClick={() => submit(false)}
             >
-              {isMilliy ? "Testni yakunlash" : "Submit Final Responses"}
+              Submit
             </Button>
           </div>
         </div>
       </div>
     );
+  }
+
+  // --- IELTS CBT Redesign Layout Rendering ---
+  const isBW = ieltsContrast === "black-on-white";
+  const isWB = ieltsContrast === "white-on-black";
+  const isYB = ieltsContrast === "yellow-on-black";
+
+  const cStyle = {
+    // Common
+    bg: isBW ? "bg-[#f7f8fa]" : "bg-black",
+    text: isBW ? "text-slate-800" : isWB ? "text-white" : "text-[#ffff00]",
+    border: isBW ? "border-slate-200" : isWB ? "border-slate-800" : "border-[#333300]",
+    
+    // Header
+    headerBg: isBW ? "bg-white" : "bg-black",
+    headerBorder: isBW ? "border-slate-200" : isWB ? "border-slate-800" : "border-[#333300]",
+    logoText: isBW ? "text-red-650" : isWB ? "text-red-500" : "text-[#ffff00]",
+    
+    // Timer Box
+    timerBox: isBW 
+      ? "bg-white border-slate-355 text-slate-800 border-slate-300" 
+      : isWB 
+        ? "bg-black border-slate-800 text-white" 
+        : "bg-black border-[#ffff00] text-[#ffff00]",
+    
+    // Icon Buttons
+    iconBtn: isBW 
+      ? "hover:bg-slate-100 text-slate-600" 
+      : isWB 
+        ? "hover:bg-slate-850 text-slate-400" 
+        : "hover:bg-[#222200] text-[#ffff00]",
+    
+    // Passage Panel
+    passageBg: isBW ? "bg-white" : "bg-black",
+    passageBorder: isBW ? "border-slate-200" : isWB ? "border-slate-800" : "border-[#333300]",
+    passageTitle: isBW ? "text-slate-900" : isWB ? "text-white" : "text-[#ffff00]",
+    passageText: isBW ? "text-slate-800" : isWB ? "text-slate-205" : "text-[#ffff00]",
+    
+    // Divider Resizer
+    dividerLine: isBW ? "bg-slate-200" : isWB ? "bg-slate-800" : "bg-[#333300]",
+    dividerHandle: isBW 
+      ? "bg-white border-slate-300 text-slate-500 shadow-md" 
+      : isWB 
+        ? "bg-[#121212] border-slate-800 text-white shadow-none" 
+        : "bg-black border-[#ffff00] text-[#ffff00] shadow-none",
+    
+    // Question Card
+    cardBg: isBW ? "bg-white" : isWB ? "bg-[#141c2e]" : "bg-black",
+    cardBorder: isBW ? "border-slate-200" : isWB ? "border-slate-850" : "border-[#333300]",
+    cardActiveBorder: isBW 
+      ? "border-l-4 border-l-blue-600 border-slate-300" 
+      : isWB 
+        ? "border-l-4 border-l-blue-500 border-slate-700" 
+        : "border-l-4 border-l-[#ffff00] border-[#ffff00]",
+    cardText: isBW ? "text-slate-900" : isWB ? "text-white" : "text-[#ffff00]",
+    cardSubtext: isBW ? "text-slate-500" : isWB ? "text-slate-400" : "text-[#ffff00]",
+    
+    // Option item
+    optHover: isBW 
+      ? "hover:bg-slate-50" 
+      : isWB 
+        ? "hover:bg-slate-800/40" 
+        : "hover:bg-[#222200]",
+    optRadioCircle: isBW 
+      ? "border-slate-300 bg-white" 
+      : isWB 
+        ? "border-slate-700 bg-slate-900" 
+        : "border-[#ffff00] bg-black",
+    optRadioCircleSelected: isBW 
+      ? "border-slate-800 bg-white" 
+      : isWB 
+        ? "border-slate-200 bg-slate-900" 
+        : "border-[#ffff00] bg-black",
+    optRadioDot: isBW ? "bg-slate-800" : isWB ? "bg-slate-200" : "bg-[#ffff00]",
+    
+    // Input fields
+    input: isBW 
+      ? "bg-white border-slate-300 text-slate-900 focus:border-blue-500" 
+      : isWB 
+        ? "bg-slate-950 border-slate-700 text-white focus:border-blue-500" 
+        : "bg-black border-[#ffff00] text-[#ffff00] focus:border-[#ffff00]",
+    
+    // Floating Nav
+    floatBg: isBW ? "bg-[#1e2022] border-slate-700" : isWB ? "bg-slate-900 border-slate-855" : "bg-black border-[#ffff00]",
+    floatDivider: isBW ? "divide-slate-700" : isWB ? "divide-slate-800" : "divide-[#ffff00]",
+    floatBtnHover: isBW ? "hover:bg-slate-800" : isWB ? "hover:bg-slate-800" : "hover:bg-[#222200]",
+    floatBtnText: isBW ? "text-white" : isWB ? "text-white" : "text-[#ffff00]",
+
+    // Part Banner
+    bannerBg: isBW ? "bg-[#f0f2f5] border-slate-200" : isWB ? "bg-[#141c2e] border-slate-850" : "bg-black border-[#ffff00]",
+    
+    // Footer
+    footerBg: isBW ? "bg-[#f0f2f5]" : "bg-black",
+    footerBorder: isBW ? "border-slate-300" : isWB ? "border-slate-850" : "border-[#333300]",
+    footerText: isBW ? "text-slate-700" : isWB ? "text-slate-300" : "text-[#ffff00]",
+    
+    // Pagination
+    pagUnanswered: isBW 
+      ? "bg-white border-slate-300 text-slate-600 hover:bg-slate-50" 
+      : isWB 
+        ? "bg-slate-900 border-slate-750 text-slate-400 hover:bg-slate-800" 
+        : "bg-black border-[#ffff00] text-[#ffff00] hover:bg-[#222200]",
+    pagActive: isBW 
+      ? "border-blue-600 bg-blue-50 text-blue-600 border-2" 
+      : isWB 
+        ? "border-blue-500 bg-blue-950/20 text-blue-400 border-2" 
+        : "border-[#ffff00] bg-black text-[#ffff00] border-2",
+    pagAnswered: isBW 
+      ? "border-blue-300 bg-blue-50/30 text-slate-700 border-b-4 border-b-blue-600" 
+      : isWB 
+        ? "border-blue-800/40 bg-blue-950/10 text-slate-300 border-b-4 border-b-blue-500" 
+        : "border-[#ffff00] bg-black text-[#ffff00] border-b-4 border-b-[#ffff00]",
+    pagFlagged: isBW 
+      ? "bg-amber-500/10 border-amber-500 text-amber-600" 
+      : isWB 
+        ? "bg-amber-950/10 border-amber-600 text-amber-400" 
+        : "bg-black border-amber-500 text-amber-500 border-2",
+  };
+
+  const textSizeStyle = {
+    passage: ieltsTextSize === "regular" ? "text-[17px]" : ieltsTextSize === "large" ? "text-[20px]" : "text-[24px]",
+    prompt: ieltsTextSize === "regular" ? "text-[15px]" : ieltsTextSize === "large" ? "text-[18px]" : "text-[22px]",
+    option: ieltsTextSize === "regular" ? "text-sm" : ieltsTextSize === "large" ? "text-base" : "text-lg",
+    input: ieltsTextSize === "regular" ? "text-sm" : ieltsTextSize === "large" ? "text-base" : "text-lg",
+  };
+
+  const renderIeltsHeader = () => {
+    return (
+      <header className={cn("h-[65px] shrink-0 border-b flex items-center justify-between px-6 z-40 select-none", cStyle.headerBg, cStyle.headerBorder, cStyle.text)}>
+        {/* Left: Logo and Test Title */}
+        <div className="flex items-center gap-4 min-w-0">
+          <span className={cn("font-extrabold text-2xl tracking-tighter shrink-0 select-none", cStyle.logoText)}>
+            IELTS
+          </span>
+          <div className={cn("h-6 w-[1px] hidden sm:block shrink-0", isYB ? "bg-[#ffff00]" : "bg-slate-200 dark:bg-slate-800")} />
+          <div className="min-w-0 leading-tight">
+            <h1 className="font-bold text-sm truncate max-w-[200px] sm:max-w-none">
+              {exam?.title || "IELTS Practice Test"}
+            </h1>
+            <div className="flex items-center gap-2 text-[10px] mt-0.5 font-bold uppercase tracking-wider opacity-85">
+              <BookOpen className="w-3.5 h-3.5" />
+              <span>{isReviewMode ? "Review | " : ""}{kind} mode</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Center: Timer Box */}
+        <div className={cn("flex items-center justify-center border rounded-md px-5 py-1.5 shadow-sm font-sans font-bold text-lg select-none", cStyle.timerBox)}>
+          <Clock className="w-5 h-5 mr-2 opacity-80" />
+          {isReviewMode ? "FINISHED" : fmt(timeLeft)}
+        </div>
+
+        {/* Right: Actions */}
+        <div className="flex items-center gap-1">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className={cn("rounded-full h-9 w-9 cursor-pointer", cStyle.iconBtn)} 
+            onClick={toggle}
+            title={theme === "dark" ? "Light Mode" : "Dark Mode"}
+          >
+            {theme === "dark" ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4" />}
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className={cn("rounded-full h-9 w-9 cursor-pointer", cStyle.iconBtn)} 
+            onClick={toggleFullscreen}
+            title="Toggle Fullscreen"
+          >
+            {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className={cn("rounded-full h-9 w-9 cursor-pointer", cStyle.iconBtn)}
+            onClick={() => setShowCalculator(!showCalculator)}
+            title="Calculator"
+          >
+            <Calculator className="h-4 w-4" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className={cn("rounded-full h-9 w-9 cursor-pointer", cStyle.iconBtn)}
+            onClick={() => {
+              setShowOptionsModal(true);
+              setOptionsPanel("main");
+            }}
+            title="Options"
+          >
+            <Menu className="h-4 w-4" />
+          </Button>
+        </div>
+      </header>
+    );
+  };
+
+  const renderIeltsPartBanner = (currentSectionIdx: number) => {
+    const sectionQuestions = questions.filter(q => q.section_index === currentSectionIdx);
+    const firstQPos = sectionQuestions[0]?.position ?? 1;
+    const lastQPos = sectionQuestions[sectionQuestions.length - 1]?.position ?? 1;
+    
+    const bannerText = isReading 
+      ? `Read and answer questions ${firstQPos}-${lastQPos}.` 
+      : kind === "listening" 
+        ? `Answer questions ${firstQPos}-${lastQPos}.` 
+        : `Complete the writing task.`;
+
+    return (
+      <div className={cn("border p-4 rounded-lg mb-6 shadow-sm", cStyle.bannerBg, cStyle.text)}>
+        <h3 className="font-extrabold text-base">
+          Part {currentSectionIdx + 1}
+        </h3>
+        <p className="text-xs mt-1 font-semibold opacity-90">
+          {bannerText}
+        </p>
+      </div>
+    );
+  };
+
+  const renderIeltsPassagePanel = (currentSectionIdx: number) => {
+    const currentSection = sections[currentSectionIdx];
+    if (!currentSection || (!currentSection.passage && !currentSection.imageUrl)) return null;
+
+    return (
+      <div
+        style={{ width: `${leftWidth}%`, flexShrink: 0 }}
+        className={cn("h-full overflow-y-auto border-r p-8 xl:p-12 transition-colors select-text", cStyle.passageBg, cStyle.passageBorder, cStyle.text)}
+      >
+        <div className="max-w-3xl mx-auto">
+          <h2 className={cn("text-3xl font-extrabold text-center font-serif mb-2 leading-tight", cStyle.passageTitle)}>
+            {currentSection.title}
+          </h2>
+          {currentSection.imageUrl && (
+            <img 
+              src={getFullImageUrl(currentSection.imageUrl)} 
+              className={cn("max-w-full mx-auto border my-6 shadow-sm", cStyle.border)} 
+              alt="Passage context"
+            />
+          )}
+          <div className={cn("prose dark:prose-invert max-w-none font-serif leading-relaxed whitespace-pre-wrap mt-8", cStyle.passageText, textSizeStyle.passage)}>
+            {formatMathText(currentSection.passage)}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderIeltsDivider = () => {
+    return (
+      <div
+        onMouseDown={startResizing}
+        className={cn("hidden md:flex w-[3px] hover:bg-blue-500 cursor-col-resize shrink-0 transition-all duration-150 relative z-20 items-center justify-center group", cStyle.dividerLine)}
+      >
+        <div className={cn("absolute h-10 w-6 border rounded-md flex items-center justify-center pointer-events-none select-none z-30", cStyle.dividerHandle)}>
+          <span className="font-bold text-xs select-none">↔</span>
+        </div>
+      </div>
+    );
+  };
+
+  const renderIeltsListeningControls = () => {
+    if (kind !== "listening" || !exam?.audioUrl || isReviewMode) return null;
+    return (
+      <div className="max-w-3xl mx-auto mb-6 px-4 md:px-0">
+        {!audioStarted ? (
+          <div className={cn("border p-8 rounded-xl text-center shadow-sm flex flex-col items-center justify-center", cStyle.cardBg, cStyle.cardBorder, cStyle.text)}>
+            <Headphones className="h-12 w-12 text-blue-555 animate-bounce mb-4 text-blue-600" />
+            <p className={cn("max-w-md text-xs font-semibold leading-relaxed mb-6", cStyle.cardSubtext)}>
+              You will be listening to an audio clip during this test. You will not be permitted to pause or rewind the audio while answering the questions. To continue, click Play.
+            </p>
+            <Button 
+              onClick={() => setAudioStarted(true)} 
+              className={cn("text-white font-bold px-8 py-2 rounded-lg flex items-center gap-2 shadow-sm border-none cursor-pointer", isYB ? "bg-[#ffff00] !text-black hover:bg-[#dddd00]" : "bg-blue-650 hover:bg-blue-700")}
+            >
+              <Play className="h-4 w-4 fill-current" /> Play Audio
+            </Button>
+          </div>
+        ) : (
+          <CustomAudioPlayer src={exam.audioUrl} />
+        )}
+      </div>
+    );
+  };
+
+  const renderIeltsFloatingNav = () => {
+    return (
+      <div className={cn("absolute bottom-6 right-8 flex items-center rounded-md shadow-lg border overflow-hidden z-30 divide-x", cStyle.floatBg, cStyle.floatDivider)}>
+        <button
+          onClick={() => setActiveQuestionIndex(i => Math.max(0, i - 1))}
+          disabled={activeQuestionIndex === 0}
+          className={cn("px-5 py-3 transition-colors cursor-pointer disabled:opacity-20", cStyle.floatBtnHover, cStyle.floatBtnText)}
+          title="Previous Question"
+        >
+          <span className="text-base font-bold">←</span>
+        </button>
+        <button
+          onClick={() => {
+            if (activeQuestionIndex === questions.length - 1) {
+              if (isReviewMode) return;
+              handleSubmitRequest();
+            } else {
+              setActiveQuestionIndex(i => Math.min(questions.length - 1, i + 1));
+            }
+          }}
+          className={cn("px-5 py-3 transition-colors cursor-pointer", cStyle.floatBtnHover, cStyle.floatBtnText)}
+          title="Next Question"
+        >
+          <span className="text-base font-bold">→</span>
+        </button>
+      </div>
+    );
+  };
+
+  const renderIeltsQuestionsPanel = (currentSectionIdx: number) => {
+    const sectionQuestions = questions.filter(q => q.section_index === currentSectionIdx);
+
+    return (
+      <div
+        style={{ width: (isReading || kind === "writing") ? `${100 - leftWidth}%` : "100%" }}
+        className={cn("h-full overflow-hidden flex flex-col transition-colors relative", isBW ? "bg-[#f7f8fa]" : "bg-black")}
+      >
+        <div className="flex-1 overflow-y-auto p-6 md:p-8 xl:p-12 pb-32 animate-fade-in">
+          <div className="max-w-3xl mx-auto">
+            {renderIeltsPartBanner(currentSectionIdx)}
+            
+            <div className="space-y-6">
+              {sectionQuestions.map(q => {
+                const isQActive = q.position - 1 === activeQuestionIndex;
+                let opts = q.options;
+                if ((!opts || opts.length === 0) && (q.qtype === "tfng" || q.qtype === "ynng")) {
+                  const labels = q.qtype === "tfng" ? ["TRUE", "FALSE", "NOT GIVEN"] : ["YES", "NO", "NOT GIVEN"];
+                  opts = labels.map((l, i) => ({
+                    id: `${q.id}_opt_${i}`,
+                    text: l,
+                    positionOrder: i,
+                    isCorrect: false
+                  }));
+                }
+
+                // If in review mode, fetch what the user submitted
+                const detailForQ = ieltsDetails.find((d: any) => String(d.questionId) === String(q.id));
+                const submittedAns = detailForQ ? detailForQ.userAns : undefined;
+
+                return (
+                  <div
+                    key={q.id}
+                    ref={el => { questionRefs.current[q.id] = el; }}
+                    className={cn(
+                      "p-6 border rounded-lg transition-all scroll-mt-6 cursor-pointer",
+                      cStyle.cardBg,
+                      isQActive ? cStyle.cardActiveBorder : cStyle.cardBorder,
+                      cStyle.cardText
+                    )}
+                    onClick={() => {
+                      if (!isQActive) {
+                        setActiveQuestionIndex(q.position - 1);
+                      }
+                    }}
+                  >
+                    {/* Badge & Flag Button */}
+                    <div className={cn("flex items-center justify-between border-b pb-3 mb-4", isYB ? "border-[#333300]" : "border-slate-100 dark:border-slate-800")}>
+                      <span className="font-extrabold text-sm">
+                        Question {q.position}
+                      </span>
+                      {!isReviewMode && (
+                        <button 
+                          className={cn(
+                            "flex items-center text-xs font-bold uppercase tracking-widest px-2.5 py-1 border transition-colors rounded-sm cursor-pointer", 
+                            flagged.has(q.id)
+                              ? isYB 
+                                ? "border-[#ffff00] text-[#ffff00] bg-yellow-955/20" 
+                                : "border-amber-500 text-amber-600 bg-amber-50/50 dark:bg-amber-950/20"
+                              : isYB 
+                                ? "border-[#ffff00] text-[#ffff00] hover:bg-[#222200]" 
+                                : "border-slate-205 dark:border-slate-750 text-slate-400 hover:border-slate-400 hover:text-slate-655"
+                          )}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleFlag(q.id);
+                          }}
+                        >
+                          <Bookmark className={cn("w-3.5 h-3.5 mr-1.5", flagged.has(q.id) ? "fill-current" : "")} /> 
+                          {flagged.has(q.id) ? "Flagged" : "Flag"}
+                        </button>
+                      )}
+                      {isReviewMode && (
+                        <span className={cn("text-xs font-bold px-2 py-0.5 rounded-sm border", 
+                          detailForQ?.ok 
+                            ? "bg-emerald-500/10 border-emerald-500/35 text-emerald-600 dark:text-emerald-400" 
+                            : "bg-rose-500/10 border-rose-500/35 text-rose-600 dark:text-rose-400"
+                        )}>
+                          {detailForQ?.ok ? "Correct" : "Incorrect"}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Prompt */}
+                    <div className={cn("font-bold leading-relaxed mb-4", textSizeStyle.prompt)}>
+                      {formatMathText(q.prompt)}
+                    </div>
+
+                    {/* Media */}
+                    {q.imageUrl && (
+                      <img 
+                        src={getFullImageUrl(q.imageUrl)} 
+                        className={cn("max-w-full border my-4 rounded-md shadow-sm", cStyle.border)} 
+                        alt="Question context" 
+                      />
+                    )}
+
+                    {/* Inputs */}
+                    {opts && opts.length > 0 ? (
+                      <div className="space-y-2 pl-1">
+                        {opts.map((opt, oIdx) => {
+                          const isSelected = answers[q.id] === opt.text;
+                          const isUserSelected = submittedAns === opt.text;
+                          const isCorrectOption = opt.isCorrect || opt.is_correct || detailForQ?.correctAns === opt.text;
+
+                          const isSelectedState = isReviewMode ? isUserSelected : isSelected;
+                          const labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+
+                          // Options colors for Review vs Exam Mode
+                          let optBgHighlight = "";
+                          if (isReviewMode) {
+                            if (isCorrectOption) {
+                              optBgHighlight = isYB 
+                                ? "bg-[#002b00] border-[#ffff00] text-[#ffff00]" 
+                                : "bg-emerald-50 dark:bg-emerald-950/20 border-emerald-500 text-emerald-700 dark:text-emerald-300 font-bold";
+                            } else if (isUserSelected && !isCorrectOption) {
+                              optBgHighlight = isYB 
+                                ? "bg-[#2b0000] border-[#ffff00] text-[#ffff00]" 
+                                : "bg-rose-50 dark:bg-rose-955/20 border-rose-500 text-rose-700 dark:text-rose-455 font-bold";
+                            }
+                          }
+
+                          return (
+                            <button
+                              key={opt.id}
+                              disabled={isReviewMode}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onAnswer(q.id, opt.text);
+                                setActiveQuestionIndex(q.position - 1);
+                              }}
+                              className={cn(
+                                "flex items-center gap-3 w-full text-left py-2.5 rounded-md px-3 border border-transparent transition-all group cursor-pointer", 
+                                optBgHighlight ? "" : cStyle.optHover,
+                                optBgHighlight
+                              )}
+                            >
+                              <div className={cn(
+                                "h-5 w-5 rounded-full border flex items-center justify-center shrink-0 transition-all",
+                                isSelectedState ? cStyle.optRadioCircleSelected : cStyle.optRadioCircle
+                              )}>
+                                {isSelectedState && (
+                                  <div className={cn("w-2.5 h-2.5 rounded-full", cStyle.optRadioDot)} />
+                                )}
+                              </div>
+                              <div className={cn("flex items-center gap-1.5 min-w-0", textSizeStyle.option)}>
+                                {q.options && q.options.length > 0 && (
+                                  <span className="font-bold text-sm">
+                                    {labels[oIdx]}.
+                                  </span>
+                                )}
+                                {opt.imageUrl && <img src={getFullImageUrl(opt.imageUrl)} className="h-10 object-contain mr-2 border rounded-sm border-slate-105" alt="Option visual" />}
+                                <span className="font-semibold">
+                                  {formatMathText(opt.text)}
+                                </span>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="w-full mt-3">
+                        {isReviewMode ? (
+                          <div className="space-y-3 font-semibold text-xs leading-relaxed select-text mt-3">
+                            <div className="flex flex-col gap-1.5">
+                              <span className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Your answer</span>
+                              <div className={cn("p-3.5 rounded-md border text-sm font-extrabold", 
+                                detailForQ?.ok 
+                                  ? isYB ? "border-[#ffff00]" : "bg-emerald-50 dark:bg-emerald-950/20 border-emerald-500/30 text-emerald-700 dark:text-emerald-450" 
+                                  : isYB ? "border-[#ffff00]" : "bg-rose-50 dark:bg-rose-955/20 border-rose-500/30 text-rose-700 dark:text-rose-455"
+                              )}>
+                                {submittedAns || "— No answer submitted —"} {detailForQ?.ok ? "✓" : "✗"}
+                              </div>
+                            </div>
+                            {!detailForQ?.ok && (
+                              <div className="flex flex-col gap-1.5">
+                                <span className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Correct answer</span>
+                                <div className={cn("p-3.5 rounded-md border text-sm font-extrabold", isYB ? "border-[#ffff00]" : "border-emerald-500/30 bg-emerald-50/10 text-emerald-700 dark:text-emerald-400")}>
+                                  {detailForQ?.correctAns || "— No correct answer key —"}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          kind === "writing" ? (
+                            <div>
+                              <Textarea
+                                rows={16}
+                                className={cn("w-full p-5 font-serif rounded-md border focus:ring-0 resize-none h-[380px] shadow-inner focus:outline-none", cStyle.input, textSizeStyle.input)}
+                                placeholder="Write your essay here..."
+                                value={answers[q.id] || ""}
+                                onChange={(e) => {
+                                  onAnswer(q.id, e.target.value);
+                                  setActiveQuestionIndex(q.position - 1);
+                                }}
+                              />
+                              <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest mt-2 px-1 opacity-80">
+                                <span>Words: {answers[q.id]?.trim() ? answers[q.id].trim().split(/\s+/).length : 0}</span>
+                                <span>Characters: {(answers[q.id] || "").length}</span>
+                              </div>
+                            </div>
+                          ) : (
+                            <input
+                              type="text"
+                              className={cn("w-full max-w-md p-3 font-semibold rounded-md border shadow-sm focus:outline-none focus:ring-0", cStyle.input, textSizeStyle.input)}
+                              placeholder="Type your answer here..."
+                              value={answers[q.id] || ""}
+                              onChange={(e) => {
+                                onAnswer(q.id, e.target.value);
+                                setActiveQuestionIndex(q.position - 1);
+                              }}
+                            />
+                          )
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+        
+        {/* Floating Controls */}
+        {renderIeltsFloatingNav()}
+      </div>
+    );
+  };
+
+  const renderIeltsFooter = (currentSectionIdx: number) => {
+    return (
+      <footer className={cn("h-[70px] border-t flex items-center justify-between px-6 z-40 select-none", cStyle.footerBg, cStyle.footerBorder, cStyle.footerText)}>
+        {/* Left side: Part info */}
+        <div className="flex items-center gap-3 w-1/4">
+          <span className="font-extrabold text-sm uppercase tracking-wide">
+            Part {currentSectionIdx + 1}
+          </span>
+        </div>
+
+        {/* Middle side: Square Pagination Buttons */}
+        <div className="flex-1 flex justify-center items-center gap-1.5 overflow-x-auto max-w-[60%] px-4 py-1 scrollbar-thin">
+          {questions.map((q, idx) => {
+            const isCurrent = idx === activeQuestionIndex;
+            const hasAns = !!answers[q.id];
+            const isFlg = flagged.has(q.id);
+            
+            let btnStyle = cStyle.pagUnanswered;
+            if (isReviewMode) {
+              const qDetail = ieltsDetails.find((d: any) => String(d.questionId) === String(q.id));
+              const isQCorrect = qDetail ? !!qDetail.ok : false;
+              const wasQAnswered = qDetail && qDetail.userAns !== undefined && String(qDetail.userAns).trim() !== "";
+              
+              if (isQCorrect) {
+                btnStyle = isYB 
+                  ? "border-[#ffff00] text-[#ffff00] bg-[#002200]" 
+                  : "border-emerald-500 text-emerald-600 dark:text-emerald-400 bg-emerald-50/10";
+              } else if (wasQAnswered) {
+                btnStyle = isYB 
+                  ? "border-[#ffff00] text-[#ffff00] bg-[#220000] line-through" 
+                  : "border-rose-500 text-rose-600 dark:text-rose-455 bg-rose-50/10";
+              } else {
+                btnStyle = isYB 
+                  ? "border-[#333300] text-[#888800] bg-black" 
+                  : "border-slate-300 dark:border-slate-750 text-slate-500 dark:text-slate-400 bg-slate-100/30";
+              }
+              if (isCurrent) {
+                btnStyle = cn(btnStyle, "ring-2 ring-blue-500 ring-offset-1");
+              }
+            } else {
+              if (isCurrent) {
+                btnStyle = cStyle.pagActive;
+              } else if (isFlg) {
+                btnStyle = cStyle.pagFlagged;
+              } else if (hasAns) {
+                btnStyle = cStyle.pagAnswered;
+              }
+            }
+
+            return (
+              <button
+                key={q.id}
+                onClick={() => {
+                  setActiveQuestionIndex(idx);
+                  const el = questionRefs.current[q.id];
+                  if (el) {
+                    el.scrollIntoView({ behavior: "smooth", block: "center" });
+                  }
+                }}
+                className={cn("h-9 w-9 text-xs font-black transition-all duration-150 border flex items-center justify-center rounded-sm shrink-0 cursor-pointer", btnStyle)}
+              >
+                {q.position}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Right side: Checkmark or Back Button */}
+        <div className="flex items-center justify-end w-1/4">
+          {isReviewMode ? (
+            <Button
+              onClick={() => setSearchParams({ attemptId: result?.id || attemptId, review: "false" })}
+              className={cn("h-10 px-6 rounded-sm font-bold text-xs uppercase tracking-widest cursor-pointer border-none text-white", isYB ? "bg-[#ffff00] !text-black hover:bg-[#dddd00]" : "bg-slate-700 hover:bg-slate-800")}
+            >
+              Back
+            </Button>
+          ) : (
+            <Button 
+              size="lg" 
+              onClick={handleSubmitRequest}
+              className={cn("h-10 w-10 p-0 rounded-sm text-white flex items-center justify-center shadow-md transition-colors border-none cursor-pointer", isYB ? "bg-[#ffff00] !text-black hover:bg-[#dddd00]" : "bg-emerald-600 hover:bg-emerald-700")}
+              title="Submit Exam"
+            >
+              <span className="text-xl font-bold font-sans">✓</span>
+            </Button>
+          )}
+        </div>
+      </footer>
+    );
+  };
+
+  const renderIeltsResultDashboard = () => {
+    if (!result) return null;
+
+    const totalQ = questions.length || 1;
+    const correctAns = questions.filter(q => {
+      const detail = ieltsDetails.find((d: any) => String(d.questionId) === String(q.id));
+      return detail ? !!detail.ok : false;
+    }).length;
+    
+    const pctAccuracy = Math.round((correctAns / totalQ) * 100);
+    
+    // Format duration spent
+    const elapsedSeconds = result.timeUsedSeconds ?? result.elapsedSec ?? 0;
+    const elapsedMinutes = Math.floor(elapsedSeconds / 60);
+    const elapsedSecondsRem = elapsedSeconds % 60;
+    const durationStr = elapsedMinutes > 0 ? `${elapsedMinutes}m ${elapsedSecondsRem}s` : `${elapsedSeconds}s`;
+
+    // Convert raw correct count to Band score (or get final score)
+    const bandScoreVal = result.score || rawToBand(kind, correctAns, totalQ);
+
+    // Performance analysis feedback & stars
+    let scoreFeedback = "This score needs serious improvement. Dedicate more time to reading and vocabulary.";
+    let starsCount = 1;
+    if (bandScoreVal >= 7.5) {
+      scoreFeedback = "Outstanding score! You have shown excellent language proficiency.";
+      starsCount = 3;
+    } else if (bandScoreVal >= 5.5) {
+      scoreFeedback = "Good effort. You have a solid grasp but keep practicing for higher bands.";
+      starsCount = 2;
+    }
+
+    // Modal theme configurations matching active Contrast theme
+    const resultBg = isYB ? "bg-black text-[#ffff00]" : isWB ? "bg-[#0b0c10] text-white" : "bg-[#f4f7f6] text-slate-800";
+    const cardContainerBg = isYB ? "bg-black border-[#ffff00]" : isWB ? "bg-[#161a22] border-slate-850" : "bg-white border-slate-200 shadow-xl";
+    const innerCardBg = isYB ? "bg-black border-[#ffff00]" : isWB ? "bg-[#251212] border-rose-950/30 text-rose-300" : "bg-[#fff5f5] border-rose-100 text-rose-800";
+    
+    const metricCardBg = isYB ? "bg-black border-[#ffff00]" : isWB ? "bg-[#1c2331] border-slate-800" : "bg-[#fcfdfd] border-slate-200 shadow-xs";
+    const metricText = isYB ? "text-[#ffff00]" : isWB ? "text-white" : "text-slate-800";
+
+    return (
+      <div className={cn("min-h-screen w-full flex flex-col items-center justify-center p-4 md:p-8 font-sans transition-colors", resultBg)}>
+        {/* White Centered Container Card */}
+        <div className={cn("w-full max-w-3xl border rounded-2xl overflow-hidden p-8 md:p-12 text-center", cardContainerBg)}>
+          
+          {/* Checkmark circular logo */}
+          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-950/20 border-4 border-emerald-500 shadow-inner text-emerald-500">
+            <span className="text-3xl font-extrabold select-none">✓</span>
+          </div>
+
+          <h2 className="text-2xl md:text-3xl font-black tracking-tight mb-1">
+            {kind.charAt(0).toUpperCase() + kind.slice(1)} Test Complete!
+          </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-8">
+            Here are your results
+          </p>
+
+          {/* Large evaluations card (light red / custom) */}
+          <div className={cn("border rounded-2xl p-6 md:p-8 text-center max-w-2xl mx-auto mb-8 relative", innerCardBg)}>
+            <span className="block font-extrabold text-xs uppercase tracking-widest text-emerald-650 dark:text-emerald-400">
+              IELTS Band Score
+            </span>
+            
+            {/* Score digit */}
+            <span className="block text-7xl md:text-8xl font-black text-rose-600 dark:text-rose-400 my-4 tracking-tighter drop-shadow-sm select-none">
+              {bandScoreVal}
+            </span>
+            
+            <span className="block text-xs font-bold text-slate-500 dark:text-slate-400">
+              out of 9.0
+            </span>
+
+            {/* score feedback */}
+            <p className="text-rose-600 dark:text-rose-400 font-bold text-xs max-w-md mx-auto my-4 leading-relaxed">
+              {scoreFeedback}
+            </p>
+
+            {/* lightbulb */}
+            <div className="flex justify-center mb-5 opacity-90">
+              <span className="text-lg">💡</span>
+            </div>
+
+            {/* Stars evaluation */}
+            <div className="flex items-center justify-center gap-1.5 mb-8 select-none">
+              {[1, 2, 3].map((starIdx) => {
+                const isFilled = starIdx <= starsCount;
+                return (
+                  <span 
+                    key={starIdx} 
+                    className={cn("text-3xl transition-transform", isFilled ? "text-amber-500 animate-scale-up" : "text-slate-350 dark:text-slate-700")}
+                  >
+                    ★
+                  </span>
+                );
+              })}
+            </div>
+
+            {/* Progress bar correct answers */}
+            <div className="w-full text-left mt-6">
+              <div className="flex justify-between items-center text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">
+                <span>Correct answers</span>
+                <span className="text-emerald-650 dark:text-emerald-400 font-extrabold">{correctAns} / {totalQ}</span>
+              </div>
+              <div className="w-full h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-emerald-500 rounded-full transition-all duration-1000" 
+                  style={{ width: `${pctAccuracy}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Metrics cards grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
+              {/* Accuracy Card */}
+              <div className={cn("border p-4 rounded-xl text-left", metricCardBg)}>
+                <span className="text-[9px] font-black text-emerald-650 dark:text-emerald-400 uppercase tracking-widest block">
+                  Accuracy
+                </span>
+                <span className={cn("text-xl font-extrabold block mt-1", metricText)}>
+                  {pctAccuracy}%
+                </span>
+              </div>
+
+              {/* Correct/Total Card */}
+              <div className={cn("border p-4 rounded-xl text-left", metricCardBg)}>
+                <span className="text-[9px] font-black text-emerald-650 dark:text-emerald-400 uppercase tracking-widest block">
+                  Correct / Total
+                </span>
+                <span className={cn("text-xl font-extrabold block mt-1", metricText)}>
+                  {correctAns} / {totalQ}
+                </span>
+              </div>
+
+              {/* Time Spent Card */}
+              <div className={cn("border p-4 rounded-xl text-left", metricCardBg)}>
+                <span className="text-[9px] font-black text-emerald-650 dark:text-emerald-400 uppercase tracking-widest block">
+                  Time Spent
+                </span>
+                <span className={cn("text-xl font-extrabold block mt-1", metricText)}>
+                  {durationStr}
+                </span>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Action buttons below */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center select-none mt-6">
+            <Button
+              onClick={() => {
+                setSearchParams({ attemptId: result.id || attemptId, review: "true" });
+              }}
+              className={cn("w-full sm:w-auto px-8 py-3 rounded-lg font-bold text-xs uppercase tracking-widest transition-opacity cursor-pointer border-none text-white", isYB ? "bg-[#ffff00] !text-black hover:bg-[#dddd00]" : "bg-gradient-to-r from-violet-600 to-indigo-600 hover:opacity-90 shadow-md")}
+            >
+              Review Answers
+            </Button>
+            <Button
+              onClick={() => nav(-1)}
+              variant="outline"
+              className={cn("w-full sm:w-auto px-8 py-3 rounded-lg font-bold text-xs uppercase tracking-widest cursor-pointer border-2 bg-transparent", isYB ? "border-[#ffff00] text-[#ffff00] hover:bg-[#222200]" : "border-slate-350 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-900")}
+            >
+              Back to Practice
+            </Button>
+          </div>
+
+        </div>
+        {renderIeltsOptionsModal()}
+      </div>
+    );
+  };
+
+  const renderIeltsOptionsModal = () => {
+    if (!showOptionsModal) return null;
+
+    // Modal theme configurations matching active Contrast theme
+    const modalBg = isYB ? "bg-black text-[#ffff00] border-[#ffff00]" : "bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-800";
+    const modalHeaderBorder = isYB ? "border-[#ffff00]" : "border-slate-200 dark:border-slate-800";
+    const modalRowBg = isYB ? "bg-black border-[#ffff00] hover:bg-[#222200]" : "bg-[#f7f8fa] dark:bg-slate-950 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-855";
+    const modalBoxBg = isYB ? "bg-black border-[#ffff00] divide-[#ffff00]" : "bg-white dark:bg-slate-955 border-slate-200 dark:border-slate-800 divide-slate-200 dark:divide-slate-800";
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs select-none animate-fade-in">
+        <div className={cn("w-full max-w-[480px] rounded-lg shadow-2xl overflow-hidden border flex flex-col animate-scale-up", modalBg)}>
+          {/* Header */}
+          <div className={cn("px-6 py-4 border-b flex items-center justify-between shrink-0", modalHeaderBorder)}>
+            {optionsPanel === "main" ? (
+              <>
+                <div className="w-10" />
+                <h3 className="font-bold text-base text-center flex-1">Options</h3>
+              </>
+            ) : (
+              <>
+                <button 
+                  onClick={() => setOptionsPanel("main")}
+                  className="flex items-center gap-1.5 text-sm font-semibold hover:opacity-85 cursor-pointer"
+                >
+                  <span>←</span> <span>Options</span>
+                </button>
+                <h3 className="font-bold text-base text-center capitalize">
+                  {optionsPanel === "contrast" ? "Contrast" : "Text size"}
+                </h3>
+              </>
+            )}
+            <button 
+              onClick={() => setShowOptionsModal(false)}
+              className="h-7 w-7 rounded-full flex items-center justify-center hover:bg-white/10 dark:hover:bg-white/5 cursor-pointer"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+
+          {/* Body */}
+          <div className="p-6">
+            {optionsPanel === "main" && (
+              <div className="space-y-4">
+                {/* Contrast Toggle */}
+                <button
+                  onClick={() => setOptionsPanel("contrast")}
+                  className={cn("flex items-center justify-between w-full p-4 border rounded-md transition-colors cursor-pointer", modalRowBg)}
+                >
+                  <div className="flex items-center gap-3.5">
+                    <svg className="w-5 h-5 text-current shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="12" cy="12" r="10" />
+                      <path d="M12 2v20a10 10 0 0 0 0-20z" fill="currentColor" />
+                    </svg>
+                    <span className="font-bold text-sm">Contrast</span>
+                  </div>
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+
+                {/* Text Size Toggle */}
+                <button
+                  onClick={() => setOptionsPanel("text-size")}
+                  className={cn("flex items-center justify-between w-full p-4 border rounded-md transition-colors cursor-pointer", modalRowBg)}
+                >
+                  <div className="flex items-center gap-3.5">
+                    <span className="font-serif font-black text-base select-none shrink-0 w-5 text-center">T</span>
+                    <span className="font-bold text-sm">Text size</span>
+                  </div>
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+
+            {optionsPanel === "contrast" && (
+              <div className={cn("border rounded-md overflow-hidden divide-y", modalBoxBg)}>
+                <button
+                  onClick={() => setIeltsContrast("black-on-white")}
+                  className="flex items-center justify-between w-full px-5 py-4 hover:bg-white/5 dark:hover:bg-white/5 transition-colors text-left cursor-pointer"
+                >
+                  <span className="text-sm font-semibold">Black on white</span>
+                  {ieltsContrast === "black-on-white" && <span className="text-base font-bold">✓</span>}
+                </button>
+
+                <button
+                  onClick={() => setIeltsContrast("white-on-black")}
+                  className="flex items-center justify-between w-full px-5 py-4 hover:bg-white/5 dark:hover:bg-white/5 transition-colors text-left cursor-pointer"
+                >
+                  <span className="text-sm font-semibold">White on black</span>
+                  {ieltsContrast === "white-on-black" && <span className="text-base font-bold">✓</span>}
+                </button>
+
+                <button
+                  onClick={() => setIeltsContrast("yellow-on-black")}
+                  className="flex items-center justify-between w-full px-5 py-4 hover:bg-white/5 dark:hover:bg-white/5 transition-colors text-left cursor-pointer"
+                >
+                  <span className="text-sm font-semibold">Yellow on black</span>
+                  {ieltsContrast === "yellow-on-black" && <span className="text-base font-bold">✓</span>}
+                </button>
+              </div>
+            )}
+
+            {optionsPanel === "text-size" && (
+              <div className={cn("border rounded-md overflow-hidden divide-y", modalBoxBg)}>
+                <button
+                  onClick={() => setIeltsTextSize("regular")}
+                  className="flex items-center justify-between w-full px-5 py-4 hover:bg-white/5 dark:hover:bg-white/5 transition-colors text-left cursor-pointer"
+                >
+                  <span className="text-sm font-semibold">Regular</span>
+                  {ieltsTextSize === "regular" && <span className="text-base font-bold">✓</span>}
+                </button>
+
+                <button
+                  onClick={() => setIeltsTextSize("large")}
+                  className="flex items-center justify-between w-full px-5 py-4 hover:bg-white/5 dark:hover:bg-white/5 transition-colors text-left cursor-pointer"
+                >
+                  <span className="text-sm font-semibold">Large</span>
+                  {ieltsTextSize === "large" && <span className="text-base font-bold">✓</span>}
+                </button>
+
+                <button
+                  onClick={() => setIeltsTextSize("extra-large")}
+                  className="flex items-center justify-between w-full px-5 py-4 hover:bg-white/5 dark:hover:bg-white/5 transition-colors text-left cursor-pointer"
+                >
+                  <span className="text-sm font-semibold">Extra large</span>
+                  {ieltsTextSize === "extra-large" && <span className="text-base font-bold">✓</span>}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderIeltsLayout = () => {
+    const currentSectionIdx = currentQuestion?.section_index ?? 0;
+
+    return (
+      <div className={cn("w-full h-screen flex flex-col font-sans transition-colors relative overflow-hidden", cStyle.bg)}>
+        {renderIeltsHeader()}
+        
+        {/* Main Content Area */}
+        <main className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
+          {(isReading || kind === "writing") && renderIeltsPassagePanel(currentSectionIdx)}
+          
+          {(isReading || kind === "writing") && renderIeltsDivider()}
+          
+          <div className="flex-1 flex flex-col overflow-hidden relative">
+            {kind === "listening" && renderIeltsListeningControls()}
+            {renderIeltsQuestionsPanel(currentSectionIdx)}
+          </div>
+        </main>
+
+        {renderIeltsFooter(currentSectionIdx)}
+        
+        {showScratchpad && <Scratchpad isOpen={showScratchpad} onClose={() => setShowScratchpad(false)} />}
+        <DesmosCalculator isOpen={showCalculator} onClose={() => setShowCalculator(false)} />
+        {renderIeltsOptionsModal()}
+      </div>
+    );
+  };
+
+  if (result && isIeltsLayout) {
+    if (isReviewMode) {
+      return renderIeltsLayout();
+    } else {
+      return renderIeltsResultDashboard();
+    }
+  }
+
+  if (started && isIeltsLayout && !result && !showReviewScreen && !showSuccessAnimation) {
+    return renderIeltsLayout();
   }
 
   return (
