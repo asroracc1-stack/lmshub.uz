@@ -824,17 +824,17 @@ export default function MockTake() {
       setLoading(true);
       const resStart = await api.post(`/student/exams/${testId}/start`);
       const attempt = resStart.data;
-      setSearchParams({ attemptId: attempt.id, seed: attempt.attemptSeed });
+      setSearchParams({ attemptId: attempt.id, seed: attempt.attempt_seed });
       setStarted(true);
       startedAt.current = Date.now();
       
       const resExam = await api.get<ExamData>(`/admin/exams/${testId}?t=${Date.now()}`);
       setExam(resExam.data);
-      const { sections: s, questions: q } = normalize(resExam.data, attempt.attemptSeed);
+      const { sections: s, questions: q } = normalize(resExam.data, attempt.attempt_seed);
       setSections(s);
       setQuestions(q);
       
-      const startTimeMs = new Date(attempt.startedAt).getTime();
+      const startTimeMs = new Date(attempt.started_at).getTime();
       const elapsedSec = Math.floor((Date.now() - startTimeMs) / 1000);
       const totalSec = (resExam.data.duration_minutes ?? resExam.data.durationMinutes ?? 60) * 60;
       setTimeLeft(Math.max(0, totalSec - elapsedSec));
@@ -855,12 +855,12 @@ export default function MockTake() {
     if (!isReviewMode && !attemptId) {
       api.get<any[]>('/student/exams/attempts')
         .then((resAttempts) => {
-          const active = resAttempts.data.find(a => a.examId === testId && !a.finishedAt);
+          const active = resAttempts.data.find(a => a.exam_id === testId && !a.finished_at);
           if (active) {
-            setSearchParams({ attemptId: active.id, seed: active.attemptSeed });
+            setSearchParams({ attemptId: active.id, seed: active.attempt_seed });
             setStarted(true);
           } else {
-            const completed = resAttempts.data.find(a => a.examId === testId && a.finishedAt);
+            const completed = resAttempts.data.find(a => a.exam_id === testId && a.finished_at);
             if (completed) {
               setSearchParams({ attemptId: completed.id, review: "true" });
             }
@@ -881,8 +881,8 @@ export default function MockTake() {
           api.get<any[]>('/student/exams/attempts')
             .then(resAttempts => {
               const att = resAttempts.data.find(a => a.id === attemptId);
-              if (att && att.startedAt) {
-                const startTimeMs = new Date(att.startedAt).getTime();
+              if (att && att.started_at) {
+                const startTimeMs = new Date(att.started_at).getTime();
                 const elapsedSec = Math.floor((Date.now() - startTimeMs) / 1000);
                 const totalSec = (data.duration_minutes ?? data.durationMinutes ?? 60) * 60;
                 setTimeLeft(Math.max(0, totalSec - elapsedSec));
@@ -912,7 +912,7 @@ export default function MockTake() {
               const resultData = resResult.data;
               setResult(resultData);
               setStarted(true);
-              const { sections: sRev, questions: qRev } = normalize(data, resultData.attemptSeed);
+              const { sections: sRev, questions: qRev } = normalize(data, resultData.attempt_seed);
               setSections(sRev);
               setQuestions(qRev);
             })
@@ -1805,28 +1805,10 @@ export default function MockTake() {
             variant="ghost" 
             size="icon" 
             className={cn("rounded-full h-9 w-9 cursor-pointer", cStyle.iconBtn)} 
-            onClick={toggle}
-            title={theme === "dark" ? "Light Mode" : "Dark Mode"}
-          >
-            {theme === "dark" ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4" />}
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className={cn("rounded-full h-9 w-9 cursor-pointer", cStyle.iconBtn)} 
             onClick={toggleFullscreen}
             title="Toggle Fullscreen"
           >
             {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className={cn("rounded-full h-9 w-9 cursor-pointer", cStyle.iconBtn)}
-            onClick={() => setShowCalculator(!showCalculator)}
-            title="Calculator"
-          >
-            <Calculator className="h-4 w-4" />
           </Button>
           <Button 
             variant="ghost" 
