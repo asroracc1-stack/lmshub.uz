@@ -56,7 +56,8 @@ public class UserStatsController {
         for (int i = 6; i >= 0; i--) {
             LocalDate date = LocalDate.now().minusDays(i);
             String dayName = date.getDayOfWeek().getDisplayName(TextStyle.SHORT, Locale.ENGLISH).toUpperCase();
-            double mins = dailyMinutes.getOrDefault(date, 0.0);
+            Double minsVal = dailyMinutes.get(date);
+            double mins = minsVal != null ? minsVal : 0.0;
 
             // Filter attempts finished on this date
             LocalDate finalDate = date;
@@ -141,11 +142,17 @@ public class UserStatsController {
         LocalDate checkToday = LocalDate.now();
         LocalDate yesterday = checkToday.minusDays(1);
         
-        if (dailyMinutes.getOrDefault(checkToday, 0.0) > 0 || dailyMinutes.getOrDefault(yesterday, 0.0) > 0) {
-            LocalDate checkDate = dailyMinutes.getOrDefault(checkToday, 0.0) > 0 ? checkToday : yesterday;
-            while (dailyMinutes.getOrDefault(checkDate, 0.0) > 0) {
+        if (dailyMinutes.containsKey(checkToday) || dailyMinutes.containsKey(yesterday)) {
+            LocalDate checkDate = dailyMinutes.containsKey(checkToday) ? checkToday : yesterday;
+            int maxIterations = 366;
+            while (maxIterations > 0) {
+                Double mins = dailyMinutes.get(checkDate);
+                if (mins == null || mins <= 0.0) {
+                    break;
+                }
                 streak++;
                 checkDate = checkDate.minusDays(1);
+                maxIterations--;
             }
         }
 
@@ -167,7 +174,10 @@ public class UserStatsController {
 
         Double totalMinutes = 0.0;
         for (int i = 0; i < 7; i++) {
-            totalMinutes += dailyMinutes.getOrDefault(LocalDate.now().minusDays(i), 0.0);
+            Double mins = dailyMinutes.get(LocalDate.now().minusDays(i));
+            if (mins != null) {
+                totalMinutes += mins;
+            }
         }
         Double targetBand = user.getTargetBand() != null ? user.getTargetBand() : 7.5;
 
