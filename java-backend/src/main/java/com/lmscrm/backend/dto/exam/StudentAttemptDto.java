@@ -13,6 +13,7 @@ public class StudentAttemptDto {
     private String studentName;
     private LocalDateTime startedAt;
     private LocalDateTime finishedAt;
+    private Long elapsedSeconds;
     private Integer totalScore;
     private Integer maxScore;
     private Boolean isPassed;

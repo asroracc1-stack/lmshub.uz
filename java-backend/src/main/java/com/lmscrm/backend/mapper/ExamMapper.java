@@ -34,4 +34,15 @@ public interface ExamMapper {
     @Mapping(source = "student.id", target = "studentId")
     @Mapping(source = "student.email", target = "studentName")
     StudentAttemptDto toStudentAttemptDto(StudentAttempt attempt);
+
+    @org.mapstruct.AfterMapping
+    default void calculateElapsedSeconds(StudentAttempt attempt, @org.mapstruct.MappingTarget StudentAttemptDto dto) {
+        if (attempt.getStartedAt() != null) {
+            if (attempt.getFinishedAt() != null) {
+                dto.setElapsedSeconds(java.time.Duration.between(attempt.getStartedAt(), attempt.getFinishedAt()).toSeconds());
+            } else {
+                dto.setElapsedSeconds(java.time.Duration.between(attempt.getStartedAt(), java.time.LocalDateTime.now()).toSeconds());
+            }
+        }
+    }
 }

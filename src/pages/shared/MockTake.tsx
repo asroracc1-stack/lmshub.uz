@@ -834,8 +834,9 @@ export default function MockTake() {
       setSections(s);
       setQuestions(q);
       
-      const startTimeMs = new Date(attempt.started_at).getTime();
-      const elapsedSec = Math.floor((Date.now() - startTimeMs) / 1000);
+      const elapsedSec = attempt.elapsed_seconds !== undefined && attempt.elapsed_seconds !== null
+        ? attempt.elapsed_seconds
+        : Math.floor((Date.now() - new Date(attempt.started_at).getTime()) / 1000);
       const totalSec = (resExam.data.duration_minutes ?? resExam.data.durationMinutes ?? 60) * 60;
       setTimeLeft(Math.max(0, totalSec - elapsedSec));
     } catch (err: any) {
@@ -881,9 +882,10 @@ export default function MockTake() {
           api.get<any[]>('/student/exams/attempts')
             .then(resAttempts => {
               const att = resAttempts.data.find(a => a.id === attemptId);
-              if (att && att.started_at) {
-                const startTimeMs = new Date(att.started_at).getTime();
-                const elapsedSec = Math.floor((Date.now() - startTimeMs) / 1000);
+              if (att && (att.started_at || att.elapsed_seconds !== undefined)) {
+                const elapsedSec = att.elapsed_seconds !== undefined && att.elapsed_seconds !== null
+                  ? att.elapsed_seconds
+                  : Math.floor((Date.now() - new Date(att.started_at).getTime()) / 1000);
                 const totalSec = (data.duration_minutes ?? data.durationMinutes ?? 60) * 60;
                 setTimeLeft(Math.max(0, totalSec - elapsedSec));
               } else {
