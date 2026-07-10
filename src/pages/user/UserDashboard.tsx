@@ -76,6 +76,27 @@ export default function UserDashboard() {
   const [selectedTargetBand, setSelectedTargetBand] = useState<number>(7.0);
   const [savingTarget, setSavingTarget] = useState(false);
 
+  const mapStats = (data: any): UserStats => {
+    return {
+      total_minutes: data.totalMinutes ?? 0,
+      streak: data.streak ?? 0,
+      target_band: data.targetBand ?? null,
+      avg_score: data.avgScore ?? null,
+      exam_days_left: data.examDaysLeft ?? null,
+      weekly_data: (data.weeklyData || []).map((d: any) => ({
+        day: d.day,
+        minutes: d.minutes ?? 0,
+        reading: d.reading ?? null,
+        listening: d.listening ?? null,
+        writing: d.writing ?? null,
+        speaking: d.speaking ?? null,
+        sat: d.sat ?? null,
+        national_cert: d.nationalCert ?? null,
+        attempts_count: d.attemptsCount ?? 0,
+      })),
+    };
+  };
+
   useEffect(() => {
     if (openKey === "avg") {
       const fetchAttempts = async () => {
@@ -148,7 +169,7 @@ export default function UserDashboard() {
     const fetchStats = async () => {
       try {
         const res = await api.get("/user/stats");
-        setStats(res.data);
+        setStats(mapStats(res.data));
       } catch (e) {
         console.error("Stats fetch failed", e);
       } finally {
@@ -174,7 +195,7 @@ export default function UserDashboard() {
       });
       await refresh();
       const res = await api.get("/user/stats");
-      setStats(res.data);
+      setStats(mapStats(res.data));
       setOpenKey(null);
     } catch (e: any) {
       toast.error(e.response?.data?.message || t("userDashboard.toast.errorOccurred"));
@@ -517,7 +538,7 @@ export default function UserDashboard() {
                       toast.success(t("userDashboard.toast.targetBandSaved", "Maqsadli ball saqlandi"));
                       await refresh();
                       const res = await api.get("/user/stats");
-                      setStats(res.data);
+                      setStats(mapStats(res.data));
                       setOpenKey(null);
                     } catch (e: any) {
                       toast.error(e.response?.data?.message || "Xatolik yuz berdi");

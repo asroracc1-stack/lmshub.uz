@@ -41,8 +41,8 @@ public class UserStatsController {
     public ResponseEntity<UserDashboardStatsDto> getStats(@AuthenticationPrincipal User currentUser) {
         User user = userRepository.findById(currentUser.getId()).orElse(currentUser);
 
-        LocalDateTime since = LocalDateTime.now().minusDays(7).truncatedTo(ChronoUnit.DAYS);
-        List<PracticeSession> sessions = practiceSessionRepository.findAllByUserIdAndCreatedAtAfter(user.getId(), since);
+        LocalDateTime since365Days = LocalDateTime.now().minusDays(365).truncatedTo(ChronoUnit.DAYS);
+        List<PracticeSession> sessions = practiceSessionRepository.findAllByUserIdAndCreatedAtAfter(user.getId(), since365Days);
         
         Map<LocalDate, Double> dailyMinutes = sessions.stream()
                 .filter(s -> s.getCreatedAt() != null)
@@ -138,12 +138,14 @@ public class UserStatsController {
         }
 
         int streak = 0;
-        for (int i = 0; i < 30; i++) {
-            LocalDate date = LocalDate.now().minusDays(i);
-            if (dailyMinutes.getOrDefault(date, 0.0) > 0) {
+        LocalDate checkToday = LocalDate.now();
+        LocalDate yesterday = checkToday.minusDays(1);
+        
+        if (dailyMinutes.getOrDefault(checkToday, 0.0) > 0 || dailyMinutes.getOrDefault(yesterday, 0.0) > 0) {
+            LocalDate checkDate = dailyMinutes.getOrDefault(checkToday, 0.0) > 0 ? checkToday : yesterday;
+            while (dailyMinutes.getOrDefault(checkDate, 0.0) > 0) {
                 streak++;
-            } else if (i > 0) {
-                break;
+                checkDate = checkDate.minusDays(1);
             }
         }
 
@@ -163,7 +165,10 @@ public class UserStatsController {
                         .average()
                         .getAsDouble() * 10.0) / 10.0 : null;
 
-        Double totalMinutes = dailyMinutes.values().stream().mapToDouble(Double::doubleValue).sum();
+        Double totalMinutes = 0.0;
+        for (int i = 0; i < 7; i++) {
+            totalMinutes += dailyMinutes.getOrDefault(LocalDate.now().minusDays(i), 0.0);
+        }
         Double targetBand = user.getTargetBand() != null ? user.getTargetBand() : 7.5;
 
         return ResponseEntity.ok(UserDashboardStatsDto.builder()

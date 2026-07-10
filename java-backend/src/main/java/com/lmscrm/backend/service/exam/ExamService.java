@@ -165,19 +165,214 @@ public class ExamService {
         exam.setPassingScore(request.getPassingScore() != null ? request.getPassingScore() : 50);
         exam.setRequiredPack(request.getRequiredPack() != null ? request.getRequiredPack().toLowerCase() : "free");
 
-        // Clear existing passages to trigger orphanRemoval
-        if (exam.getPassages() != null) {
-            exam.getPassages().clear();
-        } else {
-            exam.setPassages(new java.util.ArrayList<>());
-        }
-
-        // Flush to ensure deletions are executed before adding new ones
-        examRepository.saveAndFlush(exam);
-
-        saveSections(request, exam);
+        updateSections(request, exam);
 
         return mapper.toExamDto(examRepository.save(exam));
+    }
+
+    private void updateSections(CreateExamRequest request, Exam exam) {
+        List<Passage> existingPassages = exam.getPassages();
+        if (existingPassages == null) {
+            existingPassages = new java.util.ArrayList<>();
+            exam.setPassages(existingPassages);
+        }
+
+        List<CreateExamRequest.SectionDto> incomingSections = request.getSections();
+        if (incomingSections == null) {
+            incomingSections = new java.util.ArrayList<>();
+        }
+
+        List<Passage> passagesToRemove = new java.util.ArrayList<>();
+        
+        for (int i = 0; i < incomingSections.size(); i++) {
+            CreateExamRequest.SectionDto sectionDto = incomingSections.get(i);
+            int passageOrder = i + 1;
+            
+            Passage passage;
+            if (i < existingPassages.size()) {
+                passage = existingPassages.get(i);
+                passage.setTitle(sectionDto.getTitle() != null ? sectionDto.getTitle() : "Section " + passageOrder);
+                passage.setContent(sectionDto.getPassage() != null ? sectionDto.getPassage() : "");
+                passage.setImageUrl(sectionDto.getImageUrl());
+                passage.setPositionOrder(passageOrder);
+                passage.setAudioUrl(sectionDto.getAudioUrl());
+                passage.setPdfAttachment(sectionDto.getPdfAttachment());
+                passage.setTimeLimitSeconds(sectionDto.getTimeLimitSeconds());
+                passage.setShuffleQuestions(sectionDto.getShuffleQuestions() != null && sectionDto.getShuffleQuestions());
+                passage.setShuffleOptions(sectionDto.getShuffleOptions() != null && sectionDto.getShuffleOptions());
+                passage.setAutoNumbering(sectionDto.getAutoNumbering() != null ? sectionDto.getAutoNumbering() : true);
+                passage.setLockNavigation(sectionDto.getLockNavigation() != null && sectionDto.getLockNavigation());
+                passage.setQuestionRandomization(sectionDto.getQuestionRandomization() != null && sectionDto.getQuestionRandomization());
+                passage.setIcon(sectionDto.getIcon());
+                passage.setColorTheme(sectionDto.getColorTheme());
+                passage.setInstructions(sectionDto.getInstructions());
+                passage.setDifficulty(sectionDto.getDifficulty());
+                passage.setPassingScore(sectionDto.getPassingScore());
+            } else {
+                passage = Passage.builder()
+                        .exam(exam)
+                        .title(sectionDto.getTitle() != null ? sectionDto.getTitle() : "Section " + passageOrder)
+                        .content(sectionDto.getPassage() != null ? sectionDto.getPassage() : "")
+                        .imageUrl(sectionDto.getImageUrl())
+                        .positionOrder(passageOrder)
+                        .audioUrl(sectionDto.getAudioUrl())
+                        .pdfAttachment(sectionDto.getPdfAttachment())
+                        .timeLimitSeconds(sectionDto.getTimeLimitSeconds())
+                        .shuffleQuestions(sectionDto.getShuffleQuestions() != null && sectionDto.getShuffleQuestions())
+                        .shuffleOptions(sectionDto.getShuffleOptions() != null && sectionDto.getShuffleOptions())
+                        .autoNumbering(sectionDto.getAutoNumbering() != null ? sectionDto.getAutoNumbering() : true)
+                        .lockNavigation(sectionDto.getLockNavigation() != null && sectionDto.getLockNavigation())
+                        .questionRandomization(sectionDto.getQuestionRandomization() != null && sectionDto.getQuestionRandomization())
+                        .icon(sectionDto.getIcon())
+                        .colorTheme(sectionDto.getColorTheme())
+                        .instructions(sectionDto.getInstructions())
+                        .difficulty(sectionDto.getDifficulty())
+                        .passingScore(sectionDto.getPassingScore())
+                        .questions(new java.util.ArrayList<>())
+                        .build();
+                existingPassages.add(passage);
+            }
+            
+            passage = passageRepository.save(passage);
+            updateQuestions(sectionDto.getQuestions(), passage, exam);
+        }
+        
+        for (int i = incomingSections.size(); i < existingPassages.size(); i++) {
+            passagesToRemove.add(existingPassages.get(i));
+        }
+        
+        existingPassages.removeAll(passagesToRemove);
+    }
+
+    private void updateQuestions(List<CreateExamRequest.QuestionDto> incomingQuestions, Passage passage, Exam exam) {
+        List<Question> existingQuestions = passage.getQuestions();
+        if (existingQuestions == null) {
+            existingQuestions = new java.util.ArrayList<>();
+            passage.setQuestions(existingQuestions);
+        }
+        
+        if (incomingQuestions == null) {
+            incomingQuestions = new java.util.ArrayList<>();
+        }
+        
+        List<Question> questionsToRemove = new java.util.ArrayList<>();
+        int qOrder = 1;
+        
+        for (int i = 0; i < incomingQuestions.size(); i++) {
+            CreateExamRequest.QuestionDto qDto = incomingQuestions.get(i);
+            if (qDto.getPrompt() == null || qDto.getPrompt().isBlank()) continue;
+            
+            Question q;
+            if (i < existingQuestions.size()) {
+                q = existingQuestions.get(i);
+                q.setText(qDto.getPrompt());
+                q.setQuestionType(qDto.getQtype() != null ? qDto.getQtype() : "single_choice");
+                q.setPoints(qDto.getPoints() != null ? qDto.getPoints() : 1);
+                q.setNegativeMarks(qDto.getNegativeMarks() != null ? qDto.getNegativeMarks() : 0.0);
+                q.setImageUrl(qDto.getImageUrl());
+                q.setImagePosition(qDto.getImagePosition() != null ? qDto.getImagePosition() : "top");
+                q.setAudioUrl(qDto.getAudioUrl());
+                q.setVideoUrl(qDto.getVideoUrl());
+                q.setFormulaLatex(qDto.getFormulaLatex());
+                q.setMatchingPairs(qDto.getMatchingPairs());
+                q.setFillTemplate(qDto.getFillTemplate());
+                q.setPositionOrder(qOrder++);
+                q.setExplanation(qDto.getExplanation());
+                q.setHint(qDto.getHint());
+                q.setTopic(qDto.getTopic());
+                q.setSubtopic(qDto.getSubtopic());
+                q.setTags(qDto.getTags());
+                q.setDifficulty(qDto.getDifficulty() != null ? qDto.getDifficulty() : "medium");
+                q.setNumericAnswer(qDto.getNumericAnswer());
+                q.setNumericTolerance(qDto.getNumericTolerance());
+                q.setWordLimit(qDto.getWordLimit());
+            } else {
+                q = Question.builder()
+                        .exam(exam)
+                        .passage(passage)
+                        .text(qDto.getPrompt())
+                        .questionType(qDto.getQtype() != null ? qDto.getQtype() : "single_choice")
+                        .points(qDto.getPoints() != null ? qDto.getPoints() : 1)
+                        .negativeMarks(qDto.getNegativeMarks() != null ? qDto.getNegativeMarks() : 0.0)
+                        .imageUrl(qDto.getImageUrl())
+                        .imagePosition(qDto.getImagePosition() != null ? qDto.getImagePosition() : "top")
+                        .audioUrl(qDto.getAudioUrl())
+                        .videoUrl(qDto.getVideoUrl())
+                        .formulaLatex(qDto.getFormulaLatex())
+                        .matchingPairs(qDto.getMatchingPairs())
+                        .fillTemplate(qDto.getFillTemplate())
+                        .positionOrder(qOrder++)
+                        .explanation(qDto.getExplanation())
+                        .hint(qDto.getHint())
+                        .topic(qDto.getTopic())
+                        .subtopic(qDto.getSubtopic())
+                        .tags(qDto.getTags())
+                        .difficulty(qDto.getDifficulty() != null ? qDto.getDifficulty() : "medium")
+                        .numericAnswer(qDto.getNumericAnswer())
+                        .numericTolerance(qDto.getNumericTolerance())
+                        .wordLimit(qDto.getWordLimit())
+                        .status("draft")
+                        .options(new java.util.ArrayList<>())
+                        .build();
+                existingQuestions.add(q);
+            }
+            
+            q = questionRepository.save(q);
+            updateOptions(qDto.getOptions(), q);
+        }
+        
+        for (int i = incomingQuestions.size(); i < existingQuestions.size(); i++) {
+            questionsToRemove.add(existingQuestions.get(i));
+        }
+        
+        existingQuestions.removeAll(questionsToRemove);
+    }
+
+    private void updateOptions(List<CreateExamRequest.OptionDto> incomingOptions, Question q) {
+        List<QuestionOption> existingOptions = q.getOptions();
+        if (existingOptions == null) {
+            existingOptions = new java.util.ArrayList<>();
+            q.setOptions(existingOptions);
+        }
+        
+        if (incomingOptions == null) {
+            incomingOptions = new java.util.ArrayList<>();
+        }
+        
+        List<QuestionOption> optionsToRemove = new java.util.ArrayList<>();
+        int optOrder = 1;
+        
+        for (int i = 0; i < incomingOptions.size(); i++) {
+            CreateExamRequest.OptionDto optDto = incomingOptions.get(i);
+            
+            QuestionOption opt;
+            if (i < existingOptions.size()) {
+                opt = existingOptions.get(i);
+                opt.setText(optDto.getText() != null ? optDto.getText() : "");
+                opt.setIsCorrect(optDto.getIsCorrect() != null && optDto.getIsCorrect());
+                opt.setImageUrl(optDto.getImageUrl());
+                opt.setImagePosition(optDto.getImagePosition() != null ? optDto.getImagePosition() : "left");
+                opt.setPositionOrder(optOrder++);
+            } else {
+                opt = QuestionOption.builder()
+                        .question(q)
+                        .text(optDto.getText() != null ? optDto.getText() : "")
+                        .isCorrect(optDto.getIsCorrect() != null && optDto.getIsCorrect())
+                        .imageUrl(optDto.getImageUrl())
+                        .imagePosition(optDto.getImagePosition() != null ? optDto.getImagePosition() : "left")
+                        .positionOrder(optOrder++)
+                        .build();
+                existingOptions.add(opt);
+            }
+            
+            optionRepository.save(opt);
+        }
+        
+        for (int i = incomingOptions.size(); i < existingOptions.size(); i++) {
+            optionsToRemove.add(existingOptions.get(i));
+        }
+        
+        existingOptions.removeAll(optionsToRemove);
     }
 
     private void saveSections(CreateExamRequest request, Exam exam) {

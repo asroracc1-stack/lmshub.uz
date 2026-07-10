@@ -1776,21 +1776,27 @@ export default function MockTake() {
   };
 
   const renderIeltsHeader = () => {
+    const minutesRemainingText = isReviewOrAnalyze 
+      ? "Exam completed" 
+      : `${Math.ceil(timeLeft / 60)} minutes remaining`;
+
     return (
       <header className={cn("h-[65px] shrink-0 border-b flex items-center justify-between px-6 z-40 select-none", cStyle.headerBg, cStyle.headerBorder, cStyle.text)}>
         {/* Left: Logo and Test Title */}
         <div className="flex items-center gap-4 min-w-0">
-          <span className={cn("font-extrabold text-2xl tracking-tighter shrink-0 select-none", cStyle.logoText)}>
+          <span className={cn("font-black text-3xl tracking-tighter shrink-0 select-none", cStyle.logoText)}>
             IELTS
           </span>
           <div className={cn("h-6 w-[1px] hidden sm:block shrink-0", isYB ? "bg-[#ffff00]" : "bg-slate-200 dark:bg-slate-800")} />
           <div className="min-w-0 leading-tight">
-            <h1 className="font-bold text-sm truncate max-w-[200px] sm:max-w-none">
+            <h1 className="font-extrabold text-sm truncate max-w-[200px] sm:max-w-none">
               {exam?.title || "IELTS Practice Test"}
             </h1>
-            <div className="flex items-center gap-2 text-[10px] mt-0.5 font-bold uppercase tracking-wider opacity-85">
-              <BookOpen className="w-3.5 h-3.5" />
-              <span>{isReviewOrAnalyze ? "Review | " : ""}{kind} mode</span>
+            <div className="flex items-center gap-2 text-[11px] mt-0.5 font-bold text-slate-500 dark:text-slate-400 opacity-90 select-none">
+              <span>{minutesRemainingText}</span>
+              <span>|</span>
+              <BookOpen className="w-3.5 h-3.5 opacity-80" />
+              <span className="capitalize">{kind} mode</span>
             </div>
           </div>
         </div>
@@ -1802,27 +1808,43 @@ export default function MockTake() {
         </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5">
           <Button 
             variant="ghost" 
             size="icon" 
-            className={cn("rounded-full h-9 w-9 cursor-pointer", cStyle.iconBtn)} 
+            className={cn("rounded-none h-10 w-10 cursor-pointer", cStyle.iconBtn)} 
             onClick={toggleFullscreen}
             title="Toggle Fullscreen"
           >
-            {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+            {isFullscreen ? <Minimize2 className="h-4.5 w-4.5" /> : <Maximize2 className="h-4.5 w-4.5" />}
           </Button>
           <Button 
             variant="ghost" 
             size="icon" 
-            className={cn("rounded-full h-9 w-9 cursor-pointer", cStyle.iconBtn)}
+            className={cn("rounded-none h-10 w-10 cursor-pointer", cStyle.iconBtn)}
+            title="Diagnostics"
+          >
+            <BarChart3 className="h-4.5 w-4.5 text-emerald-600 dark:text-emerald-400" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className={cn("rounded-none h-10 w-10 cursor-pointer", cStyle.iconBtn)}
+            title="Notifications"
+          >
+            <Bell className="h-4.5 w-4.5" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className={cn("rounded-none h-10 w-10 cursor-pointer", cStyle.iconBtn)}
             onClick={() => {
               setShowOptionsModal(true);
               setOptionsPanel("main");
             }}
             title="Options"
           >
-            <Menu className="h-4 w-4" />
+            <Menu className="h-4.5 w-4.5" />
           </Button>
         </div>
       </header>
@@ -1841,13 +1863,15 @@ export default function MockTake() {
         : `Complete the writing task.`;
 
     return (
-      <div className={cn("border p-4 rounded-lg mb-6 shadow-sm", cStyle.bannerBg, cStyle.text)}>
-        <h3 className="font-extrabold text-base">
-          Part {currentSectionIdx + 1}
-        </h3>
-        <p className="text-xs mt-1 font-semibold opacity-90">
-          {bannerText}
-        </p>
+      <div className={cn("px-6 py-3.5 border-b select-none shrink-0", cStyle.bannerBg, cStyle.text)}>
+        <div className="flex flex-col gap-0.5 max-w-7xl mx-auto">
+          <h3 className="font-extrabold text-sm uppercase tracking-wider text-slate-800 dark:text-slate-200">
+            Part {currentSectionIdx + 1}
+          </h3>
+          <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
+            {bannerText}
+          </p>
+        </div>
       </div>
     );
   };
@@ -1862,7 +1886,7 @@ export default function MockTake() {
         className={cn("h-full overflow-y-auto border-r p-8 xl:p-12 transition-colors select-text", cStyle.passageBg, cStyle.passageBorder, cStyle.text)}
       >
         <div className="max-w-3xl mx-auto">
-          <h2 className={cn("text-3xl font-extrabold text-center font-serif mb-2 leading-tight", cStyle.passageTitle)}>
+          <h2 className={cn("text-3xl font-extrabold text-center font-sans mb-2 leading-tight", cStyle.passageTitle)}>
             {currentSection.title}
           </h2>
           {currentSection.imageUrl && (
@@ -1872,7 +1896,7 @@ export default function MockTake() {
               alt="Passage context"
             />
           )}
-          <div className={cn("prose dark:prose-invert max-w-none font-serif leading-relaxed whitespace-pre-wrap mt-8", cStyle.passageText, textSizeStyle.passage)}>
+          <div className={cn("prose dark:prose-invert max-w-none font-sans leading-relaxed whitespace-pre-wrap mt-8", cStyle.passageText, textSizeStyle.passage)}>
             {formatMathText(currentSection.passage)}
           </div>
         </div>
@@ -1952,14 +1976,12 @@ export default function MockTake() {
     return (
       <div
         style={{ width: "100%" }}
-        className={cn("h-full overflow-hidden flex flex-col transition-colors relative", isBW ? "bg-[#f7f8fa]" : "bg-black")}
+        className={cn("h-full overflow-hidden flex flex-col transition-colors relative", isBW ? "bg-white" : "bg-black")}
       >
-        <div className="flex-1 overflow-y-auto p-6 md:p-8 xl:p-12 pb-32 animate-fade-in">
+        <div className="flex-1 overflow-y-auto p-6 md:p-8 xl:p-12 pb-32 animate-fade-in select-text">
           <div className="max-w-3xl mx-auto">
-            {renderIeltsPartBanner(currentSectionIdx)}
-            
-            <div className="space-y-6">
-              {sectionQuestions.map(q => {
+            <div className="space-y-6 divide-y divide-slate-100 dark:divide-slate-800/40">
+              {sectionQuestions.map((q, qidx) => {
                 const isQActive = q.position - 1 === activeQuestionIndex;
                 let opts = q.options;
                 if ((!opts || opts.length === 0) && (q.qtype === "tfng" || q.qtype === "ynng")) {
@@ -1981,9 +2003,8 @@ export default function MockTake() {
                     key={q.id}
                     ref={el => { questionRefs.current[q.id] = el; }}
                     className={cn(
-                      "p-6 border rounded-lg transition-all scroll-mt-6 cursor-pointer",
-                      cStyle.cardBg,
-                      isQActive ? cStyle.cardActiveBorder : cStyle.cardBorder,
+                      "py-6 px-1 transition-all scroll-mt-6 flex flex-col gap-3",
+                      isQActive ? "bg-slate-500/[0.03]" : "",
                       cStyle.cardText
                     )}
                     onClick={() => {
@@ -1992,175 +2013,179 @@ export default function MockTake() {
                       }
                     }}
                   >
-                                        <div className={cn("flex items-center justify-between border-b pb-3 mb-4", isYB ? "border-[#333300]" : "border-slate-100 dark:border-slate-800")}>
-                      <span className="font-extrabold text-sm">
-                        Question {q.position}
+                    {/* Prompt with Inline Number */}
+                    <div className="flex items-start gap-3">
+                      <span className="font-extrabold text-sm shrink-0 bg-slate-100 dark:bg-slate-800 h-6 w-6 rounded-full flex items-center justify-center select-none text-slate-700 dark:text-slate-300">
+                        {q.position}
                       </span>
-                      {!isReviewOrAnalyze && (
-                        <button 
-                          className={cn(
-                            "flex items-center text-xs font-bold uppercase tracking-widest px-2.5 py-1 border transition-colors rounded-sm cursor-pointer", 
-                            flagged.has(q.id)
-                              ? isYB 
-                                ? "border-[#ffff00] text-[#ffff00] bg-yellow-955/20" 
-                                : "border-amber-500 text-amber-600 bg-amber-50/50 dark:bg-amber-955/20"
-                              : isYB 
-                                ? "border-[#ffff00] text-[#ffff00] hover:bg-[#222200]" 
-                                : "border-slate-205 dark:border-slate-750 text-slate-400 hover:border-slate-400 hover:text-slate-655"
-                          )}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleFlag(q.id);
-                          }}
-                        >
-                          <Bookmark className={cn("w-3.5 h-3.5 mr-1.5", flagged.has(q.id) ? "fill-current" : "")} /> 
-                          {flagged.has(q.id) ? "Flagged" : "Flag"}
-                        </button>
-                      )}
-                      {isReviewOrAnalyze && (
-                        <span className={cn("text-xs font-bold px-2 py-0.5 rounded-sm border", 
-                          detailForQ?.ok 
-                            ? "bg-emerald-500/10 border-emerald-500/35 text-emerald-600 dark:text-emerald-400" 
-                            : "bg-rose-500/10 border-rose-500/35 text-rose-600 dark:text-rose-400"
-                        )}>
-                          {detailForQ?.ok ? "Correct" : "Incorrect"}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Prompt */}
-                    <div className={cn("font-bold leading-relaxed mb-4", textSizeStyle.prompt)}>
-                      {formatMathText(q.prompt)}
-                    </div>
-
-                    {/* Media */}
-                    {q.imageUrl && (
-                      <img 
-                        src={getFullImageUrl(q.imageUrl)} 
-                        className={cn("max-w-full border my-4 rounded-md shadow-sm", cStyle.border)} 
-                        alt="Question context" 
-                      />
-                    )}
-
-                    {/* Inputs */}
-                    {opts && opts.length > 0 ? (
-                      <div className="space-y-2 pl-1">
-                        {opts.map((opt, oIdx) => {
-                          const isSelected = answers[q.id] === opt.text;
-                          const isUserSelected = submittedAns === opt.text;
-                          const isCorrectOption = opt.isCorrect || opt.is_correct || detailForQ?.correctAns === opt.text;
-
-                          const isSelectedState = isReviewOrAnalyze ? isUserSelected : isSelected;
-                          const labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
-
-                          // Options colors for Review vs Exam Mode
-                          let optBgHighlight = "";
-                          if (isReviewOrAnalyze) {
-                            if (isCorrectOption) {
-                              optBgHighlight = isYB 
-                                ? "bg-[#002b00] border-[#ffff00] text-[#ffff00]" 
-                                : "bg-emerald-50 dark:bg-emerald-950/20 border-emerald-500 text-emerald-700 dark:text-emerald-300 font-bold";
-                            } else if (isUserSelected && !isCorrectOption) {
-                              optBgHighlight = isYB 
-                                ? "bg-[#2b0000] border-[#ffff00] text-[#ffff00]" 
-                                : "bg-rose-50 dark:bg-rose-955/20 border-rose-500 text-rose-700 dark:text-rose-455 font-bold";
-                            }
-                          }
-
-                          return (
-                            <button
-                              key={opt.id}
-                              disabled={isReviewOrAnalyze}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onAnswer(q.id, opt.text);
-                                setActiveQuestionIndex(q.position - 1);
-                              }}
-                              className={cn(
-                                "flex items-center gap-3 w-full text-left py-2.5 rounded-md px-3 border border-transparent transition-all group cursor-pointer", 
-                                optBgHighlight ? "" : cStyle.optHover,
-                                optBgHighlight
-                              )}
-                            >
-                              <div className={cn(
-                                "h-5 w-5 rounded-full border flex items-center justify-center shrink-0 transition-all",
-                                isSelectedState ? cStyle.optRadioCircleSelected : cStyle.optRadioCircle
-                              )}>
-                                {isSelectedState && (
-                                  <div className={cn("w-2.5 h-2.5 rounded-full", cStyle.optRadioDot)} />
-                                )}
-                              </div>
-                              <div className={cn("flex items-center gap-1.5 min-w-0", textSizeStyle.option)}>
-                                {q.options && q.options.length > 0 && (
-                                  <span className="font-bold text-sm">
-                                    {labels[oIdx]}.
-                                  </span>
-                                )}
-                                {opt.imageUrl && <img src={getFullImageUrl(opt.imageUrl)} className="h-10 object-contain mr-2 border rounded-sm border-slate-105" alt="Option visual" />}
-                                <span className="font-semibold">
-                                  {formatMathText(opt.text)}
-                                </span>
-                              </div>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <div className="w-full mt-3">
-                        {isReviewOrAnalyze ? (
-                          <div className="space-y-3 font-semibold text-xs leading-relaxed select-text mt-3">
-                            <div className="flex flex-col gap-1.5">
-                              <span className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Your answer</span>
-                              <div className={cn("p-3.5 rounded-md border text-sm font-extrabold", 
+                      
+                      <div className="flex-1 leading-relaxed">
+                        <div className="flex justify-between items-start gap-4 flex-wrap">
+                          <div className={cn("font-bold leading-relaxed mb-3", textSizeStyle.prompt)}>
+                            {formatMathText(q.prompt)}
+                          </div>
+                          <div className="flex items-center gap-2 select-none shrink-0">
+                            {isReviewOrAnalyze && (
+                              <span className={cn("text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-sm border", 
                                 detailForQ?.ok 
-                                  ? isYB ? "border-[#ffff00]" : "bg-emerald-50 dark:bg-emerald-950/20 border-emerald-500/30 text-emerald-700 dark:text-emerald-450" 
-                                  : isYB ? "border-[#ffff00]" : "bg-rose-50 dark:bg-rose-955/20 border-rose-500/30 text-rose-700 dark:text-rose-455"
+                                  ? "bg-emerald-500/10 border-emerald-500/35 text-emerald-600 dark:text-emerald-400" 
+                                  : "bg-rose-500/10 border-rose-500/35 text-rose-600 dark:text-rose-455"
                               )}>
-                                {submittedAns || "— No answer submitted —"} {detailForQ?.ok ? "✓" : "✗"}
-                              </div>
-                            </div>
-                            {!detailForQ?.ok && (
-                              <div className="flex flex-col gap-1.5">
-                                <span className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Correct answer</span>
-                                <div className={cn("p-3.5 rounded-md border text-sm font-extrabold", isYB ? "border-[#ffff00]" : "border-emerald-500/30 bg-emerald-50/10 text-emerald-700 dark:text-emerald-400")}>
-                                  {detailForQ?.correctAns || "— No correct answer key —"}
-                                </div>
-                              </div>
+                                {detailForQ?.ok ? "Correct" : "Incorrect"}
+                              </span>
+                            )}
+                            {!isReviewOrAnalyze && (
+                              <button 
+                                className={cn(
+                                  "flex items-center text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 border rounded-sm transition-colors cursor-pointer shrink-0", 
+                                  flagged.has(q.id)
+                                    ? "border-amber-500 text-amber-600 bg-amber-50/50" 
+                                    : "border-slate-200 text-slate-400 hover:border-slate-300 hover:text-slate-500"
+                                )}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleFlag(q.id);
+                                }}
+                              >
+                                <Bookmark className={cn("w-3 h-3 mr-1", flagged.has(q.id) ? "fill-current" : "")} /> 
+                                {flagged.has(q.id) ? "Flagged" : "Flag"}
+                              </button>
                             )}
                           </div>
-                        ) : (
-                          kind === "writing" ? (
-                            <div>
-                              <Textarea
-                                rows={16}
-                                className={cn("w-full p-5 font-serif rounded-md border focus:ring-0 resize-none h-[380px] shadow-inner focus:outline-none", cStyle.input, textSizeStyle.input)}
-                                placeholder="Write your essay here..."
-                                value={answers[q.id] || ""}
-                                onChange={(e) => {
-                                  onAnswer(q.id, e.target.value);
-                                  setActiveQuestionIndex(q.position - 1);
-                                }}
-                              />
-                              <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest mt-2 px-1 opacity-80">
-                                <span>Words: {answers[q.id]?.trim() ? answers[q.id].trim().split(/\s+/).length : 0}</span>
-                                <span>Characters: {(answers[q.id] || "").length}</span>
-                              </div>
+                        </div>
+
+                        {/* Media */}
+                        {q.imageUrl && (
+                          <img 
+                            src={getFullImageUrl(q.imageUrl)} 
+                            className={cn("max-w-full border my-4 rounded-md shadow-xs", cStyle.border)} 
+                            alt="Question context" 
+                          />
+                        )}
+
+                        {/* Indented Options or Input Fields */}
+                        <div className="mt-2 pl-9">
+                          {opts && opts.length > 0 ? (
+                            <div className="space-y-1">
+                              {opts.map((opt, oIdx) => {
+                                const isSelected = answers[q.id] === opt.text;
+                                const isUserSelected = submittedAns === opt.text;
+                                const isCorrectOption = opt.isCorrect || opt.is_correct || detailForQ?.correctAns === opt.text;
+
+                                const isSelectedState = isReviewOrAnalyze ? isUserSelected : isSelected;
+                                const labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+
+                                // Options colors for Review vs Exam Mode
+                                let optBgHighlight = "";
+                                if (isReviewOrAnalyze) {
+                                  if (isCorrectOption) {
+                                    optBgHighlight = isYB 
+                                      ? "bg-[#002b00] border-[#ffff00] text-[#ffff00]" 
+                                      : "bg-emerald-50 dark:bg-emerald-950/20 border-emerald-500 text-emerald-700 dark:text-emerald-300 font-bold";
+                                  } else if (isUserSelected && !isCorrectOption) {
+                                    optBgHighlight = isYB 
+                                      ? "bg-[#2b0000] border-[#ffff00] text-[#ffff00]" 
+                                      : "bg-rose-50 dark:bg-rose-955/20 border-rose-500 text-rose-700 dark:text-rose-455 font-bold";
+                                  }
+                                }
+
+                                return (
+                                  <button
+                                    key={opt.id}
+                                    disabled={isReviewOrAnalyze}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      onAnswer(q.id, opt.text);
+                                      setActiveQuestionIndex(q.position - 1);
+                                    }}
+                                    className={cn(
+                                      "flex items-center gap-2.5 w-full text-left py-1.5 px-2 rounded-md transition-all group cursor-pointer border border-transparent", 
+                                      optBgHighlight ? "" : cStyle.optHover,
+                                      optBgHighlight
+                                    )}
+                                  >
+                                    <div className={cn(
+                                      "h-4 w-4 rounded-full border flex items-center justify-center shrink-0 transition-all",
+                                      isSelectedState ? cStyle.optRadioCircleSelected : cStyle.optRadioCircle
+                                    )}>
+                                      {isSelectedState && (
+                                        <div className={cn("w-2 h-2 rounded-full", cStyle.optRadioDot)} />
+                                      )}
+                                    </div>
+                                    <div className={cn("flex items-center gap-1 min-w-0 font-normal", textSizeStyle.option)}>
+                                      {q.qtype !== "tfng" && q.qtype !== "ynng" && q.options && q.options.length > 0 && (
+                                        <span className="font-bold text-sm text-slate-500 dark:text-slate-400 select-none mr-0.5">
+                                          {labels[oIdx]}.
+                                        </span>
+                                      )}
+                                      {opt.imageUrl && <img src={getFullImageUrl(opt.imageUrl)} className="h-10 object-contain mr-2 border rounded-sm border-slate-105" alt="Option visual" />}
+                                      <span className="font-semibold">
+                                        {formatMathText(opt.text)}
+                                      </span>
+                                    </div>
+                                  </button>
+                                );
+                              })}
                             </div>
                           ) : (
-                            <input
-                              type="text"
-                              className={cn("w-full max-w-md p-3 font-semibold rounded-md border shadow-sm focus:outline-none focus:ring-0", cStyle.input, textSizeStyle.input)}
-                              placeholder="Type your answer here..."
-                              value={answers[q.id] || ""}
-                              onChange={(e) => {
-                                onAnswer(q.id, e.target.value);
-                                setActiveQuestionIndex(q.position - 1);
-                              }}
-                            />
-                          )
-                        )}
+                            <div className="w-full">
+                              {isReviewOrAnalyze ? (
+                                <div className="space-y-3 font-semibold text-xs leading-relaxed select-text mt-2">
+                                  <div className="flex flex-col gap-1.5">
+                                    <span className="text-[10px] text-slate-400 uppercase tracking-widest font-black">Your answer</span>
+                                    <div className={cn("p-3 rounded-md border text-sm font-extrabold", 
+                                      detailForQ?.ok 
+                                        ? isYB ? "border-[#ffff00]" : "bg-emerald-50 dark:bg-emerald-950/20 border-emerald-500/30 text-emerald-700 dark:text-emerald-455" 
+                                        : isYB ? "border-[#ffff00]" : "bg-rose-50 dark:bg-rose-955/20 border-rose-500/30 text-rose-700 dark:text-rose-455"
+                                    )}>
+                                      {submittedAns || "— No answer submitted —"} {detailForQ?.ok ? "✓" : "✗"}
+                                    </div>
+                                  </div>
+                                  {!detailForQ?.ok && (
+                                    <div className="flex flex-col gap-1.5">
+                                      <span className="text-[10px] text-slate-400 uppercase tracking-widest font-black">Correct answer</span>
+                                      <div className={cn("p-3 rounded-md border text-sm font-extrabold", isYB ? "border-[#ffff00]" : "border-emerald-500/30 bg-emerald-50/10 text-emerald-700 dark:text-emerald-400")}>
+                                        {detailForQ?.correctAns || "— No correct answer key —"}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              ) : (
+                                kind === "writing" ? (
+                                  <div>
+                                    <Textarea
+                                      rows={16}
+                                      className={cn("w-full p-4 font-serif rounded-md border focus:ring-0 resize-none h-[380px] shadow-xs focus:outline-none", cStyle.input, textSizeStyle.input)}
+                                      placeholder="Write your essay here..."
+                                      value={answers[q.id] || ""}
+                                      onChange={(e) => {
+                                        onAnswer(q.id, e.target.value);
+                                        setActiveQuestionIndex(q.position - 1);
+                                      }}
+                                    />
+                                    <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest mt-2 px-1 opacity-80">
+                                      <span>Words: {answers[q.id]?.trim() ? answers[q.id].trim().split(/\s+/).length : 0}</span>
+                                      <span>Characters: {(answers[q.id] || "").length}</span>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <input
+                                    type="text"
+                                    className={cn("w-full max-w-md p-2.5 font-semibold rounded-md border shadow-xs focus:outline-none focus:ring-0", cStyle.input, textSizeStyle.input)}
+                                    placeholder="Type your answer here..."
+                                    value={answers[q.id] || ""}
+                                    onChange={(e) => {
+                                      onAnswer(q.id, e.target.value);
+                                      setActiveQuestionIndex(q.position - 1);
+                                    }}
+                                  />
+                                )
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    )}
+                    </div>
                   </div>
                 );
               })}
@@ -2651,6 +2676,9 @@ export default function MockTake() {
     return (
       <div className={cn("w-full h-screen flex flex-col font-sans transition-colors relative overflow-hidden", cStyle.bg)}>
         {renderIeltsHeader()}
+        
+        {/* Full-width Part Banner like official CD IELTS */}
+        {renderIeltsPartBanner(currentSectionIdx)}
         
         {/* Main Content Area */}
         <main className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
