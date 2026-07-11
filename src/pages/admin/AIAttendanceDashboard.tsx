@@ -280,35 +280,60 @@ export default function AIAttendanceDashboard() {
         cameraPromise, unknownsPromise, logsPromise, securityPromise
       ]);
 
-      if (camRes && camRes.data) {
+      if (camRes && camRes.data && Array.isArray(camRes.data)) {
         setCameras(camRes.data.map((c: any) => ({
           id: c.id,
           name: c.name,
-          ipAddress: c.ipAddress || "192.168.1.1",
-          status: c.status || "ONLINE",
-          protocol: c.protocol || "RTSP",
-          room: c.classroom ? c.classroom.name : "Unassigned Room",
-          studentsCount: c.lastBitrateKbps ? Math.floor(c.lastBitrateKbps / 30) : 0,
-          lastDetectionTime: c.lastSeenAt ? c.lastSeenAt.substring(11, 19) : "N/A"
+          ipAddress: c.ip_address ?? c.ipAddress ?? "192.168.1.1",
+          status: c.status ?? "ONLINE",
+          protocol: c.protocol ?? "RTSP",
+          room: c.classroom ? (c.classroom.name ?? "Room") : "Unassigned Room",
+          studentsCount: (c.last_bitrate_kbps ?? c.lastBitrateKbps) ? Math.floor((c.last_bitrate_kbps ?? c.lastBitrateKbps) / 30) : 0,
+          lastDetectionTime: (c.last_seen_at ?? c.lastSeenAt) ? (c.last_seen_at ?? c.lastSeenAt).substring(11, 19) : "N/A"
         })));
       } else {
         setCameras(getMockCameras());
       }
 
-      if (unkRes && unkRes.data) {
-        setUnknowns(unkRes.data);
+      if (unkRes && unkRes.data && Array.isArray(unkRes.data)) {
+        setUnknowns(unkRes.data.map((u: any) => ({
+          id: u.id,
+          detectedAt: u.detected_at ?? u.detectedAt ?? "",
+          cameraName: u.camera_name ?? u.cameraName ?? "",
+          room: u.room ?? "",
+          confidence: u.confidence ?? 0,
+          reason: u.reason ?? ""
+        })));
       } else {
         setUnknowns(getMockUnknowns());
       }
 
-      if (logsRes && logsRes.data) {
-        setAttendance(logsRes.data);
+      if (logsRes && logsRes.data && Array.isArray(logsRes.data)) {
+        setAttendance(logsRes.data.map((l: any) => ({
+          id: l.id,
+          studentName: l.student_name ?? l.studentName ?? "",
+          studentId: l.student_id ?? l.studentId ?? "",
+          faculty: l.faculty ?? "",
+          groupName: l.group_name ?? l.groupName ?? "",
+          room: l.room ?? "",
+          arrivalTime: l.arrival_time ?? l.arrivalTime ?? "",
+          status: l.status ?? "ABSENT",
+          presenceRate: l.presence_rate ?? l.presenceRate ?? 0,
+          checkins: l.checkins ?? [],
+          checkouts: l.checkouts ?? []
+        })));
       } else {
         setAttendance(getMockAttendance());
       }
 
-      if (secRes && secRes.data) {
-        setSecurityLogs(secRes.data);
+      if (secRes && secRes.data && Array.isArray(secRes.data)) {
+        setSecurityLogs(secRes.data.map((s: any) => ({
+          id: s.id,
+          timestamp: s.timestamp ?? "",
+          type: s.type ?? "",
+          severity: s.severity ?? "INFO",
+          message: s.message ?? ""
+        })));
       } else {
         setSecurityLogs(getMockSecurityLogs());
       }
