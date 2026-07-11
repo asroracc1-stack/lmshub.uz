@@ -15,6 +15,7 @@ public interface AttendanceRecordRepository extends JpaRepository<AttendanceReco
     Optional<AttendanceRecord> findByLessonIdAndStudentId(UUID lessonId, UUID studentId);
     List<AttendanceRecord> findByStudentId(UUID studentId);
     List<AttendanceRecord> findByLessonIdIn(List<UUID> lessonIds);
+    List<AttendanceRecord> findByOrganizationId(UUID organizationId);
     long countByStudentIdAndStatus(UUID studentId, AttendanceStatus status);
 
     @Query("SELECT ar FROM AttendanceRecord ar WHERE ar.organization.id = :orgId AND ar.campus.id = :campusId")
