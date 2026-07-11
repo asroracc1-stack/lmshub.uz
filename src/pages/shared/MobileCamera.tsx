@@ -95,9 +95,6 @@ export default function MobileCamera() {
         audio: false 
       });
       setLocalStream(stream);
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
       setHasPermission(true);
       toast.success("Camera access granted.");
     } catch (e) {
@@ -123,6 +120,13 @@ export default function MobileCamera() {
       }
     };
   }, []);
+
+  // Safe stream attachment to element to prevent React mount race condition
+  useEffect(() => {
+    if (videoRef.current && localStream) {
+      videoRef.current.srcObject = localStream;
+    }
+  }, [localStream, hasPermission]);
 
   const handleConnect = async () => {
     if (!pairingToken) {
