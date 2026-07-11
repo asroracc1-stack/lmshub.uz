@@ -33,7 +33,10 @@ public interface ExamMapper {
     @Mapping(source = "exam.title", target = "examTitle")
     @Mapping(source = "student.id", target = "studentId")
     @Mapping(source = "student.email", target = "studentName")
+    @Mapping(source = "exam", target = "exam")
     StudentAttemptDto toStudentAttemptDto(StudentAttempt attempt);
+
+    StudentAttemptDto.ExamSummary toExamSummary(Exam exam);
 
     @org.mapstruct.AfterMapping
     default void calculateElapsedSeconds(StudentAttempt attempt, @org.mapstruct.MappingTarget StudentAttemptDto dto) {

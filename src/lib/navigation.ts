@@ -183,6 +183,7 @@ export const getSidebarRoutes = (role: string, t: TFunction, options: { ielts?: 
         { to: "/super-admin/leaderboard", label: t("nav.leaderboard"), icon: Trophy },
         { to: "/super-admin/library", label: "Kutubxona", badge: "New", icon: BookOpen },
         { to: "/super-admin/library-manage", label: "Kutubxona Boshqaruvi", icon: Database },
+        { to: "/super-admin/ai-attendance", label: t("nav.aiAttendance", "AI Attendance"), icon: Camera },
         { 
           label: t("nav.ieltsAi"), 
           icon: GraduationCap,

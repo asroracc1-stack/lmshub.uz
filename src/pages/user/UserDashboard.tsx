@@ -78,12 +78,12 @@ export default function UserDashboard() {
 
   const mapStats = (data: any): UserStats => {
     return {
-      total_minutes: data.totalMinutes ?? 0,
+      total_minutes: data.total_minutes ?? data.totalMinutes ?? 0,
       streak: data.streak ?? 0,
-      target_band: data.targetBand ?? null,
-      avg_score: data.avgScore ?? null,
-      exam_days_left: data.examDaysLeft ?? null,
-      weekly_data: (data.weeklyData || []).map((d: any) => ({
+      target_band: data.target_band ?? data.targetBand ?? null,
+      avg_score: data.avg_score ?? data.avgScore ?? null,
+      exam_days_left: data.exam_days_left ?? data.examDaysLeft ?? null,
+      weekly_data: (data.weekly_data || data.weeklyData || []).map((d: any) => ({
         day: d.day,
         minutes: d.minutes ?? 0,
         reading: d.reading ?? null,
@@ -91,8 +91,8 @@ export default function UserDashboard() {
         writing: d.writing ?? null,
         speaking: d.speaking ?? null,
         sat: d.sat ?? null,
-        national_cert: d.nationalCert ?? null,
-        attempts_count: d.attemptsCount ?? 0,
+        national_cert: d.national_cert ?? d.nationalCert ?? null,
+        attempts_count: d.attempts_count ?? d.attemptsCount ?? 0,
       })),
     };
   };
@@ -140,7 +140,7 @@ export default function UserDashboard() {
 
       const count = filtered.length;
       const scores = filtered
-        .map(a => a.overallBand ?? a.totalScore ?? a.score)
+        .map(a => a.overall_band ?? a.overallBand ?? a.total_score ?? a.totalScore ?? a.score)
         .filter((s): s is number => typeof s === "number" && s > 0);
       
       const sum = scores.reduce((acc, s) => acc + s, 0);

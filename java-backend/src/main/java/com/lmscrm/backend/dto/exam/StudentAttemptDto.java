@@ -18,4 +18,13 @@ public class StudentAttemptDto {
     private Integer maxScore;
     private Boolean isPassed;
     private String attemptSeed;
+    private Double overallBand;
+    private ExamSummary exam;
+
+    @Data
+    public static class ExamSummary {
+        private UUID id;
+        private String title;
+        private String type;
+    }
 }
