@@ -27,6 +27,15 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     // Xatolarni loglash xizmatiga yuborish mumkin
     console.error('Uncaught error:', error, errorInfo);
+    
+    // Auto-reload on chunk load error to fetch updated hashes
+    const errorMsg = error.toString().toLowerCase();
+    if (errorMsg.includes("dynamically imported module") || errorMsg.includes("chunk") || errorMsg.includes("failed to fetch")) {
+      console.warn("Chunk load failure detected. Reloading page to update assets...");
+      window.location.reload();
+      return;
+    }
+
     this.setState({ errorInfo });
   }
 
