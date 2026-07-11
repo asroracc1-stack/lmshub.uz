@@ -1671,16 +1671,14 @@ export default function AIAttendanceDashboard() {
                     <div className="flex flex-col items-center justify-center text-center p-4 bg-muted/30 border border-border rounded-2xl min-h-[220px]">
                       {isPhonePaired ? (
                         <>
-                          <div className="h-32 w-32 bg-white p-2 rounded-xl flex items-center justify-center border-4 border-purple-500">
-                            {/* Simple simulated QR blocks */}
-                            <div className="grid grid-cols-4 gap-2 w-full h-full">
-                              <div className="bg-black rounded"></div><div className="bg-black rounded"></div><div className="bg-zinc-200 rounded"></div><div className="bg-black rounded"></div>
-                              <div className="bg-zinc-200 rounded"></div><div className="bg-black rounded"></div><div className="bg-black rounded"></div><div className="bg-zinc-200 rounded"></div>
-                              <div className="bg-black rounded"></div><div className="bg-zinc-200 rounded"></div><div className="bg-black rounded"></div><div className="bg-black rounded"></div>
-                              <div className="bg-black rounded"></div><div className="bg-black rounded"></div><div className="bg-zinc-200 rounded"></div><div className="bg-black rounded"></div>
-                            </div>
+                          <div className="h-32 w-32 bg-white p-1.5 rounded-xl flex items-center justify-center border-4 border-purple-500 overflow-hidden shadow-lg shadow-purple-500/10">
+                            <img 
+                              src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`${window.location.origin}/mobile-camera?token=${phoneStreamToken}`)}`}
+                              alt="Pairing QR Code"
+                              className="w-full h-full object-contain"
+                            />
                           </div>
-                          <span className="text-[9px] font-mono text-emerald-500 font-bold uppercase mt-3">Mobile stream authenticated</span>
+                          <span className="text-[9px] font-mono text-emerald-500 font-bold uppercase mt-3">Scan with Phone Camera</span>
                         </>
                       ) : (
                         <div className="text-center text-muted-foreground">
