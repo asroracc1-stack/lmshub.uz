@@ -495,8 +495,8 @@ export default function AIAttendanceDashboard() {
     try {
       const res = await api.post("/attendance/mobile-pairing").catch(() => null);
       if (res && res.data) {
-        setPhoneStreamToken(res.data.qrToken);
-        setPairingExpiry(res.data.expiresAt);
+        setPhoneStreamToken(res.data.qr_token ?? res.data.qrToken ?? "");
+        setPairingExpiry(res.data.expires_at ?? res.data.expiresAt ?? "");
       } else {
         setPhoneStreamToken("lmshub-paired-stream-token-" + Math.floor(Math.random() * 1000000));
         setPairingExpiry(new Date(Date.now() + 15 * 60 * 1000).toLocaleTimeString());
