@@ -276,6 +276,7 @@ const AppRoutes = () => {
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="referral" element={<ReferralPage />} />
           <Route path="gamification" element={<GamificationAdmin />} />
+          <Route path="ai-attendance" element={<AIAttendanceDashboard />} />
           <Route path="question-bank" element={<QuestionBank />} />
           <Route path="library" element={<Library />} />
           <Route path="library/adabiy-kitoblar" element={<LibraryCategoryDetail code="adabiy_kitoblar" />} />
