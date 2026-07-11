@@ -5,7 +5,7 @@ import {
   Play, Square, Download, FileSpreadsheet, Eye, Maximize2,
   Server, HardDrive, ShieldAlert, Check, X, ShieldX,
   Globe, Calendar, Clock, MessageSquare, Bell, ArrowUpRight, TrendingUp, BarChart3,
-  QrCode, UserCheck, History, BarChart2, Maximize, AlertOctagon, UserX, User, ArrowRight, Monitor
+  QrCode, UserCheck, History, BarChart2, Maximize, AlertOctagon, UserX, User, ArrowRight, Monitor, Search
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
