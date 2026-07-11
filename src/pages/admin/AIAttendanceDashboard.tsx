@@ -571,6 +571,7 @@ export default function AIAttendanceDashboard() {
   };
 
   const advanceEnrollStep = () => {
+    console.log("advanceEnrollStep called. Current step:", enrollStep);
     switch (enrollStep) {
       case "CHALLENGE_FRONT":
         setEnrollStep("CHALLENGE_LEFT");
