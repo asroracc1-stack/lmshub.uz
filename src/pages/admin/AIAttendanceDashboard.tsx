@@ -1315,7 +1315,14 @@ export default function AIAttendanceDashboard() {
                         </div>
 
                         {/* Camera Scanning Orb (Apple Face ID Premium Design) */}
-                        <div className="relative w-64 h-64 bg-zinc-950 rounded-full flex items-center justify-center border-4 border-purple-500/10 overflow-visible shadow-2xl shadow-purple-500/5">
+                        <div 
+                          className="relative w-64 h-64 bg-zinc-950 rounded-full flex items-center justify-center border-4 border-purple-500/10 overflow-visible shadow-2xl shadow-purple-500/5 cursor-pointer"
+                          onClick={() => {
+                            if (enrollStep !== "IDLE" && enrollStep !== "SUCCESS" && enrollStep !== "COMPILING") {
+                              advanceEnrollStep();
+                            }
+                          }}
+                        >
                           {/* Radial Apple Face ID Ticks */}
                           {Array.from({ length: 48 }).map((_, i) => {
                             const angle = (i * 360) / 48;
@@ -1433,29 +1440,31 @@ export default function AIAttendanceDashboard() {
                           </div>
                         )}
 
-                        <div className="flex gap-3">
+                        <div className="flex gap-3 z-30">
                           {enrollStep === "IDLE" ? (
-                            <Button 
-                              className="bg-purple-600 hover:bg-purple-700 text-white font-bold px-6 py-2.5 rounded-xl border-none cursor-pointer"
+                            <button 
+                              className="bg-purple-600 hover:bg-purple-700 text-white font-bold px-6 py-2.5 rounded-xl border-none cursor-pointer text-xs transition-all duration-200 flex items-center justify-center h-10 shadow-[0_0_10px_rgba(139,92,246,0.2)]"
                               onClick={() => handleStartEnrollment(selectedStudent)}
                             >
                               Start Scanning ➔
-                            </Button>
+                            </button>
                           ) : enrollStep === "SUCCESS" ? (
-                            <Button 
-                              variant="outline"
-                              className="border-border text-xs rounded-xl h-10 px-6 cursor-pointer"
+                            <button 
+                              className="border border-border text-xs rounded-xl h-10 px-6 cursor-pointer bg-transparent text-foreground hover:bg-muted transition-all duration-200"
                               onClick={() => setEnrollStep("IDLE")}
                             >
                               Reset Workspace
-                            </Button>
+                            </button>
                           ) : (
-                            <Button 
-                              className="bg-purple-600 hover:bg-purple-700 text-white font-bold px-6 py-2.5 rounded-xl border-none cursor-pointer"
-                              onClick={advanceEnrollStep}
+                            <button 
+                              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-2.5 rounded-xl border-none cursor-pointer text-xs transition-all duration-200 flex items-center justify-center h-10 shadow-[0_0_12px_rgba(16,185,129,0.35)]"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                advanceEnrollStep();
+                              }}
                             >
-                              {enrollStep === "LIVENESS_BLINK" ? "Complete Check" : "Next Angle Challenge ➔"}
-                            </Button>
+                              {enrollStep === "LIVENESS_BLINK" ? "Complete Check ➔" : "Next Angle Challenge ➔"}
+                            </button>
                           )}
                         </div>
                       </Card>
