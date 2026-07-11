@@ -132,6 +132,7 @@ const PaymentRequests = lazy(() => import("./pages/admin/PaymentRequests"));
 const SubscriptionRequests = lazy(() => import("./pages/admin/SubscriptionRequests"));
 const AIAttendanceDashboard = lazy(() => import("./pages/admin/AIAttendanceDashboard"));
 const FaceRegistration = lazy(() => import("./pages/student/FaceRegistration"));
+const MobileCamera = lazy(() => import("./pages/shared/MobileCamera"));
 
 const AdminDashboard = lazy(() => import("./pages/admin/Dashboard"));
 const Library = lazy(() => import("./pages/shared/Library"));
@@ -219,6 +220,7 @@ const AppRoutes = () => {
         <Route path="/signin" element={<Auth defaultMode="signin" />} />
         <Route path="/signup" element={<Auth defaultMode="signup" />} />
         <Route path="/pitch-debug" element={<StartupPitch />} />
+        <Route path="/mobile-camera" element={<MobileCamera />} />
 
         {/* Super Admin */}
         <Route path="/super-admin" element={<ProtectedRoute allow={["super_admin"]}><RoleLayout role="super_admin" basePath="/super-admin" /></ProtectedRoute>}>
