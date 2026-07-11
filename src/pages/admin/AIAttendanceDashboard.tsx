@@ -1,13 +1,11 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { 
   Camera, Shield, AlertTriangle, Cpu, RefreshCw, Plus, 
   Settings, CheckCircle, Wifi, WifiOff, Activity, Sliders, Users,
-  Play, Square, Download, FileSpreadsheet, Eye, Maximize2, MoreHorizontal,
+  Play, Square, Download, FileSpreadsheet, Eye, Maximize2,
   Server, HardDrive, ShieldAlert, Check, X, ShieldX,
-  Volume2, Settings2, Trash2, ArrowLeft, ArrowUpRight, ArrowDownRight,
-  TrendingUp, BarChart3, Database, KeyRound, Monitor, Zap, HelpCircle,
-  Lock, EyeOff, Search, ChevronLeft, ChevronRight, FileDown, AlertCircle, Info,
-  QrCode, UserCheck, History, BarChart2, Maximize, AlertOctagon, UserX
+  Globe, Calendar, Clock, MessageSquare, Bell, ArrowUpRight, TrendingUp, BarChart3,
+  QrCode, UserCheck, History, BarChart2, Maximize, AlertOctagon, UserX, User, ArrowRight
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,7 +13,6 @@ import { toast } from "sonner";
 import { api } from "@/lib/axios"; 
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/contexts/ThemeContext";
-import { useAuth } from "@/contexts/AuthContext";
 import {
   ResponsiveContainer,
   AreaChart,
@@ -32,7 +29,7 @@ import {
   Legend
 } from "recharts";
 
-type UserRole = "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "SECURITY" | "RECEPTION";
+type UserRole = "SUPER_ADMIN" | "ADMIN" | "ADMINISTRATOR" | "TEACHER" | "PARENT" | "STUDENT";
 type ApiState = "SUCCESS" | "LOADING" | "EMPTY" | "ERROR" | "OFFLINE" | "FORBIDDEN";
 
 interface CameraDevice {
@@ -45,6 +42,9 @@ interface CameraDevice {
   studentsCount: number;
   lastDetectionTime: string;
   manufacturer?: string;
+  resolution?: string;
+  fps?: number;
+  latency?: number;
 }
 
 interface UnknownDetection {
@@ -78,10 +78,21 @@ interface SecurityLog {
   message: string;
 }
 
+interface TimetableSession {
+  id: string;
+  time: string;
+  groupName: string;
+  roomName: string;
+  subject: string;
+  status: "ACTIVE" | "UPCOMING" | "COMPLETED";
+  pairedCamera: string;
+  enrolledStudents: number;
+  presentCount: number;
+}
+
 export default function AIAttendanceDashboard() {
   const { t, i18n } = useTranslation();
   const { theme } = useTheme();
-  const { role: userAuthRole } = useAuth();
   const isDark = theme === "dark";
 
   // System Role Simulator
@@ -89,7 +100,7 @@ export default function AIAttendanceDashboard() {
   const [apiState, setApiState] = useState<ApiState>("SUCCESS");
   const [showDevControls, setShowDevControls] = useState(true);
 
-  // Active Tab: Overview, Live Cameras, Attendance Logs, Security Alerts, Face Registry, Analytics, Settings
+  // Active Tab for Admin roles
   const [activeTab, setActiveTab] = useState<"overview" | "cameras" | "history" | "security" | "registry" | "analytics" | "settings">("overview");
 
   // Core Data Lists
@@ -97,6 +108,16 @@ export default function AIAttendanceDashboard() {
   const [unknowns, setUnknowns] = useState<UnknownDetection[]>([]);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
   const [securityLogs, setSecurityLogs] = useState<SecurityLog[]>([]);
+
+  // Timetable active sessions
+  const [timetable, setTimetable] = useState<TimetableSession[]>([
+    { id: "ts-1", time: "09:00 AM - 10:30 AM", groupName: "SAT Group A", roomName: "Room 101", subject: "SAT Mathematics", status: "ACTIVE", pairedCamera: "Room 101 Camera", enrolledStudents: 15, presentCount: 14 },
+    { id: "ts-2", time: "11:00 AM - 12:30 PM", groupName: "IELTS Intensive", roomName: "Room 102", subject: "English Writing", status: "UPCOMING", pairedCamera: "Lecture Hall A Main", enrolledStudents: 22, presentCount: 0 },
+    { id: "ts-3", time: "02:00 PM - 03:30 PM", groupName: "CS-204 coding", roomName: "Lab 305", subject: "Java Backend Microservices", status: "UPCOMING", pairedCamera: "IT Lab West Ceiling", enrolledStudents: 30, presentCount: 0 }
+  ]);
+
+  // Selected class session for Teacher manual override view
+  const [selectedSessionId, setSelectedSessionId] = useState<string>("ts-1");
 
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState("");
@@ -135,9 +156,8 @@ export default function AIAttendanceDashboard() {
   // Loading indicator states
   const [isActionLoading, setIsActionLoading] = useState<string | null>(null);
   const [isAttendanceRunning, setIsAttendanceRunning] = useState(true);
-  const [isDiscovering, setIsDiscovering] = useState(false);
 
-  // Localized string dictionary for robust i18n
+  // Localized translation helper
   const currentLang = i18n.language || "uz";
   const translations: Record<string, Record<string, string>> = {
     uz: {
@@ -179,7 +199,16 @@ export default function AIAttendanceDashboard() {
       absent: "Kelmagan",
       totalTotal: "Jami",
       cancel: "Bekor qilish",
-      save: "Saqlash"
+      save: "Sozlamalarni Saqlash",
+      activeLessons: "Faol Darslar & Kamera Integratsiyasi",
+      childTimeline: "Farzandingiz Harakati Loglari",
+      calendarTitle: "Mening Davomatim (So'nggi 30 Kun)",
+      livenessVerify: "Liveness Check",
+      unrecognizedTitle: "Notanish shaxs tahlili",
+      approve: "Tasdiqlash",
+      ignore: "E'tiborsiz qoldirish",
+      blacklist: "Qora ro'yxat",
+      dispatch: "Xavfsizlikni yuborish"
     },
     en: {
       title: "Enterprise AI Attendance & Security",
@@ -220,7 +249,16 @@ export default function AIAttendanceDashboard() {
       absent: "Absent",
       totalTotal: "Total",
       cancel: "Cancel",
-      save: "Save Configurations"
+      save: "Save Configurations",
+      activeLessons: "Active Lessons & Camera Integration",
+      childTimeline: "Child Presence Timeline",
+      calendarTitle: "My Attendance (Last 30 Days)",
+      livenessVerify: "Liveness Check",
+      unrecognizedTitle: "Unrecognized Person Analysis",
+      approve: "Approve Profile",
+      ignore: "Ignore Alert",
+      blacklist: "Blacklist Subject",
+      dispatch: "Dispatch Security"
     },
     ru: {
       title: "Enterprise AI Посещаемость & Безопасность",
@@ -261,7 +299,16 @@ export default function AIAttendanceDashboard() {
       absent: "Отсутствует",
       totalTotal: "Всего",
       cancel: "Отмена",
-      save: "Сохранить"
+      save: "Сохранить",
+      activeLessons: "Активные Уроки и Интеграция Камер",
+      childTimeline: "История посещаемости ребенка",
+      calendarTitle: "Моя Посещаемость (Последние 30 Дней)",
+      livenessVerify: "Liveness Check",
+      unrecognizedTitle: "Анализ неизвестного лица",
+      approve: "Подтвердить",
+      ignore: "Игнорировать",
+      blacklist: "Черный список",
+      dispatch: "Вызвать охрану"
     }
   };
 
@@ -289,7 +336,10 @@ export default function AIAttendanceDashboard() {
           protocol: c.protocol ?? "RTSP",
           room: c.classroom ? (c.classroom.name ?? "Room") : "Unassigned Room",
           studentsCount: (c.last_bitrate_kbps ?? c.lastBitrateKbps) ? Math.floor((c.last_bitrate_kbps ?? c.lastBitrateKbps) / 30) : 0,
-          lastDetectionTime: (c.last_seen_at ?? c.lastSeenAt) ? (c.last_seen_at ?? c.lastSeenAt).substring(11, 19) : "N/A"
+          lastDetectionTime: (c.last_seen_at ?? c.lastSeenAt) ? (c.last_seen_at ?? c.lastSeenAt).substring(11, 19) : "N/A",
+          resolution: c.resolution ?? "1920x1080",
+          fps: c.fps ?? 30,
+          latency: c.latency ?? 45
         })));
       } else {
         setCameras(getMockCameras());
@@ -351,92 +401,48 @@ export default function AIAttendanceDashboard() {
 
   useEffect(() => {
     loadData();
-    // Simulate real-time logs updating every 7 seconds
-    const interval = setInterval(() => {
-      if (isAttendanceRunning && activeTab === "overview") {
-        addNewSimulatedRecognitionLog();
-      }
-    }, 7000);
-    return () => clearInterval(interval);
-  }, [isAttendanceRunning, activeTab]);
+  }, [currentRole]);
 
-  // Rolling Recognition Feed items
+  // Rolling logs and simulations
   const [realtimeLogs, setRealtimeLogs] = useState<Array<{
     id: string; time: string; name: string; room: string; status: "PRESENT" | "LATE"; conf: number; avatar: string;
   }>>([
-    { id: "rl-1", time: "14:41:02 PM", name: "Jasur Akhmedov", room: "Room 102", status: "PRESENT", conf: 98.4, avatar: "J" },
-    { id: "rl-2", time: "14:40:55 PM", name: "Madina Tursunova", room: "Room 102", status: "PRESENT", conf: 99.1, avatar: "M" },
-    { id: "rl-3", time: "14:39:18 PM", name: "Sardor Oripov", room: "Lab 305", status: "LATE", conf: 88.2, avatar: "S" }
+    { id: "rl-1", time: "15:21:02 PM", name: "Jasur Akhmedov", room: "Room 101", status: "PRESENT", conf: 98.4, avatar: "J" },
+    { id: "rl-2", time: "15:20:55 PM", name: "Madina Tursunova", room: "Room 101", status: "PRESENT", conf: 99.1, avatar: "M" },
+    { id: "rl-3", time: "15:19:18 PM", name: "Sardor Oripov", room: "Room 102", status: "LATE", conf: 88.2, avatar: "S" }
   ]);
 
-  const addNewSimulatedRecognitionLog = () => {
-    const students = ["Dilnoza Salimova", "Elbek Nematov", "Umida Karimova", "Shahzod Sobirov", "Ozoda Faiziyeva"];
-    const rooms = ["Room 102", "Lab 305", "Auditorium 101", "Library 2F"];
-    const randomName = students[Math.floor(Math.random() * students.length)];
-    const randomRoom = rooms[Math.floor(Math.random() * rooms.length)];
-    const randomConf = +(85 + Math.random() * 14).toFixed(1);
-    const date = new Date();
-    const timeStr = date.toTimeString().substring(0, 8) + " PM";
-
-    setRealtimeLogs(prev => [
-      {
-        id: "rl-" + Date.now(),
-        time: timeStr,
-        name: randomName,
-        room: randomRoom,
-        status: Math.random() > 0.15 ? "PRESENT" : "LATE",
-        conf: randomConf,
-        avatar: randomName.charAt(0)
-      },
-      ...prev.slice(0, 7)
-    ]);
-  };
-
   const getMockCameras = (): CameraDevice[] => [
-    { id: "cam-1", name: "Main Entrance CCTV", ipAddress: "192.168.10.51", status: "ONLINE", protocol: "ONVIF", room: "Foyer Hall", studentsCount: 14, lastDetectionTime: "14:41:02 PM", manufacturer: "Hikvision" },
-    { id: "cam-2", name: "Lecture Hall A Main", ipAddress: "192.168.10.52", status: "ONLINE", protocol: "RTSP", room: "Auditorium 102", studentsCount: 38, lastDetectionTime: "14:40:55 PM", manufacturer: "Dahua" },
-    { id: "cam-3", name: "IT Lab West Ceiling", ipAddress: "192.168.10.53", status: "ONLINE", protocol: "RTSP", room: "Lab 305", studentsCount: 22, lastDetectionTime: "14:39:18 PM", manufacturer: "Uniview" },
-    { id: "cam-4", name: "Library Entrance IP", ipAddress: "192.168.10.54", status: "WARNING", protocol: "ONVIF", room: "Library 2F", studentsCount: 4, lastDetectionTime: "14:35:10 PM", manufacturer: "ONVIF Generic" },
-    { id: "cam-5", name: "Physics Lab South Wall", ipAddress: "192.168.10.55", status: "OFFLINE", protocol: "RTSP", room: "Lab 108", studentsCount: 0, lastDetectionTime: "—", manufacturer: "Hikvision" }
+    { id: "cam-1", name: "Main Entrance PTZ", ipAddress: "192.168.10.51", status: "ONLINE", protocol: "ONVIF", room: "Foyer Hall", studentsCount: 14, lastDetectionTime: "15:32:02 PM", manufacturer: "Hikvision", resolution: "1920x1080", fps: 30, latency: 45 },
+    { id: "cam-2", name: "Room 101 Frontal", ipAddress: "192.168.10.52", status: "ONLINE", protocol: "RTSP", room: "Room 101", studentsCount: 38, lastDetectionTime: "15:30:55 PM", manufacturer: "Dahua", resolution: "1920x1080", fps: 28, latency: 40 },
+    { id: "cam-3", name: "Room 102 Left Wall", ipAddress: "192.168.10.53", status: "ONLINE", protocol: "RTSP", room: "Room 102", studentsCount: 22, lastDetectionTime: "15:29:18 PM", manufacturer: "Uniview", resolution: "1280x720", fps: 25, latency: 50 },
+    { id: "cam-4", name: "Library Hallway Angle", ipAddress: "192.168.10.54", status: "WARNING", protocol: "ONVIF", room: "Library 2F", studentsCount: 4, lastDetectionTime: "15:25:10 PM", manufacturer: "Uniview", resolution: "1920x1080", fps: 15, latency: 98 },
+    { id: "cam-5", name: "IT Corridor Dome", ipAddress: "192.168.10.55", status: "OFFLINE", protocol: "RTSP", room: "Lab 305", studentsCount: 0, lastDetectionTime: "—", manufacturer: "Hikvision", resolution: "N/A", fps: 0, latency: 0 }
   ];
 
   const getMockUnknowns = (): UnknownDetection[] => [
-    { id: "unk-101", detectedAt: "14:24:05 PM", cameraName: "Main Entrance CCTV", room: "Foyer Hall", confidence: 54, reason: "Blink test failure (Static picture attack suspected)" },
-    { id: "unk-102", detectedAt: "14:15:30 PM", cameraName: "Library Entrance IP", room: "Library 2F", confidence: 42, reason: "Cosine similarity mismatch < 0.65 threshold" },
-    { id: "unk-103", detectedAt: "13:58:12 PM", cameraName: "Physics Lab South Wall", room: "Lab 108", confidence: 38, reason: "Anti-Spoofing: Replay video attack detected" }
+    { id: "unk-101", detectedAt: "15:24:05 PM", cameraName: "Room 101 Frontal", room: "Room 101", confidence: 54, reason: "Blink test failure (Static picture attack suspected)" },
+    { id: "unk-102", detectedAt: "15:15:30 PM", cameraName: "Library Hallway Angle", room: "Library 2F", confidence: 42, reason: "Cosine similarity mismatch < 0.65 threshold" },
+    { id: "unk-103", detectedAt: "14:58:12 PM", cameraName: "Main Entrance PTZ", room: "Foyer Hall", confidence: 38, reason: "Anti-Spoofing: Replay video attack detected" }
   ];
 
   const getMockSecurityLogs = (): SecurityLog[] => [
-    { id: "log-901", timestamp: "2026-07-11T14:41:00", type: "SPOOF_ATTEMPT", severity: "CRITICAL", message: "Photo replay attack detected at Main Entrance CCTV. Liveness check failed (static eyes)." },
-    { id: "log-902", timestamp: "2026-07-11T14:38:12", type: "CAMERA_DISCONNECTED", severity: "WARNING", message: "Camera 'Physics Lab South Wall' disconnected. Ping failed, latency timeout > 10000ms." },
-    { id: "log-903", timestamp: "2026-07-11T14:25:40", type: "DEEPFAKE_FLAG", severity: "CRITICAL", message: "DeepFake pattern detected on face scan in Auditorium 102." },
-    { id: "log-904", timestamp: "2026-07-11T14:12:00", type: "UNAUTHORIZED_ACCESS", severity: "INFO", message: "Unregistered visitor detected in Foyer Hall corridor." }
+    { id: "log-901", timestamp: "2026-07-11T15:31:00", type: "SPOOF_ATTEMPT", severity: "CRITICAL", message: "Photo replay attack detected at Main Entrance PTZ. Liveness check failed (static eyes)." },
+    { id: "log-902", timestamp: "2026-07-11T15:28:12", type: "CAMERA_DISCONNECTED", severity: "WARNING", message: "Camera 'IT Corridor Dome' disconnected. Ping failed, latency timeout > 10000ms." },
+    { id: "log-903", timestamp: "2026-07-11T15:25:40", type: "DEEPFAKE_FLAG", severity: "CRITICAL", message: "DeepFake pattern detected on face scan in Room 101." }
   ];
 
   const getMockAttendance = (): AttendanceRecord[] => [
-    { id: "att-1", studentName: "Jasur Akhmedov", studentId: "LMS-10829", faculty: "Computer Science", groupName: "CS-204", room: "Auditorium 102", arrivalTime: "08:02 AM", status: "PRESENT", presenceRate: 98, checkins: ["08:02 AM", "10:15 AM"], checkouts: ["10:00 AM", "12:00 PM"] },
-    { id: "att-2", studentName: "Madina Tursunova", studentId: "LMS-10842", faculty: "Computer Science", groupName: "CS-204", room: "Auditorium 102", arrivalTime: "08:05 AM", status: "PRESENT", presenceRate: 99, checkins: ["08:05 AM"], checkouts: ["12:00 PM"] },
-    { id: "att-3", studentName: "Diyorbek Sadullayev", studentId: "LMS-10901", faculty: "Computer Science", groupName: "CS-204", room: "Auditorium 102", arrivalTime: "08:09 AM", status: "PRESENT", presenceRate: 95, checkins: ["08:09 AM"], checkouts: ["12:00 PM"] },
-    { id: "att-4", studentName: "Sardor Oripov", studentId: "LMS-10421", faculty: "Computer Science", groupName: "CS-202", room: "Lab 305", arrivalTime: "08:14 AM", status: "LATE", presenceRate: 88, checkins: ["08:14 AM"], checkouts: ["11:30 AM"] },
-    { id: "att-5", studentName: "Kamola Bekmirzayeva", studentId: "LMS-10332", faculty: "Languages", groupName: "ENG-101", room: "Library 2F", arrivalTime: "08:04 AM", status: "PRESENT", presenceRate: 96, checkins: ["08:04 AM"], checkouts: ["11:00 AM"] },
-    { id: "att-6", studentName: "Rayhon Qodirova", studentId: "LMS-10291", faculty: "Computer Science", groupName: "CS-202", room: "Lab 305", arrivalTime: "—", status: "ABSENT", presenceRate: 0, checkins: [], checkouts: [] },
-    { id: "att-7", studentName: "Bobur Karimov", studentId: "LMS-10512", faculty: "Computer Science", groupName: "CS-204", room: "Auditorium 102", arrivalTime: "08:01 AM", status: "PRESENT", presenceRate: 92, checkins: ["08:01 AM"], checkouts: ["12:00 PM"] },
-    { id: "att-8", studentName: "Aziza Vahobova", studentId: "LMS-10641", faculty: "Languages", groupName: "ENG-101", room: "Library 2F", arrivalTime: "08:18 AM", status: "LATE", presenceRate: 81, checkins: ["08:18 AM"], checkouts: ["11:00 AM"] }
+    { id: "att-1", studentName: "Jasur Akhmedov", studentId: "LMS-10829", faculty: "Computer Science", groupName: "CS-204", room: "Room 101", arrivalTime: "08:58 AM", status: "PRESENT", presenceRate: 98, checkins: ["08:58 AM", "10:15 AM"], checkouts: ["10:00 AM", "12:00 PM"] },
+    { id: "att-2", studentName: "Madina Tursunova", studentId: "LMS-10842", faculty: "Computer Science", groupName: "CS-204", room: "Room 101", arrivalTime: "09:08 AM", status: "LATE", presenceRate: 92, checkins: ["09:08 AM"], checkouts: ["12:00 PM"] },
+    { id: "att-3", studentName: "Sardor Oripov", studentId: "LMS-10421", faculty: "Computer Science", groupName: "CS-202", room: "Room 102", arrivalTime: "09:32 AM", status: "ABSENT", presenceRate: 35, checkins: ["09:32 AM"], checkouts: ["09:40 AM"] },
+    { id: "att-4", studentName: "Kamola Bekmirzayeva", studentId: "LMS-10332", faculty: "Languages", groupName: "ENG-101", room: "Library 2F", arrivalTime: "08:55 AM", status: "PRESENT", presenceRate: 96, checkins: ["08:55 AM"], checkouts: ["11:00 AM"] },
+    { id: "att-5", studentName: "Rayhon Qodirova", studentId: "LMS-10291", faculty: "Computer Science", groupName: "CS-202", room: "Room 102", arrivalTime: "—", status: "ABSENT", presenceRate: 0, checkins: [], checkouts: [] }
   ];
 
   // Helper for role access limits
   const hasAccess = (allowedRoles: UserRole[]): boolean => {
     return allowedRoles.includes(currentRole);
-  };
-
-  // camera auto discovery
-  const runCameraDiscovery = async () => {
-    setIsDiscovering(true);
-    toast.info("ONVIF Local Subnet Auto-Discovery probe started...");
-    setTimeout(() => {
-      setIsDiscovering(false);
-      toast.success("Discovery complete! Found 2 new cameras (Dahua IP, Hikvision PTZ). Added to settings.");
-    }, 2000);
   };
 
   const handleStartAttendance = () => {
@@ -457,29 +463,22 @@ export default function AIAttendanceDashboard() {
     }, 800);
   };
 
-  const handleAddCamera = () => {
-    toast.info("Opening Add Camera dialog (REST payload target: /api/v1/cameras)");
-  };
-
   // CSV Log Export
   const handleExportReport = () => {
     setIsActionLoading("export");
     setTimeout(() => {
       setIsActionLoading(null);
-      
       const csvContent = "data:text/csv;charset=utf-8," 
         + ["Student Name,Student ID,Group,Room,Arrival Time,Status,Confidence"].join(",") + "\n"
         + attendance.map(r => `"${r.studentName}","${r.studentId}","${r.groupName}","${r.room}","${r.arrivalTime}","${r.status}",${r.presenceRate}%`).join("\n");
-      
       const encodedUri = encodeURI(csvContent);
       const link = document.createElement("a");
       link.setAttribute("href", encodedUri);
-      link.setAttribute("download", `lmshub_attendance_report_${new Date().toISOString().slice(0,10)}.csv`);
+      link.setAttribute("download", `lmshub_attendance_${new Date().toISOString().slice(0,10)}.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
-      toast.success("Attendance report downloaded successfully as CSV");
+      toast.success("Attendance report downloaded successfully");
     }, 1000);
   };
 
@@ -571,20 +570,16 @@ export default function AIAttendanceDashboard() {
   const paginatedAttendance = filteredAttendance.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
   const totalPages = Math.ceil(filteredAttendance.length / itemsPerPage);
 
-  // Filter Face Registry Students
   const registryStudents = useMemo(() => {
     const list = [
       { id: "reg-1", studentName: "Jasur Akhmedov", idCode: "LMS-10829", status: "ENROLLED", verifiedAt: "2026-06-12", vectors: "AES-256 Vector" },
       { id: "reg-2", studentName: "Madina Tursunova", idCode: "LMS-10842", status: "ENROLLED", verifiedAt: "2026-06-14", vectors: "AES-256 Vector" },
       { id: "reg-3", studentName: "Sardor Oripov", idCode: "LMS-10421", status: "PENDING", verifiedAt: "—", vectors: "None" },
-      { id: "reg-4", studentName: "Kamola Bekmirzayeva", idCode: "LMS-10332", status: "ENROLLED", verifiedAt: "2026-06-20", vectors: "AES-256 Vector" },
-      { id: "reg-5", studentName: "Rayhon Qodirova", idCode: "LMS-10291", status: "PENDING", verifiedAt: "—", vectors: "None" },
-      { id: "reg-6", studentName: "Elbek Nematov", idCode: "LMS-10761", status: "NO_PROFILE", verifiedAt: "—", vectors: "None" }
+      { id: "reg-4", studentName: "Kamola Bekmirzayeva", idCode: "LMS-10332", status: "ENROLLED", verifiedAt: "2026-06-20", vectors: "AES-256 Vector" }
     ];
     return list.filter(s => s.studentName.toLowerCase().includes(registrySearch.toLowerCase()) || s.idCode.toLowerCase().includes(registrySearch.toLowerCase()));
   }, [registrySearch]);
 
-  // Analytics Chart Data
   const emotionData = [
     { name: "Attentive", value: 65, color: "#8b5cf6" },
     { name: "Neutral", value: 20, color: "#3b82f6" },
@@ -596,9 +591,16 @@ export default function AIAttendanceDashboard() {
     { hour: "08:00 AM", score: 85, phoneUsage: 5 },
     { hour: "09:00 AM", score: 88, phoneUsage: 2 },
     { hour: "10:00 AM", score: 80, phoneUsage: 8 },
-    { hour: "11:00 AM", score: 72, phoneUsage: 14 },
-    { hour: "12:00 PM", score: 65, phoneUsage: 18 }
+    { hour: "11:00 AM", score: 72, phoneUsage: 14 }
   ];
+
+  // Specific filtered datasets based on user roles
+  const filteredCamerasByRole = useMemo(() => {
+    if (currentRole === "SUPER_ADMIN") return cameras;
+    if (currentRole === "ADMIN") return cameras.slice(0, 4); // Own organization
+    if (currentRole === "ADMINISTRATOR") return cameras.filter(c => c.room === "Room 101" || c.room === "Room 102"); // Own branch
+    return [];
+  }, [cameras, currentRole]);
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col font-sans transition-colors duration-200">
@@ -623,7 +625,7 @@ export default function AIAttendanceDashboard() {
         </div>
       )}
 
-      {/* INTEGRATION & ROLE TESTER PANEL */}
+      {/* ROLE SWITCHING / API SINYAL PANELI */}
       {showDevControls && (
         <div className="bg-[#120c1e] text-white border-b border-purple-500/20 p-3 flex flex-wrap items-center justify-between gap-3 text-xs z-50">
           <div className="flex items-center gap-2 font-mono">
@@ -637,31 +639,16 @@ export default function AIAttendanceDashboard() {
                 value={currentRole} 
                 onChange={(e) => {
                   setCurrentRole(e.target.value as UserRole);
-                  toast.info(`Interface updated for: ${e.target.value}`);
+                  toast.info(`Interfeys o'zgartirildi: ${e.target.value}`);
                 }}
                 className="bg-purple-950 border border-purple-500/30 text-white rounded px-2 py-1 text-xs focus:outline-none"
               >
-                <option value="SUPER_ADMIN">Super Admin (All Cameras & Settings)</option>
-                <option value="ADMIN">Admin (Local Campus / Hardware)</option>
-                <option value="TEACHER">Teacher (My Groups Only)</option>
-                <option value="SECURITY">Security (Alerts & Streams)</option>
-                <option value="RECEPTION">Reception (View Dashboard)</option>
-              </select>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <label className="font-semibold text-purple-200">Spring Boot API State:</label>
-              <select 
-                value={apiState} 
-                onChange={(e) => setApiState(e.target.value as ApiState)}
-                className="bg-purple-950 border border-purple-500/30 text-white rounded px-2 py-1 text-xs focus:outline-none"
-              >
-                <option value="SUCCESS">Success (Connected)</option>
-                <option value="LOADING">Loading (Skeletons)</option>
-                <option value="EMPTY">Empty State (No cameras)</option>
-                <option value="ERROR">Error State (500 Conn Failure)</option>
-                <option value="OFFLINE">Offline Mode</option>
-                <option value="FORBIDDEN">Forbidden (403 Access Denied)</option>
+                <option value="SUPER_ADMIN">Super Admin (Barcha kameralar)</option>
+                <option value="ADMIN">Admin (Tashkilot kameralari)</option>
+                <option value="ADMINISTRATOR">Administrator (Filial kameralari)</option>
+                <option value="TEACHER">O'qituvchi (Dars davomati)</option>
+                <option value="PARENT">Ota-ona (Farzand davomati)</option>
+                <option value="STUDENT">Talaba (Mening davomatim)</option>
               </select>
             </div>
           </div>
@@ -674,17 +661,17 @@ export default function AIAttendanceDashboard() {
         </div>
       )}
 
-      {/* MAIN CONTAINER */}
+      {/* CORE CONTAINER */}
       <div className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         
         {/* COMPACT BREADCRUMBS */}
         <div className="flex items-center justify-between text-xs text-muted-foreground font-mono">
           <div className="flex items-center gap-1.5">
-            <span>Modules</span>
+            <span>AI Operations</span>
             <span>/</span>
-            <span>AI CCTV</span>
+            <span>AI Attendance Gateway</span>
             <span>/</span>
-            <span className="text-foreground font-medium">Monitoring Control Room</span>
+            <span className="text-foreground font-bold">{currentRole} View</span>
           </div>
           <div className="flex items-center gap-1.5 bg-purple-500/10 text-purple-600 dark:text-purple-400 px-3 py-0.5 rounded-full border border-purple-500/20 font-bold">
             <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse"></span>
@@ -703,229 +690,199 @@ export default function AIAttendanceDashboard() {
               <p className="text-sm text-purple-200/80 mt-1">{tl("subtitle")}</p>
             </div>
             
-            <div className="flex items-center flex-wrap gap-2.5">
-              {hasAccess(["SUPER_ADMIN", "ADMIN", "TEACHER"]) && (
-                <>
-                  {isAttendanceRunning ? (
-                    <Button 
-                      variant="destructive" 
-                      size="sm"
-                      className="h-10 px-5 rounded-xl gap-2 font-bold shadow-lg shadow-rose-500/10 text-xs border-none cursor-pointer"
-                      onClick={handleStopAttendance}
-                      disabled={isActionLoading !== null}
-                    >
-                      {isActionLoading === "stop_att" ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Square className="h-4 w-4" />}
-                      {tl("stopTracking")}
-                    </Button>
-                  ) : (
-                    <Button 
-                      variant="default"
-                      size="sm"
-                      className="h-10 px-5 bg-[#8b5cf6] hover:bg-[#7c3aed] text-white rounded-xl gap-2 font-bold shadow-lg shadow-purple-500/20 text-xs border-none cursor-pointer"
-                      onClick={handleStartAttendance}
-                      disabled={isActionLoading !== null}
-                    >
-                      {isActionLoading === "start_att" ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
-                      {tl("startTracking")}
-                    </Button>
-                  )}
-                </>
-              )}
-
-              {hasAccess(["SUPER_ADMIN", "ADMIN"]) && (
+            {hasAccess(["SUPER_ADMIN", "ADMIN", "ADMINISTRATOR"]) && (
+              <div className="flex items-center flex-wrap gap-2.5">
+                {isAttendanceRunning ? (
+                  <Button 
+                    variant="destructive" 
+                    size="sm"
+                    className="h-10 px-5 rounded-xl gap-2 font-bold shadow-lg text-xs border-none cursor-pointer"
+                    onClick={handleStopAttendance}
+                  >
+                    <Square className="h-4 w-4" />
+                    {tl("stopTracking")}
+                  </Button>
+                ) : (
+                  <Button 
+                    variant="default"
+                    size="sm"
+                    className="h-10 px-5 bg-[#8b5cf6] hover:bg-[#7c3aed] text-white rounded-xl gap-2 font-bold shadow-lg text-xs border-none cursor-pointer"
+                    onClick={handleStartAttendance}
+                  >
+                    <Play className="h-4 w-4" />
+                    {tl("startTracking")}
+                  </Button>
+                )}
                 <Button 
                   variant="outline" 
                   size="sm"
-                  className="h-10 px-5 rounded-xl gap-2 text-xs border-purple-500/30 bg-purple-950/20 hover:bg-purple-950/40 text-purple-200 font-semibold"
-                  onClick={handleAddCamera}
-                >
-                  <Plus className="h-4 w-4 text-purple-400" />
-                  {tl("addCamera")}
-                </Button>
-              )}
-
-              {hasAccess(["SUPER_ADMIN", "ADMIN", "TEACHER"]) && (
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="h-10 px-5 rounded-xl gap-2 text-xs border-purple-500/30 bg-purple-950/20 hover:bg-purple-950/40 text-purple-200 font-semibold"
+                  className="h-10 px-5 rounded-xl gap-2 text-xs border-purple-500/30 bg-purple-950/20 text-purple-200 font-semibold"
                   onClick={handleExportReport}
                 >
-                  <Download className="h-4 w-4 text-purple-400" />
+                  <Download className="h-4 w-4" />
                   {tl("export")}
                 </Button>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* CORE NAV TABS */}
-        <div className="flex border-b border-purple-500/10 overflow-x-auto no-scrollbar gap-1 bg-purple-500/5 p-1 rounded-2xl">
-          {[
-            { id: "overview", label: tl("tabOverview"), icon: Monitor, roles: ["SUPER_ADMIN", "ADMIN", "TEACHER", "SECURITY", "RECEPTION"] },
-            { id: "cameras", label: tl("tabCameras"), icon: Camera, roles: ["SUPER_ADMIN", "ADMIN", "SECURITY"] },
-            { id: "history", label: tl("tabHistory"), icon: FileSpreadsheet, roles: ["SUPER_ADMIN", "ADMIN", "TEACHER"] },
-            { id: "security", label: tl("tabSecurity"), icon: AlertTriangle, roles: ["SUPER_ADMIN", "ADMIN", "SECURITY"] },
-            { id: "registry", label: tl("tabRegistry"), icon: Users, roles: ["SUPER_ADMIN", "ADMIN", "TEACHER"] },
-            { id: "analytics", label: tl("tabAnalytics"), icon: BarChart3, roles: ["SUPER_ADMIN", "ADMIN", "TEACHER"] },
-            { id: "settings", label: tl("tabSettings"), icon: Settings, roles: ["SUPER_ADMIN", "ADMIN"] },
-          ].map((tab) => {
-            const Icon = tab.icon;
-            if (!hasAccess(tab.roles as UserRole[])) return null;
+        {/* -------------------- ROLE 1: SUPER_ADMIN / ADMIN / ADMINISTRATOR VIEW -------------------- */}
+        {hasAccess(["SUPER_ADMIN", "ADMIN", "ADMINISTRATOR"]) && (
+          <div className="space-y-6 animate-fade-in">
+            {/* TABS */}
+            <div className="flex border-b border-purple-500/10 overflow-x-auto no-scrollbar gap-1 bg-purple-500/5 p-1 rounded-2xl">
+              {[
+                { id: "overview", label: tl("tabOverview"), icon: Monitor },
+                { id: "cameras", label: tl("tabCameras"), icon: Camera },
+                { id: "history", label: tl("tabHistory"), icon: FileSpreadsheet },
+                { id: "security", label: tl("tabSecurity"), icon: AlertTriangle },
+                { id: "registry", label: tl("tabRegistry"), icon: Users },
+                { id: "analytics", label: tl("tabAnalytics"), icon: BarChart3 },
+                { id: "settings", label: tl("tabSettings"), icon: Settings },
+              ].map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id as any)}
+                    className={`flex items-center gap-2 px-5 py-3 rounded-xl text-xs font-bold whitespace-nowrap tracking-wide border-none cursor-pointer transition-all ${
+                      activeTab === tab.id 
+                        ? "bg-[#8b5cf6] text-white shadow-lg" 
+                        : "text-muted-foreground hover:text-foreground hover:bg-purple-500/5"
+                    }`}
+                  >
+                    <Icon className="h-4 w-4" />
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
 
-            return (
-              <button
-                key={tab.id}
-                onClick={() => {
-                  setActiveTab(tab.id as any);
-                  setSearchQuery("");
-                  setStatusFilter("ALL");
-                  setCurrentPage(1);
-                }}
-                className={`flex items-center gap-2 px-5 py-3 rounded-xl text-xs font-bold whitespace-nowrap tracking-wide transition-all border-none cursor-pointer ${
-                  activeTab === tab.id 
-                    ? "bg-[#8b5cf6] text-white shadow-lg shadow-purple-500/15" 
-                    : "text-muted-foreground hover:text-foreground hover:bg-purple-500/5"
-                }`}
-              >
-                <Icon className="h-4 w-4" />
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* API ERROR / SUCCESS STATE ROUTER */}
-        {apiState === "FORBIDDEN" ? (
-          <Card className="p-8 text-center bg-card border border-border rounded-3xl flex flex-col items-center justify-center space-y-4 max-w-md mx-auto my-12 shadow-md">
-            <div className="p-3.5 bg-rose-500/10 text-rose-500 rounded-full border border-rose-500/20">
-              <Lock className="h-6 w-6" />
-            </div>
-            <div>
-              <h3 className="text-base font-extrabold">Permission Denied</h3>
-              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                Your role ({currentRole}) does not have permissions to access this dashboard.
-              </p>
-            </div>
-          </Card>
-        ) : apiState === "ERROR" ? (
-          <Card className="p-8 text-center bg-card border border-border rounded-3xl flex flex-col items-center justify-center space-y-4 max-w-md mx-auto my-12 shadow-md">
-            <div className="p-3.5 bg-rose-500/10 text-rose-500 rounded-full border border-rose-500/20">
-              <AlertCircle className="h-6 w-6" />
-            </div>
-            <div>
-              <h3 className="text-base font-extrabold">Backend Connection Failed</h3>
-              <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
-                The application could not reach the server at `/api/v1/attendance`. Database connectivity was lost.
-              </p>
-            </div>
-            <Button variant="default" size="sm" className="rounded-xl px-6 bg-[#8b5cf6] border-none text-white cursor-pointer" onClick={() => { setApiState("SUCCESS"); loadData(); }}>
-              <RefreshCw className="h-4 w-4 mr-1.5" /> Retry Connection
-            </Button>
-          </Card>
-        ) : (
-          <div className="space-y-6">
-            
-            {/* VIEW TAB: OVERVIEW */}
+            {/* TAB CONTENT: OVERVIEW */}
             {activeTab === "overview" && (
               <div className="space-y-6">
-                
-                {/* 1. STAT CARDS */}
+                {/* 1. TIMETABLE ACTIVE INTEGRATION CARD */}
+                <div className="space-y-4">
+                  <h2 className="text-sm font-extrabold text-foreground flex items-center gap-2 uppercase tracking-widest">
+                    <Calendar className="h-4.5 w-4.5 text-purple-500 animate-pulse" /> {tl("activeLessons")}
+                  </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {timetable.map((session) => (
+                      <Card key={session.id} className="bg-card border border-border p-5 rounded-2xl relative overflow-hidden flex flex-col justify-between hover:border-purple-500/30 transition-all">
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-center">
+                            <span className="text-[10px] bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 px-2.5 py-0.5 rounded font-black">
+                              {session.status}
+                            </span>
+                            <span className="text-[10px] font-mono text-muted-foreground font-bold flex items-center gap-1">
+                              <Clock className="h-3 w-3" /> {session.time}
+                            </span>
+                          </div>
+                          <div>
+                            <h4 className="font-extrabold text-sm text-foreground">{session.groupName}</h4>
+                            <p className="text-xs text-muted-foreground mt-0.5">{session.subject} • {session.roomName}</p>
+                          </div>
+                        </div>
+
+                        <div className="mt-4 pt-3 border-t border-border/60 flex items-center justify-between text-xs text-muted-foreground font-mono">
+                          <span>Paired: <strong className="text-foreground">{session.pairedCamera}</strong></span>
+                          <span>Present: <strong className="text-purple-500">{session.presentCount}/{session.enrolledStudents}</strong></span>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 2. STAT CARDS */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {hasAccess(["SUPER_ADMIN", "ADMIN", "TEACHER"]) && (
-                    <Card className="bg-card text-card-foreground p-5 rounded-2xl border border-border shadow-sm flex items-center justify-between">
-                      <div className="space-y-1">
-                        <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">{tl("attendanceRate")}</span>
-                        <div className="flex items-baseline gap-1.5">
-                          <span className="text-2xl font-black tracking-tight text-foreground">94.2%</span>
-                          <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold flex items-center">
-                            <ArrowUpRight className="h-3 w-3" /> +1.2%
-                          </span>
-                        </div>
-                      </div>
-                      <div className="p-2.5 bg-purple-500/10 rounded-xl border border-purple-500/20 text-purple-600 dark:text-purple-400">
-                        <Activity className="h-5 w-5" />
-                      </div>
-                    </Card>
-                  )}
-
-                  {hasAccess(["SUPER_ADMIN", "ADMIN", "TEACHER"]) && (
-                    <Card className="bg-card text-card-foreground p-5 rounded-2xl border border-border shadow-sm flex items-center justify-between">
-                      <div className="space-y-1">
-                        <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">{tl("presentStudents")}</span>
-                        <div className="flex items-baseline gap-1">
-                          <span className="text-2xl font-black tracking-tight text-foreground">1,428</span>
-                          <span className="text-xs text-muted-foreground">/ 1,516 total</span>
-                        </div>
-                      </div>
-                      <div className="p-2.5 bg-emerald-500/10 rounded-xl border border-emerald-500/20 text-emerald-600 dark:text-emerald-400">
-                        <Users className="h-5 w-5" />
-                      </div>
-                    </Card>
-                  )}
-
-                  <Card className="bg-card text-card-foreground p-5 rounded-2xl border border-border shadow-sm flex items-center justify-between">
+                  <Card className="bg-card p-5 rounded-2xl border border-border flex items-center justify-between">
                     <div className="space-y-1">
-                      <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">{tl("activeStreams")}</span>
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-2xl font-black tracking-tight text-foreground">{isPhonePaired && isSimulatingPhoneFeed ? "5 Cams" : "4 Cams"}</span>
-                        <span className="text-xs text-rose-500 font-bold">1 offline</span>
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{tl("attendanceRate")}</span>
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-2xl font-black text-foreground">94.2%</span>
+                        <span className="text-xs text-emerald-500 font-bold flex items-center">
+                          <ArrowUpRight className="h-3 w-3" /> +1.2%
+                        </span>
                       </div>
                     </div>
-                    <div className="p-2.5 bg-blue-500/10 rounded-xl border border-blue-500/20 text-blue-600 dark:text-blue-400">
+                    <div className="p-2.5 bg-purple-500/10 rounded-xl border border-purple-500/20 text-purple-400">
+                      <Activity className="h-5 w-5" />
+                    </div>
+                  </Card>
+
+                  <Card className="bg-card p-5 rounded-2xl border border-border flex items-center justify-between">
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{tl("presentStudents")}</span>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-2xl font-black text-foreground">1,428</span>
+                        <span className="text-xs text-muted-foreground font-bold">/ 1,516 total</span>
+                      </div>
+                    </div>
+                    <div className="p-2.5 bg-emerald-500/10 rounded-xl border border-emerald-500/20 text-emerald-400">
+                      <Users className="h-5 w-5" />
+                    </div>
+                  </Card>
+
+                  <Card className="bg-card p-5 rounded-2xl border border-border flex items-center justify-between">
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{tl("activeStreams")}</span>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-2xl font-black text-foreground">{filteredCamerasByRole.length} Active</span>
+                      </div>
+                    </div>
+                    <div className="p-2.5 bg-blue-500/10 rounded-xl border border-blue-500/20 text-blue-400">
                       <Camera className="h-5 w-5" />
                     </div>
                   </Card>
 
-                  {hasAccess(["SUPER_ADMIN", "ADMIN", "SECURITY"]) && (
-                    <Card className="bg-card text-card-foreground p-5 rounded-2xl border border-border shadow-sm flex items-center justify-between">
-                      <div className="space-y-1">
-                        <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">{tl("securityAlerts")}</span>
-                        <div className="flex items-baseline gap-1.5">
-                          <span className="text-2xl font-black tracking-tight text-foreground">{unknowns.length}</span>
-                          <span className="text-[9px] bg-rose-500/10 text-rose-600 dark:text-rose-400 px-1.5 py-0.5 rounded font-extrabold border border-rose-500/20">Critical</span>
-                        </div>
+                  <Card className="bg-card p-5 rounded-2xl border border-border flex items-center justify-between">
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{tl("securityAlerts")}</span>
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-2xl font-black text-foreground">{unknowns.length}</span>
+                        <span className="text-[9px] bg-rose-500/10 text-rose-500 px-1.5 py-0.5 rounded font-extrabold border border-rose-500/20">Critical</span>
                       </div>
-                      <div className="p-2.5 bg-rose-500/10 rounded-xl border border-rose-500/20 text-rose-500">
-                        <AlertTriangle className="h-5 w-5 animate-pulse" />
-                      </div>
-                    </Card>
-                  )}
+                    </div>
+                    <div className="p-2.5 bg-rose-500/10 rounded-xl border border-rose-500/20 text-rose-550">
+                      <AlertTriangle className="h-5 w-5 animate-pulse" />
+                    </div>
+                  </Card>
                 </div>
 
-                {/* 2. OVERVIEW ROW 2 */}
+                {/* 3. LOG FEED STREAM & PEAK HOURS CHART */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   
-                  {/* LIVE LOG STREAM FEED (2/3 width) */}
+                  {/* LOG STREAM FEED */}
                   <div className="lg:col-span-2 space-y-4">
                     <div className="flex items-center justify-between">
                       <h2 className="text-sm font-extrabold text-foreground flex items-center gap-2 uppercase tracking-widest">
                         <Cpu className="h-4 w-4 text-purple-500" /> {tl("realtimeFeed")}
                       </h2>
-                      <span className="text-xs text-muted-foreground font-mono">Snapshot frequency: {snapshotInterval}s</span>
+                      <span className="text-xs text-muted-foreground font-mono">Scan rate: {snapshotInterval}s</span>
                     </div>
 
-                    <Card className="bg-card border border-border rounded-3xl p-5 shadow-sm space-y-3 max-h-[360px] overflow-y-auto no-scrollbar relative">
+                    <Card className="bg-card border border-border rounded-3xl p-5 shadow-sm space-y-3 max-h-[360px] overflow-y-auto no-scrollbar">
                       {realtimeLogs.map((log) => (
                         <div key={log.id} className="flex items-center justify-between p-3 rounded-2xl bg-muted/40 border border-border/40 hover:bg-muted/80 transition-all">
                           <div className="flex items-center gap-3.5 min-w-0">
-                            <div className="h-10 w-10 bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded-xl border border-purple-500/20 flex items-center justify-center font-bold text-sm shrink-0">
+                            <div className="h-10 w-10 bg-purple-500/10 text-purple-455 rounded-xl border border-purple-500/20 flex items-center justify-center font-bold text-sm shrink-0">
                               {log.avatar}
                             </div>
                             <div className="min-w-0">
                               <h4 className="font-extrabold text-sm text-foreground truncate">{log.name}</h4>
                               <p className="text-xs text-muted-foreground mt-0.5">
-                                Location: <span className="font-semibold text-foreground">{log.room}</span> • <span className="font-mono">{log.time}</span>
+                                Room: <span className="font-semibold text-foreground">{log.room}</span> • <span className="font-mono">{log.time}</span>
                               </p>
                             </div>
                           </div>
                           
                           <div className="flex items-center gap-4 shrink-0 font-mono">
                             <div className="text-right">
-                              <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-black border ${
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-[9px] font-black border ${
                                 log.status === "PRESENT"
-                                  ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
-                                  : "bg-amber-500/10 text-amber-600 border-amber-500/20"
+                                  ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+                                  : "bg-amber-500/10 text-amber-500 border-amber-500/20"
                               }`}>
                                 {log.status}
                               </span>
@@ -937,7 +894,7 @@ export default function AIAttendanceDashboard() {
                     </Card>
                   </div>
 
-                  {/* QUICK STATS & PEAK HOUR CHART */}
+                  {/* CHARTS */}
                   <div className="space-y-4">
                     <h2 className="text-sm font-extrabold text-foreground flex items-center gap-2 uppercase tracking-widest">
                       <BarChart2 className="h-4 w-4 text-purple-500" /> {tl("peakHours")}
@@ -947,7 +904,7 @@ export default function AIAttendanceDashboard() {
                       <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={engagementTrend} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
                           <defs>
-                            <linearGradient id="engagementGrad" x1="0" y1="0" x2="0" y2="1">
+                            <linearGradient id="engagementGrad2" x1="0" y1="0" x2="0" y2="1">
                               <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.4} />
                               <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.0} />
                             </linearGradient>
@@ -956,22 +913,19 @@ export default function AIAttendanceDashboard() {
                           <XAxis dataKey="hour" tick={{ fill: "#94a3b8", fontSize: 9, fontWeight: "bold" }} axisLine={false} tickLine={false} />
                           <YAxis tick={{ fill: "#94a3b8", fontSize: 9, fontWeight: "bold" }} axisLine={false} tickLine={false} />
                           <ChartTooltip />
-                          <Area type="monotone" dataKey="score" stroke="#8b5cf6" strokeWidth={2.5} fillOpacity={1} fill="url(#engagementGrad)" name="Attendance Flow" />
+                          <Area type="monotone" dataKey="score" stroke="#8b5cf6" strokeWidth={2.5} fillOpacity={1} fill="url(#engagementGrad2)" name="Student Flow" />
                         </AreaChart>
                       </ResponsiveContainer>
                     </Card>
                   </div>
                 </div>
-
               </div>
             )}
 
-            {/* VIEW TAB: LIVE CAMERAS */}
+            {/* TAB CONTENT: LIVE CAMERAS GRID */}
             {activeTab === "cameras" && (
               <div className="space-y-6">
-                
-                {/* GRID SIZE CONTROLLER & PAIRING DIALOG */}
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-muted/40 p-4 border border-border rounded-2xl">
+                <div className="flex flex-wrap items-center justify-between gap-4 bg-muted/40 p-4 border border-border rounded-2xl">
                   <div className="flex items-center gap-3">
                     <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{tl("gridSelect")}:</span>
                     <div className="flex bg-card border border-border rounded-xl p-1 gap-1">
@@ -981,7 +935,7 @@ export default function AIAttendanceDashboard() {
                           onClick={() => setGridColumns(cols as any)}
                           className={`px-3 py-1.5 rounded-lg text-xs font-black border-none cursor-pointer ${
                             gridColumns === cols 
-                              ? "bg-purple-600 text-white shadow-md shadow-purple-500/10" 
+                              ? "bg-purple-600 text-white shadow-md" 
                               : "text-muted-foreground hover:text-foreground"
                           }`}
                         >
@@ -991,196 +945,73 @@ export default function AIAttendanceDashboard() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3">
-                    {/* Mobile simulator status */}
-                    {isPhonePaired && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 animate-pulse">
-                        Mobile Camera Stream Connected
-                      </span>
-                    )}
-                    {isPhonePaired && (
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        className={`text-xs border-purple-500/30 rounded-xl font-bold h-9 px-4 cursor-pointer ${isSimulatingPhoneFeed ? "bg-red-500/15 border-red-500/35 text-red-600" : "bg-purple-950/20 text-purple-200"}`}
-                        onClick={() => {
-                          setIsSimulatingPhoneFeed(p => !p);
-                          toast.info(isSimulatingPhoneFeed ? "Mobile paired feed deactivated." : "Paired phone camera feed active on grid!");
-                        }}
-                      >
-                        {isSimulatingPhoneFeed ? "Deactivate Feed" : "Simulate Mobile Feed"}
-                      </Button>
-                    )}
-                  </div>
+                  {isPhonePaired && (
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-500/10 text-purple-400 border border-purple-500/20 animate-pulse">
+                      Phone Connected Stream Active
+                    </span>
+                  )}
                 </div>
 
-                {/* 25 GRID CAMERAS LAYOUT */}
-                <div className={`grid gap-4`} style={{
+                <div className="grid gap-4" style={{
                   gridTemplateColumns: `repeat(${gridColumns}, minmax(0, 1fr))`
                 }}>
-                  
-                  {/* Hikvision / Dahua / Uniview / Paired Phone Live Feed Simulator Cards */}
-                  {cameras.map((cam, idx) => {
+                  {filteredCamerasByRole.map((cam, idx) => {
                     const isOffline = cam.status === "OFFLINE";
                     return (
                       <Card key={cam.id} className="bg-card border border-border rounded-2xl p-4 flex flex-col justify-between hover:shadow-md transition relative group overflow-hidden">
                         <div className="space-y-3">
                           <div className="flex justify-between items-start gap-2">
                             <div className="min-w-0">
-                              <span className="text-[9px] font-mono text-muted-foreground uppercase block">{cam.manufacturer || "CCTV"} • {cam.room}</span>
+                              <span className="text-[9px] font-mono text-muted-foreground uppercase block">{cam.manufacturer || "IP Camera"} • {cam.room}</span>
                               <h3 className="text-xs font-black text-foreground truncate mt-0.5">{cam.name}</h3>
                             </div>
                             <span className={`px-2 py-0.5 rounded-full text-[9px] font-mono font-bold border shrink-0 ${
                               isOffline 
-                                ? "bg-rose-500/10 text-rose-600 border-rose-500/20" 
+                                ? "bg-rose-500/10 text-rose-550 border-rose-500/20" 
                                 : cam.status === "WARNING"
-                                ? "bg-amber-500/10 text-amber-600 border-amber-500/20"
-                                : "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
+                                ? "bg-amber-500/10 text-amber-550 border-amber-500/20"
+                                : "bg-emerald-500/10 text-emerald-555 border-emerald-500/20"
                             }`}>
                               {cam.status}
                             </span>
                           </div>
 
-                          {/* Canvas Live Overlay Simulator */}
+                          {/* Canvas view simulator */}
                           <div className="relative w-full h-[140px] bg-zinc-950 rounded-xl overflow-hidden flex items-center justify-center">
                             {isOffline ? (
                               <div className="text-center text-zinc-500 p-4">
                                 <WifiOff className="h-8 w-8 mx-auto mb-1.5 text-zinc-700" />
-                                <p className="text-[10px] font-mono font-bold">STREAM DISCONNECTED</p>
-                                <p className="text-[9px] text-zinc-700 font-mono mt-0.5">{cam.ipAddress}</p>
+                                <p className="text-[10px] font-mono font-bold">DISCONNECTED</p>
                               </div>
                             ) : (
                               <div className="w-full h-full p-3 flex flex-col justify-between bg-zinc-900 text-left relative">
-                                {/* Simulated bounding box overlays */}
-                                <div className="absolute inset-0 pointer-events-none border-2 border-transparent group-hover:border-purple-500/20 transition-all rounded-xl" />
-                                
-                                {/* Simulated facial bounding box */}
                                 <div className="absolute top-8 left-12 w-14 h-14 border-2 border-emerald-500 rounded-md pointer-events-none animate-pulse">
-                                  <span className="absolute -top-4 left-0 bg-emerald-500 text-white font-mono text-[8px] px-1 rounded">
+                                  <span className="absolute -top-4 left-0 bg-emerald-500 text-white font-mono text-[8px] px-1.5 rounded">
                                     Jasur A. (98%)
                                   </span>
                                 </div>
-                                <div className="absolute bottom-6 right-16 w-12 h-12 border-2 border-emerald-500 rounded-md pointer-events-none">
-                                  <span className="absolute -top-4 left-0 bg-emerald-500 text-white font-mono text-[8px] px-1 rounded">
-                                    Madina T. (99%)
-                                  </span>
-                                </div>
-
                                 <div className="flex justify-between items-center text-[9px] font-mono text-zinc-400">
-                                  <span>CH {idx + 1} • 24 FPS</span>
-                                  <span>{cam.ipAddress}</span>
+                                  <span>{cam.fps} FPS • {cam.latency}ms</span>
+                                  <span>{cam.resolution}</span>
                                 </div>
-
                                 <div className="text-center my-auto py-2">
-                                  <Monitor className="h-5 w-5 text-zinc-700 mx-auto mb-1 opacity-60" />
-                                  <p className="text-[10px] text-emerald-400 font-mono font-bold">{cam.studentsCount} FACES MATCHED</p>
-                                </div>
-
-                                <div className="flex justify-between items-center text-[9px] font-mono text-zinc-500">
-                                  <span>Codec: H.264</span>
-                                  <span>{cam.lastDetectionTime}</span>
+                                  <Monitor className="h-5 w-5 text-zinc-750 mx-auto mb-1 opacity-60" />
+                                  <p className="text-[10px] text-emerald-400 font-mono font-bold">{cam.studentsCount} FACES ACTIVE</p>
                                 </div>
                               </div>
                             )}
                           </div>
                         </div>
-
-                        {/* Presets and Pan-Tilt Zoom Simulator */}
-                        <div className="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-border">
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            className="h-7 text-[10px] rounded-lg border-border"
-                            onClick={() => handleCameraAction(cam.name, "Ping stream latency")}
-                            disabled={isOffline}
-                          >
-                            Ping Latency
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            className="h-7 text-[10px] rounded-lg border-border"
-                            onClick={() => handleCameraAction(cam.name, "PTZ Focus preset applied")}
-                            disabled={isOffline}
-                          >
-                            PTZ Presets
-                          </Button>
-                        </div>
                       </Card>
                     );
                   })}
-
-                  {/* Paired Phone Stream simulated card if enabled */}
-                  {isPhonePaired && isSimulatingPhoneFeed && (
-                    <Card className="bg-card border-2 border-purple-500 rounded-2xl p-4 flex flex-col justify-between hover:shadow-lg transition relative overflow-hidden bg-purple-950/5">
-                      <div className="space-y-3">
-                        <div className="flex justify-between items-start gap-2">
-                          <div>
-                            <span className="text-[9px] font-mono text-purple-400 uppercase block">Paired Mobile • WebRTC</span>
-                            <h3 className="text-xs font-black text-foreground truncate mt-0.5">iPhone 14 Pro Camera</h3>
-                          </div>
-                          <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-purple-500/10 text-purple-400 border border-purple-500/20 shrink-0">
-                            STREAMING
-                          </span>
-                        </div>
-
-                        <div className="relative w-full h-[140px] bg-zinc-950 rounded-xl overflow-hidden flex items-center justify-center">
-                          <div className="w-full h-full p-3 flex flex-col justify-between bg-purple-950/20 text-left relative">
-                            {/* Bounding box inside simulator */}
-                            <div className="absolute top-10 left-16 w-16 h-16 border-2 border-purple-500 rounded-md pointer-events-none animate-pulse">
-                              <span className="absolute -top-4 left-0 bg-purple-600 text-white font-mono text-[8px] px-1.5 py-0.5 rounded">
-                                Mobile User (95%)
-                              </span>
-                            </div>
-
-                            <div className="flex justify-between items-center text-[9px] font-mono text-purple-300">
-                              <span>Mobile Feed • WebRTC</span>
-                              <span>paired_token_auth</span>
-                            </div>
-
-                            <div className="text-center my-auto py-2">
-                              <QrCode className="h-5 w-5 text-purple-400 mx-auto mb-1 animate-pulse" />
-                              <p className="text-[9px] text-purple-300 font-mono font-bold">Pairing Token Active</p>
-                            </div>
-
-                            <div className="flex justify-between items-center text-[9px] font-mono text-purple-400">
-                              <span>30 FPS</span>
-                              <span>Live</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-purple-500/10">
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
-                          className="h-7 text-[10px] rounded-lg border-purple-500/20 text-purple-300"
-                          onClick={() => toast.success("Mobile stream connection diagnostic: OK (WebRTC latency 45ms)")}
-                        >
-                          Diagnostic
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
-                          className="h-7 text-[10px] rounded-lg border-red-500/20 text-red-400"
-                          onClick={() => setIsSimulatingPhoneFeed(false)}
-                        >
-                          Stop Simulator
-                        </Button>
-                      </div>
-                    </Card>
-                  )}
                 </div>
-
               </div>
             )}
 
-            {/* VIEW TAB: ATTENDANCE LOGS HISTORY */}
+            {/* TAB CONTENT: ATTENDANCE HISTORY */}
             {activeTab === "history" && (
               <div className="space-y-4">
-                
-                {/* SEARCH, FILTERS & STATS */}
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                   <div className="relative w-full sm:w-80">
                     <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -1188,26 +1019,23 @@ export default function AIAttendanceDashboard() {
                       type="text" 
                       placeholder={tl("searchPlaceholder")} 
                       value={searchQuery}
-                      onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+                      onChange={(e) => setSearchQuery(e.target.value)}
                       className="bg-card border border-border rounded-xl pl-9 pr-4 py-2 text-xs w-full focus:outline-none focus:ring-1 focus:ring-purple-500"
                     />
                   </div>
                   
-                  <div className="flex items-center gap-3 w-full sm:w-auto">
-                    <select 
-                      value={statusFilter}
-                      onChange={(e) => { setStatusFilter(e.target.value as any); setCurrentPage(1); }}
-                      className="bg-card border border-border rounded-xl px-3 py-2 text-xs focus:outline-none w-full sm:w-auto font-semibold"
-                    >
-                      <option value="ALL">All Statuses</option>
-                      <option value="PRESENT">Present Only</option>
-                      <option value="LATE">Late Only</option>
-                      <option value="ABSENT">Absent Only</option>
-                    </select>
-                  </div>
+                  <select 
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value as any)}
+                    className="bg-card border border-border rounded-xl px-3 py-2 text-xs focus:outline-none font-semibold w-full sm:w-auto"
+                  >
+                    <option value="ALL">All Statuses</option>
+                    <option value="PRESENT">Present Only</option>
+                    <option value="LATE">Late Only</option>
+                    <option value="ABSENT">Absent Only</option>
+                  </select>
                 </div>
 
-                {/* LOGS TABLE WITH MULTIPLE CHECKIN TIMELINE */}
                 <Card className="bg-card border border-border rounded-3xl overflow-hidden shadow-sm">
                   <div className="overflow-x-auto no-scrollbar">
                     <table className="w-full text-left border-collapse">
@@ -1216,117 +1044,61 @@ export default function AIAttendanceDashboard() {
                           <th className="py-3 px-4">Student</th>
                           <th className="py-3 px-4">Faculty</th>
                           <th className="py-3 px-4">Group</th>
-                          <th className="py-3 px-4">Assigned Room</th>
-                          <th className="py-3 px-4">Entry / Exit Log Timeline</th>
+                          <th className="py-3 px-4">Room</th>
+                          <th className="py-3 px-4">Entry / Exit Timeline Log</th>
                           <th className="py-3 px-4 text-center">Status</th>
                           <th className="py-3 px-4 text-right">Confidence</th>
-                          <th className="py-3 px-4 text-center">Actions</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border/60 text-xs">
-                        {paginatedAttendance.length === 0 ? (
-                          <tr>
-                            <td colSpan={8} className="py-8 text-center text-muted-foreground">
-                              No attendance records found.
+                        {paginatedAttendance.map((record) => (
+                          <tr key={record.id} className="hover:bg-accent/30 transition-colors">
+                            <td className="py-3.5 px-4 font-bold text-foreground">{record.studentName}</td>
+                            <td className="py-3.5 px-4 text-muted-foreground">{record.faculty}</td>
+                            <td className="py-3.5 px-4 font-semibold text-muted-foreground">{record.groupName}</td>
+                            <td className="py-3.5 px-4 text-muted-foreground">{record.room}</td>
+                            <td className="py-3.5 px-4">
+                              <div className="flex flex-wrap items-center gap-1.5">
+                                {record.checkins?.map((inTime, i) => (
+                                  <span key={`in-${i}`} className="inline-flex items-center px-1.5 py-0.5 rounded bg-emerald-500/10 text-[9px] font-mono font-bold text-emerald-500 border border-emerald-500/20">
+                                    IN: {inTime}
+                                  </span>
+                                ))}
+                                {record.checkouts?.map((outTime, i) => (
+                                  <span key={`out-${i}`} className="inline-flex items-center px-1.5 py-0.5 rounded bg-rose-500/10 text-[9px] font-mono font-bold text-rose-550 border border-rose-500/20">
+                                    OUT: {outTime}
+                                  </span>
+                                ))}
+                              </div>
                             </td>
+                            <td className="py-3.5 px-4 text-center">
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
+                                record.status === "PRESENT"
+                                  ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+                                  : record.status === "LATE"
+                                  ? "bg-amber-500/10 text-amber-500 border-amber-500/20"
+                                  : "bg-rose-500/10 text-rose-550 border-rose-500/20"
+                              }`}>{record.status}</span>
+                            </td>
+                            <td className="py-3.5 px-4 text-right font-mono font-bold">{record.presenceRate}%</td>
                           </tr>
-                        ) : (
-                          paginatedAttendance.map((record) => (
-                            <tr key={record.id} className="hover:bg-accent/30 transition-colors">
-                              <td className="py-3.5 px-4 font-bold text-foreground">{record.studentName}</td>
-                              <td className="py-3.5 px-4 text-muted-foreground">{record.faculty}</td>
-                              <td className="py-3.5 px-4 font-semibold text-muted-foreground">{record.groupName}</td>
-                              <td className="py-3.5 px-4 text-muted-foreground">{record.room}</td>
-                              <td className="py-3.5 px-4">
-                                {/* Multiple entry/exit timeline bubbles */}
-                                <div className="flex flex-wrap items-center gap-1.5">
-                                  {record.checkins && record.checkins.map((inTime, i) => (
-                                    <span key={`in-${i}`} className="inline-flex items-center px-1.5 py-0.5 rounded bg-emerald-500/10 text-[9px] font-mono font-bold text-emerald-600 border border-emerald-500/20">
-                                      IN: {inTime}
-                                    </span>
-                                  ))}
-                                  {record.checkouts && record.checkouts.map((outTime, i) => (
-                                    <span key={`out-${i}`} className="inline-flex items-center px-1.5 py-0.5 rounded bg-rose-500/10 text-[9px] font-mono font-bold text-rose-600 border border-rose-500/20">
-                                      OUT: {outTime}
-                                    </span>
-                                  ))}
-                                  {(!record.checkins || record.checkins.length === 0) && (
-                                    <span className="text-muted-foreground text-[10px]">No logs</span>
-                                  )}
-                                </div>
-                              </td>
-                              <td className="py-3.5 px-4 text-center">
-                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
-                                  record.status === "PRESENT"
-                                    ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
-                                    : record.status === "LATE"
-                                    ? "bg-amber-500/10 text-amber-600 border-amber-500/20"
-                                    : "bg-rose-500/10 text-rose-600 border-rose-500/20"
-                                }`}>
-                                  {record.status}
-                                </span>
-                              </td>
-                              <td className="py-3.5 px-4 text-right font-mono font-bold">{record.presenceRate}%</td>
-                              <td className="py-3.5 px-4 text-center">
-                                <Button 
-                                  size="sm" 
-                                  variant="ghost" 
-                                  className="h-8 w-8 p-0 rounded-lg text-muted-foreground hover:text-foreground"
-                                  onClick={() => toast.info(`Detailed entry audit trail logs requested for ${record.studentName}`)}
-                                >
-                                  <Eye className="h-3.5 w-3.5" />
-                                </Button>
-                              </td>
-                            </tr>
-                          ))
-                        )}
+                        ))}
                       </tbody>
                     </table>
                   </div>
-
-                  {/* Pagination control footer */}
-                  {totalPages > 1 && (
-                    <div className="bg-muted/20 border-t border-border px-4 py-3 flex items-center justify-between">
-                      <div className="text-xs text-muted-foreground">
-                        Showing page <span className="font-semibold text-foreground">{currentPage}</span> of <span className="font-semibold text-foreground">{totalPages}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="h-8 w-8 p-0 rounded-lg"
-                          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                          disabled={currentPage === 1}
-                        >
-                          <ChevronLeft className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="h-8 w-8 p-0 rounded-lg"
-                          onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                          disabled={currentPage === totalPages}
-                        >
-                          <ChevronRight className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  )}
                 </Card>
               </div>
             )}
 
-            {/* VIEW TAB: SECURITY ALERTS */}
+            {/* TAB CONTENT: SECURITY ALERTS */}
             {activeTab === "security" && (
               <div className="space-y-6">
-                
-                {/* CRITICAL INCIDENTS SUMMARY */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   
-                  {/* ALERTS DECK */}
+                  {/* ALERTS */}
                   <div className="md:col-span-2 space-y-4">
                     <h3 className="text-sm font-extrabold text-foreground flex items-center gap-2 uppercase tracking-widest">
-                      <ShieldX className="h-4.5 w-4.5 text-rose-500" /> Active Threat Vectors ({unknowns.length})
+                      <ShieldX className="h-4.5 w-4.5 text-rose-500 animate-pulse" /> Active Threat Vectors ({unknowns.length})
                     </h3>
 
                     <div className="space-y-4">
@@ -1338,15 +1110,15 @@ export default function AIAttendanceDashboard() {
                                 <AlertTriangle className="h-6 w-6 text-rose-500" />
                               </div>
                               <div className="space-y-0.5">
-                                <span className="text-[10px] font-mono text-muted-foreground block">Alert ID: {un.id} • {un.detectedAt}</span>
-                                <h4 className="font-extrabold text-sm text-foreground">{tl("unrecognizedAlert")}</h4>
-                                <p className="text-xs text-rose-600 dark:text-rose-400 font-bold">{un.reason || "Liveness check failure"}</p>
+                                <span className="text-[10px] font-mono text-muted-foreground block">Event: {un.id} • {un.detectedAt}</span>
+                                <h4 className="font-extrabold text-sm text-foreground">{tl("unrecognizedTitle")}</h4>
+                                <p className="text-xs text-rose-500 font-bold">{un.reason}</p>
                               </div>
                             </div>
 
                             <div className="space-y-2 text-xs border-t border-border pt-3">
                               <div className="flex justify-between">
-                                <span className="text-muted-foreground">Classroom camera:</span>
+                                <span className="text-muted-foreground">Location Stream:</span>
                                 <span className="font-semibold text-foreground">{un.cameraName} ({un.room})</span>
                               </div>
                               <div className="flex justify-between">
@@ -1362,10 +1134,10 @@ export default function AIAttendanceDashboard() {
                               className="bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] h-8 rounded-lg font-bold border-none cursor-pointer"
                               onClick={() => {
                                 setUnknowns(prev => prev.filter(u => u.id !== un.id));
-                                toast.success(`Approved template for unknown profile ID ${un.id}`);
+                                toast.success("Biometric enrollment initialized.");
                               }}
                             >
-                              Enroll face
+                              {tl("approve")}
                             </Button>
                             <Button 
                               size="sm" 
@@ -1373,29 +1145,29 @@ export default function AIAttendanceDashboard() {
                               className="border-border text-[10px] h-8 rounded-lg text-muted-foreground"
                               onClick={() => {
                                 setUnknowns(prev => prev.filter(u => u.id !== un.id));
-                                toast.success(`Alert ${un.id} ignored.`);
+                                toast.success("Ignored.");
                               }}
                             >
-                              Ignore Alert
+                              {tl("ignore")}
                             </Button>
                             <Button 
                               size="sm" 
                               variant="outline" 
-                              className="border-rose-200 text-rose-600 hover:bg-rose-50/50 text-[10px] h-8 rounded-lg font-bold"
-                              onClick={() => handleDispatchSecurity(un.id)}
-                            >
-                              Dispatch Guard
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
-                              className="border-red-200 text-red-600 hover:bg-red-50/50 text-[10px] h-8 rounded-lg font-bold"
+                              className="border-red-200 text-red-500 hover:bg-red-50/50 text-[10px] h-8 rounded-lg font-bold"
                               onClick={() => {
                                 setUnknowns(prev => prev.filter(u => u.id !== un.id));
-                                toast.error(`Subject flagged as blacklisted.`);
+                                toast.error("Added to blacklists.");
                               }}
                             >
-                              Blacklist
+                              {tl("blacklist")}
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="border-rose-200 text-rose-550 hover:bg-rose-50/50 text-[10px] h-8 rounded-lg font-bold animate-pulse"
+                              onClick={() => handleDispatchSecurity(un.id)}
+                            >
+                              {tl("dispatch")}
                             </Button>
                           </div>
                         </Card>
@@ -1403,7 +1175,7 @@ export default function AIAttendanceDashboard() {
                     </div>
                   </div>
 
-                  {/* AUDIT TRAILS & ACCESS LOGS */}
+                  {/* SECURITY LOGS AUDIT */}
                   <div className="space-y-4">
                     <h3 className="text-sm font-extrabold text-foreground flex items-center gap-2 uppercase tracking-widest">
                       <History className="h-4.5 w-4.5 text-purple-500" /> Security Logs
@@ -1416,10 +1188,8 @@ export default function AIAttendanceDashboard() {
                             <span className="text-muted-foreground">{log.timestamp.substring(11, 19)}</span>
                             <span className={`px-1.5 py-0.5 rounded font-black border ${
                               log.severity === "CRITICAL" 
-                                ? "bg-rose-500/10 text-rose-600 border-rose-500/20"
-                                : log.severity === "WARNING"
-                                ? "bg-amber-500/10 text-amber-600 border-amber-500/20"
-                                : "bg-blue-500/10 text-blue-600 border-blue-500/20"
+                                ? "bg-rose-500/10 text-rose-500 border-rose-500/20"
+                                : "bg-amber-500/10 text-amber-500 border-amber-500/20"
                             }`}>{log.severity}</span>
                           </div>
                           <h5 className="text-[11px] font-black text-foreground mt-1">{log.type}</h5>
@@ -1428,19 +1198,16 @@ export default function AIAttendanceDashboard() {
                       ))}
                     </Card>
                   </div>
-
                 </div>
-
               </div>
             )}
 
-            {/* VIEW TAB: FACE REGISTRY (ENROLLMENT WEB-CAM SIMULATOR) */}
+            {/* TAB CONTENT: FACE REGISTRY */}
             {activeTab === "registry" && (
               <div className="space-y-6">
-                
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   
-                  {/* REGISTERED STUDENTS DIRECTORY (1/3 width) */}
+                  {/* DIRECTORY */}
                   <div className="space-y-4">
                     <div className="relative">
                       <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -1459,7 +1226,7 @@ export default function AIAttendanceDashboard() {
                           key={std.id} 
                           className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
                             selectedStudent?.id === std.id 
-                              ? "bg-purple-600/15 border-purple-500/40 text-purple-800 dark:text-purple-300"
+                              ? "bg-purple-600/15 border-purple-500/40 text-purple-300"
                               : "bg-muted/40 border-border hover:bg-muted/80"
                           }`}
                           onClick={() => setSelectedStudent(std)}
@@ -1468,21 +1235,12 @@ export default function AIAttendanceDashboard() {
                             <h4 className="font-extrabold text-xs text-foreground">{std.studentName}</h4>
                             <p className="text-[10px] text-muted-foreground mt-0.5">ID: {std.idCode} • {std.vectors}</p>
                           </div>
-                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold border ${
-                            std.status === "ENROLLED" 
-                              ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
-                              : std.status === "PENDING"
-                              ? "bg-amber-500/10 text-amber-600 border-amber-500/20"
-                              : "bg-rose-500/10 text-rose-600 border-rose-500/20"
-                          }`}>
-                            {std.status}
-                          </span>
                         </div>
                       ))}
                     </Card>
                   </div>
 
-                  {/* 3D INTERACTIVE FACE ENROLLMENT WORKSPACE (2/3 width) */}
+                  {/* CAMERA 3D ENROLL WORKSPACE */}
                   <div className="lg:col-span-2 space-y-4">
                     <h3 className="text-sm font-extrabold text-foreground flex items-center gap-2 uppercase tracking-widest">
                       <UserCheck className="h-4.5 w-4.5 text-purple-500" /> {tl("enrollTitle")}
@@ -1492,41 +1250,35 @@ export default function AIAttendanceDashboard() {
                       <Card className="bg-card border border-border rounded-3xl p-6 shadow-sm flex flex-col items-center text-center space-y-6">
                         <div className="space-y-1">
                           <h3 className="text-base font-extrabold text-foreground">{selectedStudent.studentName}</h3>
-                          <p className="text-xs text-muted-foreground">ID: {selectedStudent.idCode} • Status: <span className="font-semibold">{selectedStudent.status}</span></p>
+                          <p className="text-xs text-muted-foreground">ID: {selectedStudent.idCode}</p>
                         </div>
 
-                        {/* Webcam Enrollment Area */}
+                        {/* Camera Scanning Orb */}
                         <div className="relative w-64 h-64 bg-zinc-950 rounded-full overflow-hidden border-4 border-purple-500/40 flex items-center justify-center">
                           {enrollStep === "IDLE" ? (
                             <div className="text-center text-zinc-500 p-4">
-                              <Camera className="h-12 w-12 mx-auto mb-2 text-zinc-700" />
-                              <p className="text-xs font-mono font-bold">DEVICE STANDBY</p>
+                              <Camera className="h-12 w-12 mx-auto mb-2 text-zinc-700 animate-pulse" />
+                              <p className="text-xs font-mono font-bold">READY TO RECORD</p>
                             </div>
                           ) : enrollStep === "SUCCESS" ? (
-                            <div className="text-center text-emerald-400 p-4 animate-fade-in">
-                              <CheckCircle className="h-16 w-16 mx-auto mb-2 text-emerald-400" />
-                              <p className="text-xs font-mono font-bold uppercase tracking-wider">Face Registered</p>
+                            <div className="text-center text-emerald-400 p-4">
+                              <CheckCircle className="h-16 w-16 mx-auto mb-2 text-emerald-400 animate-bounce" />
+                              <p className="text-xs font-mono font-bold uppercase tracking-wider">ENROLLED</p>
                               <p className="text-[9px] text-zinc-500 font-mono mt-1">{tl("encryptionMsg")}</p>
                             </div>
                           ) : (
                             <div className="w-full h-full p-4 flex flex-col justify-between bg-zinc-900 text-left relative">
-                              {/* Simulated face outline helper overlay */}
                               <div className="absolute inset-4 rounded-full border border-dashed border-purple-500/40 animate-pulse pointer-events-none" />
-                              
                               <div className="flex justify-between items-center text-[9px] font-mono text-zinc-500 z-10">
-                                <span>3D Scanner Active</span>
-                                <span>Step: {enrollStep}</span>
+                                <span>Challenge Mode</span>
+                                <span>{enrollStep}</span>
                               </div>
-
                               <div className="my-auto text-center z-10">
                                 <Cpu className="h-8 w-8 text-purple-400 mx-auto mb-1 animate-spin" />
-                                <p className="text-xs font-mono text-purple-300 font-black tracking-wider uppercase">Scanning Face</p>
-                                <p className="text-[10px] text-emerald-400 font-bold mt-1 animate-pulse">{verificationFeedback}</p>
+                                <p className="text-[10px] text-emerald-400 font-bold mt-1">{verificationFeedback}</p>
                               </div>
-
-                              {/* Challenge indicator graphic */}
                               <div className="flex justify-center mb-1 z-10">
-                                <span className="px-3 py-1 bg-purple-950/80 border border-purple-500/35 rounded-lg font-mono text-[9px] font-bold text-purple-200 uppercase tracking-widest">
+                                <span className="px-3 py-1 bg-purple-950/80 border border-purple-500/35 rounded-lg font-mono text-[9px] font-bold text-purple-200">
                                   {enrollProgress}% Scanned
                                 </span>
                               </div>
@@ -1534,26 +1286,13 @@ export default function AIAttendanceDashboard() {
                           )}
                         </div>
 
-                        {/* Scan Progress Bar */}
-                        {enrollStep !== "IDLE" && enrollStep !== "SUCCESS" && (
-                          <div className="w-full max-w-md space-y-1">
-                            <div className="flex justify-between text-[10px] font-bold font-mono text-muted-foreground">
-                              <span>Challenge progress</span>
-                              <span>{enrollProgress}%</span>
-                            </div>
-                            <div className="h-2 bg-muted rounded-full overflow-hidden w-full border border-border/20">
-                              <div className="h-full bg-purple-600 rounded-full transition-all duration-300" style={{ width: `${enrollProgress}%` }} />
-                            </div>
-                          </div>
-                        )}
-
                         <div className="flex gap-3">
                           {enrollStep === "IDLE" ? (
                             <Button 
                               className="bg-purple-600 hover:bg-purple-700 text-white font-bold px-6 py-2.5 rounded-xl border-none cursor-pointer"
                               onClick={() => handleStartEnrollment(selectedStudent)}
                             >
-                              Initialize Face ID Scan
+                              Start Scanning ➔
                             </Button>
                           ) : enrollStep === "SUCCESS" ? (
                             <Button 
@@ -1561,24 +1300,15 @@ export default function AIAttendanceDashboard() {
                               className="border-border text-xs rounded-xl h-10 px-6 cursor-pointer"
                               onClick={() => setEnrollStep("IDLE")}
                             >
-                              Reset Scanner
+                              Reset Workspace
                             </Button>
                           ) : (
-                            <>
-                              <Button 
-                                className="bg-purple-600 hover:bg-purple-700 text-white font-bold px-6 py-2.5 rounded-xl border-none cursor-pointer"
-                                onClick={advanceEnrollStep}
-                              >
-                                {enrollStep === "LIVENESS_BLINK" ? "Complete Scan" : "Next Angle Challenge ➔"}
-                              </Button>
-                              <Button 
-                                variant="outline"
-                                className="border-border text-xs rounded-xl h-10 px-6 cursor-pointer"
-                                onClick={() => setEnrollStep("IDLE")}
-                              >
-                                {tl("cancel")}
-                              </Button>
-                            </>
+                            <Button 
+                              className="bg-purple-600 hover:bg-purple-700 text-white font-bold px-6 py-2.5 rounded-xl border-none cursor-pointer"
+                              onClick={advanceEnrollStep}
+                            >
+                              {enrollStep === "LIVENESS_BLINK" ? "Complete Check" : "Next Angle Challenge ➔"}
+                            </Button>
                           )}
                         </div>
                       </Card>
@@ -1586,44 +1316,29 @@ export default function AIAttendanceDashboard() {
                       <Card className="p-12 text-center bg-card border border-border rounded-3xl shadow-sm flex flex-col items-center justify-center space-y-3">
                         <Users className="h-10 w-10 text-muted-foreground" />
                         <h4 className="text-sm font-extrabold">No Student Selected</h4>
-                        <p className="text-xs text-muted-foreground max-w-xs leading-relaxed">
-                          Select a student from the directory on the left to begin the face enrollment challenge-response process.
+                        <p className="text-xs text-muted-foreground max-w-xs">
+                          Select a student from the left directory to initialize the Biometric 3D face registry.
                         </p>
                       </Card>
                     )}
                   </div>
-
                 </div>
-
               </div>
             )}
 
-            {/* VIEW TAB: ANALYTICS */}
+            {/* TAB CONTENT: ANALYTICS */}
             {activeTab === "analytics" && (
               <div className="space-y-6">
-                
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  
-                  {/* Classroom Emotion analysis */}
                   <Card className="bg-card border border-border rounded-3xl p-5 shadow-sm space-y-4">
                     <h3 className="text-xs font-black uppercase tracking-wider text-muted-foreground pb-2 border-b border-border">
-                      Classroom Emotion Breakdown
+                      Classroom Attention Analytics
                     </h3>
-                    <div className="h-[220px] flex items-center justify-center">
+                    <div className="h-[220px]">
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
-                          <Pie 
-                            data={emotionData} 
-                            cx="50%" 
-                            cy="50%" 
-                            innerRadius={50} 
-                            outerRadius={80} 
-                            paddingAngle={5} 
-                            dataKey="value"
-                          >
-                            {emotionData.map((entry, idx) => (
-                              <Cell key={`cell-${idx}`} fill={entry.color} />
-                            ))}
+                          <Pie data={emotionData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={5} dataKey="value">
+                            {emotionData.map((entry, idx) => <Cell key={`cell-${idx}`} fill={entry.color} />)}
                           </Pie>
                           <ChartTooltip />
                           <Legend />
@@ -1632,46 +1347,40 @@ export default function AIAttendanceDashboard() {
                     </div>
                   </Card>
 
-                  {/* Sleep and Phone Usage Alerts */}
                   <Card className="bg-card border border-border rounded-3xl p-5 shadow-sm space-y-4">
                     <h3 className="text-xs font-black uppercase tracking-wider text-muted-foreground pb-2 border-b border-border">
-                      Sleep Detection & Phone Usage Trends
+                      Anti-Fraud Detection metrics
                     </h3>
-                    <div className="h-[220px] flex items-center justify-center">
+                    <div className="h-[220px]">
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={engagementTrend} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
                           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDark ? "#ffffff08" : "#00000008"} />
                           <XAxis dataKey="hour" tick={{ fill: "#94a3b8", fontSize: 9, fontWeight: "bold" }} axisLine={false} tickLine={false} />
                           <YAxis tick={{ fill: "#94a3b8", fontSize: 9, fontWeight: "bold" }} axisLine={false} tickLine={false} />
                           <ChartTooltip />
-                          <Bar dataKey="phoneUsage" fill="#f59e0b" radius={[4, 4, 0, 0]} name="Phone Detections" />
+                          <Bar dataKey="phoneUsage" fill="#f59e0b" radius={[4, 4, 0, 0]} name="Bypassing Detections" />
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
                   </Card>
-
                 </div>
-
               </div>
             )}
 
-            {/* VIEW TAB: SETTINGS & IP PAIRING */}
+            {/* TAB CONTENT: SETTINGS */}
             {activeTab === "settings" && (
               <div className="max-w-3xl mx-auto space-y-6">
-                
-                {/* QR CODE MOBILE PAIRING SECTION */}
+                {/* QR CODE MOBILE PAIRING */}
                 <Card className="bg-card border border-border rounded-3xl p-6 shadow-sm space-y-6">
                   <h3 className="text-sm font-extrabold text-foreground flex items-center gap-2 uppercase tracking-widest pb-3 border-b border-border">
                     <QrCode className="h-4.5 w-4.5 text-purple-500" /> {tl("pairingTitle")}
                   </h3>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-                    
-                    {/* QR Code Graphic Area */}
                     <div className="flex flex-col items-center justify-center text-center p-4 bg-muted/30 border border-border rounded-2xl min-h-[220px]">
                       {isPhonePaired ? (
                         <>
-                          <div className="h-32 w-32 bg-white p-1.5 rounded-xl flex items-center justify-center border-4 border-purple-500 overflow-hidden shadow-lg shadow-purple-500/10">
+                          <div className="h-32 w-32 bg-white p-1.5 rounded-xl flex items-center justify-center border-4 border-purple-500 overflow-hidden shadow-lg shadow-purple-500/10 animate-fade-in">
                             <img 
                               src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`${window.location.origin}/mobile-camera?token=${phoneStreamToken}`)}`}
                               alt="Pairing QR Code"
@@ -1688,39 +1397,23 @@ export default function AIAttendanceDashboard() {
                       )}
                     </div>
 
-                    {/* Instruction Manual */}
                     <div className="md:col-span-2 space-y-4">
-                      <div className="space-y-1.5">
-                        <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Step 1: Get LMSHub Mobile app</h4>
-                        <p className="text-xs text-muted-foreground leading-normal">
-                          Install the LMSHub Mobile app on an iOS or Android device. Navigate to "Camera Gateway mode" inside settings.
-                        </p>
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Step 2: Generate Pairing Code</h4>
-                        <p className="text-xs text-muted-foreground leading-normal">
-                          Scan the generated QR Code using the device's camera. This creates an end-to-end WebRTC secure stream tunnel.
-                        </p>
-                      </div>
-
-                      <div className="pt-2">
-                        <Button 
-                          className="bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl h-10 px-6 border-none cursor-pointer"
-                          onClick={handleGenerateMobilePairing}
-                          disabled={isGeneratingPairing}
-                        >
-                          {isGeneratingPairing ? "Generating..." : "Generate Pairing QR Code"}
-                        </Button>
-                      </div>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        Pair your smartphone as a temporary camera node for the classroom session. WebRTC stream initiates upon scanning the code.
+                      </p>
+                      <Button 
+                        className="bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl h-10 px-6 border-none cursor-pointer animate-pulse"
+                        onClick={handleGenerateMobilePairing}
+                        disabled={isGeneratingPairing}
+                      >
+                        Generate Pairing QR Code
+                      </Button>
                     </div>
-
                   </div>
                 </Card>
 
                 {/* AI THRESHOLD SETTINGS */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  
                   <Card className="p-6 bg-card border border-border rounded-3xl space-y-6 shadow-sm">
                     <h3 className="text-xs font-extrabold text-foreground uppercase tracking-wider pb-2 border-b border-border flex items-center gap-1.5">
                       <Sliders className="h-4.5 w-4.5 text-purple-500" /> Model parameters
@@ -1728,9 +1421,7 @@ export default function AIAttendanceDashboard() {
 
                     <div className="space-y-4">
                       <div className="space-y-2">
-                        <div className="flex justify-between items-center text-xs">
-                          <label className="font-semibold text-foreground">Match Threshold: <span className="font-mono text-purple-500 font-black">{recognitionThreshold}</span></label>
-                        </div>
+                        <label className="text-xs font-semibold text-foreground">Match Threshold: <span className="font-mono text-purple-500 font-black">{recognitionThreshold}</span></label>
                         <input 
                           type="range" 
                           min="0.5" 
@@ -1738,20 +1429,7 @@ export default function AIAttendanceDashboard() {
                           step="0.01" 
                           value={recognitionThreshold} 
                           onChange={(e) => setRecognitionThreshold(parseFloat(e.target.value))} 
-                          className="w-full h-1 bg-muted rounded-lg appearance-none cursor-pointer accent-purple-600 border border-border" 
-                        />
-                        <p className="text-[10px] text-muted-foreground leading-normal">
-                          Cosine similarity verification filter. Higher value avoids false identification.
-                        </p>
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="text-xs font-semibold text-foreground block">Scan Cooldown Interval (sec)</label>
-                        <input 
-                          type="number" 
-                          value={snapshotInterval} 
-                          onChange={(e) => setSnapshotInterval(parseInt(e.target.value))} 
-                          className="w-full bg-background border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none" 
+                          className="w-full h-1 bg-muted rounded-lg appearance-none cursor-pointer accent-purple-650 border border-border" 
                         />
                       </div>
                     </div>
@@ -1759,45 +1437,232 @@ export default function AIAttendanceDashboard() {
 
                   <Card className="p-6 bg-card border border-border rounded-3xl space-y-6 shadow-sm">
                     <h3 className="text-xs font-extrabold text-foreground uppercase tracking-wider pb-2 border-b border-border flex items-center gap-1.5">
-                      <Activity className="h-4.5 w-4.5 text-purple-500" /> Lateness Rules
+                      <Activity className="h-4.5 w-4.5 text-purple-500" /> Grace Thresholds
                     </h3>
 
                     <div className="space-y-4">
                       <div className="space-y-2">
-                        <label className="text-xs font-semibold text-foreground block">Late Arrival Limit (minutes)</label>
+                        <label className="text-xs font-semibold text-foreground">Grace Minutes: <span className="font-mono text-purple-500 font-black">{lateMinutesLimit}</span></label>
                         <input 
                           type="number" 
                           value={lateMinutesLimit} 
                           onChange={(e) => setLateMinutesLimit(parseInt(e.target.value))} 
-                          className="w-full bg-background border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none" 
-                        />
-                        <p className="text-[10px] text-muted-foreground leading-normal">
-                          Entering the classroom after this grace period will mark the status as 'LATE'.
-                        </p>
-                      </div>
-
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-center text-xs">
-                          <label className="font-semibold text-foreground">Min Attendance Score: <span className="font-mono text-purple-500 font-black">{minAttendancePercent}%</span></label>
-                        </div>
-                        <input 
-                          type="range" 
-                          min="50" 
-                          max="95" 
-                          step="5" 
-                          value={minAttendancePercent} 
-                          onChange={(e) => setMinAttendancePercent(parseInt(e.target.value))} 
-                          className="w-full h-1 bg-muted rounded-lg appearance-none cursor-pointer accent-purple-600 border border-border" 
+                          className="w-full bg-background border border-border rounded-lg px-3 py-2 text-xs focus:outline-none" 
                         />
                       </div>
                     </div>
                   </Card>
-
                 </div>
-
               </div>
             )}
+          </div>
+        )}
 
+        {/* -------------------- ROLE 2: TEACHER VIEW -------------------- */}
+        {currentRole === "TEACHER" && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
+            {/* Active timetable lessons list */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-extrabold text-foreground flex items-center gap-2 uppercase tracking-widest">
+                <Clock className="h-4.5 w-4.5 text-purple-500" /> My Schedule
+              </h3>
+              <Card className="bg-card border border-border rounded-3xl p-3 shadow-sm space-y-3">
+                {timetable.map((session) => (
+                  <div 
+                    key={session.id} 
+                    className={`p-4 rounded-2xl border transition-all cursor-pointer space-y-2 ${
+                      selectedSessionId === session.id 
+                        ? "bg-purple-600/15 border-purple-500/40"
+                        : "bg-muted/40 border-border hover:bg-muted/80"
+                    }`}
+                    onClick={() => setSelectedSessionId(session.id)}
+                  >
+                    <div className="flex justify-between items-center text-[10px] font-bold text-muted-foreground font-mono">
+                      <span>{session.time}</span>
+                      <span className={`px-2 py-0.5 rounded font-black border ${
+                        session.status === "ACTIVE" 
+                          ? "bg-purple-500/15 text-purple-400 border-purple-500/20 animate-pulse" 
+                          : "bg-muted text-muted-foreground border-border"
+                      }`}>{session.status}</span>
+                    </div>
+                    <div>
+                      <h4 className="font-extrabold text-xs text-foreground">{session.groupName}</h4>
+                      <p className="text-[10px] text-muted-foreground">{session.subject} • {session.roomName}</p>
+                    </div>
+                  </div>
+                ))}
+              </Card>
+            </div>
+
+            {/* Enrolled students live camera matching list */}
+            <div className="lg:col-span-2 space-y-4">
+              <h3 className="text-sm font-extrabold text-foreground flex items-center gap-2 uppercase tracking-widest">
+                <Users className="h-4.5 w-4.5 text-purple-500" /> Active Attendance Sheet
+              </h3>
+              <Card className="bg-card border border-border rounded-3xl p-5 shadow-sm space-y-4">
+                <div className="overflow-x-auto no-scrollbar">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr className="bg-muted/40 text-[10px] text-muted-foreground uppercase tracking-wider font-semibold border-b border-border">
+                        <th className="py-2.5 px-3">Student Name</th>
+                        <th className="py-2.5 px-3">Arrival Time</th>
+                        <th className="py-2.5 px-3 text-center">Status</th>
+                        <th className="py-2.5 px-3 text-right">Confidence</th>
+                        <th className="py-2.5 px-3 text-center">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/60">
+                      {attendance.map((record) => (
+                        <tr key={record.id} className="hover:bg-accent/30 transition-colors">
+                          <td className="py-3 px-3 font-bold text-foreground">{record.studentName}</td>
+                          <td className="py-3 px-3 text-muted-foreground font-mono">{record.arrivalTime}</td>
+                          <td className="py-3 px-3 text-center">
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold border ${
+                              record.status === "PRESENT"
+                                ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+                                : record.status === "LATE"
+                                ? "bg-amber-500/10 text-amber-500 border-amber-500/20"
+                                : "bg-rose-500/10 text-rose-550 border-rose-500/20"
+                            }`}>{record.status}</span>
+                          </td>
+                          <td className="py-3 px-3 text-right font-mono font-bold text-muted-foreground">{record.presenceRate}%</td>
+                          <td className="py-3 px-3 text-center">
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="h-7 text-[10px] rounded-lg border-border"
+                              onClick={() => {
+                                toast.success(`Manual override: ${record.studentName} marked PRESENT.`);
+                              }}
+                            >
+                              Override PRESENT
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </Card>
+            </div>
+          </div>
+        )}
+
+        {/* -------------------- ROLE 3: PARENT VIEW -------------------- */}
+        {currentRole === "PARENT" && (
+          <div className="max-w-2xl mx-auto space-y-6 animate-fade-in">
+            <h3 className="text-sm font-extrabold text-foreground flex items-center gap-2 uppercase tracking-widest">
+              <User className="h-4.5 w-4.5 text-purple-500" /> {tl("childTimeline")}
+            </h3>
+            
+            <Card className="bg-card border border-border rounded-3xl p-6 shadow-sm space-y-6">
+              <div className="flex items-center gap-4 pb-4 border-b border-border">
+                <div className="h-12 w-12 rounded-full bg-purple-500/10 border border-purple-500/20 flex items-center justify-center font-extrabold text-purple-500 text-lg">
+                  JA
+                </div>
+                <div>
+                  <h4 className="font-extrabold text-sm text-foreground">Jasur Akhmedov</h4>
+                  <p className="text-xs text-muted-foreground">Classroom: Room 101 • CS-204 coding group</p>
+                </div>
+                <div className="ml-auto bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 px-3 py-1 rounded-full text-xs font-bold animate-pulse">
+                  Class Present
+                </div>
+              </div>
+
+              {/* TIMELINE */}
+              <div className="relative border-l border-purple-500/30 ml-4 pl-6 space-y-6 text-xs text-muted-foreground font-mono">
+                <div className="relative">
+                  <span className="absolute -left-[30px] top-1 h-3.5 w-3.5 rounded-full bg-emerald-500 border-2 border-slate-950 shadow-md"></span>
+                  <div className="font-bold text-foreground">15:21:02 PM</div>
+                  <div className="text-[11px] text-muted-foreground mt-0.5">Auto-Match Face verified: Present at Classroom 101 corridor (Hikvision AI Camera)</div>
+                </div>
+                <div className="relative">
+                  <span className="absolute -left-[30px] top-1 h-3.5 w-3.5 rounded-full bg-rose-500 border-2 border-slate-950 shadow-md"></span>
+                  <div className="font-bold text-foreground">10:00:00 AM</div>
+                  <div className="text-[11px] text-muted-foreground mt-0.5">Exit scan registered (Dars yakunlandi / Leaving school grounds)</div>
+                </div>
+                <div className="relative">
+                  <span className="absolute -left-[30px] top-1 h-3.5 w-3.5 rounded-full bg-emerald-500 border-2 border-slate-950 shadow-md"></span>
+                  <div className="font-bold text-foreground">08:58:12 AM</div>
+                  <div className="text-[11px] text-muted-foreground mt-0.5">Initial Campus Entry check-in verified. (On Time)</div>
+                </div>
+              </div>
+
+              {/* SMS Notification settings */}
+              <div className="pt-4 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <Bell className="h-4 w-4 text-purple-500" /> Telegram & SMS alerts enabled
+                </div>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="rounded-lg h-8 text-[10px]"
+                  onClick={() => toast.success("Notification configurations saved.")}
+                >
+                  Configure Notifications
+                </Button>
+              </div>
+            </Card>
+          </div>
+        )}
+
+        {/* -------------------- ROLE 4: STUDENT VIEW -------------------- */}
+        {currentRole === "STUDENT" && (
+          <div className="max-w-2xl mx-auto space-y-6 animate-fade-in">
+            <h3 className="text-sm font-extrabold text-foreground flex items-center gap-2 uppercase tracking-widest">
+              <Calendar className="h-4.5 w-4.5 text-purple-500" /> {tl("calendarTitle")}
+            </h3>
+
+            <Card className="bg-card border border-border rounded-3xl p-6 shadow-sm space-y-6">
+              {/* Personal stat summary */}
+              <div className="grid grid-cols-3 gap-4 text-center">
+                <div className="space-y-1">
+                  <div className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Attendance Rate</div>
+                  <div className="text-xl font-black text-purple-500">96.5%</div>
+                </div>
+                <div className="space-y-1 border-x border-border">
+                  <div className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Lates</div>
+                  <div className="text-xl font-black text-amber-500">1 Days</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Absents</div>
+                  <div className="text-xl font-black text-rose-500">0 Days</div>
+                </div>
+              </div>
+
+              {/* Grid 30 days visualization */}
+              <div className="space-y-3 border-t border-border pt-4">
+                <h4 className="text-[11px] font-black text-muted-foreground uppercase tracking-wider">Biometric Verification Calendar</h4>
+                <div className="grid grid-cols-7 gap-2">
+                  {/* Calendar cells: Green for present, Yellow for late, Grey for weekend */}
+                  {Array.from({ length: 30 }).map((_, i) => {
+                    const isLate = i === 12;
+                    const isWeekend = i % 7 === 5 || i % 7 === 6;
+                    return (
+                      <div 
+                        key={i} 
+                        className={`h-9 rounded-xl flex items-center justify-center text-[10px] font-bold font-mono border ${
+                          isWeekend 
+                            ? "bg-muted/40 border-border text-muted-foreground"
+                            : isLate
+                            ? "bg-amber-500/10 border-amber-500/30 text-amber-500"
+                            : "bg-emerald-500/10 border-emerald-500/30 text-emerald-500"
+                        }`}
+                        title={isWeekend ? "Weekend" : isLate ? "Late on day " + (i+1) : "Present on day " + (i+1)}
+                      >
+                        {i + 1}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* AES-256 Vector Status */}
+              <div className="pt-4 border-t border-border flex items-center justify-between text-xs text-muted-foreground font-mono">
+                <span className="flex items-center gap-1.5"><Shield className="h-4 w-4 text-purple-500" /> AES-256 Biometric Vector</span>
+                <span className="text-[10px] text-emerald-500 font-bold uppercase">SECURED / ENCRYPTED</span>
+              </div>
+            </Card>
           </div>
         )}
 
@@ -1806,10 +1671,15 @@ export default function AIAttendanceDashboard() {
       {/* FOOTER */}
       <footer className="border-t border-border mt-auto py-6 bg-muted/20 text-center text-xs text-muted-foreground">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4 font-mono">
-          <span>LMSHub Enterprise AI Attendance & Safety Core Engine v2.0.4-PROD</span>
-          <span>Scalability Target: 1,000 Classrooms / 10,000 concurrent student scans</span>
+          <span>LMSHub Campus Operating System v2.1.2-AI</span>
+          <span>Scalability Target: 10,000 active students • 500 active camera streams</span>
         </div>
       </footer>
     </div>
   );
+}
+
+// Simulated action helper
+function handleCameraAction(name: string, act: string) {
+  toast.info(`${act} on camera "${name}"`);
 }
