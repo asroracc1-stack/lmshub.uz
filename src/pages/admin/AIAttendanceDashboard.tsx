@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { 
   Camera, Shield, AlertTriangle, Cpu, RefreshCw, Plus, 
   Settings, CheckCircle, Wifi, WifiOff, Activity, Sliders, Users,
