@@ -145,9 +145,60 @@ export default function AIAttendanceDashboard() {
   const [registrySearch, setRegistrySearch] = useState("");
   const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
   const [isEnrolling, setIsEnrolling] = useState(false);
-  const [enrollStep, setEnrollStep] = useState<"IDLE" | "CHALLENGE_FRONT" | "CHALLENGE_LEFT" | "CHALLENGE_RIGHT" | "CHALLENGE_UP" | "CHALLENGE_DOWN" | "LIVENESS_BLINK" | "COMPILING" | "SUCCESS">("IDLE");
+  const [enrollStep, setEnrollStep] = useState<"IDLE" | "CHALLENGE_FRONT" | "CHALLENGE_LEFT" | "CHALLENGE_RIGHT" | "CHALLENGE_UP" | "CHALLENGE_DOWN" | "CHALLENGE_SMILE" | "LIVENESS_BLINK" | "COMPILING" | "SUCCESS">("IDLE");
   const [enrollProgress, setEnrollProgress] = useState(0);
   const [verificationFeedback, setVerificationFeedback] = useState("");
+
+  // Enroll webcam stream hooks
+  const videoRefEnroll = useRef<HTMLVideoElement>(null);
+  const [enrollStream, setEnrollStream] = useState<MediaStream | null>(null);
+  const [enrollHasPermission, setEnrollHasPermission] = useState<boolean | null>(null);
+
+  const requestEnrollCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: 320, height: 320 },
+        audio: false
+      });
+      setEnrollStream(stream);
+      setEnrollHasPermission(true);
+    } catch (e) {
+      console.warn("Enroll camera access failed, using fallback graphic", e);
+      setEnrollHasPermission(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isEnrolling) {
+      requestEnrollCamera();
+    } else {
+      if (enrollStream) {
+        enrollStream.getTracks().forEach(track => track.stop());
+        setEnrollStream(null);
+      }
+    }
+    return () => {
+      if (enrollStream) {
+        enrollStream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [isEnrolling]);
+
+  useEffect(() => {
+    if (videoRefEnroll.current && enrollStream) {
+      videoRefEnroll.current.srcObject = enrollStream;
+    }
+  }, [enrollStream, enrollHasPermission, isEnrolling]);
+
+  const landmarkOffset = useMemo(() => {
+    switch (enrollStep) {
+      case "CHALLENGE_LEFT": return { x: -20, y: 0 };
+      case "CHALLENGE_RIGHT": return { x: 20, y: 0 };
+      case "CHALLENGE_UP": return { x: 0, y: -20 };
+      case "CHALLENGE_DOWN": return { x: 0, y: 20 };
+      default: return { x: 0, y: 0 };
+    }
+  }, [enrollStep]);
 
   // Emergency security alert
   const [isEmergencyAlarmActive, setIsEmergencyAlarmActive] = useState(false);
@@ -523,27 +574,32 @@ export default function AIAttendanceDashboard() {
     switch (enrollStep) {
       case "CHALLENGE_FRONT":
         setEnrollStep("CHALLENGE_LEFT");
-        setEnrollProgress(30);
+        setEnrollProgress(15);
         setVerificationFeedback("Slowly rotate head LEFT. Keep eyes on screen.");
         break;
       case "CHALLENGE_LEFT":
         setEnrollStep("CHALLENGE_RIGHT");
-        setEnrollProgress(50);
-        setVerificationFeedback("Rotate head to the RIGHT. Perfect.");
+        setEnrollProgress(30);
+        setVerificationFeedback("Slowly rotate head to the RIGHT. Keep centered.");
         break;
       case "CHALLENGE_RIGHT":
         setEnrollStep("CHALLENGE_UP");
-        setEnrollProgress(70);
-        setVerificationFeedback("Tilt head UP slightly. Looking good.");
+        setEnrollProgress(45);
+        setVerificationFeedback("Tilt head UP slightly to capture neck & jawline.");
         break;
       case "CHALLENGE_UP":
         setEnrollStep("CHALLENGE_DOWN");
-        setEnrollProgress(85);
-        setVerificationFeedback("Tilt head DOWN. Excellent contrast.");
+        setEnrollProgress(60);
+        setVerificationFeedback("Tilt head DOWN. Excellent illumination.");
         break;
       case "CHALLENGE_DOWN":
+        setEnrollStep("CHALLENGE_SMILE");
+        setEnrollProgress(75);
+        setVerificationFeedback("SMILE TEST: Please smile slightly to record expression map.");
+        break;
+      case "CHALLENGE_SMILE":
         setEnrollStep("LIVENESS_BLINK");
-        setEnrollProgress(95);
+        setEnrollProgress(90);
         setVerificationFeedback("LIVENESS TEST: Please blink your eyes twice.");
         break;
       case "LIVENESS_BLINK":
@@ -553,7 +609,7 @@ export default function AIAttendanceDashboard() {
         setTimeout(() => {
           setEnrollStep("SUCCESS");
           toast.success(`Face registered successfully for ${selectedStudent.studentName}!`);
-        }, 1500);
+        }, 1800);
         break;
     }
   };
@@ -1251,44 +1307,130 @@ export default function AIAttendanceDashboard() {
                     </h3>
 
                     {selectedStudent ? (
-                      <Card className="bg-card border border-border rounded-3xl p-6 shadow-sm flex flex-col items-center text-center space-y-6">
+                      <Card className="bg-card border border-border rounded-3xl p-6 shadow-sm flex flex-col items-center text-center space-y-6 animate-fade-in">
                         <div className="space-y-1">
                           <h3 className="text-base font-extrabold text-foreground">{selectedStudent.studentName}</h3>
                           <p className="text-xs text-muted-foreground">ID: {selectedStudent.idCode}</p>
                         </div>
 
-                        {/* Camera Scanning Orb */}
-                        <div className="relative w-64 h-64 bg-zinc-950 rounded-full overflow-hidden border-4 border-purple-500/40 flex items-center justify-center">
-                          {enrollStep === "IDLE" ? (
-                            <div className="text-center text-zinc-500 p-4">
-                              <Camera className="h-12 w-12 mx-auto mb-2 text-zinc-700 animate-pulse" />
-                              <p className="text-xs font-mono font-bold">READY TO RECORD</p>
-                            </div>
-                          ) : enrollStep === "SUCCESS" ? (
-                            <div className="text-center text-emerald-400 p-4">
-                              <CheckCircle className="h-16 w-16 mx-auto mb-2 text-emerald-400 animate-bounce" />
-                              <p className="text-xs font-mono font-bold uppercase tracking-wider">ENROLLED</p>
-                              <p className="text-[9px] text-zinc-500 font-mono mt-1">{tl("encryptionMsg")}</p>
-                            </div>
-                          ) : (
-                            <div className="w-full h-full p-4 flex flex-col justify-between bg-zinc-900 text-left relative">
-                              <div className="absolute inset-4 rounded-full border border-dashed border-purple-500/40 animate-pulse pointer-events-none" />
-                              <div className="flex justify-between items-center text-[9px] font-mono text-zinc-500 z-10">
-                                <span>Challenge Mode</span>
-                                <span>{enrollStep}</span>
+                        {/* Camera Scanning Orb (Apple Face ID Premium Design) */}
+                        <div className="relative w-64 h-64 bg-zinc-950 rounded-full flex items-center justify-center border-4 border-purple-500/10 overflow-visible shadow-2xl shadow-purple-500/5">
+                          {/* Radial Apple Face ID Ticks */}
+                          {Array.from({ length: 48 }).map((_, i) => {
+                            const angle = (i * 360) / 48;
+                            const isCaptured = (i / 48) * 100 < enrollProgress;
+                            return (
+                              <div 
+                                key={i}
+                                className={`absolute w-[2px] h-[10px] origin-bottom transition-all duration-300`}
+                                style={{
+                                  transform: `rotate(${angle}deg) translateY(-122px)`,
+                                  backgroundColor: isCaptured ? "#10b981" : "#3f3f46",
+                                  boxShadow: isCaptured ? "0 0 8px #10b981" : "none"
+                                }}
+                              />
+                            );
+                          })}
+
+                          {/* Inner circular view */}
+                          <div className="w-[218px] h-[218px] rounded-full overflow-hidden relative bg-zinc-900 border border-purple-500/20 flex items-center justify-center">
+                            {enrollStep === "IDLE" ? (
+                              <div className="text-center text-zinc-500 p-4">
+                                <Camera className="h-12 w-12 mx-auto mb-2 text-zinc-700 animate-pulse" />
+                                <p className="text-xs font-mono font-bold">READY TO RECORD</p>
                               </div>
-                              <div className="my-auto text-center z-10">
-                                <Cpu className="h-8 w-8 text-purple-400 mx-auto mb-1 animate-spin" />
-                                <p className="text-[10px] text-emerald-400 font-bold mt-1">{verificationFeedback}</p>
+                            ) : enrollStep === "SUCCESS" ? (
+                              <div className="text-center text-emerald-400 p-4">
+                                <CheckCircle className="h-16 w-16 mx-auto mb-2 text-emerald-400 animate-bounce" />
+                                <p className="text-xs font-mono font-bold uppercase tracking-wider">ENROLLED</p>
+                                <p className="text-[9px] text-zinc-500 font-mono mt-1">{tl("encryptionMsg")}</p>
                               </div>
-                              <div className="flex justify-center mb-1 z-10">
-                                <span className="px-3 py-1 bg-purple-950/80 border border-purple-500/35 rounded-lg font-mono text-[9px] font-bold text-purple-200">
-                                  {enrollProgress}% Scanned
-                                </span>
+                            ) : (
+                              <div className="w-full h-full p-4 flex flex-col justify-between bg-zinc-900 text-left relative">
+                                {/* Live webcam track */}
+                                {enrollHasPermission ? (
+                                  <video 
+                                    ref={videoRefEnroll} 
+                                    autoPlay 
+                                    playsInline 
+                                    muted 
+                                    className="absolute inset-0 w-full h-full object-cover scale-x-[-1]"
+                                  />
+                                ) : (
+                                  <div className="absolute inset-0 bg-gradient-to-tr from-purple-950/20 via-zinc-900 to-fuchsia-950/20 flex items-center justify-center">
+                                    <User className="h-20 w-20 text-purple-500/20" />
+                                  </div>
+                                )}
+
+                                {/* Animated SVG landmarks */}
+                                <svg 
+                                  className="absolute inset-0 w-full h-full pointer-events-none transition-all duration-300 z-10" 
+                                  viewBox="0 0 218 218"
+                                >
+                                  <g style={{
+                                    transform: `translate(${landmarkOffset.x}px, ${landmarkOffset.y}px)`,
+                                    transformOrigin: 'center'
+                                  }}>
+                                    {/* Face boundary oval */}
+                                    <path 
+                                      d="M 59,75 C 59,75 69,30 109,30 C 149,30 159,75 159,75 C 159,115 144,180 109,180 C 74,180 59,115 59,75 Z" 
+                                      fill="none" 
+                                      stroke="#8b5cf6" 
+                                      strokeWidth="1.5" 
+                                      strokeDasharray="4,4" 
+                                      className="animate-pulse opacity-60" 
+                                    />
+                                    
+                                    {/* Cross grids */}
+                                    <path d="M 59,100 Q 109,113 159,100" fill="none" stroke="#8b5cf6" strokeWidth="1" opacity="0.3" />
+                                    <path d="M 109,30 V 180" fill="none" stroke="#8b5cf6" strokeWidth="1" opacity="0.3" />
+
+                                    {/* Eye dots */}
+                                    <circle cx="87" cy="90" r="3.5" fill={enrollStep === "LIVENESS_BLINK" ? "#ef4444" : "#10b981"} className={enrollStep === "LIVENESS_BLINK" ? "animate-ping" : ""} />
+                                    <circle cx="131" cy="90" r="3.5" fill={enrollStep === "LIVENESS_BLINK" ? "#ef4444" : "#10b981"} className={enrollStep === "LIVENESS_BLINK" ? "animate-ping" : ""} />
+                                    
+                                    {/* Nose dots */}
+                                    <path d="M 109,90 L 109,120 H 104 L 109,126 L 114,126 H 109" fill="none" stroke="#8b5cf6" strokeWidth="1.5" opacity="0.8" />
+                                    <circle cx="109" cy="126" r="3.5" fill="#f59e0b" className="animate-pulse" />
+
+                                    {/* Cheek dots */}
+                                    <circle cx="74" cy="130" r="2.5" fill="#8b5cf6" opacity="0.7" />
+                                    <circle cx="144" cy="130" r="2.5" fill="#8b5cf6" opacity="0.7" />
+                                    {/* Mouth curve */}
+                                    <path 
+                                      d={enrollStep === "CHALLENGE_SMILE" ? "M 91,148 Q 109,161 127,148" : "M 91,148 Q 109,153 127,148"} 
+                                      fill="none" 
+                                      stroke={enrollStep === "CHALLENGE_SMILE" ? "#10b981" : "#f59e0b"} 
+                                      strokeWidth="2" 
+                                    />
+                                  </g>
+                                </svg>
+
+                                <div className="absolute bottom-2 left-2 right-2 bg-black/85 backdrop-blur-md px-3 py-1.5 rounded-xl border border-purple-500/20 text-center z-20">
+                                  <span className="text-[10px] text-emerald-400 font-extrabold uppercase animate-pulse leading-snug">
+                                    {verificationFeedback}
+                                  </span>
+                                </div>
                               </div>
-                            </div>
-                          )}
+                            )}
+                          </div>
                         </div>
+
+                        {/* Scan Progress Bar (Apple biometric style) */}
+                        {enrollStep !== "IDLE" && enrollStep !== "SUCCESS" && (
+                          <div className="w-64 space-y-2 animate-fade-in">
+                            <div className="flex justify-between text-[10px] font-mono font-black text-muted-foreground uppercase">
+                              <span>Biometric Vector Progress</span>
+                              <span className="text-emerald-400 font-extrabold">{enrollProgress}%</span>
+                            </div>
+                            <div className="w-full h-2 bg-zinc-950 border border-border rounded-full overflow-hidden p-[2px]">
+                              <div 
+                                className="h-full bg-gradient-to-r from-purple-500 via-fuchsia-500 to-emerald-500 rounded-full transition-all duration-500 shadow-[0_0_12px_#10b981]"
+                                style={{ width: `${enrollProgress}%` }}
+                              />
+                            </div>
+                          </div>
+                        )}
 
                         <div className="flex gap-3">
                           {enrollStep === "IDLE" ? (
