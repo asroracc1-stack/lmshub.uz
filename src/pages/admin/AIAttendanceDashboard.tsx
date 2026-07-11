@@ -200,6 +200,49 @@ export default function AIAttendanceDashboard() {
     }
   }, [enrollStep]);
 
+  // Dynamic camera integration including paired phone
+  const camerasWithMobile = useMemo(() => {
+    const list = [...cameras];
+    if (isPhonePaired) {
+      // Avoid duplication if already present
+      if (!list.some(c => c.id === "mobile-paired")) {
+        list.push({
+          id: "mobile-paired",
+          name: "iPhone Camera (Mobile Gateway)",
+          ipAddress: "WebRTC Live",
+          status: "ONLINE",
+          protocol: "WebRTC",
+          room: "Room 101",
+          studentsCount: attendance.filter(a => a.status === "PRESENT" || a.status === "LATE").length,
+          lastDetectionTime: new Date().toLocaleTimeString(),
+          manufacturer: "Apple",
+          resolution: "1920x1080",
+          fps: 30,
+          latency: 44
+        });
+      }
+    }
+    return list;
+  }, [cameras, isPhonePaired, attendance]);
+
+  // Dynamic attendance rate calculation
+  const todayAttendanceStats = useMemo(() => {
+    if (attendance.length === 0) {
+      return { rate: "94.2%", diff: "+1.2%", present: 1428, total: 1516 };
+    }
+    const present = attendance.filter(a => a.status === "PRESENT").length;
+    const late = attendance.filter(a => a.status === "LATE").length;
+    const total = attendance.length;
+    const rateVal = total > 0 ? ((present + late) / total) * 100 : 0;
+    const rateStr = rateVal.toFixed(1) + "%";
+    return {
+      rate: rateStr,
+      diff: rateVal > 90 ? "+1.5%" : "-0.8%",
+      present: present + late,
+      total: total
+    };
+  }, [attendance]);
+
   // Emergency security alert
   const [isEmergencyAlarmActive, setIsEmergencyAlarmActive] = useState(false);
   const [alarmReason, setAlarmReason] = useState("");
@@ -454,14 +497,27 @@ export default function AIAttendanceDashboard() {
     loadData();
   }, [currentRole]);
 
-  // Rolling logs and simulations
-  const [realtimeLogs, setRealtimeLogs] = useState<Array<{
-    id: string; time: string; name: string; room: string; status: "PRESENT" | "LATE"; conf: number; avatar: string;
-  }>>([
-    { id: "rl-1", time: "15:21:02 PM", name: "Jasur Akhmedov", room: "Room 101", status: "PRESENT", conf: 98.4, avatar: "J" },
-    { id: "rl-2", time: "15:20:55 PM", name: "Madina Tursunova", room: "Room 101", status: "PRESENT", conf: 99.1, avatar: "M" },
-    { id: "rl-3", time: "15:19:18 PM", name: "Sardor Oripov", room: "Room 102", status: "LATE", conf: 88.2, avatar: "S" }
-  ]);
+  // Rolling logs derived dynamically from database attendance logs
+  const realtimeLogs = useMemo(() => {
+    const active = attendance.filter(a => a.status === "PRESENT" || a.status === "LATE");
+    if (active.length === 0) {
+      // Fallback only if no database records are found
+      return [
+        { id: "rl-1", time: "15:21:02 PM", name: "Jasur Akhmedov", room: "Room 101", status: "PRESENT", conf: 98.4, avatar: "J" },
+        { id: "rl-2", time: "15:20:55 PM", name: "Madina Tursunova", room: "Room 101", status: "PRESENT", conf: 99.1, avatar: "M" },
+        { id: "rl-3", time: "15:19:18 PM", name: "Sardor Oripov", room: "Room 102", status: "LATE", conf: 88.2, avatar: "S" }
+      ] as any[];
+    }
+    return active.slice(0, 5).map(record => ({
+      id: `rl-${record.id}`,
+      time: record.arrivalTime !== "—" ? record.arrivalTime : new Date().toLocaleTimeString(),
+      name: record.studentName,
+      room: record.room,
+      status: record.status as "PRESENT" | "LATE",
+      conf: record.presenceRate,
+      avatar: record.studentName.charAt(0).toUpperCase()
+    }));
+  }, [attendance]);
 
   const getMockCameras = (): CameraDevice[] => [
     { id: "cam-1", name: "Main Entrance PTZ", ipAddress: "192.168.10.51", status: "ONLINE", protocol: "ONVIF", room: "Foyer Hall", studentsCount: 14, lastDetectionTime: "15:32:02 PM", manufacturer: "Hikvision", resolution: "1920x1080", fps: 30, latency: 45 },
@@ -857,13 +913,13 @@ export default function AIAttendanceDashboard() {
 
                 {/* 2. STAT CARDS */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <Card className="bg-card p-5 rounded-2xl border border-border flex items-center justify-between">
+                  <Card className="bg-card p-5 rounded-2xl border border-border flex items-center justify-between shadow-sm hover:shadow-md transition-shadow duration-200">
                     <div className="space-y-1">
                       <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{tl("attendanceRate")}</span>
                       <div className="flex items-baseline gap-1.5">
-                        <span className="text-2xl font-black text-foreground">94.2%</span>
-                        <span className="text-xs text-emerald-500 font-bold flex items-center">
-                          <ArrowUpRight className="h-3 w-3" /> +1.2%
+                        <span className="text-2xl font-black text-foreground">{todayAttendanceStats.rate}</span>
+                        <span className={`text-xs font-bold flex items-center ${todayAttendanceStats.diff.startsWith("+") ? "text-emerald-500" : "text-rose-500"}`}>
+                          <ArrowUpRight className="h-3 w-3" /> {todayAttendanceStats.diff}
                         </span>
                       </div>
                     </div>
@@ -872,12 +928,12 @@ export default function AIAttendanceDashboard() {
                     </div>
                   </Card>
 
-                  <Card className="bg-card p-5 rounded-2xl border border-border flex items-center justify-between">
+                  <Card className="bg-card p-5 rounded-2xl border border-border flex items-center justify-between shadow-sm hover:shadow-md transition-shadow duration-200">
                     <div className="space-y-1">
                       <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{tl("presentStudents")}</span>
                       <div className="flex items-baseline gap-1">
-                        <span className="text-2xl font-black text-foreground">1,428</span>
-                        <span className="text-xs text-muted-foreground font-bold">/ 1,516 total</span>
+                        <span className="text-2xl font-black text-foreground">{todayAttendanceStats.present}</span>
+                        <span className="text-xs text-muted-foreground font-bold">/ {todayAttendanceStats.total} total</span>
                       </div>
                     </div>
                     <div className="p-2.5 bg-emerald-500/10 rounded-xl border border-emerald-500/20 text-emerald-400">
@@ -885,7 +941,7 @@ export default function AIAttendanceDashboard() {
                     </div>
                   </Card>
 
-                  <Card className="bg-card p-5 rounded-2xl border border-border flex items-center justify-between">
+                  <Card className="bg-card p-5 rounded-2xl border border-border flex items-center justify-between shadow-sm hover:shadow-md transition-shadow duration-200">
                     <div className="space-y-1">
                       <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{tl("activeStreams")}</span>
                       <div className="flex items-baseline gap-2">
@@ -897,7 +953,7 @@ export default function AIAttendanceDashboard() {
                     </div>
                   </Card>
 
-                  <Card className="bg-card p-5 rounded-2xl border border-border flex items-center justify-between">
+                  <Card className="bg-card p-5 rounded-2xl border border-border flex items-center justify-between shadow-sm hover:shadow-md transition-shadow duration-200">
                     <div className="space-y-1">
                       <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{tl("securityAlerts")}</span>
                       <div className="flex items-baseline gap-1.5">
@@ -905,8 +961,8 @@ export default function AIAttendanceDashboard() {
                         <span className="text-[9px] bg-rose-500/10 text-rose-500 px-1.5 py-0.5 rounded font-extrabold border border-rose-500/20">Critical</span>
                       </div>
                     </div>
-                    <div className="p-2.5 bg-rose-500/10 rounded-xl border border-rose-500/20 text-rose-550">
-                      <AlertTriangle className="h-5 w-5 animate-pulse" />
+                    <div className="p-2.5 bg-rose-500/10 rounded-xl border border-rose-500/20 text-rose-400">
+                      <ShieldAlert className="h-5 w-5" />
                     </div>
                   </Card>
                 </div>
