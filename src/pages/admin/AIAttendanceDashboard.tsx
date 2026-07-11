@@ -571,14 +571,18 @@ export default function AIAttendanceDashboard() {
   const totalPages = Math.ceil(filteredAttendance.length / itemsPerPage);
 
   const registryStudents = useMemo(() => {
-    const list = [
-      { id: "reg-1", studentName: "Jasur Akhmedov", idCode: "LMS-10829", status: "ENROLLED", verifiedAt: "2026-06-12", vectors: "AES-256 Vector" },
-      { id: "reg-2", studentName: "Madina Tursunova", idCode: "LMS-10842", status: "ENROLLED", verifiedAt: "2026-06-14", vectors: "AES-256 Vector" },
-      { id: "reg-3", studentName: "Sardor Oripov", idCode: "LMS-10421", status: "PENDING", verifiedAt: "—", vectors: "None" },
-      { id: "reg-4", studentName: "Kamola Bekmirzayeva", idCode: "LMS-10332", status: "ENROLLED", verifiedAt: "2026-06-20", vectors: "AES-256 Vector" }
-    ];
-    return list.filter(s => s.studentName.toLowerCase().includes(registrySearch.toLowerCase()) || s.idCode.toLowerCase().includes(registrySearch.toLowerCase()));
-  }, [registrySearch]);
+    return attendance.map(record => {
+      const isEnrolled = record.presenceRate > 0;
+      return {
+        id: record.id,
+        studentName: record.studentName,
+        idCode: record.studentId,
+        status: isEnrolled ? "ENROLLED" : "PENDING",
+        verifiedAt: isEnrolled ? "2026-06-12" : "—",
+        vectors: isEnrolled ? "AES-256 Vector" : "None"
+      };
+    }).filter(s => s.studentName.toLowerCase().includes(registrySearch.toLowerCase()) || s.idCode.toLowerCase().includes(registrySearch.toLowerCase()));
+  }, [attendance, registrySearch]);
 
   const emotionData = [
     { name: "Attentive", value: 65, color: "#8b5cf6" },
