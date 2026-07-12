@@ -1,6 +1,6 @@
 package com.lmscrm.backend.controller.attendance;
 
-import com.lmscrm.backend.domain.entity.StudentEmbedding;
+import com.lmscrm.backend.domain.entity.FaceEmbedding;
 import com.lmscrm.backend.service.ai.FaceRegistrationService;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -34,7 +34,7 @@ public class FaceRegistrationController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<StudentEmbedding> registerFace(
+    public ResponseEntity<FaceEmbedding> registerFace(
             @RequestBody RegisterFaceRequest request) {
         return ResponseEntity.ok(registrationService.registerFace(
                 request.getStudentId(),

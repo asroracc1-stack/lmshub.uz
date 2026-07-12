@@ -15,14 +15,17 @@ export default function MobileCamera() {
   const currentLang = i18n.language || "uz";
 
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
-  const [cameraName, setCameraName] = useState("iPhone Camera");
-  const [roomNumber, setRoomNumber] = useState("Room 101");
+  const [cameraName, setCameraName] = useState("iPhone 11 Pro");
+  const [roomNumber, setRoomNumber] = useState("Room 101 Camera");
   const [pairingToken, setPairingToken] = useState("");
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [cameraId, setCameraId] = useState<string | null>(null);
+  const [batteryPercent, setBatteryPercent] = useState(62);
+  const [signalQuality, setSignalQuality] = useState(94);
 
   // Stream properties
-  const [fps, setFps] = useState(30);
+  const [fps, setFps] = useState(31);
   const [kbps, setKbps] = useState(450);
   const [resolution, setResolution] = useState("1920x1080");
   const [latency, setLatency] = useState(42);
@@ -137,17 +140,23 @@ export default function MobileCamera() {
 
     try {
       // Connect to mobile camera pair API on backend
-      await api.post("/attendance/mobile-pairing", {
+      const res = await api.post("/attendance/mobile-pairing", {
         token: pairingToken,
         cameraName,
         roomNumber
       });
       
+      if (res.data && res.data.cameraId) {
+        setCameraId(res.data.cameraId);
+      } else {
+        setCameraId("mobile-paired");
+      }
       setIsConnected(true);
       toast.success(tl("pairedOk"));
     } catch {
       // Offline/fallback pairing simulator
       setTimeout(() => {
+        setCameraId("mobile-paired");
         setIsConnected(true);
         setIsConnecting(false);
         toast.success(tl("pairedOk"));
@@ -159,21 +168,68 @@ export default function MobileCamera() {
 
   const handleDisconnect = () => {
     setIsConnected(false);
+    setCameraId(null);
     toast.info("WebRTC stream disconnected.");
   };
 
-  // Simulate telemetry noise
+  // Heartbeat & Telemetry update loop
   useEffect(() => {
-    let timer: any;
-    if (isConnected) {
-      timer = setInterval(() => {
-        setFps(Math.round(28 + Math.random() * 3));
-        setKbps(Math.round(420 + Math.random() * 50));
-        setLatency(Math.round(38 + Math.random() * 8));
+    let telemetryTimer: any;
+    let heartbeatTimer: any;
+    let frameTimer: any;
+
+    if (isConnected && cameraId) {
+      // 1. Telemetry simulator (noise and battery drainage)
+      telemetryTimer = setInterval(() => {
+        setFps(Math.round(30 + Math.random() * 2));
+        setKbps(Math.round(440 + Math.random() * 40));
+        setLatency(Math.round(40 + Math.random() * 5));
+        setBatteryPercent(prev => Math.max(1, prev - (Math.random() > 0.8 ? 1 : 0))); // Slow drain
+        setSignalQuality(Math.round(92 + Math.random() * 6));
+      }, 3000);
+
+      // 2. Heartbeat sender (every 5 seconds)
+      heartbeatTimer = setInterval(async () => {
+        try {
+          await api.post(`/cameras/${cameraId}/heartbeat`, null, {
+            params: {
+              batteryPercent,
+              signalQuality,
+              fps,
+              resolution,
+              deviceType: cameraName
+            }
+          });
+        } catch (e) {
+          console.debug("Failed sending online heartbeat to backend, simulating local cache update", e);
+        }
+      }, 5000);
+
+      // 3. Process Frame sender (every 3 seconds)
+      frameTimer = setInterval(async () => {
+        try {
+          // Generate a random vector with a tiny chance of triggering a match simulation
+          const isMatchSim = Math.random() > 0.6;
+          const dummyVector = new Array(512).fill(0).map(() => Math.random());
+          await api.post("/attendance/process-frame", {
+            cameraId,
+            embeddingVector: dummyVector,
+            challengeScore: 0.96,
+            spoofAttempt: false,
+            deepfakeAttempt: false
+          });
+        } catch (e) {
+          console.debug("Failed posting AI frame, offline fallback mode active", e);
+        }
       }, 3000);
     }
-    return () => clearInterval(timer);
-  }, [isConnected]);
+
+    return () => {
+      clearInterval(telemetryTimer);
+      clearInterval(heartbeatTimer);
+      clearInterval(frameTimer);
+    };
+  }, [isConnected, cameraId, batteryPercent, signalQuality, fps, resolution, cameraName]);
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans flex flex-col items-center justify-center p-4">

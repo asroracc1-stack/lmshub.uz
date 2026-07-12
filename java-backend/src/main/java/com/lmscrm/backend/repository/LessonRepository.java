@@ -78,4 +78,5 @@ public interface LessonRepository extends JpaRepository<Lesson, UUID> {
     );
 
     java.util.Optional<Lesson> findFirstByGroupIdAndStartsAtBeforeAndEndsAtAfter(UUID groupId, LocalDateTime now1, LocalDateTime now2);
+    List<Lesson> findByClassroomIdAndStartsAtBeforeAndEndsAtAfter(UUID classroomId, LocalDateTime now1, LocalDateTime now2);
 }

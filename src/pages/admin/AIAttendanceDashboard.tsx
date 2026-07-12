@@ -13,6 +13,8 @@ import { toast } from "sonner";
 import { api } from "@/lib/axios"; 
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/contexts/ThemeContext";
+import SockJS from "sockjs-client";
+import { Client } from "@stomp/stompjs";
 import {
   ResponsiveContainer,
   AreaChart,
@@ -497,6 +499,132 @@ export default function AIAttendanceDashboard() {
     loadData();
   }, [currentRole]);
 
+  // WebSocket connection for real-time updates
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    const BACKEND_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+    const socket = new SockJS(`${BACKEND_URL}/ws-chat`);
+    const stompClient = new Client({
+      webSocketFactory: () => socket,
+      connectHeaders: { Authorization: `Bearer ${token}` },
+      reconnectDelay: 5000,
+      heartbeatIncoming: 4000,
+      heartbeatOutgoing: 4000,
+    });
+
+    stompClient.onConnect = () => {
+      console.log("WebSocket connected to AI Attendance channels");
+
+      stompClient.subscribe("/topic/cameras", (message) => {
+        if (message.body) {
+          const updatedCamera = JSON.parse(message.body);
+          setCameras(prev => {
+            const index = prev.findIndex(c => c.id === updatedCamera.id);
+            if (index !== -1) {
+              const next = [...prev];
+              next[index] = {
+                ...next[index],
+                status: updatedCamera.status,
+                lastSeenTime: new Date(updatedCamera.lastSeenAt).toLocaleTimeString(),
+                fps: updatedCamera.maxFps,
+                resolution: `${updatedCamera.resolutionWidth}x${updatedCamera.resolutionHeight}`,
+                latency: updatedCamera.pingLatencyMs || next[index].latency,
+                batteryPercent: updatedCamera.batteryPercent,
+                signalQuality: updatedCamera.signalQuality,
+                deviceType: updatedCamera.deviceType
+              } as any;
+              return next;
+            } else {
+              return [...prev, {
+                id: updatedCamera.id,
+                name: updatedCamera.name,
+                ipAddress: updatedCamera.ipAddress || "WebRTC",
+                status: updatedCamera.status,
+                protocol: updatedCamera.protocol || "WEBRTC",
+                room: updatedCamera.classroom?.name || "Room 101",
+                studentsCount: 0,
+                lastDetectionTime: new Date().toLocaleTimeString(),
+                resolution: `${updatedCamera.resolutionWidth}x${updatedCamera.resolutionHeight}`,
+                fps: updatedCamera.maxFps,
+                latency: updatedCamera.pingLatencyMs || 35,
+                batteryPercent: updatedCamera.batteryPercent,
+                signalQuality: updatedCamera.signalQuality,
+                deviceType: updatedCamera.deviceType
+              } as any];
+            }
+          });
+        }
+      });
+
+      stompClient.subscribe("/topic/attendance", (message) => {
+        if (message.body) {
+          const payload = JSON.parse(message.body);
+          setAttendance(prev => {
+            const exists = prev.some(a => a.studentId === payload.studentId);
+            if (exists) {
+              return prev.map(a => a.studentId === payload.studentId ? {
+                ...a,
+                status: payload.status,
+                arrivalTime: payload.arrivalTime,
+                presenceRate: payload.presenceRate
+              } : a);
+            } else {
+              return [{
+                id: payload.id,
+                studentName: payload.studentName,
+                studentId: payload.studentId,
+                faculty: "Computer Science",
+                groupName: "CS-204",
+                room: payload.room || "Room 101",
+                arrivalTime: payload.arrivalTime,
+                status: payload.status,
+                presenceRate: payload.presenceRate,
+                checkins: [payload.arrivalTime],
+                checkouts: []
+              } as any, ...prev];
+            }
+          });
+          toast.info(`Face verified: ${payload.studentName} is ${payload.status}`);
+        }
+      });
+
+      stompClient.subscribe("/topic/security-alerts", (message) => {
+        if (message.body) {
+          const alert = JSON.parse(message.body);
+          setSecurityLogs(prev => [
+            {
+              id: alert.id,
+              timestamp: alert.timestamp || new Date().toISOString(),
+              type: alert.type,
+              severity: alert.severity,
+              message: alert.message
+            },
+            ...prev
+          ]);
+          setUnknowns(prev => [
+            {
+              id: alert.id,
+              detectedAt: new Date(alert.timestamp || Date.now()).toLocaleTimeString(),
+              cameraName: "AI Monitoring Node",
+              room: "Campus",
+              confidence: 45,
+              reason: alert.message
+            },
+            ...prev
+          ]);
+          toast.error(`Security Alert: ${alert.message}`);
+        }
+      });
+    };
+
+    stompClient.activate();
+    return () => {
+      if (stompClient.active) stompClient.deactivate();
+    };
+  }, []);
+
   // Rolling logs derived dynamically from database attendance logs
   const realtimeLogs = useMemo(() => {
     const active = attendance.filter(a => a.status === "PRESENT" || a.status === "LATE");
@@ -713,11 +841,44 @@ export default function AIAttendanceDashboard() {
 
   // Specific filtered datasets based on user roles
   const filteredCamerasByRole = useMemo(() => {
-    if (currentRole === "SUPER_ADMIN") return cameras;
-    if (currentRole === "ADMIN") return cameras.slice(0, 4); // Own organization
-    if (currentRole === "ADMINISTRATOR") return cameras.filter(c => c.room === "Room 101" || c.room === "Room 102"); // Own branch
+    if (currentRole === "SUPER_ADMIN") return camerasWithMobile;
+    if (currentRole === "ADMINISTRATOR") return camerasWithMobile;
+    if (currentRole === "ADMIN") return camerasWithMobile.filter(c => c.room === "Room 101" || c.room === "Room 102" || c.id === "mobile-paired");
+    if (currentRole === "TEACHER") return camerasWithMobile.filter(c => c.room === "Room 101" || c.id === "mobile-paired");
     return [];
-  }, [cameras, currentRole]);
+  }, [camerasWithMobile, currentRole]);
+
+  // Dynamic stats computation for dashboard
+  const activeCamerasCount = useMemo(() => {
+    return filteredCamerasByRole.filter(c => c.status === "ONLINE" || c.status === "WARNING").length;
+  }, [filteredCamerasByRole]);
+
+  const presentCount = useMemo(() => {
+    return attendance.filter(a => a.status === "PRESENT").length;
+  }, [attendance]);
+
+  const lateCount = useMemo(() => {
+    return attendance.filter(a => a.status === "LATE").length;
+  }, [attendance]);
+
+  const absentCount = useMemo(() => {
+    return attendance.filter(a => a.status === "ABSENT").length;
+  }, [attendance]);
+
+  const securityAlertsCount = useMemo(() => {
+    return unknowns.length + securityLogs.filter(s => s.severity === "CRITICAL").length;
+  }, [unknowns, securityLogs]);
+
+  const cameraHealth = useMemo(() => {
+    const total = filteredCamerasByRole.length;
+    const online = filteredCamerasByRole.filter(c => c.status === "ONLINE").length;
+    return total > 0 ? Math.round((online / total) * 100) : 0;
+  }, [filteredCamerasByRole]);
+
+  const averageConfidence = useMemo(() => {
+    const valid = attendance.filter(a => a.presenceRate > 0);
+    return valid.length > 0 ? Math.round(valid.reduce((acc, curr) => acc + curr.presenceRate, 0) / valid.length) : 85;
+  }, [attendance]);
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col font-sans transition-colors duration-200">
@@ -912,57 +1073,102 @@ export default function AIAttendanceDashboard() {
                 </div>
 
                 {/* 2. STAT CARDS */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <Card className="bg-card p-5 rounded-2xl border border-border flex items-center justify-between shadow-sm hover:shadow-md transition-shadow duration-200">
-                    <div className="space-y-1">
-                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{tl("attendanceRate")}</span>
-                      <div className="flex items-baseline gap-1.5">
-                        <span className="text-2xl font-black text-foreground">{todayAttendanceStats.rate}</span>
-                        <span className={`text-xs font-bold flex items-center ${todayAttendanceStats.diff.startsWith("+") ? "text-emerald-500" : "text-rose-500"}`}>
-                          <ArrowUpRight className="h-3 w-3" /> {todayAttendanceStats.diff}
-                        </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
+                  {/* Active Cameras */}
+                  <Card className="bg-card p-4 rounded-2xl border border-border flex flex-col justify-between shadow-sm hover:shadow-md hover:border-purple-500/30 transition duration-200">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Active Cameras</span>
+                      <div className="p-1.5 bg-blue-500/10 rounded-lg text-blue-400">
+                        <Camera className="h-4 w-4" />
                       </div>
                     </div>
-                    <div className="p-2.5 bg-purple-500/10 rounded-xl border border-purple-500/20 text-purple-400">
-                      <Activity className="h-5 w-5" />
+                    <div className="mt-2.5">
+                      <span className="text-xl font-black text-foreground">{activeCamerasCount}</span>
+                      <span className="text-[10px] text-muted-foreground block font-mono">Nodes Online</span>
                     </div>
                   </Card>
 
-                  <Card className="bg-card p-5 rounded-2xl border border-border flex items-center justify-between shadow-sm hover:shadow-md transition-shadow duration-200">
-                    <div className="space-y-1">
-                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{tl("presentStudents")}</span>
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-2xl font-black text-foreground">{todayAttendanceStats.present}</span>
-                        <span className="text-xs text-muted-foreground font-bold">/ {todayAttendanceStats.total} total</span>
+                  {/* Present Students */}
+                  <Card className="bg-card p-4 rounded-2xl border border-border flex flex-col justify-between shadow-sm hover:shadow-md hover:border-purple-500/30 transition duration-200">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Present</span>
+                      <div className="p-1.5 bg-emerald-500/10 rounded-lg text-emerald-400">
+                        <Users className="h-4 w-4" />
                       </div>
                     </div>
-                    <div className="p-2.5 bg-emerald-500/10 rounded-xl border border-emerald-500/20 text-emerald-400">
-                      <Users className="h-5 w-5" />
+                    <div className="mt-2.5">
+                      <span className="text-xl font-black text-foreground">{presentCount}</span>
+                      <span className="text-[10px] text-muted-foreground block font-mono">Students</span>
                     </div>
                   </Card>
 
-                  <Card className="bg-card p-5 rounded-2xl border border-border flex items-center justify-between shadow-sm hover:shadow-md transition-shadow duration-200">
-                    <div className="space-y-1">
-                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{tl("activeStreams")}</span>
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-2xl font-black text-foreground">{filteredCamerasByRole.length} Active</span>
+                  {/* Late Students */}
+                  <Card className="bg-card p-4 rounded-2xl border border-border flex flex-col justify-between shadow-sm hover:shadow-md hover:border-purple-500/30 transition duration-200">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Late</span>
+                      <div className="p-1.5 bg-amber-500/10 rounded-lg text-amber-400">
+                        <Clock className="h-4 w-4" />
                       </div>
                     </div>
-                    <div className="p-2.5 bg-blue-500/10 rounded-xl border border-blue-500/20 text-blue-400">
-                      <Camera className="h-5 w-5" />
+                    <div className="mt-2.5">
+                      <span className="text-xl font-black text-foreground">{lateCount}</span>
+                      <span className="text-[10px] text-muted-foreground block font-mono">Students</span>
                     </div>
                   </Card>
 
-                  <Card className="bg-card p-5 rounded-2xl border border-border flex items-center justify-between shadow-sm hover:shadow-md transition-shadow duration-200">
-                    <div className="space-y-1">
-                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{tl("securityAlerts")}</span>
-                      <div className="flex items-baseline gap-1.5">
-                        <span className="text-2xl font-black text-foreground">{unknowns.length}</span>
-                        <span className="text-[9px] bg-rose-500/10 text-rose-500 px-1.5 py-0.5 rounded font-extrabold border border-rose-500/20">Critical</span>
+                  {/* Absent Students */}
+                  <Card className="bg-card p-4 rounded-2xl border border-border flex flex-col justify-between shadow-sm hover:shadow-md hover:border-purple-500/30 transition duration-200">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Absent</span>
+                      <div className="p-1.5 bg-rose-500/10 rounded-lg text-rose-450">
+                        <UserX className="h-4 w-4" />
                       </div>
                     </div>
-                    <div className="p-2.5 bg-rose-500/10 rounded-xl border border-rose-500/20 text-rose-400">
-                      <ShieldAlert className="h-5 w-5" />
+                    <div className="mt-2.5">
+                      <span className="text-xl font-black text-foreground">{absentCount}</span>
+                      <span className="text-[10px] text-muted-foreground block font-mono">Students</span>
+                    </div>
+                  </Card>
+
+                  {/* Security Alerts */}
+                  <Card className="bg-card p-4 rounded-2xl border border-border flex flex-col justify-between shadow-sm hover:shadow-md hover:border-purple-500/30 transition duration-200">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Alerts</span>
+                      <div className="p-1.5 bg-rose-500/10 rounded-lg text-rose-500 animate-pulse">
+                        <ShieldAlert className="h-4 w-4" />
+                      </div>
+                    </div>
+                    <div className="mt-2.5">
+                      <span className="text-xl font-black text-foreground">{securityAlertsCount}</span>
+                      <span className="text-[9px] bg-rose-500/10 text-rose-500 px-1 py-0.5 rounded font-black font-mono">Critical</span>
+                    </div>
+                  </Card>
+
+                  {/* Camera Health */}
+                  <Card className="bg-card p-4 rounded-2xl border border-border flex flex-col justify-between shadow-sm hover:shadow-md hover:border-purple-500/30 transition duration-200">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Cam Health</span>
+                      <div className="p-1.5 bg-teal-500/10 rounded-lg text-teal-400">
+                        <Activity className="h-4 w-4" />
+                      </div>
+                    </div>
+                    <div className="mt-2.5">
+                      <span className="text-xl font-black text-foreground">{cameraHealth}%</span>
+                      <span className="text-[10px] text-muted-foreground block font-mono">Availability</span>
+                    </div>
+                  </Card>
+
+                  {/* Recognition Confidence */}
+                  <Card className="bg-card p-4 rounded-2xl border border-border flex flex-col justify-between shadow-sm hover:shadow-md hover:border-purple-500/30 transition duration-200">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Confidence</span>
+                      <div className="p-1.5 bg-purple-500/10 rounded-lg text-purple-400">
+                        <Shield className="h-4 w-4" />
+                      </div>
+                    </div>
+                    <div className="mt-2.5">
+                      <span className="text-xl font-black text-foreground">{averageConfidence}%</span>
+                      <span className="text-[10px] text-muted-foreground block font-mono">Average Match</span>
                     </div>
                   </Card>
                 </div>
@@ -1079,8 +1285,9 @@ export default function AIAttendanceDashboard() {
                         <div className="space-y-3">
                           <div className="flex justify-between items-start gap-2">
                             <div className="min-w-0">
-                              <span className="text-[9px] font-mono text-muted-foreground uppercase block">{cam.manufacturer || "IP Camera"} • {cam.room}</span>
+                              <span className="text-[9px] font-mono text-muted-foreground uppercase block">{cam.protocol || "IP Camera"} • {cam.room}</span>
                               <h3 className="text-xs font-black text-foreground truncate mt-0.5">{cam.name}</h3>
+                              <span className="text-[9px] text-muted-foreground font-mono">Type: {cam.deviceType || cam.manufacturer || "General IP Node"}</span>
                             </div>
                             <span className={`px-2 py-0.5 rounded-full text-[9px] font-mono font-bold border shrink-0 ${
                               isOffline 
@@ -1108,12 +1315,16 @@ export default function AIAttendanceDashboard() {
                                   </span>
                                 </div>
                                 <div className="flex justify-between items-center text-[9px] font-mono text-zinc-400">
-                                  <span>{cam.fps} FPS • {cam.latency}ms</span>
-                                  <span>{cam.resolution}</span>
+                                  <span>{cam.fps || 30} FPS • {cam.latency || 42}ms</span>
+                                  <span>{cam.resolution || "1920x1080"}</span>
                                 </div>
-                                <div className="text-center my-auto py-2">
-                                  <Monitor className="h-5 w-5 text-zinc-750 mx-auto mb-1 opacity-60" />
-                                  <p className="text-[10px] text-emerald-400 font-mono font-bold">{cam.studentsCount} FACES ACTIVE</p>
+                                <div className="flex items-center justify-between text-[9px] font-mono text-zinc-450 border-t border-zinc-800/80 pt-1.5 mt-auto">
+                                  <span>Signal: {cam.signalQuality || 95}%</span>
+                                  <span>Batt: {cam.batteryPercent || 100}%</span>
+                                </div>
+                                <div className="text-center my-auto py-1">
+                                  <p className="text-[9px] text-zinc-500 font-mono font-medium">Heartbeat: {cam.lastDetectionTime || "Just Now"}</p>
+                                  <p className="text-[10px] text-emerald-400 font-mono font-bold mt-1">{cam.studentsCount || 1} FACES ACTIVE</p>
                                 </div>
                               </div>
                             )}

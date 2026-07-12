@@ -1,9 +1,11 @@
 package com.lmscrm.backend.service.ai;
 
 import com.lmscrm.backend.domain.entity.StudentEmbedding;
+import com.lmscrm.backend.domain.entity.FaceEmbedding;
 import com.lmscrm.backend.domain.entity.User;
 import com.lmscrm.backend.exception.ResourceNotFoundException;
 import com.lmscrm.backend.repository.StudentEmbeddingRepository;
+import com.lmscrm.backend.repository.FaceEmbeddingRepository;
 import com.lmscrm.backend.repository.UserRepository;
 import com.lmscrm.backend.service.storage.S3ObjectStorageService;
 import lombok.AllArgsConstructor;
@@ -25,6 +27,7 @@ import java.util.UUID;
 public class FaceRegistrationService {
 
     private final StudentEmbeddingRepository embeddingRepo;
+    private final FaceEmbeddingRepository faceEmbeddingRepo;
     private final UserRepository userRepo;
     private final S3ObjectStorageService s3Service;
 
@@ -69,33 +72,24 @@ public class FaceRegistrationService {
     }
 
     /**
-     * Finalizes student face registration by saving embedding and uploading profile image to S3.
+     * Finalizes student face registration by encrypting the 512-D embedding via AES-256
+     * and saving it to face_embeddings. Original photo is discarded.
      */
     @Transactional
-    public StudentEmbedding registerFace(UUID studentId, byte[] imageBytes, float[] embeddingVector, String modelVersion) {
+    public FaceEmbedding registerFace(UUID studentId, byte[] imageBytes, float[] embeddingVector, String modelVersion) {
         User student = userRepo.findById(studentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found"));
 
-        // 1. Upload encrypted photo to secure S3 storage
-        String s3Key = "face-templates/" + student.getOrganizationId() + "/" + studentId + ".jpg";
-        s3Service.uploadFile(s3Key, imageBytes, "image/jpeg");
+        // AES-256 Encryption
+        byte[] encryptedEmbedding = EncryptionUtils.encryptEmbedding(embeddingVector);
 
-        // 2. Compute embedding hash
-        byte[] serializedVector = serializeVector(embeddingVector);
-        String embeddingHash = sha256Hex(serializedVector);
-
-        // 3. Save embedding
-        StudentEmbedding embedding = StudentEmbedding.builder()
+        // Save embedding
+        FaceEmbedding embedding = FaceEmbedding.builder()
                 .student(student)
-                .organization(orgRepoReference(student.getOrganizationId()))
-                .modelVersion(modelVersion)
-                .embeddingVector(serializedVector)
-                .embeddingHash(embeddingHash)
-                .qualityScore(new BigDecimal("0.920"))
-                .isActive(true)
+                .embedding(encryptedEmbedding)
                 .build();
 
-        return embeddingRepo.save(embedding);
+        return faceEmbeddingRepo.save(embedding);
     }
 
     private double computeCosineSimilarity(float[] vectorA, float[] vectorB) {

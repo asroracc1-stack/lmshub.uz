@@ -104,6 +104,15 @@ public class CameraDevice {
     @Column(name = "last_latency_ms")
     private Integer lastLatencyMs;
 
+    @Column(name = "battery_percent")
+    private Integer batteryPercent;
+
+    @Column(name = "signal_quality")
+    private Integer signalQuality;
+
+    @Column(name = "device_type", length = 100)
+    private String deviceType;
+
     @Column(name = "is_active", nullable = false)
     @Builder.Default
     private Boolean isActive = true;
