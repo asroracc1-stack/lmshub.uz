@@ -213,35 +213,55 @@ export default function UserDashboard() {
       label: t("userDashboard.stats.targetBand"),
       value: stats?.target_band ? stats.target_band.toFixed(1) : "--",
       icon: Target,
-      color: isDark ? "bg-blue-500/10 text-blue-400 border-blue-500/20" : "bg-blue-50 text-blue-600 border-blue-100",
+      gradient: "from-[#3b82f6] to-[#1d4ed8] shadow-blue-500/10",
+      textClass: "text-white",
+      labelClass: "text-blue-100/70",
+      iconClass: "bg-white/15 text-white border-white/10",
+      hoverClass: "group-hover:shadow-[0_15px_30px_-5px_rgba(59,130,246,0.3)] group-hover:border-blue-400/40"
     },
     {
       key: "avg",
       label: t("userDashboard.stats.avgScore"),
       value: stats?.avg_score ? stats.avg_score.toFixed(1) : "--",
       icon: Activity,
-      color: isDark ? "bg-violet-500/10 text-violet-400 border-violet-500/20" : "bg-violet-50 text-violet-600 border-violet-100",
+      gradient: "from-[#10b981] to-[#047857] shadow-emerald-500/10",
+      textClass: "text-white",
+      labelClass: "text-emerald-100/70",
+      iconClass: "bg-white/15 text-white border-white/10",
+      hoverClass: "group-hover:shadow-[0_15px_30px_-5px_rgba(16,185,129,0.3)] group-hover:border-emerald-400/40"
     },
     {
       key: "exam",
       label: t("userDashboard.stats.daysLeft"),
       value: (stats?.exam_days_left !== null && stats?.exam_days_left !== undefined) ? t("userDashboard.stats.daysValue", { count: stats?.exam_days_left }) : "--",
       icon: CalendarDays,
-      color: isDark ? "bg-rose-500/10 text-rose-400 border-rose-500/20" : "bg-rose-50 text-rose-600 border-rose-100",
+      gradient: "from-[#ef4444] to-[#b91c1c] shadow-red-500/10",
+      textClass: "text-white",
+      labelClass: "text-red-100/70",
+      iconClass: "bg-white/15 text-white border-white/10",
+      hoverClass: "group-hover:shadow-[0_15px_30px_-5px_rgba(239,68,68,0.3)] group-hover:border-red-400/40"
     },
     {
       key: "minutes",
       label: t("userDashboard.stats.practiceTime"),
       value: t("userDashboard.stats.minutesValue", { count: (stats?.total_minutes || 0).toFixed(1) }),
       icon: Clock,
-      color: isDark ? "bg-orange-500/10 text-orange-400 border-orange-500/20" : "bg-orange-50 text-orange-600 border-orange-100",
+      gradient: "from-[#8b5cf6] to-[#6d28d9] shadow-purple-500/10",
+      textClass: "text-white",
+      labelClass: "text-purple-100/70",
+      iconClass: "bg-white/15 text-white border-white/10",
+      hoverClass: "group-hover:shadow-[0_15px_30px_-5px_rgba(139,92,246,0.3)] group-hover:border-purple-400/40"
     },
     {
       key: "streak",
       label: t("userDashboard.stats.dailyStreak"),
       value: stats?.streak ?? 0,
       icon: Flame,
-      color: isDark ? "bg-purple-500/10 text-purple-400 border-purple-500/20" : "bg-purple-50 text-purple-600 border-purple-100",
+      gradient: "from-[#f59e0b] to-[#b45309] shadow-amber-500/10",
+      textClass: "text-white",
+      labelClass: "text-amber-100/70",
+      iconClass: "bg-white/15 text-white border-white/10",
+      hoverClass: "group-hover:shadow-[0_15px_30px_-5px_rgba(245,158,11,0.3)] group-hover:border-amber-400/40"
     },
   ];
 
@@ -791,24 +811,24 @@ export default function UserDashboard() {
                     className="text-left group w-full cursor-pointer focus:outline-none"
                   >
                     <Card className={cn(
-                      "p-4 h-full transition-all duration-300 rounded-[20px] border relative overflow-hidden",
-                      isDark
-                        ? "bg-gradient-to-b from-[#18122a] to-[#110b1f] border-white/[0.04] shadow-xl group-hover:border-primary/40 group-hover:shadow-[0_15px_30px_-8px_rgba(139,92,246,0.15)]"
-                        : "bg-gradient-to-b from-white to-[#fbfbfe] border-slate-100 shadow-md shadow-slate-200/15 group-hover:border-primary/30 group-hover:shadow-xl group-hover:shadow-purple-100/20"
+                      "p-4 h-full transition-all duration-300 rounded-[22px] border relative overflow-hidden bg-gradient-to-tr",
+                      s.gradient,
+                      "border-white/10 dark:border-white/5 shadow-md",
+                      s.hoverClass
                     )}>
-                      {/* Subtly glowing back-dot decoration */}
-                      <div className="absolute -right-4 -top-4 w-12 h-12 rounded-full bg-primary/5 blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                      {/* Visual glass gloss shine layer inside the card */}
+                      <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent opacity-65 pointer-events-none" />
                       
                       <div className={cn(
-                        "h-9 w-9 rounded-xl flex items-center justify-center mb-3.5 border transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3 shadow-inner",
-                        s.color
+                        "h-9 w-9 rounded-xl flex items-center justify-center mb-3.5 border transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3 shadow-sm",
+                        s.iconClass
                       )}>
                         <Icon className="h-4.5 w-4.5" />
                       </div>
-                      <p className={cn("font-display text-2xl font-extrabold tracking-tight leading-none", isDark ? "text-white" : "text-slate-900")}>
+                      <p className="font-display text-2xl font-extrabold tracking-tight leading-none text-white">
                         {s.value}
                       </p>
-                      <p className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-2.5 truncate">
+                      <p className={cn("text-[9px] font-black uppercase tracking-widest mt-2.5 truncate", s.labelClass)}>
                         {s.label}
                       </p>
                     </Card>
