@@ -516,8 +516,8 @@ export default function RoleLayout({
           className={cn(
             "shrink-0 h-14 sm:h-16 border-b sticky top-0 z-30 transition-all w-full flex justify-center rounded-none md:rounded-t-[16px]",
             theme === "dark"
-              ? "bg-[#140D23]/80 backdrop-blur-xl border-white/[0.04] shadow-sm"
-              : "bg-[#fbfaff]/85 backdrop-blur-xl border-slate-100/80 shadow-sm"
+              ? "bg-[#0e0a1a] border-white/[0.04] shadow-sm text-slate-100"
+              : "bg-[#1f212a] border-white/[0.05] shadow-sm text-slate-100"
           )}
         >
           <div className="w-full px-3 sm:px-4 flex items-center justify-between h-full">
@@ -526,7 +526,7 @@ export default function RoleLayout({
               <Button
                 variant="ghost"
                 size="icon"
-                className="md:hidden rounded-xl h-9 w-9"
+                className="md:hidden rounded-xl h-9 w-9 text-slate-200 hover:bg-white/10 hover:text-white"
                 onClick={openMobileMenu}
                 aria-label="Menyu"
               >
@@ -535,7 +535,7 @@ export default function RoleLayout({
 
               {/* Greeting */}
               <div className="hidden sm:block">
-                <p className="font-bold text-sm tracking-tight text-foreground">
+                <p className="font-bold text-sm tracking-tight text-white/95">
                   {t("common.hello")}, {displayName} 👋
                 </p>
               </div>
@@ -544,35 +544,35 @@ export default function RoleLayout({
             <div className="flex items-center gap-1.5 sm:gap-2 md:gap-4 h-full py-2">
               {/* Mobile Coins: visible in place of clock on mobile */}
               <div 
-                className="flex sm:hidden items-center gap-1.5 px-2.5 py-1.5 rounded-full border border-border/60 bg-white/50 dark:bg-slate-900/50 shadow-sm cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                className="flex sm:hidden items-center gap-1.5 px-2.5 py-1.5 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 shadow-sm cursor-pointer transition-colors"
                 onClick={() => navigate(`${basePath}/achievements`)}
                 title="Sizning tangalaringiz"
               >
-                <CircleDollarSign className="w-4 h-4 text-emerald-500" />
-                <span className="text-[12px] font-bold text-slate-800 dark:text-slate-200">{profile?.coins || 0}</span>
+                <CircleDollarSign className="w-4 h-4 text-emerald-400" />
+                <span className="text-[12px] font-bold text-slate-200">{profile?.coins || 0}</span>
               </div>
 
               {/* Gamification Stats */}
               <div className="hidden sm:flex items-center gap-2 px-1">
                 <div 
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border/60 bg-white/50 dark:bg-slate-900/50 shadow-sm cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 shadow-sm cursor-pointer transition-colors"
                   onClick={() => navigate(`${basePath}/achievements`)}
                   title="Sizning tangalaringiz"
                 >
-                  <CircleDollarSign className="w-4 h-4 text-emerald-500" />
-                  <span className="text-[13px] font-bold text-slate-800 dark:text-slate-200">{profile?.coins || 0}</span>
+                  <CircleDollarSign className="w-4 h-4 text-emerald-400" />
+                  <span className="text-[13px] font-bold text-slate-200">{profile?.coins || 0}</span>
                 </div>
                 <div 
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border/60 bg-white/50 dark:bg-slate-900/50 shadow-sm cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 shadow-sm cursor-pointer transition-colors"
                   onClick={() => navigate(`${basePath}/achievements`)}
                   title="Yutuqlar"
                 >
-                  <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-                  <span className="text-[13px] font-bold text-slate-800 dark:text-slate-200">0</span>
+                  <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
+                  <span className="text-[13px] font-bold text-slate-200">{profile?.xp || 0}</span>
                 </div>
               </div>
 
-              <div className="flex items-center gap-1 sm:gap-1.5 md:gap-3 pl-1.5 sm:pl-2 md:pl-4 border-l border-border h-8">
+              <div className="flex items-center gap-1 sm:gap-1.5 md:gap-3 pl-1.5 sm:pl-2 md:pl-4 border-l border-white/10 h-8">
                 {/* Mening Paketlarim button */}
                 <button
                   onClick={() => navigate(`${basePath}/packs?view=my`)}
