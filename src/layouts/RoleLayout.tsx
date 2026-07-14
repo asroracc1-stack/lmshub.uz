@@ -544,11 +544,6 @@ export default function RoleLayout({
             </div>
 
             <div className="flex items-center gap-1.5 sm:gap-2 md:gap-4 h-full py-2">
-              <VoiceAssistantButton />
-              <div className="hidden sm:block">
-                <SmartClock />
-              </div>
-
               {/* Mobile Coins: visible in place of clock on mobile */}
               <div 
                 className="flex sm:hidden items-center gap-1.5 px-2.5 py-1.5 rounded-full border border-border/60 bg-white/50 dark:bg-slate-900/50 shadow-sm cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
@@ -579,16 +574,6 @@ export default function RoleLayout({
                 </div>
               </div>
 
-              <button
-                onClick={() => window.dispatchEvent(new Event("open-global-search"))}
-                className="hidden lg:flex items-center gap-2 px-3 h-9 rounded-lg border border-border bg-muted/30 text-xs text-muted-foreground hover:bg-muted/50 hover:border-primary/30 transition-all cursor-pointer"
-              >
-                <Search className="h-3.5 w-3.5" />
-                <span className="font-bold">{t("common.search")}...</span>
-                <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-white dark:bg-white/15 border-slate-100 dark:border-white/10 px-1.5 font-mono text-[9px] font-medium opacity-100">
-                  <span>⌘</span>K
-                </kbd>
-              </button>
               <div className="flex items-center gap-1 sm:gap-1.5 md:gap-3 pl-1.5 sm:pl-2 md:pl-4 border-l border-border h-8">
                 {/* Mening Paketlarim button */}
                 <button
