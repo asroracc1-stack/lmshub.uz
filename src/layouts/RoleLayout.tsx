@@ -205,12 +205,12 @@ export default function RoleLayout({
      mini=false → full (desktop expanded + mobile)
   ════════════════════════════════════════════════════ */
   const renderSidebarContent = (mini = false, isMobile = false) => (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-[#14121f] text-slate-100">
 
       {/* ── Header: Logo & Toggle (desktop only) ─────────────────────── */}
       <div 
         className={cn(
-          "shrink-0 h-16 flex items-center border-b border-sidebar-border transition-all duration-300 select-none",
+          "shrink-0 h-16 flex items-center border-b border-white/[0.05] transition-all duration-300 select-none",
           mini ? "justify-center px-2" : "justify-between px-3"
         )}
       >
@@ -221,15 +221,15 @@ export default function RoleLayout({
               <Logo
                 size={54}
                 showText={true}
-                variant={theme === "dark" ? "dark" : "light"}
+                variant="dark"
               />
             </div>
             {!isMobile && (
               <button
                 onClick={() => setCollapsed(true)}
-                className="flex items-center justify-center h-8 w-8 shrink-0 rounded-lg border border-border/60
-                  bg-background/40 hover:bg-primary/10 hover:border-primary/40
-                  text-muted-foreground hover:text-primary transition-all duration-200 cursor-pointer"
+                className="flex items-center justify-center h-8 w-8 shrink-0 rounded-lg border border-white/10
+                  bg-white/5 hover:bg-emerald-500/10 hover:border-emerald-500/40
+                  text-slate-400 hover:text-emerald-400 transition-all duration-200 cursor-pointer"
                 title={t("common.hideMenu")}
                 aria-label={t("common.hideMenu")}
               >
@@ -250,7 +250,7 @@ export default function RoleLayout({
             <Logo
               size={36}
               showText={false}
-              variant={theme === "dark" ? "dark" : "light"}
+              variant="dark"
             />
           </div>
         )}
@@ -373,7 +373,7 @@ export default function RoleLayout({
                   mini ? "justify-center h-11 w-11 mx-auto px-0" : "px-4 py-3.5",
                   isActive
                     ? "bg-[#10b981] text-white shadow-[0_8px_16px_-4px_rgba(16,185,129,0.35)] font-extrabold"
-                    : "text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white font-bold"
+                    : "text-slate-300 hover:bg-white/5 hover:text-white font-bold"
                 )
               }
             >
@@ -387,7 +387,7 @@ export default function RoleLayout({
                         "shrink-0 transition-colors",
                         isActive
                           ? "text-white"
-                          : "text-slate-400 group-hover:text-emerald-500 dark:group-hover:text-emerald-400"
+                          : "text-slate-400 group-hover:text-emerald-400"
                       )}
                     />
                     {mini && item.badge && (
@@ -419,7 +419,7 @@ export default function RoleLayout({
       {/* ── Footer: Telegram + Logout ─────────────────── */}
       <div
         className={cn(
-          "shrink-0 border-t border-slate-200 dark:border-white/5 py-3 px-3 space-y-1"
+          "shrink-0 border-t border-white/5 py-3 px-3 space-y-1"
         )}
       >
         <a
@@ -428,12 +428,12 @@ export default function RoleLayout({
           rel="noopener noreferrer"
           title={mini ? t("common.telegramBot") : undefined}
           className={cn(
-            "flex items-center gap-4 rounded-2xl text-[15px] font-semibold text-slate-500 dark:text-slate-400",
-            "hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white transition-all duration-200",
+            "flex items-center gap-4 rounded-2xl text-[15px] font-semibold text-slate-400",
+            "hover:bg-white/5 hover:text-white transition-all duration-200",
             mini ? "justify-center h-11 w-11 mx-auto px-0" : "px-4 py-3"
           )}
         >
-          <Send size={20} className="shrink-0 text-slate-400" />
+          <Send size={20} className="shrink-0 text-slate-450" />
           {!mini && (
             <span className="truncate">{t("common.telegramBot")}</span>
           )}
@@ -442,8 +442,8 @@ export default function RoleLayout({
           onClick={handleSignOut}
           title={mini ? t("common.logout") : undefined}
           className={cn(
-            "w-full flex items-center gap-4 rounded-2xl text-[15px] font-semibold text-red-500",
-            "hover:bg-red-50 dark:hover:bg-red-500/10 transition-all duration-200",
+            "w-full flex items-center gap-4 rounded-2xl text-[15px] font-semibold text-red-400",
+            "hover:bg-red-500/10 transition-all duration-200",
             mini ? "justify-center h-11 w-11 mx-auto px-0" : "px-4 py-3"
           )}
         >
@@ -486,10 +486,7 @@ export default function RoleLayout({
         animate={{ width: collapsed ? 72 : 256 }}
         transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
         className={cn(
-          "hidden md:flex shrink-0 border flex-col h-full overflow-hidden rounded-[16px]",
-          theme === "dark"
-            ? "bg-[#0e0a1a] border-white/[0.04] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)]"
-            : "bg-white border-[#f1eff7] shadow-[0_20px_40px_rgba(139,92,246,0.04)]"
+          "hidden md:flex shrink-0 border flex-col h-full overflow-hidden rounded-[16px] bg-[#14121f] border-white/[0.04] shadow-2xl"
         )}
       >
         {renderSidebarContent(collapsed, false)}
