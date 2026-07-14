@@ -281,7 +281,7 @@ export default function UserDashboard() {
       icon: Target,
       gradient: "from-[#3b82f6] to-[#1d4ed8] shadow-blue-500/10",
       textClass: "text-white",
-      labelClass: "text-blue-100/70",
+      labelClass: "text-blue-100/90 font-bold",
       iconClass: "bg-white/15 text-white border-white/10",
       hoverClass: "group-hover:shadow-[0_15px_30px_-5px_rgba(59,130,246,0.3)] group-hover:border-blue-400/40"
     },
@@ -292,7 +292,7 @@ export default function UserDashboard() {
       icon: Activity,
       gradient: "from-[#10b981] to-[#047857] shadow-emerald-500/10",
       textClass: "text-white",
-      labelClass: "text-emerald-100/70",
+      labelClass: "text-emerald-100/90 font-bold",
       iconClass: "bg-white/15 text-white border-white/10",
       hoverClass: "group-hover:shadow-[0_15px_30px_-5px_rgba(16,185,129,0.3)] group-hover:border-emerald-400/40"
     },
@@ -303,18 +303,20 @@ export default function UserDashboard() {
       icon: CalendarDays,
       gradient: "from-[#ef4444] to-[#b91c1c] shadow-red-500/10",
       textClass: "text-white",
-      labelClass: "text-red-100/70",
+      labelClass: "text-red-100/90 font-bold",
       iconClass: "bg-white/15 text-white border-white/10",
       hoverClass: "group-hover:shadow-[0_15px_30px_-5px_rgba(239,68,68,0.3)] group-hover:border-red-400/40"
     },
     {
       key: "minutes",
       label: t("userDashboard.stats.practiceTime"),
-      value: t("userDashboard.stats.minutesValue", { count: (stats?.total_minutes || 0).toFixed(1) }),
+      value: (stats?.total_minutes && stats.total_minutes >= 60)
+        ? `${(stats.total_minutes / 60).toFixed(1)} soat`
+        : `${(stats?.total_minutes || 0).toFixed(1)} daq`,
       icon: Clock,
       gradient: "from-[#8b5cf6] to-[#6d28d9] shadow-purple-500/10",
       textClass: "text-white",
-      labelClass: "text-purple-100/70",
+      labelClass: "text-purple-100/90 font-bold",
       iconClass: "bg-white/15 text-white border-white/10",
       hoverClass: "group-hover:shadow-[0_15px_30px_-5px_rgba(139,92,246,0.3)] group-hover:border-purple-400/40"
     },
@@ -325,7 +327,7 @@ export default function UserDashboard() {
       icon: Flame,
       gradient: "from-[#f59e0b] to-[#b45309] shadow-amber-500/10",
       textClass: "text-white",
-      labelClass: "text-amber-100/70",
+      labelClass: "text-amber-100/90 font-bold",
       iconClass: "bg-white/15 text-white border-white/10",
       hoverClass: "group-hover:shadow-[0_15px_30px_-5px_rgba(245,158,11,0.3)] group-hover:border-amber-400/40"
     },
