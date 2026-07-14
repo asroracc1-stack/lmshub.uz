@@ -56,51 +56,94 @@ export default function LearningContributionGraph() {
   const fetchContributions = async () => {
     try {
       setLoading(true);
-      const res = await api.get("/user/gamification/contributions");
-      const contributionsData = res.data;
+      const [contribRes, attemptsRes] = await Promise.allSettled([
+        api.get("/user/gamification/contributions"),
+        api.get("/student/exams/attempts")
+      ]);
+
+      const contributionsData = contribRes.status === "fulfilled" && contribRes.value.data
+        ? contribRes.value.data
+        : { daily_contributions: [], total_study_hours: 0, total_xp: 0, total_coins: 0 };
+      const attemptsData = attemptsRes.status === "fulfilled" && attemptsRes.value.data
+        ? attemptsRes.value.data
+        : [];
+
+      let dailyContribs: ContributionDay[] = contributionsData.daily_contributions || [];
+
+      // Calculate practice minutes for each day based on attempts
+      const attemptsByDate: Record<string, { minutes: number; mocks: number; lessons: number; quizzes: number; xp: number; coins: number }> = {};
       
-      // Ensure daily contributions exist and fill with current activity if not present
-      if (contributionsData && Array.isArray(contributionsData.daily_contributions)) {
-        const todayStr = new Date().toLocaleDateString('en-CA');
-        let foundToday = false;
-        let addedMinutes = 0;
-        let addedXp = 0;
-
-        contributionsData.daily_contributions = contributionsData.daily_contributions.map((day: any) => {
-          if (day.date === todayStr) {
-            foundToday = true;
-            if (day.minutes === 0) {
-              addedMinutes = 15;
-              addedXp = 50;
-              return {
-                ...day,
-                minutes: 15,
-                xp: day.xp || 50,
-              };
-            }
+      attemptsData.forEach((a: any) => {
+        const dateVal = a.createdAt || a.created_at || a.attemptDate || a.attempt_date || a.date;
+        if (!dateVal) return;
+        
+        try {
+          const dateStr = new Date(dateVal).toLocaleDateString('en-CA'); // YYYY-MM-DD
+          if (!attemptsByDate[dateStr]) {
+            attemptsByDate[dateStr] = { minutes: 0, mocks: 0, lessons: 0, quizzes: 0, xp: 0, coins: 0 };
           }
-          return day;
-        });
-
-        if (!foundToday && contributionsData.daily_contributions.length > 0) {
-          const lastIndex = contributionsData.daily_contributions.length - 1;
-          const lastDay = contributionsData.daily_contributions[lastIndex];
-          if (lastDay && lastDay.minutes === 0) {
-            addedMinutes = 15;
-            addedXp = 50;
-            contributionsData.daily_contributions[lastIndex] = {
-              ...lastDay,
-              minutes: 15,
-              xp: lastDay.xp || 50,
-            };
+          
+          // Estimate duration in minutes
+          const type = (a.exam?.type || "").toLowerCase();
+          let minutes = 0;
+          if (a.timeSpentSeconds || a.time_spent_seconds) {
+            minutes = (a.timeSpentSeconds ?? a.time_spent_seconds) / 60;
+          } else {
+            if (type === "listening") minutes = 30;
+            else if (type === "reading") minutes = 60;
+            else if (type === "writing") minutes = 60;
+            else if (type === "speaking") minutes = 15;
+            else if (type.includes("mock") || type === "ielts") minutes = 165;
+            else if (type === "sat") minutes = 134;
+            else minutes = 20;
           }
+          
+          attemptsByDate[dateStr].minutes += minutes;
+          if (type.includes("mock") || type === "ielts") {
+            attemptsByDate[dateStr].mocks += 1;
+          } else {
+            attemptsByDate[dateStr].quizzes += 1;
+          }
+          attemptsByDate[dateStr].xp += 50;
+          attemptsByDate[dateStr].coins += 10;
+        } catch (e) {
+          console.error(e);
         }
+      });
 
-        if (addedMinutes > 0) {
-          contributionsData.total_study_hours = (contributionsData.total_study_hours || 0) + (addedMinutes / 60);
-          contributionsData.total_xp = (contributionsData.total_xp || 0) + addedXp;
+      // Merge attempts into daily contributions
+      Object.keys(attemptsByDate).forEach((dateKey) => {
+        const attemptDay = attemptsByDate[dateKey];
+        const existingIndex = dailyContribs.findIndex(d => d.date === dateKey);
+        
+        if (existingIndex !== -1) {
+          const existing = dailyContribs[existingIndex];
+          dailyContribs[existingIndex] = {
+            ...existing,
+            minutes: Math.max(existing.minutes, attemptDay.minutes),
+            mocks: Math.max(existing.mocks || 0, attemptDay.mocks),
+            quizzes: Math.max(existing.quizzes || 0, attemptDay.quizzes),
+            xp: Math.max(existing.xp || 0, attemptDay.xp),
+            coins: Math.max(existing.coins || 0, attemptDay.coins)
+          };
+        } else {
+          dailyContribs.push({
+            date: dateKey,
+            minutes: attemptDay.minutes,
+            lessons: 0,
+            quizzes: attemptDay.quizzes,
+            mocks: attemptDay.mocks,
+            xp: attemptDay.xp,
+            coins: attemptDay.coins
+          });
         }
-      }
+      });
+
+      // Calculate total study hours dynamically based on merged daily contributions
+      const totalMinutes = dailyContribs.reduce((acc, curr) => acc + curr.minutes, 0);
+      contributionsData.total_study_hours = totalMinutes / 60;
+      contributionsData.daily_contributions = dailyContribs;
+
       setData(contributionsData);
       setError(null);
     } catch (err) {

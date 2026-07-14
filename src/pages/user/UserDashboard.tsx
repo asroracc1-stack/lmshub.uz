@@ -272,6 +272,30 @@ export default function UserDashboard() {
 
   const isDark = theme === "dark";
 
+  // Calculate total study time accurately based on both backend metrics and attempts list
+  const computedTotalMinutes = useMemo(() => {
+    let sumSec = 0;
+    attempts.forEach(a => {
+      const sec = a.timeSpentSeconds ?? a.time_spent_seconds ?? a.elapsedSeconds ?? a.elapsed_seconds ?? a.elapsedSec ?? 0;
+      if (sec > 0) {
+        sumSec += sec;
+      } else {
+        const type = (a.exam?.type || "").toLowerCase();
+        if (type === "listening") sumSec += 30 * 60;
+        else if (type === "reading") sumSec += 60 * 60;
+        else if (type === "writing") sumSec += 60 * 60;
+        else if (type === "speaking") sumSec += 15 * 60;
+        else if (type.includes("mock") || type === "ielts") sumSec += 165 * 60;
+        else if (type === "sat") sumSec += 134 * 60;
+        else sumSec += 20 * 60;
+      }
+    });
+
+    const attemptsMinutes = sumSec / 60;
+    const backendMin = stats?.total_minutes || 0;
+    return Math.max(attemptsMinutes, backendMin);
+  }, [attempts, stats?.total_minutes]);
+
   // Stat tiles config
   const statCards = [
     {
@@ -310,9 +334,9 @@ export default function UserDashboard() {
     {
       key: "minutes",
       label: t("userDashboard.stats.practiceTime"),
-      value: (stats?.total_minutes && stats.total_minutes >= 60)
-        ? `${(stats.total_minutes / 60).toFixed(1)} soat`
-        : `${(stats?.total_minutes || 0).toFixed(1)} daq`,
+      value: computedTotalMinutes >= 60
+        ? `${(computedTotalMinutes / 60).toFixed(1)} soat`
+        : `${computedTotalMinutes.toFixed(1)} daq`,
       icon: Clock,
       gradient: "from-[#8b5cf6] to-[#6d28d9] shadow-purple-500/10",
       textClass: "text-white",
