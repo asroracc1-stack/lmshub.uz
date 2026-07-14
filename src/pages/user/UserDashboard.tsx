@@ -353,44 +353,96 @@ export default function UserDashboard() {
     [stats, activeDays]
   );
 
+  // Get date keys for the current week starting from Monday
+  const currentWeekDays = useMemo(() => {
+    const today = new Date();
+    const currentDay = today.getDay(); // 0 is Sunday, 1 is Monday, etc.
+    const distanceToMonday = currentDay === 0 ? -6 : 1 - currentDay;
+    const monday = new Date(today);
+    monday.setDate(today.getDate() + distanceToMonday);
+    monday.setHours(0,0,0,0);
+
+    const weekDaysList = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      weekDaysList.push(d.toLocaleDateString("en-CA")); // YYYY-MM-DD
+    }
+    return weekDaysList;
+  }, []);
+
   // Compute stats for all 7 modules based on real database records
   const location = useLocation();
   const basePath = location.pathname.startsWith("/student") ? "/student" : "/user";
 
   const composedChartData = useMemo(() => {
     const rawWeekly = stats?.weekly_data || [];
-    if (rawWeekly.length === 0) {
-      const days = ["Du", "Se", "Cho", "Pa", "Ju", "Sha", "Ya"];
-      return days.map((day) => ({
-        day,
-        practice: 0,
-        reading: null,
-        listening: null,
-        writing: null,
-        speaking: null,
-        sat: null,
-        national_cert: null,
-        attempts: 0,
-        timeSpent: 0
-      }));
-    }
+    const days = ["Du", "Se", "Cho", "Pa", "Ju", "Sha", "Ya"];
+    
+    return days.map((dayName, index) => {
+      const dateKey = currentWeekDays[index];
+      
+      // Find raw stats for this day from stats Res (fallback practice time)
+      const rawItem = rawWeekly.find(d => mapDay(d.day) === dayName) || 
+                      rawWeekly[index] || 
+                      { minutes: 0, reading: null, listening: null, writing: null, speaking: null, sat: null, national_cert: null };
 
-    return rawWeekly.map((item) => {
-      const dayName = mapDay(item.day);
+      // Find attempts created on this weekday
+      const dayAttempts = attempts.filter(a => {
+        const dateVal = a.createdAt || a.created_at || a.attemptDate || a.attempt_date || a.date;
+        if (!dateVal) return false;
+        try {
+          const attemptDateStr = new Date(dateVal).toLocaleDateString("en-CA");
+          return attemptDateStr === dateKey;
+        } catch (err) {
+          return false;
+        }
+      });
+
+      // Calculate averages for this day from attempts if raw stats doesn't have it
+      const getAvgForType = (type: string) => {
+        const typeAttempts = dayAttempts.filter(a => {
+          const t = (a.exam?.type || "").toLowerCase();
+          if (type === "mock") {
+            return t.includes("mock") || t === "ielts";
+          }
+          return t === type;
+        });
+
+        const scores = typeAttempts
+          .map(a => a.overall_band ?? a.overallBand ?? a.total_score ?? a.totalScore ?? a.score)
+          .filter((s): s is number => typeof s === "number" && s > 0);
+
+        if (scores.length === 0) return null;
+        return scores.reduce((acc, s) => acc + s, 0) / scores.length;
+      };
+
+      const readingVal = rawItem.reading !== null ? rawItem.reading : getAvgForType("reading");
+      const listeningVal = rawItem.listening !== null ? rawItem.listening : getAvgForType("listening");
+      const writingVal = rawItem.writing !== null ? rawItem.writing : getAvgForType("writing");
+      const speakingVal = rawItem.speaking !== null ? rawItem.speaking : getAvgForType("speaking");
+      const satVal = rawItem.sat !== null ? rawItem.sat : getAvgForType("sat");
+      
+      const nationalCertVal = (rawItem.national_cert !== null && rawItem.national_cert !== undefined) 
+        ? rawItem.national_cert 
+        : (rawItem.nationalCert !== null && rawItem.nationalCert !== undefined)
+        ? rawItem.nationalCert
+        : getAvgForType("national_cert");
+
       return {
         day: dayName,
-        practice: item.minutes || 0,
-        reading: item.reading ?? null,
-        listening: item.listening ?? null,
-        writing: item.writing ?? null,
-        speaking: item.speaking ?? null,
-        sat: item.sat ?? null,
-        national_cert: item.national_cert ?? null,
-        attempts: item.attempts_count ?? 0,
-        timeSpent: item.minutes || 0
+        practice: rawItem.minutes || rawItem.timeSpent || 0,
+        reading: readingVal,
+        listening: listeningVal,
+        writing: writingVal,
+        speaking: speakingVal,
+        sat: satVal,
+        national_cert: nationalCertVal,
+        attempts: dayAttempts.length || rawItem.attempts_count || 0,
+        timeSpent: rawItem.minutes || rawItem.timeSpent || 0
       };
     });
-  }, [stats]);
+  }, [stats, attempts, currentWeekDays]);
 
   // Check if there is data for the selected chart tab
   const hasDataForActiveTab = useMemo(() => {
