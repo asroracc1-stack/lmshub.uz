@@ -252,6 +252,16 @@
   .bg-gradient-primary {
     @apply bg-gradient-to-r from-[#240046] to-[#9F86C0];
   }
+
+  .bg-premium-navy-gradient {
+    background: linear-gradient(
+      180deg,
+      #161B44 0%,
+      #1D2352 35%,
+      #242D64 70%,
+      #2D3673 100%
+    );
+  }
 }
 
 /* Slim Scrollbar Customization - Global */
