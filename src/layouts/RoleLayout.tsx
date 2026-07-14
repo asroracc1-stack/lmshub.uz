@@ -205,7 +205,7 @@ export default function RoleLayout({
      mini=false → full (desktop expanded + mobile)
   ════════════════════════════════════════════════════ */
   const renderSidebarContent = (mini = false, isMobile = false) => (
-    <div className={cn("flex flex-col h-full text-slate-100", theme === "dark" ? "bg-[#0e0a1a]" : "bg-[#1f212a]")}>
+    <div className={cn("flex flex-col h-full text-slate-100", theme === "dark" ? "bg-[#0e0a1a]" : "bg-[#130f26]")}>
 
       {/* ── Header: Logo & Toggle (desktop only) ─────────────────────── */}
       <div 
@@ -487,7 +487,7 @@ export default function RoleLayout({
         transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
         className={cn(
           "hidden md:flex shrink-0 border flex-col h-full overflow-hidden rounded-[16px] border-white/[0.04] shadow-2xl",
-          theme === "dark" ? "bg-[#0e0a1a]" : "bg-[#1f212a]"
+          theme === "dark" ? "bg-[#0e0a1a]" : "bg-[#130f26]"
         )}
       >
         {renderSidebarContent(collapsed, false)}
@@ -517,7 +517,7 @@ export default function RoleLayout({
             "shrink-0 h-14 sm:h-16 border-b sticky top-0 z-30 transition-all w-full flex justify-center rounded-none md:rounded-t-[16px]",
             theme === "dark"
               ? "bg-[#0e0a1a] border-white/[0.04] shadow-sm text-slate-100"
-              : "bg-[#1f212a] border-white/[0.05] shadow-sm text-slate-100"
+              : "bg-[#130f26] border-white/[0.05] shadow-sm text-slate-100"
           )}
         >
           <div className="w-full px-3 sm:px-4 flex items-center justify-between h-full">
