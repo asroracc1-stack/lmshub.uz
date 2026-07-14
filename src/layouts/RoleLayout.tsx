@@ -205,7 +205,7 @@ export default function RoleLayout({
      mini=false → full (desktop expanded + mobile)
   ════════════════════════════════════════════════════ */
   const renderSidebarContent = (mini = false, isMobile = false) => (
-    <div className="flex flex-col h-full bg-[#1f212a] text-slate-100">
+    <div className={cn("flex flex-col h-full text-slate-100", theme === "dark" ? "bg-[#0e0a1a]" : "bg-[#1f212a]")}>
 
       {/* ── Header: Logo & Toggle (desktop only) ─────────────────────── */}
       <div 
@@ -486,7 +486,8 @@ export default function RoleLayout({
         animate={{ width: collapsed ? 72 : 256 }}
         transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
         className={cn(
-          "hidden md:flex shrink-0 border flex-col h-full overflow-hidden rounded-[16px] bg-[#1f212a] border-white/[0.04] shadow-2xl"
+          "hidden md:flex shrink-0 border flex-col h-full overflow-hidden rounded-[16px] border-white/[0.04] shadow-2xl",
+          theme === "dark" ? "bg-[#0e0a1a]" : "bg-[#1f212a]"
         )}
       >
         {renderSidebarContent(collapsed, false)}
