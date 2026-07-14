@@ -500,7 +500,13 @@ export default function UserPractice() {
       title: t("practice.listening.title", "Eshitish 🎧"),
       desc: t("practice.listening.desc", "Improve your listening"),
       path: `${basePath}/mocks/c/listening`,
-      illustration: <ListeningIllustration isDark={isDark} />
+      illustration: <ListeningIllustration isDark={isDark} />,
+      bgClass: isDark 
+        ? "bg-gradient-to-br from-[#0c192c]/60 to-[#0e274c]/40 border-blue-500/10 shadow-blue-950/20" 
+        : "bg-gradient-to-br from-[#f0f7ff] to-[#e0f0ff] border-blue-100/70 shadow-blue-100/10 hover:border-blue-300",
+      tagClass: isDark ? "bg-blue-500/15 text-blue-400" : "bg-blue-100/70 text-blue-700",
+      glowClass: "from-blue-500/10 to-indigo-500/5",
+      buttonClass: "bg-gradient-to-b from-blue-500 via-blue-600 to-indigo-700 shadow-[0_7px_0_0_#1e3a8a,0_10px_20px_-5px_rgba(29,78,216,0.4)] hover:shadow-[0_3px_0_0_#1e3a8a,0_5px_10px_-2px_rgba(29,78,216,0.3)] active:shadow-[0_1px_0_0_#1e3a8a]"
     },
     {
       id: "reading",
@@ -508,7 +514,13 @@ export default function UserPractice() {
       title: t("practice.reading.title", "O'qish 📖"),
       desc: t("practice.reading.desc", "Read smarter"),
       path: `${basePath}/mocks/c/reading`,
-      illustration: <ReadingIllustration isDark={isDark} />
+      illustration: <ReadingIllustration isDark={isDark} />,
+      bgClass: isDark 
+        ? "bg-gradient-to-br from-[#061f14]/60 to-[#0c3a25]/40 border-emerald-500/10 shadow-emerald-950/20" 
+        : "bg-gradient-to-br from-[#ecfdf5] to-[#d1fae5] border-emerald-100/70 shadow-emerald-100/10 hover:border-emerald-300",
+      tagClass: isDark ? "bg-emerald-500/15 text-emerald-400" : "bg-emerald-100/70 text-emerald-700",
+      glowClass: "from-emerald-500/10 to-teal-500/5",
+      buttonClass: "bg-gradient-to-b from-emerald-500 via-emerald-600 to-teal-700 shadow-[0_7px_0_0_#064e3b,0_10px_20px_-5px_rgba(4,120,87,0.4)] hover:shadow-[0_3px_0_0_#064e3b,0_5px_10px_-2px_rgba(4,120,87,0.3)] active:shadow-[0_1px_0_0_#064e3b]"
     },
     {
       id: "writing",
@@ -516,7 +528,13 @@ export default function UserPractice() {
       title: t("practice.writing.title", "Yozish ✍️"),
       desc: t("practice.writing.desc", "Write confidently"),
       path: `${basePath}/mocks/c/writing`,
-      illustration: <WritingIllustration isDark={isDark} />
+      illustration: <WritingIllustration isDark={isDark} />,
+      bgClass: isDark 
+        ? "bg-gradient-to-br from-[#2d1b09]/60 to-[#472a08]/40 border-amber-500/10 shadow-amber-950/20" 
+        : "bg-gradient-to-br from-[#fffaf0] to-[#fef3c7] border-amber-100/70 shadow-amber-100/10 hover:border-amber-300",
+      tagClass: isDark ? "bg-amber-500/15 text-amber-400" : "bg-amber-100/70 text-amber-700",
+      glowClass: "from-amber-500/10 to-orange-500/5",
+      buttonClass: "bg-gradient-to-b from-amber-500 via-amber-600 to-orange-700 shadow-[0_7px_0_0_#78350f,0_10px_20px_-5px_rgba(217,119,6,0.4)] hover:shadow-[0_3px_0_0_#78350f,0_5px_10px_-2px_rgba(217,119,6,0.3)] active:shadow-[0_1px_0_0_#78350f]"
     },
     {
       id: "speaking",
@@ -525,7 +543,13 @@ export default function UserPractice() {
       desc: t("practice.speaking.desc", "Speak naturally"),
       isBeta: true,
       path: `${basePath}/speaking`,
-      illustration: <SpeakingIllustration isDark={isDark} />
+      illustration: <SpeakingIllustration isDark={isDark} />,
+      bgClass: isDark 
+        ? "bg-gradient-to-br from-[#1c0f2d]/60 to-[#2e144c]/40 border-purple-500/10 shadow-purple-950/20" 
+        : "bg-gradient-to-br from-[#faf5ff] to-[#f3e8ff] border-purple-100/70 shadow-purple-100/10 hover:border-purple-300",
+      tagClass: isDark ? "bg-purple-500/15 text-purple-400" : "bg-purple-100/70 text-purple-700",
+      glowClass: "from-purple-500/10 to-indigo-500/5",
+      buttonClass: "bg-gradient-to-b from-purple-500 via-purple-600 to-indigo-750 shadow-[0_7px_0_0_#4c1d95,0_10px_20px_-5px_rgba(109,40,217,0.4)] hover:shadow-[0_3px_0_0_#4c1d95,0_5px_10px_-2px_rgba(109,40,217,0.3)] active:shadow-[0_1px_0_0_#4c1d95]"
     }
   ];
 
@@ -561,12 +585,10 @@ export default function UserPractice() {
               >
                 <div className={cn(
                   "group relative overflow-hidden rounded-[32px] p-8 border transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl flex flex-col justify-between min-h-[320px] text-left",
-                  isDark 
-                    ? "bg-slate-900/40 border-white/5 shadow-slate-950/20" 
-                    : "bg-white/80 border-slate-200/60 shadow-slate-200/5 hover:border-slate-350 backdrop-blur-md"
+                  skill.bgClass
                 )}>
                   {/* Subtle background glow highlight behind illustrations */}
-                  <div className="absolute top-10 right-10 w-28 h-28 rounded-full bg-gradient-to-br from-purple-500/10 to-indigo-500/5 blur-xl -z-10 group-hover:scale-125 transition-transform duration-500" />
+                  <div className={cn("absolute top-10 right-10 w-28 h-28 rounded-full bg-gradient-to-br blur-xl -z-10 group-hover:scale-125 transition-transform duration-500", skill.glowClass)} />
 
                   {/* BETA Badge */}
                   {skill.isBeta && (
@@ -588,10 +610,10 @@ export default function UserPractice() {
                   {/* Left Content Column */}
                   <div className="relative z-10 flex min-h-[260px] flex-col justify-between">
                     <div>
-                      {/* tag capsule with purple highlights */}
+                      {/* tag capsule with customized highlights */}
                       <span className={cn(
                         "inline-block rounded-full px-3 py-1 text-xs font-bold leading-none select-none tracking-wider uppercase",
-                        isDark ? "bg-purple-500/15 text-purple-400" : "bg-purple-50 text-purple-700"
+                        skill.tagClass
                       )}>
                         {skill.tag}
                       </span>
@@ -610,11 +632,14 @@ export default function UserPractice() {
                       </p>
                     </div>
 
-                    {/* Start practice 3D Purple/Violet Button matching LMSHub Theme */}
+                    {/* Start practice 3D Button matching individual card theme */}
                     <div className="mt-auto pt-6">
                       <button
                         onClick={() => navigate(skill.path)}
-                        className="group relative inline-flex items-center gap-2 overflow-hidden rounded-2xl bg-gradient-to-b from-purple-500 via-purple-600 to-indigo-700 px-7 py-3.5 font-bold text-white shadow-[0_7px_0_0_#4c1d95,0_10px_20px_-5px_rgba(109,40,217,0.5)] ring-1 ring-inset ring-white/20 transition-all duration-150 hover:translate-y-1 hover:shadow-[0_3px_0_0_#4c1d95,0_5px_10px_-2px_rgba(109,40,217,0.4)] active:translate-y-[6px] active:shadow-[0_1px_0_0_#4c1d95]"
+                        className={cn(
+                          "group relative inline-flex items-center gap-2 overflow-hidden rounded-2xl px-7 py-3.5 font-bold text-white ring-1 ring-inset ring-white/20 transition-all duration-150 hover:translate-y-1",
+                          skill.buttonClass
+                        )}
                       >
                         <span className="pointer-events-none absolute inset-x-0 top-0 h-1/2 rounded-t-2xl bg-gradient-to-b from-white/30 to-transparent" />
                         <span className="pointer-events-none absolute inset-0 -translate-x-full skew-x-12 bg-gradient-to-r from-transparent via-white/50 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
