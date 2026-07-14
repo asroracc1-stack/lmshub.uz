@@ -205,7 +205,7 @@ export default function RoleLayout({
      mini=false → full (desktop expanded + mobile)
   ════════════════════════════════════════════════════ */
   const renderSidebarContent = (mini = false, isMobile = false) => (
-    <div className={cn("flex flex-col h-full text-slate-100", theme === "dark" ? "bg-[#0e0a1a]" : "bg-premium-navy-gradient")}>
+    <div className={cn("flex flex-col h-full text-slate-100", theme === "dark" ? "bg-[#0e0a1a]" : "bg-[#1f212a]")}>
 
       {/* ── Header: Logo & Toggle (desktop only) ─────────────────────── */}
       <div 
@@ -487,7 +487,7 @@ export default function RoleLayout({
         transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
         className={cn(
           "hidden md:flex shrink-0 border flex-col h-full overflow-hidden rounded-[16px] border-white/[0.04] shadow-2xl",
-          theme === "dark" ? "bg-[#0e0a1a]" : "bg-premium-navy-gradient"
+          theme === "dark" ? "bg-[#0e0a1a]" : "bg-[#1f212a]"
         )}
       >
         {renderSidebarContent(collapsed, false)}
@@ -516,8 +516,8 @@ export default function RoleLayout({
           className={cn(
             "shrink-0 h-14 sm:h-16 border-b sticky top-0 z-30 transition-all w-full flex justify-center rounded-none md:rounded-t-[16px]",
             theme === "dark"
-              ? "bg-[#0e0a1a] border-white/[0.04] shadow-sm text-slate-100"
-              : "bg-premium-navy-gradient border-white/[0.05] shadow-sm text-slate-100"
+              ? "bg-[#0e0a1a]/85 backdrop-blur-xl border-white/[0.04] shadow-sm text-slate-100"
+              : "bg-[#e8edf9]/85 backdrop-blur-xl border-slate-200/80 shadow-sm text-slate-900"
           )}
         >
           <div className="w-full px-3 sm:px-4 flex items-center justify-between h-full">
@@ -526,7 +526,10 @@ export default function RoleLayout({
               <Button
                 variant="ghost"
                 size="icon"
-                className="md:hidden rounded-xl h-9 w-9 text-slate-200 hover:bg-white/10 hover:text-white"
+                className={cn(
+                  "md:hidden rounded-xl h-9 w-9",
+                  theme === "dark" ? "text-slate-200 hover:bg-white/10 hover:text-white" : "text-slate-700 hover:bg-slate-200/60 hover:text-slate-950"
+                )}
                 onClick={openMobileMenu}
                 aria-label="Menyu"
               >
@@ -535,7 +538,7 @@ export default function RoleLayout({
 
               {/* Greeting */}
               <div className="hidden sm:block">
-                <p className="font-bold text-sm tracking-tight text-white/95">
+                <p className={cn("font-bold text-sm tracking-tight", theme === "dark" ? "text-white/95" : "text-slate-800")}>
                   {t("common.hello")}, {displayName} 👋
                 </p>
               </div>
@@ -544,35 +547,50 @@ export default function RoleLayout({
             <div className="flex items-center gap-1.5 sm:gap-2 md:gap-4 h-full py-2">
               {/* Mobile Coins: visible in place of clock on mobile */}
               <div 
-                className="flex sm:hidden items-center gap-1.5 px-2.5 py-1.5 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 shadow-sm cursor-pointer transition-colors"
+                className={cn(
+                  "flex sm:hidden items-center gap-1.5 px-2.5 py-1.5 rounded-full border shadow-sm cursor-pointer transition-colors",
+                  theme === "dark" 
+                    ? "border-white/10 bg-white/5 hover:bg-white/10 text-slate-200" 
+                    : "border-slate-200 bg-white/60 hover:bg-white text-slate-800"
+                )}
                 onClick={() => navigate(`${basePath}/achievements`)}
                 title="Sizning tangalaringiz"
               >
-                <CircleDollarSign className="w-4 h-4 text-emerald-400" />
-                <span className="text-[12px] font-bold text-slate-200">{profile?.coins || 0}</span>
+                <CircleDollarSign className="w-4 h-4 text-emerald-500" />
+                <span className="text-[12px] font-bold">{profile?.coins || 0}</span>
               </div>
 
               {/* Gamification Stats */}
               <div className="hidden sm:flex items-center gap-2 px-1">
                 <div 
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 shadow-sm cursor-pointer transition-colors"
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-full border shadow-sm cursor-pointer transition-colors",
+                    theme === "dark" 
+                      ? "border-white/10 bg-white/5 hover:bg-white/10 text-slate-200" 
+                      : "border-slate-200 bg-white/60 hover:bg-white text-slate-800"
+                  )}
                   onClick={() => navigate(`${basePath}/achievements`)}
                   title="Sizning tangalaringiz"
                 >
-                  <CircleDollarSign className="w-4 h-4 text-emerald-400" />
-                  <span className="text-[13px] font-bold text-slate-200">{profile?.coins || 0}</span>
+                  <CircleDollarSign className="w-4 h-4 text-emerald-500" />
+                  <span className="text-[13px] font-bold">{profile?.coins || 0}</span>
                 </div>
                 <div 
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 shadow-sm cursor-pointer transition-colors"
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-full border shadow-sm cursor-pointer transition-colors",
+                    theme === "dark" 
+                      ? "border-white/10 bg-white/5 hover:bg-white/10 text-slate-200" 
+                      : "border-slate-200 bg-white/60 hover:bg-white text-slate-800"
+                  )}
                   onClick={() => navigate(`${basePath}/achievements`)}
                   title="Yutuqlar"
                 >
-                  <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
-                  <span className="text-[13px] font-bold text-slate-200">{profile?.xp || 0}</span>
+                  <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+                  <span className="text-[13px] font-bold">{profile?.xp || 0}</span>
                 </div>
               </div>
 
-              <div className="flex items-center gap-1 sm:gap-1.5 md:gap-3 pl-1.5 sm:pl-2 md:pl-4 border-l border-white/10 h-8">
+              <div className={cn("flex items-center gap-1 sm:gap-1.5 md:gap-3 pl-1.5 sm:pl-2 md:pl-4 border-l h-8", theme === "dark" ? "border-white/10" : "border-slate-200")}>
                 {/* Mening Paketlarim button */}
                 <button
                   onClick={() => navigate(`${basePath}/packs?view=my`)}
