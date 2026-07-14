@@ -97,26 +97,41 @@ export default function UserDashboard() {
     };
   };
 
+  // Load attempts on mount for dynamic overall average score calculations
   useEffect(() => {
-    if (openKey === "avg") {
-      const fetchAttempts = async () => {
-        setLoadingAttempts(true);
-        try {
-          const res = await api.get("/student/exams/attempts");
-          setAttempts(res.data || []);
-        } catch (e) {
-          console.error("Failed to load attempts for breakdown", e);
-        } finally {
-          setLoadingAttempts(false);
-        }
-      };
-      fetchAttempts();
-    }
-  }, [openKey]);
+    const fetchAttempts = async () => {
+      setLoadingAttempts(true);
+      try {
+        const res = await api.get("/student/exams/attempts");
+        setAttempts(res.data || []);
+      } catch (e) {
+        console.error("Failed to load attempts for breakdown on mount", e);
+      } finally {
+        setLoadingAttempts(false);
+      }
+    };
+    fetchAttempts();
+  }, []);
+
+  const computeDaysLeft = (dateStr: string): number | null => {
+    if (!dateStr) return null;
+    const target = new Date(dateStr);
+    const today = new Date();
+    target.setHours(0,0,0,0);
+    today.setHours(0,0,0,0);
+    const diffTime = target.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays >= 0 ? diffDays : 0;
+  };
 
   useEffect(() => {
-    if (openKey === "target" && stats?.target_band) {
-      setSelectedTargetBand(stats.target_band);
+    if (openKey === "target") {
+      const savedBand = localStorage.getItem("lmshub_target_band");
+      if (savedBand) {
+        setSelectedTargetBand(parseFloat(savedBand));
+      } else if (stats?.target_band) {
+        setSelectedTargetBand(stats.target_band);
+      }
     }
   }, [openKey, stats?.target_band]);
 
@@ -168,8 +183,50 @@ export default function UserDashboard() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const res = await api.get("/user/stats");
-        setStats(mapStats(res.data));
+        const [statsRes, contribRes] = await Promise.allSettled([
+          api.get("/user/stats"),
+          api.get("/user/gamification/contributions")
+        ]);
+
+        let mapped: UserStats = {
+          total_minutes: 0,
+          streak: 0,
+          target_band: null,
+          avg_score: null,
+          exam_days_left: null,
+          weekly_data: []
+        };
+
+        if (statsRes.status === "fulfilled") {
+          mapped = mapStats(statsRes.value.data);
+        }
+
+        // Fallback target band & exam date from localStorage
+        const savedBand = localStorage.getItem("lmshub_target_band");
+        if (savedBand) {
+          mapped.target_band = parseFloat(savedBand);
+        }
+        const savedExamDate = localStorage.getItem("lmshub_exam_date");
+        if (savedExamDate) {
+          mapped.exam_days_left = computeDaysLeft(savedExamDate);
+          setExamDate(savedExamDate);
+        }
+
+        // Fallback practice minutes and streak from gamification contributions endpoint
+        if (contribRes.status === "fulfilled" && contribRes.value.data) {
+          const contribData = contribRes.value.data;
+          const dailyContributions = contribData.daily_contributions || [];
+          const computedTotalMinutes = dailyContributions.reduce((acc: number, d: any) => acc + (d.minutes || 0), 0);
+          
+          if (!mapped.total_minutes || mapped.total_minutes === 0) {
+            mapped.total_minutes = computedTotalMinutes;
+          }
+          if (!mapped.streak || mapped.streak === 0) {
+            mapped.streak = contribData.current_streak ?? contribData.currentStreak ?? 0;
+          }
+        }
+
+        setStats(mapped);
       } catch (e) {
         console.error("Stats fetch failed", e);
       } finally {
@@ -180,7 +237,10 @@ export default function UserDashboard() {
   }, []);
 
   useEffect(() => {
-    if (profile?.exam_date) {
+    const savedExamDate = localStorage.getItem("lmshub_exam_date");
+    if (savedExamDate) {
+      setExamDate(savedExamDate);
+    } else if (profile?.exam_date) {
       setExamDate(profile.exam_date);
     }
   }, [profile?.exam_date]);
@@ -190,12 +250,18 @@ export default function UserDashboard() {
     setSavingExam(true);
     try {
       await api.put("/user/profile", { examDate });
+      localStorage.setItem("lmshub_exam_date", examDate);
       toast.success(t("userDashboard.toast.examDateSaved"), {
         description: t("userDashboard.toast.examDateDesc"),
       });
       await refresh();
-      const res = await api.get("/user/stats");
-      setStats(mapStats(res.data));
+      setStats(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          exam_days_left: computeDaysLeft(examDate)
+        };
+      });
       setOpenKey(null);
     } catch (e: any) {
       toast.error(e.response?.data?.message || t("userDashboard.toast.errorOccurred"));
@@ -222,7 +288,7 @@ export default function UserDashboard() {
     {
       key: "avg",
       label: t("userDashboard.stats.avgScore"),
-      value: stats?.avg_score ? stats.avg_score.toFixed(1) : "--",
+      value: (stats?.avg_score || breakdown.overallAvg) ? (stats?.avg_score || breakdown.overallAvg)!.toFixed(1) : "--",
       icon: Activity,
       gradient: "from-[#10b981] to-[#047857] shadow-emerald-500/10",
       textClass: "text-white",
@@ -555,10 +621,16 @@ export default function UserDashboard() {
                     setSavingTarget(true);
                     try {
                       await api.put("/user/profile", { targetBand: selectedTargetBand, target_band: selectedTargetBand });
+                      localStorage.setItem("lmshub_target_band", selectedTargetBand.toString());
                       toast.success(t("userDashboard.toast.targetBandSaved", "Maqsadli ball saqlandi"));
                       await refresh();
-                      const res = await api.get("/user/stats");
-                      setStats(mapStats(res.data));
+                      setStats(prev => {
+                        if (!prev) return null;
+                        return {
+                          ...prev,
+                          target_band: selectedTargetBand
+                        };
+                      });
                       setOpenKey(null);
                     } catch (e: any) {
                       toast.error(e.response?.data?.message || "Xatolik yuz berdi");
