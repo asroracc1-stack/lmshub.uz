@@ -99,8 +99,11 @@ export default function WelcomeBanner() {
       initial={{ opacity: 0, y: -16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.55, ease: "easeOut" }}
-      className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-purple-500 via-violet-500 to-fuchsia-500 shadow-2xl shadow-purple-500/30 max-w-full"
+      className="relative overflow-hidden rounded-[24px] bg-gradient-to-tr from-[#5b21b6] via-[#7c3aed] to-[#db2777] shadow-xl shadow-purple-900/20 dark:shadow-black/45 max-w-full border border-white/10"
     >
+      {/* Visual gloss overlay effect */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.15),transparent_45%)] pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
       {/* Subtle inner glow ring */}
       <div className="absolute inset-0 rounded-3xl ring-1 ring-inset ring-white/20 pointer-events-none" />
 
@@ -155,13 +158,13 @@ export default function WelcomeBanner() {
           {/* Quick badges */}
           <div className="mt-4 flex flex-wrap gap-2">
             {roleLabelText && (
-              <span className="inline-flex items-center gap-1.5 bg-white/15 hover:bg-white/25 transition-colors text-white text-xs font-semibold px-3 py-1.5 rounded-full backdrop-blur-sm cursor-default select-none">
-                <Zap className="h-3.5 w-3.5 text-yellow-300" />
+              <span className="inline-flex items-center gap-1.5 bg-white/10 hover:bg-white/25 border border-white/15 shadow-inner transition-all duration-350 text-white text-[11px] font-extrabold px-3.5 py-1.5 rounded-full backdrop-blur-md cursor-default select-none">
+                <Zap className="h-3.5 w-3.5 text-yellow-300 animate-pulse" />
                 {roleLabelText}
               </span>
             )}
-            <span className="inline-flex items-center gap-1.5 bg-white/15 hover:bg-white/25 transition-colors text-white text-xs font-semibold px-3 py-1.5 rounded-full backdrop-blur-sm cursor-default select-none">
-              <Star className="h-3.5 w-3.5 text-yellow-300" /> LMSHub Platform
+            <span className="inline-flex items-center gap-1.5 bg-white/10 hover:bg-white/25 border border-white/15 shadow-inner transition-all duration-350 text-white text-[11px] font-extrabold px-3.5 py-1.5 rounded-full backdrop-blur-md cursor-default select-none">
+              <Star className="h-3.5 w-3.5 text-yellow-300 fill-yellow-300" /> LMSHub Platform
             </span>
           </div>
         </div>

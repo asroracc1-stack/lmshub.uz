@@ -474,8 +474,8 @@ export default function RoleLayout({
     <VoiceAssistantProvider>
       <div
         className={cn(
-          "h-screen flex w-full overflow-hidden transition-colors duration-500 p-0 gap-0 md:p-3 md:gap-3",
-          theme === "dark" ? "bg-[#080410] text-slate-100" : "bg-[#F3F4F6] text-slate-900"
+          "h-screen flex w-full overflow-hidden transition-colors duration-500 p-0 gap-0 md:p-3.5 md:gap-3.5",
+          theme === "dark" ? "bg-[#080410] text-slate-100" : "bg-[#f5f4fa] text-slate-900"
         )}
       >
       <TigerLoader isLoading={authLoading} />
@@ -484,12 +484,12 @@ export default function RoleLayout({
       {/* ── Desktop sidebar ─────────────────────────── */}
       <motion.aside
         animate={{ width: collapsed ? 72 : 256 }}
-        transition={{ duration: 0.3, ease: "easeInOut" }}
+        transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
         className={cn(
           "hidden md:flex shrink-0 border flex-col h-full overflow-hidden rounded-[16px]",
           theme === "dark"
-            ? "bg-[#140D23] border-[#2E1E52] shadow-2xl"
-            : "bg-white border-[#E8DDFB] shadow-xl shadow-purple-100/40"
+            ? "bg-[#0e0a1a] border-white/[0.04] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)]"
+            : "bg-white border-[#f1eff7] shadow-[0_20px_40px_rgba(139,92,246,0.04)]"
         )}
       >
         {renderSidebarContent(collapsed, false)}
@@ -509,8 +509,8 @@ export default function RoleLayout({
         className={cn(
           "flex-1 flex flex-col min-w-0 h-full overflow-y-auto overflow-x-hidden relative thin-scrollbar rounded-none border-0 md:rounded-[16px] md:border",
           theme === "dark"
-            ? "bg-[#140D23] md:border-[#2E1E52] shadow-2xl"
-            : "bg-white md:border-[#E8DDFB] shadow-xl shadow-purple-100/40"
+            ? "bg-[#110b21] md:border-white/[0.04] shadow-2xl"
+            : "bg-white md:border-[#f1eff7] shadow-xl shadow-purple-100/20"
         )}
       >
         {/* Topbar */}
@@ -518,8 +518,8 @@ export default function RoleLayout({
           className={cn(
             "shrink-0 h-14 sm:h-16 border-b sticky top-0 z-30 transition-all w-full flex justify-center rounded-none md:rounded-t-[16px]",
             theme === "dark"
-              ? "bg-[#140D23]/60 backdrop-blur-xl border-[#2E1E52]"
-              : "bg-white/80 backdrop-blur-md border-[#E8DDFB]"
+              ? "bg-[#140D23]/80 backdrop-blur-xl border-white/[0.04] shadow-sm"
+              : "bg-white/85 backdrop-blur-xl border-slate-100 shadow-sm"
           )}
         >
           <div className="w-full px-3 sm:px-4 flex items-center justify-between h-full">

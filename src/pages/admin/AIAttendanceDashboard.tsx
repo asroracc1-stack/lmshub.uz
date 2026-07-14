@@ -129,7 +129,7 @@ export default function AIAttendanceDashboard() {
 
   // AI Configuration Engine state
   const [recognitionThreshold, setRecognitionThreshold] = useState(0.82);
-  const [snapshotInterval, setSnapshotInterval] = useState(15);
+  const  [snapshotInterval, setSnapshotInterval] = useState(15);
   const [lateMinutesLimit, setLateMinutesLimit] = useState(10);
   const [minAttendancePercent, setMinAttendancePercent] = useState(75);
 

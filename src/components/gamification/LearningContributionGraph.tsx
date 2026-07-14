@@ -283,8 +283,10 @@ export default function LearningContributionGraph() {
 
   return (
     <Card className={cn(
-      "p-5 shadow-lg rounded-[24px] border relative overflow-hidden transition-all duration-300",
-      isDark ? "bg-slate-900/30 border-white/5 shadow-xl shadow-slate-950/20" : "bg-white border-slate-200/60 shadow-slate-200/10"
+      "p-6 shadow-xl rounded-[24px] border relative overflow-hidden transition-all duration-300",
+      isDark
+        ? "bg-gradient-to-b from-[#18122a] to-[#110b1f] border-white/[0.04]"
+        : "bg-gradient-to-b from-white to-[#fbfbfe] border-slate-100 shadow-slate-200/15"
     )}>
       {/* Calendar Header */}
       <div className="flex items-center justify-between mb-4">

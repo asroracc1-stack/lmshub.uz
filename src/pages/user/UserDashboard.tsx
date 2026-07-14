@@ -489,19 +489,19 @@ export default function UserDashboard() {
   const modal = (() => {
     if (!openKey) return null;
     const common = { open: true, onOpenChange: (v: boolean) => !v && setOpenKey(null) };
-    const dialogClass = isDark ? "bg-[#0c0d12] border-white/10 text-white" : "bg-white border-slate-200 text-slate-900";
+    const dialogClass = isDark ? "bg-[#120b20] border-white/[0.08] text-white" : "bg-white border-slate-100 text-slate-900";
     const descClass = isDark ? "text-slate-400" : "text-slate-500";
-    const labelClass = isDark ? "text-slate-300" : "text-slate-600";
-    const inputClass = isDark ? "bg-white/5 border-white/10 text-white" : "bg-slate-50 border-slate-200 text-slate-900";
-    const itemClass = isDark ? "bg-white/5 border-white/5" : "bg-slate-50 border-slate-100";
+    const labelClass = isDark ? "text-slate-350" : "text-slate-600";
+    const inputClass = isDark ? "bg-white/[0.04] border-white/[0.08] text-white" : "bg-slate-50 border-slate-100 text-slate-900";
+    const itemClass = isDark ? "bg-white/[0.02] border-white/[0.04]" : "bg-slate-50/50 border-slate-100";
 
     switch (openKey) {
       case "target": {
         const bands = [5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0];
         return (
           <Dialog {...common}>
-            <DialogContent className={cn(dialogClass, "shadow-2xl rounded-2xl max-w-sm p-6")}>
-              <DialogHeader className="flex flex-row items-center justify-between border-b pb-4 mb-4 dark:border-white/5 border-slate-100 relative">
+            <DialogContent className={cn(dialogClass, "shadow-2xl rounded-[24px] max-w-sm p-6 border")}>
+              <DialogHeader className="flex flex-row items-center justify-between border-b pb-4 mb-4 dark:border-white/[0.06] border-slate-100/60 relative">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 bg-blue-50 dark:bg-blue-950/20 text-blue-500 border border-blue-100 rounded-xl flex items-center justify-center shadow-sm">
                     <Target className="h-5 w-5" />
@@ -559,8 +559,8 @@ export default function UserDashboard() {
       case "avg": {
         return (
           <Dialog {...common}>
-            <DialogContent className={cn(dialogClass, "shadow-2xl rounded-2xl max-w-md p-6")}>
-              <DialogHeader className="flex flex-row items-center justify-between border-b pb-4 mb-4 dark:border-white/5 border-slate-100 relative">
+            <DialogContent className={cn(dialogClass, "shadow-2xl rounded-[24px] max-w-md p-6 border")}>
+              <DialogHeader className="flex flex-row items-center justify-between border-b pb-4 mb-4 dark:border-white/[0.06] border-slate-100/60 relative">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 bg-violet-50 dark:bg-violet-950/20 text-violet-500 border border-violet-100 rounded-xl flex items-center justify-center shadow-sm">
                     <Activity className="h-5 w-5" />
@@ -640,8 +640,8 @@ export default function UserDashboard() {
       case "exam": {
         return (
           <Dialog {...common}>
-            <DialogContent className={cn(dialogClass, "shadow-2xl rounded-2xl max-w-sm p-6")}>
-              <DialogHeader className="flex flex-row items-center justify-between border-b pb-4 mb-4 dark:border-white/5 border-slate-100 relative">
+            <DialogContent className={cn(dialogClass, "shadow-2xl rounded-[24px] max-w-sm p-6 border")}>
+              <DialogHeader className="flex flex-row items-center justify-between border-b pb-4 mb-4 dark:border-white/[0.06] border-slate-100/60 relative">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 bg-rose-50 dark:bg-rose-955/20 text-rose-500 border border-rose-100 rounded-xl flex items-center justify-center shadow-sm">
                     <CalendarDays className="h-5 w-5" />
@@ -674,8 +674,8 @@ export default function UserDashboard() {
       case "minutes":
         return (
           <Dialog {...common}>
-            <DialogContent className={cn(dialogClass, "shadow-2xl rounded-2xl max-w-sm p-6")}>
-              <DialogHeader className="flex flex-row items-center justify-between border-b pb-4 mb-4 dark:border-white/5 border-slate-100 relative">
+            <DialogContent className={cn(dialogClass, "shadow-2xl rounded-[24px] max-w-sm p-6 border")}>
+              <DialogHeader className="flex flex-row items-center justify-between border-b pb-4 mb-4 dark:border-white/[0.06] border-slate-100/60 relative">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 bg-orange-50 dark:bg-orange-955/20 text-orange-500 border border-orange-100 rounded-xl flex items-center justify-center shadow-sm">
                     <Clock className="h-5 w-5" />
@@ -707,8 +707,8 @@ export default function UserDashboard() {
       case "streak":
         return (
           <Dialog {...common}>
-            <DialogContent className={cn(dialogClass, "shadow-2xl rounded-2xl max-w-sm p-6")}>
-              <DialogHeader className="flex flex-row items-center justify-between border-b pb-4 mb-4 dark:border-white/5 border-slate-100 relative">
+            <DialogContent className={cn(dialogClass, "shadow-2xl rounded-[24px] max-w-sm p-6 border")}>
+              <DialogHeader className="flex flex-row items-center justify-between border-b pb-4 mb-4 dark:border-white/[0.06] border-slate-100/60 relative">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 bg-purple-50 dark:bg-purple-955/20 text-purple-500 border border-purple-100 rounded-xl flex items-center justify-center shadow-sm">
                     <Flame className="h-5 w-5" />
@@ -788,19 +788,29 @@ export default function UserDashboard() {
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: i * 0.05 }}
                     whileHover={{ y: -3, scale: 1.02 }}
-                    className="text-left group w-full"
+                    className="text-left group w-full cursor-pointer focus:outline-none"
                   >
                     <Card className={cn(
-                      "p-3.5 h-full transition-all duration-300 cursor-pointer border rounded-2xl",
+                      "p-4 h-full transition-all duration-300 rounded-[20px] border relative overflow-hidden",
                       isDark
-                        ? "bg-slate-900/40 backdrop-blur-md border-white/5 shadow-xl group-hover:bg-slate-900/60 group-hover:border-white/10"
-                        : "bg-white border-slate-100 shadow-md shadow-slate-200/10 group-hover:shadow-xl group-hover:border-slate-200"
+                        ? "bg-gradient-to-b from-[#18122a] to-[#110b1f] border-white/[0.04] shadow-xl group-hover:border-primary/40 group-hover:shadow-[0_15px_30px_-8px_rgba(139,92,246,0.15)]"
+                        : "bg-gradient-to-b from-white to-[#fbfbfe] border-slate-100 shadow-md shadow-slate-200/15 group-hover:border-primary/30 group-hover:shadow-xl group-hover:shadow-purple-100/20"
                     )}>
-                      <div className={cn("h-8 w-8 rounded-xl flex items-center justify-center mb-2 border transition-transform group-hover:rotate-6 shadow-sm", s.color)}>
+                      {/* Subtly glowing back-dot decoration */}
+                      <div className="absolute -right-4 -top-4 w-12 h-12 rounded-full bg-primary/5 blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                      
+                      <div className={cn(
+                        "h-9 w-9 rounded-xl flex items-center justify-center mb-3.5 border transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3 shadow-inner",
+                        s.color
+                      )}>
                         <Icon className="h-4.5 w-4.5" />
                       </div>
-                      <p className={cn("font-display text-xl font-black tracking-tight leading-none", isDark ? "text-white" : "text-slate-900")}>{s.value}</p>
-                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-1.5 truncate">{s.label}</p>
+                      <p className={cn("font-display text-2xl font-extrabold tracking-tight leading-none", isDark ? "text-white" : "text-slate-900")}>
+                        {s.value}
+                      </p>
+                      <p className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-2.5 truncate">
+                        {s.label}
+                      </p>
                     </Card>
                   </motion.button>
                 );
@@ -809,8 +819,10 @@ export default function UserDashboard() {
 
           {/* Weekly Results Chart (Clean, Spacious, Floating Pills Layout similar to IELTS Hub) */}
           <Card className={cn(
-            "p-5 shadow-lg rounded-[24px] border transition-all duration-300 overflow-hidden relative",
-            isDark ? "bg-slate-900/30 border-white/5" : "bg-white border-slate-200/60 shadow-slate-200/10"
+            "p-6 shadow-xl rounded-[24px] border transition-all duration-300 overflow-hidden relative",
+            isDark
+              ? "bg-gradient-to-b from-[#18122a] to-[#110b1f] border-white/[0.04]"
+              : "bg-gradient-to-b from-white to-[#fbfbfe] border-slate-100 shadow-slate-200/15"
           )}>
             {/* Header Row: Title & Total Badge */}
             <div className="flex items-center justify-between gap-4">

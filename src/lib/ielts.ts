@@ -19,7 +19,7 @@ export const READING_BAND: Record<number, number> = {
   6: 3, 7: 3,
   4: 2.5, 5: 2.5,
 };
-
+ 
 export const LISTENING_BAND: Record<number, number> = {
   39: 9, 40: 9,
   37: 8.5, 38: 8.5,
