@@ -507,7 +507,7 @@ export default function RoleLayout({
           "flex-1 flex flex-col min-w-0 h-full overflow-y-auto overflow-x-hidden relative thin-scrollbar rounded-none border-0 md:rounded-[16px] md:border",
           theme === "dark"
             ? "bg-[#110b21] md:border-white/[0.04] shadow-2xl"
-            : "bg-white md:border-[#f1eff7] shadow-xl shadow-purple-100/20"
+            : "bg-[#fbfaff] md:border-[#f1eff7] shadow-xl shadow-purple-100/10"
         )}
       >
         {/* Topbar */}
@@ -516,7 +516,7 @@ export default function RoleLayout({
             "shrink-0 h-14 sm:h-16 border-b sticky top-0 z-30 transition-all w-full flex justify-center rounded-none md:rounded-t-[16px]",
             theme === "dark"
               ? "bg-[#140D23]/80 backdrop-blur-xl border-white/[0.04] shadow-sm"
-              : "bg-white/85 backdrop-blur-xl border-slate-100 shadow-sm"
+              : "bg-[#fbfaff]/85 backdrop-blur-xl border-slate-100/80 shadow-sm"
           )}
         >
           <div className="w-full px-3 sm:px-4 flex items-center justify-between h-full">
