@@ -810,10 +810,11 @@ export default function UserDashboard() {
                     whileHover={{ y: -3, scale: 1.02 }}
                     className="text-left group w-full cursor-pointer focus:outline-none"
                   >
-                    <Card className={cn(
+                    <div className={cn(
                       "p-4 h-full transition-all duration-300 rounded-[22px] border relative overflow-hidden bg-gradient-to-tr",
                       s.gradient,
                       "border-white/10 dark:border-white/5 shadow-md",
+                      "group-hover:scale-[1.02] group-hover:-translate-y-1",
                       s.hoverClass
                     )}>
                       {/* Visual glass gloss shine layer inside the card */}
@@ -831,7 +832,7 @@ export default function UserDashboard() {
                       <p className={cn("text-[9px] font-black uppercase tracking-widest mt-2.5 truncate", s.labelClass)}>
                         {s.label}
                       </p>
-                    </Card>
+                    </div>
                   </motion.button>
                 );
               })}
