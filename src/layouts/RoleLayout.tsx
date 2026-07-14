@@ -475,7 +475,7 @@ export default function RoleLayout({
       <div
         className={cn(
           "h-screen flex w-full overflow-hidden transition-colors duration-500 p-0 gap-0 md:p-3.5 md:gap-3.5",
-          theme === "dark" ? "bg-[#080410] text-slate-100" : "bg-[#f5f4fa] text-slate-900"
+          theme === "dark" ? "bg-[#080410] text-slate-100" : "bg-[#dee5f5] text-slate-900"
         )}
       >
       <TigerLoader isLoading={authLoading} />
@@ -508,7 +508,7 @@ export default function RoleLayout({
           "flex-1 flex flex-col min-w-0 h-full overflow-y-auto overflow-x-hidden relative thin-scrollbar rounded-none border-0 md:rounded-[16px] md:border",
           theme === "dark"
             ? "bg-[#110b21] md:border-white/[0.04] shadow-2xl"
-            : "bg-[#fbfaff] md:border-[#f1eff7] shadow-xl shadow-purple-100/10"
+            : "bg-[#e8edf9] md:border-[#d9e2f4] shadow-xl shadow-purple-100/5"
         )}
       >
         {/* Topbar */}
