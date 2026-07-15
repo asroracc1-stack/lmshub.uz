@@ -2131,7 +2131,7 @@ export default function MockTake() {
 
                         {/* Indented Options or Input Fields */}
                         <div className="mt-2 pl-9">
-                          {opts && opts.length > 0 ? (
+                          {opts && opts.length > 1 && q.qtype !== "fill" && q.qtype !== "short" ? (
                             <div className="space-y-1">
                               {opts.map((opt, oIdx) => {
                                 const isSelected = answers[q.id] === opt.text;
@@ -3015,7 +3015,7 @@ export default function MockTake() {
                 )}
 
                 {/* OPTIONS */}
-                {currentQuestion.options && currentQuestion.options.length > 0 ? (
+                {currentQuestion.options && currentQuestion.options.length > 1 && currentQuestion.qtype !== "fill" && currentQuestion.qtype !== "short" ? (
                   <div className="space-y-3">
                     {currentQuestion.options.map((opt, oIdx) => {
                       const isSelected = answers[currentQuestion.id] === opt.text;
@@ -3051,21 +3051,37 @@ export default function MockTake() {
                   </div>
                 ) : (
                   <div className="w-full">
-                    <Textarea 
-                      rows={12}
-                      className={cn("w-full p-6 text-lg font-serif rounded-none border-2 resize-none h-[400px] focus:ring-0 focus:outline-none", 
-                        isMilliy 
-                          ? "bg-white dark:bg-[#0b1624] border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:border-[#10b981]" 
-                          : "bg-white dark:bg-slate-950/30 border-slate-300 dark:border-slate-800 text-slate-900 dark:text-white focus:border-slate-500 dark:focus:border-slate-400"
-                      )}
-                      placeholder={isMilliy ? "Javobingizni shu yerga yozing..." : "Start typing your response here..."}
-                      value={answers[currentQuestion.id] || ""}
-                      onChange={(e) => onAnswer(currentQuestion.id, e.target.value)}
-                    />
-                    <div className="flex justify-between items-center text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-2 px-1">
-                      <span>Words: {wordCount}</span>
-                      <span>Characters: {(answers[currentQuestion.id] || "").length}</span>
-                    </div>
+                    {kind === "writing" ? (
+                      <div>
+                        <Textarea 
+                          rows={12}
+                          className={cn("w-full p-6 text-lg font-serif rounded-none border-2 resize-none h-[400px] focus:ring-0 focus:outline-none", 
+                            isMilliy 
+                              ? "bg-white dark:bg-[#0b1624] border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:border-[#10b981]" 
+                              : "bg-white dark:bg-slate-950/30 border-slate-300 dark:border-slate-800 text-slate-900 dark:text-white focus:border-slate-500 dark:focus:border-slate-400"
+                          )}
+                          placeholder={isMilliy ? "Javobingizni shu yerga yozing..." : "Start typing your response here..."}
+                          value={answers[currentQuestion.id] || ""}
+                          onChange={(e) => onAnswer(currentQuestion.id, e.target.value)}
+                        />
+                        <div className="flex justify-between items-center text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-2 px-1">
+                          <span>Words: {wordCount}</span>
+                          <span>Characters: {(answers[currentQuestion.id] || "").length}</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <input
+                        type="text"
+                        className={cn("w-full max-w-md p-3.5 text-lg font-semibold rounded-none border-2 focus:ring-0 focus:outline-none", 
+                          isMilliy 
+                            ? "bg-white dark:bg-[#0b1624] border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:border-[#10b981]" 
+                            : "bg-white dark:bg-slate-950/30 border-slate-300 dark:border-slate-800 text-slate-900 dark:text-white focus:border-slate-500 dark:focus:border-slate-400"
+                        )}
+                        placeholder={isMilliy ? "Javobingizni kiriting..." : "Type your answer here..."}
+                        value={answers[currentQuestion.id] || ""}
+                        onChange={(e) => onAnswer(currentQuestion.id, e.target.value)}
+                      />
+                    )}
                   </div>
                 )}
               </div>
