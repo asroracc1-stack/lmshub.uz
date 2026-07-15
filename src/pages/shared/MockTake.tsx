@@ -1983,7 +1983,8 @@ export default function MockTake() {
   };
 
   const renderIeltsListeningControls = () => {
-    if (kind !== "listening" || !exam?.audioUrl || isReviewOrAnalyze) return null;
+    const audioUrl = exam?.audioUrl || exam?.audio_url;
+    if (kind !== "listening" || !audioUrl || isReviewOrAnalyze) return null;
     return (
       <div className="max-w-3xl mx-auto mb-6 px-4 md:px-0">
         {!audioStarted ? (
@@ -2000,7 +2001,7 @@ export default function MockTake() {
             </Button>
           </div>
         ) : (
-          <CustomAudioPlayer src={exam.audioUrl} />
+          <CustomAudioPlayer src={audioUrl} />
         )}
       </div>
     );
@@ -2274,59 +2275,85 @@ export default function MockTake() {
           </span>
         </div>
 
-        {/* Middle side: Square Pagination Buttons */}
-        <div className="flex-1 flex justify-center items-center gap-1.5 overflow-x-auto px-2 py-1 scrollbar-none">
-          {questions.map((q, idx) => {
-            const isCurrent = idx === activeQuestionIndex;
-            const hasAns = !!answers[q.id];
-            const isFlg = flagged.has(q.id);
-            
-            let btnStyle = cStyle.pagUnanswered;
-            if (isReviewOrAnalyze) {
-              const qDetail = ieltsDetails.find((d: any) => String(d.questionId) === String(q.id));
-              const isQCorrect = qDetail ? !!qDetail.ok : false;
-              const wasQAnswered = qDetail && qDetail.userAns !== undefined && String(qDetail.userAns).trim() !== "";
-              
-              if (isQCorrect) {
-                btnStyle = isYB 
-                  ? "border-[#ffff00] text-[#ffff00] bg-[#002200]" 
-                  : "border-emerald-500 text-emerald-600 dark:text-emerald-400 bg-emerald-50/10";
-              } else if (wasQAnswered) {
-                btnStyle = isYB 
-                  ? "border-[#ffff00] text-[#ffff00] bg-[#220000] line-through" 
-                  : "border-rose-500 text-rose-600 dark:text-rose-455 bg-rose-50/10";
-              } else {
-                btnStyle = isYB 
-                  ? "border-[#333300] text-[#888800] bg-black" 
-                  : "border-slate-300 dark:border-slate-750 text-slate-500 dark:text-slate-400 bg-slate-100/30";
-              }
-              if (isCurrent) {
-                btnStyle = cn(btnStyle, "ring-2 ring-blue-500 ring-offset-1");
-              }
-            } else {
-              if (isCurrent) {
-                btnStyle = cStyle.pagActive;
-              } else if (isFlg) {
-                btnStyle = cStyle.pagFlagged;
-              } else if (hasAns) {
-                btnStyle = cStyle.pagAnswered;
-              }
-            }
+        {/* Middle side: Square Pagination Buttons grouped by Part */}
+        <div className="flex-1 flex items-center gap-3 overflow-x-auto px-2 py-1 scrollbar-none select-none">
+          {Array.from({ length: 4 }).map((_, secIdx) => {
+            const secQuestions = questions.filter(q => q.section_index === secIdx);
+            if (secQuestions.length === 0) return null;
+            const isCurrentSection = secIdx === currentSectionIdx;
 
             return (
-              <button
-                key={q.id}
-                onClick={() => {
-                  setActiveQuestionIndex(idx);
-                  const el = questionRefs.current[q.id];
-                  if (el) {
-                    el.scrollIntoView({ behavior: "smooth", block: "center" });
-                  }
-                }}
-                className={cn("h-8 w-8 sm:h-9 sm:w-9 text-xs font-black transition-all duration-150 border flex items-center justify-center rounded-sm shrink-0 cursor-pointer", btnStyle)}
+              <div 
+                key={secIdx} 
+                className={cn(
+                  "flex items-center gap-1.5 px-2 py-1 rounded-md transition-all border shrink-0",
+                  isCurrentSection 
+                    ? "border-blue-500/30 bg-blue-500/5 dark:border-blue-400/30 dark:bg-blue-400/5" 
+                    : "border-transparent"
+                )}
               >
-                {q.position}
-              </button>
+                <span className={cn("text-[10px] font-black uppercase tracking-wider mr-1 shrink-0",
+                  isCurrentSection ? "text-blue-600 dark:text-blue-450" : "text-slate-405 dark:text-slate-500"
+                )}>
+                  Part {secIdx + 1}:
+                </span>
+                <div className="flex gap-1">
+                  {secQuestions.map((q) => {
+                    const idx = questions.findIndex(item => item.id === q.id);
+                    const isCurrent = idx === activeQuestionIndex;
+                    const hasAns = !!answers[q.id];
+                    const isFlg = flagged.has(q.id);
+                    
+                    let btnStyle = cStyle.pagUnanswered;
+                    if (isReviewOrAnalyze) {
+                      const qDetail = ieltsDetails.find((d: any) => String(d.questionId) === String(q.id));
+                      const isQCorrect = qDetail ? !!qDetail.ok : false;
+                      const wasQAnswered = qDetail && qDetail.userAns !== undefined && String(qDetail.userAns).trim() !== "";
+                      
+                      if (isQCorrect) {
+                        btnStyle = isYB 
+                          ? "border-[#ffff00] text-[#ffff00] bg-[#002200]" 
+                          : "border-emerald-500 text-emerald-600 dark:text-emerald-400 bg-emerald-50/10";
+                      } else if (wasQAnswered) {
+                        btnStyle = isYB 
+                          ? "border-[#ffff00] text-[#ffff00] bg-[#220000] line-through" 
+                          : "border-rose-500 text-rose-600 dark:text-rose-455 bg-rose-50/10";
+                      } else {
+                        btnStyle = isYB 
+                          ? "border-[#333300] text-[#888800] bg-black" 
+                          : "border-slate-300 dark:border-slate-750 text-slate-500 dark:text-slate-400 bg-slate-100/30";
+                      }
+                      if (isCurrent) {
+                        btnStyle = cn(btnStyle, "ring-2 ring-blue-500 ring-offset-1");
+                      }
+                    } else {
+                      if (isCurrent) {
+                        btnStyle = cStyle.pagActive;
+                      } else if (isFlg) {
+                        btnStyle = cStyle.pagFlagged;
+                      } else if (hasAns) {
+                        btnStyle = cStyle.pagAnswered;
+                      }
+                    }
+
+                    return (
+                      <button
+                        key={q.id}
+                        onClick={() => {
+                          setActiveQuestionIndex(idx);
+                          const el = questionRefs.current[q.id];
+                          if (el) {
+                            el.scrollIntoView({ behavior: "smooth", block: "center" });
+                          }
+                        }}
+                        className={cn("h-7 w-7 sm:h-8 sm:w-8 text-[10px] font-black transition-all duration-150 border flex items-center justify-center rounded-sm shrink-0 cursor-pointer", btnStyle)}
+                      >
+                        {q.position}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             );
           })}
         </div>
@@ -2919,29 +2946,29 @@ export default function MockTake() {
             )}
           >
             {/* Listening Headphones overlay prompt */}
-            {kind === "listening" && exam.audioUrl && !audioStarted && (
+            {kind === "listening" && (exam.audioUrl || exam.audio_url) && !audioStarted && (
               <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md flex flex-col items-center justify-center p-8 text-center text-white z-30">
                 <div className="relative mx-auto mb-8 flex h-40 w-40 items-center justify-center rounded-full border border-white/10 bg-white/5 shadow-inner">
-                <Headphones className="h-16 w-16 text-blue-500 animate-bounce" />
+                  <Headphones className="h-16 w-16 text-blue-500 animate-bounce" />
+                </div>
+                <p className="max-w-md text-sm font-semibold leading-relaxed mb-6 text-slate-300">
+                  You will be listening to an audio clip during this test. You will not be permitted to pause or rewind the audio while answering the questions. To continue, click Play.
+                </p>
+                <Button 
+                  onClick={() => setAudioStarted(true)} 
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-3 rounded-xl flex items-center gap-2 shadow-lg shadow-blue-500/20"
+                >
+                  <Play className="h-4 w-4 fill-current" /> Play
+                </Button>
               </div>
-              <p className="max-w-md text-sm font-semibold leading-relaxed mb-6 text-slate-300">
-                You will be listening to an audio clip during this test. You will not be permitted to pause or rewind the audio while answering the questions. To continue, click Play.
-              </p>
-              <Button 
-                onClick={() => setAudioStarted(true)} 
-                className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-3 rounded-xl flex items-center gap-2 shadow-lg shadow-blue-500/20"
-              >
-                <Play className="h-4 w-4 fill-current" /> Play
-              </Button>
-            </div>
-          )}
+            )}
 
-          {/* Listening Sticky player */}
-          {kind === "listening" && exam.audioUrl && audioStarted && (
-            <div className="mb-6 z-20">
-              <CustomAudioPlayer src={exam.audioUrl} />
-            </div>
-          )}
+            {/* Listening Sticky player */}
+            {kind === "listening" && (exam.audioUrl || exam.audio_url) && audioStarted && (
+              <div className="mb-6 z-20">
+                <CustomAudioPlayer src={exam.audioUrl || exam.audio_url} />
+              </div>
+            )}
           
           <div className="w-full flex-1 flex flex-col">
             {currentQuestion && (
