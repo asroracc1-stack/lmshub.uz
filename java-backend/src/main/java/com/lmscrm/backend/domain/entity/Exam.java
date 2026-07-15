@@ -64,6 +64,20 @@ public class Exam {
     @Builder.Default
     private Boolean isActive = true;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private String status = "DRAFT";
+
+    @Column(name = "sub_type")
+    private String subType;
+
+    @Column(name = "is_ai_imported", nullable = false)
+    @Builder.Default
+    private Boolean isAiImported = false;
+
+    @Column(name = "published_at")
+    private LocalDateTime publishedAt;
+
     @Column(name = "required_pack", nullable = false)
     @Builder.Default
     private String requiredPack = "free";

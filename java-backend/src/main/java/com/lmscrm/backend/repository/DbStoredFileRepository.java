@@ -9,4 +9,5 @@ import java.util.Optional;
 @Repository
 public interface DbStoredFileRepository extends JpaRepository<DbStoredFile, String> {
     Optional<DbStoredFile> findByFilename(String filename);
+    org.springframework.data.domain.Page<DbStoredFile> findByFilenameContainingIgnoreCase(String filename, org.springframework.data.domain.Pageable pageable);
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,30 +10,92 @@ import {
   ShieldAlert, ShieldCheck, History, Target, Loader2, ArrowLeft, ArrowRight,
   BookOpen, Headphones, HelpCircle, FileSignature, Lightbulb, Pause, Play,
   Volume2, Share2, RotateCcw, LayoutDashboard, Search, ChevronLeft, ThumbsUp,
-  AlertTriangle, Gauge, Zap, Sparkles
+  AlertTriangle, Gauge, Zap, Sparkles, Trophy, Coins, Award
 } from "lucide-react";
 import { getExamCalculator, SATCalculator } from "@/lib/scoring";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatMathText, MathRenderer } from "@/lib/math";
 import { toast } from "sonner";
- 
+import { motion, AnimatePresence } from "framer-motion";
+import confetti from "canvas-confetti";
+import { jsPDF } from "jspdf";
+import "jspdf-autotable";
+import { api } from "@/lib/axios";
+import {
+  ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid,
+  Tooltip, BarChart, Bar, LineChart, Line, Legend, RadarChart,
+  PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar
+} from "recharts";
+
+// Helper components
+function AnimatedCounter({ value, duration = 1.2, isFloat = false }: { value: number; duration?: number; isFloat?: boolean }) {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    let start = 0;
+    const end = value;
+    if (start === end) {
+      setCount(end);
+      return;
+    }
+    
+    const range = end - start;
+    let current = start;
+    const stepTime = 1000 / 60; // 65fps
+    const totalFrames = Math.round(duration * 60);
+    const increment = range / totalFrames;
+    
+    const timer = setInterval(() => {
+      current += increment;
+      if (increment > 0 && current >= end) {
+        clearInterval(timer);
+        setCount(end);
+      } else if (increment < 0 && current <= end) {
+        clearInterval(timer);
+        setCount(end);
+      } else {
+        setCount(current);
+      }
+    }, stepTime);
+
+    return () => clearInterval(timer);
+  }, [value, duration]);
+
+  return <>{isFloat ? count.toFixed(1) : Math.round(count)}</>;
+}
+
 export function ExamResultDashboard({ result, questions, exam }: { result: any, questions: any[], exam: any }) {
   const { t } = useTranslation();
   const nav = useNavigate();
   const { role } = useAuth();
   const [activeTab, setActiveTab] = useState<'analytics' | 'analysis' | 'review'>('analytics');
   const [activeQuestionIndex, setActiveQuestionIndex] = useState<number>(0);
-  const [isPlaying, setIsPlaying] = useState(false);
   const [showCorrectAnswers, setShowCorrectAnswers] = useState(true);
   const [filterState, setFilterState] = useState<'all' | 'correct' | 'wrong' | 'review' | 'skipped'>('all');
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const activeQuestionRef = useRef<HTMLDivElement>(null);
+  
+  // Historical data states
+  const [previousAttempts, setPreviousAttempts] = useState<any[]>([]);
+  const [scoreDifference, setScoreDifference] = useState<number | null>(null);
 
   const kind = (exam?.type ?? result?.kind ?? "exam").toLowerCase();
   const isSat = kind === "sat";
   const isMilliy = kind === "national_cert" || kind === "milliy";
-  const isIelts = kind === "ielts" || kind === "reading" || kind === "listening";
+  const isIelts = kind === "ielts" || kind === "reading" || kind === "listening" || kind === "writing";
+
+  // Confetti effect on mount
+  useEffect(() => {
+    try {
+      confetti({
+        particleCount: 120,
+        spread: 70,
+        origin: { y: 0.65 },
+        colors: ["#10b981", "#3b82f6", "#a855f7", "#f59e0b"]
+      });
+    } catch (e) {
+      console.log("Confetti trigger failed");
+    }
+  }, []);
 
   // Normalize details fields to support both camelCase and snake_case backend serializations
   const rawDetails = result.detail || result.details || [];
@@ -110,7 +172,6 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
   let incorrectAnswers = 0;
 
   if (allUnanswered) {
-    // Correct Answers = 0, Wrong Answers = totalQuestions, Omitted = 0
     omittedAnswers = 0;
     incorrectAnswers = totalQuestions;
   } else {
@@ -159,28 +220,142 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
     finalScore = satBreakdown.isSingleSection ? 200 : 400;
   }
 
+  const numericScore = Number(finalScore) || 0;
+
+  // Fetch past attempts to find score improvement
+  useEffect(() => {
+    const fetchAttempts = async () => {
+      try {
+        const response = await api.get<any[]>('/student/exams/attempts');
+        const attempts = response.data || [];
+        setPreviousAttempts(attempts);
+
+        const finishedAttempts = attempts
+          .filter((a: any) => a.exam_id === exam?.id && a.finished_at && a.id !== result?.id)
+          .sort((a: any, b: any) => new Date(b.finished_at).getTime() - new Date(a.finished_at).getTime());
+
+        if (finishedAttempts.length > 0) {
+          const latestPastAttempt = finishedAttempts[0];
+          const pastVal = Number(latestPastAttempt.score ?? latestPastAttempt.overallBand ?? latestPastAttempt.totalScore) || 0;
+          setScoreDifference(numericScore - pastVal);
+        }
+      } catch (err) {
+        console.error("Failed to load historical attempts", err);
+      }
+    };
+    fetchAttempts();
+  }, [exam, result, numericScore]);
+
   // Performance Rating Logic for Circular progress label
   const scoreRatio = isSat
-    ? Math.max(0, ((allUnanswered ? (satBreakdown.isSingleSection ? 200 : 400) : Number(finalScore)) - (satBreakdown.isSingleSection ? 200 : 400)) / (satBreakdown.isSingleSection ? 600 : 1200))
+    ? Math.max(0, ((allUnanswered ? (satBreakdown.isSingleSection ? 200 : 400) : numericScore) - (satBreakdown.isSingleSection ? 200 : 400)) / (satBreakdown.isSingleSection ? 600 : 1200))
     : isMilliy
-    ? (allUnanswered ? 0 : Number(finalScore)) / 100
+    ? (allUnanswered ? 0 : numericScore) / 100
+    : isIelts
+    ? numericScore / 9.0
     : accuracy / 100;
 
-  let performanceLabel = "Average";
-  let labelColor = "text-amber-400";
-  if (scoreRatio >= 0.85) {
-    performanceLabel = "Excellent";
-    labelColor = "text-emerald-400";
-  } else if (scoreRatio >= 0.70) {
-    performanceLabel = "Good";
-    labelColor = "text-purple-400";
-  } else if (scoreRatio >= 0.50) {
-    performanceLabel = "Average";
-    labelColor = "text-amber-400";
-  } else {
-    performanceLabel = "Poor";
-    labelColor = "text-rose-500";
-  }
+  // Color theme variables based on Score / IELTS Band
+  const bandTheme = useMemo(() => {
+    const ratio = scoreRatio;
+    if (isIelts) {
+      if (numericScore >= 8.0) {
+        return {
+          gradient: "from-emerald-500 to-cyan-400 dark:from-emerald-400 dark:to-cyan-400",
+          glowColor: "rgba(16, 185, 129, 0.4)",
+          textClass: "text-emerald-500 dark:text-emerald-400",
+          cardClass: "border-emerald-500/20 bg-emerald-500/[0.02]",
+          textColor: "text-emerald-600 dark:text-emerald-400",
+          level: "Expert User / Advanced (C2)",
+          target: 8.5,
+          gap: 8.5 - numericScore
+        };
+      } else if (numericScore >= 6.0) {
+        return {
+          gradient: "from-blue-500 to-purple-500 dark:from-blue-400 dark:to-purple-400",
+          glowColor: "rgba(59, 130, 246, 0.4)",
+          textClass: "text-blue-500 dark:text-blue-400",
+          cardClass: "border-blue-500/20 bg-blue-500/[0.02]",
+          textColor: "text-blue-600 dark:text-blue-400",
+          level: "Competent User / Upper Intermediate (B2)",
+          target: 7.5,
+          gap: 7.5 - numericScore
+        };
+      } else if (numericScore >= 4.0) {
+        return {
+          gradient: "from-orange-500 to-red-500 dark:from-orange-400 dark:to-red-400",
+          glowColor: "rgba(249, 115, 22, 0.4)",
+          textClass: "text-orange-500 dark:text-orange-400",
+          cardClass: "border-orange-500/20 bg-orange-500/[0.02]",
+          textColor: "text-orange-600 dark:text-orange-400",
+          level: "Modest User / Intermediate (B1)",
+          target: 6.5,
+          gap: 6.5 - numericScore
+        };
+      } else {
+        return {
+          gradient: "from-red-600 to-rose-700 dark:from-red-500 dark:to-rose-600",
+          glowColor: "rgba(239, 68, 68, 0.4)",
+          textClass: "text-red-500 dark:text-red-400",
+          cardClass: "border-red-500/20 bg-red-500/[0.02]",
+          textColor: "text-red-600 dark:text-red-450",
+          level: "Limited / Elementary (A1-A2)",
+          target: 5.5,
+          gap: 5.5 - numericScore
+        };
+      }
+    } else {
+      // General non-IELTS score ratio mapping
+      if (ratio >= 0.85) {
+        return {
+          gradient: "from-emerald-500 to-cyan-400",
+          glowColor: "rgba(16, 185, 129, 0.4)",
+          textClass: "text-emerald-500 dark:text-emerald-400",
+          cardClass: "border-emerald-500/20 bg-emerald-500/[0.02]",
+          textColor: "text-emerald-600 dark:text-emerald-400",
+          level: "Excellent",
+          target: 100,
+          gap: 0
+        };
+      } else if (ratio >= 0.70) {
+        return {
+          gradient: "from-blue-500 to-purple-500",
+          glowColor: "rgba(59, 130, 246, 0.4)",
+          textClass: "text-blue-500 dark:text-blue-400",
+          cardClass: "border-blue-500/20 bg-blue-500/[0.02]",
+          textColor: "text-blue-600 dark:text-blue-400",
+          level: "Good",
+          target: 85,
+          gap: 0
+        };
+      } else if (ratio >= 0.50) {
+        return {
+          gradient: "from-orange-500 to-red-500",
+          glowColor: "rgba(249, 115, 22, 0.4)",
+          textClass: "text-orange-500 dark:text-orange-400",
+          cardClass: "border-orange-500/20 bg-orange-500/[0.02]",
+          textColor: "text-orange-600 dark:text-orange-400",
+          level: "Average",
+          target: 70,
+          gap: 0
+        };
+      } else {
+        return {
+          gradient: "from-red-600 to-rose-700",
+          glowColor: "rgba(239, 68, 68, 0.4)",
+          textClass: "text-red-500 dark:text-red-400",
+          cardClass: "border-red-500/20 bg-red-500/[0.02]",
+          textColor: "text-red-600 dark:text-red-400",
+          level: "Poor",
+          target: 50,
+          gap: 0
+        };
+      }
+    }
+  }, [numericScore, scoreRatio, isIelts]);
+
+  let performanceLabel = bandTheme.level.split(" ")[0];
+  let labelColor = bandTheme.textClass;
 
   const scoreType = isSat 
     ? (satBreakdown.isSingleSection ? (satBreakdown.singleSectionName === "math" ? "Math Section Score" : "R&W Section Score") : "SAT Score") 
@@ -196,308 +371,257 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
   const timeStr = `${elapsedMin}m ${elapsedSecRem}s`;
   const avgTimePerQuestion = Math.round(elapsedSec / totalQuestions);
 
-  // Auto-scroll logic to active question card
-  useEffect(() => {
-    if (activeTab === 'review') {
-      const timer = setTimeout(() => {
-        const el = document.getElementById("active-question-card");
-        if (el) {
-          el.scrollIntoView({ behavior: "smooth", block: "center" });
-        }
-      }, 150);
-      return () => clearTimeout(timer);
-    }
-  }, [activeQuestionIndex, activeTab]);
-
-  const handleQuestionClick = (idx: number) => {
-    setActiveQuestionIndex(idx);
-    setActiveTab('review');
-  };
-
-  // Context-aware metadata helper for questions
-  const getQuestionMetadata = (q: any, idx: number, resultDetail: any) => {
-    let explanationText = q.explanation || "";
-    let referenceParagraph = q.reference_paragraph || q.referenceParagraph || "";
-    let highlightedSentence = q.highlighted_sentence || q.highlightedSentence || "";
-    let learningTip = q.learning_tip || q.learningTip || "";
-    let difficulty = q.difficulty || "";
-    let skillCategory = q.skill_category || q.skillCategory || q.category || "";
-    let topic = q.topic || "";
-    let subject = q.subject || "";
-    let evidenceExplanation = q.evidence_explanation || q.evidenceExplanation || "";
-
-    if (explanationText.trim().startsWith("{")) {
-      try {
-        const parsed = JSON.parse(explanationText);
-        explanationText = parsed.explanation || explanationText;
-        referenceParagraph = parsed.referenceParagraph || referenceParagraph;
-        highlightedSentence = parsed.highlightedSentence || highlightedSentence;
-        learningTip = parsed.learningTip || learningTip;
-        difficulty = parsed.difficulty || difficulty;
-        skillCategory = parsed.skillCategory || parsed.skill_category || parsed.category || skillCategory;
-        topic = parsed.topic || topic;
-        subject = parsed.subject || subject;
-        evidenceExplanation = parsed.evidenceExplanation || parsed.evidence_explanation || evidenceExplanation;
-      } catch (e) {
-        // fallback
+  // Group Question Type stats dynamically
+  const questionTypeStats = useMemo(() => {
+    const stats: Record<string, { correct: number; total: number }> = {};
+    questionResults.forEach((r) => {
+      const rawType = r.question.questionType || r.question.question_type || r.question.category || "General";
+      const label = mapQuestionTypeToLabel(rawType);
+      if (!stats[label]) {
+        stats[label] = { correct: 0, total: 0 };
       }
-    }
-
-    // Heuristics for SAT Skill Categories
-    if (!skillCategory && isSat) {
-      const promptLower = (q.prompt || "").toLowerCase();
-      if (promptLower.includes("x") && (promptLower.includes("y") || promptLower.includes("equation") || promptLower.includes("system") || promptLower.includes("linear"))) {
-        skillCategory = "Algebra";
-      } else if (promptLower.includes("quadratic") || promptLower.includes("exponent") || promptLower.includes("polynomial") || promptLower.includes("function") || promptLower.includes("parabola")) {
-        skillCategory = "Advanced Math";
-      } else if (promptLower.includes("ratio") || promptLower.includes("percent") || promptLower.includes("speed") || promptLower.includes("unit") || promptLower.includes("probability")) {
-        skillCategory = "Problem Solving";
-      } else if (promptLower.includes("mean") || promptLower.includes("median") || promptLower.includes("standard deviation") || promptLower.includes("table") || promptLower.includes("graph") || promptLower.includes("chart") || promptLower.includes("scatter")) {
-        skillCategory = "Data Analysis";
-      } else if (promptLower.includes("triangle") || promptLower.includes("circle") || promptLower.includes("angle") || promptLower.includes("volume") || promptLower.includes("area") || promptLower.includes("geometry")) {
-        skillCategory = "Geometry";
-      } else {
-        const cats = ["Algebra", "Advanced Math", "Problem Solving", "Data Analysis", "Geometry"];
-        skillCategory = cats[idx % cats.length];
+      stats[label].total++;
+      if (r.isCorrect) {
+        stats[label].correct++;
       }
-    }
+    });
 
-    // Heuristics for National Certificate Subjects and Topics
-    if (isMilliy) {
-      if (!subject) {
-        const subjects = ["Mathematics", "History", "Native Language", "English", "Science"];
-        subject = q.qtype === "math" ? "Mathematics" : subjects[idx % subjects.length];
-      }
-      if (!topic) {
-        if (subject === "Mathematics") {
-          const topics = ["Algebraic Expressions", "Equations & Inequalities", "Functions & Graphs", "Geometry Foundations", "Probability & Combinatorics"];
-          topic = topics[idx % topics.length];
-        } else if (subject === "History") {
-          const topics = ["Ancient Civilizations", "Middle Ages of Central Asia", "Modern History", "Cultural Heritage Monuments", "Independence Era Studies"];
-          topic = topics[idx % topics.length];
-        } else if (subject === "Native Language") {
-          const topics = ["Morphology Rules", "Syntax Analysis", "Punctuation Standards", "Stylistic Analysis", "Spelling Competency"];
-          topic = topics[idx % topics.length];
-        } else if (subject === "English") {
-          const topics = ["Reading Comprehension", "Grammatical Structures", "Lexical Resource", "Prepositional Nuances", "Sentence Completion"];
-          topic = topics[idx % topics.length];
-        } else {
-          const topics = ["Classical Mechanics", "Thermodynamics", "Chemical Reaction Rates", "Cellular Biology", "Astrophysics"];
-          topic = topics[idx % topics.length];
-        }
-      }
-    }
+    return Object.entries(stats).map(([label, s]) => {
+      const acc = Math.round((s.correct / s.total) * 100);
+      return {
+        label,
+        correct: s.correct,
+        total: s.total,
+        accuracy: acc,
+      };
+    });
+  }, [questionResults]);
 
-    // Heuristics for Difficulty Level
-    if (!difficulty) {
-      if (idx % 3 === 0) difficulty = "Easy";
-      else if (idx % 3 === 1) difficulty = "Medium";
-      else difficulty = "Hard";
-    }
+  function mapQuestionTypeToLabel(raw: string): string {
+    const t = (raw ?? "").toLowerCase().replace(/-/g, "_");
+    if (t.includes("heading") || t === "headings") return "Matching Headings";
+    if (t.includes("tfng") || t.includes("true_false") || t.includes("true false")) return "True / False / Not Given";
+    if (t.includes("ynng") || t.includes("yes_no") || t.includes("yes no")) return "Yes / No / Not Given";
+    if (t.includes("mcq") || t.includes("multiple_choice") || t.includes("multiplechoice") || t.includes("single_choice")) return "Multiple Choice";
+    if (t.includes("sentence") || t.includes("sentence_completion")) return "Sentence Completion";
+    if (t.includes("summary") || t.includes("summary_completion") || t.includes("fill")) return "Summary Completion";
+    if (t.includes("matching") || t.includes("matching_info") || t.includes("matching_information")) return "Matching Information";
+    if (t.includes("short") || t.includes("short_answer")) return "Short Answer Questions";
+    return raw ? raw.charAt(0).toUpperCase() + raw.slice(1) : "General Questions";
+  }
 
-    // Heuristics for Learning Tip
-    if (!learningTip) {
-      if (isSat) {
-        if (skillCategory === "Algebra") {
-          learningTip = "Focus on isolating variables and eliminating choices by plugging in simple coordinates like (0,0) or (1,1).";
-        } else if (skillCategory === "Advanced Math") {
-          learningTip = "Remember the quadratic formula, vertex forms, and discriminants. Sketching functions helps verify intersection points.";
-        } else if (skillCategory === "Problem Solving") {
-          learningTip = "Read rates, ratios, and percentages carefully. Pay special attention to unit conversions (e.g. hours to minutes).";
-        } else if (skillCategory === "Data Analysis") {
-          learningTip = "Read all chart titles, axis labels, and keys first. Be careful not to extrapolate trends beyond the given data points.";
-        } else {
-          learningTip = "Leverage special triangles (30-60-90, 45-45-90) and similarity laws. Draw helping auxiliary lines when necessary.";
-        }
-      } else if (isMilliy) {
-        learningTip = `For National Certificate ${subject}, double-check the key rules and definitions in this specific domain to build solid foundations.`;
-      } else {
-        learningTip = "Scan the passage for exact synonyms of key words in the prompt. Eliminate options that use words out of context.";
-      }
-    }
-
-    // Heuristics for Evidence Explanation
-    if (!evidenceExplanation) {
-      evidenceExplanation = "Direct textual evidence confirms this option. The reference sentence supports this relationship while contrasting claims are explicitly rejected.";
-    }
-
-    return {
-      explanation: explanationText,
-      referenceParagraph,
-      highlightedSentence,
-      learningTip,
-      difficulty,
-      skillCategory,
-      topic,
-      subject,
-      evidenceExplanation,
-      timeSpent: resultDetail ? (resultDetail.timeSpentSeconds ?? resultDetail.time_spent_seconds ?? 0) : 0
-    };
-  };
-
-  // Grid states mapping
-  const questionStates = questionResults.map((res, idx) => {
-    let state: 'correct' | 'wrong' | 'review' | 'skipped' = 'wrong';
-    if (res.isCorrect) {
-      state = 'correct';
-    } else if (res.isOmitted) {
-      state = 'skipped';
-    } else {
-      const meta = getQuestionMetadata(res.question, idx, res.detail);
-      // Heuristic: If they spent a lot of time on it but failed, mark for "Review"
-      if (meta.timeSpent > avgTimePerQuestion * 1.25) {
-        state = 'review';
-      } else {
-        state = 'wrong';
-      }
-    }
-    return {
-      ...res,
-      state
-    };
-  });
-
-  // Performance Analysis Report (ChatGPT / Notion AI Style)
-  const getPerformanceAnalysis = () => {
-    const easyTotal = Math.max(1, questionResults.filter(r => getQuestionMetadata(r.question, questions.indexOf(r.question), r.detail).difficulty === "Easy").length);
-    const mediumTotal = Math.max(1, questionResults.filter(r => getQuestionMetadata(r.question, questions.indexOf(r.question), r.detail).difficulty === "Medium").length);
-    const hardTotal = Math.max(1, questionResults.filter(r => getQuestionMetadata(r.question, questions.indexOf(r.question), r.detail).difficulty === "Hard").length);
-
-    let easyCorrect = questionResults.filter(r => r.isCorrect && getQuestionMetadata(r.question, questions.indexOf(r.question), r.detail).difficulty === "Easy").length;
-    let mediumCorrect = questionResults.filter(r => r.isCorrect && getQuestionMetadata(r.question, questions.indexOf(r.question), r.detail).difficulty === "Medium").length;
-    let hardCorrect = questionResults.filter(r => r.isCorrect && getQuestionMetadata(r.question, questions.indexOf(r.question), r.detail).difficulty === "Hard").length;
-
+  // Dynamic AI Strength & Weaknesses Diagnosis
+  const analysis = useMemo(() => {
     const strengths: string[] = [];
     const weaknesses: string[] = [];
 
-    // Analyze by Skill Categories or Subjects
-    if (isSat) {
-      const catStats: Record<string, { correct: number; total: number }> = {};
-      questionResults.forEach((r, idx) => {
-        const meta = getQuestionMetadata(r.question, idx, r.detail);
-        const cat = meta.skillCategory;
-        if (!catStats[cat]) catStats[cat] = { correct: 0, total: 0 };
-        catStats[cat].total++;
-        if (r.isCorrect) catStats[cat].correct++;
-      });
+    questionTypeStats.forEach(stat => {
+      if (stat.accuracy >= 65) {
+        strengths.push(`${stat.label} (${stat.accuracy}% accuracy)`);
+      } else {
+        weaknesses.push(`${stat.label} (${stat.accuracy}% accuracy)`);
+      }
+    });
 
-      Object.entries(catStats).forEach(([cat, stats]) => {
-        const acc = stats.correct / stats.total;
-        if (acc >= 0.7) {
-          strengths.push(`${cat} (${Math.round(acc * 100)}% accuracy)`);
-        } else {
-          weaknesses.push(`${cat} (${Math.round(acc * 100)}% accuracy)`);
-        }
-      });
-    } else if (isMilliy) {
-      const subStats: Record<string, { correct: number; total: number }> = {};
-      questionResults.forEach((r, idx) => {
-        const meta = getQuestionMetadata(r.question, idx, r.detail);
-        const sub = meta.subject;
-        if (!subStats[sub]) subStats[sub] = { correct: 0, total: 0 };
-        subStats[sub].total++;
-        if (r.isCorrect) subStats[sub].correct++;
-      });
-
-      Object.entries(subStats).forEach(([sub, stats]) => {
-        const acc = stats.correct / stats.total;
-        if (acc >= 0.7) {
-          strengths.push(`${sub} (${Math.round(acc * 100)}% accuracy)`);
-        } else {
-          weaknesses.push(`${sub} (${Math.round(acc * 100)}% accuracy)`);
-        }
-      });
-    } else {
-      strengths.push(`Core exam content coverage (${accuracy}% accuracy)`);
-    }
-
-    if (strengths.length === 0) strengths.push("Basic concepts and structured navigation");
-    if (weaknesses.length === 0) weaknesses.push("Advanced analytical and fast-paced reasoning");
-
-    // Vocabulary & Grammar analysis heuristics
-    const vocabIssues = isSat 
-      ? "Focus on 'Words in Context' question categories. Pay attention to secondary dictionary definitions of common words." 
-      : "Acquire intermediate and upper-academic words. Keep a journal of transition words and descriptive verbs.";
-    const grammarIssues = isSat 
-      ? "Review standard English punctuation conventions, specifically relative clauses and semi-colon linkages." 
-      : "Practice sentence synthesis, identifying grammatical subjects, and verifying subject-verb agreement.";
-
-    // Estimated Future Score projection (Encouraging +10% improvement path)
-    let estFutureScore = "";
-    if (isSat) {
-      const currentScoreNum = allUnanswered ? (satBreakdown.isSingleSection ? 200 : 400) : Number(finalScore);
-      const maxLimit = satBreakdown.isSingleSection ? 800 : 1600;
-      const addScore = satBreakdown.isSingleSection ? 55 : 110;
-      estFutureScore = `${Math.min(maxLimit, currentScoreNum + Math.round(addScore * (1.15 - scoreRatio)))}`;
-    } else if (isMilliy) {
-      const currentScoreNum = allUnanswered ? 0 : Number(finalScore);
-      estFutureScore = `${Math.min(100, currentScoreNum + Math.round(12 * (1.15 - scoreRatio)))} Ball`;
-    } else {
-      estFutureScore = `${Math.min(100, accuracy + 12)}%`;
-    }
+    if (strengths.length === 0) strengths.push("Basic concept retrieval & outline matching");
+    if (weaknesses.length === 0) weaknesses.push("None! Highly consistent performance");
 
     return {
       strengths,
-      weaknesses,
-      vocabAnalysis: vocabIssues,
-      grammarAnalysis: grammarIssues,
-      recommendations: isSat 
-        ? ["Desmos scientific tools integration", "Grammatical subject-verb relative clauses review"] 
-        : ["Time division strategies per section", "Weakest subject syllabus revision weekly"],
-      studyPlan: isSat 
-        ? ["Solve 15 Algebra/Adv. Math questions daily", "Review transition words for 10 mins daily"] 
-        : ["Review weekly weak topic guidelines", "One complete full-length mock exam monthly"],
-      estFutureScore,
-      byDifficulty: {
-        easy: { correct: easyCorrect, total: easyTotal },
-        medium: { correct: mediumCorrect, total: mediumTotal },
-        hard: { correct: hardCorrect, total: hardTotal }
-      }
+      weaknesses
     };
-  };
+  }, [questionTypeStats]);
 
-  const analysis = getPerformanceAnalysis();
+  const aiRecommendation = useMemo(() => {
+    if (questionTypeStats.length === 0) return "Maintain consistent simulated mock schedules to lock in pacing guidelines.";
+    const sorted = [...questionTypeStats].sort((a, b) => a.accuracy - b.accuracy);
+    const weakest = sorted[0];
 
-  // Subject Stats for National Certificate
-  const subjectStats: Record<string, { correct: number; total: number; omitted: number; incorrect: number }> = {
-    "Mathematics": { correct: 0, total: 0, omitted: 0, incorrect: 0 },
-    "History": { correct: 0, total: 0, omitted: 0, incorrect: 0 },
-    "Native Language": { correct: 0, total: 0, omitted: 0, incorrect: 0 },
-    "English": { correct: 0, total: 0, omitted: 0, incorrect: 0 },
-    "Science": { correct: 0, total: 0, omitted: 0, incorrect: 0 }
-  };
-
-  questionResults.forEach((res, idx) => {
-    const meta = getQuestionMetadata(res.question, idx, res.detail);
-    const sub = meta.subject || "Mathematics";
-    if (!subjectStats[sub]) {
-      subjectStats[sub] = { correct: 0, total: 0, omitted: 0, incorrect: 0 };
+    if (weakest.accuracy >= 85) {
+      return "Outstanding balance of lexicon and speed! Continue practicing full IELTS simulations to build fatigue tolerance.";
     }
-    subjectStats[sub].total++;
-    if (res.isCorrect) subjectStats[sub].correct++;
-    else if (res.isOmitted) subjectStats[sub].omitted++;
-    else subjectStats[sub].incorrect++;
-  });
 
-  const subjectAnalyticsList = Object.entries(subjectStats)
-    .filter(([_, stats]) => stats.total > 0)
-    .map(([subjectName, stats]) => {
-      const acc = Math.round((stats.correct / stats.total) * 100);
+    const label = weakest.label;
+    if (label === "Multiple Choice") {
+      return "You lose most marks in Multiple Choice Questions. Spend more time practicing elimination techniques and keyword scanning, while ignoring common distractor synonym trap patterns.";
+    } else if (label === "True / False / Not Given" || label === "Yes / No / Not Given") {
+      return "Focus on distinguishing 'False' (the text contradicts) from 'Not Given' (the text provides no facts to confirm or deny). Scanning context is key.";
+    } else if (label === "Matching Headings") {
+      return "Avoid keyword matching traps. Read paragraphs for overall thematic intent, prioritizing the opening topic sentences and closing summaries.";
+    } else if (label === "Sentence Completion" || label === "Summary Completion") {
+      return "Ensure strict word counts are met and review spelling accuracy. Pay close attention to synonym matching for contextual words.";
+    } else if (label === "Matching Information") {
+      return "Skim paragraph blocks specifically to locate contextual triggers and synonyms instead of analyzing paragraph blocks in full depth.";
+    } else {
+      return `Practice vocabulary variations and scan synonym cues in passages to address comprehension performance in ${label}.`;
+    }
+  }, [questionTypeStats]);
+
+  // Gamification & Achievements dynamic parsing
+  const gamificationRewards = useMemo(() => {
+    const list = [];
+    if (isIelts || isSat || isMilliy) {
+      list.push({ title: "IELTS Exam completed", xp: "+50 XP", coins: "+20 Coins", icon: Trophy });
+    }
+
+    const earnedAchievements = [];
+    if (isIelts && kind.includes("reading")) {
+      earnedAchievements.push({ title: "Reading Machine", desc: "Completed reading test simulation", icon: "📖" });
+      if (avgTimePerQuestion < 45) {
+        earnedAchievements.push({ title: "Fast Reader", desc: "Paced under 45 seconds average per item", icon: "⚡" });
+      }
+    }
+    if (isIelts && kind.includes("listening")) {
+      if (accuracy > 85) {
+        earnedAchievements.push({ title: "Listening Expert", desc: "Achieved over 85% accuracy in Listening", icon: "🎧" });
+      }
+    }
+    if (accuracy > 80) {
+      earnedAchievements.push({ title: "Vocabulary Master", desc: "Lexical precision over 80%", icon: "🎓" });
+    }
+    if (kind.includes("writing") || accuracy > 80) {
+      earnedAchievements.push({ title: "Grammar Hunter", desc: "High syntactical consistency", icon: "✍️" });
+    }
+
+    return {
+      rewards: list,
+      achievements: earnedAchievements
+    };
+  }, [isIelts, isSat, isMilliy, kind, avgTimePerQuestion, accuracy]);
+
+  // Recharts historical attempts format
+  const chartData = useMemo(() => {
+    // Current attempt format
+    const currentAttemptObj = {
+      name: "Current",
+      score: numericScore,
+      accuracy: accuracy,
+      speed: avgTimePerQuestion
+    };
+
+    if (previousAttempts.length === 0) {
+      // Mock history details if first attempt to prevent empty charts
+      return [
+        { name: "Global Avg", score: isIelts ? 6.0 : (isSat ? 1000 : 60), accuracy: 60, speed: 60 },
+        { name: "Target", score: isIelts ? 7.5 : (isSat ? 1350 : 80), accuracy: 80, speed: 45 },
+        currentAttemptObj
+      ];
+    }
+
+    // Sort chronologically and extract last 5 finished attempts
+    const sorted = [...previousAttempts]
+      .filter((a: any) => a.exam_id === exam?.id && a.finished_at)
+      .sort((a: any, b: any) => new Date(a.finished_at).getTime() - new Date(b.finished_at).getTime())
+      .slice(-6);
+
+    const historyData = sorted.map((att: any, idx: number) => {
+      const sc = Number(att.score ?? att.overallBand ?? att.totalScore) || 0;
+      const totalQ = questions.length || 40;
+      // Synthesize accuracy from past details or default estimates
+      const correctCount = att.correctAnswers ?? Math.round(totalQ * (sc / (isIelts ? 9 : (isSat ? 1600 : 100))));
+      const acc = Math.round((correctCount / totalQ) * 100);
+      const elapsed = att.timeUsedSeconds ?? att.elapsedSec ?? 2400;
+      const speed = Math.round(elapsed / totalQ);
+
       return {
-        subjectName,
-        correct: stats.correct,
-        total: stats.total,
-        omitted: stats.omitted,
-        incorrect: stats.incorrect,
+        name: `Attempt ${idx + 1}`,
+        score: sc,
         accuracy: acc,
-        isStrength: acc >= 70,
-        isWeakness: acc < 70
+        speed: speed
       };
     });
 
-  const activeQ = questions[activeQuestionIndex];
-  const activeResult = questionStates[activeQuestionIndex];
-  const activeMeta = activeQ ? getQuestionMetadata(activeQ, activeQuestionIndex, activeResult?.detail) : null;
+    // Append current
+    return [...historyData, currentAttemptObj];
+  }, [previousAttempts, exam, numericScore, accuracy, avgTimePerQuestion, isIelts, isSat, questions.length]);
+
+  // PDF report card download utilizing jsPDF
+  const handleDownloadPdf = () => {
+    const doc = new jsPDF();
+    const primaryThemeColor = [139, 92, 246]; // Purple
+    
+    // Document Header
+    doc.setFillColor(31, 41, 55);
+    doc.rect(0, 0, 210, 45, 'F');
+    
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(22);
+    doc.setTextColor(255, 255, 255);
+    doc.text("LMSHub AI Result Report Card", 20, 28);
+    
+    // Exam metadata
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text("World-class AI Performance Diagnostics Report", 20, 36);
+
+    // Section 1: Score Footprint
+    doc.setTextColor(31, 41, 55);
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("Performance Footprint", 20, 60);
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Test Title: ${exam?.title || "Exam Simulator Result"}`, 20, 70);
+    doc.text(`Date Completed: ${new Date().toLocaleDateString()}`, 20, 76);
+    doc.text(`Exam Category: ${kind.toUpperCase()}`, 20, 82);
+
+    doc.setFont("helvetica", "bold");
+    doc.text(`Band Score / Score: ${finalScore} / ${isIelts ? '9.0' : (isSat ? '1600' : '100')}`, 120, 70);
+    doc.text(`Correct Answers: ${correctAnswers} / ${totalQuestions} (${accuracy}%)`, 120, 76);
+    doc.text(`Time Spent: ${timeStr} (Avg ${avgTimePerQuestion}s/q)`, 120, 82);
+
+    // Section 2: AI Strengths & Weaknesses
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    doc.text("AI Diagnostic Profile", 20, 100);
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.text("Strengths identified:", 20, 110);
+    doc.setFont("helvetica", "normal");
+    analysis.strengths.forEach((s, idx) => doc.text(`* ${s}`, 25, 118 + (idx * 6)));
+
+    const yStartWeak = 118 + (analysis.strengths.length * 6) + 4;
+    doc.setFont("helvetica", "bold");
+    doc.text("Focus areas / Weaknesses:", 20, yStartWeak);
+    doc.setFont("helvetica", "normal");
+    analysis.weaknesses.forEach((w, idx) => doc.text(`* ${w}`, 25, yStartWeak + 8 + (idx * 6)));
+
+    // Section 3: AI Recommendations
+    const yStartRec = yStartWeak + 8 + (analysis.weaknesses.length * 6) + 6;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    doc.text("AI Study Recommendations", 20, yStartRec);
+    
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    const splitAdvice = doc.splitTextToSize(aiRecommendation, 170);
+    doc.text(splitAdvice, 20, yStartRec + 10);
+
+    // Section 4: Question Category Table
+    const yStartTable = yStartRec + 10 + (splitAdvice.length * 5) + 10;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    doc.text("Category Breakdown", 20, yStartTable);
+
+    const tableRows = questionTypeStats.map(stat => [
+      stat.label,
+      `${stat.correct} / ${stat.total}`,
+      `${stat.accuracy}%`
+    ]);
+
+    (doc as any).autoTable({
+      startY: yStartTable + 6,
+      head: [['Question Category', 'Correct / Total', 'Accuracy Rate']],
+      body: tableRows,
+      theme: 'striped',
+      headStyles: { fillColor: primaryThemeColor }
+    });
+
+    doc.save(`LMSHub_ExamReport_${exam?.title?.replace(/\s+/g, "_") || "IELTS"}.pdf`);
+    toast.success("Professional PDF report downloaded!");
+  };
 
   const handleShare = () => {
     try {
@@ -510,224 +634,81 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
 
   // SVGs for Premium Animated progress rings
   const radius = 74;
-  const strokeWidth = 8;
+  const strokeWidth = 10;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference * (1 - scoreRatio);
 
-  const renderPackDetails = () => {
-    return (
-      <Card className="border border-slate-200 dark:border-slate-800 p-6 rounded-2xl bg-gradient-to-br from-indigo-50/50 via-white to-purple-50/30 dark:from-slate-900/50 dark:via-slate-950 dark:to-slate-900/30 shadow-sm relative overflow-hidden transition-all duration-300 hover:shadow-md">
-        <div className="absolute top-0 right-0 w-24 h-24 bg-violet-500/10 rounded-full blur-2xl pointer-events-none"></div>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-violet-100 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400 flex items-center justify-center font-bold">
-              👑
-            </div>
-            <div>
-              <h3 className="font-bold text-slate-850 dark:text-slate-200 text-sm">Sizning Imtihon Paketingiz</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">LMSHub Premium full access litsenziyasi</p>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 sm:flex sm:items-center gap-4 text-xs font-semibold">
-            <div className="border-r border-slate-200 dark:border-slate-800 pr-4">
-              <span className="text-slate-400 block uppercase text-[9px] tracking-wider mb-0.5">Xarid qilingan</span>
-              <span className="text-slate-800 dark:text-slate-200 font-bold">24 Iyun, 2026</span>
-            </div>
-            <div className="sm:border-r sm:border-slate-200 sm:dark:border-slate-800 sm:pr-4">
-              <span className="text-slate-400 block uppercase text-[9px] tracking-wider mb-0.5">Tugash muddati</span>
-              <span className="text-slate-850 dark:text-slate-200 font-bold text-amber-600 dark:text-amber-400">24 Iyul, 2026</span>
-            </div>
-            <div className="col-span-2 sm:col-span-1 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200/50 dark:border-emerald-800/20 px-3 py-1.5 rounded-lg text-emerald-700 dark:text-emerald-400 text-center font-bold">
-              Qolgan: 30 Kun (Faol)
-            </div>
-          </div>
-        </div>
-      </Card>
-    );
+  const activeQ = questions[activeQuestionIndex];
+  const activeResult = questionResults[activeQuestionIndex];
+
+  // AI Transcript Highlights for Listening
+  const highlightTranscriptKeywords = (text: string, correctAns: string) => {
+    if (!text) return null;
+    if (!correctAns) return <span>{text}</span>;
+    const cleanAns = String(correctAns).trim();
+    if (!cleanAns) return <span>{text}</span>;
+
+    // Highlight answer key in reference transcript
+    const escaped = cleanAns.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    try {
+      const regex = new RegExp(`(${escaped})`, 'gi');
+      const parts = text.split(regex);
+      return (
+        <span className="leading-relaxed">
+          {parts.map((p, i) => 
+            regex.test(p) ? (
+              <span key={i} className="bg-emerald-500/25 text-emerald-600 dark:text-emerald-400 font-extrabold px-1.5 py-0.5 rounded border border-emerald-500/20 animate-pulse">
+                {p}
+              </span>
+            ) : p
+          )}
+        </span>
+      );
+    } catch {
+      return <span>{text}</span>;
+    }
   };
 
-  const renderAnswerSheet = (showFilters = true) => {
-    return (
-      <div className="space-y-4">
-        {/* Filters panel for Answer sheet */}
-        {showFilters && (
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-[#0F172A] border border-slate-200 dark:border-white/[0.06] p-4 rounded-xl select-none">
-            <div className="flex items-center gap-2 overflow-x-auto py-1">
-              <Button
-                size="sm"
-                variant={filterState === 'all' ? 'default' : 'outline'}
-                onClick={() => setFilterState('all')}
-                className={cn("rounded-lg text-xs font-bold h-7 px-3", filterState === 'all' ? "bg-purple-600 hover:bg-purple-700 text-white" : "border-slate-200 dark:border-white/[0.06] text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white")}
-              >
-                All ({questionStates.length})
-              </Button>
-              <Button
-                size="sm"
-                variant={filterState === 'correct' ? 'default' : 'outline'}
-                onClick={() => setFilterState('correct')}
-                className={cn("rounded-lg text-xs font-bold h-7 px-3", filterState === 'correct' ? "bg-emerald-600 hover:bg-emerald-700 text-white" : "border-slate-200 dark:border-white/[0.06] text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white")}
-              >
-                Correct ({questionStates.filter(r => r.state === 'correct').length})
-              </Button>
-              <Button
-                size="sm"
-                variant={filterState === 'wrong' ? 'default' : 'outline'}
-                onClick={() => setFilterState('wrong')}
-                className={cn("rounded-lg text-xs font-bold h-7 px-3", filterState === 'wrong' ? "bg-rose-600 hover:bg-rose-700 text-white" : "border-slate-200 dark:border-white/[0.06] text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white")}
-              >
-                Wrong ({questionStates.filter(r => r.state === 'wrong').length})
-              </Button>
-              <Button
-                size="sm"
-                variant={filterState === 'review' ? 'default' : 'outline'}
-                onClick={() => setFilterState('review')}
-                className={cn("rounded-lg text-xs font-bold h-7 px-3", filterState === 'review' ? "bg-amber-600 hover:bg-amber-700 text-white" : "border-slate-200 dark:border-white/[0.06] text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white")}
-              >
-                Review ({questionStates.filter(r => r.state === 'review').length})
-              </Button>
-              <Button
-                size="sm"
-                variant={filterState === 'skipped' ? 'default' : 'outline'}
-                onClick={() => setFilterState('skipped')}
-                className={cn("rounded-lg text-xs font-bold h-7 px-3", filterState === 'skipped' ? "bg-slate-700 hover:bg-slate-600 text-white" : "border-slate-200 dark:border-white/[0.06] text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white")}
-              >
-                Skipped ({questionStates.filter(r => r.state === 'skipped').length})
-              </Button>
-            </div>
+  // Framer Motion entry configurations
+  const staggerContainer = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.12 }
+    }
+  };
 
-            
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Show correct options</span>
-              <button
-                onClick={() => setShowCorrectAnswers(!showCorrectAnswers)}
-                className={cn(
-                  "w-9 h-5 rounded-full p-0.5 transition-colors duration-200 focus:outline-none",
-                  showCorrectAnswers ? "bg-[#8B5CF6]" : "bg-slate-350 dark:bg-slate-800"
-                )}
-              >
-                <div
-                  className={cn(
-                    "w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-200",
-                    showCorrectAnswers ? "translate-x-4" : "translate-x-0"
-                  )}
-                />
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Answer Sheet grid */}
-        <Card className="border border-slate-200 dark:border-white/[0.06] p-6 rounded-2xl bg-white dark:bg-[#0F172A] shadow-xl">
-          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3">
-            {questionStates
-              .map((res: any, idx: number) => ({ res, originalIdx: idx }))
-              .filter(({ res }) => !showFilters || filterState === 'all' || res.state === filterState)
-              .map(({ res, originalIdx }) => {
-                const isActive = activeQuestionIndex === originalIdx;
-                let statusStyle = "";
-                let statusBadge = "";
-                let statusText = "Wrong";
-                if (res.state === 'correct') {
-
-                  statusStyle = "border-emerald-500/20 dark:border-emerald-500/10 bg-emerald-50 dark:bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 hover:border-emerald-500/40 hover:bg-emerald-100 dark:hover:bg-emerald-500/10";
-                  statusBadge = "bg-emerald-500 text-white";
-                  statusText = "Correct";
-                } else if (res.state === 'skipped') {
-                  statusStyle = "border-slate-300 dark:border-slate-700/30 bg-slate-100 dark:bg-slate-800/10 text-slate-600 dark:text-slate-400 hover:border-slate-400 dark:hover:border-slate-700/50 hover:bg-slate-200 dark:hover:bg-slate-800/20";
-                  statusBadge = "bg-slate-600 text-white";
-                  statusText = "Skipped";
-                } else if (res.state === 'review') {
-                  statusStyle = "border-amber-500/20 dark:border-amber-500/10 bg-amber-50 dark:bg-amber-500/5 text-amber-600 dark:text-amber-400 hover:border-amber-500/40 hover:bg-amber-100 dark:hover:bg-amber-500/10";
-                  statusBadge = "bg-amber-500 text-white";
-                  statusText = "Review";
-                } else {
-                  statusStyle = "border-rose-500/20 dark:border-rose-500/10 bg-rose-50 dark:bg-rose-500/5 text-rose-600 dark:text-rose-400 hover:border-rose-500/40 hover:bg-rose-100 dark:hover:bg-rose-500/10";
-                  statusBadge = "bg-rose-500 text-white";
-                  statusText = "Wrong";
-                }
-
-                return (
-                  <button
-                    key={originalIdx}
-                    onClick={() => handleQuestionClick(originalIdx)}
-                    className={cn(
-                      "p-3 rounded-xl border flex flex-col justify-between text-xs font-bold transition-all duration-200 select-none text-left w-full h-20 relative group hover:scale-[1.03]",
-                      statusStyle,
-                      isActive && "ring-2 ring-[#8B5CF6] ring-offset-2 ring-offset-white dark:ring-offset-[#070B14] shadow-lg shadow-[#8B5CF6]/10"
-                    )}
-                  >
-                    <div className="flex items-center justify-between w-full">
-                      <span className={cn("w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0", statusBadge)}>
-                        {originalIdx + 1}
-                      </span>
-                      <span className="text-[10px] font-bold opacity-80">{statusText}</span>
-                    </div>
-                    <div className="mt-2.5 flex items-center justify-between w-full select-none text-[10px]">
-                      <span className="truncate max-w-[50px] font-black text-slate-800 dark:text-white">
-                        {res.isOmitted ? "-" : res.userAns}
-                      </span>
-                      {showCorrectAnswers && (
-                        <span className="text-slate-400 dark:text-slate-500 font-black flex items-center gap-0.5">
-                          ➔ <span className="text-[#8B5CF6] dark:text-[#A855F7]">{res.correctAns}</span>
-                        </span>
-                      )}
-                    </div>
-                  </button>
-                );
-              })}
-          </div>
-        </Card>
-
-        {/* Action Bar */}
-        {showFilters && (
-          <div className="flex flex-wrap items-center justify-between gap-3 pt-6 border-t border-slate-200 dark:border-white/[0.06] select-none">
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" className="rounded-xl font-bold gap-2 text-xs h-10 px-4 border-slate-200 dark:border-white/[0.06] bg-white dark:bg-[#0F172A] text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5" onClick={handleShare}>
-                <Share2 className="w-4 h-4" /> Share Results
-              </Button>
-              <Button variant="default" size="sm" className="rounded-xl font-bold gap-2 text-xs h-10 px-6 bg-gradient-to-r from-[#8B5CF6] to-[#A855F7] text-white hover:opacity-90" onClick={() => setActiveTab('analysis')}>
-                <BrainCircuit className="w-4 h-4" /> Analyze Performance
-              </Button>
-              <Button variant="outline" size="sm" className="rounded-xl font-bold gap-2 text-xs h-10 px-4 border-slate-200 dark:border-white/[0.06] bg-white dark:bg-[#0F172A] text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5" onClick={() => nav(-1)}>
-                <RotateCcw className="w-4 h-4" /> Retry Mock Test
-              </Button>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" className="rounded-xl font-bold gap-2 text-xs h-10 px-4 border-emerald-500/20 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10" onClick={() => toast.success("Diagnostic feedback sent to academic coaches!")}>
-                Send Feedback
-              </Button>
-              <Button variant="default" size="sm" className="rounded-xl font-bold gap-2 text-xs h-10 px-6 bg-[#8B5CF6] text-white hover:bg-[#7C3AED] transition-all" onClick={() => nav(`/${role || "student"}/dashboard`)}>
-                <LayoutDashboard className="w-4 h-4" /> {t("cheating.returnToDashboard")}
-              </Button>
-              <Button variant="default" size="sm" className="rounded-xl font-bold gap-2 text-xs h-10 px-6 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200" onClick={() => nav(-1)}>
-                Back to Practice
-              </Button>
-            </div>
-          </div>
-        )}
-      </div>
-    );
+  const itemFadeInUp = {
+    hidden: { opacity: 0, y: 35 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { type: "spring", stiffness: 100, damping: 14 }
+    }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#070B14] text-slate-900 dark:text-slate-100 font-sans pb-16 selection:bg-[#8B5CF6]/30 selection:text-[#C084FC]">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#070b14] text-slate-900 dark:text-slate-100 font-sans pb-16 transition-colors duration-300 animate-fade-in">
       
-      {/* Header Bar */}
-      <header className="bg-white dark:bg-[#0F172A] border-b border-slate-200 dark:border-white/[0.06] py-4 px-6 sticky top-0 z-30 shadow-md backdrop-blur-md bg-white/90 dark:bg-[#0F172A]/90 select-none text-slate-900 dark:text-slate-100">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Header bar */}
+      <header className="bg-white/80 dark:bg-[#0F172A]/80 border-b border-slate-200 dark:border-white/[0.06] py-4 px-6 sticky top-0 z-30 shadow-md backdrop-blur-md flex items-center justify-between transition-colors">
+        <div className="max-w-7xl mx-auto w-full flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <Button size="icon" variant="ghost" className="rounded-full hover:bg-slate-100 dark:hover:bg-white/10 shrink-0 text-slate-600 dark:text-slate-300" onClick={() => nav(-1)}>
+            <Button size="icon" variant="ghost" className="rounded-full hover:bg-slate-100 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300" onClick={() => nav(-1)}>
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
-              <h1 className="font-extrabold text-lg text-slate-900 dark:text-white uppercase tracking-tight line-clamp-1">{exam?.title || "Exam Result"}</h1>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider">LMSHub Premium Review & Learning Center</p>
+              <h1 className="font-extrabold text-lg text-slate-900 dark:text-white uppercase tracking-tight line-clamp-1">{exam?.title || "IELTS Analytics"}</h1>
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider">LMSHub AI Diagnostic Center</p>
             </div>
           </div>
+          
+          {/* Action Tabs & Controls */}
           <div className="flex items-center flex-wrap gap-2.5">
-            <Badge variant="secondary" className="px-3 py-1 text-[10px] font-black uppercase bg-[#8B5CF6]/20 text-[#A855F7] border border-[#8B5CF6]/30">
-              {kind} Test
+            <Badge variant="secondary" className="px-3 py-1 text-[10px] font-black uppercase bg-[#8B5CF6]/15 text-[#8b5cf6] dark:text-[#a855f7] border border-[#8B5CF6]/20">
+              {kind.toUpperCase()}
             </Badge>
+
             <Button
               variant={activeTab === 'analytics' ? 'default' : 'outline'}
               size="sm"
@@ -735,12 +716,13 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
               className={cn(
                 "rounded-xl gap-2 font-bold text-xs h-9 px-4 transition-all duration-300",
                 activeTab === 'analytics' 
-                  ? "bg-gradient-to-r from-[#8B5CF6] to-[#A855F7] text-white shadow-lg shadow-[#8B5CF6]/25" 
+                  ? "bg-gradient-to-r from-[#8B5CF6] to-[#A855F7] text-white shadow-lg shadow-[#8B5CF6]/25 border-none animate-[scale-in_0.2s_ease-out]" 
                   : "bg-white dark:bg-[#0F172A] border-slate-200 dark:border-white/[0.06] text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5"
               )}
             >
               <LayoutDashboard className="w-3.5 h-3.5" /> Dashboard
             </Button>
+            
             <Button
               variant={activeTab === 'analysis' ? 'default' : 'outline'}
               size="sm"
@@ -748,12 +730,13 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
               className={cn(
                 "rounded-xl gap-2 font-bold text-xs h-9 px-4 transition-all duration-300",
                 activeTab === 'analysis' 
-                  ? "bg-gradient-to-r from-[#8B5CF6] to-[#A855F7] text-white shadow-lg shadow-[#8B5CF6]/25" 
+                  ? "bg-gradient-to-r from-[#8B5CF6] to-[#A855F7] text-white shadow-lg shadow-[#8B5CF6]/25 border-none animate-[scale-in_0.2s_ease-out]" 
                   : "bg-white dark:bg-[#0F172A] border-slate-200 dark:border-white/[0.06] text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5"
               )}
             >
               <BrainCircuit className="w-3.5 h-3.5" /> AI Coach
             </Button>
+
             <Button
               variant={activeTab === 'review' ? 'default' : 'outline'}
               size="sm"
@@ -761,7 +744,7 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
               className={cn(
                 "rounded-xl gap-2 font-bold text-xs h-9 px-4 transition-all duration-300",
                 activeTab === 'review' 
-                  ? "bg-gradient-to-r from-[#8B5CF6] to-[#A855F7] text-white shadow-lg shadow-[#8B5CF6]/25" 
+                  ? "bg-gradient-to-r from-[#8B5CF6] to-[#A855F7] text-white shadow-lg shadow-[#8B5CF6]/25 border-none animate-[scale-in_0.2s_ease-out]" 
                   : "bg-white dark:bg-[#0F172A] border-slate-200 dark:border-white/[0.06] text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5"
               )}
             >
@@ -771,562 +754,590 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 mt-6 space-y-6">
-
-        {/* Dashboard / Analytics overview tab */}
-        {activeTab === 'analytics' && (
-          <div className="space-y-6 animate-fadeIn">
-            
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-              {/* Animated Progress Ring Card */}
-              <Card className="border border-slate-200 dark:border-white/[0.06] p-8 rounded-2xl bg-white dark:bg-[#0F172A] flex flex-col items-center justify-between shadow-xl relative overflow-hidden group">
-                {/* Glow ring in the background */}
-                <div className="absolute top-0 right-0 w-32 h-32 bg-[#8B5CF6]/10 rounded-full blur-3xl pointer-events-none group-hover:bg-[#8B5CF6]/15 transition-all duration-500"></div>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 mt-6">
+        <motion.div
+          variants={staggerContainer}
+          initial="hidden"
+          animate="visible"
+          className="space-y-6"
+        >
+          {/* TAB 1: ANALYTICS DASHBOARD */}
+          {activeTab === 'analytics' && (
+            <div className="space-y-6">
+              
+              {/* HERO METRICS SECTION */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 
-                <div className="w-full text-center sm:text-left select-none">
-                  <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">{scoreType}</h3>
-                  <p className="text-[10px] text-[#A855F7] font-bold uppercase tracking-wider">{scoreSub}</p>
-                </div>
+                {/* Visual score circular progress ring */}
+                <motion.div variants={itemFadeInUp}>
+                  <Card className="border border-slate-200 dark:border-white/[0.06] p-8 rounded-2xl bg-white dark:bg-[#0F172A] flex flex-col items-center justify-between shadow-xl relative overflow-hidden group h-full transition-[border-color,box-shadow] duration-350 hover:border-violet-500/20 hover:shadow-violet-500/[0.02]">
+                    {/* Orb Glow backdrop */}
+                    <div className={cn("absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl opacity-10 pointer-events-none transition-all duration-500 bg-gradient-to-r", bandTheme.gradient)} />
 
-                {/* Circular Score Visualizer */}
-                <div className="relative my-6 flex items-center justify-center select-none">
-                  <svg className="w-48 h-48 transform -rotate-90">
-                    <defs>
-                      <linearGradient id="scoreGlowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="#8B5CF6" />
-                        <stop offset="100%" stopColor="#A855F7" />
-                      </linearGradient>
-                      <filter id="ringGlow" x="-20%" y="-20%" width="140%" height="140%">
-                        <feGaussianBlur stdDeviation="5" result="blur" />
-                        <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                      </filter>
-                    </defs>
-                    {/* Background ring */}
-                    <circle
-                      cx="96"
-                      cy="96"
-                      r={radius}
-                      stroke="currentColor"
-                      strokeWidth={strokeWidth}
-                      fill="transparent"
-                      className="text-slate-100 dark:text-white/[0.03]"
-                    />
-                    {/* Animated foreground ring */}
-                    <circle
-                      cx="96"
-                      cy="96"
-                      r={radius}
-                      stroke="url(#scoreGlowGrad)"
-                      strokeWidth={strokeWidth}
-                      fill="transparent"
-                      strokeDasharray={circumference}
-                      strokeDashoffset={strokeDashoffset}
-                      strokeLinecap="round"
-                      filter="url(#ringGlow)"
-                      className="transition-[stroke-dashoffset] duration-1000 ease-out"
-                    />
-                  </svg>
-
-                  {/* Score text absolute values */}
-                  <div className="absolute flex flex-col items-center justify-center text-center">
-                    <span className="text-5xl font-black tracking-tighter text-slate-900 dark:text-white">
-                      {isSat && allUnanswered ? (satBreakdown.isSingleSection ? 200 : 400) : (isMilliy && allUnanswered ? 0 : finalScore)}
-                    </span>
-                    <span className={cn("text-xs font-extrabold uppercase mt-1 tracking-wider px-2 py-0.5 rounded-full bg-slate-100 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08]", labelColor)}>
-                      {performanceLabel}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="w-full border-t border-slate-200 dark:border-white/[0.06] pt-4 flex justify-between items-center text-xs font-semibold text-slate-400 select-none">
-                  <span>Score Status</span>
-                  <span className="text-slate-900 dark:text-white font-extrabold uppercase tracking-wide">Official Scale</span>
-                </div>
-              </Card>
-
-              {/* Statistics Grid (Glassmorphic cards with hovers) */}
-              <Card className="lg:col-span-2 border border-slate-200 dark:border-white/[0.06] p-6 rounded-2xl bg-white dark:bg-[#0F172A] shadow-xl flex flex-col justify-between group">
-                <div>
-                  <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-5">Exam Performance Statistics</h3>
-                  
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                    {/* Correct Card */}
-                    <div className="p-4 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.04] hover:border-emerald-500/30 hover:bg-emerald-500/[0.01] transition-all duration-300 group/card relative overflow-hidden">
-                      <div className="absolute top-2 right-2 text-emerald-500/10 group-hover/card:text-emerald-500/20 transition-all"><CheckCircle2 className="w-8 h-8" /></div>
-                      <span className="text-slate-400 block text-[9px] uppercase font-black tracking-wider mb-1">Correct Answers</span>
-                      <span className="text-3xl font-black text-emerald-500 dark:text-emerald-400">{correctAnswers}</span>
-                      <span className="text-slate-500 text-xs font-bold block mt-1">({Math.round(correctAnswers / totalQuestions * 100)}% accuracy)</span>
+                    <div className="w-full text-center sm:text-left select-none">
+                      <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">{scoreType}</h3>
+                      <p className="text-[10px] text-slate-500 font-extrabold uppercase tracking-wider">{scoreSub}</p>
                     </div>
 
-                    {/* Wrong Card */}
-                    <div className="p-4 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.04] hover:border-rose-500/30 hover:bg-rose-500/[0.01] transition-all duration-300 group/card relative overflow-hidden">
-                      <div className="absolute top-2 right-2 text-rose-500/10 group-hover/card:text-rose-500/20 transition-all"><XCircle className="w-8 h-8" /></div>
-                      <span className="text-slate-400 block text-[9px] uppercase font-black tracking-wider mb-1">Wrong Answers</span>
-                      <span className="text-3xl font-black text-rose-500">{incorrectAnswers}</span>
-                      <span className="text-slate-500 text-xs font-bold block mt-1">({Math.round(incorrectAnswers / totalQuestions * 100)}% count)</span>
-                    </div>
+                    {/* Progress Circle Visualizer */}
+                    <div className="relative my-6 flex items-center justify-center select-none">
+                      <svg className="w-48 h-48 transform -rotate-90">
+                        <defs>
+                          <linearGradient id="scoreGlowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stopColor="#10b981" />
+                            <stop offset="100%" stopColor="#3b82f6" />
+                          </linearGradient>
+                          <filter id="ringGlow" x="-20%" y="-20%" width="140%" height="140%">
+                            <feGaussianBlur stdDeviation="5" result="blur" />
+                            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                          </filter>
+                        </defs>
+                        {/* Background ring */}
+                        <circle
+                          cx="96"
+                          cy="96"
+                          r={radius}
+                          stroke="currentColor"
+                          strokeWidth={strokeWidth}
+                          fill="transparent"
+                          className="text-slate-100 dark:text-white/[0.03]"
+                        />
+                        {/* Animated foreground ring */}
+                        <motion.circle
+                          cx="96"
+                          cy="96"
+                          r={radius}
+                          stroke="url(#scoreGlowGrad)"
+                          strokeWidth={strokeWidth}
+                          fill="transparent"
+                          strokeDasharray={circumference}
+                          initial={{ strokeDashoffset: circumference }}
+                          animate={{ strokeDashoffset: strokeDashoffset }}
+                          transition={{ duration: 1.5, ease: "easeOut", delay: 0.1 }}
+                          strokeLinecap="round"
+                          filter="url(#ringGlow)"
+                        />
+                      </svg>
 
-                    {/* Omitted Card */}
-                    <div className="p-4 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.04] hover:border-amber-500/30 hover:bg-amber-500/[0.01] transition-all duration-300 group/card relative overflow-hidden">
-                      <div className="absolute top-2 right-2 text-amber-500/10 group-hover/card:text-amber-500/20 transition-all"><AlertCircle className="w-8 h-8" /></div>
-                      <span className="text-slate-400 block text-[9px] uppercase font-black tracking-wider mb-1">Omitted Questions</span>
-                      <span className="text-3xl font-black text-amber-500">{omittedAnswers}</span>
-                      <span className="text-slate-500 text-xs font-bold block mt-1">({Math.round(omittedAnswers / totalQuestions * 100)}% count)</span>
-                    </div>
-
-                    {/* Time Card */}
-                    <div className="p-4 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.04] hover:border-[#8B5CF6]/30 hover:bg-[#8B5CF6]/[0.01] transition-all duration-300 group/card relative overflow-hidden">
-                      <div className="absolute top-2 right-2 text-[#8B5CF6]/10 group-hover/card:text-[#8B5CF6]/20 transition-all"><Clock className="w-8 h-8" /></div>
-                      <span className="text-slate-400 block text-[9px] uppercase font-black tracking-wider mb-1">Sarflangan Vaqt</span>
-                      <span className="text-3xl font-black text-slate-900 dark:text-white">{timeStr}</span>
-                      <span className="text-slate-500 text-xs font-bold block mt-1">Jami vaqt</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="border-t border-slate-200 dark:border-white/[0.06] pt-4 grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs font-bold select-none text-slate-400">
-                  <div>
-                    <span className="text-[9px] uppercase tracking-wider block mb-0.5 text-slate-500">Pace Per Question</span>
-                    <span className="text-slate-800 dark:text-slate-200 font-extrabold">{avgTimePerQuestion} sec / q</span>
-                  </div>
-                  <div>
-                    <span className="text-[9px] uppercase tracking-wider block mb-0.5 text-slate-500">Total Accuracy</span>
-                    <span className="text-[#A855F7] font-extrabold">{accuracy}%</span>
-                  </div>
-                  <div>
-                    <span className="text-[9px] uppercase tracking-wider block mb-0.5 text-slate-500">Attempted Rate</span>
-                    <span className="text-slate-800 dark:text-slate-200 font-extrabold">{Math.round(((totalQuestions - omittedAnswers) / totalQuestions) * 105)}%</span>
-                  </div>
-                  <div>
-                    <span className="text-[9px] uppercase tracking-wider block mb-0.5 text-slate-500">Total Questions</span>
-                    <span className="text-slate-800 dark:text-slate-200 font-extrabold">{totalQuestions} items</span>
-                  </div>
-                </div>
-              </Card>
-
-            </div>
-
-            {/* SAT Specific Score Section */}
-            {isSat && (
-              <div className="border border-white/[0.06] p-6 rounded-2xl bg-[#0F172A] shadow-xl transition-all duration-300 hover:bg-[#131C31] hover:shadow-2xl hover:border-white/[0.1] hover:scale-[1.005]">
-                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Digital SAT Section Scaled Scores</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div className="p-5 rounded-xl border border-white/[0.04] bg-white/[0.01]">
-                    <h4 className="text-xs font-black uppercase text-[#8B5CF6] tracking-wider mb-2">Reading & Writing Section</h4>
-                    <div className="flex justify-between items-end font-semibold">
-                      <div>
-                        <div className="text-xs text-slate-400 mb-1">Section Scaled Score</div>
-                        <div className="text-3xl font-black text-white">{satBreakdown.rwScore} / 800</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-xs text-slate-400 mb-1">Raw Correct Count</div>
-                        <div className="text-sm font-extrabold text-slate-300">{satBreakdown.rwCorrect} / {satBreakdown.rwTotal}</div>
+                      {/* Numeric values */}
+                      <div className="absolute flex flex-col items-center justify-center text-center animate-[scale-in_0.4s_ease-out]">
+                        <span className="text-5xl font-black tracking-tighter text-slate-900 dark:text-white">
+                          <AnimatedCounter value={numericScore} isFloat={isIelts} />
+                        </span>
+                        <span className={cn("text-[9px] font-extrabold uppercase mt-1 tracking-wider px-2 py-0.5 rounded-full bg-slate-100 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08]", labelColor)}>
+                          {performanceLabel}
+                        </span>
                       </div>
                     </div>
-                  </div>
-                  <div className="p-5 rounded-xl border border-white/[0.04] bg-white/[0.01]">
-                    <h4 className="text-xs font-black uppercase text-[#A855F7] tracking-wider mb-2">Mathematics Section</h4>
-                    <div className="flex justify-between items-end font-semibold">
-                      <div>
-                        <div className="text-xs text-slate-400 mb-1">Section Scaled Score</div>
-                        <div className="text-3xl font-black text-white">{satBreakdown.mathScore} / 800</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-xs text-slate-400 mb-1">Raw Correct Count</div>
-                        <div className="text-sm font-extrabold text-slate-300">{satBreakdown.mathCorrect} / {satBreakdown.mathTotal}</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
 
-            {/* National Certificate Specific Score Card */}
-            {isMilliy && (
-              <Card className="border border-slate-200 dark:border-white/[0.06] p-6 rounded-2xl bg-white dark:bg-[#0F172A] shadow-xl">
-                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Official National Certificate Result</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center font-bold">
-                  <div className="p-4 rounded-xl bg-slate-50 dark:bg-white/[0.01] border border-slate-200 dark:border-white/[0.04]">
-                    <span className="text-[10px] uppercase font-black tracking-wider text-slate-500 block mb-1">Raw Correct Count</span>
-                    <span className="text-2xl font-black text-slate-900 dark:text-white">{correctAnswers} / {totalQuestions}</span>
-                  </div>
-                  <div className="p-4 rounded-xl bg-slate-50 dark:bg-white/[0.01] border border-slate-200 dark:border-white/[0.04]">
-                    <span className="text-[10px] uppercase font-black tracking-wider text-slate-500 block mb-1">Accuracy Percentage</span>
-                    <span className="text-2xl font-black text-[#A855F7]">{accuracy}%</span>
-                  </div>
-                  <div className="p-4 rounded-xl bg-gradient-to-br from-[#8B5CF6]/10 to-[#A855F7]/10 border border-[#8B5CF6]/30">
-                    <span className="text-[10px] uppercase font-black tracking-wider text-[#A855F7] block mb-1">Official Final Score</span>
-                    <span className="text-2xl font-black text-[#8B5CF6]">{finalScore} / 100</span>
-                  </div>
-                </div>
-              </Card>
-            )}
-
-            {/* Premium Package details */}
-            {renderPackDetails()}
-
-            {/* Top Interactive Answer Sheet */}
-            {renderAnswerSheet(true)}
-
-          </div>
-        )}
-
-        {/* AI Performance Analysis (ChatGPT + Notion AI Style Design) */}
-        {activeTab === 'analysis' && (
-          <div className="space-y-6 animate-fadeIn select-text">
-            
-            {/* Main AI Insights Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-              {/* AI Coaching & Language Diagnostic Reports */}
-              <div className="lg:col-span-2 space-y-6">
-
-                {/* GPT + Notion AI styled Insight Panel */}
-                <Card className="border border-slate-200 dark:border-white/[0.06] p-6 rounded-2xl bg-white dark:bg-[#0F172A] shadow-xl relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-48 h-48 bg-[#A855F7]/5 rounded-full blur-3xl pointer-events-none"></div>
-                  
-                  {/* AI Header */}
-                  <div className="flex items-center gap-3 mb-6 border-b border-slate-200 dark:border-white/[0.06] pb-4">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-[#8B5CF6] to-[#A855F7] text-white flex items-center justify-center font-bold shadow-lg shadow-[#8B5CF6]/20">
-                      <Sparkles className="w-5 h-5 animate-pulse" />
-                    </div>
-                    <div>
-                      <h2 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-                        AI Performance Diagnostics Insights <Badge className="bg-[#8B5CF6]/20 text-[#A855F7] border border-[#8B5CF6]/30 text-[9px] uppercase font-black">Active</Badge>
-                      </h2>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">Synthesized cognitive analytics and pacing diagnoses</p>
-                    </div>
-                  </div>
-
-                  {/* Strengths & Weaknesses */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Strengths */}
-                    <div className="space-y-3">
-                      <h3 className="text-xs font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Cognitive Strengths
-                      </h3>
-                      <ul className="space-y-2">
-                        {analysis.strengths.map((str, i) => (
-                          <li key={i} className="text-xs text-slate-750 dark:text-slate-300 flex items-start gap-2 bg-emerald-50 dark:bg-emerald-500/5 p-3 rounded-xl border border-emerald-100 dark:border-emerald-500/10 font-bold">
-                            <span className="text-emerald-500">✔</span>
-                            <span>{str}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    {/* Weaknesses */}
-                    <div className="space-y-3">
-                      <h3 className="text-xs font-black text-rose-650 dark:text-rose-400 uppercase tracking-wider flex items-center gap-2">
-                        <XCircle className="w-4 h-4 text-rose-500" /> Focus Improvement Areas
-                      </h3>
-                      <ul className="space-y-2">
-                        {analysis.weaknesses.map((weak, i) => (
-                          <li key={i} className="text-xs text-slate-750 dark:text-slate-300 flex items-start gap-2 bg-rose-55 dark:bg-rose-500/5 p-3 rounded-xl border border-rose-100 dark:border-rose-500/10 font-bold">
-                            <span className="text-rose-500">✖</span>
-                            <span>{weak}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-
-                  {/* Vocabulary & Grammar analyses (Notion style blocks) */}
-                  <div className="mt-6 pt-6 border-t border-slate-200 dark:border-white/[0.06] grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="bg-slate-50 dark:bg-white/[0.01] p-4.5 rounded-xl border border-slate-200 dark:border-white/[0.04] space-y-2">
-                      <h4 className="text-xs font-black text-slate-800 dark:text-slate-300 uppercase tracking-wide flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-[#8B5CF6]"></span> Vocabulary & Lexicon Analysis
-                      </h4>
-                      <p className="text-xs text-slate-600 dark:text-slate-400 font-bold leading-relaxed">
-                        {analysis.vocabAnalysis}
-                      </p>
-                    </div>
-                    <div className="bg-slate-50 dark:bg-white/[0.01] p-4.5 rounded-xl border border-slate-200 dark:border-white/[0.04] space-y-2">
-                      <h4 className="text-xs font-black text-slate-800 dark:text-slate-300 uppercase tracking-wide flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-[#A855F7]"></span> Structural Grammar & Syntax Analysis
-                      </h4>
-                      <p className="text-xs text-slate-600 dark:text-slate-400 font-bold leading-relaxed">
-                        {analysis.grammarAnalysis}
-                      </p>
-                    </div>
-                  </div>
-                </Card>
-
-                {/* Recommendation Engine and Action Plan */}
-                <Card className="border border-slate-200 dark:border-white/[0.06] p-6 rounded-2xl bg-white dark:bg-[#0F172A] shadow-xl space-y-4">
-                  <h3 className="text-xs font-black text-[#A855F7] uppercase tracking-wider flex items-center gap-2">
-                    <Lightbulb className="w-4 h-4 text-amber-500 animate-pulse" /> Topic Recommendations & Syllabus Focus
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-bold text-xs">
-                    <div className="bg-[#8B5CF6]/10 dark:bg-[#8B5CF6]/5 p-4 border border-[#8B5CF6]/20 dark:border-[#8B5CF6]/10 rounded-xl space-y-2">
-                      <h4 className="text-xs font-black text-[#8B5CF6] dark:text-[#A855F7] uppercase">Recommended Focus Topics</h4>
-                      <ul className="space-y-2 text-slate-700 dark:text-slate-300 list-disc list-inside">
-                        {analysis.recommendations.map((rec, i) => (
-                          <li key={i}>{rec}</li>
-                        ))}
-                      </ul>
-                    </div>
-                    <div className="bg-[#A855F7]/10 dark:bg-[#A855F7]/5 p-4 border border-[#A855F7]/20 dark:border-[#A855F7]/10 rounded-xl space-y-2">
-                      <h4 className="text-xs font-black text-amber-600 dark:text-amber-500 uppercase">Suggested Step-by-Step Study Plan</h4>
-                      <ul className="space-y-2 text-slate-700 dark:text-slate-300 list-disc list-inside">
-                        {analysis.studyPlan.map((step, i) => (
-                          <li key={i}>{step}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                </Card>
-
-              </div>
-
-              {/* Subject Breakdown, pacing and score estimation */}
-              <div className="space-y-6">
-
-                {/* Score Projection Panel */}
-                <Card className="border border-[#8B5CF6]/30 dark:border-[#8B5CF6]/20 p-6 rounded-2xl bg-gradient-to-br from-violet-50 via-white to-purple-50/50 dark:from-[#8B5CF6]/10 dark:via-[#0F172A] dark:to-transparent shadow-2xl relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-24 h-24 bg-[#A855F7]/10 rounded-full blur-2xl pointer-events-none"></div>
-                  <h3 className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2 select-none">
-                    <Zap className="w-4 h-4 text-[#A855F7] animate-bounce" /> Projected Target Score
-                  </h3>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-black tracking-tight text-slate-900 dark:text-white">{analysis.estFutureScore}</span>
-                  </div>
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold mt-2 leading-relaxed">
-                    Estimated next attempt result based on full coverage of recommended topic study plans.
-                  </p>
-                </Card>
-
-                {/* National Certificate Subject Metrics */}
-                {isMilliy && (
-                  <Card className="border border-slate-200 dark:border-white/[0.06] p-6 rounded-2xl bg-white dark:bg-[#0F172A] shadow-xl space-y-4">
-                    <h3 className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                      <BarChart3 className="w-4 h-4 text-[#8B5CF6]" /> Subject Proficiency Analysis
-                    </h3>
-                    <div className="space-y-4 text-xs font-bold">
-                      {subjectAnalyticsList.map((sub, i) => {
-                        let barColor = "bg-rose-500";
-                        if (sub.accuracy >= 70) barColor = "bg-emerald-500";
-                        else if (sub.accuracy >= 45) barColor = "bg-amber-500";
-
-                        return (
-                          <div key={i} className="space-y-1.5">
-                            <div className="flex justify-between items-center text-slate-800 dark:text-slate-200">
-                              <span>{sub.subjectName}</span>
-                              <span>{sub.correct} / {sub.total} ({sub.accuracy}%)</span>
-                            </div>
-                            <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                              <div
-                                className={cn("h-full rounded-full transition-all duration-500", barColor)}
-                                style={{ width: `${sub.accuracy}%` }}
-                              />
-                            </div>
-                            <div className="flex justify-between items-center text-[10px] text-slate-500 dark:text-slate-500 font-semibold">
-                              <span>Omitted: {sub.omitted} | Incorrect: {sub.incorrect}</span>
-                              <span className={cn(sub.isStrength ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-500")}>
-                                {sub.isStrength ? "Strength" : "Improvement Needed"}
-                              </span>
-                            </div>
-                          </div>
-                        );
-                      })}
+                    <div className="w-full border-t border-slate-200 dark:border-white/[0.06] pt-4 flex justify-between items-center text-xs font-semibold text-slate-400 select-none">
+                      <span>Score Level</span>
+                      <span className="text-slate-900 dark:text-white font-extrabold uppercase tracking-wide">
+                        {isIelts ? `Target ${bandTheme.target}` : "Official"}
+                      </span>
                     </div>
                   </Card>
-                )}
+                </motion.div>
 
-                {/* Time pacing Diagnostics */}
-                <Card className="border border-slate-200 dark:border-white/[0.06] p-6 rounded-2xl bg-white dark:bg-[#0F172A] shadow-xl space-y-4">
-                  <h3 className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                    <Timer className="w-4 h-4 text-[#8B5CF6]" /> Pacing Diagnostics
-                  </h3>
-                  <div className="space-y-3 font-bold">
-                    <div className="p-3 bg-slate-50 dark:bg-white/[0.01] border border-slate-200 dark:border-white/[0.04] rounded-xl">
-                      <span className="text-[9px] uppercase tracking-wider block text-slate-500 mb-0.5">Average Pace Rate</span>
-                      <span className="text-xl font-black text-slate-900 dark:text-white">{avgTimePerQuestion} sec / question</span>
+                {/* Score Stats Details Grid */}
+                <motion.div variants={itemFadeInUp} className="lg:col-span-2">
+                  <Card className="border border-slate-200 dark:border-white/[0.06] p-6 rounded-2xl bg-white dark:bg-[#0F172A] shadow-xl flex flex-col justify-between h-full relative overflow-hidden transition-[border-color,box-shadow] duration-350 hover:border-violet-500/20 hover:shadow-violet-500/[0.02]">
+                    <div>
+                      <div className="flex justify-between items-center mb-5">
+                        <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Performance Statistics</h3>
+                        {scoreDifference !== null && (
+                          <Badge className={cn("rounded-lg px-2.5 py-1 text-xs font-bold border flex items-center gap-1 shadow-sm", 
+                            scoreDifference > 0 
+                              ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" 
+                              : scoreDifference < 0
+                              ? "bg-rose-500/10 text-rose-600 dark:text-rose-455 border-rose-500/20"
+                              : "bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20"
+                          )}>
+                            {scoreDifference > 0 ? "▲ Score Improved" : scoreDifference < 0 ? "▼ Score Decreased" : "No Change"}
+                            {scoreDifference !== 0 && ` (${scoreDifference > 0 ? "+" : ""}${scoreDifference.toFixed(1)})`}
+                          </Badge>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {/* Correct Answers */}
+                        <div className="p-4 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.04] hover:border-emerald-500/30 hover:bg-emerald-500/[0.01] transition-all duration-300 relative overflow-hidden group">
+                          <CheckCircle2 className="w-8 h-8 absolute top-2 right-2 text-emerald-500/10 group-hover:text-emerald-500/20 transition-colors" />
+                          <span className="text-slate-400 block text-[9px] uppercase font-black tracking-wider mb-1">Correct Answers</span>
+                          <span className="text-3xl font-black text-emerald-500 dark:text-emerald-400">
+                            <AnimatedCounter value={correctAnswers} />
+                          </span>
+                          <span className="text-slate-500 text-xs font-bold block mt-1">({accuracy}% accuracy)</span>
+                        </div>
+
+                        {/* Wrong Answers */}
+                        <div className="p-4 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.04] hover:border-rose-500/30 hover:bg-rose-500/[0.01] transition-all duration-300 relative overflow-hidden group">
+                          <XCircle className="w-8 h-8 absolute top-2 right-2 text-rose-500/10 group-hover:text-rose-500/20 transition-colors" />
+                          <span className="text-slate-400 block text-[9px] uppercase font-black tracking-wider mb-1">Wrong Answers</span>
+                          <span className="text-3xl font-black text-rose-500">
+                            <AnimatedCounter value={incorrectAnswers} />
+                          </span>
+                          <span className="text-slate-500 text-xs font-bold block mt-1">({Math.round((incorrectAnswers/totalQuestions)*100)}% count)</span>
+                        </div>
+
+                        {/* Omitted */}
+                        <div className="p-4 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.04] hover:border-amber-500/30 hover:bg-amber-500/[0.01] transition-all duration-300 relative overflow-hidden group">
+                          <AlertCircle className="w-8 h-8 absolute top-2 right-2 text-amber-500/10 group-hover:text-amber-500/20 transition-colors" />
+                          <span className="text-slate-400 block text-[9px] uppercase font-black tracking-wider mb-1">Omitted</span>
+                          <span className="text-3xl font-black text-amber-500">
+                            <AnimatedCounter value={omittedAnswers} />
+                          </span>
+                          <span className="text-slate-500 text-xs font-bold block mt-1">({Math.round((omittedAnswers/totalQuestions)*100)}% skipped)</span>
+                        </div>
+
+                        {/* Time spent */}
+                        <div className="p-4 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.04] hover:border-[#8B5CF6]/30 hover:bg-[#8B5CF6]/[0.01] transition-all duration-300 relative overflow-hidden group">
+                          <Clock className="w-8 h-8 absolute top-2 right-2 text-[#8B5CF6]/10 group-hover:text-[#8B5CF6]/20 transition-colors" />
+                          <span className="text-slate-400 block text-[9px] uppercase font-black tracking-wider mb-1">Time Spent</span>
+                          <span className="text-3xl font-black text-slate-800 dark:text-slate-100">{timeStr}</span>
+                          <span className="text-slate-500 text-xs font-bold block mt-1">Total Duration</span>
+                        </div>
+                      </div>
                     </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-semibold">
-                      {omittedAnswers > totalQuestions * 0.2
-                        ? "Critical pacing blockages. Plan to skip time-consuming items and save buffers."
-                        : "Healthy pacing. Continue practice to lock in consistent timing parameters."}
+
+                    {/* Progress indicators details footer */}
+                    <div className="border-t border-slate-200 dark:border-white/[0.06] pt-4 grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs font-bold select-none text-slate-400">
+                      <div>
+                        <span className="text-[9px] uppercase tracking-wider block mb-0.5 text-slate-500">Pacing per item</span>
+                        <span className="text-slate-800 dark:text-slate-200 font-extrabold">{avgTimePerQuestion} sec / q</span>
+                      </div>
+                      <div>
+                        <span className="text-[9px] uppercase tracking-wider block mb-0.5 text-slate-500">Overall Accuracy</span>
+                        <span className="text-[#8B5CF6] font-extrabold">{accuracy}%</span>
+                      </div>
+                      <div>
+                        <span className="text-[9px] uppercase tracking-wider block mb-0.5 text-slate-500">Target Gap</span>
+                        <span className="text-slate-850 dark:text-slate-100 font-extrabold">
+                          {isIelts && bandTheme.gap > 0 ? `${bandTheme.gap.toFixed(1)} band remaining` : "Target Achieved! 🎉"}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[9px] uppercase tracking-wider block mb-0.5 text-slate-500">Simulated Items</span>
+                        <span className="text-slate-800 dark:text-slate-200 font-extrabold">{totalQuestions} items</span>
+                      </div>
+                    </div>
+                  </Card>
+                </motion.div>
+
+              </div>
+
+              {/* REWARDS & ACHIEVEMENTS */}
+              <motion.div variants={itemFadeInUp}>
+                <Card className="border border-slate-200 dark:border-white/[0.06] p-6 rounded-2xl bg-gradient-to-br from-indigo-50/50 via-white to-purple-50/30 dark:from-slate-900/50 dark:via-slate-950 dark:to-slate-900/30 shadow-md relative overflow-hidden transition-all duration-300">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/10 rounded-full blur-3xl pointer-events-none" />
+                  
+                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                    <div className="flex items-center gap-4">
+                      {/* Interactive Coins/XP animations */}
+                      <div className="flex gap-2">
+                        {gamificationRewards.rewards.map((reward, i) => (
+                          <motion.div
+                            key={i}
+                            initial={{ scale: 0.5, rotate: -20 }}
+                            animate={{ scale: 1, rotate: 0 }}
+                            transition={{ type: "spring", delay: 0.3 + i * 0.15 }}
+                            className="bg-amber-500/10 text-amber-500 border border-amber-500/20 px-3 py-1.5 rounded-xl flex items-center gap-1.5 text-xs font-black"
+                          >
+                            <Coins className="w-4 h-4 animate-bounce" /> {reward.coins}
+                          </motion.div>
+                        ))}
+                        <motion.div
+                          initial={{ scale: 0.5 }}
+                          animate={{ scale: 1 }}
+                          transition={{ type: "spring", delay: 0.5 }}
+                          className="bg-indigo-500/10 text-indigo-500 border border-indigo-500/20 px-3 py-1.5 rounded-xl flex items-center gap-1.5 text-xs font-black"
+                        >
+                          <Trophy className="w-4 h-4 animate-pulse" /> +50 XP
+                        </motion.div>
+                      </div>
+                      <div>
+                        <h3 className="font-extrabold text-sm text-slate-800 dark:text-slate-200">Simulated Gamification Rewards</h3>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">Tokens added to your learning footprints profile</p>
+                      </div>
+                    </div>
+
+                    {/* Achievements grid */}
+                    <div className="flex flex-wrap gap-2">
+                      {gamificationRewards.achievements.map((ach, i) => (
+                        <motion.div
+                          key={i}
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.4 + i * 0.1 }}
+                          className="bg-white/60 dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.04] p-2 rounded-xl flex items-center gap-2 text-xs shadow-sm hover:border-violet-500/30 transition-all duration-300"
+                        >
+                          <span className="text-lg">{ach.icon}</span>
+                          <div>
+                            <span className="font-black text-[11px] block">{ach.title}</span>
+                            <span className="text-[9px] text-slate-400 font-semibold">{ach.desc}</span>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+                </Card>
+              </motion.div>
+
+              {/* QUESTION CATEGORY BREAKDOWN CARDS */}
+              <motion.div variants={itemFadeInUp} className="space-y-4">
+                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest select-none">Question Type Proficiencies</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {questionTypeStats.map((stat, i) => {
+                    let fillGrad = "from-red-500 to-rose-500";
+                    if (stat.accuracy >= 80) fillGrad = "from-emerald-500 to-cyan-400";
+                    else if (stat.accuracy >= 60) fillGrad = "from-blue-500 to-indigo-400";
+                    else if (stat.accuracy >= 40) fillGrad = "from-orange-500 to-red-400";
+
+                    return (
+                      <Card key={i} className="border border-slate-200 dark:border-white/[0.04] p-5 rounded-2xl bg-white dark:bg-[#0F172A] shadow-lg relative overflow-hidden group hover:border-[#8B5CF6]/30 hover:-translate-y-0.5 transition-all duration-300">
+                        <div className="absolute top-0 right-0 w-16 h-16 bg-[#8B5CF6]/5 rounded-full blur-xl pointer-events-none" />
+                        <h4 className="text-xs font-extrabold text-slate-800 dark:text-slate-200 mb-2 truncate">{stat.label}</h4>
+                        <div className="flex justify-between items-baseline mb-2">
+                          <span className="text-2xl font-black text-slate-900 dark:text-white">{stat.accuracy}%</span>
+                          <span className="text-xs font-bold text-slate-400">{stat.correct} / {stat.total} Correct</span>
+                        </div>
+                        <div className="w-full h-2 bg-slate-100 dark:bg-slate-800/80 rounded-full overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${stat.accuracy}%` }}
+                            transition={{ duration: 1.2, ease: "easeOut" }}
+                            className={cn("h-full rounded-full bg-gradient-to-r", fillGrad)}
+                          />
+                        </div>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </motion.div>
+
+              {/* PERFORMANCE CHARTS Responsive Grid */}
+              <motion.div variants={itemFadeInUp} className="space-y-4">
+                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest select-none">Simulated Progress Diagnostics Charting</h3>
+                
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  
+                  {/* Chart 1: Accuracy Line Chart */}
+                  <Card className="border border-slate-200 dark:border-white/[0.06] p-6 rounded-2xl bg-white dark:bg-[#0F172A] shadow-xl">
+                    <h4 className="text-xs font-black text-slate-500 uppercase mb-4 tracking-wider">Accuracy Tracking Profile (%)</h4>
+                    <div className="h-64">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={chartData} margin={{ top: 10, right: 15, left: -20, bottom: 0 }}>
+                          <defs>
+                            <linearGradient id="colorAcc" x1="0%" y1="0%" x2="0%" y2="100%">
+                              <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.3} />
+                              <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.0} />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
+                          <XAxis dataKey="name" stroke="rgba(156, 163, 175, 0.5)" tickLine={false} tick={{ fontSize: 10 }} />
+                          <YAxis stroke="rgba(156, 163, 175, 0.5)" tickLine={false} domain={[0, 100]} tick={{ fontSize: 10 }} />
+                          <Tooltip contentStyle={{ backgroundColor: "#0F172A", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px", color: "#fff" }} />
+                          <Area type="monotone" dataKey="accuracy" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorAcc)" />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </Card>
+
+                  {/* Chart 2: Pacing speed Bar Chart */}
+                  <Card className="border border-slate-200 dark:border-white/[0.06] p-6 rounded-2xl bg-white dark:bg-[#0F172A] shadow-xl">
+                    <h4 className="text-xs font-black text-slate-500 uppercase mb-4 tracking-wider">Pacing Diagnostics (sec/item)</h4>
+                    <div className="h-64">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={chartData} margin={{ top: 10, right: 15, left: -20, bottom: 0 }}>
+                          <defs>
+                            <linearGradient id="colorSpeed" x1="0%" y1="0%" x2="0%" y2="100%">
+                              <stop offset="0%" stopColor="#a855f7" stopOpacity={0.4} />
+                              <stop offset="100%" stopColor="#a855f7" stopOpacity={0.1} />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
+                          <XAxis dataKey="name" stroke="rgba(156, 163, 175, 0.5)" tickLine={false} tick={{ fontSize: 10 }} />
+                          <YAxis stroke="rgba(156, 163, 175, 0.5)" tickLine={false} tick={{ fontSize: 10 }} />
+                          <Tooltip contentStyle={{ backgroundColor: "#0F172A", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px", color: "#fff" }} />
+                          <Bar dataKey="speed" fill="url(#colorSpeed)" stroke="#a855f7" strokeWidth={1} radius={[6, 6, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </Card>
+
+                  {/* Chart 3: Monthly Prediction Projection Chart */}
+                  <Card className="border border-slate-200 dark:border-white/[0.06] p-6 rounded-2xl bg-white dark:bg-[#0F172A] shadow-xl">
+                    <h4 className="text-xs font-black text-slate-500 uppercase mb-4 tracking-wider">30-Day Band Score Projection Trend</h4>
+                    <div className="h-64">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={chartData} margin={{ top: 10, right: 15, left: -20, bottom: 0 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
+                          <XAxis dataKey="name" stroke="rgba(156, 163, 175, 0.5)" tickLine={false} tick={{ fontSize: 10 }} />
+                          <YAxis stroke="rgba(156, 163, 175, 0.5)" tickLine={false} domain={[0, isIelts ? 9 : (isSat ? 1600 : 100)]} tick={{ fontSize: 10 }} />
+                          <Tooltip contentStyle={{ backgroundColor: "#0F172A", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px", color: "#fff" }} />
+                          <Line type="monotone" dataKey="score" stroke="#3b82f6" strokeWidth={3} activeDot={{ r: 6 }} />
+                          {/* Project +1.0 Band Score progress */}
+                          <Line type="monotone" dataKey={(d) => d.score + (isIelts ? 1.0 : 15)} name="Projected" stroke="#10b981" strokeWidth={2} strokeDasharray="5 5" />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </Card>
+
+                  {/* Chart 4: Radar Question Type Distribution */}
+                  <Card className="border border-slate-200 dark:border-white/[0.06] p-6 rounded-2xl bg-white dark:bg-[#0F172A] shadow-xl flex flex-col justify-between">
+                    <h4 className="text-xs font-black text-slate-500 uppercase mb-2 tracking-wider">Proficiency Cognitive Radar</h4>
+                    <div className="h-60">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <RadarChart cx="50%" cy="50%" outerRadius="80%" data={questionTypeStats}>
+                          <PolarGrid stroke="rgba(156,163,175,0.1)" />
+                          <PolarAngleAxis dataKey="label" stroke="rgba(156,163,175,0.7)" tick={{ fontSize: 9 }} />
+                          <PolarRadiusAxis angle={30} domain={[0, 100]} stroke="rgba(156,163,175,0.3)" tick={{ fontSize: 8 }} />
+                          <Radar name="Accuracy" dataKey="accuracy" stroke="#8B5CF6" fill="#8B5CF6" fillOpacity={0.2} />
+                        </RadarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </Card>
+
+                </div>
+              </motion.div>
+
+              {/* ANSWER SHEET QUICK OVERVIEW */}
+              <motion.div variants={itemFadeInUp} className="space-y-4">
+                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest select-none">Quick Response Grid</h3>
+                <Card className="border border-slate-200 dark:border-white/[0.06] p-6 rounded-2xl bg-white dark:bg-[#0F172A] shadow-xl">
+                  <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-3">
+                    {questionResults.map((res: any, idx: number) => {
+                      const isCorrect = res.isCorrect;
+                      const isOmitted = res.isOmitted;
+                      let badgeColor = "bg-rose-500 text-white";
+                      if (isCorrect) badgeColor = "bg-emerald-500 text-white";
+                      else if (isOmitted) badgeColor = "bg-slate-500 text-white";
+
+                      return (
+                        <button
+                          key={idx}
+                          onClick={() => {
+                            setActiveQuestionIndex(idx);
+                            setActiveTab('review');
+                          }}
+                          className={cn(
+                            "p-3 rounded-xl border flex flex-col items-center justify-between font-bold transition-all duration-300 w-full h-16 hover:scale-[1.04]",
+                            isCorrect 
+                              ? "border-emerald-500/20 bg-emerald-500/[0.02] text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10" 
+                              : isOmitted
+                              ? "border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/10 text-slate-500"
+                              : "border-rose-500/20 bg-rose-500/[0.02] text-rose-600 dark:text-rose-455 hover:bg-rose-500/10",
+                            activeQuestionIndex === idx && "ring-2 ring-[#8B5CF6] ring-offset-2 ring-offset-white dark:ring-offset-[#070B14]"
+                          )}
+                        >
+                          <span className={cn("w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px]", badgeColor)}>
+                            {idx + 1}
+                          </span>
+                          <span className="text-[10px] uppercase font-black truncate w-full text-center">
+                            {isOmitted ? "-" : res.userAns}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </Card>
+              </motion.div>
+
+              {/* ACTION BUTTONS FOOTER */}
+              <motion.div variants={itemFadeInUp} className="flex flex-wrap items-center justify-between gap-4 pt-6 border-t border-slate-200 dark:border-white/[0.06] select-none font-sans font-bold">
+                <div className="flex items-center flex-wrap gap-2.5">
+                  <Button variant="outline" size="sm" onClick={handleShare} className="rounded-xl font-bold gap-2 text-xs h-10 px-4 border-slate-200 dark:border-white/[0.06] bg-white dark:bg-[#0F172A] text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 transition-all">
+                    <Share2 className="w-4 h-4" /> Share Results
+                  </Button>
+                  <Button variant="default" size="sm" onClick={() => setActiveTab('analysis')} className="rounded-xl font-bold gap-2 text-xs h-10 px-6 bg-gradient-to-r from-[#8B5CF6] to-[#A855F7] text-white hover:opacity-90 shadow-md border-none transition-all">
+                    <BrainCircuit className="w-4 h-4 animate-pulse" /> AI Analysis
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => nav(-1)} className="rounded-xl font-bold gap-2 text-xs h-10 px-4 border-slate-200 dark:border-white/[0.06] bg-white dark:bg-[#0F172A] text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 transition-all">
+                    <RotateCcw className="w-4 h-4" /> Retry Test
+                  </Button>
+                </div>
+                <div className="flex items-center flex-wrap gap-2.5">
+                  <Button variant="outline" size="sm" onClick={handleDownloadPdf} className="rounded-xl font-bold gap-2 text-xs h-10 px-5 border-violet-500/20 bg-violet-500/5 text-violet-600 dark:text-violet-400 hover:bg-violet-500/10 transition-all">
+                    Download PDF Report
+                  </Button>
+                  <Button variant="default" size="sm" onClick={() => nav(`/${role || "student"}/dashboard`)} className="rounded-xl font-bold gap-2 text-xs h-10 px-6 bg-[#8B5CF6] hover:bg-[#7C3AED] text-white transition-all">
+                    Continue Practice
+                  </Button>
+                </div>
+              </motion.div>
+
+            </div>
+          )}
+
+          {/* TAB 2: AI COACH DIAGNOSTICS */}
+          {activeTab === 'analysis' && (
+            <div className="space-y-6">
+              
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                {/* AI COACH METRIC CARDS */}
+                <div className="lg:col-span-2 space-y-6">
+                  <Card className="border border-slate-200 dark:border-white/[0.06] p-6 rounded-2xl bg-white dark:bg-[#0F172A] shadow-xl relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-48 h-48 bg-[#A855F7]/5 rounded-full blur-3xl pointer-events-none" />
+
+                    <div className="flex items-center gap-3 mb-6 border-b border-slate-200 dark:border-white/[0.06] pb-4 select-none">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-[#8B5CF6] to-[#A855F7] text-white flex items-center justify-center font-bold shadow-lg shadow-[#8B5CF6]/20">
+                        <Sparkles className="w-5 h-5 animate-pulse" />
+                      </div>
+                      <div>
+                        <h2 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                          AI Coach Diagnostics Insights
+                          <Badge className="bg-[#8B5CF6]/15 text-[#A855F7] border border-[#8B5CF6]/25 text-[9px] uppercase font-black">Active</Badge>
+                        </h2>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">Personalized cognitive assessment based on actual responses</p>
+                      </div>
+                    </div>
+
+                    {/* AI Coach Prediction Widgets */}
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+                      <div className="p-4 rounded-xl border border-slate-200 dark:border-white/[0.04] bg-slate-50 dark:bg-white/[0.01]">
+                        <span className="text-[10px] uppercase font-black text-slate-400 block mb-1">Current Prediction</span>
+                        <span className="text-2xl font-black text-slate-900 dark:text-white">{numericScore.toFixed(1)}</span>
+                      </div>
+                      <div className="p-4 rounded-xl border border-slate-200 dark:border-white/[0.04] bg-slate-50 dark:bg-white/[0.01]">
+                        <span className="text-[10px] uppercase font-black text-slate-400 block mb-1">Potential (30 Days)</span>
+                        <span className="text-2xl font-black text-emerald-500 dark:text-emerald-400">{Math.min(9.0, numericScore + 1.0).toFixed(1)}</span>
+                      </div>
+                      <div className="p-4 rounded-xl border border-slate-200 dark:border-white/[0.04] bg-slate-50 dark:bg-white/[0.01]">
+                        <span className="text-[10px] uppercase font-black text-slate-400 block mb-1">Confidence Score</span>
+                        <span className="text-2xl font-black text-[#A855F7]">{Math.min(95, Math.round(70 + accuracy * 0.25))}%</span>
+                      </div>
+                      <div className="p-4 rounded-xl border border-slate-200 dark:border-white/[0.04] bg-slate-50 dark:bg-white/[0.01]">
+                        <span className="text-[10px] uppercase font-black text-slate-400 block mb-1">Study Hours Recommended</span>
+                        <span className="text-2xl font-black text-amber-500">{Math.max(10, Math.round((7.5 - numericScore) * 30 + 10))} hrs</span>
+                      </div>
+                      <div className="p-4 rounded-xl border border-slate-200 dark:border-white/[0.04] bg-slate-50 dark:bg-white/[0.01]">
+                        <span className="text-[10px] uppercase font-black text-slate-400 block mb-1">Exam Readiness</span>
+                        <span className="text-2xl font-black text-blue-500">{Math.max(30, Math.round(accuracy - 5))}%</span>
+                      </div>
+                    </div>
+
+                    {/* Strengths & Weaknesses lists */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 pt-6 border-t border-slate-200 dark:border-white/[0.06]">
+                      <div className="space-y-3">
+                        <h3 className="text-xs font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-2 select-none">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Cognitive Strengths
+                        </h3>
+                        <ul className="space-y-2">
+                          {analysis.strengths.map((str, i) => (
+                            <li key={i} className="text-xs text-slate-750 dark:text-slate-350 flex items-start gap-2 bg-emerald-500/5 p-3 rounded-xl border border-emerald-500/10 font-bold animate-[fade-in_0.4s_ease-out]">
+                              <span className="text-emerald-500 font-extrabold">✔</span>
+                              <span>{str}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <div className="space-y-3">
+                        <h3 className="text-xs font-black text-rose-600 dark:text-rose-455 uppercase tracking-wider flex items-center gap-2 select-none">
+                          <XCircle className="w-4 h-4 text-rose-500" /> Focus Improvement Areas
+                        </h3>
+                        <ul className="space-y-2">
+                          {analysis.weaknesses.map((weak, i) => (
+                            <li key={i} className="text-xs text-slate-750 dark:text-slate-350 flex items-start gap-2 bg-rose-500/5 p-3 rounded-xl border border-rose-500/10 font-bold animate-[fade-in_0.4s_ease-out]">
+                              <span className="text-rose-500 font-extrabold">✖</span>
+                              <span>{weak}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </Card>
+                </div>
+
+                {/* AI Advice Side panel */}
+                <div className="space-y-6">
+                  <Card className="border border-[#8B5CF6]/30 dark:border-[#8B5CF6]/20 p-6 rounded-2xl bg-gradient-to-br from-violet-50/50 via-white to-purple-50/50 dark:from-[#8B5CF6]/10 dark:via-[#0F172A] dark:to-transparent shadow-2xl relative overflow-hidden h-full">
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-[#A855F7]/10 rounded-full blur-2xl pointer-events-none" />
+                    <h3 className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2 select-none">
+                      <Zap className="w-4 h-4 text-[#A855F7] animate-bounce" /> AI Coach Advice
+                    </h3>
+                    <p className="text-slate-800 dark:text-slate-200 font-bold text-sm leading-relaxed whitespace-pre-wrap">
+                      {aiRecommendation}
                     </p>
-                  </div>
-                </Card>
-
-                {/* Difficulty distributions */}
-                <Card className="border border-slate-200 dark:border-white/[0.06] p-6 rounded-2xl bg-white dark:bg-[#0F172A] shadow-xl space-y-4">
-                  <h3 className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                    <BarChart3 className="w-4 h-4 text-[#8B5CF6]" /> Difficulty Analytics
-                  </h3>
-                  <div className="space-y-3 text-xs font-bold">
-                    <div>
-                      <div className="flex justify-between mb-1 text-slate-800 dark:text-slate-200">
-                        <span>Easy Questions</span>
-                        <span>{analysis.byDifficulty.easy.correct} / {analysis.byDifficulty.easy.total}</span>
-                      </div>
-                      <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-emerald-500 rounded-full"
-                          style={{ width: `${(analysis.byDifficulty.easy.correct / analysis.byDifficulty.easy.total) * 100}%` }}
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <div className="flex justify-between mb-1 text-slate-800 dark:text-slate-200">
-                        <span>Medium Questions</span>
-                        <span>{analysis.byDifficulty.medium.correct} / {analysis.byDifficulty.medium.total}</span>
-                      </div>
-                      <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-amber-500 rounded-full"
-                          style={{ width: `${(analysis.byDifficulty.medium.correct / analysis.byDifficulty.medium.total) * 100}%` }}
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <div className="flex justify-between mb-1 text-slate-800 dark:text-slate-200">
-                        <span>Hard Questions</span>
-                        <span>{analysis.byDifficulty.hard.correct} / {analysis.byDifficulty.hard.total}</span>
-                      </div>
-                      <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-rose-500 rounded-full"
-                          style={{ width: `${(analysis.byDifficulty.hard.correct / analysis.byDifficulty.hard.total) * 100}%` }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </Card>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold mt-6 leading-relaxed select-none">
+                      Calculated by mapping question category performance curves against simulated metrics.
+                    </p>
+                  </Card>
+                </div>
 
               </div>
 
             </div>
+          )}
 
-            {/* Question Performance Analysis Table */}
-            <Card className="border border-slate-200 dark:border-white/[0.06] p-6 rounded-2xl bg-white dark:bg-[#0F172A] shadow-xl overflow-hidden">
-              <h3 className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                <FileText className="w-4 h-4 text-[#8B5CF6]" /> Question-Level Performance Analysis Table
-              </h3>
+          {/* TAB 3: ANSWER REVIEW SYSTEM */}
+          {activeTab === 'review' && (
+            <div className="space-y-6">
+              
+              {/* Question selector quick panel */}
+              <Card className="border border-slate-200 dark:border-white/[0.06] p-4 rounded-2xl bg-white dark:bg-[#0F172A] shadow-xl">
+                <div className="flex flex-wrap gap-2 justify-center">
+                  {questionResults.map((res, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setActiveQuestionIndex(idx)}
+                      className={cn(
+                        "w-9 h-9 rounded-lg font-bold text-xs flex items-center justify-center transition-all duration-200",
+                        res.isCorrect 
+                          ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400" 
+                          : res.isOmitted
+                          ? "bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-500"
+                          : "bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-455",
+                        activeQuestionIndex === idx && "ring-2 ring-violet-500 ring-offset-2 ring-offset-white dark:ring-offset-slate-900"
+                      )}
+                    >
+                      {idx + 1}
+                    </button>
+                  ))}
+                </div>
+              </Card>
 
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse text-left text-xs font-semibold">
-                  <thead>
-                    <tr className="border-b border-slate-200 dark:border-white/[0.06] text-slate-500 font-black uppercase tracking-wider">
-                      <th className="py-3 px-4"># Question</th>
-                      <th className="py-3 px-4">Selected Answer</th>
-                      <th className="py-3 px-4">Correct Answer</th>
-                      <th className="py-3 px-4 text-center">Status</th>
-                      <th className="py-3 px-4">Time Spent</th>
-                      <th className="py-3 px-4 text-right">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-white/[0.03] font-bold">
-                    {questionStates.map((res: any, idx: number) => {
-                      return (
-                        <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-white/[0.01] transition-colors">
-                          <td className="py-3.5 px-4 font-extrabold text-slate-850 dark:text-slate-200">
-                            Question {idx + 1}
-                          </td>
-                          <td className={cn(
-                            "py-3.5 px-4 font-black",
-                            res.state === 'correct' ? "text-emerald-600 dark:text-emerald-400" : res.state === 'skipped' ? "text-slate-500" : "text-rose-600 dark:text-rose-400"
-                          )}>
-                            {res.state === 'skipped' ? "— Omitted —" : <MathRenderer text={res.userAns} />}
-                          </td>
-                          <td className="py-3.5 px-4 text-slate-700 dark:text-slate-300 font-black">
-                            <MathRenderer text={res.correctAns} />
-                          </td>
-                          <td className="py-3.5 px-4 text-center">
-                            {res.state === 'correct' ? (
-                              <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-bold text-[10px] rounded-lg">Correct ✅</Badge>
-                            ) : res.state === 'skipped' ? (
-                              <Badge className="bg-slate-100 dark:bg-slate-800/10 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700/30 font-bold text-[10px] rounded-lg">Omitted ⚪</Badge>
-                            ) : res.state === 'review' ? (
-                              <Badge className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 font-bold text-[10px] rounded-lg">Review ⚠️</Badge>
-                            ) : (
-                              <Badge className="bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 font-bold text-[10px] rounded-lg">Incorrect ❌</Badge>
-                            )}
-                          </td>
-                          <td className="py-3.5 px-4 font-mono font-medium text-slate-500">
-                            {res.timeSpent} sec
-                          </td>
-                          <td className="py-3.5 px-4 text-right">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-[#8B5CF6] hover:text-[#A855F7] font-bold rounded-lg px-2 h-7"
-                              onClick={() => handleQuestionClick(idx)}
-                            >
-                              Review <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
-                            </Button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </Card>
-          </div>
-        )}
-
-        {/* Detailed Question Review Tab */}
-        {activeTab === 'review' && (
-          <div className="space-y-6 animate-fadeIn select-text">
-            {/* Answer sheet quick bar */}
-            {renderAnswerSheet(false)}
-
-            {/* Question detail card */}
-            <div className="max-w-4xl mx-auto space-y-6">
+              {/* Main detail card for current selected question */}
               {activeQ && (
-                <Card id="active-question-card" className="border border-slate-200 dark:border-white/[0.06] p-6 sm:p-8 rounded-2xl bg-white dark:bg-[#0F172A] shadow-xl flex flex-col justify-between">
-                  <div className="space-y-6">
+                <div className="max-w-4xl mx-auto">
+                  <Card className="border border-slate-200 dark:border-white/[0.06] p-6 sm:p-8 rounded-2xl bg-white dark:bg-[#0F172A] shadow-xl space-y-6 relative overflow-hidden transition-[border-color,box-shadow] duration-350 hover:border-violet-500/20 hover:shadow-violet-500/[0.02]">
                     
-                    {/* Detail Header */}
                     <div className="flex items-center justify-between pb-3.5 border-b border-slate-200 dark:border-white/[0.06] select-none">
                       <div className="flex items-center gap-2">
-                        <span className="font-extrabold text-slate-800 dark:text-slate-200 text-sm uppercase">Question {activeQuestionIndex + 1}</span>
-                        {isSat && activeMeta && (
-                          <Badge variant="outline" className="text-[10px] font-black uppercase text-[#A855F7] bg-[#8B5CF6]/10 border-[#8B5CF6]/30">
-                            {activeMeta.skillCategory}
-                          </Badge>
-                        )}
-                        {isMilliy && activeMeta && (
-                          <Badge variant="outline" className="text-[10px] font-black uppercase text-[#8B5CF6] bg-[#8B5CF6]/10 border-[#8B5CF6]/30">
-                            {activeMeta.subject}
-                          </Badge>
-                        )}
+                        <span className="font-extrabold text-slate-800 dark:text-slate-250 text-sm uppercase">Question {activeQuestionIndex + 1}</span>
+                        <Badge variant="outline" className="text-[9px] font-black uppercase text-[#A855F7] bg-[#8B5CF6]/10 border-[#8B5CF6]/30">
+                          {activeQ.questionType || activeQ.question_type || activeQ.category || "General"}
+                        </Badge>
                       </div>
                       <div>
-                        {activeResult?.state === 'correct' ? (
+                        {activeResult?.isCorrect ? (
                           <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-bold gap-1 rounded-lg">
-                            <CheckCircle2 className="w-3.5 h-3.5" /> Correct ✅
+                            Correct ✅
                           </Badge>
-                        ) : activeResult?.state === 'skipped' ? (
-                          <Badge className="bg-slate-200/50 dark:bg-[#0F172A]/10 text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-700/30 font-bold gap-1 rounded-lg">
-                            <AlertCircle className="w-3.5 h-3.5" /> Omitted ⚪
-                          </Badge>
-                        ) : activeResult?.state === 'review' ? (
-                          <Badge className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 font-bold gap-1 rounded-lg">
-                            <AlertTriangle className="w-3.5 h-3.5" /> Review ⚠️
+                        ) : activeResult?.isOmitted ? (
+                          <Badge className="bg-slate-100 dark:bg-slate-800/10 text-slate-600 dark:text-slate-450 border border-slate-350 dark:border-slate-750 font-bold gap-1 rounded-lg">
+                            Omitted ⚪
                           </Badge>
                         ) : (
-                          <Badge className="bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 font-bold gap-1 rounded-lg">
-                            <XCircle className="w-3.5 h-3.5" /> Incorrect ❌
+                          <Badge className="bg-rose-500/10 text-rose-600 dark:text-rose-455 border border-rose-500/20 font-bold gap-1 rounded-lg">
+                            Incorrect ❌
                           </Badge>
                         )}
                       </div>
                     </div>
 
                     {/* Question text prompt */}
-                    <div className="text-base sm:text-lg text-slate-900 dark:text-white font-semibold leading-relaxed">
-                      <MathRenderer text={activeQ.prompt} />
+                    <div className="text-base text-slate-900 dark:text-white font-bold leading-relaxed">
+                      <MathRenderer text={activeQ.prompt || activeQ.text || ""} />
                     </div>
 
-                    {/* Options rendering */}
+                    {/* Options list */}
                     {activeQ.options && activeQ.options.length > 0 && (
-                      <div className="grid gap-3 select-none">
-                        {activeQ.options.map((opt: any) => {
+                      <div className="grid gap-3 select-none animate-[fade-in_0.4s_ease-out]">
+                        {activeQ.options.map((opt: any, optIdx: number) => {
                           const isUserSelected = activeResult?.userAns === opt.text;
+                          // Fallback check
                           const isCorrectOption = opt.isCorrect || opt.is_correct || activeResult?.correctAns === opt.text;
 
                           let optionStyle = "border-slate-200 dark:border-white/[0.04] bg-slate-50 dark:bg-white/[0.01] text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/[0.03]";
@@ -1334,16 +1345,16 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
 
                           if (isCorrectOption) {
                             optionStyle = "border-emerald-500/40 bg-emerald-50 dark:bg-emerald-500/5 text-emerald-700 dark:text-emerald-300 ring-1 ring-emerald-500/30";
-                            checkMarker = <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">Correct Answer ✔</span>;
+                            checkMarker = <span className="text-emerald-600 dark:text-emerald-400 font-black flex items-center gap-1 text-xs">Correct Option ✔</span>;
                           } else if (isUserSelected && !isCorrectOption) {
                             optionStyle = "border-rose-500/40 bg-rose-50 dark:bg-rose-500/5 text-rose-700 dark:text-rose-455 ring-1 ring-rose-500/30";
-                            checkMarker = <span className="text-rose-600 dark:text-rose-400 font-bold flex items-center gap-1">Your Answer ✖</span>;
+                            checkMarker = <span className="text-rose-600 dark:text-rose-400 font-black flex items-center gap-1 text-xs">Your Selection ✖</span>;
                           }
 
                           return (
                             <div
-                              key={opt.id || opt.text}
-                              className={cn("p-4 rounded-xl border text-sm font-bold flex items-center justify-between transition-all duration-200", optionStyle)}
+                              key={opt.id || optIdx}
+                              className={cn("p-4 rounded-xl border text-xs font-bold flex items-center justify-between transition-all duration-200", optionStyle)}
                             >
                               <div className="flex-1 pr-4">
                                 <MathRenderer text={opt.text} />
@@ -1355,146 +1366,93 @@ export function ExamResultDashboard({ result, questions, exam }: { result: any, 
                       </div>
                     )}
 
-                    {/* Output block structured exactly as requested */}
-                    <div className="p-5 bg-slate-50 dark:bg-white/[0.01] rounded-xl border border-slate-200 dark:border-white/[0.06] grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-bold leading-relaxed">
+                    {/* Selected and correct answer mapping */}
+                    <div className="p-4 bg-slate-50 dark:bg-white/[0.01] rounded-xl border border-slate-200 dark:border-white/[0.06] grid grid-cols-2 gap-4 text-xs font-bold">
                       <div>
                         <span className="text-slate-500 block uppercase tracking-wider mb-1">Your Selected Answer</span>
-                        <div className={cn("text-sm font-extrabold flex items-center gap-1.5", 
-                          activeResult?.state === 'correct' ? "text-emerald-600 dark:text-emerald-400" : activeResult?.state === 'skipped' ? "text-slate-500" : "text-rose-600 dark:text-rose-400"
+                        <div className={cn("text-sm font-extrabold flex items-center gap-1", 
+                          activeResult?.isCorrect ? "text-emerald-600 dark:text-emerald-400" : activeResult?.isOmitted ? "text-slate-500" : "text-rose-600 dark:text-rose-450"
                         )}>
-                          {activeResult?.state === 'skipped' ? "Not Answered ⚪" : <MathRenderer text={activeResult?.userAns} />}
-                          {activeResult?.state === 'skipped' ? null : activeResult?.state === 'correct' ? "✅" : "❌"}
+                          {activeResult?.isOmitted ? "Not Answered ⚪" : <MathRenderer text={activeResult?.userAns} />}
+                          {activeResult?.isOmitted ? null : activeResult?.isCorrect ? "✅" : "❌"}
                         </div>
                       </div>
                       <div>
-                        <span className="text-slate-500 dark:text-slate-500 block uppercase tracking-wider mb-1">Correct Answer</span>
-                        <div className="text-sm font-extrabold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                        <span className="text-slate-500 block uppercase tracking-wider mb-1">Correct Answer</span>
+                        <div className="text-sm font-extrabold text-slate-800 dark:text-slate-200 flex items-center gap-1">
                           <MathRenderer text={activeResult?.correctAns} /> ✅
                         </div>
                       </div>
                     </div>
 
-                    {/* Metadata attributes */}
-                    {activeMeta && (
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-bold text-slate-400">
-                        {isSat && (
-                          <>
-                            <div className="p-3 bg-slate-50 dark:bg-white/[0.01] rounded-lg border border-slate-200 dark:border-white/[0.04]">
-                              <span className="text-[9px] uppercase tracking-wider block text-slate-500 mb-0.5">Skill Category</span>
-                              <span className="text-slate-800 dark:text-slate-200 font-extrabold">{activeMeta.skillCategory}</span>
-                            </div>
-                            <div className="p-3 bg-slate-50 dark:bg-white/[0.01] rounded-lg border border-slate-200 dark:border-white/[0.04]">
-                              <span className="text-[9px] uppercase tracking-wider block text-slate-500 mb-0.5">Difficulty Level</span>
-                              <span className={cn("font-extrabold", 
-                                activeMeta.difficulty === "Easy" ? "text-emerald-600 dark:text-emerald-400" : activeMeta.difficulty === "Medium" ? "text-amber-600 dark:text-amber-500" : "text-rose-600 dark:text-rose-500"
-                              )}>{activeMeta.difficulty}</span>
-                            </div>
-                            <div className="p-3 bg-slate-50 dark:bg-white/[0.01] rounded-lg border border-slate-200 dark:border-white/[0.04]">
-                              <span className="text-[9px] uppercase tracking-wider block text-slate-500 mb-0.5">Time Spent</span>
-                              <span className="text-slate-800 dark:text-slate-200 font-extrabold">{activeMeta.timeSpent} seconds</span>
-                            </div>
-                            <div className="p-3 bg-slate-50 dark:bg-white/[0.01] rounded-lg border border-slate-200 dark:border-white/[0.04]">
-                              <span className="text-[9px] uppercase tracking-wider block text-slate-500 mb-0.5">Pacing Status</span>
-                              <span className="text-slate-800 dark:text-slate-200 font-extrabold">
-                                {activeMeta.timeSpent > avgTimePerQuestion * 1.3 ? "Slow Pace" : "Good Pace"}
-                              </span>
-                            </div>
-                          </>
-                        )}
-                        {isMilliy && (
-                          <>
-                            <div className="p-3 bg-slate-50 dark:bg-white/[0.01] rounded-lg border border-slate-200 dark:border-white/[0.04]">
-                              <span className="text-[9px] uppercase tracking-wider block text-slate-500 mb-0.5">Subject</span>
-                              <span className="text-slate-800 dark:text-slate-200 font-extrabold">{activeMeta.subject}</span>
-                            </div>
-                            <div className="p-3 bg-slate-50 dark:bg-white/[0.01] rounded-lg border border-slate-200 dark:border-white/[0.04]">
-                              <span className="text-[9px] uppercase tracking-wider block text-slate-500 mb-0.5">Topic</span>
-                              <span className="text-slate-800 dark:text-slate-200 font-extrabold">{activeMeta.topic}</span>
-                            </div>
-                            <div className="p-3 bg-slate-50 dark:bg-white/[0.01] rounded-lg border border-slate-200 dark:border-white/[0.04]">
-                              <span className="text-[9px] uppercase tracking-wider block text-slate-500 mb-0.5">Difficulty</span>
-                              <span className={cn("font-extrabold", 
-                                activeMeta.difficulty === "Easy" ? "text-emerald-600 dark:text-emerald-400" : activeMeta.difficulty === "Medium" ? "text-amber-600 dark:text-amber-500" : "text-rose-600 dark:text-rose-500"
-                              )}>{activeMeta.difficulty}</span>
-                            </div>
-                            <div className="p-3 bg-slate-50 dark:bg-white/[0.01] rounded-lg border border-slate-200 dark:border-white/[0.04]">
-                              <span className="text-[9px] uppercase tracking-wider block text-slate-500 mb-0.5">Subject Proficiency</span>
-                              <span className="text-slate-800 dark:text-slate-200 font-extrabold">
-                                {subjectStats[activeMeta.subject || ""] ? Math.round((subjectStats[activeMeta.subject || ""].correct / subjectStats[activeMeta.subject || ""].total) * 100) : 0}%
-                              </span>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    )}
-
-                    {/* SAT Text Evidence explanation */}
-                    {isSat && activeMeta?.evidenceExplanation && (
-                      <div className="bg-emerald-500/5 p-4 border border-emerald-500/10 rounded-xl space-y-1.5 font-semibold">
-                        <h4 className="text-xs font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
-                          <span>📍</span> Text Evidence Citation
+                    {/* Transcript snippet for listening with keyword highlights */}
+                    {kind === "listening" && activeQ.reference_paragraph && (
+                      <div className="bg-slate-50 dark:bg-white/[0.01] p-4.5 border border-slate-200 dark:border-white/[0.06] rounded-xl space-y-2">
+                        <h4 className="text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5 font-bold">
+                          🎧 Audio Transcript Snippet
                         </h4>
-                        <p className="text-slate-700 dark:text-slate-300 text-xs leading-relaxed">
-                          {activeMeta.evidenceExplanation}
+                        <p className="text-slate-600 dark:text-slate-400 font-semibold text-xs leading-relaxed">
+                          {highlightTranscriptKeywords(activeQ.reference_paragraph, activeResult?.correctAns)}
                         </p>
                       </div>
                     )}
 
-                    {/* Rationale / Explanation */}
-                    <div className="bg-[#8B5CF6]/5 p-4 border border-[#8B5CF6]/10 rounded-xl space-y-2">
-                      <h4 className="text-xs font-black text-[#8B5CF6] dark:text-[#A855F7] uppercase tracking-wider flex items-center gap-1.5 font-bold">
-                        <BrainCircuit className="w-4 h-4 animate-pulse" /> Explanation & Rationale
-                      </h4>
-                      <p className="text-slate-700 dark:text-slate-300 text-sm leading-relaxed whitespace-pre-wrap font-semibold">
-                        <MathRenderer text={activeMeta?.explanation || "No explanation provided for this question."} />
-                      </p>
+                    {/* Explanation */}
+                    {(activeQ.explanation || activeResult?.detail?.aiExplanation) && (
+                      <div className="bg-[#8B5CF6]/5 p-4 border border-[#8B5CF6]/10 rounded-xl space-y-2">
+                        <h4 className="text-xs font-black text-[#8B5CF6] dark:text-[#A855F7] uppercase tracking-wider flex items-center gap-1.5 font-bold">
+                          <BrainCircuit className="w-4 h-4 animate-pulse" /> Explanation & Rationale
+                        </h4>
+                        <p className="text-slate-700 dark:text-slate-350 text-xs leading-relaxed whitespace-pre-wrap font-semibold">
+                          <MathRenderer text={activeResult?.detail?.aiExplanation || activeQ.explanation || ""} />
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Learning tip */}
+                    {activeQ.learning_tip && (
+                      <div className="bg-amber-500/5 p-4 border border-amber-500/10 rounded-xl space-y-1.5 font-semibold">
+                        <h4 className="text-xs font-black text-amber-600 dark:text-amber-500 uppercase tracking-wider flex items-center gap-1.5 font-bold">
+                          <Lightbulb className="w-4 h-4 text-amber-500" /> Learning Tip
+                        </h4>
+                        <p className="text-slate-700 dark:text-slate-350 text-xs leading-relaxed">
+                          <MathRenderer text={activeQ.learning_tip} />
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Navigation buttons */}
+                    <div className="flex items-center justify-between pt-6 border-t border-slate-200 dark:border-white/[0.06] mt-6 select-none font-bold">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={activeQuestionIndex === 0}
+                        onClick={() => setActiveQuestionIndex(prev => prev - 1)}
+                        className="rounded-xl font-bold gap-1 text-xs border-slate-200 dark:border-white/[0.06] bg-white dark:bg-[#0F172A] text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5"
+                      >
+                        <ChevronLeft className="w-4 h-4" /> Previous
+                      </Button>
+                      <span className="text-xs text-slate-500 dark:text-slate-455 font-black">
+                        Question {activeQuestionIndex + 1} / {totalQuestions}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={activeQuestionIndex === totalQuestions - 1}
+                        onClick={() => setActiveQuestionIndex(prev => prev + 1)}
+                        className="rounded-xl font-bold gap-1 text-xs border-slate-200 dark:border-white/[0.06] bg-white dark:bg-[#0F172A] text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5"
+                      >
+                        Next <ChevronRight className="w-4 h-4" />
+                      </Button>
                     </div>
 
-                    {/* Learning Tip */}
-                    {activeMeta?.learningTip && (
-                      <div className="bg-amber-500/5 p-4 border border-amber-500/10 rounded-xl space-y-1.5 font-semibold">
-                        <h4 className="text-xs font-black text-amber-600 dark:text-amber-500 uppercase tracking-wider flex items-center gap-1.5">
-                          <Lightbulb className="w-4 h-4 text-amber-500 dark:text-amber-400" /> Learning Tip
-                        </h4>
-                        <p className="text-slate-700 dark:text-slate-300 text-xs leading-relaxed">
-                          <MathRenderer text={activeMeta.learningTip} />
-                        </p>
-                      </div>
-                    )}
-
-                  </div>
-
-                  {/* Review Tab Navigation buttons */}
-                  <div className="flex items-center justify-between pt-6 border-t border-slate-200 dark:border-white/[0.06] mt-6 select-none shrink-0 font-bold">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={activeQuestionIndex === 0}
-                      onClick={() => setActiveQuestionIndex(prev => prev - 1)}
-                      className="rounded-xl font-bold gap-1 text-xs border-slate-200 dark:border-white/[0.06] bg-white dark:bg-[#0F172A] text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5"
-                    >
-                      <ChevronLeft className="w-4 h-4" /> Previous
-                    </Button>
-                    <span className="text-xs text-slate-500 dark:text-slate-450 font-black">
-                      Question {activeQuestionIndex + 1} / {totalQuestions}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={activeQuestionIndex === totalQuestions - 1}
-                      onClick={() => setActiveQuestionIndex(prev => prev + 1)}
-                      className="rounded-xl font-bold gap-1 text-xs border-slate-200 dark:border-white/[0.06] bg-white dark:bg-[#0F172A] text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5"
-                    >
-                      Next <ChevronRight className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </Card>
+                  </Card>
+                </div>
               )}
+
             </div>
-
-          </div>
-        )}
-
+          )}
+        </motion.div>
       </main>
     </div>
   );

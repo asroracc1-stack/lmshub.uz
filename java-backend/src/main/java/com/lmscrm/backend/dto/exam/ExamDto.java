@@ -22,6 +22,10 @@ public class ExamDto {
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private Boolean isActive;
+    private String status;
+    private String subType;
+    private Boolean isAiImported;
+    private LocalDateTime publishedAt;
     private String requiredPack;
     private String pdfUrl;
     // Exam player uchun - passages va ichidagi questions

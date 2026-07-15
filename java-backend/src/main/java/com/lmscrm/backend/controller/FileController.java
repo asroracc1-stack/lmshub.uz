@@ -43,6 +43,24 @@ public class FileController {
     private final ProfileRepository profileRepository;
     private final DbStoredFileRepository dbStoredFileRepository;
 
+    @GetMapping
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
+    @Operation(summary = "List Uploaded Files Catalog")
+    public ResponseEntity<org.springframework.data.domain.Page<DbStoredFile>> listFiles(
+            @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size) {
+        
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(
+            page, size, org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt")
+        );
+        
+        if (search != null && !search.trim().isEmpty()) {
+            return ResponseEntity.ok(dbStoredFileRepository.findByFilenameContainingIgnoreCase(search.trim(), pageable));
+        }
+        return ResponseEntity.ok(dbStoredFileRepository.findAll(pageable));
+    }
+
     @PostMapping("/upload")
     @Operation(summary = "Upload File (Hybrid Store)")
     public ResponseEntity<String> upload(@RequestParam("file") MultipartFile file) throws IOException {

@@ -170,6 +170,7 @@ const OrgRewards = lazy(() => import("./pages/shared/OrgRewards"));
 const Leaderboard = lazy(() => import("./pages/shared/Leaderboard"));
 const Packs = lazy(() => import("./pages/shared/Packs"));
 const MockTests = lazy(() => import("./pages/shared/MockTests"));
+const MockDashboard = lazy(() => import("./pages/super-admin/MockDashboard"));
 const MockCategory = lazy(() => import("./pages/shared/MockCategory"));
 const MockTake = lazy(() => import("./pages/shared/MockTake"));
 const MockEditor = lazy(() => import("./pages/shared/MockEditor"));
@@ -240,7 +241,7 @@ const AppRoutes = () => {
           <Route path="calendar" element={<CalendarPage />} />
           <Route path="messages" element={<Messages />} />
           <Route path="leaderboard" element={<Leaderboard defaultRole="student" />} />
-          <Route path="mocks" element={<MockTests basePath="/super-admin" />} />
+          <Route path="mocks" element={<MockDashboard />} />
           <Route path="mocks/new" element={<MockEditor basePath="/super-admin" />} />
           <Route path="mocks/edit/:testId" element={<MockEditor basePath="/super-admin" />} />
           <Route path="mocks/c/:kind" element={<MockCategory basePath="/super-admin" />} />

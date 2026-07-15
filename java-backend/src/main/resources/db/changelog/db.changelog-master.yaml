@@ -101,5 +101,7 @@ databaseChangeLog:
       file: db/changelog/changes/v0050_attendance_enterprise.yaml
   - include:
       file: db/changelog/changes/v0051_weekly_schedules.yaml
+  - include:
+      file: db/changelog/changes/v0052_mock_enterprise_system.yaml
 
 

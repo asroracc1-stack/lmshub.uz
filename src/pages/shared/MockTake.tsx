@@ -635,6 +635,173 @@ function CustomAudioPlayer({ src, isExternalPaused }: { src: string, isExternalP
   );
 }
 
+
+interface PremiumLoaderOverlayProps {
+  examType: string;
+}
+
+function PremiumLoaderOverlay({ examType }: PremiumLoaderOverlayProps) {
+  const [msgIndex, setMsgIndex] = useState(0);
+  const typeLower = (examType ?? "").toLowerCase();
+
+  const messages = useMemo(() => {
+    if (typeLower.includes("reading")) {
+      return [
+        "Analyzing reading comprehension...",
+        "Measuring keyword scanning speed...",
+        "Building cognitive profile...",
+        "Calculating IELTS band score..."
+      ];
+    } else if (typeLower.includes("listening")) {
+      return [
+        "Processing listening behavior...",
+        "Detecting listening patterns...",
+        "Analyzing attention efficiency...",
+        "Calculating IELTS band score..."
+      ];
+    } else if (typeLower.includes("writing")) {
+      return [
+        "Evaluating coherence and cohesion...",
+        "Measuring lexical resource...",
+        "Evaluating grammar complexity...",
+        "Calculating IELTS band score..."
+      ];
+    } else {
+      return [
+        "Preparing AI insights...",
+        "Generating personalized recommendations...",
+        "Building learning profile...",
+        "Finalizing analytics dashboard..."
+      ];
+    }
+  }, [typeLower]);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setMsgIndex((prev) => (prev + 1) % messages.length);
+    }, 2000);
+    return () => clearInterval(timer);
+  }, [messages]);
+
+  const gradientClass = useMemo(() => {
+    if (typeLower.includes("reading")) return "from-blue-500 via-cyan-400 to-blue-600";
+    if (typeLower.includes("listening")) return "from-purple-500 via-indigo-400 to-purple-600";
+    if (typeLower.includes("writing")) return "from-emerald-500 via-teal-400 to-emerald-600";
+    if (typeLower.includes("sat")) return "from-violet-500 via-blue-400 to-violet-600";
+    if (typeLower.includes("national_cert") || typeLower.includes("milliy") || typeLower.includes("national certificate")) return "from-amber-500 via-orange-400 to-amber-600";
+    return "from-[#8B5CF6] via-[#A855F7] to-[#8B5CF6]";
+  }, [typeLower]);
+
+  const glowShadowColor = useMemo(() => {
+    if (typeLower.includes("reading")) return "rgba(59, 130, 246, 0.4)";
+    if (typeLower.includes("listening")) return "rgba(168, 85, 247, 0.4)";
+    if (typeLower.includes("writing")) return "rgba(16, 185, 129, 0.4)";
+    if (typeLower.includes("sat")) return "rgba(139, 92, 246, 0.4)";
+    if (typeLower.includes("national_cert") || typeLower.includes("milliy") || typeLower.includes("national certificate")) return "rgba(245, 158, 11, 0.4)";
+    return "rgba(168, 85, 247, 0.4)";
+  }, [typeLower]);
+
+  return (
+    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center p-4 bg-slate-900/60 dark:bg-black/60 backdrop-blur-xl transition-all duration-400 ease-in-out">
+      {/* Glow Ambient background shapes */}
+      <div className={cn("absolute top-1/4 left-1/4 h-[300px] w-[300px] rounded-full blur-[100px] animate-pulse opacity-20 bg-gradient-to-r", gradientClass)} />
+      <div className={cn("absolute bottom-1/4 right-1/4 h-[300px] w-[300px] rounded-full blur-[100px] animate-pulse opacity-20 bg-gradient-to-r", gradientClass)} />
+
+      {/* Main Orb Center */}
+      <motion.div
+        initial={{ scale: 0.85, opacity: 0 }}
+        animate={{ scale: [1, 1.04, 1], opacity: 1 }}
+        transition={{
+          scale: { repeat: Infinity, duration: 2.5, ease: "easeInOut" },
+          opacity: { duration: 0.4 }
+        }}
+        style={{
+          boxShadow: `0 0 60px ${glowShadowColor}, inset 0 0 20px rgba(255, 255, 255, 0.2)`
+        }}
+        className={cn("relative flex items-center justify-center w-36 h-36 rounded-full border border-white/20 bg-gradient-to-br transition-all duration-300", gradientClass)}
+      >
+        {/* Animated Checkmark SVG drawing itself */}
+        <svg className="w-14 h-14 text-white drop-shadow-md" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+          <motion.path
+            d="M20 6L9 17l-5-5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            initial={{ pathLength: 0 }}
+            animate={{ pathLength: 1 }}
+            transition={{ delay: 0.3, duration: 0.8, ease: "easeInOut" }}
+          />
+        </svg>
+
+        {/* Orbiting particles */}
+        <div className="absolute inset-0 -m-8 animate-[spin_10s_linear_infinite] pointer-events-none">
+          {/* Particle 1 */}
+          <motion.div
+            animate={{ y: [0, -6, 0] }}
+            transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+            className="absolute top-0 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-white opacity-90 shadow-md shadow-white/30"
+          />
+          {/* Particle 2 */}
+          <motion.div
+            animate={{ y: [0, 6, 0] }}
+            transition={{ repeat: Infinity, duration: 4, ease: "easeInOut", delay: 0.5 }}
+            className="absolute bottom-0 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-white/70 opacity-60 shadow-md shadow-white/20"
+          />
+          {/* Particle 3 */}
+          <motion.div
+            animate={{ x: [0, -5, 0] }}
+            transition={{ repeat: Infinity, duration: 3.5, ease: "easeInOut", delay: 1 }}
+            className="absolute left-0 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-white/80 opacity-70 shadow-md"
+          />
+          {/* Particle 4 */}
+          <motion.div
+            animate={{ x: [0, 5, 0] }}
+            transition={{ repeat: Infinity, duration: 2.8, ease: "easeInOut", delay: 1.5 }}
+            className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-white/50 opacity-55 shadow-sm"
+          />
+        </div>
+
+        {/* Outer Orbiting particles at different speed */}
+        <div className="absolute inset-0 -m-14 animate-[spin_16s_linear_infinite_reverse] pointer-events-none">
+          {/* Particle 5 */}
+          <motion.div
+            animate={{ scale: [1, 1.2, 1] }}
+            transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
+            className="absolute top-1/4 left-0 w-2.5 h-2.5 rounded-full bg-white/75 opacity-70 shadow-sm"
+          />
+          {/* Particle 6 */}
+          <motion.div
+            animate={{ scale: [1.2, 1, 1.2] }}
+            transition={{ repeat: Infinity, duration: 3.2, ease: "easeInOut", delay: 0.4 }}
+            className="absolute bottom-1/4 right-0 w-2 h-2 rounded-full bg-white/90 opacity-80 shadow-sm"
+          />
+        </div>
+      </motion.div>
+
+      {/* Rotating Text Container */}
+      <div className="mt-12 text-center max-w-sm select-none">
+        <div className="h-8 flex items-center justify-center">
+          <AnimatePresence mode="wait">
+            <motion.p
+              key={msgIndex}
+              initial={{ opacity: 0, y: 10, filter: "blur(4px)" }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              exit={{ opacity: 0, y: -10, filter: "blur(4px)" }}
+              transition={{ duration: 0.35, ease: "easeInOut" }}
+              className="text-base font-bold text-slate-800 dark:text-slate-100 tracking-wide transition-colors"
+            >
+              {messages[msgIndex]}
+            </motion.p>
+          </AnimatePresence>
+        </div>
+        <p className="text-xs text-slate-400 dark:text-slate-500 font-semibold mt-3 animate-pulse uppercase tracking-[0.18em]">
+          Cognitive Diagnostic Engine
+        </p>
+      </div>
+    </div>
+  );
+}
+
+
 export default function MockTake() {
   const { t } = useTranslation();
   const { theme, toggle } = useTheme();
@@ -754,6 +921,17 @@ export default function MockTake() {
   
   const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
   const [successAnimPhase, setSuccessAnimPhase] = useState<'idle' | 'loading' | 'success'>('idle');
+
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [mobileTab, setMobileTab] = useState<'passage' | 'questions'>('passage');
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const currentQuestion = questions[activeQuestionIndex];
   const isReading = kind === "reading";
@@ -1076,12 +1254,7 @@ export default function MockTake() {
 
     const isMilliyVal = exam?.type ? (exam.type.toLowerCase() === "national_cert" || exam.type.toLowerCase() === "milliy") : false;
 
-    if (isMilliyVal) {
-      setShowSuccessAnimation(true);
-      setSuccessAnimPhase('loading');
-    } else {
-      setShowSuccessAnimation(true);
-    }
+    setShowSuccessAnimation(true);
 
     let apiResponseData: any = null;
     let apiError: any = null;
@@ -1107,29 +1280,23 @@ export default function MockTake() {
       apiError = err;
     }
 
-    if (isMilliyVal) {
-      // Milliy mock exam loader must run for at least 2.5 seconds
-      const elapsedTime = Date.now() - startTime;
-      const remainingTime = Math.max(0, 2500 - elapsedTime);
+    const elapsedTime = Date.now() - startTime;
+    const remainingTime = Math.max(0, 3000 - elapsedTime); // Keep visible for at least 3 seconds
 
-      setTimeout(() => {
-        if (apiError) {
-          toast.error("Error submitting exam: " + (apiError.response?.data?.message || apiError.message));
-          setShowSuccessAnimation(false);
-          setSuccessAnimPhase('idle');
-          setSubmitting(false);
-          return;
-        }
+    setTimeout(() => {
+      if (apiError) {
+        toast.error("Error submitting exam: " + (apiError.response?.data?.message || apiError.message));
+        setShowSuccessAnimation(false);
+        setSubmitting(false);
+        return;
+      }
 
-        // Transition to success checkmark phase
-        setSuccessAnimPhase('success');
-
-        // Play congrats.mp3 sound automatically
-        try {
+      // Play audio cues
+      try {
+        if (isMilliyVal) {
           const audio = new Audio('/congrats.mp3');
           audio.play().catch(e => {
             console.log("Failed to play congrats.mp3, using warm synth fallback:", e);
-            // warm synthesizer fallback chord (sine wave)
             const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
             const now = audioCtx.currentTime;
             const playTone = (freq: number, startTimeVal: number, duration: number, vol = 0.15) => {
@@ -1151,48 +1318,23 @@ export default function MockTake() {
             playTone(493.88, now + 0.15, 1.75, 0.08); // B4
             playTone(587.33, now + 0.20, 1.7, 0.06);  // D5
           });
-        } catch (soundErr) {
-          console.error("Audio trigger error:", soundErr);
-        }
-
-        // Redirect to results dashboard after 2.0 seconds of success checkmark
-        setTimeout(() => {
-          setResult(apiResponseData);
-          setShowSuccessAnimation(false);
-          setSuccessAnimPhase('idle');
-          setSubmitting(false);
-        }, 2000);
-
-      }, remainingTime);
-
-    } else {
-      // Standard SAT completion logic
-      try {
-        if ('speechSynthesis' in window) {
+        } else if ('speechSynthesis' in window) {
           window.speechSynthesis.cancel();
           const utterance = new SpeechSynthesisUtterance("Your test has been successfully completed.");
           utterance.lang = "en-US";
           window.speechSynthesis.speak(utterance);
         }
       } catch (soundErr) {
-        console.error(soundErr);
+        console.error("Audio feedback error:", soundErr);
       }
 
-      const elapsedTime = Date.now() - startTime;
-      const remainingTime = Math.max(0, 3000 - elapsedTime);
-
+      // Fade/Scale/Blur out loader first, then reveal results after 400ms transition
+      setShowSuccessAnimation(false);
       setTimeout(() => {
-        if (apiError) {
-          toast.error("Error submitting exam: " + (apiError.response?.data?.message || apiError.message));
-          setShowSuccessAnimation(false);
-          setSubmitting(false);
-          return;
-        }
         setResult(apiResponseData);
-        setShowSuccessAnimation(false);
         setSubmitting(false);
-      }, remainingTime);
-    }
+      }, 400);
+    }, remainingTime);
   };
 
   const handleSubmitRequest = () => {
@@ -1239,146 +1381,7 @@ export default function MockTake() {
     </div>
   );
 
-  if (showSuccessAnimation) {
-    const isMilliyVal = exam?.type ? (exam.type.toLowerCase() === "national_cert" || exam.type.toLowerCase() === "milliy") : false;
 
-    if (isMilliyVal) {
-      return (
-        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center p-4 bg-gradient-to-br from-white via-emerald-50/20 to-white dark:from-[#060b13] dark:via-[#09221a] dark:to-[#060b13] transition-colors duration-500">
-          <div className="w-full max-w-md p-10 flex flex-col items-center justify-center text-center">
-            {successAnimPhase === 'loading' ? (
-              <>
-                {/* Modern circular progress loader */}
-                <div className="relative mb-8 flex h-24 w-24 items-center justify-center">
-                  <svg className="animate-spin h-20 w-20 text-[#16a34a] dark:text-[#22c55e]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-20" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-85" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                </div>
-                <h3 className="font-sans text-xl font-bold text-slate-800 dark:text-slate-100 animate-pulse">
-                  Natijalar tayyorlanmoqda....
-                </h3>
-              </>
-            ) : (
-              <>
-                {/* Checkmark ✔ scale + fade effect animation */}
-                <motion.div
-                  initial={{ scale: 0.3, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ type: "spring", stiffness: 220, damping: 16 }}
-                  className="h-24 w-24 rounded-full bg-emerald-50 dark:bg-emerald-950/30 border-4 border-[#16a34a] dark:border-[#22c55e] flex items-center justify-center text-[#16a34a] dark:text-[#22c55e] text-5xl font-extrabold shadow-lg shadow-emerald-500/10 mb-8"
-                >
-                  ✔
-                </motion.div>
-                <motion.h2 
-                  initial={{ opacity: 0, y: 12 }} 
-                  animate={{ opacity: 1, y: 0 }} 
-                  transition={{ delay: 0.15, duration: 0.4 }} 
-                  className="font-sans text-2xl font-extrabold text-slate-800 dark:text-slate-100 mb-2"
-                >
-                  Tabriklaymiz! Test muvaffaqiyatli yakunlandi.
-                </motion.h2>
-              </>
-            )}
-          </div>
-        </div>
-      );
-    }
-
-    return (
-      <div className={cn("fixed inset-0 z-[9999] flex items-center justify-center p-4 overflow-hidden", isMilliyVal ? "bg-[#050c18]" : "bg-[#080410]")}>
-        {/* Glow Backgrounds */}
-        <div className={cn("absolute top-1/4 left-1/4 h-[350px] w-[350px] rounded-full blur-[100px] animate-pulse", isMilliyVal ? "bg-emerald-650/10" : "bg-blue-600/10")} />
-        <div className={cn("absolute bottom-1/4 right-1/4 h-[350px] w-[350px] rounded-full blur-[100px] animate-pulse", isMilliyVal ? "bg-amber-600/10" : "bg-purple-600/10")} />
-
-        <motion.div
-          initial={{ scale: 0.9, y: 20, opacity: 0 }}
-          animate={{ scale: 1, y: 0, opacity: 1 }}
-          transition={{ type: "spring", duration: 0.6 }}
-          className={cn(
-            "relative w-full max-w-md overflow-hidden rounded-[32px] border backdrop-blur-2xl p-10 text-center shadow-2xl",
-            isMilliyVal 
-              ? "border-emerald-550/20 bg-white/5 dark:bg-[#0b1624]/60 shadow-emerald-950/20" 
-              : "border-white/10 bg-white/5 dark:bg-[#140D23]/60 shadow-purple-950/20"
-          )}
-        >
-          {/* Top light beam */}
-          <div className={cn("absolute -top-20 left-1/2 -translate-x-1/2 w-[200px] h-[100px] blur-xl", isMilliyVal ? "bg-gradient-to-b from-emerald-500/20 to-transparent" : "bg-gradient-to-b from-blue-500/20 to-transparent")} />
-
-          {/* Lottie Animation Container */}
-          <div className={cn(
-            "relative mx-auto mb-8 flex h-44 w-44 items-center justify-center rounded-full border shadow-inner",
-            isMilliyVal 
-              ? "from-emerald-500/5 to-amber-500/5 border-emerald-550/10" 
-              : "from-blue-500/5 to-purple-500/5 border-white/5"
-          )}>
-            {/* Glow ring */}
-            <div className={cn("absolute inset-2 rounded-full blur-md animate-pulse", isMilliyVal ? "bg-gradient-to-br from-emerald-500/10 to-amber-500/10" : "bg-gradient-to-br from-blue-500/10 to-purple-500/10")} />
-            <motion.div
-              animate={{ 
-                scale: [1, 1.05, 1],
-              }}
-              transition={{ 
-                repeat: Infinity, 
-                duration: 4,
-                ease: "easeInOut"
-              }}
-              className="z-10 w-36 h-36"
-            >
-              <DotLottiePlayer
-                src="https://lottie.host/05a8da46-bffb-4416-a160-0b16adbce445/CxzFkSjThh.lottie"
-                autoplay
-                loop
-                className="w-full h-full"
-              />
-            </motion.div>
-          </div>
-
-          {/* Status Text */}
-          <motion.h3 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="font-display text-2xl font-black tracking-tight text-white mb-3"
-          >
-            {isMilliyVal ? "Imtihon yakunlandi! 🎉" : "Section Completed! 🎉"}
-          </motion.h3>
-
-          <motion.p 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="text-sm text-slate-300 leading-relaxed max-w-[280px] mx-auto mb-8 font-medium"
-          >
-            {isMilliyVal 
-              ? "Javoblaringiz muvaffaqiyatli qabul qilindi. Natijalar tahlil qilinmoqda, iltimos oynani yopmang..." 
-              : "Your responses have been successfully submitted. Analyzing your performance, please do not close this window..."}
-          </motion.p>
-
-          {/* Premium Progress / Loader Dots */}
-          <div className="flex flex-col items-center gap-3">
-            <span className={cn("text-[10px] font-bold uppercase tracking-[0.2em] animate-pulse", isMilliyVal ? "text-emerald-400" : "text-blue-400")}>
-              {isMilliyVal ? "Javoblar yuborilmoqda" : "Submitting Responses"}
-            </span>
-            <div className="flex gap-2 justify-center">
-              {[0, 1, 2].map((i) => (
-                <motion.div
-                  key={i}
-                  animate={{ 
-                    scale: [1, 1.4, 1], 
-                    opacity: [0.4, 1, 0.4],
-                    backgroundColor: isMilliyVal ? ["#10b981", "#f59e0b", "#10b981"] : ["#3b82f6", "#a855f7", "#3b82f6"]
-                  }}
-                  transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2, ease: "easeInOut" }}
-                  className="h-2 w-2 rounded-full"
-                />
-              ))}
-            </div>
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
 
   if (result) {
     return <ExamResultDashboard result={result} questions={questions} exam={exam} />;
@@ -1781,18 +1784,18 @@ export default function MockTake() {
       : `${Math.ceil(timeLeft / 60)} minutes remaining`;
 
     return (
-      <header className={cn("h-[65px] shrink-0 border-b flex items-center justify-between px-6 z-40 select-none", cStyle.headerBg, cStyle.headerBorder, cStyle.text)}>
+      <header className={cn("h-[65px] shrink-0 border-b flex items-center justify-between px-3 sm:px-6 z-40 select-none", cStyle.headerBg, cStyle.headerBorder, cStyle.text)}>
         {/* Left: Logo and Test Title */}
-        <div className="flex items-center gap-4 min-w-0">
-          <span className={cn("font-black text-3xl tracking-tighter shrink-0 select-none", cStyle.logoText)}>
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+          <span className={cn("font-black text-2xl sm:text-3xl tracking-tighter shrink-0 select-none", cStyle.logoText)}>
             IELTS
           </span>
           <div className={cn("h-6 w-[1px] hidden sm:block shrink-0", isYB ? "bg-[#ffff00]" : "bg-slate-200 dark:bg-slate-800")} />
           <div className="min-w-0 leading-tight">
-            <h1 className="font-extrabold text-sm truncate max-w-[200px] sm:max-w-none">
+            <h1 className="font-extrabold text-xs sm:text-sm truncate max-w-[80px] xs:max-w-[120px] sm:max-w-none">
               {exam?.title || "IELTS Practice Test"}
             </h1>
-            <div className="flex items-center gap-2 text-[11px] mt-0.5 font-bold text-slate-500 dark:text-slate-400 opacity-90 select-none">
+            <div className="flex items-center gap-2 text-[11px] mt-0.5 font-bold text-slate-500 dark:text-slate-400 opacity-90 select-none hidden sm:flex">
               <span>{minutesRemainingText}</span>
               <span>|</span>
               <BookOpen className="w-3.5 h-3.5 opacity-80" />
@@ -1802,17 +1805,17 @@ export default function MockTake() {
         </div>
 
         {/* Center: Timer Box */}
-        <div className={cn("flex items-center justify-center border rounded-md px-5 py-1.5 shadow-sm font-sans font-bold text-lg select-none", cStyle.timerBox)}>
-          <Clock className="w-5 h-5 mr-2 opacity-80" />
+        <div className={cn("flex items-center justify-center border rounded-md px-3 sm:px-5 py-1 sm:py-1.5 shadow-sm font-sans font-bold text-sm sm:text-lg select-none shrink-0", cStyle.timerBox)}>
+          <Clock className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2 opacity-80" />
           {isReviewOrAnalyze ? "FINISHED" : fmt(timeLeft)}
         </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1 sm:gap-1.5">
           <Button 
             variant="ghost" 
             size="icon" 
-            className={cn("rounded-none h-10 w-10 cursor-pointer", cStyle.iconBtn)} 
+            className={cn("rounded-none h-10 w-10 cursor-pointer hidden sm:inline-flex", cStyle.iconBtn)} 
             onClick={toggleFullscreen}
             title="Toggle Fullscreen"
           >
@@ -1821,7 +1824,7 @@ export default function MockTake() {
           <Button 
             variant="ghost" 
             size="icon" 
-            className={cn("rounded-none h-10 w-10 cursor-pointer", cStyle.iconBtn)}
+            className={cn("rounded-none h-10 w-10 cursor-pointer hidden sm:inline-flex", cStyle.iconBtn)}
             title="Diagnostics"
           >
             <BarChart3 className="h-4.5 w-4.5 text-emerald-600 dark:text-emerald-400" />
@@ -1829,7 +1832,7 @@ export default function MockTake() {
           <Button 
             variant="ghost" 
             size="icon" 
-            className={cn("rounded-none h-10 w-10 cursor-pointer", cStyle.iconBtn)}
+            className={cn("rounded-none h-10 w-10 cursor-pointer hidden sm:inline-flex", cStyle.iconBtn)}
             title="Notifications"
           >
             <Bell className="h-4.5 w-4.5" />
@@ -1882,7 +1885,7 @@ export default function MockTake() {
 
     return (
       <div
-        style={{ width: `${leftWidth}%`, flexShrink: 0 }}
+        style={{ width: isMobile ? "100%" : `${leftWidth}%`, flexShrink: 0 }}
         className={cn("h-full overflow-y-auto border-r p-8 xl:p-12 transition-colors select-text", cStyle.passageBg, cStyle.passageBorder, cStyle.text)}
       >
         <div className="max-w-3xl mx-auto">
@@ -1900,6 +1903,68 @@ export default function MockTake() {
             {formatMathText(currentSection.passage)}
           </div>
         </div>
+      </div>
+    );
+  };
+
+  const renderIeltsMobileTabSwitcher = () => {
+    if (!isMobile || (!isReading && kind !== "writing")) return null;
+    return (
+      <div className={cn("flex border-b shrink-0 select-none z-30", cStyle.headerBg, cStyle.headerBorder)}>
+        <button
+          onClick={() => setMobileTab('passage')}
+          className={cn(
+            "flex-1 py-3 text-center text-xs font-black uppercase tracking-wider transition-all border-b-2 flex items-center justify-center gap-1.5",
+            mobileTab === 'passage' 
+              ? (isYB ? "border-[#ffff00] text-[#ffff00]" : "border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400") 
+              : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-350"
+          )}
+        >
+          <BookOpen className="w-3.5 h-3.5" /> Passage
+        </button>
+        <button
+          onClick={() => setMobileTab('questions')}
+          className={cn(
+            "flex-1 py-3 text-center text-xs font-black uppercase tracking-wider transition-all border-b-2 flex items-center justify-center gap-1.5",
+            mobileTab === 'questions' 
+              ? (isYB ? "border-[#ffff00] text-[#ffff00]" : "border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400") 
+              : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-350"
+          )}
+        >
+          <HelpCircle className="w-3.5 h-3.5" /> Questions
+        </button>
+      </div>
+    );
+  };
+
+  const renderDefaultMobileTabSwitcher = () => {
+    if (!isMobile || (!isReading && kind !== "writing")) return null;
+    return (
+      <div className={cn("flex border-b shrink-0 select-none z-30 transition-colors", 
+        isMilliy ? "bg-white dark:bg-[#0b1624] border-slate-200 dark:border-slate-800" : "bg-white dark:bg-[#140D23] border-slate-300 dark:border-slate-800"
+      )}>
+        <button
+          onClick={() => setMobileTab('passage')}
+          className={cn(
+            "flex-1 py-3 text-center text-xs font-black uppercase tracking-wider transition-all border-b-2 flex items-center justify-center gap-1.5",
+            mobileTab === 'passage' 
+              ? (isMilliy ? "border-[#10b981] text-[#10b981]" : "border-blue-650 text-blue-600 dark:text-blue-400") 
+              : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-350"
+          )}
+        >
+          <BookOpen className="w-3.5 h-3.5" /> {isMilliy ? "Matn" : "Passage"}
+        </button>
+        <button
+          onClick={() => setMobileTab('questions')}
+          className={cn(
+            "flex-1 py-3 text-center text-xs font-black uppercase tracking-wider transition-all border-b-2 flex items-center justify-center gap-1.5",
+            mobileTab === 'questions' 
+              ? (isMilliy ? "border-[#10b981] text-[#10b981]" : "border-blue-650 text-blue-600 dark:text-blue-400") 
+              : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-350"
+          )}
+        >
+          <HelpCircle className="w-3.5 h-3.5" /> {isMilliy ? "Savollar" : "Questions"}
+        </button>
       </div>
     );
   };
@@ -2201,16 +2266,16 @@ export default function MockTake() {
 
   const renderIeltsFooter = (currentSectionIdx: number) => {
     return (
-      <footer className={cn("h-[70px] border-t flex items-center justify-between px-6 z-40 select-none", cStyle.footerBg, cStyle.footerBorder, cStyle.footerText)}>
+      <footer className={cn("h-[70px] border-t flex items-center justify-between px-3 sm:px-6 z-40 select-none gap-2", cStyle.footerBg, cStyle.footerBorder, cStyle.footerText)}>
         {/* Left side: Part info */}
-        <div className="flex items-center gap-3 w-1/4">
-          <span className="font-extrabold text-sm uppercase tracking-wide">
+        <div className="flex items-center gap-2 shrink-0 select-none">
+          <span className="font-extrabold text-xs sm:text-sm uppercase tracking-wide">
             Part {currentSectionIdx + 1}
           </span>
         </div>
 
         {/* Middle side: Square Pagination Buttons */}
-        <div className="flex-1 flex justify-center items-center gap-1.5 overflow-x-auto max-w-[60%] px-4 py-1 scrollbar-thin">
+        <div className="flex-1 flex justify-center items-center gap-1.5 overflow-x-auto px-2 py-1 scrollbar-none">
           {questions.map((q, idx) => {
             const isCurrent = idx === activeQuestionIndex;
             const hasAns = !!answers[q.id];
@@ -2258,7 +2323,7 @@ export default function MockTake() {
                     el.scrollIntoView({ behavior: "smooth", block: "center" });
                   }
                 }}
-                className={cn("h-9 w-9 text-xs font-black transition-all duration-150 border flex items-center justify-center rounded-sm shrink-0 cursor-pointer", btnStyle)}
+                className={cn("h-8 w-8 sm:h-9 sm:w-9 text-xs font-black transition-all duration-150 border flex items-center justify-center rounded-sm shrink-0 cursor-pointer", btnStyle)}
               >
                 {q.position}
               </button>
@@ -2267,7 +2332,7 @@ export default function MockTake() {
         </div>
 
         {/* Right side: Checkmark or Back Button */}
-        <div className="flex items-center justify-end w-1/4">
+        <div className="flex items-center justify-end shrink-0">
           {isReviewOrAnalyze ? (
             <Button
               onClick={() => {
@@ -2679,17 +2744,25 @@ export default function MockTake() {
         
         {/* Full-width Part Banner like official CD IELTS */}
         {renderIeltsPartBanner(currentSectionIdx)}
+
+        {/* Mobile Tab Switcher */}
+        {renderIeltsMobileTabSwitcher()}
         
         {/* Main Content Area */}
         <main className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
-          {(isReading || kind === "writing") && renderIeltsPassagePanel(currentSectionIdx)}
+          {(!isMobile || mobileTab === 'passage') && (isReading || kind === "writing") && renderIeltsPassagePanel(currentSectionIdx)}
           
-          {(isReading || kind === "writing") && renderIeltsDivider()}
+          {!isMobile && (isReading || kind === "writing") && renderIeltsDivider()}
           
-          <div className="flex-1 flex flex-col overflow-hidden relative">
-            {kind === "listening" && renderIeltsListeningControls()}
-            {renderIeltsQuestionsPanel(currentSectionIdx)}
-          </div>
+          {(!isMobile || mobileTab === 'questions') && (
+            <div 
+              style={{ width: (!isMobile && (isReading || kind === "writing")) ? `${100 - leftWidth}%` : "100%" }}
+              className="flex-1 flex flex-col overflow-hidden relative"
+            >
+              {kind === "listening" && renderIeltsListeningControls()}
+              {renderIeltsQuestionsPanel(currentSectionIdx)}
+            </div>
+          )}
         </main>
 
         {renderIeltsFooter(currentSectionIdx)}
@@ -2697,6 +2770,19 @@ export default function MockTake() {
         {showScratchpad && <Scratchpad isOpen={showScratchpad} onClose={() => setShowScratchpad(false)} />}
         <DesmosCalculator isOpen={showCalculator} onClose={() => setShowCalculator(false)} />
         {renderIeltsOptionsModal()}
+        <AnimatePresence>
+          {showSuccessAnimation && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0, scale: 0.95, filter: "blur(10px)" }}
+              transition={{ duration: 0.4, ease: "easeInOut" }}
+              className="fixed inset-0 z-[9999]"
+            >
+              <PremiumLoaderOverlay examType={exam?.type || ""} />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     );
   };
@@ -2705,11 +2791,11 @@ export default function MockTake() {
     if (isReviewOrAnalyze) {
       return renderIeltsLayout();
     } else {
-      return renderIeltsResultDashboard();
+      return <ExamResultDashboard result={result} questions={questions} exam={exam} />;
     }
   }
 
-  if (started && isIeltsLayout && !result && !showReviewScreen && !showSuccessAnimation) {
+  if (started && isIeltsLayout && !result && !showReviewScreen) {
     return renderIeltsLayout();
   }
 
@@ -2719,14 +2805,14 @@ export default function MockTake() {
     )}>
       
       {/* EXAM COMMAND CENTER HEADER - Official Deep Blue/Teal Bar */}
-      <header className={cn("h-[60px] shrink-0 text-white flex items-center justify-between px-6 z-40 border-b transition-colors", 
+      <header className={cn("h-[60px] shrink-0 text-white flex items-center justify-between px-3 sm:px-6 z-40 border-b transition-colors", 
         isMilliy ? "bg-[#0a192f] border-b-2 border-b-[#10b981]" : "bg-[#0f2c59] dark:bg-[#0b1e3b] border-[#0f2c59] dark:border-[#0b1e3b]"
       )}>
-        <div className="flex items-center gap-4 min-w-0">
-           <h1 className="font-bold text-sm uppercase tracking-widest truncate max-w-[150px] sm:max-w-none">
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+           <h1 className="font-bold text-xs uppercase tracking-widest truncate max-w-[80px] xs:max-w-[120px] sm:max-w-none">
              {isMilliy ? "O'ZBEKISTON RESPUBLIKASI MILLIY SERTIFIKAT IMTIHONI" : exam.title}
            </h1>
-           <span className="text-[10px] bg-white/10 px-2 py-0.5 border border-white/20 uppercase tracking-widest shrink-0">
+           <span className="text-[10px] bg-white/10 px-2 py-0.5 border border-white/20 uppercase tracking-widest shrink-0 hidden sm:inline-block">
              {isMilliy ? "Milliy Sertifikat" : exam.type}
            </span>
         </div>
@@ -2737,27 +2823,27 @@ export default function MockTake() {
             {isMilliy ? "Qolgan vaqt:" : "Time Remaining:"}
           </span>
           <div className={cn(
-            "flex items-center justify-center px-6 py-1.5 font-mono text-xl font-bold tracking-[0.1em] border-2",
+            "flex items-center justify-center px-3 sm:px-6 py-1 sm:py-1.5 font-mono text-sm sm:text-xl font-bold tracking-[0.1em] border-2 shrink-0",
             timeLeft < 60 ? "bg-[#991b1b] border-[#ef4444] animate-pulse" :
             timeLeft < 300 ? "bg-[#ca8a04] border-[#facc15]" :
             "bg-transparent border-transparent"
           )}>
-            <Clock className="w-4 h-4 mr-2 opacity-50" />
+            <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-2 opacity-50" />
             {fmt(timeLeft)}
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-1 sm:gap-4">
            <Button 
              variant="ghost" 
              size="icon" 
-             className="rounded-none hover:bg-white/10" 
+             className="rounded-none hover:bg-white/10 hidden sm:flex" 
              onClick={toggle}
              title={theme === "dark" ? (isMilliy ? "Yorug' rejim" : "Light Mode") : (isMilliy ? "Qorong'u rejim" : "Dark Mode")}
            >
              {theme === "dark" ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-slate-300" />}
            </Button>
-           <Button variant="ghost" size="icon" className="rounded-none hover:bg-white/10" onClick={toggleFullscreen}>
+           <Button variant="ghost" size="icon" className="rounded-none hover:bg-white/10 hidden sm:flex" onClick={toggleFullscreen}>
              {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
            </Button>
            {isMilliy ? (
@@ -2778,14 +2864,17 @@ export default function MockTake() {
         </div>
       </header>
 
+      {/* Mobile Tab Switcher */}
+      {renderDefaultMobileTabSwitcher()}
+
       {/* QUESTION AREA — both panels scroll independently */}
       <main className={cn(
         "flex-1 flex flex-col md:flex-row overflow-hidden transition-colors relative",
         isMilliy ? "bg-[#f1f5f9] dark:bg-[#060b13]" : "bg-[#f4f4f4] dark:bg-[#0c0817]"
       )}>
-        {(isReading || kind === "writing") && sections[currentQuestion?.section_index] && (sections[currentQuestion?.section_index].passage || sections[currentQuestion?.section_index].imageUrl) && (
+        {(!isMobile || mobileTab === 'passage') && (isReading || kind === "writing") && sections[currentQuestion?.section_index] && (sections[currentQuestion?.section_index].passage || sections[currentQuestion?.section_index].imageUrl) && (
           <div
-            style={{ width: `${leftWidth}%`, flexShrink: 0 }}
+            style={{ width: isMobile ? "100%" : `${leftWidth}%`, flexShrink: 0 }}
             className={cn(
               "h-full overflow-y-auto border-b md:border-b-0 md:border-r p-6 md:p-8 xl:p-12 transition-colors",
               isMilliy
@@ -2807,7 +2896,7 @@ export default function MockTake() {
           </div>
         )}
 
-        {(isReading || kind === "writing") && (
+        {!isMobile && (isReading || kind === "writing") && (
           <div
             onMouseDown={startResizing}
             className="hidden md:flex w-1 hover:w-2 bg-slate-200 hover:bg-blue-500 dark:bg-slate-800 dark:hover:bg-blue-600 cursor-col-resize shrink-0 transition-all duration-150 relative z-20 items-center justify-center group"
@@ -2818,20 +2907,21 @@ export default function MockTake() {
           </div>
         )}
 
-        <div
-          style={{ width: (isReading || kind === "writing") ? `${100 - leftWidth}%` : "100%" }}
-          className={cn(
-            "h-full overflow-y-auto flex flex-col p-6 md:p-8 xl:p-12 transition-colors relative",
-            !(isReading || kind === "writing") && "max-w-5xl mx-auto border-x",
-            isMilliy
-              ? "bg-white dark:bg-[#0b1624] border-slate-200 dark:border-slate-800"
-              : "bg-white dark:bg-[#140D23] border-slate-300 dark:border-slate-800"
-          )}
-        >
-          {/* Listening Headphones overlay prompt */}
-          {kind === "listening" && exam.audioUrl && !audioStarted && (
-            <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md flex flex-col items-center justify-center p-8 text-center text-white z-30">
-              <div className="relative mx-auto mb-8 flex h-40 w-40 items-center justify-center rounded-full border border-white/10 bg-white/5 shadow-inner">
+        {(!isMobile || mobileTab === 'questions') && (
+          <div
+            style={{ width: (!isMobile && (isReading || kind === "writing")) ? `${100 - leftWidth}%` : "100%" }}
+            className={cn(
+              "h-full overflow-y-auto flex flex-col p-6 md:p-8 xl:p-12 transition-colors relative",
+              !(isReading || kind === "writing") && "max-w-5xl mx-auto border-x",
+              isMilliy
+                ? "bg-white dark:bg-[#0b1624] border-slate-200 dark:border-slate-800"
+                : "bg-white dark:bg-[#140D23] border-slate-300 dark:border-slate-800"
+            )}
+          >
+            {/* Listening Headphones overlay prompt */}
+            {kind === "listening" && exam.audioUrl && !audioStarted && (
+              <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md flex flex-col items-center justify-center p-8 text-center text-white z-30">
+                <div className="relative mx-auto mb-8 flex h-40 w-40 items-center justify-center rounded-full border border-white/10 bg-white/5 shadow-inner">
                 <Headphones className="h-16 w-16 text-blue-500 animate-bounce" />
               </div>
               <p className="max-w-md text-sm font-semibold leading-relaxed mb-6 text-slate-300">
@@ -2955,6 +3045,7 @@ export default function MockTake() {
             )}
           </div>
         </div>
+      )}
       </main>
 
       {/* EXAM NAVIGATOR - Formal Status Bar */}
@@ -3111,6 +3202,20 @@ export default function MockTake() {
                 </Button>
               </div>
             </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showSuccessAnimation && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, scale: 0.95, filter: "blur(10px)" }}
+            transition={{ duration: 0.4, ease: "easeInOut" }}
+            className="fixed inset-0 z-[9999]"
+          >
+            <PremiumLoaderOverlay examType={exam?.type || ""} />
           </motion.div>
         )}
       </AnimatePresence>

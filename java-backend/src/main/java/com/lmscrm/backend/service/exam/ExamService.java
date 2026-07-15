@@ -38,6 +38,9 @@ public class ExamService {
     private final GeminiService geminiService;
     private final ObjectMapper objectMapper;
     private final com.lmscrm.backend.service.SubscriptionService subscriptionService;
+    private final DbStoredFileRepository dbStoredFileRepository;
+
+    private final String uploadDir = "uploads/";
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -130,6 +133,11 @@ public class ExamService {
             finalTitle = request.getTitle() + " (" + new java.util.Random().nextInt(1000) + ")";
         }
 
+        String status = (request.getStatus() != null) ? request.getStatus().toUpperCase() : "DRAFT";
+        if ("PUBLISHED".equals(status) && !author.getRole().name().equals("SUPER_ADMIN")) {
+            throw new com.lmscrm.backend.exception.BusinessException("Faqat Super Admin nashr eta oladi!");
+        }
+
         Exam exam = Exam.builder()
                 .title(finalTitle)
                 .description(request.getDescription())
@@ -143,6 +151,10 @@ public class ExamService {
                 .organization(org)
                 .createdBy(author)
                 .isActive(true)
+                .status(status)
+                .subType(request.getSubType() != null ? request.getSubType().toUpperCase() : null)
+                .isAiImported(request.getIsAiImported() != null ? request.getIsAiImported() : false)
+                .publishedAt("PUBLISHED".equals(status) ? java.time.LocalDateTime.now() : null)
                 .build();
         exam = examRepository.save(exam);
 
@@ -152,9 +164,16 @@ public class ExamService {
     }
 
     @Transactional
-    public ExamDto updateMockExam(UUID examId, CreateExamRequest request) {
+    public ExamDto updateMockExam(UUID examId, CreateExamRequest request, User author) {
         Exam exam = examRepository.findById(examId)
                 .orElseThrow(() -> new ResourceNotFoundException("Exam not found: " + examId));
+
+        String newStatus = request.getStatus() != null ? request.getStatus().toUpperCase() : "DRAFT";
+        if ("PUBLISHED".equals(newStatus) && !"PUBLISHED".equals(exam.getStatus())) {
+            if (!author.getRole().name().equals("SUPER_ADMIN")) {
+                throw new com.lmscrm.backend.exception.BusinessException("Faqat Super Admin nashr eta oladi!");
+            }
+        }
 
         exam.setTitle(request.getTitle());
         exam.setDescription(request.getDescription());
@@ -164,6 +183,17 @@ public class ExamService {
         exam.setDurationMinutes(request.getDurationMinutes() != null ? request.getDurationMinutes() : 60);
         exam.setPassingScore(request.getPassingScore() != null ? request.getPassingScore() : 50);
         exam.setRequiredPack(request.getRequiredPack() != null ? request.getRequiredPack().toLowerCase() : "free");
+
+        exam.setStatus(newStatus);
+        if ("PUBLISHED".equals(newStatus) && exam.getPublishedAt() == null) {
+            exam.setPublishedAt(java.time.LocalDateTime.now());
+        }
+        if (request.getSubType() != null) {
+            exam.setSubType(request.getSubType().toUpperCase());
+        }
+        if (request.getIsAiImported() != null) {
+            exam.setIsAiImported(request.getIsAiImported());
+        }
 
         updateSections(request, exam);
 
@@ -900,4 +930,436 @@ public class ExamService {
             org.slf4j.LoggerFactory.getLogger(ExamService.class).error("Failed to generate and save AI review asynchronously: ", e);
         }
     }
+
+    @Transactional
+    public ExamDto duplicateExam(UUID examId, User user) {
+        Exam original = examRepository.findById(examId)
+                .orElseThrow(() -> new ResourceNotFoundException("Exam not found: " + examId));
+
+        String finalTitle = "Copy of " + original.getTitle();
+        while (examRepository.existsByTitle(finalTitle)) {
+            finalTitle = "Copy of " + original.getTitle() + " (" + new java.util.Random().nextInt(1000) + ")";
+        }
+
+        Exam duplicate = Exam.builder()
+                .title(finalTitle)
+                .description(original.getDescription())
+                .difficulty(original.getDifficulty())
+                .audioUrl(original.getAudioUrl())
+                .pdfUrl(original.getPdfUrl())
+                .type(original.getType())
+                .durationMinutes(original.getDurationMinutes())
+                .passingScore(original.getPassingScore())
+                .requiredPack(original.getRequiredPack())
+                .organization(original.getOrganization())
+                .createdBy(user)
+                .isActive(true)
+                .status("DRAFT")
+                .subType(original.getSubType())
+                .isAiImported(false)
+                .passages(new ArrayList<>())
+                .build();
+
+        duplicate = examRepository.save(duplicate);
+
+        List<Passage> passages = passageRepository.findByExamIdOrderByPositionOrderAsc(original.getId());
+        for (Passage p : passages) {
+            Passage newP = Passage.builder()
+                    .exam(duplicate)
+                    .title(p.getTitle())
+                    .content(p.getContent())
+                    .positionOrder(p.getPositionOrder())
+                    .imageUrl(p.getImageUrl())
+                    .audioUrl(p.getAudioUrl())
+                    .pdfAttachment(p.getPdfAttachment())
+                    .timeLimitSeconds(p.getTimeLimitSeconds())
+                    .shuffleQuestions(p.getShuffleQuestions())
+                    .shuffleOptions(p.getShuffleOptions())
+                    .autoNumbering(p.getAutoNumbering())
+                    .lockNavigation(p.getLockNavigation())
+                    .questionRandomization(p.getQuestionRandomization())
+                    .icon(p.getIcon())
+                    .colorTheme(p.getColorTheme())
+                    .instructions(p.getInstructions())
+                    .difficulty(p.getDifficulty())
+                    .passingScore(p.getPassingScore())
+                    .questions(new ArrayList<>())
+                    .build();
+
+            newP = passageRepository.save(newP);
+            duplicate.getPassages().add(newP);
+
+            List<Question> questions = questionRepository.findByPassageIdOrderByPositionOrderAsc(p.getId());
+            for (Question q : questions) {
+                Question newQ = Question.builder()
+                        .exam(duplicate)
+                        .passage(newP)
+                        .questionType(q.getQuestionType())
+                        .text(q.getText())
+                        .points(q.getPoints())
+                        .negativeMarks(q.getNegativeMarks())
+                        .positionOrder(q.getPositionOrder())
+                        .imageUrl(q.getImageUrl())
+                        .imagePosition(q.getImagePosition())
+                        .audioUrl(q.getAudioUrl())
+                        .videoUrl(q.getVideoUrl())
+                        .formulaLatex(q.getFormulaLatex())
+                        .matchingPairs(q.getMatchingPairs())
+                        .fillTemplate(q.getFillTemplate())
+                        .explanation(q.getExplanation())
+                        .hint(q.getHint())
+                        .topic(q.getTopic())
+                        .subtopic(q.getSubtopic())
+                        .tags(q.getTags())
+                        .difficulty(q.getDifficulty())
+                        .status("draft")
+                        .timeLimitSeconds(q.getTimeLimitSeconds())
+                        .numericAnswer(q.getNumericAnswer())
+                        .numericTolerance(q.getNumericTolerance())
+                        .wordLimit(q.getWordLimit())
+                        .options(new ArrayList<>())
+                        .build();
+
+                newQ = questionRepository.save(newQ);
+                newP.getQuestions().add(newQ);
+
+                List<QuestionOption> options = optionRepository.findByQuestionIdOrderByPositionOrderAsc(q.getId());
+                for (QuestionOption o : options) {
+                    QuestionOption newO = QuestionOption.builder()
+                            .question(newQ)
+                            .text(o.getText())
+                            .isCorrect(o.getIsCorrect())
+                            .positionOrder(o.getPositionOrder())
+                            .imageUrl(o.getImageUrl())
+                            .imagePosition(o.getImagePosition())
+                            .build();
+
+                    optionRepository.save(newO);
+                    newQ.getOptions().add(newO);
+                }
+            }
+        }
+
+        return getExamDetails(duplicate.getId());
+    }
+
+    @Transactional
+    public void bulkPublish(List<UUID> ids, User author) {
+        if (!author.getRole().name().equals("SUPER_ADMIN")) {
+            throw new com.lmscrm.backend.exception.BusinessException("Faqat Super Admin nashr eta oladi!");
+        }
+        for (UUID id : ids) {
+            examRepository.findById(id).ifPresent(exam -> {
+                exam.setStatus("PUBLISHED");
+                exam.setPublishedAt(java.time.LocalDateTime.now());
+                examRepository.save(exam);
+            });
+        }
+    }
+
+    @Transactional
+    public void bulkArchive(List<UUID> ids) {
+        for (UUID id : ids) {
+            examRepository.findById(id).ifPresent(exam -> {
+                exam.setStatus("ARCHIVED");
+                examRepository.save(exam);
+            });
+        }
+    }
+
+    @Transactional
+    public void bulkDelete(List<UUID> ids) {
+        for (UUID id : ids) {
+            deleteExam(id);
+        }
+    }
+
+    @Transactional
+    public List<ExamDto> bulkDuplicate(List<UUID> ids, User user) {
+        List<ExamDto> duplicates = new ArrayList<>();
+        for (UUID id : ids) {
+            duplicates.add(duplicateExam(id, user));
+        }
+        return duplicates;
+    }
+
+    @Transactional(readOnly = true)
+    public byte[] bulkExport(List<UUID> ids) throws Exception {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        try (java.util.zip.ZipOutputStream zos = new java.util.zip.ZipOutputStream(bos)) {
+            for (UUID id : ids) {
+                Exam exam = examRepository.findById(id).orElse(null);
+                if (exam != null) {
+                    ExamDto dto = getExamDetails(id);
+                    byte[] jsonBytes = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(dto);
+                    java.util.zip.ZipEntry entry = new java.util.zip.ZipEntry(exam.getTitle().replaceAll("[^a-zA-Z0-9.-]", "_") + "_" + exam.getId() + ".json");
+                    zos.putNextEntry(entry);
+                    zos.write(jsonBytes);
+                    zos.closeEntry();
+                }
+            }
+        }
+        return bos.toByteArray();
+    }
+
+    @Transactional
+    public ExamDto importExamZip(org.springframework.web.multipart.MultipartFile file, User author) throws Exception {
+        Map<String, byte[]> zipContents = new java.util.HashMap<>();
+        try (java.util.zip.ZipInputStream zis = new java.util.zip.ZipInputStream(file.getInputStream())) {
+            java.util.zip.ZipEntry entry;
+            while ((entry = zis.getNextEntry()) != null) {
+                if (!entry.isDirectory()) {
+                    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                    byte[] buffer = new byte[1024];
+                    int len;
+                    while ((len = zis.read(buffer)) > 0) {
+                        bos.write(buffer, 0, len);
+                    }
+                    zipContents.put(entry.getName(), bos.toByteArray());
+                }
+                zis.closeEntry();
+            }
+        }
+
+        String jsonKey = zipContents.keySet().stream()
+                .filter(k -> k.endsWith("exam.json"))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("exam.json topilmadi"));
+
+        byte[] jsonBytes = zipContents.get(jsonKey);
+        CreateExamRequest request = objectMapper.readValue(jsonBytes, CreateExamRequest.class);
+
+        String zipFolderPrefix = "";
+        if (jsonKey.contains("/")) {
+            zipFolderPrefix = jsonKey.substring(0, jsonKey.lastIndexOf('/') + 1);
+        }
+
+        Map<String, String> assetUrls = new java.util.HashMap<>();
+        for (String key : zipContents.keySet()) {
+            if (key.endsWith("exam.json") || key.endsWith("/")) continue;
+
+            byte[] data = zipContents.get(key);
+            String relativePath = key;
+            if (!zipFolderPrefix.isEmpty() && key.startsWith(zipFolderPrefix)) {
+                relativePath = key.substring(zipFolderPrefix.length());
+            }
+
+            String originalName = relativePath.contains("/") ? relativePath.substring(relativePath.lastIndexOf('/') + 1) : relativePath;
+            String cleanedName = UUID.randomUUID().toString() + "-" + originalName.replaceAll("[^a-zA-Z0-9.-]", "_");
+            String contentType = getMimeTypeFallback(cleanedName);
+
+            String subFolder = null;
+            if (relativePath.contains("/")) {
+                subFolder = relativePath.substring(0, relativePath.indexOf('/'));
+            }
+
+            String webUrl = storeBytesHybrid(data, cleanedName, contentType, subFolder);
+            assetUrls.put(relativePath, webUrl);
+            assetUrls.put(key, webUrl);
+        }
+
+        if (request.getAudioUrl() != null && assetUrls.containsKey(request.getAudioUrl())) {
+            request.setAudioUrl(assetUrls.get(request.getAudioUrl()));
+        }
+        if (request.getPdfUrl() != null && assetUrls.containsKey(request.getPdfUrl())) {
+            request.setPdfUrl(assetUrls.get(request.getPdfUrl()));
+        }
+
+        if (request.getSections() != null) {
+            for (CreateExamRequest.SectionDto s : request.getSections()) {
+                if (s.getImageUrl() != null && assetUrls.containsKey(s.getImageUrl())) {
+                    s.setImageUrl(assetUrls.get(s.getImageUrl()));
+                }
+                if (s.getAudioUrl() != null && assetUrls.containsKey(s.getAudioUrl())) {
+                    s.setAudioUrl(assetUrls.get(s.getAudioUrl()));
+                }
+                if (s.getPdfAttachment() != null && assetUrls.containsKey(s.getPdfAttachment())) {
+                    s.setPdfAttachment(assetUrls.get(s.getPdfAttachment()));
+                }
+
+                if (s.getQuestions() != null) {
+                    for (CreateExamRequest.QuestionDto q : s.getQuestions()) {
+                        if (q.getImageUrl() != null && assetUrls.containsKey(q.getImageUrl())) {
+                            q.setImageUrl(assetUrls.get(q.getImageUrl()));
+                        }
+                        if (q.getAudioUrl() != null && assetUrls.containsKey(q.getAudioUrl())) {
+                            q.setAudioUrl(assetUrls.get(q.getAudioUrl()));
+                        }
+                        if (q.getVideoUrl() != null && assetUrls.containsKey(q.getVideoUrl())) {
+                            q.setVideoUrl(assetUrls.get(q.getVideoUrl()));
+                        }
+
+                        if (q.getOptions() != null) {
+                            for (CreateExamRequest.OptionDto o : q.getOptions()) {
+                                if (o.getImageUrl() != null && assetUrls.containsKey(o.getImageUrl())) {
+                                    o.setImageUrl(assetUrls.get(o.getImageUrl()));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        request.setStatus("UNDER_REVIEW");
+        request.setIsAiImported(true);
+
+        return createMockExam(request, author);
+    }
+
+    public String extractMockFromUrl(String urlString) {
+        try {
+            java.net.URL url = new java.net.URL(urlString);
+            java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
+            conn.setConnectTimeout(10000);
+            conn.setReadTimeout(15000);
+
+            int status = conn.getResponseCode();
+            if (status != 200) {
+                throw new RuntimeException("Web sahifani yuklab bo'lmadi, HTTP kod: " + status);
+            }
+
+            BufferedReader in = new BufferedReader(new java.io.InputStreamReader(conn.getInputStream(), java.nio.charset.StandardCharsets.UTF_8));
+            String inputLine;
+            StringBuilder content = new StringBuilder();
+            while ((inputLine = in.readLine()) != null) {
+                content.append(inputLine).append("\n");
+            }
+            in.close();
+            conn.disconnect();
+
+            String html = content.toString();
+            String cleanText = html.replaceAll("<script[^>]*>[\\s\\S]*?</script>", "")
+                                   .replaceAll("<style[^>]*>[\\s\\S]*?</style>", "")
+                                   .replaceAll("<[^>]*>", " ")
+                                   .replaceAll("\\s+", " ")
+                                   .trim();
+            if (cleanText.length() > 50000) {
+                cleanText = cleanText.substring(0, 50000);
+            }
+
+            return geminiService.analyzeIeltsMockWithImages(cleanText, new ArrayList<>());
+        } catch (Exception e) {
+            throw new RuntimeException("URL orqali tahlil qilishda xatolik: " + e.getMessage());
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> getMockAnalytics() {
+        Map<String, Object> stats = new java.util.HashMap<>();
+
+        try {
+            Number total = (Number) entityManager.createNativeQuery("SELECT COUNT(*) FROM public.exams").getSingleResult();
+            Number published = (Number) entityManager.createNativeQuery("SELECT COUNT(*) FROM public.exams WHERE status = 'PUBLISHED'").getSingleResult();
+            Number draft = (Number) entityManager.createNativeQuery("SELECT COUNT(*) FROM public.exams WHERE status = 'DRAFT'").getSingleResult();
+            Number review = (Number) entityManager.createNativeQuery("SELECT COUNT(*) FROM public.exams WHERE status = 'UNDER_REVIEW'").getSingleResult();
+            Number archived = (Number) entityManager.createNativeQuery("SELECT COUNT(*) FROM public.exams WHERE status = 'ARCHIVED'").getSingleResult();
+
+            stats.put("totalMocks", total.longValue());
+            stats.put("publishedMocks", published.longValue());
+            stats.put("draftMocks", draft.longValue());
+            stats.put("underReviewMocks", review.longValue());
+            stats.put("archivedMocks", archived.longValue());
+
+            Number totalAttempts = (Number) entityManager.createNativeQuery("SELECT COUNT(*) FROM public.student_attempts").getSingleResult();
+            Number finishedAttempts = (Number) entityManager.createNativeQuery("SELECT COUNT(*) FROM public.student_attempts WHERE finished_at IS NOT NULL").getSingleResult();
+
+            double completionRate = 0.0;
+            if (totalAttempts.longValue() > 0) {
+                completionRate = (finishedAttempts.doubleValue() / totalAttempts.doubleValue()) * 100.0;
+            }
+            stats.put("totalAttempts", totalAttempts.longValue());
+            stats.put("completionRate", Math.round(completionRate * 10.0) / 10.0);
+
+            Double avgScore = null;
+            try {
+                avgScore = (Double) entityManager.createNativeQuery("SELECT AVG(CASE WHEN max_score > 0 THEN (total_score * 100.0 / max_score) ELSE 0.0 END) FROM public.student_attempts WHERE finished_at IS NOT NULL").getSingleResult();
+            } catch (Exception ignored) {}
+            stats.put("avgScore", avgScore != null ? Math.round(avgScore * 10.0) / 10.0 : 0.0);
+
+            String mostSolvedExam = "—";
+            try {
+                List<?> row = entityManager.createNativeQuery("SELECT e.title, COUNT(sa.id) as cnt FROM public.student_attempts sa JOIN public.exams e ON sa.exam_id = e.id GROUP BY e.title ORDER BY cnt DESC LIMIT 1").getResultList();
+                if (!row.isEmpty()) {
+                    Object[] arr = (Object[]) row.get(0);
+                    mostSolvedExam = (String) arr[0];
+                }
+            } catch (Exception ignored) {}
+            stats.put("mostSolvedExam", mostSolvedExam);
+
+            String mostDifficultType = "—";
+            try {
+                List<?> row = entityManager.createNativeQuery("SELECT q.question_type, SUM(CASE WHEN sa.is_correct = true THEN 1 ELSE 0 END) * 1.0 / COUNT(sa.id) as ratio FROM public.student_answers sa JOIN public.questions q ON sa.question_id = q.id GROUP BY q.question_type ORDER BY ratio ASC LIMIT 1").getResultList();
+                if (!row.isEmpty()) {
+                    Object[] arr = (Object[]) row.get(0);
+                    mostDifficultType = (String) arr[0];
+                }
+            } catch (Exception ignored) {}
+            stats.put("mostDifficultQuestionType", mostDifficultType);
+
+        } catch (Exception e) {
+            log.error("Failed to generate mock analytics: ", e);
+        }
+
+        return stats;
+    }
+
+    private String storeBytesHybrid(byte[] data, String filename, String contentType, String subFolder) throws IOException {
+        long size = data.length;
+        String dbKey = (subFolder != null && !subFolder.isEmpty()) ? subFolder + "/" + filename : filename;
+
+        if (size < 2 * 1024 * 1024) {
+            DbStoredFile storedFile = DbStoredFile.builder()
+                    .filename(dbKey)
+                    .contentType(contentType)
+                    .fileSize(size)
+                    .storageType("DB")
+                    .data(data)
+                    .build();
+            dbStoredFileRepository.save(storedFile);
+        } else {
+            java.nio.file.Path targetDir = java.nio.file.Paths.get(uploadDir);
+            if (subFolder != null && !subFolder.isEmpty()) {
+                targetDir = targetDir.resolve(subFolder);
+            }
+            if (!java.nio.file.Files.exists(targetDir)) {
+                java.nio.file.Files.createDirectories(targetDir);
+            }
+            java.nio.file.Path targetPath = targetDir.resolve(filename);
+            java.nio.file.Files.write(targetPath, data);
+
+            DbStoredFile storedFile = DbStoredFile.builder()
+                    .filename(dbKey)
+                    .contentType(contentType)
+                    .fileSize(size)
+                    .storageType("LOCAL")
+                    .path(targetPath.toString())
+                    .build();
+            dbStoredFileRepository.save(storedFile);
+        }
+
+        if (subFolder != null && !subFolder.isEmpty()) {
+            return "/api/v1/files/view/" + subFolder + "/" + filename;
+        } else {
+            return "/api/v1/files/view/" + filename;
+        }
+    }
+
+    private String getMimeTypeFallback(String filename) {
+        String lower = filename.toLowerCase();
+        if (lower.endsWith(".webp")) return "image/webp";
+        if (lower.endsWith(".png")) return "image/png";
+        if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "image/jpeg";
+        if (lower.endsWith(".gif")) return "image/gif";
+        if (lower.endsWith(".pdf")) return "application/pdf";
+        if (lower.endsWith(".mp3")) return "audio/mpeg";
+        if (lower.endsWith(".wav")) return "audio/wav";
+        if (lower.endsWith(".m4a")) return "audio/mp4";
+        if (lower.endsWith(".mp4")) return "video/mp4";
+        if (lower.endsWith(".svg")) return "image/svg+xml";
+        return "application/octet-stream";
+    }
 }
+

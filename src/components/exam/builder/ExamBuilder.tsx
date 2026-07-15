@@ -212,6 +212,79 @@ const ExamBuilder: React.FC<ExamBuilderProps> = ({
 
   // ---- Load existing exam ----
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const importType = params.get("import");
+    const kindParam = params.get("kind") as ExamKind;
+
+    if (kindParam) {
+      updateMeta({ kind: kindParam });
+    }
+
+    if (importType === "url" || importType === "pdf") {
+      const storageKey = importType === "url" ? "exam_builder_url_preview" : "exam_builder_pdf_preview";
+      try {
+        const raw = localStorage.getItem(storageKey);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          localStorage.removeItem(storageKey);
+
+          setMeta({
+            title: parsed.title || "AI Imported Mock",
+            description: parsed.description || "",
+            kind: (parsed.type?.toLowerCase() || parsed.kind || "reading") as ExamKind,
+            difficulty: (parsed.difficulty?.toLowerCase() || "medium") as Difficulty,
+            durationMinutes: parsed.durationMinutes || parsed.duration_minutes || 60,
+            passingScore: parsed.passingScore || 50,
+            requiredPack: parsed.requiredPack || "free",
+            status: importType === "url" ? "under_review" : "draft",
+            audioUrl: parsed.audioUrl || parsed.audio_url || "",
+            pdfUrl: parsed.pdfUrl || parsed.pdf_url || "",
+            isAiImported: true,
+            tags: [],
+          });
+
+          if (parsed.sections && Array.isArray(parsed.sections)) {
+            const built: Section[] = parsed.sections.map((p: any) => ({
+              id: uid(),
+              title: p.title || "Section",
+              passage: p.passage || p.content || "",
+              richPassage: p.passage || p.content || "",
+              imageUrl: p.imageUrl || p.image_url || "",
+              media: p.imageUrl ? [{ type: "image", url: p.imageUrl }] : [],
+              questions: (p.questions || []).map((q: any): Question => ({
+                id: uid(),
+                prompt: q.prompt || q.text || "",
+                richText: q.prompt || q.text || "",
+                qtype: (q.qtype || q.questionType || "single_choice") as QuestionType,
+                difficulty: "medium",
+                points: q.points || 1,
+                status: "draft",
+                options: (q.options || []).map((o: any) => {
+                  const isOptObj = typeof o === "object" && o !== null;
+                  return {
+                    id: uid(),
+                    text: isOptObj ? (o.text || "") : String(o),
+                    isCorrect: isOptObj ? (o.isCorrect || o.is_correct || false) : false,
+                  };
+                }),
+                media: q.imageUrl ? [{ type: "image", url: q.imageUrl }] : [],
+                audioUrl: q.audioUrl || q.audio_url,
+                explanation: q.explanation || "",
+              })),
+            }));
+            setSections(built.length ? built : [newSection()]);
+            if (built.length > 0 && built[0].questions.length > 0) {
+              setActiveQuestionId(built[0].questions[0].id);
+            }
+          }
+          toast.success("AI import ma'lumotlari Preview rejimida yuklandi!");
+          return;
+        }
+      } catch (e) {
+        console.error("Failed to parse import preview data", e);
+      }
+    }
+
     if (!isEdit || !testId) {
       // Try to restore draft for new exam
       const draft = loadDraft();
@@ -235,9 +308,10 @@ const ExamBuilder: React.FC<ExamBuilderProps> = ({
           durationMinutes: t.durationMinutes || t.duration_minutes || 60,
           passingScore: t.passingScore || t.passing_score || 50,
           requiredPack: t.requiredPack || t.required_pack || "free",
-          status: (t.isActive ? "published" : "draft") as PublishStatus,
+          status: (t.status || (t.isActive ? "published" : "draft")).toLowerCase() as any,
           audioUrl: t.audioUrl || t.audio_url,
           pdfUrl: t.pdfUrl || t.pdf_url,
+          isAiImported: t.isAiImported || false,
           tags: t.tags ? t.tags.split(",").map((s: string) => s.trim()) : [],
         });
 
@@ -459,44 +533,70 @@ const ExamBuilder: React.FC<ExamBuilderProps> = ({
     description: meta.description || null,
     type: meta.kind.toUpperCase(),
     audio_url: meta.audioUrl || null,
+    audioUrl: meta.audioUrl || null,
     pdf_url: meta.pdfUrl || null,
+    pdfUrl: meta.pdfUrl || null,
     duration_minutes: meta.durationMinutes,
+    durationMinutes: meta.durationMinutes,
     passing_score: meta.passingScore,
+    passingScore: meta.passingScore,
     difficulty: meta.difficulty.toUpperCase(),
     required_pack: meta.requiredPack,
+    requiredPack: meta.requiredPack,
+    status: (meta.status || "DRAFT").toUpperCase(),
+    subType: (meta.subType || meta.kind).toUpperCase(),
+    isAiImported: meta.isAiImported || false,
     sections: sections.filter((s) => s.title.trim() || s.passage?.trim() || s.questions.length > 0).map((s) => ({
       title: s.title || "Section",
       passage: s.richPassage || s.passage || "",
       image_url: s.imageUrl || s.media?.[0]?.url || null,
+      imageUrl: s.imageUrl || s.media?.[0]?.url || null,
       audio_url: s.audioUrl || null,
+      audioUrl: s.audioUrl || null,
       pdf_attachment: s.pdfAttachment || null,
+      pdfAttachment: s.pdfAttachment || null,
       time_limit_seconds: s.timeLimitSeconds || null,
+      timeLimitSeconds: s.timeLimitSeconds || null,
       shuffle_questions: s.shuffleQuestions || false,
+      shuffleQuestions: s.shuffleQuestions || false,
       shuffle_options: s.shuffleOptions || false,
+      shuffleOptions: s.shuffleOptions || false,
       auto_numbering: s.autoNumbering !== false,
+      autoNumbering: s.autoNumbering !== false,
       lock_navigation: s.lockNavigation || false,
+      lockNavigation: s.lockNavigation || false,
       instructions: s.instructions || null,
       color_theme: s.colorTheme || null,
+      colorTheme: s.colorTheme || null,
       icon: s.icon || null,
       difficulty: s.difficulty || null,
       passing_score: s.passingScore || null,
+      passingScore: s.passingScore || null,
       questions: s.questions.filter((q) => q.prompt.trim() || q.richText?.trim()).map((q) => ({
         prompt: q.richText || q.prompt,
         qtype: q.qtype,
         options: q.options.map((o) => ({
           text: o.text,
           is_correct: o.isCorrect,
+          isCorrect: o.isCorrect,
           image_url: o.media?.url || null,
+          imageUrl: o.media?.url || null,
           formula: o.formula || null,
           explanation: o.explanation || null,
         })),
         image_url: q.media?.[0]?.url || null,
+        imageUrl: q.media?.[0]?.url || null,
         audio_url: q.audioUrl || null,
+        audioUrl: q.audioUrl || null,
         video_url: q.videoUrl || null,
+        videoUrl: q.videoUrl || null,
         formula_latex: q.formula || null,
+        formulaLatex: q.formula || null,
         points: q.points || 1,
         negative_marks: q.negativeMarks || 0,
+        negativeMarks: q.negativeMarks || 0,
         time_limit_seconds: q.timeLimitSeconds || null,
+        timeLimitSeconds: q.timeLimitSeconds || null,
         explanation: q.explanation || null,
         hint: q.hint || null,
         topic: q.topic || null,
@@ -504,10 +604,15 @@ const ExamBuilder: React.FC<ExamBuilderProps> = ({
         tags: q.tags?.join(",") || null,
         difficulty: q.difficulty,
         numeric_answer: q.numericAnswer || null,
+        numericAnswer: q.numericAnswer || null,
         numeric_tolerance: q.numericTolerance || null,
+        numericTolerance: q.numericTolerance || null,
         fill_template: q.fillTemplate || null,
+        fillTemplate: q.fillTemplate || null,
         word_limit: q.wordLimit || null,
+        wordLimit: q.wordLimit || null,
         matching_pairs: q.matchingPairs ? JSON.stringify(q.matchingPairs) : null,
+        matchingPairs: q.matchingPairs ? JSON.stringify(q.matchingPairs) : null,
       })),
     })),
   });
@@ -525,7 +630,7 @@ const ExamBuilder: React.FC<ExamBuilderProps> = ({
         toast.success("Test yaratildi ✅");
       }
       clearDraft();
-      navigate(`${basePath}/sat-mocks`);
+      navigate(`${basePath}/mocks`);
     } catch (e: any) {
       toast.error("Xatolik: " + (e?.response?.data?.message || e?.message));
     } finally {

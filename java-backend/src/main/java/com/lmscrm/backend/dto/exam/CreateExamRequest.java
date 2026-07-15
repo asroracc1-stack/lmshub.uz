@@ -16,6 +16,9 @@ public class CreateExamRequest {
     private String requiredPack;
     private String pdfUrl;
     private Boolean isPublished;
+    private String status;
+    private String subType;
+    private Boolean isAiImported;
     private String tags;            // comma-separated
     private List<SectionDto> sections;
 

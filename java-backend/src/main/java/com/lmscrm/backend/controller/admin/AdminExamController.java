@@ -87,8 +87,8 @@ public class AdminExamController {
     @PutMapping("/{examId}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
     @CacheEvict(cacheNames = {"examDetails", "examsByType"}, allEntries = true)
-    public ResponseEntity<ExamDto> updateExam(@PathVariable UUID examId, @RequestBody CreateExamRequest request) {
-        return ResponseEntity.ok(examService.updateMockExam(examId, request));
+    public ResponseEntity<ExamDto> updateExam(@PathVariable UUID examId, @RequestBody CreateExamRequest request, @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(examService.updateMockExam(examId, request, user));
     }
 
     // Admin can view questions including correct answers
@@ -143,4 +143,84 @@ public class AdminExamController {
             return ResponseEntity.status(500).body("PDF AI tahlilida xatolik: " + e.getMessage());
         }
     }
+
+    @PostMapping("/{examId}/duplicate")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
+    @CacheEvict(cacheNames = {"examDetails", "examsByType"}, allEntries = true)
+    public ResponseEntity<ExamDto> duplicateExam(@PathVariable UUID examId, @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(examService.duplicateExam(examId, user));
+    }
+
+    @GetMapping("/analytics")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
+    public ResponseEntity<java.util.Map<String, Object>> getAnalytics() {
+        return ResponseEntity.ok(examService.getMockAnalytics());
+    }
+
+    @PostMapping("/bulk-publish")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
+    @CacheEvict(cacheNames = {"examDetails", "examsByType"}, allEntries = true)
+    public ResponseEntity<Void> bulkPublish(@RequestBody List<UUID> ids, @AuthenticationPrincipal User user) {
+        examService.bulkPublish(ids, user);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/bulk-archive")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
+    @CacheEvict(cacheNames = {"examDetails", "examsByType"}, allEntries = true)
+    public ResponseEntity<Void> bulkArchive(@RequestBody List<UUID> ids) {
+        examService.bulkArchive(ids);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/bulk-delete")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
+    @CacheEvict(cacheNames = {"examDetails", "examsByType"}, allEntries = true)
+    public ResponseEntity<Void> bulkDelete(@RequestBody List<UUID> ids) {
+        examService.bulkDelete(ids);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/bulk-duplicate")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
+    @CacheEvict(cacheNames = {"examDetails", "examsByType"}, allEntries = true)
+    public ResponseEntity<List<ExamDto>> bulkDuplicate(@RequestBody List<UUID> ids, @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(examService.bulkDuplicate(ids, user));
+    }
+
+    @PostMapping("/bulk-export")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
+    public ResponseEntity<byte[]> bulkExport(@RequestBody List<UUID> ids) throws Exception {
+        byte[] zipBytes = examService.bulkExport(ids);
+        return ResponseEntity.ok()
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"exams_export.zip\"")
+                .contentType(org.springframework.http.MediaType.APPLICATION_OCTET_STREAM)
+                .body(zipBytes);
+    }
+
+    @PostMapping(value = "/import-zip", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
+    @CacheEvict(cacheNames = {"examDetails", "examsByType"}, allEntries = true)
+    public ResponseEntity<ExamDto> importZip(
+            @RequestParam("file") org.springframework.web.multipart.MultipartFile file,
+            @AuthenticationPrincipal User user) throws Exception {
+        if (file.isEmpty()) {
+            throw new IllegalArgumentException("ZIP fayl bo'sh");
+        }
+        if (!file.getOriginalFilename().toLowerCase().endsWith(".zip")) {
+            throw new IllegalArgumentException("Faqat ZIP formatdagi fayllar qabul qilinadi");
+        }
+        return ResponseEntity.ok(examService.importExamZip(file, user));
+    }
+
+    @PostMapping("/import-url")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
+    public ResponseEntity<String> importUrl(@RequestBody java.util.Map<String, String> payload) {
+        String url = payload.get("url");
+        if (url == null || url.trim().isEmpty()) {
+            throw new IllegalArgumentException("URL kiritilishi shart");
+        }
+        return ResponseEntity.ok(examService.extractMockFromUrl(url));
+    }
 }
+
