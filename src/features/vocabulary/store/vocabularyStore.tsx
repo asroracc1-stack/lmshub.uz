@@ -91,6 +91,9 @@ export const VocabularyProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       setVocabularyTitle(data.vocabulary_title || 'Novice');
     } catch (e) {
       console.error('Failed to load roadmap:', e);
+      if (e && typeof e === 'object' && 'response' in e) {
+        console.error('Roadmap server response error details:', (e as any).response?.data);
+      }
     } finally {
       setLoadingRoadmap(false);
     }
@@ -104,6 +107,9 @@ export const VocabularyProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       setStats(data);
     } catch (e) {
       console.error('Failed to fetch stats:', e);
+      if (e && typeof e === 'object' && 'response' in e) {
+        console.error('Stats server response error details:', (e as any).response?.data);
+      }
     }
   };
 
