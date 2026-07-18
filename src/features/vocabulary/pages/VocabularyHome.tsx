@@ -207,19 +207,21 @@ const VocabularyHomeContent: React.FC = () => {
 
         {/* Central overlapping avatar */}
         <div className="absolute -top-12 left-1/2 -translate-x-1/2 flex flex-col items-center">
-          <div className="relative h-24 w-24 rounded-full border-4 border-white dark:border-[#160e2a] bg-slate-100 dark:bg-slate-800 flex items-center justify-center shadow-lg overflow-hidden">
-            {profile?.avatar_url || authUser?.avatar_url ? (
-              <img 
-                src={getImageUrl(profile?.avatar_url || authUser?.avatar_url)} 
-                alt="Avatar" 
-                className="h-full w-full object-cover" 
-              />
-            ) : (
-              <span className="text-4xl select-none">👤</span>
-            )}
-            {/* Trophy circle badge bottom right */}
-            <div className="absolute bottom-0 right-0 h-6 w-6 rounded-full bg-amber-400 border-2 border-white dark:border-[#160e2a] flex items-center justify-center text-white">
-              <span className="text-[10px]">🏆</span>
+          <div className="relative h-24 w-24">
+            <div className="h-full w-full rounded-full border-4 border-white dark:border-[#160e2a] bg-slate-100 dark:bg-slate-800 flex items-center justify-center shadow-lg overflow-hidden">
+              {profile?.avatar_url || authUser?.avatar_url ? (
+                <img 
+                  src={getImageUrl(profile?.avatar_url || authUser?.avatar_url)} 
+                  alt="Avatar" 
+                  className="h-full w-full object-cover" 
+                />
+              ) : (
+                <span className="text-4xl select-none">👤</span>
+              )}
+            </div>
+            {/* Trophy circle badge bottom right - placed outside overflow-hidden */}
+            <div className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full bg-amber-400 border-2 border-white dark:border-[#160e2a] flex items-center justify-center text-white shadow-md z-10">
+              <span className="text-[10px] select-none">🏆</span>
             </div>
           </div>
         </div>
