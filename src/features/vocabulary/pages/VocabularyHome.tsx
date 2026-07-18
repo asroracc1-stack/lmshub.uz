@@ -37,7 +37,7 @@ const cefrLevels = [
 ];
 
 const VocabularyHomeContent: React.FC = () => {
-  const { role, user: authUser } = useAuth();
+  const { role, user: authUser, profile } = useAuth();
   const navigate = useNavigate();
   const {
     selectedLevel,
@@ -208,9 +208,9 @@ const VocabularyHomeContent: React.FC = () => {
         {/* Central overlapping avatar */}
         <div className="absolute -top-12 left-1/2 -translate-x-1/2 flex flex-col items-center">
           <div className="relative h-24 w-24 rounded-full border-4 border-white dark:border-[#160e2a] bg-slate-100 dark:bg-slate-800 flex items-center justify-center shadow-lg overflow-hidden">
-            {authUser?.avatar_url ? (
+            {profile?.avatar_url || authUser?.avatar_url ? (
               <img 
-                src={authUser.avatar_url} 
+                src={profile?.avatar_url || authUser?.avatar_url} 
                 alt="Avatar" 
                 className="h-full w-full object-cover" 
               />
@@ -238,7 +238,7 @@ const VocabularyHomeContent: React.FC = () => {
                 </div>
                 <div>
                   <h4 className="text-sm font-black text-slate-800 dark:text-white leading-none mb-1">
-                    {stats?.coins || 1376}
+                    {profile?.coins ?? 0}
                   </h4>
                   <span className="text-[9px] text-slate-400 font-extrabold uppercase leading-none">Coins</span>
                 </div>
@@ -265,7 +265,7 @@ const VocabularyHomeContent: React.FC = () => {
                 </div>
                 <div>
                   <h4 className="text-sm font-black text-slate-800 dark:text-white leading-none mb-1">
-                    {stats?.xp || 364}
+                    {profile?.xp ?? 0}
                   </h4>
                   <span className="text-[9px] text-slate-400 font-extrabold uppercase leading-none">Stars</span>
                 </div>
