@@ -242,24 +242,54 @@ public class VocabularyController {
     @PostMapping("/admin/words")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     @Operation(summary = "Create vocabulary word record manually")
-    public ResponseEntity<VocabularyWord> createWord(@RequestBody VocabularyWord word) {
-        return ResponseEntity.ok(vocabularyService.createWord(word));
+    public ResponseEntity<?> createWord(@RequestBody VocabularyWord word) {
+        try {
+            return ResponseEntity.ok(vocabularyService.createWord(word));
+        } catch (Exception e) {
+            e.printStackTrace();
+            java.io.StringWriter sw = new java.io.StringWriter();
+            e.printStackTrace(new java.io.PrintWriter(sw));
+            return ResponseEntity.status(500).body(Map.of(
+                "error", e.getMessage() != null ? e.getMessage() : "Unknown creation error",
+                "stack", sw.toString()
+            ));
+        }
     }
 
     @PutMapping("/admin/words/{id}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     @Operation(summary = "Update vocabulary word record manually")
-    public ResponseEntity<VocabularyWord> updateWord(
+    public ResponseEntity<?> updateWord(
             @PathVariable("id") UUID id,
             @RequestBody VocabularyWord word) {
-        return ResponseEntity.ok(vocabularyService.updateWord(id, word));
+        try {
+            return ResponseEntity.ok(vocabularyService.updateWord(id, word));
+        } catch (Exception e) {
+            e.printStackTrace();
+            java.io.StringWriter sw = new java.io.StringWriter();
+            e.printStackTrace(new java.io.PrintWriter(sw));
+            return ResponseEntity.status(500).body(Map.of(
+                "error", e.getMessage() != null ? e.getMessage() : "Unknown update error",
+                "stack", sw.toString()
+            ));
+        }
     }
 
     @DeleteMapping("/admin/words/{id}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     @Operation(summary = "Delete vocabulary word")
     public ResponseEntity<?> deleteWord(@PathVariable("id") UUID id) {
-        vocabularyService.deleteWord(id);
-        return ResponseEntity.ok(Map.of("success", true, "message", "Word deleted"));
+        try {
+            vocabularyService.deleteWord(id);
+            return ResponseEntity.ok(Map.of("success", true, "message", "Word deleted"));
+        } catch (Exception e) {
+            e.printStackTrace();
+            java.io.StringWriter sw = new java.io.StringWriter();
+            e.printStackTrace(new java.io.PrintWriter(sw));
+            return ResponseEntity.status(500).body(Map.of(
+                "error", e.getMessage() != null ? e.getMessage() : "Unknown deletion error",
+                "stack", sw.toString()
+            ));
+        }
     }
 }
