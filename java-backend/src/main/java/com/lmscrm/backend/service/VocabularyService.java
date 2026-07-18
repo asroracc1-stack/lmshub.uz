@@ -269,7 +269,7 @@ public class VocabularyService {
                     .source("VOCABULARY")
                     .organization(user.getOrganizationId() != null ? 
                             Organization.builder().id(user.getOrganizationId()).build() : 
-                            Organization.builder().id(UUID.fromString("00000000-0000-0000-0000-000000000000")).build())
+                            null)
                     .build();
             coinTransactionRepository.save(tx);
 
@@ -859,7 +859,7 @@ public class VocabularyService {
                 .source("VOCABULARY_CHEST")
                 .organization(user.getOrganizationId() != null ? 
                         Organization.builder().id(user.getOrganizationId()).build() : 
-                        Organization.builder().id(UUID.fromString("00000000-0000-0000-0000-000000000000")).build())
+                        null)
                 .build();
         coinTransactionRepository.save(tx);
 

@@ -258,7 +258,7 @@ public class GamificationService {
                     .source("GAMIFICATION_REWARD")
                     .organization(freshUser.getOrganizationId() != null ? 
                             Organization.builder().id(freshUser.getOrganizationId()).build() : 
-                            Organization.builder().id(UUID.fromString("00000000-0000-0000-0000-000000000000")).build())
+                            null)
                     .build();
             coinTransactionRepository.save(tx);
             rewardMessage = "+" + amt + " Coinlar qo'shildi!";
