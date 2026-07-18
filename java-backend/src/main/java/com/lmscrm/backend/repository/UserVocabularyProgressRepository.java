@@ -38,7 +38,7 @@ public interface UserVocabularyProgressRepository extends JpaRepository<UserVoca
     @Query("SELECT COUNT(p) FROM UserVocabularyProgress p WHERE p.user.id = :userId AND p.status = :status")
     long countByUserIdAndStatus(@Param("userId") UUID userId, @Param("status") WordStatus status);
 
-    @Query("SELECT COUNT(p) FROM UserVocabularyProgress p WHERE p.user.id = :userId AND p.status != 'NEW'")
+    @Query("SELECT COUNT(p) FROM UserVocabularyProgress p WHERE p.user.id = :userId AND p.status != com.lmscrm.backend.domain.enums.WordStatus.NEW")
     long countLearnedWords(@Param("userId") UUID userId);
 
     @Query("SELECT AVG(p.speakingAccuracyAvg) FROM UserVocabularyProgress p WHERE p.user.id = :userId AND p.speakingAccuracyAvg > 0")

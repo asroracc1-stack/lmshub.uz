@@ -6,7 +6,7 @@ import { StatsDashboard } from '../components/StatsDashboard';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
+import { cn, getImageUrl } from '@/lib/utils';
 import { 
   Search, 
   ChevronLeft, 
@@ -210,7 +210,7 @@ const VocabularyHomeContent: React.FC = () => {
           <div className="relative h-24 w-24 rounded-full border-4 border-white dark:border-[#160e2a] bg-slate-100 dark:bg-slate-800 flex items-center justify-center shadow-lg overflow-hidden">
             {profile?.avatar_url || authUser?.avatar_url ? (
               <img 
-                src={profile?.avatar_url || authUser?.avatar_url} 
+                src={getImageUrl(profile?.avatar_url || authUser?.avatar_url)} 
                 alt="Avatar" 
                 className="h-full w-full object-cover" 
               />
