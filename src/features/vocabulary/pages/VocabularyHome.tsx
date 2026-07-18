@@ -157,7 +157,7 @@ const VocabularyHomeContent: React.FC = () => {
   return (
     <div className="space-y-8 pb-16 max-w-5xl mx-auto animate-fade-in">
       {/* Upper header section */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
           <h2 className="text-xl font-black text-slate-850 dark:text-white flex items-center gap-2">
             Lugʻat Darslari
@@ -167,7 +167,7 @@ const VocabularyHomeContent: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
           <Button
             onClick={() => navigate(`${basePath}/vocabulary/search`)}
             className="rounded-2xl border border-slate-150 dark:border-white/5 bg-white/40 dark:bg-slate-800/40 text-slate-650 dark:text-slate-200 font-bold text-xs h-10 px-4 flex items-center gap-2"
@@ -327,7 +327,7 @@ const VocabularyHomeContent: React.FC = () => {
           </div>
 
           {/* Progress Bars - on the right column */}
-          <div className="lg:col-span-4 space-y-3.5 border-l border-slate-100 dark:border-white/5 pl-0 lg:pl-6">
+          <div className="lg:col-span-4 space-y-3.5 border-t lg:border-t-0 lg:border-l border-slate-100 dark:border-white/5 pt-6 lg:pt-0 pl-0 lg:pl-6">
             {/* Grammar */}
             <div className="space-y-1">
               <div className="flex justify-between text-[10px] font-black uppercase text-slate-455 dark:text-slate-400 leading-none">

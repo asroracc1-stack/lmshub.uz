@@ -139,7 +139,7 @@ public class VocabularyService {
 
     // ─── ROADMAP & COUNTDOWNS ────────────────────────────────────────────────
 
-    @Transactional(readOnly = true)
+    @Transactional
     public Map<String, Object> getRoadmap(UUID userId, String level, boolean isPremium) {
         List<VocabularyWord> allWords = wordRepository.findByLevelOrderByUnitAscWordAsc(level);
         List<Integer> units = wordRepository.findUnitsByLevel(level);
@@ -877,7 +877,7 @@ public class VocabularyService {
 
     // ─── INTERACTIVE CHARTS / STATISTICS ─────────────────────────────────────
 
-    @Transactional(readOnly = true)
+    @Transactional
     public Map<String, Object> getDashboardStats(UUID userId) {
         long wordsLearned = progressRepository.countLearnedWords(userId);
         long mastered = progressRepository.countByUserIdAndStatus(userId, WordStatus.MASTERED);
