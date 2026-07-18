@@ -84,7 +84,14 @@ export const VocabularyProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setLoadingRoadmap(true);
     try {
       const data = await vocabularyApi.getRoadmap(level);
-      setRoadmap(data.units || []);
+      const mappedUnits = (data.units || []).map((u: any) => ({
+        unit: u.unit,
+        stageCompleted: u.stage_completed ?? u.stageCompleted ?? 0,
+        totalWords: u.total_words ?? u.totalWords ?? 0,
+        isUnlocked: u.is_unlocked ?? u.isUnlocked ?? false,
+        remainingSeconds: u.remaining_seconds ?? u.remainingSeconds ?? 0,
+      }));
+      setRoadmap(mappedUnits);
       setDailyGoalInternal(data.daily_goal || 20);
       setStreak(data.current_streak || 0);
       setLongestStreak(data.longest_streak || 0);

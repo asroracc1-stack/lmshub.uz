@@ -95,14 +95,15 @@ public class VocabularyService {
                 : "%%";
         return wordRepository.searchWords(
                 searchParam,
-                (level != null && !level.trim().isEmpty()) ? level.trim() : null,
+                (level != null && !level.trim().isEmpty()) ? level.trim().toUpperCase() : null,
                 (category != null && !category.trim().isEmpty()) ? category.trim() : null,
                 pageable
         );
     }
 
     public List<VocabularyWord> getWordsByLevelAndUnit(String level, Integer unit) {
-        return wordRepository.findByLevelAndUnitOrderByWordAsc(level, unit);
+        String cleanLevel = (level != null) ? level.trim().toUpperCase() : "A1";
+        return wordRepository.findByLevelAndUnitOrderByWordAsc(cleanLevel, unit);
     }
 
     public List<String> getCategories() {
@@ -141,11 +142,12 @@ public class VocabularyService {
 
     @Transactional
     public Map<String, Object> getRoadmap(UUID userId, String level, boolean isPremium) {
-        List<VocabularyWord> allWords = wordRepository.findByLevelOrderByUnitAscWordAsc(level);
-        List<Integer> units = wordRepository.findUnitsByLevel(level);
+        String cleanLevel = (level != null) ? level.trim().toUpperCase() : "A1";
+        List<VocabularyWord> allWords = wordRepository.findByLevelOrderByUnitAscWordAsc(cleanLevel);
+        List<Integer> units = wordRepository.findUnitsByLevel(cleanLevel);
 
         // Fetch completed stages
-        List<UserVocabularyUnitProgress> unitProgs = unitProgressRepository.findByUserIdAndLevel(userId, level);
+        List<UserVocabularyUnitProgress> unitProgs = unitProgressRepository.findByUserIdAndLevel(userId, cleanLevel);
         Map<Integer, Integer> stageMap = new HashMap<>();
         for (UserVocabularyUnitProgress p : unitProgs) {
             stageMap.put(p.getUnit(), p.getStageCompleted());
@@ -222,11 +224,12 @@ public class VocabularyService {
     public Map<String, Object> submitStageProgress(UUID userId, String level, Integer unit, Integer stage) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+        String cleanLevel = (level != null) ? level.trim().toUpperCase() : "A1";
         
-        UserVocabularyUnitProgress progress = unitProgressRepository.findByUserIdAndLevelAndUnit(userId, level, unit)
+        UserVocabularyUnitProgress progress = unitProgressRepository.findByUserIdAndLevelAndUnit(userId, cleanLevel, unit)
                 .orElseGet(() -> UserVocabularyUnitProgress.builder()
                         .user(user)
-                        .level(level)
+                        .level(cleanLevel)
                         .unit(unit)
                         .stageCompleted(0)
                         .build());
