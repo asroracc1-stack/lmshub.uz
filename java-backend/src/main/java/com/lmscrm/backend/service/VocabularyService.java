@@ -90,8 +90,11 @@ public class VocabularyService {
     @Transactional(readOnly = true)
     public Page<VocabularyWord> searchWords(String search, String level, String category, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("word").ascending());
+        String searchParam = (search != null && !search.trim().isEmpty()) 
+                ? "%" + search.trim().toLowerCase() + "%" 
+                : "%%";
         return wordRepository.searchWords(
-                (search != null && !search.trim().isEmpty()) ? search.trim() : null,
+                searchParam,
                 (level != null && !level.trim().isEmpty()) ? level.trim() : null,
                 (category != null && !category.trim().isEmpty()) ? category.trim() : null,
                 pageable

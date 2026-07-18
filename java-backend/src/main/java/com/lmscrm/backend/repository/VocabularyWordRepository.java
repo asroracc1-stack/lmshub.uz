@@ -25,7 +25,7 @@ public interface VocabularyWordRepository extends JpaRepository<VocabularyWord, 
     List<Integer> findUnitsByLevel(@Param("level") String level);
 
     @Query("SELECT w FROM VocabularyWord w WHERE " +
-           "(:search IS NULL OR LOWER(w.word) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(w.translation) LIKE LOWER(CONCAT('%', :search, '%'))) AND " +
+           "(LOWER(w.word) LIKE :search OR LOWER(w.translation) LIKE :search) AND " +
            "(:level IS NULL OR w.level = :level) AND " +
            "(:category IS NULL OR w.category = :category)")
     Page<VocabularyWord> searchWords(
