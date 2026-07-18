@@ -120,7 +120,6 @@ public class VocabularyService {
                             .orElseThrow(() -> new RuntimeException("User not found"));
                     UserVocabularySettings settings = UserVocabularySettings.builder()
                             .user(user)
-                            .userId(userId)
                             .dailyGoal(20)
                             .currentStreak(0)
                             .longestStreak(0)
