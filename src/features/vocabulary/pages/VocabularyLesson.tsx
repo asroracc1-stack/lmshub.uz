@@ -21,6 +21,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 // Native Web Audio API sound generator (100% offline, zero latency beep synthesis)
 const playSoundEffect = (type: 'correct' | 'wrong') => {
