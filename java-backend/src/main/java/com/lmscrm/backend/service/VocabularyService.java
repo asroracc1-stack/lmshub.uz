@@ -611,37 +611,128 @@ public class VocabularyService {
         String csvContent = new String(file.getBytes(), StandardCharsets.UTF_8);
         List<String[]> lines = parseCsv(csvContent);
 
-        // Header check & skips
         if (lines.isEmpty()) return;
-        boolean hasHeader = lines.get(0)[0].equalsIgnoreCase("Word");
-        int startIndex = hasHeader ? 1 : 0;
+
+        // Default indices mapping (positional fallback if no header matches)
+        int wordIdx = 0;
+        int transIdx = 1;
+        int ipaUsIdx = 2;
+        int ipaUkIdx = 3;
+        int posIdx = 4;
+        int defIdx = 5;
+        int exIdx = 6;
+        int uzExIdx = 7;
+        int imgIdx = 8;
+        int audUsIdx = 9;
+        int audUkIdx = 10;
+        int lvlIdx = 11;
+        int unitIdx = 12;
+        int synIdx = 13;
+        int antIdx = 14;
+        int collIdx = 15;
+        int mistakeIdx = 16;
+        int tipsIdx = 17;
+        int catIdx = 18;
+
+        String[] firstRow = lines.get(0);
+        boolean hasHeader = false;
+
+        // Scan first row to check if it's a header
+        for (String cell : firstRow) {
+            String clean = cell.toLowerCase().trim();
+            if (clean.equals("word") || clean.equals("english") || clean.equals("translation") || 
+                clean.equals("uzbek") || clean.equals("ipa") || clean.equals("example") || 
+                clean.equals("definition")) {
+                hasHeader = true;
+                break;
+            }
+        }
+
+        int startIndex = 0;
+        if (hasHeader) {
+            startIndex = 1;
+            // Initialize mapped indices to -1
+            wordIdx = -1; transIdx = -1; ipaUsIdx = -1; ipaUkIdx = -1; posIdx = -1;
+            defIdx = -1; exIdx = -1; uzExIdx = -1; imgIdx = -1; audUsIdx = -1;
+            audUkIdx = -1; lvlIdx = -1; unitIdx = -1; synIdx = -1; antIdx = -1;
+            collIdx = -1; mistakeIdx = -1; tipsIdx = -1; catIdx = -1;
+
+            for (int c = 0; c < firstRow.length; c++) {
+                String col = firstRow[c].toLowerCase().trim();
+                if (col.equals("word") || col.equals("english")) {
+                    wordIdx = c;
+                } else if (col.equals("translation") || col.equals("uzbek")) {
+                    transIdx = c;
+                } else if (col.equals("ipa") || col.equals("ipa_us") || col.equals("ipa us") || col.equals("pronunciation")) {
+                    ipaUsIdx = c;
+                } else if (col.equals("ipa_uk") || col.equals("ipa uk")) {
+                    ipaUkIdx = c;
+                } else if (col.equals("pos") || col.equals("part_of_speech") || col.equals("part of speech") || col.equals("partofspeech")) {
+                    posIdx = c;
+                } else if (col.equals("definition")) {
+                    defIdx = c;
+                } else if (col.equals("example") || col.equals("example_sentence") || col.equals("example sentence") || col.equals("sentence")) {
+                    exIdx = c;
+                } else if (col.equals("uzbek_example") || col.equals("uzbek example") || col.equals("translation_example")) {
+                    uzExIdx = c;
+                } else if (col.equals("image") || col.equals("image_url") || col.equals("image url")) {
+                    imgIdx = c;
+                } else if (col.equals("audio") || col.equals("audio_us") || col.equals("audio us")) {
+                    audUsIdx = c;
+                } else if (col.equals("audio_uk") || col.equals("audio uk")) {
+                    audUkIdx = c;
+                } else if (col.equals("level")) {
+                    lvlIdx = c;
+                } else if (col.equals("unit")) {
+                    unitIdx = c;
+                } else if (col.equals("synonyms")) {
+                    synIdx = c;
+                } else if (col.equals("antonyms")) {
+                    antIdx = c;
+                } else if (col.equals("collocations")) {
+                    collIdx = c;
+                } else if (col.equals("common_mistakes") || col.equals("common mistakes")) {
+                    mistakeIdx = c;
+                } else if (col.equals("pronunciation_tips") || col.equals("pronunciation tips")) {
+                    tipsIdx = c;
+                } else if (col.equals("category")) {
+                    catIdx = c;
+                }
+            }
+        }
 
         for (int i = startIndex; i < lines.size(); i++) {
             String[] row = lines.get(i);
-            if (row.length < 2 || row[0].isEmpty()) continue;
+            // Must have word and translation fields mapped and not empty
+            if (wordIdx < 0 || transIdx < 0) continue;
+            if (row.length <= wordIdx || row.length <= transIdx) continue;
 
-            String word = row[0];
-            String translation = row[1];
-            String ipaUs = row.length > 2 ? row[2] : "";
-            String ipaUk = row.length > 3 ? row[3] : "";
-            String partOfSpeech = row.length > 4 ? row[4] : "";
-            String definition = row.length > 5 ? row[5] : "";
-            String exampleSentence = row.length > 6 ? row[6] : "";
-            String uzbekExample = row.length > 7 ? row[7] : "";
-            String imageUrl = row.length > 8 ? row[8] : "";
-            String audioUsUrl = row.length > 9 ? row[9] : "";
-            String audioUkUrl = row.length > 10 ? row[10] : "";
-            String level = row.length > 11 ? row[11] : forcedLevel;
-            int unit = 1;
-            if (row.length > 12 && !row[12].isEmpty()) {
-                try { unit = Integer.parseInt(row[12]); } catch (Exception e) {}
+            String word = row[wordIdx];
+            String translation = row[transIdx];
+            if (word == null || word.trim().isEmpty() || translation == null || translation.trim().isEmpty()) {
+                continue;
             }
-            String synonyms = row.length > 13 ? row[13] : "";
-            String antonyms = row.length > 14 ? row[14] : "";
-            String collocations = row.length > 15 ? row[15] : "";
-            String commonMistakes = row.length > 16 ? row[16] : "";
-            String pronunciationTips = row.length > 17 ? row[17] : "";
-            String category = row.length > 18 ? row[18] : "General";
+
+            String ipaUs = (ipaUsIdx >= 0 && row.length > ipaUsIdx) ? row[ipaUsIdx] : "";
+            String ipaUk = (ipaUkIdx >= 0 && row.length > ipaUkIdx) ? row[ipaUkIdx] : "";
+            String partOfSpeech = (posIdx >= 0 && row.length > posIdx) ? row[posIdx] : "";
+            String definition = (defIdx >= 0 && row.length > defIdx) ? row[defIdx] : "";
+            String exampleSentence = (exIdx >= 0 && row.length > exIdx) ? row[exIdx] : "";
+            String uzbekExample = (uzExIdx >= 0 && row.length > uzExIdx) ? row[uzExIdx] : "";
+            String imageUrl = (imgIdx >= 0 && row.length > imgIdx) ? row[imgIdx] : "";
+            String audioUsUrl = (audUsIdx >= 0 && row.length > audUsIdx) ? row[audUsIdx] : "";
+            String audioUkUrl = (audUkIdx >= 0 && row.length > audUkIdx) ? row[audUkIdx] : "";
+            String level = (lvlIdx >= 0 && row.length > lvlIdx) ? row[lvlIdx] : forcedLevel;
+            int unit = 1;
+            if (unitIdx >= 0 && row.length > unitIdx && !row[unitIdx].isEmpty()) {
+                try { unit = Integer.parseInt(row[unitIdx]); } catch (Exception e) {}
+            }
+            String synonyms = (synIdx >= 0 && row.length > synIdx) ? row[synIdx] : "";
+            String antonyms = (antIdx >= 0 && row.length > antIdx) ? row[antIdx] : "";
+            String collocations = (collIdx >= 0 && row.length > collIdx) ? row[collIdx] : "";
+            String commonMistakes = (mistakeIdx >= 0 && row.length > mistakeIdx) ? row[mistakeIdx] : "";
+            String pronunciationTips = (tipsIdx >= 0 && row.length > tipsIdx) ? row[tipsIdx] : "";
+            String category = (catIdx >= 0 && row.length > catIdx) ? row[catIdx] : "General";
 
             // Level validation
             if (level == null || level.trim().isEmpty()) {
@@ -650,7 +741,7 @@ public class VocabularyService {
 
             Optional<VocabularyWord> existingOpt = wordRepository.findByWordIgnoreCase(word);
             VocabularyWord vocabWord = existingOpt.orElseGet(() -> VocabularyWord.builder().word(word).build());
-            
+
             vocabWord.setTranslation(translation);
             vocabWord.setIpaUs(ipaUs);
             vocabWord.setIpaUk(ipaUk);

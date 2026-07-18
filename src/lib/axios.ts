@@ -464,6 +464,7 @@ api.interceptors.response.use(
                 translation: "tanishtirmoq",
                 level: "A1",
                 category: "General",
+                unit: 1,
                 definition: "To present someone by name to another person."
               },
               {
@@ -472,6 +473,7 @@ api.interceptors.response.use(
                 translation: "manzil",
                 level: "A1",
                 category: "General",
+                unit: 1,
                 definition: "The particulars of the place where someone lives."
               },
               {
@@ -480,6 +482,7 @@ api.interceptors.response.use(
                 translation: "atrof-muhit",
                 level: "A1",
                 category: "Nature",
+                unit: 1,
                 definition: "The surroundings in which we live."
               }
             ],
