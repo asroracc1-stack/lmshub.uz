@@ -110,8 +110,24 @@ export const VocabularyProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const fetchStats = async () => {
     if (isOffline) return;
     try {
-      const data = await vocabularyApi.getStats();
-      setStats(data);
+      const data = await vocabularyApi.getStats() as any;
+      const mappedStats: DashboardStats = {
+        wordsLearned: data.words_learned ?? data.wordsLearned ?? 0,
+        masteredWords: data.mastered_words ?? data.masteredWords ?? 0,
+        learningWords: data.learning_words ?? data.learningWords ?? 0,
+        reviewWords: data.review_words ?? data.reviewWords ?? 0,
+        speakingAccuracy: data.speaking_accuracy ?? data.speakingAccuracy ?? 0,
+        writingAccuracy: data.writing_accuracy ?? data.writingAccuracy ?? 0,
+        streak: data.streak ?? 0,
+        longestStreak: data.longest_streak ?? data.longestStreak ?? 0,
+        minutesStudied: data.minutes_studied ?? data.minutesStudied ?? 0,
+        coins: data.coins ?? 0,
+        xp: data.xp ?? 0,
+        vocabularyTitle: data.vocabulary_title ?? data.vocabularyTitle ?? '',
+        learningSpeedChart: data.learning_speed_chart ?? data.learningSpeedChart ?? [],
+        retentionRateChart: data.retention_rate_chart ?? data.retentionRateChart ?? [],
+      };
+      setStats(mappedStats);
     } catch (e) {
       console.error('Failed to fetch stats:', e);
       if (e && typeof e === 'object' && 'response' in e) {
