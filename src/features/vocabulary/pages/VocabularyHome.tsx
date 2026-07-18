@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { VocabularyProvider, useVocabularyStore } from '../store/vocabularyStore';
@@ -20,17 +20,20 @@ import {
   Zap,
   Star,
   Activity,
-  ArrowRight
+  ArrowRight,
+  TrendingUp,
+  Flag,
+  Award as MedalIcon
 } from 'lucide-react';
 import { toast } from 'sonner';
 
 const cefrLevels = [
-  { code: 'A1', name: 'Beginner', desc: 'Kundalik eng oddiy iboralar va gaplar', gradient: 'from-blue-500 to-cyan-400' },
-  { code: 'A2', name: 'Elementary', desc: 'Tez-tez ishlatiladigan sohalardagi iboralar', gradient: 'from-emerald-500 to-teal-400' },
-  { code: 'B1', name: 'Intermediate', desc: 'Tanish mavzulardagi matnlar mazmunini tushunish', gradient: 'from-amber-500 to-orange-400' },
-  { code: 'B2', name: 'Upper Intermediate', desc: 'Murakkab matnlar va erkin suhbat', gradient: 'from-rose-500 to-pink-400' },
-  { code: 'C1', name: 'Advanced', desc: 'Keng koʻlamli qiyin matnlarni anglash', gradient: 'from-purple-500 to-indigo-400' },
-  { code: 'C2', name: 'Proficient', desc: 'Eshitilgan va oʻqilgan deyarli hamma narsani tushunish', gradient: 'from-violet-600 to-fuchsia-500' }
+  { code: 'A1', name: 'Beginner', desc: '日常生活で使われる基本的な単語や表現 (A1)', gradient: 'from-blue-500 to-cyan-400' },
+  { code: 'A2', name: 'Elementary', desc: '身近な事柄に関する簡単な単語や表現 (A2)', gradient: 'from-emerald-500 to-teal-400' },
+  { code: 'B1', name: 'Intermediate', desc: '仕事や学校など身近な話題を理解できる (B1)', gradient: 'from-amber-500 to-orange-400' },
+  { code: 'B2', name: 'Upper Intermediate', desc: '抽象的・具体的な話題の主要点を理解できる (B2)', gradient: 'from-rose-500 to-pink-400' },
+  { code: 'C1', name: 'Advanced', desc: '幅広い難解な文章を理解できる (C1)', gradient: 'from-purple-500 to-indigo-400' },
+  { code: 'C2', name: 'Proficient', desc: '聞いたり読んだりしたほぼ全ての情報を理解できる (C2)', gradient: 'from-violet-600 to-fuchsia-500' }
 ];
 
 const VocabularyHomeContent: React.FC = () => {
@@ -75,7 +78,6 @@ const VocabularyHomeContent: React.FC = () => {
   };
 
   // Carousel helpers
-  const maxIndex = Math.max(0, roadmap.length - 3); // showing 3 cards at a time on desktop
   const handleNextSlide = () => {
     if (carouselIndex < roadmap.length - 1) {
       setCarouselIndex(prev => prev + 1);
@@ -151,7 +153,7 @@ const VocabularyHomeContent: React.FC = () => {
     );
   }
 
-  // 2. MAIN DASHBOARD & CAROUSEL LAYOUT
+  // 2. MAIN DASHBOARD & CAROUSEL LAYOUT (Matching screenshot perfectly)
   return (
     <div className="space-y-8 pb-16 max-w-5xl mx-auto animate-fade-in">
       {/* Upper header section */}
@@ -168,7 +170,7 @@ const VocabularyHomeContent: React.FC = () => {
         <div className="flex items-center gap-3">
           <Button
             onClick={() => navigate(`${basePath}/vocabulary/search`)}
-            className="rounded-2xl border border-slate-100 dark:border-white/5 bg-white/40 dark:bg-slate-800/40 text-slate-650 dark:text-slate-200 font-bold text-xs h-10 px-4 flex items-center gap-2"
+            className="rounded-2xl border border-slate-150 dark:border-white/5 bg-white/40 dark:bg-slate-800/40 text-slate-650 dark:text-slate-200 font-bold text-xs h-10 px-4 flex items-center gap-2"
           >
             <Search className="h-4 w-4" />
             Lugʻat (Dictionary)
@@ -184,110 +186,185 @@ const VocabularyHomeContent: React.FC = () => {
         </div>
       </div>
 
-      {/* Primary Header Stats Dashboard Card */}
-      <div className="bg-white dark:bg-[#160e2a] border border-slate-150/40 dark:border-white/5 rounded-[2.5rem] shadow-xl p-8 relative overflow-hidden backdrop-blur-xl">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-          {/* Avatar and central name profile details */}
-          <div className="lg:col-span-3 flex flex-col items-center justify-center text-center">
-            <div className="relative h-24 w-24 rounded-full border-4 border-amber-405 bg-slate-100 dark:bg-slate-800 flex items-center justify-center shadow-lg mb-3">
+      {/* Main card panel - layout matches 2nd screenshot */}
+      <div className="relative bg-white dark:bg-[#160e2a] border border-slate-200/50 dark:border-white/5 rounded-[2.5rem] shadow-xl p-8 pt-16 mt-12 backdrop-blur-xl">
+        {/* Wavy background layout rings (top-left & top-right) */}
+        <svg className="absolute top-0 left-0 text-slate-100 dark:text-slate-850 h-28 w-28 pointer-events-none opacity-60" viewBox="0 0 100 100" fill="none">
+          <circle cx="0" cy="0" r="30" stroke="currentColor" strokeWidth="0.8" />
+          <circle cx="0" cy="0" r="40" stroke="currentColor" strokeWidth="0.8" />
+          <circle cx="0" cy="0" r="50" stroke="currentColor" strokeWidth="0.8" />
+          <circle cx="0" cy="0" r="60" stroke="currentColor" strokeWidth="0.8" />
+          <circle cx="0" cy="0" r="70" stroke="currentColor" strokeWidth="0.8" />
+        </svg>
+
+        <svg className="absolute top-0 right-0 text-slate-100 dark:text-slate-850 h-28 w-28 pointer-events-none opacity-60" viewBox="0 0 100 100" fill="none">
+          <circle cx="100" cy="0" r="30" stroke="currentColor" strokeWidth="0.8" />
+          <circle cx="100" cy="0" r="40" stroke="currentColor" strokeWidth="0.8" />
+          <circle cx="100" cy="0" r="50" stroke="currentColor" strokeWidth="0.8" />
+          <circle cx="100" cy="0" r="60" stroke="currentColor" strokeWidth="0.8" />
+          <circle cx="100" cy="0" r="70" stroke="currentColor" strokeWidth="0.8" />
+        </svg>
+
+        {/* Central overlapping avatar */}
+        <div className="absolute -top-12 left-1/2 -translate-x-1/2 flex flex-col items-center">
+          <div className="relative h-24 w-24 rounded-full border-4 border-white dark:border-[#160e2a] bg-slate-100 dark:bg-slate-800 flex items-center justify-center shadow-lg overflow-hidden">
+            {authUser?.avatar_url ? (
+              <img 
+                src={authUser.avatar_url} 
+                alt="Avatar" 
+                className="h-full w-full object-cover" 
+              />
+            ) : (
               <span className="text-4xl select-none">👤</span>
-              <div className="absolute -bottom-1 right-2 h-7 w-7 rounded-full bg-amber-400 flex items-center justify-center text-white border-2 border-white dark:border-[#160e2a]">
-                <Star className="h-4 w-4 fill-current" />
-              </div>
-            </div>
-            <h3 className="text-sm font-black text-slate-850 dark:text-white leading-tight">
-              {authUser?.name || 'Oʻquvchi'}
-            </h3>
-            <span className="text-xs font-extrabold text-slate-400 capitalize">
-              {cefrLevels.find(l => l.code === selectedLevel)?.name || 'Beginner'}
-            </span>
-          </div>
-
-          {/* Stats matrix grid */}
-          <div className="lg:col-span-5 grid grid-cols-2 gap-4">
-            {/* Coins */}
-            <div className="bg-slate-50 dark:bg-white/5 p-4 rounded-3xl border border-slate-100 dark:border-none flex items-center gap-3">
-              <div className="h-10 w-10 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500">
-                <span className="text-lg">🪙</span>
-              </div>
-              <div>
-                <h4 className="text-base font-black leading-none">{stats?.coins || 1376}</h4>
-                <span className="text-[10px] text-slate-400 font-extrabold uppercase">Tanga</span>
-              </div>
-            </div>
-
-            {/* Stars */}
-            <div className="bg-slate-50 dark:bg-white/5 p-4 rounded-3xl border border-slate-100 dark:border-none flex items-center gap-3">
-              <div className="h-10 w-10 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-400">
-                <Star className="h-4.5 w-4.5 fill-current" />
-              </div>
-              <div>
-                <h4 className="text-base font-black leading-none">{stats?.xp || 364}</h4>
-                <span className="text-[10px] text-slate-400 font-extrabold uppercase">Yulduz</span>
-              </div>
-            </div>
-
-            {/* Ranking info */}
-            <div className="bg-slate-50 dark:bg-white/5 p-4 rounded-3xl border border-slate-100 dark:border-none">
-              <span className="block text-xs font-black text-emerald-500">84-oʻrin</span>
-              <span className="text-[9px] text-slate-400 font-extrabold uppercase">Filial reytingi</span>
-            </div>
-
-            <div className="bg-slate-50 dark:bg-white/5 p-4 rounded-3xl border border-slate-100 dark:border-none">
-              <span className="block text-xs font-black text-rose-500">1-oʻrin</span>
-              <span className="text-[9px] text-slate-400 font-extrabold uppercase">Guruh reytingi</span>
-            </div>
-
-            {/* Monthly average */}
-            <div className="bg-slate-50 dark:bg-white/5 p-4 rounded-3xl border border-slate-100 dark:border-none col-span-2 flex justify-between items-center">
-              <div>
-                <span className="text-[9px] text-slate-450 dark:text-slate-400 font-extrabold uppercase block">Iyul oʻrtacha natijasi</span>
-                <span className="text-xs font-black leading-none text-slate-800 dark:text-white">97.78%</span>
-              </div>
-              <Badge className="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-black rounded-lg border-none text-[10px]">
-                +100%
-              </Badge>
+            )}
+            {/* Trophy circle badge bottom right */}
+            <div className="absolute bottom-0 right-0 h-6 w-6 rounded-full bg-amber-400 border-2 border-white dark:border-[#160e2a] flex items-center justify-center text-white">
+              <span className="text-[10px]">🏆</span>
             </div>
           </div>
+        </div>
 
-          {/* Metric skill progress bars */}
-          <div className="lg:col-span-4 space-y-3.5">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center mt-4">
+          
+          {/* Metrics Blocks: 4 Columns on desktop */}
+          <div className="lg:col-span-8 grid grid-cols-2 sm:grid-cols-4 gap-4">
+            
+            {/* Column 1 */}
+            <div className="space-y-4">
+              {/* Coins block */}
+              <div className="bg-slate-50/50 dark:bg-white/5 p-4 rounded-[1.25rem] border border-slate-100/50 dark:border-none flex items-center gap-3">
+                <div className="h-9 w-9 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500 shrink-0">
+                  <span className="text-base">🪙</span>
+                </div>
+                <div>
+                  <h4 className="text-sm font-black text-slate-800 dark:text-white leading-none mb-1">
+                    {stats?.coins || 1376}
+                  </h4>
+                  <span className="text-[9px] text-slate-400 font-extrabold uppercase leading-none">Coins</span>
+                </div>
+              </div>
+
+              {/* July Average block */}
+              <div className="bg-slate-50/50 dark:bg-white/5 p-4 rounded-[1.25rem] border border-slate-100/50 dark:border-none space-y-1">
+                <span className="text-[8px] text-slate-450 dark:text-slate-400 font-extrabold uppercase block leading-none">July average</span>
+                <div className="flex items-center justify-between gap-1.5 flex-wrap">
+                  <span className="text-xs font-black text-slate-800 dark:text-white">97.78%</span>
+                  <Badge className="bg-emerald-500/15 text-emerald-600 dark:text-emerald-450 font-black rounded-lg border-none text-[8px] px-1 py-0">
+                    +100%
+                  </Badge>
+                </div>
+              </div>
+            </div>
+
+            {/* Column 2 */}
+            <div className="space-y-4">
+              {/* Stars block */}
+              <div className="bg-slate-50/50 dark:bg-white/5 p-4 rounded-[1.25rem] border border-slate-100/50 dark:border-none flex items-center gap-3">
+                <div className="h-9 w-9 rounded-xl bg-amber-400/10 flex items-center justify-center text-amber-400 shrink-0">
+                  <Star className="h-5 w-5 fill-current" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-black text-slate-800 dark:text-white leading-none mb-1">
+                    {stats?.xp || 364}
+                  </h4>
+                  <span className="text-[9px] text-slate-400 font-extrabold uppercase leading-none">Stars</span>
+                </div>
+              </div>
+
+              {/* Battle wins block */}
+              <div className="bg-slate-50/50 dark:bg-white/5 p-4 rounded-[1.25rem] border border-slate-100/50 dark:border-none flex items-center gap-3">
+                <div className="h-9 w-9 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 shrink-0">
+                  <Flag className="h-4.5 w-4.5" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-black text-slate-800 dark:text-white leading-none mb-1">x0</h4>
+                  <span className="text-[9px] text-slate-400 font-extrabold uppercase leading-none block truncate max-w-[80px]">Battle wins</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Column 3 */}
+            <div className="space-y-4">
+              {/* Branch ranking block */}
+              <div className="bg-slate-50/50 dark:bg-white/5 p-4 rounded-[1.25rem] border border-slate-100/50 dark:border-none flex items-center gap-3">
+                <div className="h-9 w-9 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 shrink-0">
+                  <TrendingUp className="h-4.5 w-4.5" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-black text-emerald-600 dark:text-emerald-450 leading-none mb-1">84th</h4>
+                  <span className="text-[9px] text-slate-400 font-extrabold uppercase leading-none block truncate max-w-[80px]">Branch ranking</span>
+                </div>
+              </div>
+
+              {/* Level indicator block */}
+              <div className="bg-slate-50/50 dark:bg-white/5 p-4 rounded-[1.25rem] border border-slate-100/50 dark:border-none flex items-center gap-3">
+                <div className="h-9 w-9 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-500 shrink-0">
+                  <Activity className="h-4.5 w-4.5" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-black text-slate-800 dark:text-white leading-none mb-1">
+                    {cefrLevels.find(l => l.code === selectedLevel)?.name || 'Beginner'}
+                  </h4>
+                  <span className="text-[9px] text-slate-400 font-extrabold uppercase leading-none">Level</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Column 4 */}
+            <div className="space-y-4">
+              {/* Group ranking block */}
+              <div className="bg-slate-50/50 dark:bg-white/5 p-4 rounded-[1.25rem] border border-slate-100/50 dark:border-none flex items-center gap-3">
+                <div className="h-9 w-9 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-500 shrink-0">
+                  <MedalIcon className="h-4.5 w-4.5" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-black text-rose-600 dark:text-rose-450 leading-none mb-1">1st</h4>
+                  <span className="text-[9px] text-slate-400 font-extrabold uppercase leading-none block truncate max-w-[80px]">Group ranking</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Progress Bars - on the right column */}
+          <div className="lg:col-span-4 space-y-3.5 border-l border-slate-100 dark:border-white/5 pl-0 lg:pl-6">
             {/* Grammar */}
             <div className="space-y-1">
-              <div className="flex justify-between text-[10px] font-black uppercase text-slate-455 dark:text-slate-400">
+              <div className="flex justify-between text-[10px] font-black uppercase text-slate-455 dark:text-slate-400 leading-none">
                 <span>Grammar</span>
                 <span>100%</span>
               </div>
-              <Progress value={100} className="h-1.5 rounded-full" />
+              <Progress value={100} className="h-1.5 rounded-full bg-slate-100 dark:bg-slate-800" />
             </div>
 
             {/* Vocabulary */}
             <div className="space-y-1">
-              <div className="flex justify-between text-[10px] font-black uppercase text-slate-455 dark:text-slate-400">
+              <div className="flex justify-between text-[10px] font-black uppercase text-slate-455 dark:text-slate-400 leading-none">
                 <span>Vocabulary</span>
                 <span>{stats ? Math.round((stats.wordsLearned / 200) * 100) : 100}%</span>
               </div>
-              <Progress value={stats ? Math.min(100, (stats.wordsLearned / 200) * 100) : 100} className="h-1.5 rounded-full bg-slate-100 dark:bg-slate-850" />
+              <Progress value={stats ? Math.min(100, (stats.wordsLearned / 200) * 100) : 100} className="h-1.5 rounded-full bg-slate-100 dark:bg-slate-800" />
             </div>
 
             {/* Listening */}
             <div className="space-y-1">
-              <div className="flex justify-between text-[10px] font-black uppercase text-slate-455 dark:text-slate-400">
+              <div className="flex justify-between text-[10px] font-black uppercase text-slate-455 dark:text-slate-400 leading-none">
                 <span>Listening</span>
                 <span>100%</span>
               </div>
-              <Progress value={100} className="h-1.5 rounded-full" />
+              <Progress value={100} className="h-1.5 rounded-full bg-slate-100 dark:bg-slate-800" />
             </div>
 
             {/* Pronunciation */}
             <div className="space-y-1">
-              <div className="flex justify-between text-[10px] font-black uppercase text-slate-455 dark:text-slate-400">
+              <div className="flex justify-between text-[10px] font-black uppercase text-slate-455 dark:text-slate-400 leading-none">
                 <span>Pronunciation</span>
                 <span>{stats ? Math.round(stats.speakingAccuracy) : 100}%</span>
               </div>
-              <Progress value={stats ? stats.speakingAccuracy : 100} className="h-1.5 rounded-full" />
+              <Progress value={stats ? stats.speakingAccuracy : 100} className="h-1.5 rounded-full bg-slate-100 dark:bg-slate-800" />
             </div>
           </div>
+
         </div>
       </div>
 
