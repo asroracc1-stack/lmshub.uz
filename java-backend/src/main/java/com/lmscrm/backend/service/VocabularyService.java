@@ -87,6 +87,7 @@ public class VocabularyService {
                 .orElseThrow(() -> new RuntimeException("Word not found"));
     }
 
+    @Transactional(readOnly = true)
     public Page<VocabularyWord> searchWords(String search, String level, String category, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("word").ascending());
         return wordRepository.searchWords(
@@ -135,7 +136,7 @@ public class VocabularyService {
 
     // ─── ROADMAP & COUNTDOWNS ────────────────────────────────────────────────
 
-    @Transactional
+    @Transactional(readOnly = true)
     public Map<String, Object> getRoadmap(UUID userId, String level, boolean isPremium) {
         List<VocabularyWord> allWords = wordRepository.findByLevelOrderByUnitAscWordAsc(level);
         List<Integer> units = wordRepository.findUnitsByLevel(level);
@@ -873,6 +874,7 @@ public class VocabularyService {
 
     // ─── INTERACTIVE CHARTS / STATISTICS ─────────────────────────────────────
 
+    @Transactional(readOnly = true)
     public Map<String, Object> getDashboardStats(UUID userId) {
         long wordsLearned = progressRepository.countLearnedWords(userId);
         long mastered = progressRepository.countByUserIdAndStatus(userId, WordStatus.MASTERED);

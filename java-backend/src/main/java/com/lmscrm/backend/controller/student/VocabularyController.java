@@ -33,13 +33,23 @@ public class VocabularyController {
     @GetMapping("/words")
     @PreAuthorize("hasAnyRole('STUDENT', 'USER', 'SUPER_ADMIN', 'ADMIN')")
     @Operation(summary = "Search and filter vocabulary dictionary")
-    public ResponseEntity<Page<VocabularyWord>> searchWords(
+    public ResponseEntity<?> searchWords(
             @RequestParam(value = "search", required = false) String search,
             @RequestParam(value = "level", required = false) String level,
             @RequestParam(value = "category", required = false) String category,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "20") int size) {
-        return ResponseEntity.ok(vocabularyService.searchWords(search, level, category, page, size));
+        try {
+            return ResponseEntity.ok(vocabularyService.searchWords(search, level, category, page, size));
+        } catch (Exception e) {
+            e.printStackTrace();
+            java.io.StringWriter sw = new java.io.StringWriter();
+            e.printStackTrace(new java.io.PrintWriter(sw));
+            return ResponseEntity.status(500).body(Map.of(
+                "error", e.getMessage() != null ? e.getMessage() : "Unknown query error",
+                "stack", sw.toString()
+            ));
+        }
     }
 
     @GetMapping("/words/unit")
@@ -54,14 +64,23 @@ public class VocabularyController {
     @GetMapping("/roadmap")
     @PreAuthorize("hasAnyRole('STUDENT', 'USER', 'SUPER_ADMIN', 'ADMIN')")
     @Operation(summary = "Get roadmap levels structure with locks and timers")
-    public ResponseEntity<Map<String, Object>> getRoadmap(
+    public ResponseEntity<?> getRoadmap(
             @RequestParam("level") String level,
             @AuthenticationPrincipal User user) {
-        // Simple check if user is premium/privileged
-        boolean isPremium = user.getRole().name().contains("ADMIN") || 
-                            user.getRole().name().contains("MANAGER") ||
-                            (user.getCoins() != null && user.getCoins() > 1000); // placeholder subscription condition
-        return ResponseEntity.ok(vocabularyService.getRoadmap(user.getId(), level, isPremium));
+        try {
+            boolean isPremium = user.getRole().name().contains("ADMIN") || 
+                                user.getRole().name().contains("MANAGER") ||
+                                (user.getCoins() != null && user.getCoins() > 1000);
+            return ResponseEntity.ok(vocabularyService.getRoadmap(user.getId(), level, isPremium));
+        } catch (Exception e) {
+            e.printStackTrace();
+            java.io.StringWriter sw = new java.io.StringWriter();
+            e.printStackTrace(new java.io.PrintWriter(sw));
+            return ResponseEntity.status(500).body(Map.of(
+                "error", e.getMessage() != null ? e.getMessage() : "Unknown roadmap error",
+                "stack", sw.toString()
+            ));
+        }
     }
 
     @PostMapping("/progress")
@@ -78,8 +97,18 @@ public class VocabularyController {
     @GetMapping("/stats")
     @PreAuthorize("hasAnyRole('STUDENT', 'USER', 'SUPER_ADMIN', 'ADMIN')")
     @Operation(summary = "Fetch dashboard analytics charts & metrics")
-    public ResponseEntity<Map<String, Object>> getStats(@AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(vocabularyService.getDashboardStats(user.getId()));
+    public ResponseEntity<?> getStats(@AuthenticationPrincipal User user) {
+        try {
+            return ResponseEntity.ok(vocabularyService.getDashboardStats(user.getId()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            java.io.StringWriter sw = new java.io.StringWriter();
+            e.printStackTrace(new java.io.PrintWriter(sw));
+            return ResponseEntity.status(500).body(Map.of(
+                "error", e.getMessage() != null ? e.getMessage() : "Unknown stats error",
+                "stack", sw.toString()
+            ));
+        }
     }
 
     // ─── SRS REVIEWS ─────────────────────────────────────────────────────────

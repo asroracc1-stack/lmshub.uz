@@ -31,7 +31,7 @@ public interface UserVocabularyProgressRepository extends JpaRepository<UserVoca
     List<UserVocabularyProgress> findDueReviews(@Param("userId") UUID userId, @Param("now") LocalDateTime now);
 
     @Query("SELECT p FROM UserVocabularyProgress p JOIN FETCH p.word w WHERE p.user.id = :userId AND " +
-           "(p.speakingAccuracyAvg < 70.0 OR (p.timesTotalWriting > 0 AND (CAST(p.timesCorrectWriting AS double) / p.timesTotalWriting) < 0.7)) " +
+           "(p.speakingAccuracyAvg < 70.0 OR (p.timesTotalWriting > 0 AND p.timesCorrectWriting < p.timesTotalWriting * 0.7)) " +
            "ORDER BY p.speakingAccuracyAvg ASC, p.timesCorrectWriting ASC")
     List<UserVocabularyProgress> findWeakWords(@Param("userId") UUID userId, Pageable pageable);
 
