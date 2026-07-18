@@ -1,0 +1,327 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0053-1
+      author: ai
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: vocabulary_words
+      changes:
+        - createTable:
+            tableName: vocabulary_words
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: word
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: translation
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: ipa_us
+                  type: varchar(100)
+              - column:
+                  name: ipa_uk
+                  type: varchar(100)
+              - column:
+                  name: part_of_speech
+                  type: varchar(50)
+              - column:
+                  name: definition
+                  type: text
+              - column:
+                  name: example_sentence
+                  type: text
+              - column:
+                  name: uzbek_example
+                  type: text
+              - column:
+                  name: image_url
+                  type: varchar(512)
+              - column:
+                  name: audio_us_url
+                  type: varchar(512)
+              - column:
+                  name: audio_uk_url
+                  type: varchar(512)
+              - column:
+                  name: level
+                  type: varchar(10)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: unit
+                  type: integer
+                  constraints:
+                    nullable: false
+              - column:
+                  name: synonyms
+                  type: varchar(512)
+              - column:
+                  name: antonyms
+                  type: varchar(512)
+              - column:
+                  name: difficulty_score
+                  type: double precision
+                  defaultValueNumeric: 1.0
+              - column:
+                  name: collocations
+                  type: text
+              - column:
+                  name: common_mistakes
+                  type: text
+              - column:
+                  name: pronunciation_tips
+                  type: text
+              - column:
+                  name: category
+                  type: varchar(50)
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: CURRENT_TIMESTAMP
+
+  - changeSet:
+      id: v0053-2
+      author: ai
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: user_vocabulary_settings
+      changes:
+        - createTable:
+            tableName: user_vocabulary_settings
+            columns:
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: daily_goal
+                  type: integer
+                  defaultValueNumeric: 20
+              - column:
+                  name: current_streak
+                  type: integer
+                  defaultValueNumeric: 0
+              - column:
+                  name: longest_streak
+                  type: integer
+                  defaultValueNumeric: 0
+              - column:
+                  name: last_activity_date
+                  type: date
+              - column:
+                  name: total_minutes_studied
+                  type: double precision
+                  defaultValueNumeric: 0.0
+              - column:
+                  name: vocabulary_title
+                  type: varchar(50)
+                  defaultValue: "Novice"
+              - column:
+                  name: claimed_chests
+                  type: text
+        - addForeignKeyConstraint:
+            baseTableName: user_vocabulary_settings
+            baseColumnNames: user_id
+            constraintName: fk_vocab_settings_user
+            referencedTableName: users
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+  - changeSet:
+      id: v0053-3
+      author: ai
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: user_vocabulary_progress
+      changes:
+        - createTable:
+            tableName: user_vocabulary_progress
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: word_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: varchar(20)
+                  defaultValue: "NEW"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: times_reviewed
+                  type: integer
+                  defaultValueNumeric: 0
+              - column:
+                  name: times_correct_writing
+                  type: integer
+                  defaultValueNumeric: 0
+              - column:
+                  name: times_total_writing
+                  type: integer
+                  defaultValueNumeric: 0
+              - column:
+                  name: speaking_accuracy_avg
+                  type: double precision
+                  defaultValueNumeric: 0.0
+              - column:
+                  name: difficulty
+                  type: varchar(10)
+                  defaultValue: "MEDIUM"
+              - column:
+                  name: ease_factor
+                  type: double precision
+                  defaultValueNumeric: 2.5
+              - column:
+                  name: interval_days
+                  type: integer
+                  defaultValueNumeric: 1
+              - column:
+                  name: next_review_at
+                  type: timestamp
+              - column:
+                  name: last_reviewed_at
+                  type: timestamp
+              - column:
+                  name: is_bookmarked
+                  type: boolean
+                  defaultValueBoolean: false
+              - column:
+                  name: is_favorite
+                  type: boolean
+                  defaultValueBoolean: false
+        - addForeignKeyConstraint:
+            baseTableName: user_vocabulary_progress
+            baseColumnNames: user_id
+            constraintName: fk_vocab_prog_user
+            referencedTableName: users
+            referencedColumnNames: id
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: user_vocabulary_progress
+            baseColumnNames: word_id
+            constraintName: fk_vocab_prog_word
+            referencedTableName: vocabulary_words
+            referencedColumnNames: id
+            onDelete: CASCADE
+        - addUniqueConstraint:
+            tableName: user_vocabulary_progress
+            columnNames: user_id, word_id
+            constraintName: uq_user_word_vocab
+
+  - changeSet:
+      id: v0053-4
+      author: ai
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: user_vocabulary_unit_progress
+      changes:
+        - createTable:
+            tableName: user_vocabulary_unit_progress
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: level
+                  type: varchar(10)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: unit
+                  type: integer
+                  constraints:
+                    nullable: false
+              - column:
+                  name: stage_completed
+                  type: integer
+                  defaultValueNumeric: 0
+              - column:
+                  name: completed_at
+                  type: timestamp
+        - addForeignKeyConstraint:
+            baseTableName: user_vocabulary_unit_progress
+            baseColumnNames: user_id
+            constraintName: fk_vocab_unit_user
+            referencedTableName: users
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+  - changeSet:
+      id: v0053-5
+      author: ai
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: user_vocabulary_achievements
+      changes:
+        - createTable:
+            tableName: user_vocabulary_achievements
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: achievement_code
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: unlocked_at
+                  type: timestamp
+                  defaultValueComputed: CURRENT_TIMESTAMP
+        - addForeignKeyConstraint:
+            baseTableName: user_vocabulary_achievements
+            baseColumnNames: user_id
+            constraintName: fk_vocab_ach_user
+            referencedTableName: users
+            referencedColumnNames: id
+            onDelete: CASCADE
+        - addUniqueConstraint:
+            tableName: user_vocabulary_achievements
+            columnNames: user_id, achievement_code
+            constraintName: uq_user_ach_vocab

@@ -193,6 +193,13 @@ const PMGrantCoins = lazy(() => import("./pages/pack-manager/GrantCoins"));
 const AdventureMapFull = lazy(() => import("./pages/student/Map/AdvancedAdventureMap"));
 const GamificationAdmin = lazy(() => import("./pages/admin/GamificationAdmin"));
 
+// Vocabulary Module Pages
+const VocabularyHome = lazy(() => import("./features/vocabulary/pages/VocabularyHome"));
+const VocabularyLesson = lazy(() => import("./features/vocabulary/pages/VocabularyLesson"));
+const VocabularySearch = lazy(() => import("./features/vocabulary/pages/VocabularySearch"));
+const VocabularyAdmin = lazy(() => import("./features/vocabulary/pages/VocabularyAdmin"));
+
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -290,6 +297,11 @@ const AppRoutes = () => {
           <Route path="library-manage" element={<LibraryManage />} />
           <Route path="library-manage/create" element={<LibraryForm />} />
           <Route path="library-manage/edit/:id" element={<LibraryForm />} />
+          <Route path="vocabulary" element={<VocabularyHome />} />
+          <Route path="vocabulary/lesson/:level/:unit" element={<VocabularyLesson />} />
+          <Route path="vocabulary/search" element={<VocabularySearch />} />
+          <Route path="vocabulary/manage" element={<VocabularyAdmin />} />
+
         </Route>
 
         {/* Admin */}
@@ -441,7 +453,11 @@ const AppRoutes = () => {
           <Route path="referral" element={<ReferralPage />} />
           <Route path="face-registration" element={<FaceRegistration />} />
           <Route path="map" element={<AdventureMapFull />} />
+          <Route path="vocabulary" element={<VocabularyHome />} />
+          <Route path="vocabulary/lesson/:level/:unit" element={<VocabularyLesson />} />
+          <Route path="vocabulary/search" element={<VocabularySearch />} />
           <Route path="library" element={<Library />} />
+
           <Route path="library/adabiy-kitoblar" element={<LibraryCategoryDetail code="adabiy_kitoblar" />} />
           <Route path="library/maktab-darsliklari" element={<LibraryCategoryDetail code="maktab_darsliklari" />} />
           <Route path="library/oquv-qollanmalar" element={<LibraryCategoryDetail code="oquv_qollanmalar" />} />
@@ -470,7 +486,11 @@ const AppRoutes = () => {
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="referral" element={<ReferralPage />} />
           <Route path="map" element={<AdventureMapFull />} />
+          <Route path="vocabulary" element={<VocabularyHome />} />
+          <Route path="vocabulary/lesson/:level/:unit" element={<VocabularyLesson />} />
+          <Route path="vocabulary/search" element={<VocabularySearch />} />
           <Route path="library" element={<Library />} />
+
           <Route path="library/adabiy-kitoblar" element={<LibraryCategoryDetail code="adabiy_kitoblar" />} />
           <Route path="library/maktab-darsliklari" element={<LibraryCategoryDetail code="maktab_darsliklari" />} />
           <Route path="library/oquv-qollanmalar" element={<LibraryCategoryDetail code="oquv_qollanmalar" />} />

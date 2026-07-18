@@ -300,7 +300,274 @@ api.interceptors.response.use(
           config
         } as any;
       }
+
+      if (url.includes('/vocabulary/roadmap')) {
+        return {
+          data: {
+            level: "A1",
+            daily_goal: 20,
+            current_streak: 5,
+            longest_streak: 15,
+            vocabulary_title: "Top Learner",
+            units: [
+              { unit: 1, stageCompleted: 3, totalWords: 20, isUnlocked: true, remainingSeconds: 0 },
+              { unit: 2, stageCompleted: 1, totalWords: 20, isUnlocked: true, remainingSeconds: 0 },
+              { unit: 3, stageCompleted: 0, totalWords: 20, isUnlocked: true, remainingSeconds: 0 },
+              { unit: 4, stageCompleted: 0, totalWords: 20, isUnlocked: false, remainingSeconds: 83700 },
+              { unit: 5, stageCompleted: 0, totalWords: 20, isUnlocked: false, remainingSeconds: 0 }
+            ]
+          },
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config
+        } as any;
+      }
+
+      if (url.includes('/vocabulary/progress')) {
+        return {
+          data: { success: true, coins_earned: 10, xp_earned: 8, new_stage: 1 },
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config
+        } as any;
+      }
+
+      if (url.includes('/vocabulary/stats')) {
+        return {
+          data: {
+            wordsLearned: 145,
+            masteredWords: 95,
+            learningWords: 40,
+            reviewWords: 10,
+            speakingAccuracy: 86.5,
+            writingAccuracy: 91.0,
+            streak: 5,
+            longestStreak: 15,
+            minutesStudied: 195.5,
+            coins: 350,
+            xp: 1450,
+            vocabularyTitle: "Top Learner",
+            learningSpeedChart: [
+              { name: 'Mon', words: 5 },
+              { name: 'Tue', words: 8 },
+              { name: 'Wed', words: 12 },
+              { name: 'Thu', words: 15 },
+              { name: 'Fri', words: 18 },
+              { name: 'Sat', words: 22 },
+              { name: 'Sun', words: 25 }
+            ],
+            retentionRateChart: [
+              { name: 'Day 1', rate: 100 },
+              { name: 'Day 3', rate: 92 },
+              { name: 'Day 7', rate: 85 },
+              { name: 'Day 14', rate: 79 },
+              { name: 'Day 30', rate: 75 }
+            ]
+          },
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config
+        } as any;
+      }
+
+      if (url.includes('/vocabulary/words/unit')) {
+        const mockWords = [
+          {
+            id: "mock-w-1",
+            word: "introduce",
+            translation: "tanishtirmoq",
+            ipaUs: "ˌɪntrəˈdus",
+            ipaUk: "ˌɪntrəˈdjuːs",
+            partOfSpeech: "verb",
+            definition: "To present someone by name to another person.",
+            exampleSentence: "Let me introduce you to my sister.",
+            uzbekExample: "Sizni singlim bilan tanishtirishga ruxsat bering.",
+            imageUrl: "",
+            audioUsUrl: "",
+            audioUkUrl: "",
+            level: "A1",
+            unit: 1,
+            synonyms: "present, acquaint",
+            antonyms: "",
+            difficultyScore: 1.0,
+            collocations: "introduce a friend; introduce myself",
+            commonMistakes: "Do not say 'introduce with'. Say 'introduce to'.",
+            pronunciationTips: "Ensure the stress is on the last syllable: intro-DUCE.",
+            category: "General"
+          },
+          {
+            id: "mock-w-2",
+            word: "address",
+            translation: "manzil",
+            ipaUs: "əˈdrɛs",
+            ipaUk: "əˈdrɛs",
+            partOfSpeech: "noun",
+            definition: "The particulars of the place where someone lives or an organization is situated.",
+            exampleSentence: "What is your home address?",
+            uzbekExample: "Sizning uy manzilingiz nima?",
+            imageUrl: "",
+            audioUsUrl: "",
+            audioUkUrl: "",
+            level: "A1",
+            unit: 1,
+            synonyms: "residence, location",
+            antonyms: "",
+            difficultyScore: 1.0,
+            collocations: "home address; email address",
+            commonMistakes: "Double 'd' and double 's' are required in spelling.",
+            pronunciationTips: "The 'a' sound is soft and brief.",
+            category: "General"
+          },
+          {
+            id: "mock-w-3",
+            word: "environment",
+            translation: "atrof-muhit",
+            ipaUs: "ɪnˈvaɪrənmənt",
+            ipaUk: "ɪnˈvaɪərənmənt",
+            partOfSpeech: "noun",
+            definition: "The surroundings or conditions in which a person, animal, or plant lives or operates.",
+            exampleSentence: "We must protect the natural environment.",
+            uzbekExample: "Biz tabiiy atrof-muhitni himoya qilishimiz kerak.",
+            imageUrl: "",
+            audioUsUrl: "",
+            audioUkUrl: "",
+            level: "A1",
+            unit: 1,
+            synonyms: "surroundings, ecosystem",
+            antonyms: "",
+            difficultyScore: 1.0,
+            collocations: "protect the environment; environmental damage",
+            commonMistakes: "Do not forget the silent 'n' before 'ment'.",
+            pronunciationTips: "Pronounce the 'n' sound clearly in envir-o-n-ment.",
+            category: "Nature"
+          }
+        ];
+        return {
+          data: mockWords,
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config
+        } as any;
+      }
+
+      if (url.includes('/vocabulary/words')) {
+        return {
+          data: {
+            content: [
+              {
+                id: "mock-w-1",
+                word: "introduce",
+                translation: "tanishtirmoq",
+                level: "A1",
+                category: "General",
+                definition: "To present someone by name to another person."
+              },
+              {
+                id: "mock-w-2",
+                word: "address",
+                translation: "manzil",
+                level: "A1",
+                category: "General",
+                definition: "The particulars of the place where someone lives."
+              },
+              {
+                id: "mock-w-3",
+                word: "environment",
+                translation: "atrof-muhit",
+                level: "A1",
+                category: "Nature",
+                definition: "The surroundings in which we live."
+              }
+            ],
+            totalPages: 1,
+            totalElements: 3
+          },
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config
+        } as any;
+      }
+
+      if (url.includes('/vocabulary/bookmarks') || url.includes('/vocabulary/reviews') || url.includes('/vocabulary/weak-words')) {
+        return {
+          data: [],
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config
+        } as any;
+      }
+
+      if (url.includes('/vocabulary/words/bookmark') || url.includes('/vocabulary/words/favorite')) {
+        return {
+          data: { success: true, is_bookmarked: true, is_favorite: true },
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config
+        } as any;
+      }
+
+      if (url.includes('/vocabulary/claim-chest')) {
+        return {
+          data: { success: true, coins: 15, xp: 10 },
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config
+        } as any;
+      }
+
+      if (url.includes('/vocabulary/ai/pronounce-check')) {
+        return {
+          data: {
+            score: 92.0,
+            stress_score: 90.0,
+            intonation_score: 95.0,
+            fluency_score: 92.0,
+            feedback: "Zo'r talaffuz, 'o' unlisini biroz cho'zibroq ayting.",
+            verdict: "Excellent",
+            missing_sounds: [],
+            wrong_sounds: ["o"]
+          },
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config
+        } as any;
+      }
+
+      if (url.includes('/vocabulary/ai/generate-word-data')) {
+        return {
+          data: {
+            word: "achieve",
+            translation: "erishmoq",
+            ipa_us: "əˈtʃiv",
+            ipa_uk: "əˈtʃiːv",
+            part_of_speech: "verb",
+            definition: "Successfully bring about or reach a desired objective or result by effort, skill, or courage.",
+            example_sentence: "He achieved his goals through hard work.",
+            uzbek_example: "U tinimsiz mehnat orqali oʻz maqsadlariga erishdi.",
+            synonyms: "attain, accomplish, realize",
+            antonyms: "fail, lose",
+            collocations: "achieve goals; achieve success",
+            common_mistakes: "Spelt with 'i' before 'e': a-c-h-i-e-v-e.",
+            pronunciation_tips: "Put stress on the second syllable: a-CHIEVE.",
+            category: "General"
+          },
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config
+        } as any;
+      }
     }
+
 
     // Agar 401 Unauthorized xatosi kelsa, foydalanuvchini tizimdan chiqarish mumkin
     if (error.response && error.response.status === 401) {

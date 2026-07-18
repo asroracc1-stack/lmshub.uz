@@ -121,7 +121,9 @@ export const getSidebarRoutes = (role: string, t: TFunction, options: { ielts?: 
     case "student":
       return [
         { to: "/student/dashboard", label: t("nav.dashboard"), icon: LayoutDashboard },
+        { to: "/student/vocabulary", label: "Vocabulary", icon: BookOpen },
         // { to: "/student/practice", label: t("nav.practice"), badge: "New", badgeColor: "bg-gradient-to-r from-purple-600 to-indigo-500 shadow-purple-500/20", miniBadgeColor: "bg-purple-500", icon: GraduationCap },
+
         { to: "/student/lessons", label: t("nav.myLessonsStudent"), icon: CalendarClock },
         { to: "/student/grades", label: t("nav.results"), icon: Award },
         { to: "/student/calendar", label: t("nav.schedule"), icon: Calendar },
@@ -140,7 +142,9 @@ export const getSidebarRoutes = (role: string, t: TFunction, options: { ielts?: 
     case "user":
       return [
         { to: "/user/dashboard", label: t("nav.dashboard"), icon: LayoutDashboard },
+        { to: "/user/vocabulary", label: "Vocabulary", icon: BookOpen },
         { to: "/user/practice", label: t("nav.practice"), badge: "New", badgeColor: "bg-gradient-to-r from-purple-600 to-indigo-500 shadow-purple-500/20", miniBadgeColor: "bg-purple-500", icon: GraduationCap },
+
         { to: "/user/sat", label: t("nav.sat"), icon: Target },
         { to: "/user/national-cert", label: t("nav.nationalCert"), icon: Landmark },
         { to: "/user/subscriptions", label: t("nav.subscriptions"), icon: Package },
@@ -183,7 +187,9 @@ export const getSidebarRoutes = (role: string, t: TFunction, options: { ielts?: 
         { to: "/super-admin/leaderboard", label: t("nav.leaderboard"), icon: Trophy },
         { to: "/super-admin/library", label: "Kutubxona", badge: "New", icon: BookOpen },
         { to: "/super-admin/library-manage", label: "Kutubxona Boshqaruvi", icon: Database },
+        { to: "/super-admin/vocabulary/manage", label: "Vocabulary Boshqaruvi", icon: Database },
         { to: "/super-admin/ai-attendance", label: t("nav.aiAttendance", "AI Attendance"), icon: Camera },
+
         { 
           label: t("nav.ieltsAi"), 
           icon: GraduationCap,
