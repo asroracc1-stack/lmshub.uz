@@ -276,15 +276,15 @@ export default function RoleLayout({
                   aria-expanded={isExpanded}
                   title={mini ? item.label : undefined}
                   className={cn(
-                    "w-full flex items-center gap-4 rounded-2xl text-[15px] transition-all duration-200 group sidebar-nav-link",
-                    mini ? "justify-center h-11 w-11 mx-auto px-0" : "px-4 py-3.5",
+                    "w-full flex items-center gap-3 rounded-xl text-[13.5px] transition-all duration-200 group sidebar-nav-link",
+                    mini ? "justify-center h-9 w-9 mx-auto px-0" : "px-3.5 py-2.5",
                     isExpanded || hasActiveChild
                       ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-extrabold"
                       : "text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white font-bold"
                   )}
                 >
                   <item.icon
-                    size={22}
+                    size={18}
                     strokeWidth={isExpanded || hasActiveChild ? 2.8 : 2.4}
                     className={cn(
                       "shrink-0 transition-colors",
@@ -317,7 +317,7 @@ export default function RoleLayout({
                     >
                       <div className="pl-4 pt-1 pb-1 space-y-0.5 relative">
                         {/* Vertical guide line */}
-                        <div className="absolute left-[22px] top-0 bottom-2 w-px bg-slate-200 dark:bg-slate-700/60 rounded-full" />
+                        <div className="absolute left-[18px] top-0 bottom-2 w-px bg-slate-200 dark:bg-slate-700/60 rounded-full" />
                         {item.children.map((child) => (
                           <NavLink
                             key={child.to}
@@ -325,10 +325,10 @@ export default function RoleLayout({
                             onClick={handleMobileNavClick}
                             className={({ isActive }) =>
                               cn(
-                                "relative flex items-center gap-4 pl-7 pr-3.5 py-2.5 rounded-xl text-[13px] transition-all duration-200 sidebar-nav-link",
+                                "relative flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg text-[12.5px] transition-all duration-200 sidebar-nav-link",
                                 isActive
                                   ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-extrabold"
-                                  : "text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/5 font-bold"
+                                  : "text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/5 font-semibold"
                               )
                             }
                           >
@@ -337,11 +337,11 @@ export default function RoleLayout({
                                 {isActive && (
                                   <motion.div
                                     layoutId={`active-child-dot-${item.label}`}
-                                    className="absolute left-[10px] w-1.5 h-1.5 rounded-full bg-emerald-500"
+                                    className="absolute left-[8px] w-1 h-1 rounded-full bg-emerald-500"
                                   />
                                 )}
                                 <child.icon
-                                  size={17}
+                                  size={15}
                                   strokeWidth={isActive ? 2.5 : 2.2}
                                   className={cn(isActive ? "text-emerald-500 dark:text-emerald-400" : "text-slate-400")}
                                 />
@@ -369,11 +369,11 @@ export default function RoleLayout({
               title={mini ? item.label : undefined}
               className={({ isActive }) =>
                 cn(
-                  "group flex items-center gap-4 rounded-2xl text-[15px] transition-all duration-200 sidebar-nav-link",
-                  mini ? "justify-center h-11 w-11 mx-auto px-0" : "px-4 py-3.5",
+                  "group flex items-center gap-3 rounded-xl text-[13.5px] transition-all duration-200 sidebar-nav-link",
+                  mini ? "justify-center h-9 w-9 mx-auto px-0" : "px-3.5 py-2",
                   isActive
-                    ? "bg-[#10b981] text-white shadow-[0_8px_16px_-4px_rgba(16,185,129,0.35)] font-extrabold"
-                    : "text-slate-300 hover:bg-white/5 hover:text-white font-bold"
+                    ? "bg-[#10b981] text-white shadow-[0_4px_12px_-3px_rgba(16,185,129,0.3)] font-extrabold"
+                    : "text-slate-350 hover:bg-white/5 hover:text-white font-semibold"
                 )
               }
             >
@@ -381,7 +381,7 @@ export default function RoleLayout({
                 <>
                   <div className="relative flex items-center">
                     <item.icon
-                      size={22}
+                      size={18}
                       strokeWidth={isActive ? 2.8 : 2.4}
                       className={cn(
                         "shrink-0 transition-colors",
@@ -419,7 +419,7 @@ export default function RoleLayout({
       {/* ── Footer: Telegram + Logout ─────────────────── */}
       <div
         className={cn(
-          "shrink-0 border-t border-white/5 py-3 px-3 space-y-1"
+          "shrink-0 border-t border-white/5 py-2 px-2.5 space-y-1"
         )}
       >
         <a
@@ -428,12 +428,12 @@ export default function RoleLayout({
           rel="noopener noreferrer"
           title={mini ? t("common.telegramBot") : undefined}
           className={cn(
-            "flex items-center gap-4 rounded-2xl text-[15px] font-semibold text-slate-400",
+            "flex items-center gap-3 rounded-xl text-[13.5px] font-semibold text-slate-400",
             "hover:bg-white/5 hover:text-white transition-all duration-200",
-            mini ? "justify-center h-11 w-11 mx-auto px-0" : "px-4 py-3"
+            mini ? "justify-center h-9 w-9 mx-auto px-0" : "px-3 py-1.5"
           )}
         >
-          <Send size={20} className="shrink-0 text-slate-450" />
+          <Send size={18} className="shrink-0 text-slate-450" />
           {!mini && (
             <span className="truncate">{t("common.telegramBot")}</span>
           )}
@@ -442,12 +442,12 @@ export default function RoleLayout({
           onClick={handleSignOut}
           title={mini ? t("common.logout") : undefined}
           className={cn(
-            "w-full flex items-center gap-4 rounded-2xl text-[15px] font-semibold text-red-400",
+            "w-full flex items-center gap-3 rounded-xl text-[13.5px] font-semibold text-red-400",
             "hover:bg-red-500/10 transition-all duration-200",
-            mini ? "justify-center h-11 w-11 mx-auto px-0" : "px-4 py-3"
+            mini ? "justify-center h-9 w-9 mx-auto px-0" : "px-3 py-1.5"
           )}
         >
-          <LogOut size={20} className="shrink-0" />
+          <LogOut size={18} className="shrink-0" />
           {!mini && (
             <span className="truncate">{t("common.logout")}</span>
           )}
