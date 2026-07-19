@@ -13,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -21,6 +22,7 @@ import java.util.*;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional(readOnly = true)
 public class LeaderboardService {
 
     private final UserRepository userRepository;
@@ -78,7 +80,8 @@ public class LeaderboardService {
             Optional<UserSubscription> subOpt = userSubscriptionRepository.findFirstByUserIdAndIsActiveTrueOrderByExpiresAtDesc(freshUser.getId());
             if (subOpt.isPresent()) {
                 UserSubscription sub = subOpt.get();
-                if (sub.getExpiresAt() == null || sub.getExpiresAt().isAfter(LocalDateTime.now())) {
+                if ((sub.getExpiresAt() == null || sub.getExpiresAt().isAfter(LocalDateTime.now()))
+                        && sub.getPack() != null && sub.getPack().getType() != null) {
                     userTier = sub.getPack().getType().name(); // PRO or ELITE
                 }
             }
