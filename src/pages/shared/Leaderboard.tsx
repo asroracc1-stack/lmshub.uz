@@ -230,15 +230,15 @@ function PodiumCard({ row, cfg, isLoading, onClick }: { row: Row | null; cfg: ty
       {cfg.place === 1 && !isLoading && row && (
         <motion.div
           animate={{
-            y: [0, -10, 0],
-            rotate: [-3, 3, -3],
+            y: [0, -6, 0],
+            rotate: [-2, 2, -2],
           }}
           transition={{
-            duration: 2.5,
+            duration: 3,
             repeat: Infinity,
             ease: "easeInOut",
           }}
-          className="absolute -top-10 left-1/2 -translate-x-1/2 text-4xl select-none drop-shadow-[0_4px_12px_rgba(255,215,0,0.65)] z-50 pointer-events-none"
+          className="absolute -top-9 left-0 right-0 flex justify-center text-4xl select-none drop-shadow-[0_4px_12px_rgba(255,215,0,0.65)] z-50 pointer-events-none"
         >
           👑
         </motion.div>
