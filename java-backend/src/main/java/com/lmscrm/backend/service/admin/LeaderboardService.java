@@ -27,39 +27,42 @@ public class LeaderboardService {
     private final UserSubscriptionRepository userSubscriptionRepository;
 
     public LeaderboardResponseDto getLeaderboard(User currentUser, String metric, String role, boolean isGlobal, int page, int size) {
+        User freshUser = userRepository.findById(currentUser.getId())
+                .orElseThrow(() -> new RuntimeException("User not found: " + currentUser.getId()));
+
         AppRole appRole = parseRole(role);
 
         // Enforce: USER role users can only see USER leaderboard
-        if (currentUser.getRole() == AppRole.USER) {
+        if (freshUser.getRole() == AppRole.USER) {
             appRole = AppRole.USER;
         }
 
         Pageable pageable = PageRequest.of(page, size);
         Page<Object[]> resultsPage;
 
-        boolean hasOrg = (!isGlobal && currentUser.getOrganizationId() != null && appRole != AppRole.USER);
+        boolean hasOrg = (!isGlobal && freshUser.getOrganizationId() != null && appRole != AppRole.USER);
 
         if ("stars".equalsIgnoreCase(metric)) {
             if (hasOrg) {
-                resultsPage = userRepository.getLeaderboardByStarsByOrg(appRole, currentUser.getOrganizationId(), pageable);
+                resultsPage = userRepository.getLeaderboardByStarsByOrg(appRole, freshUser.getOrganizationId(), pageable);
             } else {
                 resultsPage = userRepository.getLeaderboardByStarsGlobal(appRole, pageable);
             }
         } else if ("practice_time".equalsIgnoreCase(metric)) {
             if (hasOrg) {
-                resultsPage = userRepository.getLeaderboardByPracticeByOrg(appRole, currentUser.getOrganizationId(), pageable);
+                resultsPage = userRepository.getLeaderboardByPracticeByOrg(appRole, freshUser.getOrganizationId(), pageable);
             } else {
                 resultsPage = userRepository.getLeaderboardByPracticeGlobal(appRole, pageable);
             }
         } else if ("streak".equalsIgnoreCase(metric)) {
             if (hasOrg) {
-                resultsPage = userRepository.getLeaderboardByStreakByOrg(appRole, currentUser.getOrganizationId(), pageable);
+                resultsPage = userRepository.getLeaderboardByStreakByOrg(appRole, freshUser.getOrganizationId(), pageable);
             } else {
                 resultsPage = userRepository.getLeaderboardByStreakGlobal(appRole, pageable);
             }
         } else { // coins
             if (hasOrg) {
-                resultsPage = userRepository.getLeaderboardByCoinsByOrg(appRole, currentUser.getOrganizationId(), pageable);
+                resultsPage = userRepository.getLeaderboardByCoinsByOrg(appRole, freshUser.getOrganizationId(), pageable);
             } else {
                 resultsPage = userRepository.getLeaderboardByCoinsGlobal(appRole, pageable);
             }
@@ -69,10 +72,10 @@ public class LeaderboardService {
 
         // Determine user subscription B2C tier
         String userTier = "FREE";
-        if (currentUser.getRole() == AppRole.SUPER_ADMIN || currentUser.getRole() == AppRole.ADMIN) {
+        if (freshUser.getRole() == AppRole.SUPER_ADMIN || freshUser.getRole() == AppRole.ADMIN) {
             userTier = "ELITE";
         } else {
-            Optional<UserSubscription> subOpt = userSubscriptionRepository.findFirstByUserIdAndIsActiveTrueOrderByExpiresAtDesc(currentUser.getId());
+            Optional<UserSubscription> subOpt = userSubscriptionRepository.findFirstByUserIdAndIsActiveTrueOrderByExpiresAtDesc(freshUser.getId());
             if (subOpt.isPresent()) {
                 UserSubscription sub = subOpt.get();
                 if (sub.getExpiresAt() == null || sub.getExpiresAt().isAfter(LocalDateTime.now())) {
@@ -83,7 +86,7 @@ public class LeaderboardService {
 
         // Apply B2C Subscription limits on Leaderboard rows (Free: top 10, Pro: top 100, Elite: unlimited)
         for (LeaderboardDto dto : mappedUsers) {
-            boolean isOwnRow = dto.getId().equals(currentUser.getId());
+            boolean isOwnRow = dto.getId().equals(freshUser.getId());
             if (isOwnRow) continue; // Do not mask the user themselves
 
             int limit = 10;
@@ -101,7 +104,7 @@ public class LeaderboardService {
         }
 
         // Calculate current user stats
-        LeaderboardResponseDto.CurrentUserStats userStats = calculateCurrentUserStats(currentUser, appRole, hasOrg, metric);
+        LeaderboardResponseDto.CurrentUserStats userStats = calculateCurrentUserStats(freshUser, appRole, hasOrg, metric);
 
         return LeaderboardResponseDto.builder()
                 .users(mappedUsers)

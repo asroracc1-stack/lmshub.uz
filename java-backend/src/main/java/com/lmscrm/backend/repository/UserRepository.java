@@ -151,28 +151,36 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     Long getLeaderboardPeriodCoins(@Param("userId") UUID userId, @Param("startDate") LocalDateTime startDate);
 
     // Metric-based Leaderboard queries
-    @Query("SELECT u, (SELECT COUNT(sa) FROM StudentAttempt sa WHERE sa.student = u AND sa.finishedAt IS NOT NULL) FROM User u WHERE u.role = :role AND u.active = true ORDER BY u.xp DESC, u.createdAt ASC")
+    @Query(value = "SELECT u, (SELECT COUNT(sa) FROM StudentAttempt sa WHERE sa.student = u AND sa.finishedAt IS NOT NULL) FROM User u WHERE u.role = :role AND u.active = true ORDER BY u.xp DESC, u.createdAt ASC",
+           countQuery = "SELECT COUNT(u) FROM User u WHERE u.role = :role AND u.active = true")
     Page<Object[]> getLeaderboardByStarsGlobal(@Param("role") AppRole role, Pageable pageable);
 
-    @Query("SELECT u, (SELECT COUNT(sa) FROM StudentAttempt sa WHERE sa.student = u AND sa.finishedAt IS NOT NULL) FROM User u WHERE u.role = :role AND u.active = true AND u.organizationId = :orgId ORDER BY u.xp DESC, u.createdAt ASC")
+    @Query(value = "SELECT u, (SELECT COUNT(sa) FROM StudentAttempt sa WHERE sa.student = u AND sa.finishedAt IS NOT NULL) FROM User u WHERE u.role = :role AND u.active = true AND u.organizationId = :orgId ORDER BY u.xp DESC, u.createdAt ASC",
+           countQuery = "SELECT COUNT(u) FROM User u WHERE u.role = :role AND u.active = true AND u.organizationId = :orgId")
     Page<Object[]> getLeaderboardByStarsByOrg(@Param("role") AppRole role, @Param("orgId") UUID orgId, Pageable pageable);
 
-    @Query("SELECT u, (SELECT COUNT(sa) FROM StudentAttempt sa WHERE sa.student = u AND sa.finishedAt IS NOT NULL) FROM User u WHERE u.role = :role AND u.active = true ORDER BY u.coins DESC, u.createdAt ASC")
+    @Query(value = "SELECT u, (SELECT COUNT(sa) FROM StudentAttempt sa WHERE sa.student = u AND sa.finishedAt IS NOT NULL) FROM User u WHERE u.role = :role AND u.active = true ORDER BY u.coins DESC, u.createdAt ASC",
+           countQuery = "SELECT COUNT(u) FROM User u WHERE u.role = :role AND u.active = true")
     Page<Object[]> getLeaderboardByCoinsGlobal(@Param("role") AppRole role, Pageable pageable);
 
-    @Query("SELECT u, (SELECT COUNT(sa) FROM StudentAttempt sa WHERE sa.student = u AND sa.finishedAt IS NOT NULL) FROM User u WHERE u.role = :role AND u.active = true AND u.organizationId = :orgId ORDER BY u.coins DESC, u.createdAt ASC")
+    @Query(value = "SELECT u, (SELECT COUNT(sa) FROM StudentAttempt sa WHERE sa.student = u AND sa.finishedAt IS NOT NULL) FROM User u WHERE u.role = :role AND u.active = true AND u.organizationId = :orgId ORDER BY u.coins DESC, u.createdAt ASC",
+           countQuery = "SELECT COUNT(u) FROM User u WHERE u.role = :role AND u.active = true AND u.organizationId = :orgId")
     Page<Object[]> getLeaderboardByCoinsByOrg(@Param("role") AppRole role, @Param("orgId") UUID orgId, Pageable pageable);
 
-    @Query("SELECT u, (SELECT COUNT(sa) FROM StudentAttempt sa WHERE sa.student = u AND sa.finishedAt IS NOT NULL) FROM User u WHERE u.role = :role AND u.active = true ORDER BY u.currentStreak DESC, u.createdAt ASC")
+    @Query(value = "SELECT u, (SELECT COUNT(sa) FROM StudentAttempt sa WHERE sa.student = u AND sa.finishedAt IS NOT NULL) FROM User u WHERE u.role = :role AND u.active = true ORDER BY u.currentStreak DESC, u.createdAt ASC",
+           countQuery = "SELECT COUNT(u) FROM User u WHERE u.role = :role AND u.active = true")
     Page<Object[]> getLeaderboardByStreakGlobal(@Param("role") AppRole role, Pageable pageable);
 
-    @Query("SELECT u, (SELECT COUNT(sa) FROM StudentAttempt sa WHERE sa.student = u AND sa.finishedAt IS NOT NULL) FROM User u WHERE u.role = :role AND u.active = true AND u.organizationId = :orgId ORDER BY u.currentStreak DESC, u.createdAt ASC")
+    @Query(value = "SELECT u, (SELECT COUNT(sa) FROM StudentAttempt sa WHERE sa.student = u AND sa.finishedAt IS NOT NULL) FROM User u WHERE u.role = :role AND u.active = true AND u.organizationId = :orgId ORDER BY u.currentStreak DESC, u.createdAt ASC",
+           countQuery = "SELECT COUNT(u) FROM User u WHERE u.role = :role AND u.active = true AND u.organizationId = :orgId")
     Page<Object[]> getLeaderboardByStreakByOrg(@Param("role") AppRole role, @Param("orgId") UUID orgId, Pageable pageable);
 
-    @Query("SELECT u, (SELECT COUNT(sa) FROM StudentAttempt sa WHERE sa.student = u AND sa.finishedAt IS NOT NULL), COALESCE((SELECT SUM(ps.minutes) FROM PracticeSession ps WHERE ps.user = u), 0.0) as totalPractice FROM User u WHERE u.role = :role AND u.active = true ORDER BY totalPractice DESC, u.createdAt ASC")
+    @Query(value = "SELECT u, (SELECT COUNT(sa) FROM StudentAttempt sa WHERE sa.student = u AND sa.finishedAt IS NOT NULL), COALESCE((SELECT SUM(ps.minutes) FROM PracticeSession ps WHERE ps.user = u), 0.0) as totalPractice FROM User u WHERE u.role = :role AND u.active = true ORDER BY totalPractice DESC, u.createdAt ASC",
+           countQuery = "SELECT COUNT(u) FROM User u WHERE u.role = :role AND u.active = true")
     Page<Object[]> getLeaderboardByPracticeGlobal(@Param("role") AppRole role, Pageable pageable);
 
-    @Query("SELECT u, (SELECT COUNT(sa) FROM StudentAttempt sa WHERE sa.student = u AND sa.finishedAt IS NOT NULL), COALESCE((SELECT SUM(ps.minutes) FROM PracticeSession ps WHERE ps.user = u), 0.0) as totalPractice FROM User u WHERE u.role = :role AND u.active = true AND u.organizationId = :orgId ORDER BY totalPractice DESC, u.createdAt ASC")
+    @Query(value = "SELECT u, (SELECT COUNT(sa) FROM StudentAttempt sa WHERE sa.student = u AND sa.finishedAt IS NOT NULL), COALESCE((SELECT SUM(ps.minutes) FROM PracticeSession ps WHERE ps.user = u), 0.0) as totalPractice FROM User u WHERE u.role = :role AND u.active = true AND u.organizationId = :orgId ORDER BY totalPractice DESC, u.createdAt ASC",
+           countQuery = "SELECT COUNT(u) FROM User u WHERE u.role = :role AND u.active = true AND u.organizationId = :orgId")
     Page<Object[]> getLeaderboardByPracticeByOrg(@Param("role") AppRole role, @Param("orgId") UUID orgId, Pageable pageable);
 
     // Rank counting queries per metric
