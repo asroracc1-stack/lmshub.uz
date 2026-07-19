@@ -26,7 +26,7 @@ public class LeaderboardService {
     private final UserRepository userRepository;
     private final UserSubscriptionRepository userSubscriptionRepository;
 
-    public LeaderboardResponseDto getLeaderboard(User currentUser, String period, String role, boolean isGlobal, int page, int size) {
+    public LeaderboardResponseDto getLeaderboard(User currentUser, String metric, String role, boolean isGlobal, int page, int size) {
         AppRole appRole = parseRole(role);
 
         // Enforce: USER role users can only see USER leaderboard
@@ -34,28 +34,38 @@ public class LeaderboardService {
             appRole = AppRole.USER;
         }
 
-        LocalDateTime startDate = calculateStartDate(period);
         Pageable pageable = PageRequest.of(page, size);
         Page<Object[]> resultsPage;
 
-        boolean isAllTime = (startDate == null);
         boolean hasOrg = (!isGlobal && currentUser.getOrganizationId() != null && appRole != AppRole.USER);
 
-        if (isAllTime) {
+        if ("stars".equalsIgnoreCase(metric)) {
             if (hasOrg) {
-                resultsPage = userRepository.getLeaderboardAllTimeByOrg(appRole, currentUser.getOrganizationId(), pageable);
+                resultsPage = userRepository.getLeaderboardByStarsByOrg(appRole, currentUser.getOrganizationId(), pageable);
             } else {
-                resultsPage = userRepository.getLeaderboardAllTimeGlobal(appRole, pageable);
+                resultsPage = userRepository.getLeaderboardByStarsGlobal(appRole, pageable);
             }
-        } else {
+        } else if ("practice_time".equalsIgnoreCase(metric)) {
             if (hasOrg) {
-                resultsPage = userRepository.getLeaderboardPeriodByOrg(appRole, currentUser.getOrganizationId(), startDate, pageable);
+                resultsPage = userRepository.getLeaderboardByPracticeByOrg(appRole, currentUser.getOrganizationId(), pageable);
             } else {
-                resultsPage = userRepository.getLeaderboardPeriodGlobal(appRole, startDate, pageable);
+                resultsPage = userRepository.getLeaderboardByPracticeGlobal(appRole, pageable);
+            }
+        } else if ("streak".equalsIgnoreCase(metric)) {
+            if (hasOrg) {
+                resultsPage = userRepository.getLeaderboardByStreakByOrg(appRole, currentUser.getOrganizationId(), pageable);
+            } else {
+                resultsPage = userRepository.getLeaderboardByStreakGlobal(appRole, pageable);
+            }
+        } else { // coins
+            if (hasOrg) {
+                resultsPage = userRepository.getLeaderboardByCoinsByOrg(appRole, currentUser.getOrganizationId(), pageable);
+            } else {
+                resultsPage = userRepository.getLeaderboardByCoinsGlobal(appRole, pageable);
             }
         }
 
-        List<LeaderboardDto> mappedUsers = mapResults(resultsPage.getContent(), page * size);
+        List<LeaderboardDto> mappedUsers = mapResults(resultsPage.getContent(), page * size, metric);
 
         // Determine user subscription B2C tier
         String userTier = "FREE";
@@ -91,7 +101,7 @@ public class LeaderboardService {
         }
 
         // Calculate current user stats
-        LeaderboardResponseDto.CurrentUserStats userStats = calculateCurrentUserStats(currentUser, appRole, hasOrg, isAllTime, startDate);
+        LeaderboardResponseDto.CurrentUserStats userStats = calculateCurrentUserStats(currentUser, appRole, hasOrg, metric);
 
         return LeaderboardResponseDto.builder()
                 .users(mappedUsers)
@@ -101,18 +111,21 @@ public class LeaderboardService {
                 .build();
     }
 
-    public List<LeaderboardDto> getRegularUsersLeaderboard(String period, int limit) {
-        LocalDateTime startDate = calculateStartDate(period);
+    public List<LeaderboardDto> getRegularUsersLeaderboard(String metric, int limit) {
         Pageable pageable = PageRequest.of(0, limit);
         Page<Object[]> resultsPage;
 
-        if (startDate == null) {
-            resultsPage = userRepository.getLeaderboardAllTimeGlobal(AppRole.USER, pageable);
+        if ("stars".equalsIgnoreCase(metric)) {
+            resultsPage = userRepository.getLeaderboardByStarsGlobal(AppRole.USER, pageable);
+        } else if ("practice_time".equalsIgnoreCase(metric)) {
+            resultsPage = userRepository.getLeaderboardByPracticeGlobal(AppRole.USER, pageable);
+        } else if ("streak".equalsIgnoreCase(metric)) {
+            resultsPage = userRepository.getLeaderboardByStreakGlobal(AppRole.USER, pageable);
         } else {
-            resultsPage = userRepository.getLeaderboardPeriodGlobal(AppRole.USER, startDate, pageable);
+            resultsPage = userRepository.getLeaderboardByCoinsGlobal(AppRole.USER, pageable);
         }
 
-        return mapResults(resultsPage.getContent(), 0);
+        return mapResults(resultsPage.getContent(), 0, metric);
     }
 
     private AppRole parseRole(String role) {
@@ -135,7 +148,7 @@ public class LeaderboardService {
         };
     }
 
-    private List<LeaderboardDto> mapResults(List<Object[]> results, int offset) {
+    private List<LeaderboardDto> mapResults(List<Object[]> results, int offset, String metric) {
         if (results == null || results.isEmpty()) return Collections.emptyList();
 
         List<LeaderboardDto> list = new ArrayList<>();
@@ -148,9 +161,17 @@ public class LeaderboardService {
             User user = (User) row[0];
             Long completedTests = (Long) row[1];
 
-            // For period queries, row[2] is periodCoins and row[3] is periodXp
-            Long coins = (row.length > 2 && row[2] != null) ? (Long) row[2] : (user.getCoins() != null ? user.getCoins() : 0L);
-            Long xp = (row.length > 3 && row[3] != null) ? (Long) row[3] : (user.getXp() != null ? user.getXp() : 0L);
+            Long coins = user.getCoins() != null ? user.getCoins() : 0L;
+            Long xp = user.getXp() != null ? user.getXp() : 0L;
+
+            Double practiceMinutes = 0.0;
+            if ("practice_time".equalsIgnoreCase(metric) && row.length > 2 && row[2] != null) {
+                practiceMinutes = (Double) row[2];
+            } else {
+                // otherwise set total minutes dynamically
+                practiceMinutes = userRepository.getTotalPracticeMinutes(user.getId());
+                if (practiceMinutes == null) practiceMinutes = 0.0;
+            }
 
             // Level formula: 1 + totalXp / 100
             Long totalXp = user.getXp() != null ? user.getXp() : 0L;
@@ -173,14 +194,14 @@ public class LeaderboardService {
                     .streak(streak)
                     .joinDate(joinDate)
                     .rank(currentRank++)
-                    .practiceMinutes(0.0)
+                    .practiceMinutes(practiceMinutes)
                     .build());
         }
         return list;
     }
 
     private LeaderboardResponseDto.CurrentUserStats calculateCurrentUserStats(
-            User currentUser, AppRole role, boolean hasOrg, boolean isAllTime, LocalDateTime startDate) {
+            User currentUser, AppRole role, boolean hasOrg, String metric) {
 
         long totalUsers = hasOrg
                 ? userRepository.countByRoleAndOrganizationIdAndActive(role, currentUser.getOrganizationId(), true)
@@ -189,34 +210,56 @@ public class LeaderboardService {
         long usersAbove = 0;
         Long coins = currentUser.getCoins() != null ? currentUser.getCoins() : 0L;
         Long xp = currentUser.getXp() != null ? currentUser.getXp() : 0L;
+        Integer streak = currentUser.getCurrentStreak() != null ? currentUser.getCurrentStreak() : 3;
         LocalDateTime userCreatedAt = currentUser.getCreatedAt() != null ? currentUser.getCreatedAt() : LocalDateTime.now();
 
-        if (isAllTime) {
+        if ("stars".equalsIgnoreCase(metric)) {
             if (hasOrg) {
-                usersAbove = userRepository.countUsersAboveAllTimeByOrg(role, currentUser.getOrganizationId(), coins, xp, userCreatedAt);
+                usersAbove = userRepository.countUsersAboveStarsByOrg(role, currentUser.getOrganizationId(), xp, userCreatedAt);
             } else {
-                usersAbove = userRepository.countUsersAboveAllTimeGlobal(role, coins, xp, userCreatedAt);
+                usersAbove = userRepository.countUsersAboveStarsGlobal(role, xp, userCreatedAt);
             }
-        } else {
-            long myPeriodCoins = 0;
-            Long periodSum = userRepository.getLeaderboardPeriodCoins(currentUser.getId(), startDate);
-            if (periodSum != null) {
-                myPeriodCoins = periodSum;
-            }
+        } else if ("practice_time".equalsIgnoreCase(metric)) {
+            Double myPracticeMinutes = userRepository.getTotalPracticeMinutes(currentUser.getId());
+            if (myPracticeMinutes == null) myPracticeMinutes = 0.0;
 
             if (hasOrg) {
-                usersAbove = userRepository.countUsersAbovePeriodByOrg(role, currentUser.getOrganizationId(), startDate, myPeriodCoins);
+                usersAbove = userRepository.countUsersAbovePracticeByOrg(role, currentUser.getOrganizationId(), myPracticeMinutes);
             } else {
-                usersAbove = userRepository.countUsersAbovePeriodGlobal(role, startDate, myPeriodCoins);
+                usersAbove = userRepository.countUsersAbovePracticeGlobal(role, myPracticeMinutes);
+            }
+        } else if ("streak".equalsIgnoreCase(metric)) {
+            if (hasOrg) {
+                usersAbove = userRepository.countUsersAboveStreakByOrg(role, currentUser.getOrganizationId(), streak, userCreatedAt);
+            } else {
+                usersAbove = userRepository.countUsersAboveStreakGlobal(role, streak, userCreatedAt);
+            }
+        } else { // coins
+            if (hasOrg) {
+                usersAbove = userRepository.countUsersAboveCoinsByOrg(role, currentUser.getOrganizationId(), coins, userCreatedAt);
+            } else {
+                usersAbove = userRepository.countUsersAboveCoinsGlobal(role, coins, userCreatedAt);
             }
         }
 
         int rank = (int) (usersAbove + 1);
         long usersBelow = Math.max(0, totalUsers - rank);
 
+        long displayVal = 0;
+        if ("stars".equalsIgnoreCase(metric)) {
+            displayVal = xp;
+        } else if ("practice_time".equalsIgnoreCase(metric)) {
+            Double myPracticeMinutes = userRepository.getTotalPracticeMinutes(currentUser.getId());
+            displayVal = Math.round(myPracticeMinutes != null ? myPracticeMinutes : 0.0);
+        } else if ("streak".equalsIgnoreCase(metric)) {
+            displayVal = streak;
+        } else {
+            displayVal = coins;
+        }
+
         return LeaderboardResponseDto.CurrentUserStats.builder()
                 .rank(rank)
-                .coins(isAllTime ? coins : (userRepository.getLeaderboardPeriodCoins(currentUser.getId(), startDate) != null ? userRepository.getLeaderboardPeriodCoins(currentUser.getId(), startDate) : 0L))
+                .coins(displayVal)
                 .usersAbove(usersAbove)
                 .usersBelow(usersBelow)
                 .build();

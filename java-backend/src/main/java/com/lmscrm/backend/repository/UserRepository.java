@@ -149,6 +149,59 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     @Query("SELECT COALESCE(SUM(ct.amount), 0L) FROM CoinTransaction ct WHERE ct.student.id = :userId AND ct.createdAt >= :startDate")
     Long getLeaderboardPeriodCoins(@Param("userId") UUID userId, @Param("startDate") LocalDateTime startDate);
+
+    // Metric-based Leaderboard queries
+    @Query("SELECT u, (SELECT COUNT(sa) FROM StudentAttempt sa WHERE sa.student = u AND sa.finishedAt IS NOT NULL) FROM User u WHERE u.role = :role AND u.active = true ORDER BY u.xp DESC, u.createdAt ASC")
+    Page<Object[]> getLeaderboardByStarsGlobal(@Param("role") AppRole role, Pageable pageable);
+
+    @Query("SELECT u, (SELECT COUNT(sa) FROM StudentAttempt sa WHERE sa.student = u AND sa.finishedAt IS NOT NULL) FROM User u WHERE u.role = :role AND u.active = true AND u.organizationId = :orgId ORDER BY u.xp DESC, u.createdAt ASC")
+    Page<Object[]> getLeaderboardByStarsByOrg(@Param("role") AppRole role, @Param("orgId") UUID orgId, Pageable pageable);
+
+    @Query("SELECT u, (SELECT COUNT(sa) FROM StudentAttempt sa WHERE sa.student = u AND sa.finishedAt IS NOT NULL) FROM User u WHERE u.role = :role AND u.active = true ORDER BY u.coins DESC, u.createdAt ASC")
+    Page<Object[]> getLeaderboardByCoinsGlobal(@Param("role") AppRole role, Pageable pageable);
+
+    @Query("SELECT u, (SELECT COUNT(sa) FROM StudentAttempt sa WHERE sa.student = u AND sa.finishedAt IS NOT NULL) FROM User u WHERE u.role = :role AND u.active = true AND u.organizationId = :orgId ORDER BY u.coins DESC, u.createdAt ASC")
+    Page<Object[]> getLeaderboardByCoinsByOrg(@Param("role") AppRole role, @Param("orgId") UUID orgId, Pageable pageable);
+
+    @Query("SELECT u, (SELECT COUNT(sa) FROM StudentAttempt sa WHERE sa.student = u AND sa.finishedAt IS NOT NULL) FROM User u WHERE u.role = :role AND u.active = true ORDER BY u.currentStreak DESC, u.createdAt ASC")
+    Page<Object[]> getLeaderboardByStreakGlobal(@Param("role") AppRole role, Pageable pageable);
+
+    @Query("SELECT u, (SELECT COUNT(sa) FROM StudentAttempt sa WHERE sa.student = u AND sa.finishedAt IS NOT NULL) FROM User u WHERE u.role = :role AND u.active = true AND u.organizationId = :orgId ORDER BY u.currentStreak DESC, u.createdAt ASC")
+    Page<Object[]> getLeaderboardByStreakByOrg(@Param("role") AppRole role, @Param("orgId") UUID orgId, Pageable pageable);
+
+    @Query("SELECT u, (SELECT COUNT(sa) FROM StudentAttempt sa WHERE sa.student = u AND sa.finishedAt IS NOT NULL), COALESCE((SELECT SUM(ps.minutes) FROM PracticeSession ps WHERE ps.user = u), 0.0) as totalPractice FROM User u WHERE u.role = :role AND u.active = true ORDER BY totalPractice DESC, u.createdAt ASC")
+    Page<Object[]> getLeaderboardByPracticeGlobal(@Param("role") AppRole role, Pageable pageable);
+
+    @Query("SELECT u, (SELECT COUNT(sa) FROM StudentAttempt sa WHERE sa.student = u AND sa.finishedAt IS NOT NULL), COALESCE((SELECT SUM(ps.minutes) FROM PracticeSession ps WHERE ps.user = u), 0.0) as totalPractice FROM User u WHERE u.role = :role AND u.active = true AND u.organizationId = :orgId ORDER BY totalPractice DESC, u.createdAt ASC")
+    Page<Object[]> getLeaderboardByPracticeByOrg(@Param("role") AppRole role, @Param("orgId") UUID orgId, Pageable pageable);
+
+    // Rank counting queries per metric
+    @Query("SELECT COUNT(u) FROM User u WHERE u.role = :role AND u.active = true AND (u.xp > :xp OR (u.xp = :xp AND u.createdAt < :createdAt))")
+    long countUsersAboveStarsGlobal(@Param("role") AppRole role, @Param("xp") Long xp, @Param("createdAt") LocalDateTime createdAt);
+
+    @Query("SELECT COUNT(u) FROM User u WHERE u.role = :role AND u.active = true AND u.organizationId = :orgId AND (u.xp > :xp OR (u.xp = :xp AND u.createdAt < :createdAt))")
+    long countUsersAboveStarsByOrg(@Param("role") AppRole role, @Param("orgId") UUID orgId, @Param("xp") Long xp, @Param("createdAt") LocalDateTime createdAt);
+
+    @Query("SELECT COUNT(u) FROM User u WHERE u.role = :role AND u.active = true AND (u.coins > :coins OR (u.coins = :coins AND u.createdAt < :createdAt))")
+    long countUsersAboveCoinsGlobal(@Param("role") AppRole role, @Param("coins") Long coins, @Param("createdAt") LocalDateTime createdAt);
+
+    @Query("SELECT COUNT(u) FROM User u WHERE u.role = :role AND u.active = true AND u.organizationId = :orgId AND (u.coins > :coins OR (u.coins = :coins AND u.createdAt < :createdAt))")
+    long countUsersAboveCoinsByOrg(@Param("role") AppRole role, @Param("orgId") UUID orgId, @Param("coins") Long coins, @Param("createdAt") LocalDateTime createdAt);
+
+    @Query("SELECT COUNT(u) FROM User u WHERE u.role = :role AND u.active = true AND (u.currentStreak > :streak OR (u.currentStreak = :streak AND u.createdAt < :createdAt))")
+    long countUsersAboveStreakGlobal(@Param("role") AppRole role, @Param("streak") Integer streak, @Param("createdAt") LocalDateTime createdAt);
+
+    @Query("SELECT COUNT(u) FROM User u WHERE u.role = :role AND u.active = true AND u.organizationId = :orgId AND (u.currentStreak > :streak OR (u.currentStreak = :streak AND u.createdAt < :createdAt))")
+    long countUsersAboveStreakByOrg(@Param("role") AppRole role, @Param("orgId") UUID orgId, @Param("streak") Integer streak, @Param("createdAt") LocalDateTime createdAt);
+
+    @Query("SELECT COUNT(u) FROM User u WHERE u.role = :role AND u.active = true AND COALESCE((SELECT SUM(ps.minutes) FROM PracticeSession ps WHERE ps.user = u), 0.0) > :practiceMinutes")
+    long countUsersAbovePracticeGlobal(@Param("role") AppRole role, @Param("practiceMinutes") Double practiceMinutes);
+
+    @Query("SELECT COUNT(u) FROM User u WHERE u.role = :role AND u.active = true AND u.organizationId = :orgId AND COALESCE((SELECT SUM(ps.minutes) FROM PracticeSession ps WHERE ps.user = u), 0.0) > :practiceMinutes")
+    long countUsersAbovePracticeByOrg(@Param("role") AppRole role, @Param("orgId") UUID orgId, @Param("practiceMinutes") Double practiceMinutes);
+
+    @Query("SELECT COALESCE(SUM(ps.minutes), 0.0) FROM PracticeSession ps WHERE ps.user.id = :userId")
+    Double getTotalPracticeMinutes(@Param("userId") UUID userId);
 }
 
 

@@ -21,15 +21,15 @@ public class LeaderboardController {
 
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    @Operation(summary = "Get Leaderboard rankings by period and role")
+    @Operation(summary = "Get Leaderboard rankings by metric and role")
     public ResponseEntity<com.lmscrm.backend.dto.admin.LeaderboardResponseDto> getLeaderboard(
             @org.springframework.security.core.annotation.AuthenticationPrincipal com.lmscrm.backend.domain.entity.User user,
-            @RequestParam(defaultValue = "all_time") String period,
+            @RequestParam(defaultValue = "stars") String metric,
             @RequestParam(defaultValue = "STUDENT") String role,
             @RequestParam(defaultValue = "false") boolean isGlobal,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
-        return ResponseEntity.ok(leaderboardService.getLeaderboard(user, period, role, isGlobal, page, size));
+        return ResponseEntity.ok(leaderboardService.getLeaderboard(user, metric, role, isGlobal, page, size));
     }
 
 

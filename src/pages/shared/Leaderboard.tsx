@@ -27,7 +27,22 @@ import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
-type Period = "daily" | "weekly" | "monthly" | "all_time";
+type Metric = "stars" | "practice_time" | "streak" | "coins";
+
+const formatMetricValue = (row: any, metric: Metric) => {
+  switch (metric) {
+    case "stars":
+      return `${row.xp ?? 0} stars`;
+    case "practice_time":
+      return `${Math.round(row.practiceMinutes ?? 0)} mins`;
+    case "streak":
+      return `${row.streak ?? 0} days`;
+    case "coins":
+      return `${row.coins ?? 0} coins`;
+    default:
+      return "";
+  }
+};
 
 interface Row {
   id: string;
@@ -128,7 +143,7 @@ const PODIUM_CONFIG = [
 ];
 
 // ── Podium Card Component ────────────────────────────────────────────
-function PodiumCard({ row, cfg, isLoading, onClick }: { row: Row | null; cfg: typeof PODIUM_CONFIG[number]; isLoading: boolean; onClick: () => void }) {
+function PodiumCard({ row, cfg, isLoading, activeMetric, onClick }: { row: Row | null; cfg: typeof PODIUM_CONFIG[number]; isLoading: boolean; activeMetric: Metric; onClick: () => void }) {
   const isPremiumMasked = row?.username === "premium_user";
 
   return (
@@ -216,9 +231,9 @@ function PodiumCard({ row, cfg, isLoading, onClick }: { row: Row | null; cfg: ty
           <p className={cn("text-xs font-black text-center line-clamp-1 leading-tight", cfg.nameColor)}>
             {getDisplayName(row)}
           </p>
-          <div className="flex items-center gap-0.5 bg-black/30 rounded-full px-2 py-0.5 border border-white/5">
+          <div className="flex items-center gap-0.5 bg-black/30 rounded-full px-2.5 py-0.5 border border-white/5">
             <span className="text-[10px] font-bold text-amber-400 tabular-nums">
-              {formatCoins(row.coins)}
+              {formatMetricValue(row, activeMetric)}
             </span>
           </div>
         </div>
@@ -248,7 +263,7 @@ function PodiumCard({ row, cfg, isLoading, onClick }: { row: Row | null; cfg: ty
 }
 
 // ── Rank Row Component (List view) ────────────────────
-function RankRow({ row, index, isCurrentUser, onClick }: { row: Row; index: number; isCurrentUser: boolean; onClick: () => void }) {
+function RankRow({ row, index, isCurrentUser, activeMetric, onClick }: { row: Row; index: number; isCurrentUser: boolean; activeMetric: Metric; onClick: () => void }) {
   const { t } = useTranslation();
   const isPremiumMasked = row.username === "premium_user";
   
@@ -378,13 +393,9 @@ function RankRow({ row, index, isCurrentUser, onClick }: { row: Row; index: numb
       {/* Stats right side */}
       <div className="shrink-0 flex items-center gap-3">
         <div className="text-right">
-          <div className="flex items-center gap-1 justify-end">
-            <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-            <span className="text-sm font-black text-amber-500 dark:text-amber-400 tabular-nums">
-              {Number(row.coins || 0).toLocaleString("uz-UZ")}
-            </span>
-          </div>
-          <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold block">{row.xp} XP</span>
+          <span className="text-sm font-black text-emerald-500 dark:text-emerald-450 tabular-nums">
+            {formatMetricValue(row, activeMetric)}
+          </span>
         </div>
       </div>
     </motion.div>
@@ -527,32 +538,32 @@ export default function Leaderboard({ defaultRole = "student", isGlobal = false 
   const { t } = useTranslation();
   const { user } = useAuth();
 
-  const PERIODS = useMemo((): { value: Period; label: string; emoji: string }[] => [
-    { value: "daily",    label: t("leaderboardPage.daily"),     emoji: "☀️" },
-    { value: "weekly",   label: t("leaderboardPage.weekly"),    emoji: "📅" },
-    { value: "monthly",  label: t("leaderboardPage.monthly"),   emoji: "🗓️" },
-    { value: "all_time", label: t("leaderboardPage.allTime"),   emoji: "🏆" },
-  ], [t]);
+  const METRICS = useMemo((): { value: Metric; label: string; emoji: string }[] => [
+    { value: "stars",         label: "Stars",          emoji: "⭐" },
+    { value: "practice_time", label: "Practice Time",  emoji: "⏱️" },
+    { value: "streak",        label: "Streak",         emoji: "🔥" },
+    { value: "coins",         label: "Coins",          emoji: "🪙" },
+  ], []);
 
   const isRegularUser = user?.role === "user";
   const initialRole: AppRole = isRegularUser ? "user" : defaultRole;
 
-  const [period, setPeriod]   = useState<Period>("all_time");
+  const [metric, setMetric]   = useState<Metric>("stars");
   const [role, setRole]       = useState<AppRole>(initialRole);
   const [rows, setRows]       = useState<Row[]>([]);
   const [currentUserStats, setCurrentUserStats] = useState<CurrentUserStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState<string | null>(null);
 
-  const activePeriodRatingLabel = useMemo(() => {
-    switch (period) {
-      case "daily": return t("leaderboardPage.dailyRating");
-      case "weekly": return t("leaderboardPage.weeklyRating");
-      case "monthly": return t("leaderboardPage.monthlyRating");
-      case "all_time": return t("leaderboardPage.allTimeRating");
+  const activeMetricRatingLabel = useMemo(() => {
+    switch (metric) {
+      case "stars": return "Stars Rating";
+      case "practice_time": return "Practice Time Rating";
+      case "streak": return "Streak Rating";
+      case "coins": return "Coins Rating";
       default: return "";
     }
-  }, [period, t]);
+  }, [metric]);
   
   // Pagination State
   const [page, setPage] = useState(0);
@@ -580,7 +591,7 @@ export default function Leaderboard({ defaultRole = "student", isGlobal = false 
     setError(null);
     try {
       const res = await api.get<{ users: any[]; currentUserStats: any; totalPages: number; totalElements: number }>("/leaderboard", {
-        params: { period, role, isGlobal, page, size: PAGE_SIZE },
+        params: { metric, role, isGlobal, page, size: PAGE_SIZE },
       });
       
       const payload = res.data;
@@ -597,6 +608,7 @@ export default function Leaderboard({ defaultRole = "student", isGlobal = false 
         streak:    Number(row.streak ?? 3),
         joinDate:  row.joinDate ?? row.join_date ?? "—",
         rank:      row.rank || (page * PAGE_SIZE) + idx + 1,
+        practiceMinutes: Number(row.practiceMinutes ?? row.practice_minutes ?? 0),
       })) as Row[];
 
       setRows(mapped);
@@ -617,7 +629,7 @@ export default function Leaderboard({ defaultRole = "student", isGlobal = false 
     } finally {
       setLoading(false);
     }
-  }, [period, role, isGlobal, page]);
+  }, [metric, role, isGlobal, page]);
 
   useEffect(() => {
     load(true);
@@ -631,7 +643,7 @@ export default function Leaderboard({ defaultRole = "student", isGlobal = false 
     return () => clearInterval(timer);
   }, [load]);
 
-  const activePeriodLabel = PERIODS.find((p) => p.value === period)?.label ?? "";
+  const activeMetricLabel = METRICS.find((m) => m.value === metric)?.label ?? "";
 
   return (
     <div className="w-full pb-24 transition-all duration-300 space-y-4">
@@ -655,7 +667,7 @@ export default function Leaderboard({ defaultRole = "student", isGlobal = false 
             <Flame className="h-7 w-7 text-amber-500 animate-pulse" />
           </div>
           <p className="text-emerald-500/70 text-[10px] font-black uppercase tracking-widest">
-            {activePeriodRatingLabel}
+            {activeMetricRatingLabel}
           </p>
         </div>
 
@@ -669,6 +681,7 @@ export default function Leaderboard({ defaultRole = "student", isGlobal = false 
                   row={row}
                   cfg={config}
                   isLoading={loading}
+                  activeMetric={metric}
                   onClick={() => row && setSelectedUser(row)}
                 />
               </div>
@@ -676,22 +689,22 @@ export default function Leaderboard({ defaultRole = "student", isGlobal = false 
           })}
         </div>
 
-        {/* ── PERIOD FILTERS ──────────────────────────────────────── */}
+        {/* ── METRIC FILTERS ──────────────────────────────────────── */}
         <div className="relative z-10 mt-8">
           <div className="flex w-full rounded-2xl bg-black/45 p-1 border border-white/5 gap-1">
-            {PERIODS.map((p) => (
+            {METRICS.map((m) => (
               <button
-                key={p.value}
-                onClick={() => { setPeriod(p.value); setPage(0); }}
+                key={m.value}
+                onClick={() => { setMetric(m.value); setPage(0); }}
                 className={cn(
                   "flex-1 flex flex-col sm:flex-row items-center justify-center gap-1.5 py-2 px-1 rounded-xl text-[10px] sm:text-xs font-bold transition-all duration-200",
-                  period === p.value
+                  metric === m.value
                     ? "bg-emerald-600 text-white shadow-[0_0_12px_rgba(16,185,129,0.3)] scale-[1.02]"
                     : "text-white/40 hover:text-white/80 hover:bg-white/5"
                 )}
               >
-                <span className="text-sm leading-none">{p.emoji}</span>
-                <span>{p.label}</span>
+                <span className="text-sm leading-none">{m.emoji}</span>
+                <span>{m.label}</span>
               </button>
             ))}
           </div>
@@ -820,13 +833,14 @@ export default function Leaderboard({ defaultRole = "student", isGlobal = false 
         ) : (
           <div>
             <AnimatePresence mode="wait">
-              <div key={`${period}-${role}-${page}`} className="divide-y divide-slate-50 dark:divide-white/[0.02]">
+              <div key={`${metric}-${role}-${page}`} className="divide-y divide-slate-50 dark:divide-white/[0.02]">
                 {rows.map((row, i) => (
                   <RankRow
                     key={row.id}
                     row={row}
                     index={i}
                     isCurrentUser={row.id === user?.id}
+                    activeMetric={metric}
                     onClick={() => setSelectedUser(row)}
                   />
                 ))}
