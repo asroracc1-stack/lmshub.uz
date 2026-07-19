@@ -105,6 +105,8 @@ databaseChangeLog:
       file: db/changelog/changes/v0052_mock_enterprise_system.yaml
   - include:
       file: db/changelog/changes/v0053_vocabulary_system.yaml
+  - include:
+      file: db/changelog/changes/v0054_fix_student_roles.yaml
 
 
 
