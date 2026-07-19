@@ -17,6 +17,7 @@ import {
   Medal,
   Flame,
   X,
+  Eye,
   ChevronLeft,
   ChevronRight,
   TrendingUp,
@@ -143,7 +144,7 @@ const PODIUM_CONFIG = [
 ];
 
 // ── Podium Card Component ────────────────────────────────────────────
-function PodiumCard({ row, cfg, isLoading, activeMetric, onClick }: { row: Row | null; cfg: typeof PODIUM_CONFIG[number]; isLoading: boolean; activeMetric: Metric; onClick: () => void }) {
+function PodiumCard({ row, cfg, isLoading, activeMetric, onClick, onAvatarClick }: { row: Row | null; cfg: typeof PODIUM_CONFIG[number]; isLoading: boolean; activeMetric: Metric; onClick: () => void; onAvatarClick: (url: string) => void }) {
   const isPremiumMasked = row?.username === "premium_user";
 
   return (
@@ -188,20 +189,32 @@ function PodiumCard({ row, cfg, isLoading, activeMetric, onClick }: { row: Row |
         <div className={cn("rounded-full bg-white/10 animate-pulse shrink-0", cfg.avatarSize)} />
       ) : row ? (
         <div className="relative">
-          <Avatar
-            className={cn(
-              "ring-4 ring-offset-2 ring-offset-transparent shadow-2xl shrink-0 transition-transform duration-300 hover:rotate-6",
-              cfg.avatarSize, cfg.ringColor
+          <div className="relative group cursor-pointer" onClick={(e) => {
+            if (row.avatarUrl && !isPremiumMasked) {
+              e.stopPropagation();
+              onAvatarClick(row.avatarUrl);
+            }
+          }}>
+            <Avatar
+              className={cn(
+                "ring-4 ring-offset-2 ring-offset-transparent shadow-2xl shrink-0 transition-transform duration-300 group-hover:scale-105",
+                cfg.avatarSize, cfg.ringColor
+              )}
+            >
+              {row.avatarUrl ? (
+                <AvatarImage src={getImageUrl(row.avatarUrl)} className="object-cover" />
+              ) : (
+                <AvatarFallback className="text-lg font-black bg-slate-700 text-white">
+                  {getInitials(row)}
+                </AvatarFallback>
+              )}
+            </Avatar>
+            {row.avatarUrl && !isPremiumMasked && (
+              <div className="absolute inset-0 bg-black/45 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10 border border-white/20">
+                <Eye className="h-5 w-5 text-white" />
+              </div>
             )}
-          >
-            {row.avatarUrl ? (
-              <AvatarImage src={getImageUrl(row.avatarUrl)} className="object-cover" />
-            ) : (
-              <AvatarFallback className="text-lg font-black bg-slate-700 text-white">
-                {getInitials(row)}
-              </AvatarFallback>
-            )}
-          </Avatar>
+          </div>
           
           {/* Rank Badge */}
           <div
@@ -263,7 +276,7 @@ function PodiumCard({ row, cfg, isLoading, activeMetric, onClick }: { row: Row |
 }
 
 // ── Rank Row Component (List view) ────────────────────
-function RankRow({ row, index, isCurrentUser, activeMetric, onClick }: { row: Row; index: number; isCurrentUser: boolean; activeMetric: Metric; onClick: () => void }) {
+function RankRow({ row, index, isCurrentUser, activeMetric, onClick, onAvatarClick }: { row: Row; index: number; isCurrentUser: boolean; activeMetric: Metric; onClick: () => void; onAvatarClick: (url: string) => void }) {
   const { t } = useTranslation();
   const isPremiumMasked = row.username === "premium_user";
   
@@ -359,15 +372,27 @@ function RankRow({ row, index, isCurrentUser, activeMetric, onClick }: { row: Ro
       </div>
 
       {/* Avatar */}
-      <Avatar className={cn(
-        "h-10 w-10 shrink-0 shadow-md border border-slate-200 dark:border-white/10",
-        medal ? medal.avatarRing : ""
-      )}>
-        {row.avatarUrl && <AvatarImage src={getImageUrl(row.avatarUrl)} className="object-cover" />}
-        <AvatarFallback className="text-[11px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800">
-          {getInitials(row)}
-        </AvatarFallback>
-      </Avatar>
+      <div className="relative group cursor-pointer shrink-0" onClick={(e) => {
+        if (row.avatarUrl && !isPremiumMasked) {
+          e.stopPropagation();
+          onAvatarClick(row.avatarUrl);
+        }
+      }}>
+        <Avatar className={cn(
+          "h-10 w-10 shrink-0 shadow-md border border-slate-200 dark:border-white/10 group-hover:scale-105 transition-transform duration-200",
+          medal ? medal.avatarRing : ""
+        )}>
+          {row.avatarUrl && <AvatarImage src={getImageUrl(row.avatarUrl)} className="object-cover" />}
+          <AvatarFallback className="text-[11px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800">
+            {getInitials(row)}
+          </AvatarFallback>
+        </Avatar>
+        {row.avatarUrl && !isPremiumMasked && (
+          <div className="absolute inset-0 bg-black/45 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10 border border-white/10">
+            <Eye className="h-4 w-4 text-white" />
+          </div>
+        )}
+      </div>
 
       {/* Details */}
       <div className="min-w-0 flex-1">
@@ -573,6 +598,7 @@ export default function Leaderboard({ defaultRole = "student", isGlobal = false 
 
   // Selected profile state for popup
   const [selectedUser, setSelectedUser] = useState<Row | null>(null);
+  const [selectedAvatarUrl, setSelectedAvatarUrl] = useState<string | null>(null);
 
   const podiumRows  = useMemo(() => PODIUM_ORDER.map((i) => rows[i] ?? null), [rows]);
   const listRows    = useMemo(() => rows.slice(3), [rows]);
@@ -683,6 +709,7 @@ export default function Leaderboard({ defaultRole = "student", isGlobal = false 
                   isLoading={loading}
                   activeMetric={metric}
                   onClick={() => row && setSelectedUser(row)}
+                  onAvatarClick={setSelectedAvatarUrl}
                 />
               </div>
             );
@@ -842,6 +869,7 @@ export default function Leaderboard({ defaultRole = "student", isGlobal = false 
                     isCurrentUser={row.id === user?.id}
                     activeMetric={metric}
                     onClick={() => setSelectedUser(row)}
+                    onAvatarClick={setSelectedAvatarUrl}
                   />
                 ))}
               </div>
@@ -883,6 +911,40 @@ export default function Leaderboard({ defaultRole = "student", isGlobal = false 
             rank={selectedUser.rank}
             onClose={() => setSelectedUser(null)}
           />
+        )}
+      </AnimatePresence>
+
+      {/* ── AVATAR FULL VIEW MODAL ─────────────────────────────────────── */}
+      <AnimatePresence>
+        {selectedAvatarUrl && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSelectedAvatarUrl(null)}
+            className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 cursor-pointer"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.9, y: 20, opacity: 0 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative max-w-full max-h-full sm:max-w-2xl sm:max-h-[85vh] flex items-center justify-center overflow-hidden rounded-2xl bg-slate-900 border border-white/10 shadow-2xl p-1"
+            >
+              <button
+                onClick={() => setSelectedAvatarUrl(null)}
+                className="absolute top-4 right-4 z-[1010] flex h-9 w-9 items-center justify-center rounded-full bg-black/60 border border-white/15 text-white/80 hover:text-white hover:bg-black/80 hover:scale-105 active:scale-95 transition-all outline-none"
+              >
+                <X className="h-4 w-4" />
+              </button>
+              <img
+                src={getImageUrl(selectedAvatarUrl)}
+                alt="Full Avatar"
+                className="max-w-[90vw] max-h-[80vh] sm:max-w-md sm:max-h-[60vh] md:max-w-xl md:max-h-[70vh] object-contain rounded-xl select-none"
+              />
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
