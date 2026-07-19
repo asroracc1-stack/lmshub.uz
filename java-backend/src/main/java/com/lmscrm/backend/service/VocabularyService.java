@@ -36,6 +36,8 @@ public class VocabularyService {
     private final UserVocabularyAchievementRepository achievementRepository;
     private final UserRepository userRepository;
     private final CoinTransactionRepository coinTransactionRepository;
+    private final XpTransactionRepository xpTransactionRepository;
+    private final UserSubscriptionRepository userSubscriptionRepository;
     private final GeminiService geminiService;
     private final NotificationService notificationService;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -153,6 +155,10 @@ public class VocabularyService {
         }
 
         UserVocabularySettings settings = getOrCreateSettings(userId);
+        
+        // Premium check based on roles, coins, or active subscription pack
+        boolean actualPremium = isPremium || 
+                                userSubscriptionRepository.findFirstByUserIdAndIsActiveTrueOrderByExpiresAtDesc(userId).isPresent();
 
         List<Map<String, Object>> roadmapUnits = new ArrayList<>();
         
@@ -178,12 +184,12 @@ public class VocabularyService {
             boolean isUnlocked = false;
             long remainingSeconds = 0;
 
-            if (unitNum == 1 || isPremium) {
+            if (unitNum == 1 || actualPremium) {
                 isUnlocked = true;
             } else {
                 // Check if previous unit is completed
                 Integer prevUnitNum = units.get(i - 1);
-                Optional<UserVocabularyUnitProgress> prevProgOpt = unitProgressRepository.findByUserIdAndLevelAndUnit(userId, level, prevUnitNum);
+                Optional<UserVocabularyUnitProgress> prevProgOpt = unitProgressRepository.findByUserIdAndLevelAndUnit(userId, cleanLevel, prevUnitNum);
                 
                 if (prevProgOpt.isPresent() && prevProgOpt.get().getStageCompleted() == 3) {
                     LocalDateTime completedAt = prevProgOpt.get().getCompletedAt();
@@ -272,6 +278,13 @@ public class VocabularyService {
                             null)
                     .build();
             coinTransactionRepository.save(tx);
+
+            // Record XP transaction
+            XpTransaction xpTx = XpTransaction.builder()
+                    .user(user)
+                    .amount((long) xpEarned)
+                    .build();
+            xpTransactionRepository.save(xpTx);
 
             // Register words in SRS
             List<VocabularyWord> unitWords = wordRepository.findByLevelAndUnitOrderByWordAsc(level, unit);
@@ -731,7 +744,17 @@ public class VocabularyService {
             String level = (lvlIdx >= 0 && row.length > lvlIdx) ? row[lvlIdx] : forcedLevel;
             int unit = 1;
             if (unitIdx >= 0 && row.length > unitIdx && !row[unitIdx].isEmpty()) {
-                try { unit = Integer.parseInt(row[unitIdx]); } catch (Exception e) {}
+                try { 
+                    unit = Integer.parseInt(row[unitIdx].trim()); 
+                    if (unit <= 1 && lines.size() > 20) {
+                        // If they marked everything as unit 1, but we have many words, let's distribute them!
+                        unit = (i - startIndex) / 20 + 1;
+                    }
+                } catch (Exception e) {
+                    unit = (i - startIndex) / 20 + 1;
+                }
+            } else {
+                unit = (i - startIndex) / 20 + 1;
             }
             String synonyms = (synIdx >= 0 && row.length > synIdx) ? row[synIdx] : "";
             String antonyms = (antIdx >= 0 && row.length > antIdx) ? row[antIdx] : "";
@@ -862,6 +885,13 @@ public class VocabularyService {
                         null)
                 .build();
         coinTransactionRepository.save(tx);
+
+        // Record XP transaction
+        XpTransaction xpTx = XpTransaction.builder()
+                .user(user)
+                .amount((long) xp)
+                .build();
+        xpTransactionRepository.save(xpTx);
 
         notificationService.createNotification(
                 user,

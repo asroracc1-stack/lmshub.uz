@@ -3,6 +3,7 @@ import { vocabularyApi } from '../services/vocabularyApi';
 import { offlineStorage } from '../utils/offlineStorage';
 import { UnitProgress, DashboardStats } from '../types/vocabulary';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface VocabularyContextType {
   selectedLevel: string;
@@ -38,6 +39,7 @@ export const VocabularyProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [loadingRoadmap, setLoadingRoadmap] = useState(false);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [claimedChests, setClaimedChests] = useState<string[]>([]);
+  const { refresh } = useAuth();
 
   // Update selected level helper
   const setSelectedLevel = (level: string) => {
@@ -187,6 +189,7 @@ export const VocabularyProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       if (data.success) {
         toast.success(`Tabriklaymiz! +${data.coins} tanga va +${data.xp} XP olindi!`);
         fetchStats();
+        refresh();
         return true;
       }
       return false;

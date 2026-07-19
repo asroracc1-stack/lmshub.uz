@@ -50,6 +50,7 @@ public class UserProfileController {
         response.put("fullName", user.getFullName());
         response.put("avatarUrl", user.getAvatarUrl());
         response.put("coins", user.getCoins());
+        response.put("xp", user.getXp());
         response.put("targetBand", user.getTargetBand());
         response.put("examDate", user.getExamDate());
         response.put("lastLoginAt", user.getLastLoginAt());

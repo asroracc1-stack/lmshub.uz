@@ -32,6 +32,7 @@ public class StudentAttemptService {
     private final StudentAnswerRepository answerRepository;
     private final CoinService coinService;
     private final UserRepository userRepository;
+    private final XpTransactionRepository xpTransactionRepository;
     private final ExamMapper mapper;
     private final SubscriptionService subscriptionService;
     private final PracticeSessionRepository practiceSessionRepository;
@@ -327,6 +328,13 @@ public class StudentAttemptService {
 
         student.setXp((student.getXp() != null ? student.getXp() : 0L) + xpEarned);
         userRepository.save(student);
+
+        // Record XP transaction
+        XpTransaction xpTx = XpTransaction.builder()
+                .user(student)
+                .amount(xpEarned)
+                .build();
+        xpTransactionRepository.save(xpTx);
 
         // Simple Analytics: Compare with previous 5 attempts
         List<StudentAttempt> history = attemptRepository.findTop5ByStudentIdAndFinishedAtIsNotNullOrderByFinishedAtAsc(student.getId());

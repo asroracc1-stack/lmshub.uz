@@ -4,9 +4,11 @@ import { offlineStorage } from '../utils/offlineStorage';
 import { VocabularyWord, SpeechEvaluationResult } from '../types/vocabulary';
 import { useVocabularyStore } from '../store/vocabularyStore';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
 export const useVocabularyLesson = (level: string, unit: number) => {
   const { isOffline, fetchRoadmap } = useVocabularyStore();
+  const { refresh } = useAuth();
   const [words, setWords] = useState<VocabularyWord[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentStage, setCurrentStage] = useState<number>(1); // 1: LEARN, 2: WRITE, 3: SPEAK
@@ -93,6 +95,7 @@ export const useVocabularyLesson = (level: string, unit: number) => {
           setProgressCoins(prev => prev + res.coins_earned);
           setProgressXp(prev => prev + res.xp_earned);
           toast.success(`Yutuqlar: +${res.coins_earned} Coin, +${res.xp_earned} XP!`);
+          refresh();
           advanceStage();
         }
       } catch (e) {

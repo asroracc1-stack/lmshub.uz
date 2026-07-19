@@ -16,6 +16,7 @@ interface Profile {
   payment_card_number?: string | null;
   payment_card_owner?: string | null;
   coins?: number | null;
+  xp?: number | null;
   exam_date?: string | null;
   last_login_at?: string | null;
   subscriptionPackCode?: string | null;
@@ -124,6 +125,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
            avatar_url: res.data.avatarUrl || res.data.avatar_url || null,
            organization_id: res.data.organizationId || res.data.organization_id || null,
            coins: res.data.coins || 0,
+           xp: res.data.xp || 0,
            exam_date: res.data.examDate || null,
          };
          setProfile(mappedProfile);
@@ -191,6 +193,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               avatar_url: res.data.avatarUrl || res.data.avatar_url || null,
               organization_id: res.data.organizationId || res.data.organization_id || null,
               coins: res.data.coins || 0,
+              xp: res.data.xp || 0,
               exam_date: res.data.examDate || null,
             };
             setProfile(refreshedProfile);

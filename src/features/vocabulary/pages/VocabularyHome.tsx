@@ -77,9 +77,36 @@ const VocabularyHomeContent: React.FC = () => {
     localStorage.removeItem('vocab_level_confirmed');
   };
 
+  // Local state to manage countdown timers
+  const [localRoadmap, setLocalRoadmap] = useState<any[]>([]);
+
+  useEffect(() => {
+    setLocalRoadmap(roadmap);
+  }, [roadmap]);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setLocalRoadmap(prev => 
+        prev.map(item => ({
+          ...item,
+          remainingSeconds: item.remainingSeconds > 0 ? item.remainingSeconds - 1 : 0
+        }))
+      );
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formatRemainingTime = (seconds: number) => {
+    if (seconds <= 0) return '';
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
+
   // Carousel helpers
   const handleNextSlide = () => {
-    if (carouselIndex < roadmap.length - 1) {
+    if (carouselIndex < localRoadmap.length - 1) {
       setCarouselIndex(prev => prev + 1);
     }
   };
@@ -388,7 +415,7 @@ const VocabularyHomeContent: React.FC = () => {
             </Button>
             <Button
               onClick={handleNextSlide}
-              disabled={carouselIndex >= roadmap.length - 1}
+              disabled={carouselIndex >= localRoadmap.length - 1}
               size="icon"
               variant="outline"
               className="h-9 w-9 rounded-xl border border-slate-100 dark:border-white/5 text-slate-650 cursor-pointer"
@@ -404,7 +431,7 @@ const VocabularyHomeContent: React.FC = () => {
             className="flex gap-6 transition-transform duration-500 ease-out"
             style={{ transform: `translateX(-${carouselIndex * 280}px)` }}
           >
-            {roadmap.map((unit, index) => {
+            {localRoadmap.map((unit, index) => {
               const isCompleted = unit.stageCompleted === 3;
               const isLocked = !unit.isUnlocked;
               const isActive = unit.stageCompleted > 0 && unit.stageCompleted < 3 && unit.isUnlocked;
@@ -413,7 +440,13 @@ const VocabularyHomeContent: React.FC = () => {
               return (
                 <div
                   key={unit.unit}
-                  onClick={() => !isLocked && handleSelectUnit(unit.unit)}
+                  onClick={() => {
+                    if (isLocked) {
+                      navigate(`${basePath}/packs`);
+                    } else {
+                      handleSelectUnit(unit.unit);
+                    }
+                  }}
                   className={cn(
                     "w-[256px] shrink-0 rounded-[2.5rem] p-6 text-white shadow-xl cursor-pointer hover:scale-[1.03] transition-all duration-300 flex flex-col justify-between relative overflow-hidden min-h-[300px]",
                     isLocked ? "bg-slate-900 border border-white/5 opacity-80" : ""
@@ -440,6 +473,11 @@ const VocabularyHomeContent: React.FC = () => {
                       <Badge className="bg-rose-500/20 text-rose-450 font-bold border-none text-[9px] uppercase tracking-wider">
                         Locked
                       </Badge>
+                      {unit.remainingSeconds > 0 && (
+                        <span className="text-[11px] font-black text-rose-300/90 mt-2 bg-rose-950/40 px-2 py-0.5 rounded-full border border-rose-500/10 whitespace-nowrap">
+                          Ochilishiga: {formatRemainingTime(unit.remainingSeconds)}
+                        </span>
+                      )}
                     </div>
                   )}
 

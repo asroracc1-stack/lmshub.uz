@@ -20,6 +20,7 @@ public class RewardService {
 
     private final TravelRewardRepository travelRewardRepository;
     private final UserRepository userRepository;
+    private final XpTransactionRepository xpTransactionRepository;
 
     @Transactional
     public void grantRewardsForRegion(UserTravelState state, JourneyRegion region) {
@@ -34,6 +35,12 @@ public class RewardService {
             if (reward.getXpAmount() != null && reward.getXpAmount() > 0) {
                 user.setXp(user.getXp() + reward.getXpAmount());
                 log.info("User {} granted {} XP for reaching region {}", user.getId(), reward.getXpAmount(), region.getName());
+                
+                XpTransaction xpTx = XpTransaction.builder()
+                        .user(user)
+                        .amount(reward.getXpAmount().longValue())
+                        .build();
+                xpTransactionRepository.save(xpTx);
             }
             if (reward.getBadgeName() != null && !reward.getBadgeName().isEmpty()) {
                 // Here you would typically link badge to user_achievements table.

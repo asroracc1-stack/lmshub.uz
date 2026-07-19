@@ -31,6 +31,7 @@ public class GamificationService {
     private final StudentAttemptRepository studentAttemptRepository;
     private final CoinTransactionRepository coinTransactionRepository;
     private final UserRepository userRepository;
+    private final XpTransactionRepository xpTransactionRepository;
     private final NotificationService notificationService;
 
     @PersistenceContext
@@ -266,6 +267,14 @@ public class GamificationService {
             long amt = Long.parseLong(rewardValue);
             freshUser.setXp((freshUser.getXp() != null ? freshUser.getXp() : 0L) + amt);
             userRepository.save(freshUser);
+
+            // Record XP transaction
+            XpTransaction xpTx = XpTransaction.builder()
+                    .user(freshUser)
+                    .amount(amt)
+                    .build();
+            xpTransactionRepository.save(xpTx);
+
             rewardMessage = "+" + amt + " XP ballari qo'shildi!";
         } else if ("FREE_PACK".equalsIgnoreCase(rewardType) || "PREMIUM_MOCK_TEST".equalsIgnoreCase(rewardType)) {
             // Grant a subscription pack to user
