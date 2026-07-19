@@ -24,7 +24,7 @@ import {
   Clock,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, getImageUrl } from "@/lib/utils";
 import { toast } from "sonner";
 
 type Metric = "stars" | "practice_time" | "streak" | "coins";
@@ -195,7 +195,7 @@ function PodiumCard({ row, cfg, isLoading, activeMetric, onClick }: { row: Row |
             )}
           >
             {row.avatarUrl ? (
-              <AvatarImage src={row.avatarUrl} className="object-cover" />
+              <AvatarImage src={getImageUrl(row.avatarUrl)} className="object-cover" />
             ) : (
               <AvatarFallback className="text-lg font-black bg-slate-700 text-white">
                 {getInitials(row)}
@@ -363,7 +363,7 @@ function RankRow({ row, index, isCurrentUser, activeMetric, onClick }: { row: Ro
         "h-10 w-10 shrink-0 shadow-md border border-slate-200 dark:border-white/10",
         medal ? medal.avatarRing : ""
       )}>
-        {row.avatarUrl && <AvatarImage src={row.avatarUrl} className="object-cover" />}
+        {row.avatarUrl && <AvatarImage src={getImageUrl(row.avatarUrl)} className="object-cover" />}
         <AvatarFallback className="text-[11px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800">
           {getInitials(row)}
         </AvatarFallback>
