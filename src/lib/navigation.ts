@@ -142,11 +142,10 @@ export const getSidebarRoutes = (role: string, t: TFunction, options: { ielts?: 
     case "user":
       return [
         { to: "/user/dashboard", label: t("nav.dashboard"), icon: LayoutDashboard },
-        { to: "/user/vocabulary", label: "Vocabulary", icon: BookOpen },
         { to: "/user/practice", label: t("nav.practice"), badge: "New", badgeColor: "bg-gradient-to-r from-purple-600 to-indigo-500 shadow-purple-500/20", miniBadgeColor: "bg-purple-500", icon: GraduationCap },
-
         { to: "/user/sat", label: t("nav.sat"), icon: Target },
         { to: "/user/national-cert", label: t("nav.nationalCert"), icon: Landmark },
+        { to: "/user/vocabulary", label: "Vocabulary", badge: "New", badgeColor: "bg-gradient-to-r from-purple-600 to-indigo-500 shadow-purple-500/20", miniBadgeColor: "bg-purple-500", icon: BookOpen },
         { to: "/user/subscriptions", label: t("nav.subscriptions"), icon: Package },
         { to: "/user/leaderboard", label: t("nav.leaderboard"), icon: Trophy },
         { to: "/user/library", label: "Kutubxona", badge: "New", icon: BookOpen },

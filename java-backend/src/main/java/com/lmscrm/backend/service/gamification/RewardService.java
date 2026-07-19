@@ -1,10 +1,12 @@
 package com.lmscrm.backend.service.gamification;
 
 import com.lmscrm.backend.domain.entity.User;
+import com.lmscrm.backend.domain.entity.XpTransaction;
 import com.lmscrm.backend.domain.entity.gamification.JourneyRegion;
 import com.lmscrm.backend.domain.entity.gamification.TravelReward;
 import com.lmscrm.backend.domain.entity.gamification.UserTravelState;
 import com.lmscrm.backend.repository.UserRepository;
+import com.lmscrm.backend.repository.XpTransactionRepository;
 import com.lmscrm.backend.repository.gamification.TravelRewardRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

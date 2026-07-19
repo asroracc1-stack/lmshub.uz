@@ -205,10 +205,7 @@ export default function RoleLayout({
      mini=false → full (desktop expanded + mobile)
   ════════════════════════════════════════════════════ */
   const renderSidebarContent = (mini = false, isMobile = false) => (
-    <div 
-      className={cn("flex flex-col h-full text-slate-100", theme === "dark" ? "bg-[#0e0a1a]" : "bg-[#1f212a]")}
-      style={{ fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" }}
-    >
+    <div className={cn("flex flex-col h-full text-slate-100", theme === "dark" ? "bg-[#0e0a1a]" : "bg-[#1f212a]")}>
 
       {/* ── Header: Logo & Toggle (desktop only) ─────────────────────── */}
       <div 
@@ -282,8 +279,8 @@ export default function RoleLayout({
                     "w-full flex items-center gap-3 rounded-xl text-[13.5px] transition-all duration-200 group sidebar-nav-link",
                     mini ? "justify-center h-9 w-9 mx-auto px-0" : "px-3.5 py-2.5",
                     isExpanded || hasActiveChild
-                      ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold"
-                      : "text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white font-medium"
+                      ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-extrabold"
+                      : "text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white font-bold"
                   )}
                 >
                   <item.icon
@@ -330,8 +327,8 @@ export default function RoleLayout({
                               cn(
                                 "relative flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg text-[12.5px] transition-all duration-200 sidebar-nav-link",
                                 isActive
-                                  ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold"
-                                  : "text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/5 font-medium"
+                                  ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-extrabold"
+                                  : "text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/5 font-semibold"
                               )
                             }
                           >
@@ -375,8 +372,8 @@ export default function RoleLayout({
                   "group flex items-center gap-3 rounded-xl text-[13.5px] transition-all duration-200 sidebar-nav-link",
                   mini ? "justify-center h-9 w-9 mx-auto px-0" : "px-3.5 py-2",
                   isActive
-                    ? "bg-[#10b981] text-white shadow-[0_4px_12px_-3px_rgba(16,185,129,0.3)] font-bold"
-                    : "text-slate-300 hover:bg-white/5 hover:text-white font-medium"
+                    ? "bg-[#10b981] text-white shadow-[0_4px_12px_-3px_rgba(16,185,129,0.3)] font-extrabold"
+                    : "text-slate-300 hover:bg-white/5 hover:text-white font-bold"
                 )
               }
             >
@@ -431,7 +428,7 @@ export default function RoleLayout({
           rel="noopener noreferrer"
           title={mini ? t("common.telegramBot") : undefined}
           className={cn(
-            "flex items-center gap-3 rounded-xl text-[13.5px] font-medium text-slate-400",
+            "flex items-center gap-3 rounded-xl text-[13.5px] font-semibold text-slate-400",
             "hover:bg-white/5 hover:text-white transition-all duration-200",
             mini ? "justify-center h-9 w-9 mx-auto px-0" : "px-3 py-1.5"
           )}
@@ -445,7 +442,7 @@ export default function RoleLayout({
           onClick={handleSignOut}
           title={mini ? t("common.logout") : undefined}
           className={cn(
-            "w-full flex items-center gap-3 rounded-xl text-[13.5px] font-medium text-red-400",
+            "w-full flex items-center gap-3 rounded-xl text-[13.5px] font-semibold text-red-400",
             "hover:bg-red-500/10 transition-all duration-200",
             mini ? "justify-center h-9 w-9 mx-auto px-0" : "px-3 py-1.5"
           )}
