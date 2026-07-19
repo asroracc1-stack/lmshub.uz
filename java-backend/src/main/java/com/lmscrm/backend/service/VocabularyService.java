@@ -38,6 +38,7 @@ public class VocabularyService {
     private final CoinTransactionRepository coinTransactionRepository;
     private final XpTransactionRepository xpTransactionRepository;
     private final UserSubscriptionRepository userSubscriptionRepository;
+    private final PracticeSessionRepository practiceSessionRepository;
     private final GeminiService geminiService;
     private final NotificationService notificationService;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -285,6 +286,24 @@ public class VocabularyService {
                     .amount((long) xpEarned)
                     .build();
             xpTransactionRepository.save(xpTx);
+
+            // Record practice session minutes
+            double minutesSpent = 0.0;
+            if (stage == 1) {
+                minutesSpent = 5.0;
+            } else if (stage == 2) {
+                minutesSpent = 7.0;
+            } else if (stage == 3) {
+                minutesSpent = 10.0;
+            }
+
+            if (minutesSpent > 0.0) {
+                PracticeSession session = PracticeSession.builder()
+                        .user(user)
+                        .minutes(minutesSpent)
+                        .build();
+                practiceSessionRepository.save(session);
+            }
 
             // Register words in SRS
             List<VocabularyWord> unitWords = wordRepository.findByLevelAndUnitOrderByWordAsc(level, unit);
