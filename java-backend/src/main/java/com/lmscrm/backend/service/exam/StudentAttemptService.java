@@ -20,6 +20,9 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import com.lmscrm.backend.service.exam.generator.RuntimeExamGenerator;
+import com.lmscrm.backend.service.exam.scoring.AnswerVerificationEngine;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -36,6 +39,8 @@ public class StudentAttemptService {
     private final ExamMapper mapper;
     private final SubscriptionService subscriptionService;
     private final PracticeSessionRepository practiceSessionRepository;
+    private final RuntimeExamGenerator runtimeExamGenerator;
+    private final AnswerVerificationEngine answerVerificationEngine;
 
     @Transactional
     public StudentAttemptDto startExam(UUID examId, User student) {
@@ -77,8 +82,12 @@ public class StudentAttemptService {
                 .startedAt(LocalDateTime.now())
                 .attemptSeed(attemptSeed)
                 .build();
+        attempt = attemptRepository.save(attempt);
 
-        return mapper.toStudentAttemptDto(attemptRepository.save(attempt));
+        // Pre-generate/resolve questions to lock attempt snapshot
+        runtimeExamGenerator.generateExamQuestions(exam, attempt);
+
+        return mapper.toStudentAttemptDto(attempt);
     }
 
     @Transactional
@@ -104,28 +113,27 @@ public class StudentAttemptService {
             maxScore += question.getPoints();
 
             QuestionOption selectedOption = null;
-            boolean isCorrect = false;
-            int pointsEarned = 0;
-
+            String answerText = "";
             if (ansRequest.getSelectedOptionId() != null) {
                 selectedOption = optionRepository.findById(ansRequest.getSelectedOptionId())
                         .orElseThrow(() -> new ResourceNotFoundException("Option not found"));
-                isCorrect = selectedOption.getIsCorrect();
-                if (isCorrect) {
-                    pointsEarned = question.getPoints();
-                    totalScore += pointsEarned;
-                }
+                answerText = selectedOption.getText();
             }
+
+            com.lmscrm.backend.service.exam.scoring.ValidationResult result = 
+                    answerVerificationEngine.verifyAnswer(question, answerText);
 
             StudentAnswer answer = StudentAnswer.builder()
                     .attempt(attempt)
                     .question(question)
                     .selectedOption(selectedOption)
-                    .isCorrect(isCorrect)
-                    .pointsEarned(pointsEarned)
+                    .userAnswerText(answerText)
+                    .isCorrect(result.isCorrect())
+                    .pointsEarned((int) result.getPointsEarned())
                     .build();
 
             answerRepository.save(answer);
+            totalScore += (int) result.getPointsEarned();
         }
 
         attempt.setFinishedAt(LocalDateTime.now());

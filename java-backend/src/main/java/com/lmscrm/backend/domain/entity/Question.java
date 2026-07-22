@@ -98,6 +98,17 @@ public class Question {
     @Column(name = "word_limit")
     private Integer wordLimit;
 
+    @Column(name = "version", nullable = false)
+    @Builder.Default
+    private Integer version = 1;
+
+    @Column(name = "parent_id")
+    private UUID parentId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "student_attempt_id")
+    private StudentAttempt studentAttempt;
+
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
     private java.util.List<QuestionOption> options;
 }

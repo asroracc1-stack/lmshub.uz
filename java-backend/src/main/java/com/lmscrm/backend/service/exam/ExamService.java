@@ -45,6 +45,9 @@ public class ExamService {
     private final ObjectMapper objectMapper;
     private final com.lmscrm.backend.service.SubscriptionService subscriptionService;
     private final DbStoredFileRepository dbStoredFileRepository;
+    private final com.lmscrm.backend.service.AuditLogService auditLogService;
+    private final org.springframework.context.ApplicationEventPublisher eventPublisher;
+    private final com.lmscrm.backend.service.exam.scoring.AnswerVerificationEngine answerVerificationEngine;
 
     private final String uploadDir = "uploads/";
 
@@ -301,27 +304,67 @@ public class ExamService {
             Question q;
             if (i < existingQuestions.size()) {
                 q = existingQuestions.get(i);
-                q.setText(qDto.getPrompt());
-                q.setQuestionType(qDto.getQtype() != null ? qDto.getQtype() : "single_choice");
-                q.setPoints(qDto.getPoints() != null ? qDto.getPoints() : 1);
-                q.setNegativeMarks(qDto.getNegativeMarks() != null ? qDto.getNegativeMarks() : 0.0);
-                q.setImageUrl(qDto.getImageUrl());
-                q.setImagePosition(qDto.getImagePosition() != null ? qDto.getImagePosition() : "top");
-                q.setAudioUrl(qDto.getAudioUrl());
-                q.setVideoUrl(qDto.getVideoUrl());
-                q.setFormulaLatex(qDto.getFormulaLatex());
-                q.setMatchingPairs(qDto.getMatchingPairs());
-                q.setFillTemplate(qDto.getFillTemplate());
-                q.setPositionOrder(qOrder++);
-                q.setExplanation(qDto.getExplanation());
-                q.setHint(qDto.getHint());
-                q.setTopic(qDto.getTopic());
-                q.setSubtopic(qDto.getSubtopic());
-                q.setTags(qDto.getTags());
-                q.setDifficulty(qDto.getDifficulty() != null ? qDto.getDifficulty() : "medium");
-                q.setNumericAnswer(qDto.getNumericAnswer());
-                q.setNumericTolerance(qDto.getNumericTolerance());
-                q.setWordLimit(qDto.getWordLimit());
+                boolean isChanged = !java.util.Objects.equals(q.getText(), qDto.getPrompt())
+                        || !java.util.Objects.equals(q.getQuestionType(), qDto.getQtype())
+                        || !java.util.Objects.equals(q.getPoints(), qDto.getPoints())
+                        || !java.util.Objects.equals(q.getExplanation(), qDto.getExplanation());
+
+                boolean isUsed = studentAnswerRepository.existsByQuestionId(q.getId());
+
+                if (isChanged && isUsed) {
+                    q = Question.builder()
+                            .exam(exam)
+                            .passage(passage)
+                            .text(qDto.getPrompt())
+                            .questionType(qDto.getQtype() != null ? qDto.getQtype() : "single_choice")
+                            .points(qDto.getPoints() != null ? qDto.getPoints() : 1)
+                            .negativeMarks(qDto.getNegativeMarks() != null ? qDto.getNegativeMarks() : 0.0)
+                            .imageUrl(qDto.getImageUrl())
+                            .imagePosition(qDto.getImagePosition() != null ? qDto.getImagePosition() : "top")
+                            .audioUrl(qDto.getAudioUrl())
+                            .videoUrl(qDto.getVideoUrl())
+                            .formulaLatex(qDto.getFormulaLatex())
+                            .matchingPairs(qDto.getMatchingPairs())
+                            .fillTemplate(qDto.getFillTemplate())
+                            .positionOrder(qOrder++)
+                            .explanation(qDto.getExplanation())
+                            .hint(qDto.getHint())
+                            .topic(qDto.getTopic())
+                            .subtopic(qDto.getSubtopic())
+                            .tags(qDto.getTags())
+                            .difficulty(qDto.getDifficulty() != null ? qDto.getDifficulty() : "medium")
+                            .numericAnswer(qDto.getNumericAnswer())
+                            .numericTolerance(qDto.getNumericTolerance())
+                            .wordLimit(qDto.getWordLimit())
+                            .status("published")
+                            .version(q.getVersion() != null ? q.getVersion() + 1 : 2)
+                            .parentId(q.getParentId() != null ? q.getParentId() : q.getId())
+                            .options(new java.util.ArrayList<>())
+                            .build();
+                    existingQuestions.set(i, q);
+                } else {
+                    q.setText(qDto.getPrompt());
+                    q.setQuestionType(qDto.getQtype() != null ? qDto.getQtype() : "single_choice");
+                    q.setPoints(qDto.getPoints() != null ? qDto.getPoints() : 1);
+                    q.setNegativeMarks(qDto.getNegativeMarks() != null ? qDto.getNegativeMarks() : 0.0);
+                    q.setImageUrl(qDto.getImageUrl());
+                    q.setImagePosition(qDto.getImagePosition() != null ? qDto.getImagePosition() : "top");
+                    q.setAudioUrl(qDto.getAudioUrl());
+                    q.setVideoUrl(qDto.getVideoUrl());
+                    q.setFormulaLatex(qDto.getFormulaLatex());
+                    q.setMatchingPairs(qDto.getMatchingPairs());
+                    q.setFillTemplate(qDto.getFillTemplate());
+                    q.setPositionOrder(qOrder++);
+                    q.setExplanation(qDto.getExplanation());
+                    q.setHint(qDto.getHint());
+                    q.setTopic(qDto.getTopic());
+                    q.setSubtopic(qDto.getSubtopic());
+                    q.setTags(qDto.getTags());
+                    q.setDifficulty(qDto.getDifficulty() != null ? qDto.getDifficulty() : "medium");
+                    q.setNumericAnswer(qDto.getNumericAnswer());
+                    q.setNumericTolerance(qDto.getNumericTolerance());
+                    q.setWordLimit(qDto.getWordLimit());
+                }
             } else {
                 q = Question.builder()
                         .exam(exam)
@@ -348,11 +391,13 @@ public class ExamService {
                         .numericTolerance(qDto.getNumericTolerance())
                         .wordLimit(qDto.getWordLimit())
                         .status("draft")
+                        .version(1)
+                        .parentId(null)
                         .options(new java.util.ArrayList<>())
                         .build();
                 existingQuestions.add(q);
             }
-            
+
             q = questionRepository.save(q);
             updateOptions(qDto.getOptions(), q);
         }
@@ -593,7 +638,32 @@ public class ExamService {
         Exam exam = examRepository.findById(request.getExam_id())
                 .orElseThrow(() -> new ResourceNotFoundException("Exam not found: " + request.getExam_id()));
 
-        List<Question> questions = questionRepository.findByExamIdOrderByPositionOrderAsc(exam.getId());
+        // Resolve StudentAttempt first
+        StudentAttempt attempt = null;
+        if (user != null) {
+            java.util.Optional<StudentAttempt> attemptOpt = studentAttemptRepository.findByExamIdAndStudentId(exam.getId(), user.getId());
+            if (attemptOpt.isPresent()) {
+                attempt = attemptOpt.get();
+                studentAnswerRepository.deleteByAttemptId(attempt.getId());
+            } else {
+                attempt = new StudentAttempt();
+                attempt.setExam(exam);
+                attempt.setStudent(user);
+                attempt.setAttemptSeed(java.util.UUID.randomUUID().toString());
+                attempt.setStartedAt(java.time.LocalDateTime.now().minusMinutes(exam.getDurationMinutes() != null ? exam.getDurationMinutes() : 60));
+                attempt = studentAttemptRepository.save(attempt);
+            }
+        }
+
+        // Load attempt questions (from snapshot) if dynamic blueprint, otherwise static questions
+        List<Question> questions = new ArrayList<>();
+        if (attempt != null) {
+            questions = questionRepository.findByStudentAttemptIdOrderByPositionOrderAsc(attempt.getId());
+        }
+        if (questions.isEmpty()) {
+            questions = questionRepository.findByExamIdAndStudentAttemptIsNullOrderByPositionOrderAsc(exam.getId());
+        }
+
         List<ExamResultDto.QuestionDetail> details = new ArrayList<>();
         int correctCount = 0;
         
@@ -614,14 +684,19 @@ public class ExamService {
                     .findFirst()
                     .orElse("");
 
-            boolean ok = IeltsGradingUtils.checkAnswer(userAns, correctAns);
-            if (ok) correctCount += q.getPoints();
+            // Core Strategy Verification Engine Call
+            com.lmscrm.backend.service.exam.scoring.ValidationResult verifyResult = 
+                    answerVerificationEngine.verifyAnswer(q, userAns);
+
+            if (verifyResult.isCorrect()) {
+                correctCount += q.getPoints();
+            }
 
             details.add(ExamResultDto.QuestionDetail.builder()
                     .questionId(q.getId().toString())
                     .userAns(userAns != null ? userAns : "")
                     .correctAns(correctAns)
-                    .ok(ok)
+                    .ok(verifyResult.isCorrect())
                     .timeSpentSeconds(timeSpent.intValue())
                     .build());
         }
@@ -653,19 +728,7 @@ public class ExamService {
             org.slf4j.LoggerFactory.getLogger(ExamService.class).error("Failed to build exam JSON: ", e);
         }
 
-        StudentAttempt attempt = null;
-        if (user != null) {
-            java.util.Optional<StudentAttempt> attemptOpt = studentAttemptRepository.findByExamIdAndStudentId(exam.getId(), user.getId());
-            if (attemptOpt.isPresent()) {
-                attempt = attemptOpt.get();
-                studentAnswerRepository.deleteByAttemptId(attempt.getId());
-            } else {
-                attempt = new StudentAttempt();
-                attempt.setExam(exam);
-                attempt.setStudent(user);
-                attempt.setAttemptSeed(java.util.UUID.randomUUID().toString());
-            }
-            attempt.setStartedAt(java.time.LocalDateTime.now().minusMinutes(exam.getDurationMinutes() != null ? exam.getDurationMinutes() : 60));
+        if (user != null && attempt != null) {
             attempt.setFinishedAt(java.time.LocalDateTime.now());
             attempt.setTotalScore(correctCount);
             attempt.setMaxScore(questions.size());
@@ -719,25 +782,25 @@ public class ExamService {
                             .orElse(null);
                 }
 
-                String correctAns = options.stream()
-                        .filter(QuestionOption::getIsCorrect)
-                        .map(QuestionOption::getText)
-                        .findFirst()
-                        .orElse("");
-                boolean isCorrect = IeltsGradingUtils.checkAnswer(userAns, correctAns);
+                com.lmscrm.backend.service.exam.scoring.ValidationResult verifyResult = 
+                        answerVerificationEngine.verifyAnswer(q, userAns);
 
                 StudentAnswer answer = StudentAnswer.builder()
                         .attempt(attempt)
                         .question(q)
                         .selectedOption(selectedOption)
                         .userAnswerText(userAns)
-                        .isCorrect(isCorrect)
-                        .pointsEarned(isCorrect ? q.getPoints() : 0)
+                        .isCorrect(verifyResult.isCorrect())
+                        .pointsEarned((int) verifyResult.getPointsEarned())
                         .timeSpentSeconds(timeSpent.intValue())
                         .aiExplanation(null)
                         .build();
                 studentAnswerRepository.save(answer);
             }
+
+            // Publish submission event for async listeners (rewards, notifications, leaderboards)
+            eventPublisher.publishEvent(new com.lmscrm.backend.event.ExamSubmittedEvent(
+                    this, attempt, user, attempt.getIsPassed(), correctCount, questions.size()));
 
             if (!examDataJson.isEmpty()) {
                 final UUID finalAttemptId = attempt.getId();

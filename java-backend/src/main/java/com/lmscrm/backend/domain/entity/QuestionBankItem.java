@@ -99,6 +99,13 @@ public class QuestionBankItem {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "version", nullable = false)
+    @Builder.Default
+    private Integer version = 1;
+
+    @Column(name = "parent_id")
+    private UUID parentId;
+
     // ─── Options (for MCQ, Multi-select, True/False, YNNG) ───────────────
     @OneToMany(mappedBy = "questionBankItem", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("positionOrder ASC")

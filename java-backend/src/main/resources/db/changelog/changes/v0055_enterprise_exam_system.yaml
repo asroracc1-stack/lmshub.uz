@@ -1,0 +1,267 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0055-1
+      author: antigravity
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: answer_keys
+      changes:
+        - createTable:
+            tableName: answer_keys
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: question_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    unique: true
+                    foreignKeyName: fk_answer_keys_question
+                    references: questions(id)
+              - column:
+                  name: answer_type
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: validator
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: correct_answer
+                  type: text
+                  constraints:
+                    nullable: false
+              - column:
+                  name: points
+                  type: integer
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false
+              - column:
+                  name: partial_scoring
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: negative_marking
+                  type: double precision
+                  defaultValueNumeric: 0.0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: tolerance
+                  type: double precision
+                  defaultValueNumeric: 0.0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: normalization_rules
+                  type: varchar(255)
+
+  - changeSet:
+      id: v0055-2
+      author: antigravity
+      changes:
+        - addColumn:
+            tableName: questions
+            columns:
+              - column:
+                  name: version
+                  type: integer
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false
+              - column:
+                  name: parent_id
+                  type: uuid
+              - column:
+                  name: student_attempt_id
+                  type: uuid
+                  constraints:
+                    foreignKeyName: fk_questions_student_attempt
+                    references: student_attempts(id)
+        - addColumn:
+            tableName: question_bank_items
+            columns:
+              - column:
+                  name: version
+                  type: integer
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false
+              - column:
+                  name: parent_id
+                  type: uuid
+
+  - changeSet:
+      id: v0055-3
+      author: antigravity
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: exam_blueprints
+      changes:
+        - createTable:
+            tableName: exam_blueprints
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: exam_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    unique: true
+                    foreignKeyName: fk_exam_blueprints_exam
+                    references: exams(id)
+              - column:
+                  name: subject
+                  type: varchar(255)
+              - column:
+                  name: easy_count
+                  type: integer
+                  defaultValueNumeric: 0
+              - column:
+                  name: medium_count
+                  type: integer
+                  defaultValueNumeric: 0
+              - column:
+                  name: hard_count
+                  type: integer
+                  defaultValueNumeric: 0
+              - column:
+                  name: rules_json
+                  type: text
+
+  - changeSet:
+      id: v0055-4
+      author: antigravity
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: question_analytics
+      changes:
+        - createTable:
+            tableName: question_analytics
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: question_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    unique: true
+                    foreignKeyName: fk_question_analytics_question
+                    references: questions(id)
+              - column:
+                  name: difficulty_index
+                  type: double precision
+                  defaultValueNumeric: 0.0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: discrimination_index
+                  type: double precision
+                  defaultValueNumeric: 0.0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: average_time_ms
+                  type: bigint
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: correct_count
+                  type: integer
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: wrong_count
+                  type: integer
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: skip_count
+                  type: integer
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: ai_quality_score
+                  type: double precision
+                  defaultValueNumeric: 0.0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp
+
+  - changeSet:
+      id: v0055-5
+      author: antigravity
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: media_assets
+      changes:
+        - createTable:
+            tableName: media_assets
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: file_hash
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: filename
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: file_size
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: url
+                  type: varchar(512)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: mime_type
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp
+                  constraints:
+                    nullable: false

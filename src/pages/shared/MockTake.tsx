@@ -884,6 +884,8 @@ export default function MockTake() {
   };
   
   const [cheatingStrikes, setCheatingStrikes] = useState(0);
+  const [violations, setViolations] = useState<any[]>([]);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [leftWidth, setLeftWidth] = useState(50);
   const isResizingRef = useRef(false);
   const [audioStarted, setAudioStarted] = useState(false);
@@ -1078,7 +1080,13 @@ export default function MockTake() {
         try {
           const saved = localStorage.getItem(`lmshub_exam_${testId}`);
           if (saved) {
-            setAnswers(JSON.parse(saved));
+            const parsed = JSON.parse(saved);
+            if (parsed.answers) {
+              setAnswers(parsed.answers);
+              if (parsed.timeSpent) timeSpentRef.current = parsed.timeSpent;
+            } else {
+              setAnswers(parsed);
+            }
             toast.info("Session restored", { duration: 3000 });
           }
         } catch { /* ignore */ }
@@ -1164,6 +1172,17 @@ export default function MockTake() {
   useEffect(() => {
     if (!started || result || isPaused || showSuccessAnimation || showCheatingLocked) return;
 
+    const logViolation = (type: string, details: string) => {
+      setViolations((prev) => [
+        ...prev,
+        {
+          violationType: type,
+          timestamp: new Date().toISOString(),
+          details: details
+        }
+      ]);
+    };
+
     const handleCheating = () => {
       toast.warning(t("cheating.warning", { defaultValue: "Cheating is not allowed" }));
       if (showCheatingWarning) return;
@@ -1183,6 +1202,7 @@ export default function MockTake() {
     const handleVisibilityChange = () => {
       if (document.hidden) {
         toast.error(t("cheating.tabSwitchWarning", { defaultValue: "Tab switching detected! Cheating is not allowed." }));
+        logViolation("TAB_SWITCH", "Student switched tab or minimized window");
         handleCheating();
       }
     };
@@ -1192,23 +1212,39 @@ export default function MockTake() {
         if (document.activeElement && document.activeElement.tagName === "IFRAME") {
           return;
         }
+        logViolation("WINDOW_BLUR", "Student clicked outside the exam window");
         handleCheating();
       }, 100);
     };
 
     const handleCopy = (e: ClipboardEvent) => {
       e.preventDefault();
+      logViolation("COPY_BLOCK", "Student attempted to copy text");
       toast.warning(t("cheating.warning", { defaultValue: "Cheating is not allowed" }) + ": " + t("cheating.copyDisabled", { defaultValue: "Copying question content is disabled." }));
     };
 
     const handlePaste = (e: ClipboardEvent) => {
       e.preventDefault();
+      logViolation("PASTE_BLOCK", "Student attempted to paste text");
       toast.warning(t("cheating.warning", { defaultValue: "Cheating is not allowed" }) + ": " + t("cheating.pasteDisabled", { defaultValue: "Pasting content is disabled." }));
     };
 
     const handleContextMenu = (e: MouseEvent) => {
       e.preventDefault();
+      logViolation("RIGHT_CLICK", "Student attempted to open context menu");
       toast.warning(t("cheating.warning", { defaultValue: "Cheating is not allowed" }));
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "PrintScreen") {
+        logViolation("PRINT_SCREEN", "Student pressed PrintScreen");
+        toast.warning(t("cheating.warning", { defaultValue: "Cheating is not allowed" }));
+      }
+      if (e.key === "F12" || (e.ctrlKey && e.shiftKey && (e.key === "I" || e.key === "J" || e.key === "C")) || (e.metaKey && e.altKey && e.key === "I")) {
+        e.preventDefault();
+        logViolation("DEV_TOOLS", "Student attempted to open DevTools");
+        toast.warning(t("cheating.warning", { defaultValue: "Cheating is not allowed" }));
+      }
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
@@ -1216,6 +1252,7 @@ export default function MockTake() {
     document.addEventListener("copy", handleCopy);
     document.addEventListener("paste", handlePaste);
     document.addEventListener("contextmenu", handleContextMenu);
+    document.addEventListener("keydown", handleKeyDown);
 
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
@@ -1223,6 +1260,7 @@ export default function MockTake() {
       document.removeEventListener("copy", handleCopy);
       document.removeEventListener("paste", handlePaste);
       document.removeEventListener("contextmenu", handleContextMenu);
+      document.removeEventListener("keydown", handleKeyDown);
     };
   }, [started, result, isPaused, showSuccessAnimation, showCheatingWarning, showCheatingLocked, t]);
   
@@ -1237,10 +1275,29 @@ export default function MockTake() {
     return () => clearInterval(interval);
   }, [started, isPaused, result, activeQuestionIndex, questions, showSuccessAnimation]);
 
+  // Periodic Auto-Save every 10 seconds
+  useEffect(() => {
+    if (!started || result || submitting) return;
+    const interval = setInterval(() => {
+      try {
+        const payload = {
+          answers,
+          timeSpent: timeSpentRef.current,
+        };
+        localStorage.setItem(`lmshub_exam_${testId}`, JSON.stringify(payload));
+        setLastSaved(new Date());
+      } catch { /* ignore */ }
+    }, 10000);
+    return () => clearInterval(interval);
+  }, [started, result, submitting, answers, testId]);
+
   const onAnswer = (qid: string, val: string) => {
     setAnswers((p) => {
       const next = { ...p, [qid]: val };
-      try { localStorage.setItem(`lmshub_exam_${testId}`, JSON.stringify(next)); } catch { /* ignore */ }
+      try { 
+        localStorage.setItem(`lmshub_exam_${testId}`, JSON.stringify({ answers: next, timeSpent: timeSpentRef.current }));
+        setLastSaved(new Date());
+      } catch { /* ignore */ }
       return next;
     });
   };
@@ -1269,7 +1326,9 @@ export default function MockTake() {
         exam_id: exam.id,
         answers: answers,
         time_spent: timeSpentRef.current,
-        writing_answer: writingAnswer || null
+        writing_answer: writingAnswer || null,
+        violations: violations,
+        auto_submitted: auto
       };
 
       const res = await api.post("/exams/submit", payload);
@@ -1804,10 +1863,17 @@ export default function MockTake() {
           </div>
         </div>
 
-        {/* Center: Timer Box */}
-        <div className={cn("flex items-center justify-center border rounded-md px-3 sm:px-5 py-1 sm:py-1.5 shadow-sm font-sans font-bold text-sm sm:text-lg select-none shrink-0", cStyle.timerBox)}>
-          <Clock className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2 opacity-80" />
-          {isReviewOrAnalyze ? "FINISHED" : fmt(timeLeft)}
+        {/* Center: Timer Box & Save Status */}
+        <div className="flex flex-col items-center justify-center shrink-0">
+          <div className={cn("flex items-center justify-center border rounded-md px-3 sm:px-5 py-1 sm:py-1.5 shadow-sm font-sans font-bold text-sm sm:text-lg select-none", cStyle.timerBox)}>
+            <Clock className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2 opacity-80" />
+            {isReviewOrAnalyze ? "FINISHED" : fmt(timeLeft)}
+          </div>
+          {lastSaved && !isReviewOrAnalyze && (
+            <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 font-medium absolute -bottom-4">
+              Saved {lastSaved.toLocaleTimeString()}
+            </span>
+          )}
         </div>
 
         {/* Right: Actions */}
