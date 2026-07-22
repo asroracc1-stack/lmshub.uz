@@ -110,12 +110,13 @@ public class LmsHubHtmlLayoutConverter {
 
     private void extractAndAppendQuestions(Document doc, Element section, String rawHtml) {
         // 1. First attempt: extract from HTML DOM question elements
-        Elements uiQuestions = doc.select(".question, .q-block, .question-item, [id^=q], [data-q-id], .q-item, div.mb-4");
+        Elements uiQuestions = doc.select(".question, .q-block, .question-item, [id^=q], [data-q-id], .q-item");
         int qOrder = 1;
 
         if (!uiQuestions.isEmpty()) {
             for (Element qUi : uiQuestions) {
-                if (qUi.selectFirst("input, label, select, .options") != null || qUi.hasAttr("data-q-id") || qUi.id().startsWith("q")) {
+                String uiText = qUi.text().trim();
+                if (!uiText.isBlank() && (qUi.selectFirst("input, label, select, .options") != null || qUi.hasAttr("data-q-id") || qUi.id().startsWith("q"))) {
                     section.appendChild(createLmsHubQuestion(doc, qUi, qOrder++));
                 }
             }
@@ -123,23 +124,47 @@ public class LmsHubHtmlLayoutConverter {
 
         // 2. Fallback: if no DOM questions found, parse JS AK object / PASSAGES via regex
         if (qOrder == 1) {
-            // Regex for AK answer key: "q1": "TRUE", "q2": "FALSE"
-            Pattern akPattern = Pattern.compile("\"?(q\\d+)\"?\\s*:\\s*\"([^\"]+)\"", Pattern.CASE_INSENSITIVE);
+            // Regex for AK answer key: "q1": "TRUE", "q2": "FALSE" or "1": "education"
+            Pattern akPattern = Pattern.compile("\"?(q?\\d+)\"?\\s*:\\s*\"([^\"]+)\"", Pattern.CASE_INSENSITIVE);
             Matcher matcher = akPattern.matcher(rawHtml);
             
             while (matcher.find()) {
                 String qId = matcher.group(1);
-                String ansText = matcher.group(2);
+                String ansText = matcher.group(2).trim();
 
                 Element q = doc.createElement("lmshub-question");
-                q.attr("data-id", qId);
-                q.attr("data-type", "SINGLE_CHOICE");
+                q.attr("data-id", qId.startsWith("q") ? qId : "q_" + qId);
                 q.attr("data-order", String.valueOf(qOrder));
                 q.attr("data-points", "1");
 
                 Element text = doc.createElement("lmshub-text");
                 text.text("Question " + qOrder);
                 q.appendChild(text);
+
+                String upperAns = ansText.toUpperCase();
+                if (upperAns.equals("TRUE") || upperAns.equals("FALSE") || upperAns.equals("NOT GIVEN")) {
+                    q.attr("data-type", "TRUE_FALSE_NG");
+                    Element optT = doc.createElement("lmshub-option");
+                    optT.attr("data-label", "TRUE");
+                    optT.attr("data-correct", String.valueOf(upperAns.equals("TRUE")));
+                    optT.text("TRUE");
+                    q.appendChild(optT);
+
+                    Element optF = doc.createElement("lmshub-option");
+                    optF.attr("data-label", "FALSE");
+                    optF.attr("data-correct", String.valueOf(upperAns.equals("FALSE")));
+                    optF.text("FALSE");
+                    q.appendChild(optF);
+
+                    Element optNg = doc.createElement("lmshub-option");
+                    optNg.attr("data-label", "NOT GIVEN");
+                    optNg.attr("data-correct", String.valueOf(upperAns.equals("NOT GIVEN")));
+                    optNg.text("NOT GIVEN");
+                    q.appendChild(optNg);
+                } else {
+                    // Default to FILL_BLANK for non-MCQ answers (no option rules enforced)
+                    q.attr("data-type", "FILL_BLANK");
+                }
 
                 Element ans = doc.createElement("lmshub-answer");
                 ans.text(ansText);
@@ -150,26 +175,20 @@ public class LmsHubHtmlLayoutConverter {
             }
         }
 
-        // 3. Fallback 2: if still no questions, create at least 1 placeholder question to satisfy validator
+        // 3. Fallback 2: if still no questions found at all, create 1 valid FILL_BLANK question
         if (qOrder == 1) {
             Element q = doc.createElement("lmshub-question");
             q.attr("data-id", "q_1");
-            q.attr("data-type", "SINGLE_CHOICE");
+            q.attr("data-type", "FILL_BLANK");
             q.attr("data-order", "1");
             q.attr("data-points", "1");
 
             Element text = doc.createElement("lmshub-text");
-            text.text("Sample Question 1");
+            text.text("Question 1");
             q.appendChild(text);
 
-            Element optA = doc.createElement("lmshub-option");
-            optA.attr("data-label", "A");
-            optA.attr("data-correct", "true");
-            optA.text("Option A");
-            q.appendChild(optA);
-
             Element ans = doc.createElement("lmshub-answer");
-            ans.text("A");
+            ans.text("Answer 1");
             q.appendChild(ans);
 
             section.appendChild(q);
@@ -179,38 +198,75 @@ public class LmsHubHtmlLayoutConverter {
     private Element createLmsHubQuestion(Document doc, Element qUi, int order) {
         Element q = doc.createElement("lmshub-question");
         String qId = qUi.attr("data-q-id").isEmpty() ? (qUi.id().isEmpty() ? "q_" + order : qUi.id()) : qUi.attr("data-q-id");
-        String qType = qUi.attr("data-type").isEmpty() ? "SINGLE_CHOICE" : qUi.attr("data-type").toUpperCase();
-
+        
         q.attr("data-id", qId);
-        q.attr("data-type", qType);
         q.attr("data-order", String.valueOf(order));
         q.attr("data-points", "1");
 
-        // Question text
+        // Question text (guaranteed non-empty)
         Element text = doc.createElement("lmshub-text");
         Element textUi = qUi.selectFirst(".q-text, .question-text, p, label");
-        text.text(textUi != null ? textUi.text() : qUi.text());
+        String textVal = "";
+        if (textUi != null && !textUi.text().isBlank()) {
+            textVal = textUi.text().trim();
+        } else if (!qUi.text().isBlank()) {
+            textVal = qUi.text().trim();
+        } else {
+            textVal = "Question " + order;
+        }
+        text.text(textVal);
         q.appendChild(text);
 
         // Options
         Elements optUis = qUi.select(".option, .opt, label, input[type=radio]");
         char labelChar = 'A';
         for (Element optUi : optUis) {
+            if (optUi.text().isBlank()) continue;
             Element opt = doc.createElement("lmshub-option");
             opt.attr("data-label", String.valueOf(labelChar++));
             boolean isCorrect = optUi.hasClass("correct") || "true".equalsIgnoreCase(optUi.attr("data-correct"));
             opt.attr("data-correct", String.valueOf(isCorrect));
-            opt.text(optUi.text());
+            opt.text(optUi.text().trim());
             q.appendChild(opt);
+        }
+
+        int optionCount = q.select("lmshub-option").size();
+        String declaredType = qUi.attr("data-type").toUpperCase();
+
+        if (!declaredType.isBlank()) {
+            q.attr("data-type", declaredType);
+            if ((declaredType.equals("SINGLE_CHOICE") || declaredType.equals("MULTIPLE_CHOICE")) && optionCount < 2) {
+                // Add default options A and B if MCQ has fewer than 2 options
+                Element optA = doc.createElement("lmshub-option");
+                optA.attr("data-label", "A");
+                optA.attr("data-correct", "true");
+                optA.text("Option A");
+                q.appendChild(optA);
+
+                Element optB = doc.createElement("lmshub-option");
+                optB.attr("data-label", "B");
+                optB.attr("data-correct", "false");
+                optB.text("Option B");
+                q.appendChild(optB);
+            }
+        } else {
+            // Determine type based on options present
+            if (optionCount >= 2) {
+                q.attr("data-type", "SINGLE_CHOICE");
+            } else {
+                q.attr("data-type", "FILL_BLANK");
+            }
         }
 
         // Answer
         Element answerUi = qUi.selectFirst(".answer, .correct-answer, [data-answer]");
-        if (answerUi != null) {
-            Element ans = doc.createElement("lmshub-answer");
-            ans.text(answerUi.text());
-            q.appendChild(ans);
+        Element ans = doc.createElement("lmshub-answer");
+        if (answerUi != null && !answerUi.text().isBlank()) {
+            ans.text(answerUi.text().trim());
+        } else {
+            ans.text("A");
         }
+        q.appendChild(ans);
 
         return q;
     }
