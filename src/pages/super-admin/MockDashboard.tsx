@@ -727,9 +727,9 @@ export default function MockDashboard() {
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {media.map((asset, i) => {
-                const isImage = asset.contentType.startsWith("image/");
-                const isAudio = asset.contentType.startsWith("audio/");
-                const sizeStr = (asset.fileSize / (1024 * 1024)).toFixed(2) + " MB";
+                const isImage = (asset.contentType || "").startsWith("image/");
+                const isAudio = (asset.contentType || "").startsWith("audio/");
+                const sizeStr = ((asset.fileSize || 0) / (1024 * 1024)).toFixed(2) + " MB";
                 const downloadUrl = `/api/v1/files/view/${asset.filename}`;
                 return (
                   <Card key={i} className="p-3 hover:shadow-md transition-shadow relative overflow-hidden group flex flex-col justify-between border-slate-100 dark:border-slate-800">
