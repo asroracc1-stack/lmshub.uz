@@ -102,7 +102,7 @@ public class ExamBuilderService {
             QuestionBankItem bankItem = QuestionBankItem.builder()
                     .subject(result.getSubject() != null && !result.getSubject().isBlank() ? result.getSubject() : "English")
                     .topic(section.getSectionTitle() != null ? section.getSectionTitle() : "Reading Passages")
-                    .examCategory(result.getExamType() != null && !result.getExamType().isBlank() ? result.getExamType().toUpperCase() : "IELTS")
+                    .examCategory(resolveExamCategory(result.getExamType()))
                     .questionType(pq.getQuestionType() != null ? pq.getQuestionType().toLowerCase() : "single_choice")
                     .difficulty("medium")
                     .text(pq.getRawText() != null ? pq.getRawText() : "")
@@ -225,17 +225,29 @@ public class ExamBuilderService {
     }
 
     private ExamType resolveExamType(String examTypeStr) {
-        if (examTypeStr == null) return ExamType.IELTS;
+        if (examTypeStr == null) return ExamType.READING;
         String upper = examTypeStr.toUpperCase().trim();
-        if (upper.contains("IELTS")) return ExamType.IELTS;
         if (upper.contains("READING")) return ExamType.READING;
+        if (upper.contains("LISTENING")) return ExamType.LISTENING;
+        if (upper.contains("WRITING")) return ExamType.WRITING;
+        if (upper.contains("SPEAKING")) return ExamType.SPEAKING;
         if (upper.contains("SAT")) return ExamType.SAT;
         if (upper.contains("MATH")) return ExamType.MATH;
-        if (upper.contains("NATIONAL")) return ExamType.NATIONAL_CERT;
+        if (upper.contains("NATIONAL") || upper.contains("MILLIY")) return ExamType.NATIONAL_CERT;
+        if (upper.contains("IELTS")) return ExamType.IELTS;
         try {
             return ExamType.valueOf(upper);
         } catch (IllegalArgumentException e) {
-            return ExamType.IELTS;
+            return ExamType.READING;
         }
+    }
+
+    private String resolveExamCategory(String examCategoryStr) {
+        if (examCategoryStr == null) return "IELTS";
+        String upper = examCategoryStr.toUpperCase().trim();
+        if (upper.contains("IELTS")) return "IELTS";
+        if (upper.contains("SAT")) return "SAT";
+        if (upper.contains("NATIONAL") || upper.contains("MILLIY")) return "MILLIY_SERTIFIKAT";
+        return "GENERAL";
     }
 }
