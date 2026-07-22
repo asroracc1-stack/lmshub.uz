@@ -43,6 +43,7 @@ public class ImportOrchestrator {
     private final ImportSessionStore   sessionStore;
     private final ImportLogRepository  importLogRepository;
     private final ObjectMapper         objectMapper;
+    private final com.lmscrm.backend.service.exam.converter.LmsHubHtmlLayoutConverter layoutConverter;
 
     // ─────────────────────────────────────────────────────────────────────────
     // STEP 1: Preview
@@ -53,6 +54,14 @@ public class ImportOrchestrator {
         long start = System.currentTimeMillis();
 
         try {
+            // 0. Auto-convert HTML if missing static <lmshub-section> tags
+            String rawHtmlStr = new String(fileBytes, java.nio.charset.StandardCharsets.UTF_8);
+            if (!rawHtmlStr.contains("<lmshub-section")) {
+                log.info("Uploaded HTML missing <lmshub-section>. Auto-converting via LmsHubHtmlLayoutConverter...");
+                String convertedHtml = layoutConverter.convertToLmsHubSpecification(fileBytes, fileName, "IELTS");
+                fileBytes = convertedHtml.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+            }
+
             // 1. Select correct parser by reading HTML metadata
             ExamParser parser = parserFactory.getParser(fileBytes);
 
