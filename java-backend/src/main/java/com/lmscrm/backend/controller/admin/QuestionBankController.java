@@ -3,15 +3,20 @@ package com.lmscrm.backend.controller.admin;
 import com.lmscrm.backend.domain.entity.User;
 import com.lmscrm.backend.dto.exam.QuestionBankDto;
 import com.lmscrm.backend.dto.exam.QuestionBankRequest;
+import com.lmscrm.backend.dto.exam.parser.ValidationReport;
 import com.lmscrm.backend.service.exam.QuestionBankService;
+import com.lmscrm.backend.service.exam.parser.ImportOrchestrator;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
@@ -24,6 +29,7 @@ import java.util.UUID;
 public class QuestionBankController {
 
     private final QuestionBankService questionBankService;
+    private final ImportOrchestrator importOrchestrator;
 
     // ─── GET: Barcha savollar (filter + pagination) ─────────────────────────────
     @GetMapping
@@ -114,5 +120,48 @@ public class QuestionBankController {
     @Operation(summary = "Fan bo'yicha mavzular ro'yxati")
     public ResponseEntity<List<String>> getTopics(@RequestParam String subject) {
         return ResponseEntity.ok(questionBankService.getTopics(subject));
+    }
+
+    // ─── POST: Import preview (fayl tekshirish) ─────────────────────────────────
+    @PostMapping(value = "/import-preview", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
+    @Operation(summary = "HTML/PDF faylini import qilishdan oldin tekshirish")
+    public ResponseEntity<?> importPreview(@RequestParam("file") MultipartFile file) {
+        try {
+            if (file.isEmpty()) {
+                return ResponseEntity.badRequest().body("Fayl bo'sh");
+            }
+            if (file.getSize() > 20 * 1024 * 1024) {
+                return ResponseEntity.badRequest().body("Hujjat 20MB dan kichik bo'lishi kerak");
+            }
+            String fileName = file.getOriginalFilename() != null ? file.getOriginalFilename().toLowerCase() : "";
+            byte[] bytes = file.getBytes();
+            ValidationReport report = importOrchestrator.previewImport(bytes, fileName);
+            return ResponseEntity.ok(report);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Import tahlilida xatolik: " + e.getMessage());
+        }
+    }
+
+    // ─── POST: Import commit (ma'lumotlar bazasiga saqlash) ─────────────────────
+    @PostMapping(value = "/import-commit", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
+    @CacheEvict(cacheNames = {"examDetails", "examsByType"}, allEntries = true)
+    @Operation(summary = "HTML/PDF faylini import qilib bazaga saqlash")
+    public ResponseEntity<?> importCommit(
+            @RequestParam("file") MultipartFile file,
+            @AuthenticationPrincipal User user) {
+        try {
+            if (file.isEmpty()) {
+                return ResponseEntity.badRequest().body("Fayl bo'sh");
+            }
+            String fileName = file.getOriginalFilename() != null ? file.getOriginalFilename().toLowerCase() : "";
+            byte[] bytes = file.getBytes();
+            ValidationReport report = importOrchestrator.previewImport(bytes, fileName);
+            importOrchestrator.commitImport(report, user);
+            return ResponseEntity.ok("Imtihon muvaffaqiyatli saqlandi!");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Import tizimida xatolik: " + e.getMessage());
+        }
     }
 }
