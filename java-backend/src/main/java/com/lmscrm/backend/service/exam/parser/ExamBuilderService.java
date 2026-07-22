@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,11 +18,13 @@ import java.util.List;
  *
  * Pipeline:
  *   ParseResult
- *     → Exam (version=1)
+ *     → Exam (status="PUBLISHED", isActive=true)
  *     → Passage (per section)
  *     → Question[] (bulk saved)
  *     → QuestionOption[] (bulk saved)
  *     → AnswerKey[] (IMMUTABLE, bulk saved)
+ *     → QuestionBankItem[] (populates Super Admin Question Bank)
+ *     → QuestionBankOption[] (populates Question Bank options)
  */
 @Service
 @RequiredArgsConstructor
@@ -33,13 +36,15 @@ public class ExamBuilderService {
     private final QuestionRepository questionRepository;
     private final QuestionOptionRepository questionOptionRepository;
     private final AnswerKeyRepository answerKeyRepository;
+    private final QuestionBankRepository questionBankRepository;
+    private final QuestionBankOptionRepository questionBankOptionRepository;
 
     @Transactional(rollbackFor = Exception.class)
     public Exam buildAndSave(ParseResult result, User createdBy) {
         log.info("Building exam from ParseResult: {} sections, {} questions",
                 result.getSections().size(), result.totalQuestionCount());
 
-        // ── 1. Create Exam ───────────────────────────────────────────────────
+        // ── 1. Create Exam (status="PUBLISHED" so it appears on Student User Panel) ──
         ExamType examType = resolveExamType(result.getExamType());
         Exam exam = Exam.builder()
                 .title(result.getExamTitle() != null ? result.getExamTitle() : "Imported Exam")
@@ -48,23 +53,23 @@ public class ExamBuilderService {
                 .passingScore(50)
                 .isActive(true)
                 .isAiImported(false)
-                .status("DRAFT")
+                .status("PUBLISHED")
                 .version(1)
                 .requiredPack("free")
                 .createdBy(createdBy)
                 .build();
         examRepository.save(exam);
-        log.info("Exam created: {} ({})", exam.getId(), exam.getTitle());
+        log.info("Exam created and published: {} ({})", exam.getId(), exam.getTitle());
 
         // ── 2. Create Passages + Questions per section ────────────────────────
         for (ParseResult.ParsedSection section : result.getSections()) {
-            buildSection(section, exam);
+            buildSection(section, exam, result, createdBy);
         }
 
         return exam;
     }
 
-    private void buildSection(ParseResult.ParsedSection section, Exam exam) {
+    private void buildSection(ParseResult.ParsedSection section, Exam exam, ParseResult result, User createdBy) {
         // Create Passage
         Passage passage = Passage.builder()
                 .exam(exam)
@@ -86,31 +91,68 @@ public class ExamBuilderService {
 
         if (section.getQuestions() == null || section.getQuestions().isEmpty()) return;
 
-        // ── Bulk build questions ──────────────────────────────────────────────
+        // ── Bulk build questions for Exam engine ──────────────────────────────
         List<Question> questions = new ArrayList<>();
+        List<QuestionBankItem> bankItems = new ArrayList<>();
+
         for (ParseResult.ParsedQuestion pq : section.getQuestions()) {
             questions.add(buildQuestion(pq, passage, exam));
+
+            // Also build QuestionBankItem for Super Admin Question Bank
+            QuestionBankItem bankItem = QuestionBankItem.builder()
+                    .subject(result.getSubject() != null && !result.getSubject().isBlank() ? result.getSubject() : "English")
+                    .topic(section.getSectionTitle() != null ? section.getSectionTitle() : "Reading Passages")
+                    .examCategory(result.getExamType() != null && !result.getExamType().isBlank() ? result.getExamType().toUpperCase() : "IELTS")
+                    .questionType(pq.getQuestionType() != null ? pq.getQuestionType().toLowerCase() : "single_choice")
+                    .difficulty("medium")
+                    .text(pq.getRawText() != null ? pq.getRawText() : "")
+                    .passageText(section.getPassageText())
+                    .correctAnswer(resolveCorrectAnswer(pq))
+                    .explanation(pq.getExplanation())
+                    .points(Math.max(pq.getPoints(), 1))
+                    .isActive(true)
+                    .usageCount(1)
+                    .createdBy(createdBy)
+                    .createdAt(LocalDateTime.now())
+                    .updatedAt(LocalDateTime.now())
+                    .build();
+            bankItems.add(bankItem);
         }
-        questionRepository.saveAll(questions);  // ✅ one batch insert
+        questionRepository.saveAll(questions);          // ✅ Batch insert into questions table
+        questionBankRepository.saveAll(bankItems);       // ✅ Batch insert into question_bank_items table
 
         // ── Bulk build options + answer keys ──────────────────────────────────
         List<QuestionOption> allOptions = new ArrayList<>();
         List<AnswerKey>      allKeys    = new ArrayList<>();
+        List<QuestionBankOption> bankOptions = new ArrayList<>();
 
         for (int i = 0; i < section.getQuestions().size(); i++) {
             ParseResult.ParsedQuestion pq = section.getQuestions().get(i);
             Question q = questions.get(i);
+            QuestionBankItem bankItem = bankItems.get(i);
 
+            int optOrder = 1;
             for (ParseResult.ParsedOption po : pq.getOptions()) {
                 allOptions.add(buildOption(po, q));
+
+                QuestionBankOption qbo = QuestionBankOption.builder()
+                        .questionBankItem(bankItem)
+                        .text(po.getText() != null ? po.getText() : "")
+                        .isCorrect(po.isCorrect())
+                        .positionOrder(optOrder++)
+                        .build();
+                bankOptions.add(qbo);
             }
             allKeys.add(buildAnswerKey(pq, q));
         }
 
-        questionOptionRepository.saveAll(allOptions);  // ✅ batch
-        answerKeyRepository.saveAll(allKeys);           // ✅ batch
+        questionOptionRepository.saveAll(allOptions);     // ✅ batch
+        answerKeyRepository.saveAll(allKeys);              // ✅ batch
+        if (!bankOptions.isEmpty()) {
+            questionBankOptionRepository.saveAll(bankOptions); // ✅ batch
+        }
 
-        log.info("Section '{}': saved {} questions, {} options, {} answer keys",
+        log.info("Section '{}': saved {} questions (Exam + QuestionBank), {} options, {} answer keys",
                 section.getSectionTitle(), questions.size(), allOptions.size(), allKeys.size());
     }
 
@@ -138,7 +180,7 @@ public class ExamBuilderService {
                 .question(q)
                 .text(po.getText() != null ? po.getText() : "")
                 .isCorrect(po.isCorrect())
-                .imageUrl(null) // Media URL resolved separately by MediaProcessor
+                .imageUrl(null)
                 .imagePosition("left")
                 .build();
     }
@@ -160,11 +202,9 @@ public class ExamBuilderService {
     }
 
     private String resolveCorrectAnswer(ParseResult.ParsedQuestion pq) {
-        // Explicit answer (fill blank, TFNG, math)
         if (pq.getCorrectAnswer() != null && !pq.getCorrectAnswer().isBlank()) {
             return pq.getCorrectAnswer();
         }
-        // MCQ: join all correct option texts
         return pq.getOptions().stream()
                 .filter(ParseResult.ParsedOption::isCorrect)
                 .map(ParseResult.ParsedOption::getText)
@@ -179,22 +219,17 @@ public class ExamBuilderService {
             case "MULTIPLE_CHOICE"                        -> "MultipleChoiceValidator";
             case "TRUE_FALSE_NG", "YES_NO_NG"             -> "TrueFalseValidator";
             case "MATCHING", "HEADING_MATCH"              -> "MatchingValidator";
-            case "ORDERING"                               -> "OrderingValidator";
-            case "FILL_BLANK", "SENTENCE_COMPLETION",
-                 "SHORT_ANSWER", "MAP_LABELLING"          -> "FillBlankValidator";
-            case "MATH"                                   -> "MathValidator";
-            case "ESSAY"                                  -> "ManualGradingValidator";
+            case "FILL_BLANK", "SHORT_ANSWER"             -> "ExactMatchValidator";
             default                                       -> "GenericValidator";
         };
     }
 
-    private ExamType resolveExamType(String examType) {
-        if (examType == null || examType.isBlank()) return ExamType.IELTS;
+    private ExamType resolveExamType(String examTypeStr) {
+        if (examTypeStr == null) return ExamType.IELTS_READING;
         try {
-            return ExamType.valueOf(examType.toUpperCase().replace("-", "_"));
+            return ExamType.valueOf(examTypeStr.toUpperCase());
         } catch (IllegalArgumentException e) {
-            log.warn("Unknown exam type '{}', defaulting to IELTS", examType);
-            return ExamType.IELTS;
+            return ExamType.IELTS_READING;
         }
     }
 }
