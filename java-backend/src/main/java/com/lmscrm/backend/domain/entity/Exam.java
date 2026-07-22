@@ -71,9 +71,12 @@ public class Exam {
     @Column(name = "sub_type")
     private String subType;
 
-    @Column(name = "is_ai_imported", nullable = false)
+    @Column(name = "version", nullable = false)
     @Builder.Default
-    private Boolean isAiImported = false;
+    private Integer version = 1;
+
+    @Column(name = "parent_exam_id")
+    private UUID parentExamId;
 
     @Column(name = "published_at")
     private LocalDateTime publishedAt;

@@ -105,9 +105,7 @@ public class Question {
     @Column(name = "parent_id")
     private UUID parentId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "student_attempt_id")
-    private StudentAttempt studentAttempt;
+
 
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
     private java.util.List<QuestionOption> options;
