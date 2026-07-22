@@ -122,14 +122,15 @@ public class AdminExamController {
             if (file.isEmpty()) {
                 return ResponseEntity.badRequest().body("Fayl bo'sh");
             }
-            if (!file.getOriginalFilename().toLowerCase().endsWith(".pdf")) {
-                return ResponseEntity.badRequest().body("Faqat PDF formatdagi fayllar qabul qilinadi");
+            String fileName = file.getOriginalFilename() != null ? file.getOriginalFilename().toLowerCase() : "";
+            if (!fileName.endsWith(".pdf") && !fileName.endsWith(".html")) {
+                return ResponseEntity.badRequest().body("Faqat PDF yoki HTML formatdagi fayllar qabul qilinadi");
             }
             byte[] bytes = file.getBytes();
             if (bytes.length > 20 * 1024 * 1024) {
-                return ResponseEntity.badRequest().body("PDF fayli 20MB dan kichik bo'lishi kerak");
+                return ResponseEntity.badRequest().body("Hujjat 20MB dan kichik bo'lishi kerak");
             }
-            String result = geminiService.analyzePdfMock(bytes);
+            String result = geminiService.analyzePdfMock(bytes, fileName);
             return ResponseEntity.ok(result);
         } catch (RuntimeException e) {
             // Surface clear error messages to the frontend (e.g. missing API key, rate limit)
