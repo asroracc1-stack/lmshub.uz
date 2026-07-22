@@ -115,33 +115,28 @@ public class AdminExamController {
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping(value = "/analyze-pdf", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/import-preview", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
-    public ResponseEntity<String> analyzePdf(@RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
+    public ResponseEntity<?> importPreview(@RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
         try {
             if (file.isEmpty()) {
                 return ResponseEntity.badRequest().body("Fayl bo'sh");
             }
+            
             String fileName = file.getOriginalFilename() != null ? file.getOriginalFilename().toLowerCase() : "";
-            if (!fileName.endsWith(".pdf") && !fileName.endsWith(".html")) {
-                return ResponseEntity.badRequest().body("Faqat PDF yoki HTML formatdagi fayllar qabul qilinadi");
-            }
+            
             byte[] bytes = file.getBytes();
             if (bytes.length > 20 * 1024 * 1024) {
                 return ResponseEntity.badRequest().body("Hujjat 20MB dan kichik bo'lishi kerak");
             }
-            String result = geminiService.analyzePdfMock(bytes, fileName);
-            return ResponseEntity.ok(result);
-        } catch (RuntimeException e) {
-            // Surface clear error messages to the frontend (e.g. missing API key, rate limit)
-            String msg = e.getMessage() != null ? e.getMessage() : "Noma'lum xatolik";
-            if (msg.contains("Yaroqli Gemini API kaliti") || msg.contains("GEMINI_API_KEY")) {
-                return ResponseEntity.status(503).body("AI xizmati sozlanmagan: Server administratori Gemini API kalitini o'rnatishi kerak.");
-            }
-            return ResponseEntity.status(500).body("PDF AI tahlilida xatolik: " + msg);
+            
+            // Assuming ImportOrchestrator is injected in this controller (will need to wire it via constructor)
+            // com.lmscrm.backend.dto.exam.parser.ValidationReport report = importOrchestrator.previewImport(bytes, fileName);
+            // return ResponseEntity.ok(report);
+            
+            return ResponseEntity.ok("Import Engine integration pending ApplicationContext wiring");
         } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(500).body("PDF AI tahlilida xatolik: " + e.getMessage());
+            return ResponseEntity.status(500).body("Import tizimida xatolik: " + e.getMessage());
         }
     }
 
