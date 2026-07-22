@@ -558,15 +558,60 @@ public class LmsHubHtmlLayoutConverter {
             appendJsQuestion(doc, sec, qNum, txt, "SINGLE_CHOICE", akMap.get(qNum), List.of("A", "B", "C", "D", "E", "F", "G", "H"));
         }
 
-        // 4. ii(qn, w) -> FILL_BLANK (e.g. li/p items with ${ii(qn,w)})
-        Pattern iiPattern = Pattern.compile("([^\\n<]*?)\\$\\{ii\\((\\d+)[^\\)]*\\)\\}([^\\n<]*)");
+        // 4. ii(qn, w) -> FILL_BLANK (e.g. li/p/td items with ${ii(qn,w)})
+        Pattern iiPattern = Pattern.compile("\\$\\{ii\\((\\d+)[^\\)]*\\)\\}");
         Matcher iiMatcher = iiPattern.matcher(qHtml);
         while (iiMatcher.find()) {
-            String before = iiMatcher.group(1).replaceAll("<[^>]+>", "").trim();
-            int qNum = Integer.parseInt(iiMatcher.group(2));
-            String after = iiMatcher.group(3).replaceAll("<[^>]+>", "").trim();
-            String prompt = (before + " [____] " + after).trim();
-            if (prompt.equals("[____]") || prompt.length() < 3) prompt = "Question " + qNum;
+            int qNum = Integer.parseInt(iiMatcher.group(1));
+            int matchStart = iiMatcher.start();
+            int matchEnd = iiMatcher.end();
+
+            // Find start of containing block/line
+            int start = matchStart;
+            while (start > 0) {
+                if (qHtml.charAt(start) == '\n') {
+                    break;
+                }
+                if (start >= 4 && qHtml.substring(start - 4, start).equalsIgnoreCase("<li>")) {
+                    break;
+                }
+                if (start >= 4 && qHtml.substring(start - 4, start).equalsIgnoreCase("<td>")) {
+                    break;
+                }
+                if (start >= 3 && qHtml.substring(start - 3, start).equalsIgnoreCase("<p>")) {
+                    break;
+                }
+                start--;
+            }
+
+            // Find end of containing block/line
+            int end = matchEnd;
+            while (end < qHtml.length()) {
+                if (qHtml.charAt(end) == '\n') {
+                    break;
+                }
+                if (end + 5 <= qHtml.length() && qHtml.substring(end, end + 5).equalsIgnoreCase("</li>")) {
+                    break;
+                }
+                if (end + 5 <= qHtml.length() && qHtml.substring(end, end + 5).equalsIgnoreCase("</td>")) {
+                    break;
+                }
+                if (end + 4 <= qHtml.length() && qHtml.substring(end, end + 4).equalsIgnoreCase("</p>")) {
+                    break;
+                }
+                end++;
+            }
+
+            String blockText = qHtml.substring(start, end);
+            blockText = blockText.replaceAll("<[^>]+>", " ");
+            blockText = blockText.replaceAll("\\s+", " ").trim();
+            
+            // Replace all ${ii(qn, w)} placeholders in the block with [____]
+            String prompt = blockText.replaceAll("\\$\\{ii\\(\\d+[^\\)]*\\)\\}", " [____] ").replaceAll("\\s+", " ").trim();
+
+            if (prompt.isEmpty() || prompt.length() < 3) {
+                prompt = "[____]";
+            }
 
             appendJsQuestion(doc, sec, qNum, prompt, "FILL_BLANK", akMap.get(qNum), Collections.emptyList());
         }

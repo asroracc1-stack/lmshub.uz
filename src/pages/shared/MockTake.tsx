@@ -176,7 +176,13 @@ function normalize(exam: ExamData, attemptSeed?: string | null): { sections: { t
     rootQuestionsCount: (exam as any).questions?.length ?? 0,
   }));
 
-  const passagesToUse = attemptSeed && rawPassages.length > 0
+  const examTypeUpper = (exam.type || "").toUpperCase();
+  const isIeltsOrSat = examTypeUpper.startsWith("IELTS")
+    || examTypeUpper.startsWith("SAT")
+    || examTypeUpper.startsWith("CEFR")
+    || examTypeUpper.startsWith("MILLIY");
+
+  const passagesToUse = (attemptSeed && rawPassages.length > 0 && !isIeltsOrSat)
     ? deterministicShuffle(rawPassages, attemptSeed)
     : rawPassages;
 
@@ -185,7 +191,7 @@ function normalize(exam: ExamData, attemptSeed?: string | null): { sections: { t
       sections.push({ title: p.title ?? "", passage: p.content ?? "", imageUrl: p.imageUrl ?? p.image_url ?? "" });
       
       const rawQuestions = p.questions ?? [];
-      const questionsToUse = attemptSeed
+      const questionsToUse = (attemptSeed && !isIeltsOrSat)
         ? deterministicShuffle(rawQuestions, attemptSeed + "_" + (p.id || sIdx))
         : rawQuestions;
 
@@ -202,7 +208,7 @@ function normalize(exam: ExamData, attemptSeed?: string | null): { sections: { t
             })).sort((a, b) => a.positionOrder - b.positionOrder)
           : null;
 
-        if (attemptSeed && rawOpts && rawOpts.length > 0) {
+        if (attemptSeed && rawOpts && rawOpts.length > 0 && !isIeltsOrSat) {
           rawOpts = deterministicShuffle(rawOpts, q.id + attemptSeed);
         }
 
@@ -223,7 +229,7 @@ function normalize(exam: ExamData, attemptSeed?: string | null): { sections: { t
     });
   } else {
     const rawRootQuestions = (exam as any).questions ?? [];
-    const questionsToUse = attemptSeed
+    const questionsToUse = (attemptSeed && !isIeltsOrSat)
       ? deterministicShuffle(rawRootQuestions, attemptSeed)
       : rawRootQuestions;
 
