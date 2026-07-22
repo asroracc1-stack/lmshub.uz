@@ -1,11 +1,13 @@
 package com.lmscrm.backend.service.exam.exporter;
 
 import com.lmscrm.backend.domain.entity.*;
+import com.lmscrm.backend.repository.AnswerKeyRepository;
+import com.lmscrm.backend.repository.QuestionRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 
 /**
  * LmsHubHtmlExporterService — Generates 100% LMSHub HTML v1 Specification compliant HTML files.
@@ -27,7 +29,11 @@ import java.util.Map;
  * Keeps frontend UI intact while providing static tags for non-JS backend parsing.
  */
 @Service
+@RequiredArgsConstructor
 public class LmsHubHtmlExporterService {
+
+    private final QuestionRepository questionRepository;
+    private final AnswerKeyRepository answerKeyRepository;
 
     public String generateCompliantHtml(Exam exam) {
         StringBuilder html = new StringBuilder();
@@ -48,14 +54,14 @@ public class LmsHubHtmlExporterService {
         html.append("<head>\n");
         html.append("  <meta charset=\"UTF-8\">\n");
         html.append("  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n");
-        html.append(String.format("  <meta name=\"lmshub:format\" content=\"lmshub-v1\">\n"));
+        html.append("  <meta name=\"lmshub:format\" content=\"lmshub-v1\">\n");
         html.append(String.format("  <meta name=\"lmshub:exam\" content=\"%s\">\n", examType));
         html.append(String.format("  <meta name=\"lmshub:title\" content=\"%s\">\n", examTitle));
         html.append(String.format("  <title>%s</title>\n", examTitle));
         html.append("  <style>\n");
         html.append("    body { font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 20px; background: #f8fafc; color: #0f172a; }\n");
         html.append("    .lmshub-container { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }\n");
-        html.append("    .passage-card { background: white; padding: 24px; border-radius: 12px; border: 1fr solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow-y: auto; max-height: 85vh; }\n");
+        html.append("    .passage-card { background: white; padding: 24px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow-y: auto; max-height: 85vh; }\n");
         html.append("    .questions-card { background: white; padding: 24px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow-y: auto; max-height: 85vh; }\n");
         html.append("    .q-block { margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px dashed #cbd5e1; }\n");
         html.append("    .opt-label { display: flex; align-items: center; gap: 8px; margin: 6px 0; cursor: pointer; }\n");
@@ -77,17 +83,19 @@ public class LmsHubHtmlExporterService {
             for (Passage passage : passages) {
                 appendSection(html, passage, secOrder++);
             }
-        } else if (exam.getQuestions() != null && !exam.getQuestions().isEmpty()) {
-            // Default single section if no passages
-            html.append(String.format("  <lmshub-section data-id=\"sec_main\" data-title=\"%s\" data-order=\"1\">\n", examTitle));
-            html.append("    <lmshub-instructions>Barcha savollarga javob bering.</lmshub-instructions>\n");
-            html.append("    <lmshub-passage>Exam Questions</lmshub-passage>\n");
-            
-            int qOrder = 1;
-            for (Question question : exam.getQuestions()) {
-                appendQuestion(html, question, qOrder++);
+        } else {
+            List<Question> directQuestions = exam.getId() != null ? questionRepository.findByExamIdOrderByPositionOrderAsc(exam.getId()) : null;
+            if (directQuestions != null && !directQuestions.isEmpty()) {
+                html.append(String.format("  <lmshub-section data-id=\"sec_main\" data-title=\"%s\" data-order=\"1\">\n", examTitle));
+                html.append("    <lmshub-instructions>Barcha savollarga javob bering.</lmshub-instructions>\n");
+                html.append("    <lmshub-passage>Exam Questions</lmshub-passage>\n");
+                
+                int qOrder = 1;
+                for (Question question : directQuestions) {
+                    appendQuestion(html, question, qOrder++);
+                }
+                html.append("  </lmshub-section>\n");
             }
-            html.append("  </lmshub-section>\n");
         }
 
         html.append("</body>\n");
@@ -168,12 +176,16 @@ public class LmsHubHtmlExporterService {
             }
         }
 
-        // Correct Answer
-        AnswerKey ak = q.getAnswerKey();
+        // Correct Answer from AnswerKey repository
         String correctAnswer = "";
-        if (ak != null && ak.getCorrectAnswer() != null) {
-            correctAnswer = ak.getCorrectAnswer();
-        } else if (options != null) {
+        if (q.getId() != null) {
+            Optional<AnswerKey> akOpt = answerKeyRepository.findByQuestionId(q.getId());
+            if (akOpt.isPresent() && akOpt.get().getCorrectAnswer() != null) {
+                correctAnswer = akOpt.get().getCorrectAnswer();
+            }
+        }
+        
+        if (correctAnswer.isBlank() && options != null) {
             // fallback: find correct option label
             char l = 'A';
             for (QuestionOption opt : options) {
