@@ -1109,7 +1109,7 @@ function PdfImportModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <BrainCircuit className="h-5 w-5 text-violet-500" />
-            PDF Import — AI bilan tahlil
+            Hujjat Import — AI bilan tahlil (PDF yoki HTML)
           </DialogTitle>
         </DialogHeader>
 
@@ -1137,7 +1137,7 @@ function PdfImportModal({
             </div>
 
             <label className="cursor-pointer block">
-              <input type="file" accept="application/pdf" hidden
+              <input type="file" accept="application/pdf, text/html, .html" hidden
                 onChange={e => e.target.files?.[0] && handlePdf(e.target.files[0])}
               />
               <div className="border-2 border-dashed border-violet-400/50 rounded-xl p-12 text-center bg-violet-500/5 hover:bg-violet-500/10 transition-colors">
@@ -1145,21 +1145,22 @@ function PdfImportModal({
                   <div className="space-y-3">
                     <Loader2 className="h-12 w-12 mx-auto text-violet-500 animate-spin" />
                     <p className="text-sm font-medium text-violet-700 dark:text-violet-300">
-                      AI PDF ni tahlil qilyapti...
+                      AI hujjatni tahlil qilyapti...
                     </p>
                     <p className="text-xs text-muted-foreground">Bu 1-3 daqiqa vaqt olishi mumkin</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    <div className="h-16 w-16 mx-auto bg-violet-100 dark:bg-violet-900/50 rounded-full flex items-center justify-center">
-                      <Upload className="h-8 w-8 text-violet-500" />
+                    <div className="mx-auto w-16 h-16 rounded-full bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center">
+                      <Sparkles className="h-8 w-8 text-violet-500" />
                     </div>
-                    <p className="font-semibold text-lg">PDF yuklash</p>
-                    <p className="text-sm text-muted-foreground">
-                      Test PDF yoki javoblar PDF ni yuklang.<br />
-                      AI avtomatik savollar, variantlar va javoblarni ajratadi.
-                    </p>
-                    <Badge variant="outline" className="text-violet-600">Faqat PDF formatda</Badge>
+                    <div>
+                      <p className="font-bold text-slate-700 dark:text-slate-200">PDF yoki HTML faylni yuklash</p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        AI avtomatik ravishda savollar, variantlar va javoblarni ajratib oladi.
+                      </p>
+                    </div>
+                    <Badge variant="outline" className="text-violet-600 mt-2">PDF & HTML formatlar</Badge>
                   </div>
                 )}
               </div>
