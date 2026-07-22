@@ -587,11 +587,17 @@ public class LmsHubHtmlLayoutConverter {
         p.text(promptText);
         q.appendChild(p);
 
-        if ("FILL_BLANK".equalsIgnoreCase(type)) {
+        boolean isExactAnswer = "FILL_BLANK".equalsIgnoreCase(type)
+                || "TRUE_FALSE_NG".equalsIgnoreCase(type)
+                || "YES_NO_NG".equalsIgnoreCase(type);
+
+        if (isExactAnswer) {
             Element ans = doc.createElement("lmshub-answer");
             ans.text(correctAns != null ? correctAns : "");
             q.appendChild(ans);
-        } else {
+        }
+
+        if (!"FILL_BLANK".equalsIgnoreCase(type)) {
             Element opts = doc.createElement("lmshub-options");
             String upperAns = correctAns != null ? correctAns.toUpperCase().trim() : "";
             for (String optText : defaultOpts) {
