@@ -78,6 +78,10 @@ public class LmsHubHtmlLayoutConverter {
     }
 
     private void injectLmsHubTags(Document doc, Element body, String rawHtml, HtmlLayoutDetector.HtmlLayoutType layoutType) {
+        if (tryConvertJsPassages(doc, body, rawHtml)) {
+            return;
+        }
+
         Elements passageContainers = doc.select(".passage, .passage-block, section, article, [data-passage-id], .reading-text, #passage-content, .cambridge-passage, .bc-passage");
 
         // Global question order counter and ID set across entire exam
@@ -85,6 +89,7 @@ public class LmsHubHtmlLayoutConverter {
         Set<String> globalQuestionIds = new HashSet<>();
 
         if (passageContainers.isEmpty()) {
+
             Element sec = doc.createElement("lmshub-section");
             sec.attr("data-id", "sec_1");
             sec.attr("data-title", "Section 1");
@@ -398,6 +403,208 @@ public class LmsHubHtmlLayoutConverter {
         o3.attr("data-correct", String.valueOf(opt3.equals(upperAns)));
         o3.text(opt3);
         q.appendChild(o3);
+    }
+
+    private boolean tryConvertJsPassages(Document doc, Element body, String rawHtml) {
+        int passIdx = rawHtml.indexOf("PASSAGES");
+        if (passIdx == -1) {
+            return false;
+        }
+
+        String passScript = rawHtml.substring(passIdx);
+        int endScript = passScript.indexOf("</script>");
+        if (endScript != -1) passScript = passScript.substring(0, endScript);
+
+        Map<Integer, String> pTitles = new LinkedHashMap<>();
+        Map<Integer, String> pHtmls = new LinkedHashMap<>();
+
+        for (int pNum = 1; pNum <= 10; pNum++) {
+            int pKeyIdx = passScript.indexOf(pNum + ":");
+            if (pKeyIdx == -1) pKeyIdx = passScript.indexOf("'" + pNum + "':");
+            if (pKeyIdx == -1) pKeyIdx = passScript.indexOf("\"" + pNum + "\":");
+            if (pKeyIdx == -1) continue;
+
+            int titleIdx = passScript.indexOf("title:", pKeyIdx);
+            if (titleIdx != -1 && titleIdx < pKeyIdx + 300) {
+                int quoteStart = -1;
+                char quoteChar = ' ';
+                for (int i = titleIdx + 6; i < passScript.length(); i++) {
+                    char c = passScript.charAt(i);
+                    if (c == '`' || c == '\'' || c == '"') {
+                        quoteStart = i;
+                        quoteChar = c;
+                        break;
+                    }
+                }
+                if (quoteStart != -1) {
+                    int quoteEnd = passScript.indexOf(quoteChar, quoteStart + 1);
+                    if (quoteEnd != -1) {
+                        String title = passScript.substring(quoteStart + 1, quoteEnd).trim();
+                        pTitles.put(pNum, title);
+                    }
+                }
+            }
+
+            int htmlIdx = passScript.indexOf("html:", pKeyIdx);
+            if (htmlIdx != -1 && htmlIdx < pKeyIdx + 500) {
+                int quoteStart = -1;
+                char quoteChar = ' ';
+                for (int i = htmlIdx + 5; i < passScript.length(); i++) {
+                    char c = passScript.charAt(i);
+                    if (c == '`' || c == '\'' || c == '"') {
+                        quoteStart = i;
+                        quoteChar = c;
+                        break;
+                    }
+                }
+                if (quoteStart != -1) {
+                    int quoteEnd = passScript.indexOf(quoteChar, quoteStart + 1);
+                    if (quoteEnd != -1) {
+                        String html = passScript.substring(quoteStart + 1, quoteEnd).trim();
+                        pHtmls.put(pNum, html);
+                    }
+                }
+            }
+        }
+
+        if (pHtmls.isEmpty()) {
+            return false;
+        }
+
+        log.info("Successfully extracted {} dynamic JS passages from HTML!", pHtmls.size());
+
+        Map<Integer, String> akMap = extractAnswerKeyMap(rawHtml);
+
+        for (Map.Entry<Integer, String> entry : pHtmls.entrySet()) {
+            int pNum = entry.getKey();
+            String pTitle = pTitles.getOrDefault(pNum, "Passage " + pNum);
+            String pHtml = entry.getValue();
+
+            Element sec = doc.createElement("lmshub-section");
+            sec.attr("data-id", "sec_" + pNum);
+            sec.attr("data-title", "Passage " + pNum);
+            sec.attr("data-order", String.valueOf(pNum));
+
+            Element instr = doc.createElement("lmshub-instructions");
+            instr.text("Read Passage " + pNum + " (" + pTitle + ") carefully and answer the questions.");
+            sec.appendChild(instr);
+
+            Element passage = doc.createElement("lmshub-passage");
+            passage.attr("data-title", pTitle);
+            passage.html(pHtml);
+            sec.appendChild(passage);
+
+            buildQuestionsForJsPassage(doc, sec, rawHtml, pNum, akMap);
+
+            body.appendChild(sec);
+        }
+
+        return true;
+    }
+
+    private Map<Integer, String> extractAnswerKeyMap(String rawHtml) {
+        Map<Integer, String> akMap = new HashMap<>();
+        Matcher akBlockMatcher = Pattern.compile("(?:const\\s+)?AK\\s*=\\s*\\{([^}]+)\\}").matcher(rawHtml);
+        String searchContent = akBlockMatcher.find() ? akBlockMatcher.group(1) : rawHtml;
+
+        Matcher matcher = Pattern.compile("\"?(\\d+)\"?\\s*:\\s*\"([^\"]+)\"", Pattern.CASE_INSENSITIVE).matcher(searchContent);
+        while (matcher.find()) {
+            try {
+                int qNum = Integer.parseInt(matcher.group(1));
+                String ans = matcher.group(2).trim();
+                akMap.put(qNum, ans);
+            } catch (NumberFormatException ignored) {}
+        }
+        return akMap;
+    }
+
+    private void buildQuestionsForJsPassage(Document doc, Element sec, String rawHtml, int pNum, Map<Integer, String> akMap) {
+        String funcName = "function qP" + pNum;
+        String qHtml = "";
+        int funcIdx = rawHtml.indexOf(funcName);
+        if (funcIdx != -1) {
+            int endIdx = rawHtml.indexOf("function qP", funcIdx + 5);
+            if (endIdx == -1) endIdx = rawHtml.indexOf("</script>", funcIdx);
+            if (endIdx == -1) endIdx = rawHtml.length();
+            qHtml = rawHtml.substring(funcIdx, endIdx);
+        } else {
+            qHtml = rawHtml;
+        }
+
+        // 1. tfng(qn, txt) -> TRUE_FALSE_NG
+        Pattern tfngPattern = Pattern.compile("tfng\\s*\\(\\s*(\\d+)\\s*,\\s*['\"`](.*?)['\"`]", Pattern.DOTALL);
+        Matcher tfngMatcher = tfngPattern.matcher(qHtml);
+        while (tfngMatcher.find()) {
+            int qNum = Integer.parseInt(tfngMatcher.group(1));
+            String txt = tfngMatcher.group(2).trim();
+            appendJsQuestion(doc, sec, qNum, txt, "TRUE_FALSE_NG", akMap.get(qNum), List.of("TRUE", "FALSE", "NOT GIVEN"));
+        }
+
+        // 2. yngng(qn, txt) -> YES_NO_NG
+        Pattern yngngPattern = Pattern.compile("yngng\\s*\\(\\s*(\\d+)\\s*,\\s*['\"`](.*?)['\"`]", Pattern.DOTALL);
+        Matcher yngngMatcher = yngngPattern.matcher(qHtml);
+        while (yngngMatcher.find()) {
+            int qNum = Integer.parseInt(yngngMatcher.group(1));
+            String txt = yngngMatcher.group(2).trim();
+            appendJsQuestion(doc, sec, qNum, txt, "YES_NO_NG", akMap.get(qNum), List.of("YES", "NO", "NOT GIVEN"));
+        }
+
+        // 3. pgQ(qn, txt), rsrQ(qn, txt), prsQ(qn, txt) -> SINGLE_CHOICE
+        Pattern mcqPattern = Pattern.compile("(?:pgQ|rsrQ|prsQ)\\s*\\(\\s*(\\d+)\\s*,\\s*['\"`](.*?)['\"`]", Pattern.DOTALL);
+        Matcher mcqMatcher = mcqPattern.matcher(qHtml);
+        while (mcqMatcher.find()) {
+            int qNum = Integer.parseInt(mcqMatcher.group(1));
+            String txt = mcqMatcher.group(2).trim();
+            appendJsQuestion(doc, sec, qNum, txt, "SINGLE_CHOICE", akMap.get(qNum), List.of("A", "B", "C", "D", "E", "F", "G", "H"));
+        }
+
+        // 4. ii(qn, w) -> FILL_BLANK (e.g. li/p items with ${ii(qn,w)})
+        Pattern iiPattern = Pattern.compile("([^\\n<]*?)\\$\\{ii\\((\\d+)[^\\)]*\\)\\}([^\\n<]*)");
+        Matcher iiMatcher = iiPattern.matcher(qHtml);
+        while (iiMatcher.find()) {
+            String before = iiMatcher.group(1).replaceAll("<[^>]+>", "").trim();
+            int qNum = Integer.parseInt(iiMatcher.group(2));
+            String after = iiMatcher.group(3).replaceAll("<[^>]+>", "").trim();
+            String prompt = (before + " [____] " + after).trim();
+            if (prompt.equals("[____]") || prompt.length() < 3) prompt = "Question " + qNum;
+
+            appendJsQuestion(doc, sec, qNum, prompt, "FILL_BLANK", akMap.get(qNum), Collections.emptyList());
+        }
+    }
+
+    private void appendJsQuestion(Document doc, Element sec, int qNum, String promptText, String type, String correctAns, List<String> defaultOpts) {
+        String qId = "q_" + qNum;
+        if (sec.selectFirst("[data-id='" + qId + "']") != null) {
+            return; // prevent duplicate
+        }
+
+        Element q = doc.createElement("lmshub-question");
+        q.attr("data-id", qId);
+        q.attr("data-order", String.valueOf(qNum));
+        q.attr("data-type", type.toLowerCase());
+
+        Element p = doc.createElement("lmshub-text");
+        p.text(promptText);
+        q.appendChild(p);
+
+        if ("FILL_BLANK".equalsIgnoreCase(type)) {
+            Element ans = doc.createElement("lmshub-answer");
+            ans.text(correctAns != null ? correctAns : "");
+            q.appendChild(ans);
+        } else {
+            Element opts = doc.createElement("lmshub-options");
+            String upperAns = correctAns != null ? correctAns.toUpperCase().trim() : "";
+            for (String optText : defaultOpts) {
+                Element o = doc.createElement("lmshub-option");
+                o.attr("data-label", optText);
+                o.attr("data-correct", String.valueOf(optText.equalsIgnoreCase(upperAns)));
+                o.text(optText);
+                opts.appendChild(o);
+            }
+            q.appendChild(opts);
+        }
+
+        sec.appendChild(q);
     }
 
     private String truncate(String text, int maxLength) {
