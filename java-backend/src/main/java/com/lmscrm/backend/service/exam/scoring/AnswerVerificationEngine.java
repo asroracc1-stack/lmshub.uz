@@ -27,7 +27,7 @@ public class AnswerVerificationEngine {
 
     @Transactional
     public AnswerKey getOrCreateAnswerKey(Question question) {
-        return answerKeyRepository.findByQuestionId(question.getId())
+        return answerKeyRepository.findFirstByQuestionId(question.getId())
                 .orElseGet(() -> {
                     // Backfill AnswerKey from existing options or numeric values in legacy Question
                     String correctAns = "";

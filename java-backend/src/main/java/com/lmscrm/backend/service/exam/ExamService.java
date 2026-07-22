@@ -635,8 +635,17 @@ public class ExamService {
 
     @Transactional
     public ExamResultDto submitExam(ExamSubmitRequest request, User user) {
-        Exam exam = examRepository.findById(request.getExam_id())
-                .orElseThrow(() -> new ResourceNotFoundException("Exam not found: " + request.getExam_id()));
+        if (request == null) {
+            throw new IllegalArgumentException("Submit request cannot be null");
+        }
+
+        UUID targetExamId = request.getExamId();
+        if (targetExamId == null) {
+            throw new IllegalArgumentException("Exam ID is required for submission");
+        }
+
+        Exam exam = examRepository.findById(targetExamId)
+                .orElseThrow(() -> new ResourceNotFoundException("Exam not found: " + targetExamId));
 
         // Resolve StudentAttempt first
         StudentAttempt attempt = null;
@@ -668,13 +677,18 @@ public class ExamService {
         int correctCount = 0;
         
         long totalTimeSpent = 0;
-        if (request.getTime_spent() != null) {
-            totalTimeSpent = request.getTime_spent().values().stream().mapToLong(Long::longValue).sum();
+        Map<String, Long> timeSpentMap = request.getTimeSpentMap();
+        if (timeSpentMap != null && !timeSpentMap.isEmpty()) {
+            totalTimeSpent = timeSpentMap.values().stream().filter(java.util.Objects::nonNull).mapToLong(Long::longValue).sum();
         }
 
+        Map<String, String> answersMap = request.getAnswers() != null ? request.getAnswers() : java.util.Collections.emptyMap();
+
         for (Question q : questions) {
-            String userAns = request.getAnswers().get(q.getId().toString());
-            Long timeSpent = request.getTime_spent() != null ? request.getTime_spent().getOrDefault(q.getId().toString(), 0L) : 0L;
+            String qIdStr = q.getId().toString();
+            String userAns = answersMap.get(qIdStr);
+            Long timeSpent = timeSpentMap != null ? timeSpentMap.getOrDefault(qIdStr, 0L) : 0L;
+            if (timeSpent == null) timeSpent = 0L;
             
             // Get correct answer from options
             List<QuestionOption> options = optionRepository.findByQuestionIdOrderByPositionOrderAsc(q.getId());
@@ -685,18 +699,24 @@ public class ExamService {
                     .orElse("");
 
             // Core Strategy Verification Engine Call
-            com.lmscrm.backend.service.exam.scoring.ValidationResult verifyResult = 
-                    answerVerificationEngine.verifyAnswer(q, userAns);
+            com.lmscrm.backend.service.exam.scoring.ValidationResult verifyResult = null;
+            try {
+                verifyResult = answerVerificationEngine.verifyAnswer(q, userAns);
+            } catch (Exception e) {
+                log.warn("Answer verification failed for question {}: {}", q.getId(), e.getMessage());
+            }
 
-            if (verifyResult.isCorrect()) {
-                correctCount += q.getPoints();
+            boolean isCorrect = verifyResult != null && verifyResult.isCorrect();
+            int points = q.getPoints() != null ? q.getPoints() : 1;
+            if (isCorrect) {
+                correctCount += points;
             }
 
             details.add(ExamResultDto.QuestionDetail.builder()
-                    .questionId(q.getId().toString())
+                    .questionId(qIdStr)
                     .userAns(userAns != null ? userAns : "")
                     .correctAns(correctAns)
-                    .ok(verifyResult.isCorrect())
+                    .ok(isCorrect)
                     .timeSpentSeconds(timeSpent.intValue())
                     .build());
         }

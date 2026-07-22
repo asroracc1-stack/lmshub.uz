@@ -10,4 +10,5 @@ import java.util.UUID;
 @Repository
 public interface AnswerKeyRepository extends JpaRepository<AnswerKey, UUID> {
     Optional<AnswerKey> findByQuestionId(UUID questionId);
+    Optional<AnswerKey> findFirstByQuestionId(UUID questionId);
 }
