@@ -71,7 +71,10 @@ public class Exam {
     @Column(name = "sub_type")
     private String subType;
 
-    @Column(name = "version", nullable = false)
+    @Column(name = "is_ai_imported")
+    @Builder.Default
+    private Boolean isAiImported = false;
+
     @Builder.Default
     private Integer version = 1;
 

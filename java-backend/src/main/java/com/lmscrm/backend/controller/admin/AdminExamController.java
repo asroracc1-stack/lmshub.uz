@@ -143,18 +143,23 @@ public class AdminExamController {
     @PostMapping(value = "/import-commit", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
     @CacheEvict(cacheNames = {"examDetails", "examsByType"}, allEntries = true)
-    public ResponseEntity<?> importCommit(@RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
+    public ResponseEntity<?> importCommit(@RequestParam("file") org.springframework.web.multipart.MultipartFile file,
+                                          @AuthenticationPrincipal User user) {
         try {
             if (file.isEmpty()) {
                 return ResponseEntity.badRequest().body("Fayl bo'sh");
             }
-            
+
             String fileName = file.getOriginalFilename() != null ? file.getOriginalFilename().toLowerCase() : "";
             byte[] bytes = file.getBytes();
-            
-            importOrchestrator.commitImport(bytes, fileName);
+
+            // First preview to obtain ValidationReport
+            com.lmscrm.backend.dto.exam.parser.ValidationReport report = importOrchestrator.previewImport(bytes, fileName);
+            // Then commit with the report and the authenticated user
+            importOrchestrator.commitImport(report, user);
+
             return ResponseEntity.ok("Imtihon muvaffaqiyatli saqlandi va barcha qoidalardan o'tdi!");
-            
+
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Import tizimida xatolik: " + e.getMessage());
         }

@@ -23,6 +23,10 @@ public class Question {
     private Exam exam;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "student_attempt_id")
+    private StudentAttempt studentAttempt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "passage_id")
     private Passage passage;
 
