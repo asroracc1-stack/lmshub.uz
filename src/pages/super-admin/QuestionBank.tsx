@@ -1209,31 +1209,40 @@ function LmsImportModal({
                 <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Import statistikasi</p>
                 <div className="grid grid-cols-3 gap-3">
                   <div className="text-center p-3 bg-white dark:bg-slate-800 rounded-lg border">
-                    <p className="text-2xl font-black text-violet-600">{statistics.totalQuestions || 0}</p>
+                    <p className="text-2xl font-black text-violet-600">
+                      {statistics.totalQuestions ?? statistics.total_questions ?? 0}
+                    </p>
                     <p className="text-xs text-muted-foreground">Jami savollar</p>
                   </div>
                   <div className="text-center p-3 bg-white dark:bg-slate-800 rounded-lg border">
-                    <p className="text-2xl font-black text-blue-600">{statistics.sectionCount || 0}</p>
+                    <p className="text-2xl font-black text-blue-600">
+                      {statistics.sectionCount ?? statistics.section_count ?? 0}
+                    </p>
                     <p className="text-xs text-muted-foreground">Sectionlar</p>
                   </div>
                   <div className="text-center p-3 bg-white dark:bg-slate-800 rounded-lg border">
-                    <p className="text-2xl font-black text-emerald-600">{statistics.mediaAssetCount || 0}</p>
+                    <p className="text-2xl font-black text-emerald-600">
+                      {statistics.mediaAssetCount ?? statistics.media_asset_count ?? 0}
+                    </p>
                     <p className="text-xs text-muted-foreground">Media fayllar</p>
                   </div>
                 </div>
-                {statistics.examTitle && (
+                {(statistics.examTitle || statistics.exam_title) && (
                   <div className="flex items-center gap-2 text-sm">
                     <span className="text-muted-foreground">Imtihon:</span>
-                    <span className="font-semibold">{statistics.examTitle}</span>
-                    {statistics.examType && <Badge variant="outline" className="text-xs">{statistics.examType}</Badge>}
+                    <span className="font-semibold">{statistics.examTitle || statistics.exam_title}</span>
+                    {(statistics.examType || statistics.exam_type) && (
+                      <Badge variant="outline" className="text-xs">{statistics.examType || statistics.exam_type}</Badge>
+                    )}
                   </div>
                 )}
                 {/* Question type breakdown */}
-                {statistics.byQuestionType && Object.keys(statistics.byQuestionType).length > 0 && (
+                {(statistics.byQuestionType || statistics.by_question_type) &&
+                 Object.keys(statistics.byQuestionType || statistics.by_question_type || {}).length > 0 && (
                   <div className="space-y-1.5">
                     <p className="text-xs text-muted-foreground font-medium">Savol turlari:</p>
                     <div className="flex flex-wrap gap-2">
-                      {Object.entries(statistics.byQuestionType).map(([type, count]) => (
+                      {Object.entries(statistics.byQuestionType || statistics.by_question_type || {}).map(([type, count]) => (
                         <span key={type} className="px-2 py-0.5 bg-white dark:bg-slate-800 border rounded-full text-xs font-medium">
                           {type}: <b>{count as number}</b>
                         </span>
