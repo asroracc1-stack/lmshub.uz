@@ -3,16 +3,24 @@ package com.lmscrm.backend.service.exam.parser;
 import com.lmscrm.backend.dto.exam.parser.ParseResult;
 
 /**
- * Common interface for all deterministic parsing engines.
+ * ExamParser — Parses LMSHub HTML v1 specification into a ParseResult.
+ *
+ * Contract:
+ *   - supports() must return true for the format version this parser handles
+ *   - parse() NEVER reads CSS, style, class, animation, color, font, theme
+ *   - parse() ONLY reads lmshub-* custom elements and data-* attributes
  */
 public interface ExamParser {
-    
+
     /**
-     * Parses a raw file into a standardized ParseResult
-     * @param fileBytes The raw binary data of the file
-     * @param fileName The original file name
-     * @return ParseResult containing extracted questions and media
-     * @throws Exception if parsing critically fails
+     * Returns true if this parser can handle the given format version string.
+     * Example: "lmshub-v1"
+     */
+    boolean supports(String formatVersion);
+
+    /**
+     * Parses the HTML bytes into a structured ParseResult.
+     * Must be deterministic — same input always produces same output.
      */
     ParseResult parse(byte[] fileBytes, String fileName) throws Exception;
 }

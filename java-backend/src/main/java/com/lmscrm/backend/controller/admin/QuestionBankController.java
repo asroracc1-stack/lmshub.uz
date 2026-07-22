@@ -122,10 +122,10 @@ public class QuestionBankController {
         return ResponseEntity.ok(questionBankService.getTopics(subject));
     }
 
-    // ─── POST: Import preview (fayl tekshirish) ─────────────────────────────────
+    // ─── POST: Import preview — parse + validate, return sessionId + stats ──────
     @PostMapping(value = "/import-preview", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
-    @Operation(summary = "HTML/PDF faylini import qilishdan oldin tekshirish")
+    @Operation(summary = "HTML faylini parse qilib tekshiradi. SessionId qaytaradi.")
     public ResponseEntity<?> importPreview(@RequestParam("file") MultipartFile file) {
         try {
             if (file.isEmpty()) {
@@ -134,32 +134,42 @@ public class QuestionBankController {
             if (file.getSize() > 20 * 1024 * 1024) {
                 return ResponseEntity.badRequest().body("Hujjat 20MB dan kichik bo'lishi kerak");
             }
-            String fileName = file.getOriginalFilename() != null ? file.getOriginalFilename().toLowerCase() : "";
+            String fileName = file.getOriginalFilename() != null
+                    ? file.getOriginalFilename() : "upload.html";
             byte[] bytes = file.getBytes();
-            ValidationReport report = importOrchestrator.previewImport(bytes, fileName);
-            return ResponseEntity.ok(report);
+
+            // Returns {importSessionId, report, statistics}
+            // Frontend stores only importSessionId — NOT ParseResult
+            com.lmscrm.backend.dto.exam.parser.PreviewResponse response =
+                    importOrchestrator.previewImport(bytes, fileName);
+            return ResponseEntity.ok(response);
+
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Import tahlilida xatolik: " + e.getMessage());
         }
     }
 
-    // ─── POST: Import commit (ma'lumotlar bazasiga saqlash) ─────────────────────
-    @PostMapping(value = "/import-commit", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    // ─── POST: Import commit — send only importSessionId, no file re-upload ──────
+    @PostMapping(value = "/import-commit", consumes = org.springframework.http.MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
     @CacheEvict(cacheNames = {"examDetails", "examsByType"}, allEntries = true)
-    @Operation(summary = "HTML/PDF faylini import qilib bazaga saqlash")
+    @Operation(summary = "Preview'dagi sessionId bilan import tasdiqlash")
     public ResponseEntity<?> importCommit(
-            @RequestParam("file") MultipartFile file,
+            @RequestBody java.util.Map<String, String> body,
             @AuthenticationPrincipal User user) {
         try {
-            if (file.isEmpty()) {
-                return ResponseEntity.badRequest().body("Fayl bo'sh");
+            String importSessionId = body.get("importSessionId");
+            if (importSessionId == null || importSessionId.isBlank()) {
+                return ResponseEntity.badRequest().body("importSessionId talab qilinadi");
             }
-            String fileName = file.getOriginalFilename() != null ? file.getOriginalFilename().toLowerCase() : "";
-            byte[] bytes = file.getBytes();
-            ValidationReport report = importOrchestrator.previewImport(bytes, fileName);
-            importOrchestrator.commitImport(report, user);
-            return ResponseEntity.ok("Imtihon muvaffaqiyatli saqlandi!");
+            com.lmscrm.backend.dto.exam.parser.CommitResponse response =
+                    importOrchestrator.commitImport(importSessionId, user);
+            return ResponseEntity.ok(response);
+
+        } catch (com.lmscrm.backend.exception.SessionExpiredException e) {
+            return ResponseEntity.status(410).body("Sessiya muddati tugagan. Faylni qayta yuklang.");
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Import tizimida xatolik: " + e.getMessage());
         }

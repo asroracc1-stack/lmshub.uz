@@ -125,41 +125,40 @@ public class AdminExamController {
                 return ResponseEntity.badRequest().body("Fayl bo'sh");
             }
             
-            String fileName = file.getOriginalFilename() != null ? file.getOriginalFilename().toLowerCase() : "";
-            
+            String fileName = file.getOriginalFilename() != null ? file.getOriginalFilename() : "";
+
             byte[] bytes = file.getBytes();
             if (bytes.length > 20 * 1024 * 1024) {
                 return ResponseEntity.badRequest().body("Hujjat 20MB dan kichik bo'lishi kerak");
             }
-            
-            com.lmscrm.backend.dto.exam.parser.ValidationReport report = importOrchestrator.previewImport(bytes, fileName);
-            return ResponseEntity.ok(report);
-            
+
+            com.lmscrm.backend.dto.exam.parser.PreviewResponse response =
+                    importOrchestrator.previewImport(bytes, fileName);
+            return ResponseEntity.ok(response);
+
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Import tizimida xatolik: " + e.getMessage());
         }
     }
 
-    @PostMapping(value = "/import-commit", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/import-commit", consumes = org.springframework.http.MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
     @CacheEvict(cacheNames = {"examDetails", "examsByType"}, allEntries = true)
-    public ResponseEntity<?> importCommit(@RequestParam("file") org.springframework.web.multipart.MultipartFile file,
+    public ResponseEntity<?> importCommit(@RequestBody java.util.Map<String, String> body,
                                           @AuthenticationPrincipal User user) {
         try {
-            if (file.isEmpty()) {
-                return ResponseEntity.badRequest().body("Fayl bo'sh");
+            String importSessionId = body.get("importSessionId");
+            if (importSessionId == null || importSessionId.isBlank()) {
+                return ResponseEntity.badRequest().body("importSessionId talab qilinadi");
             }
+            com.lmscrm.backend.dto.exam.parser.CommitResponse response =
+                    importOrchestrator.commitImport(importSessionId, user);
+            return ResponseEntity.ok(response);
 
-            String fileName = file.getOriginalFilename() != null ? file.getOriginalFilename().toLowerCase() : "";
-            byte[] bytes = file.getBytes();
-
-            // First preview to obtain ValidationReport
-            com.lmscrm.backend.dto.exam.parser.ValidationReport report = importOrchestrator.previewImport(bytes, fileName);
-            // Then commit with the report and the authenticated user
-            importOrchestrator.commitImport(report, user);
-
-            return ResponseEntity.ok("Imtihon muvaffaqiyatli saqlandi va barcha qoidalardan o'tdi!");
-
+        } catch (com.lmscrm.backend.exception.SessionExpiredException e) {
+            return ResponseEntity.status(410).body("Sessiya muddati tugagan. Faylni qayta yuklang.");
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Import tizimida xatolik: " + e.getMessage());
         }
