@@ -590,6 +590,13 @@ public class ExamService {
                     .executeUpdate();
         }
 
+        // 2.b. Delete attempt snapshots associated with attempts or exam
+        if (tableExists("attempt_snapshots")) {
+            entityManager.createNativeQuery("DELETE FROM public.attempt_snapshots WHERE exam_id = :examId OR student_attempt_id IN (SELECT id FROM public.student_attempts WHERE exam_id = :examId)")
+                    .setParameter("examId", id)
+                    .executeUpdate();
+        }
+
         // 3. Delete student attempts associated with this exam
         if (tableExists("student_attempts")) {
             entityManager.createNativeQuery("DELETE FROM public.student_attempts WHERE exam_id = :examId")
@@ -607,6 +614,13 @@ public class ExamService {
         // 5. Delete question options associated with the questions of this exam
         if (tableExists("question_options") && tableExists("questions")) {
             entityManager.createNativeQuery("DELETE FROM public.question_options WHERE question_id IN (SELECT id FROM public.questions WHERE exam_id = :examId)")
+                    .setParameter("examId", id)
+                    .executeUpdate();
+        }
+
+        // 5.b. Delete answer keys associated with the questions of this exam
+        if (tableExists("answer_keys") && tableExists("questions")) {
+            entityManager.createNativeQuery("DELETE FROM public.answer_keys WHERE question_id IN (SELECT id FROM public.questions WHERE exam_id = :examId)")
                     .setParameter("examId", id)
                     .executeUpdate();
         }
