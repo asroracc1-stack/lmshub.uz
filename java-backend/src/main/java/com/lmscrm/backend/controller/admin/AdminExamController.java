@@ -6,6 +6,7 @@ import com.lmscrm.backend.dto.exam.ParseAiRequest;
 import com.lmscrm.backend.dto.exam.CreateExamRequest;
 import com.lmscrm.backend.service.exam.ExamService;
 import com.lmscrm.backend.service.GeminiService;
+import com.lmscrm.backend.service.exam.parser.ImportOrchestrator;
 import com.lmscrm.backend.domain.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
@@ -24,6 +25,7 @@ public class AdminExamController {
 
     private final ExamService examService;
     private final GeminiService geminiService;
+    private final ImportOrchestrator importOrchestrator;
 
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
@@ -130,11 +132,29 @@ public class AdminExamController {
                 return ResponseEntity.badRequest().body("Hujjat 20MB dan kichik bo'lishi kerak");
             }
             
-            // Assuming ImportOrchestrator is injected in this controller (will need to wire it via constructor)
-            // com.lmscrm.backend.dto.exam.parser.ValidationReport report = importOrchestrator.previewImport(bytes, fileName);
-            // return ResponseEntity.ok(report);
+            com.lmscrm.backend.dto.exam.parser.ValidationReport report = importOrchestrator.previewImport(bytes, fileName);
+            return ResponseEntity.ok(report);
             
-            return ResponseEntity.ok("Import Engine integration pending ApplicationContext wiring");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Import tizimida xatolik: " + e.getMessage());
+        }
+    }
+
+    @PostMapping(value = "/import-commit", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TEACHER')")
+    @CacheEvict(cacheNames = {"examDetails", "examsByType"}, allEntries = true)
+    public ResponseEntity<?> importCommit(@RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
+        try {
+            if (file.isEmpty()) {
+                return ResponseEntity.badRequest().body("Fayl bo'sh");
+            }
+            
+            String fileName = file.getOriginalFilename() != null ? file.getOriginalFilename().toLowerCase() : "";
+            byte[] bytes = file.getBytes();
+            
+            importOrchestrator.commitImport(bytes, fileName);
+            return ResponseEntity.ok("Imtihon muvaffaqiyatli saqlandi va barcha qoidalardan o'tdi!");
+            
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Import tizimida xatolik: " + e.getMessage());
         }

@@ -1033,74 +1033,67 @@ function QuestionPreviewModal({ open, onClose, question }: { open: boolean; onCl
   );
 }
 
-// ─── PDF Import Modal ─────────────────────────────────────────────────────────
-function PdfImportModal({
-  open, onClose, onImported
+// ─── LMSHub Import Modal (Validation Engine) ─────────────────────────────────────────────────────────
+function LmsImportModal({
+  open, onClose, onSuccess
 }: {
   open: boolean;
   onClose: () => void;
-  onImported: (questions: Question[]) => void;
+  onSuccess: () => void;
 }) {
   const [step, setStep] = useState<"upload" | "review">("upload");
   const [parsing, setParsing] = useState(false);
-  const [parsed, setParsed] = useState<Question[]>([]);
+  const [report, setReport] = useState<any>(null);
+  const [importFile, setImportFile] = useState<File | null>(null);
   const [examType, setExamType] = useState<ExamType>("SAT");
   const [subject, setSubject] = useState("Math");
 
-  const handlePdf = async (file: File) => {
+  const handleFile = async (file: File) => {
     setParsing(true);
+    setImportFile(file);
     try {
       const fd = new FormData();
       fd.append("file", file);
-      const res = await api.post("/admin/exams/analyze-pdf", fd, {
+      const res = await api.post("/super-admin/question-bank/import-preview", fd, {
         headers: { "Content-Type": "multipart/form-data" },
-        timeout: 240000,
+        timeout: 60000,
       });
-      const data = typeof res.data === "string" ? JSON.parse(res.data) : res.data;
-      // Map sections/questions from PDF parse to Question[]
-      const qs: Question[] = [];
-      (data?.sections || []).forEach((s: any) => {
-        (s.questions || []).forEach((q: any) => {
-          qs.push({
-            examType,
-            subject,
-            topic: s.title || "",
-            difficulty: "MEDIUM",
-            questionType: q.qtype === "mcq" ? "MCQ" : q.qtype === "tfng" ? "TRUE_FALSE" : q.qtype === "ynng" ? "YES_NO_NG" : "MCQ",
-            contentBlocks: [{ type: "PARAGRAPH", value: q.prompt || "" }],
-            rawText: q.prompt || "",
-            options: (q.options || []).map((o: string, i: number) => ({
-              label: ["A", "B", "C", "D"][i] || String.fromCharCode(65 + i),
-              textContent: o,
-              isCorrect: o.trim() === String(q.correct_answer || "").trim(),
-            })),
-            correctAnswer: String(q.correct_answer || ""),
-            explanation: q.explanation || "",
-            images: [],
-            tags: [],
-            passageText: s.passage || "",
-          });
-        });
-      });
-      if (qs.length === 0) {
-        toast.error("PDF dan savollar topilmadi");
-        return;
-      }
-      setParsed(qs);
+      
+      setReport(res.data);
       setStep("review");
-      toast.success(`${qs.length} ta savol topildi - tekshirib tasdiqlang`);
+      
+      if (res.data.valid) {
+        toast.success("Hujjat tekshiruvdan o'tdi!");
+      } else {
+        toast.error("Hujjatda xatoliklar topildi, import to'xtatildi!");
+      }
     } catch (e: any) {
-      toast.error("PDF tahlil xatolik: " + (e?.response?.data?.message || e?.message));
+      toast.error("Import tahlil xatolik: " + (e?.response?.data || e?.message));
     } finally {
       setParsing(false);
     }
   };
 
-  const confirmImport = () => {
-    onImported(parsed);
-    onClose();
-    setStep("upload");
-    setParsed([]);
+  const confirmImport = async () => {
+    if (!importFile) return;
+    setParsing(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", importFile);
+      await api.post("/super-admin/question-bank/import-commit", fd, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      toast.success("Imtihon muvaffaqiyatli saqlandi va barcha qoidalardan o'tdi! ✅");
+      onSuccess();
+      onClose();
+      setStep("upload");
+      setReport(null);
+      setImportFile(null);
+    } catch (e: any) {
+      toast.error("Saqlashda xatolik: " + (e?.response?.data || e?.message));
+    } finally {
+      setParsing(false);
+    }
   };
 
   return (
@@ -1108,8 +1101,8 @@ function PdfImportModal({
       <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <BrainCircuit className="h-5 w-5 text-violet-500" />
-            Hujjat Import — AI bilan tahlil (PDF yoki HTML)
+            <Layers className="h-5 w-5 text-violet-500" />
+            LMSHub Deterministic Import
           </DialogTitle>
         </DialogHeader>
 
@@ -1138,29 +1131,29 @@ function PdfImportModal({
 
             <label className="cursor-pointer block">
               <input type="file" accept="application/pdf, text/html, .html" hidden
-                onChange={e => e.target.files?.[0] && handlePdf(e.target.files[0])}
+                onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])}
               />
               <div className="border-2 border-dashed border-violet-400/50 rounded-xl p-12 text-center bg-violet-500/5 hover:bg-violet-500/10 transition-colors">
                 {parsing ? (
                   <div className="space-y-3">
                     <Loader2 className="h-12 w-12 mx-auto text-violet-500 animate-spin" />
                     <p className="text-sm font-medium text-violet-700 dark:text-violet-300">
-                      AI hujjatni tahlil qilyapti...
+                      Validation Engine tekshirmoqda...
                     </p>
-                    <p className="text-xs text-muted-foreground">Bu 1-3 daqiqa vaqt olishi mumkin</p>
+                    <p className="text-xs text-muted-foreground">Fayl 40+ xavfsizlik qoidalaridan o'tmoqda</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    <div className="mx-auto w-16 h-16 rounded-full bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center">
-                      <Sparkles className="h-8 w-8 text-violet-500" />
+                    <div className="mx-auto w-16 h-16 rounded-full bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center border">
+                      <FileText className="h-8 w-8 text-violet-500" />
                     </div>
                     <div>
-                      <p className="font-bold text-slate-700 dark:text-slate-200">PDF yoki HTML faylni yuklash</p>
+                      <p className="font-bold text-slate-700 dark:text-slate-200">LMSHub HTML faylini yuklash</p>
                       <p className="text-sm text-muted-foreground mt-1">
-                        AI avtomatik ravishda savollar, variantlar va javoblarni ajratib oladi.
+                        Tizim HTML strukturasini tekshiradi va 100% to'g'ri ishlashini kafolatlaydi. (Hech qanday AI yo'q)
                       </p>
                     </div>
-                    <Badge variant="outline" className="text-violet-600 mt-2">PDF & HTML formatlar</Badge>
+                    <Badge variant="outline" className="text-violet-600 mt-2">.HTML & .PDF formati</Badge>
                   </div>
                 )}
               </div>
@@ -1168,55 +1161,67 @@ function PdfImportModal({
           </div>
         )}
 
-        {step === "review" && (
+        {step === "review" && report && (
           <div className="space-y-4 py-4">
-            <div className="flex items-center gap-3 p-3 bg-emerald-50 dark:bg-emerald-950/30 rounded-lg border border-emerald-200">
-              <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
+            <div className={cn("flex items-start gap-3 p-4 rounded-lg border", report.valid ? "bg-emerald-50 border-emerald-200" : "bg-rose-50 border-rose-200")}>
+              {report.valid ? (
+                <CheckCircle2 className="h-6 w-6 text-emerald-600 shrink-0 mt-0.5" />
+              ) : (
+                <XCircle className="h-6 w-6 text-rose-600 shrink-0 mt-0.5" />
+              )}
               <div>
-                <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-200">
-                  {parsed.length} ta savol topildi
+                <p className={cn("text-base font-bold", report.valid ? "text-emerald-800" : "text-rose-800")}>
+                  {report.valid ? "Import tasdiqlandi" : "Import xatoliklar tufayli to'xtatildi"}
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  Quyidagi savollarni tekshiring va "Tasdiqlash" tugmasini bosing
+                <p className="text-sm text-muted-foreground mt-1">
+                  Topilgan savollar: <b>{report.parseResult?.questions?.length || 0} ta</b> | Media: <b>{report.parseResult?.mediaAssets?.length || 0} ta</b>
                 </p>
               </div>
             </div>
 
-            <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
-              {parsed.map((q, i) => (
-                <div key={i} className="p-3 border rounded-lg bg-muted/20 space-y-1.5">
-                  <div className="flex items-center gap-2 justify-between">
-                    <span className="text-xs font-bold text-muted-foreground">#{i + 1}</span>
-                    <Badge variant="outline" className="text-xs">{q.questionType}</Badge>
+            {/* Errors Panel */}
+            {report.errors?.length > 0 && (
+              <div className="space-y-2 max-h-48 overflow-y-auto">
+                <p className="text-xs font-bold text-rose-600 uppercase tracking-wide">Qattiq Xatoliklar (Errors):</p>
+                {report.errors.map((err: any, i: number) => (
+                  <div key={i} className="p-3 bg-white dark:bg-slate-900 border-l-4 border-l-rose-500 rounded text-sm shadow-sm flex items-start gap-2">
+                    <AlertCircle className="h-4 w-4 text-rose-500 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-semibold">{err.message}</p>
+                      <p className="text-xs text-muted-foreground">ID: {err.targetId} | Rule: {err.ruleName}</p>
+                    </div>
                   </div>
-                  <p className="text-sm font-medium line-clamp-2">{q.rawText || q.contentBlocks[0]?.value}</p>
-                  <div className="flex flex-wrap gap-1">
-                    {q.options.slice(0, 4).map((o, oi) => (
-                      <span
-                        key={oi}
-                        className={cn(
-                          "text-xs px-2 py-0.5 rounded border",
-                          o.isCorrect ? "bg-emerald-100 border-emerald-400 text-emerald-800" : "bg-muted border-border"
-                        )}
-                      >
-                        {o.label}: {o.textContent.slice(0, 30)}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
 
-            <div className="flex gap-3">
-              <Button variant="outline" onClick={() => { setStep("upload"); setParsed([]); }}>
-                <ArrowLeft className="h-4 w-4 mr-2" /> Qayta yuklash
+            {/* Warnings Panel */}
+            {report.warnings?.length > 0 && (
+              <div className="space-y-2 max-h-40 overflow-y-auto">
+                <p className="text-xs font-bold text-amber-600 uppercase tracking-wide">Ogohlantirishlar (Warnings):</p>
+                {report.warnings.map((warn: any, i: number) => (
+                  <div key={i} className="p-3 bg-white dark:bg-slate-900 border-l-4 border-l-amber-500 rounded text-sm shadow-sm flex items-start gap-2">
+                    <AlertCircle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-semibold">{warn.message}</p>
+                      <p className="text-xs text-muted-foreground">ID: {warn.targetId} | Rule: {warn.ruleName}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="flex gap-3 pt-4 border-t">
+              <Button variant="outline" onClick={() => { setStep("upload"); setReport(null); setImportFile(null); }}>
+                <ArrowLeft className="h-4 w-4 mr-2" /> Boshqa fayl tanlash
               </Button>
               <Button
-                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white disabled:bg-slate-300"
                 onClick={confirmImport}
+                disabled={!report.valid || parsing}
               >
-                <CheckCircle2 className="h-4 w-4 mr-2" />
-                {parsed.length} ta savolni tasdiqlash va saqlash
+                {parsing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Database className="h-4 w-4 mr-2" />}
+                Tasdiqlash va Ma'lumotlar bazasiga yozish
               </Button>
             </div>
           </div>
@@ -1363,23 +1368,9 @@ export default function QuestionBank() {
     }
   };
 
-  const handlePdfImport = async (imported: Question[]) => {
-    let saved = 0;
-    let failed = 0;
-    for (const q of imported) {
-      try {
-        const payload = mapQuestionToApi(q);
-        const res = await api.post("/super-admin/question-bank", payload);
-        setQuestions(prev => [mapApiToQuestion(res.data), ...prev]);
-        saved++;
-      } catch {
-        failed++;
-      }
-    }
-    setTotalItems(t => t + saved);
+  const handleImportSuccess = () => {
+    loadQuestions(0);
     loadStats();
-    if (saved > 0) toast.success(`${saved} ta savol import qilindi ✅`);
-    if (failed > 0) toast.error(`${failed} ta savol saqlanmadi`);
   };
 
   return (
@@ -1400,8 +1391,8 @@ export default function QuestionBank() {
             onClick={() => setShowPdfImport(true)}
             className="gap-2 border-violet-300 text-violet-700 hover:bg-violet-50 dark:hover:bg-violet-950"
           >
-            <BrainCircuit className="h-4 w-4" />
-            PDF Import (AI)
+            <Layers className="h-4 w-4" />
+            LMS HTML Import
           </Button>
           <Button
             onClick={() => { setEditingQ(null); setShowCreate(true); }}
@@ -1732,10 +1723,10 @@ export default function QuestionBank() {
         onClose={() => setPreviewQ(null)}
         question={previewQ}
       />
-      <PdfImportModal
+      <LmsImportModal
         open={showPdfImport}
         onClose={() => setShowPdfImport(false)}
-        onImported={handlePdfImport}
+        onSuccess={handleImportSuccess}
       />
     </div>
   );
