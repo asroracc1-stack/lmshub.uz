@@ -1068,14 +1068,15 @@ function LmsImportModal({
         timeout: 60000,
       });
 
-      // res.data = { importSessionId, report, statistics }
+      // res.data = { importSessionId / import_session_id, report, statistics }
       const data = res.data;
-      setImportSessionId(data.importSessionId || null);
+      const sessId = data.importSessionId || data.import_session_id || null;
+      setImportSessionId(sessId);
       setReport(data.report || data);  // fallback if old format
       setStatistics(data.statistics || null);
       setStep("review");
 
-      if (data.report?.valid ?? data.valid) {
+      if (data.report?.valid ?? data.report?.is_valid ?? data.valid ?? data.is_valid) {
         toast.success("Hujjat tekshiruvdan o'tdi! ✅");
       } else {
         toast.warning("Hujjatda xatoliklar topildi. Ko'rib chiqing.");
@@ -1102,8 +1103,10 @@ function LmsImportModal({
       );
       // res.data = { examId, questionCount, sectionCount, importLogId, warnings }
       const data = res.data;
+      const qCount = data.questionCount ?? data.question_count ?? 0;
+      const sCount = data.sectionCount ?? data.section_count ?? 0;
       toast.success(
-        `✅ Import muvaffaqiyatli! ${data.questionCount || 0} ta savol, ${data.sectionCount || 0} ta section saqlandi.`
+        `✅ Import muvaffaqiyatli! ${qCount} ta savol, ${sCount} ta section saqlandi.`
       );
       onSuccess();
       onClose();

@@ -176,8 +176,13 @@ public class LmsHubHtmlLayoutConverter {
         // Fallback: Regex extraction if DOM candidate search yielded 0 questions across doc
         if (globalQOrder.get() == 1 && container == doc) {
             log.info("No DOM question elements found in container. Attempting regex extraction for JS AnswerKey...");
-            Pattern akPattern = Pattern.compile("\"?(q?\\d+)\"?\\s*:\\s*\"([^\"]+)\"", Pattern.CASE_INSENSITIVE);
-            Matcher matcher = akPattern.matcher(rawHtml);
+            
+            // Scope search strictly inside AK block: const AK = { ... };
+            Matcher akBlockMatcher = Pattern.compile("(?:const\\s+)?AK\\s*=\\s*\\{([^}]+)\\}").matcher(rawHtml);
+            String searchContent = akBlockMatcher.find() ? akBlockMatcher.group(1) : rawHtml;
+
+            Pattern akPattern = Pattern.compile("\"?(\\d+)\"?\\s*:\\s*\"([^\"]+)\"", Pattern.CASE_INSENSITIVE);
+            Matcher matcher = akPattern.matcher(searchContent);
 
             while (matcher.find()) {
                 int currentOrder = globalQOrder.get();
