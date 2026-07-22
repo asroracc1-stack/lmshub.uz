@@ -1033,7 +1033,7 @@ function QuestionPreviewModal({ open, onClose, question }: { open: boolean; onCl
   );
 }
 
-// ─── LMSHub Import Modal (Validation Engine) ─────────────────────────────────────────────────────────
+// ─── LMSHub Import Modal (Session-based) ─────────────────────────────────────
 function LmsImportModal({
   open, onClose, onSuccess
 }: {
@@ -1043,14 +1043,23 @@ function LmsImportModal({
 }) {
   const [step, setStep] = useState<"upload" | "review">("upload");
   const [parsing, setParsing] = useState(false);
-  const [report, setReport] = useState<any>(null);
-  const [importFile, setImportFile] = useState<File | null>(null);
-  const [examType, setExamType] = useState<ExamType>("SAT");
-  const [subject, setSubject] = useState("Math");
+  const [committing, setCommitting] = useState(false);
 
+  // Backend returns: { importSessionId, report, statistics }
+  const [importSessionId, setImportSessionId] = useState<string | null>(null);
+  const [report, setReport] = useState<any>(null);
+  const [statistics, setStatistics] = useState<any>(null);
+
+  const resetState = () => {
+    setStep("upload");
+    setReport(null);
+    setStatistics(null);
+    setImportSessionId(null);
+  };
+
+  // STEP 1: Upload file → backend parses + validates → returns sessionId + stats
   const handleFile = async (file: File) => {
     setParsing(true);
-    setImportFile(file);
     try {
       const fd = new FormData();
       fd.append("file", file);
@@ -1058,14 +1067,18 @@ function LmsImportModal({
         headers: { "Content-Type": "multipart/form-data" },
         timeout: 60000,
       });
-      
-      setReport(res.data);
+
+      // res.data = { importSessionId, report, statistics }
+      const data = res.data;
+      setImportSessionId(data.importSessionId || null);
+      setReport(data.report || data);  // fallback if old format
+      setStatistics(data.statistics || null);
       setStep("review");
-      
-      if (res.data.valid) {
-        toast.success("Hujjat tekshiruvdan o'tdi!");
+
+      if (data.report?.valid ?? data.valid) {
+        toast.success("Hujjat tekshiruvdan o'tdi! ✅");
       } else {
-        toast.error("Hujjatda xatoliklar topildi, import to'xtatildi!");
+        toast.warning("Hujjatda xatoliklar topildi. Ko'rib chiqing.");
       }
     } catch (e: any) {
       toast.error("Import tahlil xatolik: " + (e?.response?.data || e?.message));
@@ -1074,63 +1087,68 @@ function LmsImportModal({
     }
   };
 
+  // STEP 2: Send only importSessionId to commit — NO file re-upload
   const confirmImport = async () => {
-    if (!importFile) return;
-    setParsing(true);
+    if (!importSessionId) {
+      toast.error("Session ID topilmadi. Faylni qayta yuklang.");
+      return;
+    }
+    setCommitting(true);
     try {
-      const fd = new FormData();
-      fd.append("file", importFile);
-      await api.post("/super-admin/question-bank/import-commit", fd, {
-        headers: { "Content-Type": "multipart/form-data" }
-      });
-      toast.success("Imtihon muvaffaqiyatli saqlandi va barcha qoidalardan o'tdi! ✅");
+      const res = await api.post(
+        "/super-admin/question-bank/import-commit",
+        { importSessionId },
+        { headers: { "Content-Type": "application/json" } }
+      );
+      // res.data = { examId, questionCount, sectionCount, importLogId, warnings }
+      const data = res.data;
+      toast.success(
+        `✅ Import muvaffaqiyatli! ${data.questionCount || 0} ta savol, ${data.sectionCount || 0} ta section saqlandi.`
+      );
       onSuccess();
       onClose();
-      setStep("upload");
-      setReport(null);
-      setImportFile(null);
+      resetState();
     } catch (e: any) {
-      toast.error("Saqlashda xatolik: " + (e?.response?.data || e?.message));
+      const status = e?.response?.status;
+      if (status === 410) {
+        toast.error("Sessiya muddati tugagan (30 daqiqa). Faylni qayta yuklang.");
+        resetState();
+      } else {
+        toast.error("Saqlashda xatolik: " + (e?.response?.data || e?.message));
+      }
     } finally {
-      setParsing(false);
+      setCommitting(false);
     }
   };
 
+  const isValid = report?.valid ?? report?.isValid ?? false;
+  const errors = report?.errors || [];
+  const warnings = report?.warnings || [];
+
   return (
     <Dialog open={open} onOpenChange={v => !v && onClose()}>
-      <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[88vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2 text-lg">
             <Layers className="h-5 w-5 text-violet-500" />
-            LMSHub Deterministic Import
+            LMSHub Import Engine
+            <Badge variant="outline" className="text-violet-600 text-xs ml-1">v1 Spec</Badge>
           </DialogTitle>
         </DialogHeader>
 
+        {/* STEP 1: Upload */}
         {step === "upload" && (
           <div className="space-y-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label>Imtihon turi</Label>
-                <Select value={examType} onValueChange={v => { setExamType(v as ExamType); setSubject(getSubjectsForExam(v as ExamType)[0]); }}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {EXAM_TYPES.map(et => <SelectItem key={et.value} value={et.value}>{et.icon} {et.label}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <Label>Fan</Label>
-                <Select value={subject} onValueChange={setSubject}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {getSubjectsForExam(examType).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="p-3 rounded-lg bg-violet-50 dark:bg-violet-950/30 border border-violet-200 dark:border-violet-800 text-sm text-violet-800 dark:text-violet-200">
+              <p className="font-semibold mb-1">📋 LMSHub HTML v1 Specification</p>
+              <p className="text-xs opacity-80">
+                HTML fayl <code className="bg-violet-100 dark:bg-violet-900 px-1 rounded">data-format="lmshub-v1"</code> atributiga ega bo'lishi kerak.
+                PDF → Layout Converter → LMSHub HTML → bu yerga.
+              </p>
             </div>
 
             <label className="cursor-pointer block">
-              <input type="file" accept="application/pdf, text/html, .html" hidden
+              <input type="file" accept="text/html, .html" hidden
                 onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])}
               />
               <div className="border-2 border-dashed border-violet-400/50 rounded-xl p-12 text-center bg-violet-500/5 hover:bg-violet-500/10 transition-colors">
@@ -1138,9 +1156,9 @@ function LmsImportModal({
                   <div className="space-y-3">
                     <Loader2 className="h-12 w-12 mx-auto text-violet-500 animate-spin" />
                     <p className="text-sm font-medium text-violet-700 dark:text-violet-300">
-                      Validation Engine tekshirmoqda...
+                      Validation Engine ishlamoqda...
                     </p>
-                    <p className="text-xs text-muted-foreground">Fayl 40+ xavfsizlik qoidalaridan o'tmoqda</p>
+                    <p className="text-xs text-muted-foreground">Fayl 42+ xavfsizlik qoidasidan o'tmoqda</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -1150,10 +1168,10 @@ function LmsImportModal({
                     <div>
                       <p className="font-bold text-slate-700 dark:text-slate-200">LMSHub HTML faylini yuklash</p>
                       <p className="text-sm text-muted-foreground mt-1">
-                        Tizim HTML strukturasini tekshiradi va 100% to'g'ri ishlashini kafolatlaydi. (Hech qanday AI yo'q)
+                        42 ta qoida bilan tekshiriladi. Hech qanday AI ishlatilmaydi.
                       </p>
                     </div>
-                    <Badge variant="outline" className="text-violet-600 mt-2">.HTML & .PDF formati</Badge>
+                    <Badge variant="outline" className="text-violet-600">.HTML formati</Badge>
                   </div>
                 )}
               </div>
@@ -1161,67 +1179,129 @@ function LmsImportModal({
           </div>
         )}
 
+        {/* STEP 2: Review */}
         {step === "review" && report && (
           <div className="space-y-4 py-4">
-            <div className={cn("flex items-start gap-3 p-4 rounded-lg border", report.valid ? "bg-emerald-50 border-emerald-200" : "bg-rose-50 border-rose-200")}>
-              {report.valid ? (
-                <CheckCircle2 className="h-6 w-6 text-emerald-600 shrink-0 mt-0.5" />
-              ) : (
-                <XCircle className="h-6 w-6 text-rose-600 shrink-0 mt-0.5" />
-              )}
+
+            {/* Status banner */}
+            <div className={cn(
+              "flex items-start gap-3 p-4 rounded-lg border",
+              isValid ? "bg-emerald-50 border-emerald-200 dark:bg-emerald-950/30 dark:border-emerald-800"
+                      : "bg-rose-50 border-rose-200 dark:bg-rose-950/30 dark:border-rose-800"
+            )}>
+              {isValid
+                ? <CheckCircle2 className="h-6 w-6 text-emerald-600 shrink-0 mt-0.5" />
+                : <XCircle className="h-6 w-6 text-rose-600 shrink-0 mt-0.5" />
+              }
               <div>
-                <p className={cn("text-base font-bold", report.valid ? "text-emerald-800" : "text-rose-800")}>
-                  {report.valid ? "Import tasdiqlandi" : "Import xatoliklar tufayli to'xtatildi"}
+                <p className={cn("text-base font-bold", isValid ? "text-emerald-800 dark:text-emerald-200" : "text-rose-800 dark:text-rose-200")}>
+                  {isValid ? "Tasdiqlandi — Import qilishga tayyor" : "Xatoliklar topildi — Import to'xtatildi"}
                 </p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Topilgan savollar: <b>{report.parseResult?.questions?.length || 0} ta</b> | Media: <b>{report.parseResult?.mediaAssets?.length || 0} ta</b>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  {errors.length} ta xato · {warnings.length} ta ogohlantirish
                 </p>
               </div>
             </div>
 
-            {/* Errors Panel */}
-            {report.errors?.length > 0 && (
-              <div className="space-y-2 max-h-48 overflow-y-auto">
-                <p className="text-xs font-bold text-rose-600 uppercase tracking-wide">Qattiq Xatoliklar (Errors):</p>
-                {report.errors.map((err: any, i: number) => (
+            {/* Preview Statistics */}
+            {statistics && (
+              <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-xl border space-y-3">
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Import statistikasi</p>
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="text-center p-3 bg-white dark:bg-slate-800 rounded-lg border">
+                    <p className="text-2xl font-black text-violet-600">{statistics.totalQuestions || 0}</p>
+                    <p className="text-xs text-muted-foreground">Jami savollar</p>
+                  </div>
+                  <div className="text-center p-3 bg-white dark:bg-slate-800 rounded-lg border">
+                    <p className="text-2xl font-black text-blue-600">{statistics.sectionCount || 0}</p>
+                    <p className="text-xs text-muted-foreground">Sectionlar</p>
+                  </div>
+                  <div className="text-center p-3 bg-white dark:bg-slate-800 rounded-lg border">
+                    <p className="text-2xl font-black text-emerald-600">{statistics.mediaAssetCount || 0}</p>
+                    <p className="text-xs text-muted-foreground">Media fayllar</p>
+                  </div>
+                </div>
+                {statistics.examTitle && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-muted-foreground">Imtihon:</span>
+                    <span className="font-semibold">{statistics.examTitle}</span>
+                    {statistics.examType && <Badge variant="outline" className="text-xs">{statistics.examType}</Badge>}
+                  </div>
+                )}
+                {/* Question type breakdown */}
+                {statistics.byQuestionType && Object.keys(statistics.byQuestionType).length > 0 && (
+                  <div className="space-y-1.5">
+                    <p className="text-xs text-muted-foreground font-medium">Savol turlari:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {Object.entries(statistics.byQuestionType).map(([type, count]) => (
+                        <span key={type} className="px-2 py-0.5 bg-white dark:bg-slate-800 border rounded-full text-xs font-medium">
+                          {type}: <b>{count as number}</b>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Errors */}
+            {errors.length > 0 && (
+              <div className="space-y-2 max-h-44 overflow-y-auto">
+                <p className="text-xs font-bold text-rose-600 uppercase tracking-wide">
+                  Xatoliklar ({errors.length}):
+                </p>
+                {errors.map((err: any, i: number) => (
                   <div key={i} className="p-3 bg-white dark:bg-slate-900 border-l-4 border-l-rose-500 rounded text-sm shadow-sm flex items-start gap-2">
                     <AlertCircle className="h-4 w-4 text-rose-500 shrink-0 mt-0.5" />
                     <div>
                       <p className="font-semibold">{err.message}</p>
-                      <p className="text-xs text-muted-foreground">ID: {err.targetId} | Rule: {err.ruleName}</p>
+                      <p className="text-xs text-muted-foreground">ID: {err.targetId || "—"} · Rule: {err.ruleName}</p>
                     </div>
                   </div>
                 ))}
               </div>
             )}
 
-            {/* Warnings Panel */}
-            {report.warnings?.length > 0 && (
-              <div className="space-y-2 max-h-40 overflow-y-auto">
-                <p className="text-xs font-bold text-amber-600 uppercase tracking-wide">Ogohlantirishlar (Warnings):</p>
-                {report.warnings.map((warn: any, i: number) => (
+            {/* Warnings */}
+            {warnings.length > 0 && (
+              <div className="space-y-2 max-h-36 overflow-y-auto">
+                <p className="text-xs font-bold text-amber-600 uppercase tracking-wide">
+                  Ogohlantirishlar ({warnings.length}):
+                </p>
+                {warnings.map((warn: any, i: number) => (
                   <div key={i} className="p-3 bg-white dark:bg-slate-900 border-l-4 border-l-amber-500 rounded text-sm shadow-sm flex items-start gap-2">
                     <AlertCircle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
                     <div>
                       <p className="font-semibold">{warn.message}</p>
-                      <p className="text-xs text-muted-foreground">ID: {warn.targetId} | Rule: {warn.ruleName}</p>
+                      <p className="text-xs text-muted-foreground">ID: {warn.targetId || "—"} · Rule: {warn.ruleName}</p>
                     </div>
                   </div>
                 ))}
               </div>
             )}
 
-            <div className="flex gap-3 pt-4 border-t">
-              <Button variant="outline" onClick={() => { setStep("upload"); setReport(null); setImportFile(null); }}>
-                <ArrowLeft className="h-4 w-4 mr-2" /> Boshqa fayl tanlash
+            {/* Session expiry notice */}
+            {importSessionId && (
+              <div className="flex items-center gap-2 p-2 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 rounded-lg text-xs text-amber-700 dark:text-amber-300">
+                <Clock className="h-3.5 w-3.5 shrink-0" />
+                Session 30 daqiqa davomida amal qiladi. Shu vaqt ichida tasdiqlang.
+              </div>
+            )}
+
+            <div className="flex gap-3 pt-3 border-t">
+              <Button variant="outline" onClick={resetState} disabled={committing}>
+                <ArrowLeft className="h-4 w-4 mr-2" /> Boshqa fayl
               </Button>
               <Button
-                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white disabled:bg-slate-300"
+                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-50"
                 onClick={confirmImport}
-                disabled={!report.valid || parsing}
+                disabled={!isValid || committing || !importSessionId}
               >
-                {parsing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Database className="h-4 w-4 mr-2" />}
-                Tasdiqlash va Ma'lumotlar bazasiga yozish
+                {committing
+                  ? <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  : <Database className="h-4 w-4 mr-2" />
+                }
+                {committing ? "Saqlanmoqda..." : "Tasdiqlash va Bazaga yozish"}
               </Button>
             </div>
           </div>
