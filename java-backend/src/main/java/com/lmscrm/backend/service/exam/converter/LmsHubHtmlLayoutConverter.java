@@ -1,5 +1,6 @@
 package com.lmscrm.backend.service.exam.converter;
 
+import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -11,17 +12,25 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * LmsHubHtmlLayoutConverter — Converts legacy/UI-oriented HTML files into 100% compliant
- * LMSHub HTML v1 specification files with static <lmshub-section> and <lmshub-question> tags.
+ * LmsHubHtmlLayoutConverter — Production-Grade Layout Converter.
+ *
+ * Strictly converts HTML/IELTS layouts into 100% compliant LMSHub HTML v1 Specification.
+ *
+ * Rules:
+ *   1. NO artificial prompts ("Question N") are ever created.
+ *   2. NO artificial options ("Option A/B") are ever injected.
+ *   3. If an element lacks a valid prompt or options, it is ignored and logged.
+ *   4. Real HTML structure (inputs, labels, selects, .q-item, .q-text) is detected cleanly.
  */
 @Service
+@Slf4j
 public class LmsHubHtmlLayoutConverter {
 
     public String convertToLmsHubSpecification(byte[] htmlBytes, String examTitle, String examType) {
         String rawHtml = new String(htmlBytes, StandardCharsets.UTF_8);
         Document doc = Jsoup.parse(rawHtml);
 
-        // 1. Ensure <html> element has required data attributes
+        // 1. Ensure <html> root metadata
         Element htmlEl = doc.selectFirst("html");
         if (htmlEl == null) {
             doc.append("<html data-format=\"lmshub-v1\"></html>");
@@ -44,13 +53,13 @@ public class LmsHubHtmlLayoutConverter {
             htmlEl.attr("data-duration", "60");
         }
 
-        // 2. If <lmshub-section> already exists, return unchanged
+        // 2. Return unchanged if <lmshub-section> already exists
         Elements existingSections = doc.select("lmshub-section");
         if (!existingSections.isEmpty()) {
             return doc.outerHtml();
         }
 
-        // 3. Inject static <lmshub-section> tags from HTML DOM or JS scripts
+        // 3. Transform HTML DOM / JS data into static <lmshub-*> elements
         Element body = doc.body();
         if (body == null) {
             body = doc.appendElement("body");
@@ -65,7 +74,6 @@ public class LmsHubHtmlLayoutConverter {
         Elements passageContainers = doc.select(".passage, .passage-block, section, article, [data-passage-id], .reading-text, #passage-content");
 
         if (passageContainers.isEmpty()) {
-            // Create default section 1
             Element sec = doc.createElement("lmshub-section");
             sec.attr("data-id", "sec_1");
             sec.attr("data-title", "Section 1");
@@ -80,11 +88,10 @@ public class LmsHubHtmlLayoutConverter {
             if (passageTextEl != null && !passageTextEl.text().isBlank()) {
                 passage.text(passageTextEl.text());
             } else {
-                passage.text("Passage content");
+                passage.text("Passage Content");
             }
             sec.appendChild(passage);
 
-            // Extract questions from UI DOM or JS regex
             extractAndAppendQuestions(doc, sec, rawHtml);
 
             body.appendChild(sec);
@@ -109,25 +116,31 @@ public class LmsHubHtmlLayoutConverter {
     }
 
     private void extractAndAppendQuestions(Document doc, Element section, String rawHtml) {
-        // 1. First attempt: extract from HTML DOM question elements
-        Elements uiQuestions = doc.select(".question, .q-block, .question-item, [id^=q], [data-q-id], .q-item");
+        // 1. Search DOM question containers
+        Elements uiCandidates = doc.select(".q-item, .question, .q-block, .question-item, [id^=q], [data-q-id], .q-box");
         int qOrder = 1;
 
-        if (!uiQuestions.isEmpty()) {
-            for (Element qUi : uiQuestions) {
-                String uiText = qUi.text().trim();
-                if (!uiText.isBlank() && (qUi.selectFirst("input, label, select, .options") != null || qUi.hasAttr("data-q-id") || qUi.id().startsWith("q"))) {
-                    section.appendChild(createLmsHubQuestion(doc, qUi, qOrder++));
-                }
+        for (Element candidate : uiCandidates) {
+            // Filter out group headers like "Questions 1–5" or empty containers
+            String rawText = candidate.text().trim();
+            if (isGroupHeaderOrEmpty(rawText, candidate)) {
+                log.info("Candidate ignored (Group header or non-question container): '{}'", rawText);
+                continue;
+            }
+
+            Element qEl = parseRealQuestion(doc, candidate, qOrder);
+            if (qEl != null) {
+                section.appendChild(qEl);
+                qOrder++;
             }
         }
 
-        // 2. Fallback: if no DOM questions found, parse JS AK object / PASSAGES via regex
+        // 2. Regex fallback for JS AnswerKey (AK) / PASSAGES object if DOM questions are empty
         if (qOrder == 1) {
-            // Regex for AK answer key: "q1": "TRUE", "q2": "FALSE" or "1": "education"
+            log.info("No DOM question elements found. Attempting regex extraction for JS AnswerKey...");
             Pattern akPattern = Pattern.compile("\"?(q?\\d+)\"?\\s*:\\s*\"([^\"]+)\"", Pattern.CASE_INSENSITIVE);
             Matcher matcher = akPattern.matcher(rawHtml);
-            
+
             while (matcher.find()) {
                 String qId = matcher.group(1);
                 String ansText = matcher.group(2).trim();
@@ -142,27 +155,11 @@ public class LmsHubHtmlLayoutConverter {
                 q.appendChild(text);
 
                 String upperAns = ansText.toUpperCase();
-                if (upperAns.equals("TRUE") || upperAns.equals("FALSE") || upperAns.equals("NOT GIVEN")) {
+                if (upperAns.equals("TRUE") || upperAns.equals("FALSE") || upperAns.equals("NOT GIVEN") ||
+                    upperAns.equals("YES") || upperAns.equals("NO")) {
                     q.attr("data-type", "TRUE_FALSE_NG");
-                    Element optT = doc.createElement("lmshub-option");
-                    optT.attr("data-label", "TRUE");
-                    optT.attr("data-correct", String.valueOf(upperAns.equals("TRUE")));
-                    optT.text("TRUE");
-                    q.appendChild(optT);
-
-                    Element optF = doc.createElement("lmshub-option");
-                    optF.attr("data-label", "FALSE");
-                    optF.attr("data-correct", String.valueOf(upperAns.equals("FALSE")));
-                    optF.text("FALSE");
-                    q.appendChild(optF);
-
-                    Element optNg = doc.createElement("lmshub-option");
-                    optNg.attr("data-label", "NOT GIVEN");
-                    optNg.attr("data-correct", String.valueOf(upperAns.equals("NOT GIVEN")));
-                    optNg.text("NOT GIVEN");
-                    q.appendChild(optNg);
+                    addTfngOptions(doc, q, upperAns);
                 } else {
-                    // Default to FILL_BLANK for non-MCQ answers (no option rules enforced)
                     q.attr("data-type", "FILL_BLANK");
                 }
 
@@ -174,100 +171,134 @@ public class LmsHubHtmlLayoutConverter {
                 qOrder++;
             }
         }
-
-        // 3. Fallback 2: if still no questions found at all, create 1 valid FILL_BLANK question
-        if (qOrder == 1) {
-            Element q = doc.createElement("lmshub-question");
-            q.attr("data-id", "q_1");
-            q.attr("data-type", "FILL_BLANK");
-            q.attr("data-order", "1");
-            q.attr("data-points", "1");
-
-            Element text = doc.createElement("lmshub-text");
-            text.text("Question 1");
-            q.appendChild(text);
-
-            Element ans = doc.createElement("lmshub-answer");
-            ans.text("Answer 1");
-            q.appendChild(ans);
-
-            section.appendChild(q);
-        }
     }
 
-    private Element createLmsHubQuestion(Document doc, Element qUi, int order) {
+    private boolean isGroupHeaderOrEmpty(String text, Element el) {
+        if (text.isBlank()) return true;
+        
+        // Skip headings like "Questions 1-5", "Questions 14-20"
+        if (text.matches("(?i)^Questions?\\s+\\d+([–-]\\d+)?\\s*$")) return true;
+        if (text.matches("(?i)^READING PASSAGE \\d+.*$") && el.select("input, select, .option").isEmpty()) return true;
+
+        // Container without any input, select, options or prompt
+        boolean hasInputs = !el.select("input, select, textarea, label.choice, .option, .opt").isEmpty();
+        boolean hasPrompt = el.selectFirst(".q-text, .question-text, label, p, strong, h4, h3") != null;
+
+        return !hasInputs && !hasPrompt && !el.hasAttr("data-q-id");
+    }
+
+    private Element parseRealQuestion(Document doc, Element qUi, int order) {
+        // Extract Prompt: .q-text, .question-text, <label>, <p>, <strong>, <h4>
+        String prompt = extractPromptText(qUi);
+        if (prompt.isBlank()) {
+            log.info("Question #{}: Ignored. Reason: No prompt text found.", order);
+            return null;
+        }
+
+        // Extract Options: <select><option>, <input type="radio/checkbox">, label.choice, .option
+        Elements optElements = qUi.select(".option, .opt, label.choice, label:has(input[type=radio]), label:has(input[type=checkbox]), select option");
+
         Element q = doc.createElement("lmshub-question");
         String qId = qUi.attr("data-q-id").isEmpty() ? (qUi.id().isEmpty() ? "q_" + order : qUi.id()) : qUi.attr("data-q-id");
-        
         q.attr("data-id", qId);
         q.attr("data-order", String.valueOf(order));
         q.attr("data-points", "1");
 
-        // Question text (guaranteed non-empty)
-        Element text = doc.createElement("lmshub-text");
-        Element textUi = qUi.selectFirst(".q-text, .question-text, p, label");
-        String textVal = "";
-        if (textUi != null && !textUi.text().isBlank()) {
-            textVal = textUi.text().trim();
-        } else if (!qUi.text().isBlank()) {
-            textVal = qUi.text().trim();
-        } else {
-            textVal = "Question " + order;
-        }
-        text.text(textVal);
-        q.appendChild(text);
+        // Question text tag
+        Element textTag = doc.createElement("lmshub-text");
+        textTag.text(prompt);
+        q.appendChild(textTag);
 
-        // Options
-        Elements optUis = qUi.select(".option, .opt, label, input[type=radio]");
         char labelChar = 'A';
-        for (Element optUi : optUis) {
-            if (optUi.text().isBlank()) continue;
-            Element opt = doc.createElement("lmshub-option");
-            opt.attr("data-label", String.valueOf(labelChar++));
-            boolean isCorrect = optUi.hasClass("correct") || "true".equalsIgnoreCase(optUi.attr("data-correct"));
-            opt.attr("data-correct", String.valueOf(isCorrect));
-            opt.text(optUi.text().trim());
-            q.appendChild(opt);
+        for (Element optEl : optElements) {
+            String optText = optEl.text().trim();
+            if (optText.isBlank() || optText.equalsIgnoreCase("select")) continue;
+
+            Element optTag = doc.createElement("lmshub-option");
+            optTag.attr("data-label", String.valueOf(labelChar++));
+            boolean isCorrect = optEl.hasClass("correct") || "true".equalsIgnoreCase(optEl.attr("data-correct"));
+            optTag.attr("data-correct", String.valueOf(isCorrect));
+            optTag.text(optText);
+            q.appendChild(optTag);
         }
 
         int optionCount = q.select("lmshub-option").size();
-        String declaredType = qUi.attr("data-type").toUpperCase();
+        boolean hasSelect = !qUi.select("select").isEmpty();
+        boolean hasTextInput = !qUi.select("input[type=text], textarea").isEmpty();
 
-        if (!declaredType.isBlank()) {
-            q.attr("data-type", declaredType);
-            if ((declaredType.equals("SINGLE_CHOICE") || declaredType.equals("MULTIPLE_CHOICE")) && optionCount < 2) {
-                // Add default options A and B if MCQ has fewer than 2 options
-                Element optA = doc.createElement("lmshub-option");
-                optA.attr("data-label", "A");
-                optA.attr("data-correct", "true");
-                optA.text("Option A");
-                q.appendChild(optA);
-
-                Element optB = doc.createElement("lmshub-option");
-                optB.attr("data-label", "B");
-                optB.attr("data-correct", "false");
-                optB.text("Option B");
-                q.appendChild(optB);
-            }
-        } else {
-            // Determine type based on options present
-            if (optionCount >= 2) {
-                q.attr("data-type", "SINGLE_CHOICE");
+        // Detect Question Type
+        String qType;
+        if (hasSelect) {
+            qType = "MATCHING";
+        } else if (optionCount >= 2) {
+            // Check if options are TRUE/FALSE/NOT GIVEN
+            String firstOptText = q.select("lmshub-option").first().text().toUpperCase();
+            if (firstOptText.contains("TRUE") || firstOptText.contains("FALSE") || firstOptText.contains("YES")) {
+                qType = "TRUE_FALSE_NG";
             } else {
-                q.attr("data-type", "FILL_BLANK");
+                qType = "SINGLE_CHOICE";
             }
+        } else if (hasTextInput || optionCount == 0) {
+            qType = "FILL_BLANK";
+        } else {
+            qType = "SINGLE_CHOICE";
         }
 
-        // Answer
-        Element answerUi = qUi.selectFirst(".answer, .correct-answer, [data-answer]");
-        Element ans = doc.createElement("lmshub-answer");
-        if (answerUi != null && !answerUi.text().isBlank()) {
-            ans.text(answerUi.text().trim());
-        } else {
-            ans.text("A");
+        // NO FAKE OPTIONS: If MCQ type has fewer than 2 options, reclassify to FILL_BLANK instead of adding dummy options!
+        if ((qType.equals("SINGLE_CHOICE") || qType.equals("MULTIPLE_CHOICE")) && optionCount < 2) {
+            log.info("Question #{}: Reclassified from {} to FILL_BLANK due to insufficient options ({})", order, qType, optionCount);
+            qType = "FILL_BLANK";
         }
-        q.appendChild(ans);
+
+        q.attr("data-type", qType);
+
+        // Answer tag
+        Element answerUi = qUi.selectFirst(".answer, .correct-answer, [data-answer]");
+        Element ansTag = doc.createElement("lmshub-answer");
+        if (answerUi != null && !answerUi.text().isBlank()) {
+            ansTag.text(answerUi.text().trim());
+        } else {
+            ansTag.text("");
+        }
+        q.appendChild(ansTag);
 
         return q;
+    }
+
+    private String extractPromptText(Element qUi) {
+        Element promptEl = qUi.selectFirst(".q-text, .question-text, label, p, strong, h4, h3");
+        if (promptEl != null && !promptEl.text().isBlank()) {
+            String pText = promptEl.text().trim();
+            if (!pText.matches("(?i)^Questions?\\s+\\d+.*$")) {
+                return pText;
+            }
+        }
+        
+        // Fallback to container text
+        String text = qUi.text().trim();
+        if (!text.matches("(?i)^Questions?\\s+\\d+.*$")) {
+            return text;
+        }
+        return "";
+    }
+
+    private void addTfngOptions(Document doc, Element q, String upperAns) {
+        Element optT = doc.createElement("lmshub-option");
+        optT.attr("data-label", "TRUE");
+        optT.attr("data-correct", String.valueOf("TRUE".equals(upperAns) || "YES".equals(upperAns)));
+        optT.text("TRUE");
+        q.appendChild(optT);
+
+        Element optF = doc.createElement("lmshub-option");
+        optF.attr("data-label", "FALSE");
+        optF.attr("data-correct", String.valueOf("FALSE".equals(upperAns) || "NO".equals(upperAns)));
+        optF.text("FALSE");
+        q.appendChild(optF);
+
+        Element optNg = doc.createElement("lmshub-option");
+        optNg.attr("data-label", "NOT GIVEN");
+        optNg.attr("data-correct", String.valueOf("NOT GIVEN".equals(upperAns)));
+        optNg.text("NOT GIVEN");
+        q.appendChild(optNg);
     }
 }
