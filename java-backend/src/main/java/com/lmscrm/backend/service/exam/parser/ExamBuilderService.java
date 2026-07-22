@@ -225,11 +225,17 @@ public class ExamBuilderService {
     }
 
     private ExamType resolveExamType(String examTypeStr) {
-        if (examTypeStr == null) return ExamType.IELTS_READING;
+        if (examTypeStr == null) return ExamType.IELTS;
+        String upper = examTypeStr.toUpperCase().trim();
+        if (upper.contains("IELTS")) return ExamType.IELTS;
+        if (upper.contains("READING")) return ExamType.READING;
+        if (upper.contains("SAT")) return ExamType.SAT;
+        if (upper.contains("MATH")) return ExamType.MATH;
+        if (upper.contains("NATIONAL")) return ExamType.NATIONAL_CERT;
         try {
-            return ExamType.valueOf(examTypeStr.toUpperCase());
+            return ExamType.valueOf(upper);
         } catch (IllegalArgumentException e) {
-            return ExamType.IELTS_READING;
+            return ExamType.IELTS;
         }
     }
 }
