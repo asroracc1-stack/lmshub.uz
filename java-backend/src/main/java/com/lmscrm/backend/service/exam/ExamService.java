@@ -77,7 +77,7 @@ public class ExamService {
 
                 // correctAnswer: isCorrect=true bo'lgan option text sini olish
                 String correctAnswer = options.stream()
-                        .filter(QuestionOption::getIsCorrect)
+                        .filter(o -> Boolean.TRUE.equals(o.getIsCorrect()))
                         .map(QuestionOption::getText)
                         .findFirst()
                         .orElse(null);
@@ -693,7 +693,7 @@ public class ExamService {
             // Get correct answer from options
             List<QuestionOption> options = optionRepository.findByQuestionIdOrderByPositionOrderAsc(q.getId());
             String correctAns = options.stream()
-                    .filter(QuestionOption::getIsCorrect)
+                    .filter(o -> Boolean.TRUE.equals(o.getIsCorrect()))
                     .map(QuestionOption::getText)
                     .findFirst()
                     .orElse("");
@@ -876,7 +876,7 @@ public class ExamService {
 
             List<QuestionOption> options = optionRepository.findByQuestionIdOrderByPositionOrderAsc(q.getId());
             String correctAns = options.stream()
-                    .filter(QuestionOption::getIsCorrect)
+                    .filter(o -> Boolean.TRUE.equals(o.getIsCorrect()))
                     .map(QuestionOption::getText)
                     .findFirst()
                     .orElse("");
@@ -946,7 +946,7 @@ public class ExamService {
 
             List<QuestionOption> options = optionRepository.findByQuestionIdOrderByPositionOrderAsc(q.getId());
             String correctAns = options.stream()
-                    .filter(QuestionOption::getIsCorrect)
+                    .filter(o -> Boolean.TRUE.equals(o.getIsCorrect()))
                     .map(QuestionOption::getText)
                     .findFirst()
                     .orElse("");
