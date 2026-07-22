@@ -444,3 +444,62 @@
               box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* ── IELTS Passage Paragraph Labels & Tables ── */
+.pl {
+  font-weight: 800;
+  color: #c41230;
+  margin-right: 8px;
+  font-size: 1.05em;
+  display: inline-block;
+}
+
+.dark .pl {
+  color: #ef4444; /* Readable red for dark mode */
+}
+
+.comp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  margin: 10px 0 18px;
+}
+
+.comp-table th {
+  background: #c41230;
+  color: #fff;
+  padding: 8px 10px;
+  text-align: left;
+  font-size: 12px;
+}
+
+.dark .comp-table th {
+  background: #7f1d1d;
+}
+
+.comp-table td {
+  padding: 10px;
+  border: 1px solid #ddd;
+  vertical-align: top;
+  line-height: 1.7;
+}
+
+.dark .comp-table td {
+  border-color: #374151;
+}
+
+.comp-table tr:nth-child(even) td {
+  background: #fafafa;
+}
+
+.dark .comp-table tr:nth-child(even) td {
+  background: #1f2937;
+}
+
+.comp-table tr:nth-child(odd) td {
+  background: #fff;
+}
+
+.dark .comp-table tr:nth-child(odd) td {
+  background: #111827;
+}
+
