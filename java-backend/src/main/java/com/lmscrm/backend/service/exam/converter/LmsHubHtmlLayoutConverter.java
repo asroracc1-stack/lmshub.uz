@@ -10,14 +10,15 @@ import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
  * LmsHubHtmlLayoutConverter — Multi-Layout Context-Aware HTML Layout Converter.
  *
- * Detects HTML layouts automatically (Cambridge, British Council, Fozilbek, Generic)
- * and converts them into 100% compliant LMSHub HTML v1 specification documents.
+ * Guaranteed Global ID Uniqueness across all sections and passages.
+ * Prevents double DOM traversal by scoping candidate searches to individual passage containers.
  */
 @Service
 @RequiredArgsConstructor
@@ -79,6 +80,10 @@ public class LmsHubHtmlLayoutConverter {
     private void injectLmsHubTags(Document doc, Element body, String rawHtml, HtmlLayoutDetector.HtmlLayoutType layoutType) {
         Elements passageContainers = doc.select(".passage, .passage-block, section, article, [data-passage-id], .reading-text, #passage-content, .cambridge-passage, .bc-passage");
 
+        // Global question order counter and ID set across entire exam
+        AtomicInteger globalQOrder = new AtomicInteger(1);
+        Set<String> globalQuestionIds = new HashSet<>();
+
         if (passageContainers.isEmpty()) {
             Element sec = doc.createElement("lmshub-section");
             sec.attr("data-id", "sec_1");
@@ -98,7 +103,8 @@ public class LmsHubHtmlLayoutConverter {
             }
             sec.appendChild(passage);
 
-            extractAndAppendQuestions(doc, sec, rawHtml);
+            // Scope question extraction to doc (single section)
+            extractAndAppendQuestions(doc, doc, sec, rawHtml, globalQOrder, globalQuestionIds, 1);
 
             body.appendChild(sec);
         } else {
@@ -113,7 +119,8 @@ public class LmsHubHtmlLayoutConverter {
                 passage.text(pUi.text());
                 sec.appendChild(passage);
 
-                extractAndAppendQuestions(doc, sec, rawHtml);
+                // CRITICAL FIX: Scope candidate search strictly to pUi container (NOT doc!)
+                extractAndAppendQuestions(doc, pUi, sec, rawHtml, globalQOrder, globalQuestionIds, secOrder);
 
                 body.appendChild(sec);
                 secOrder++;
@@ -121,10 +128,16 @@ public class LmsHubHtmlLayoutConverter {
         }
     }
 
-    private void extractAndAppendQuestions(Document doc, Element section, String rawHtml) {
-        // Multi-structure question selectors:
-        // .q-item, .question, .question-item, .ielts-question, lmshub-question, .q-block, .fozilbek-q, .bc-question, .cambridge-q, div.mb-4, .q-box, tr.question-row
-        Elements uiCandidates = doc.select(
+    private void extractAndAppendQuestions(Document doc,
+                                           Element container,
+                                           Element section,
+                                           String rawHtml,
+                                           AtomicInteger globalQOrder,
+                                           Set<String> globalQuestionIds,
+                                           int secOrder) {
+
+        // Scope search to container ONLY to prevent duplicate DOM traversal
+        Elements uiCandidates = container.select(
             ".q-item, .question, .question-item, .ielts-question, .q-block, .fozilbek-q, .bc-question, .cambridge-q, [data-q-id], [id^=q], .q-box, tr.question-row"
         );
 
@@ -134,8 +147,6 @@ public class LmsHubHtmlLayoutConverter {
         int parsedCount = 0;
 
         Map<String, Integer> parsedTypeCounts = new HashMap<>();
-
-        int qOrder = 1;
 
         for (Element candidate : uiCandidates) {
             String rawText = candidate.text().trim();
@@ -150,33 +161,46 @@ public class LmsHubHtmlLayoutConverter {
                 continue;
             }
 
-            Element qEl = parseRealQuestionContextAware(doc, candidate, qOrder);
+            int currentOrder = globalQOrder.get();
+            Element qEl = parseRealQuestionContextAware(doc, candidate, currentOrder, globalQuestionIds, secOrder);
             if (qEl != null) {
                 section.appendChild(qEl);
+                globalQOrder.incrementAndGet();
+
                 String qType = qEl.attr("data-type");
                 parsedTypeCounts.put(qType, parsedTypeCounts.getOrDefault(qType, 0) + 1);
                 parsedCount++;
-                qOrder++;
             }
         }
 
-        // Fallback: Regex extraction if DOM question candidates yield 0
-        if (qOrder == 1) {
-            log.info("No DOM question elements found. Attempting regex extraction for JS AnswerKey...");
+        // Fallback: Regex extraction if DOM candidate search yielded 0 questions across doc
+        if (globalQOrder.get() == 1 && container == doc) {
+            log.info("No DOM question elements found in container. Attempting regex extraction for JS AnswerKey...");
             Pattern akPattern = Pattern.compile("\"?(q?\\d+)\"?\\s*:\\s*\"([^\"]+)\"", Pattern.CASE_INSENSITIVE);
             Matcher matcher = akPattern.matcher(rawHtml);
 
             while (matcher.find()) {
-                String qId = matcher.group(1);
+                int currentOrder = globalQOrder.get();
+                String rawQId = matcher.group(1);
                 String ansText = matcher.group(2).trim();
 
+                String qId = "q_" + currentOrder;
+
+                if (globalQuestionIds.contains(qId)) {
+                    throw new IllegalStateException("Duplicate question id detected during layout conversion: " + qId);
+                }
+                globalQuestionIds.add(qId);
+
+                log.info("Adding Question (Regex Fallback): ID='{}', Order={}, Text='Question {}', DOM Path='JS_Regex'",
+                        qId, currentOrder, currentOrder);
+
                 Element q = doc.createElement("lmshub-question");
-                q.attr("data-id", qId.startsWith("q") ? qId : "q_" + qId);
-                q.attr("data-order", String.valueOf(qOrder));
+                q.attr("data-id", qId);
+                q.attr("data-order", String.valueOf(currentOrder));
                 q.attr("data-points", "1");
 
                 Element text = doc.createElement("lmshub-text");
-                text.text("Question " + qOrder);
+                text.text("Question " + currentOrder);
                 q.appendChild(text);
 
                 String upperAns = ansText.toUpperCase();
@@ -195,21 +219,21 @@ public class LmsHubHtmlLayoutConverter {
                 q.appendChild(ans);
 
                 section.appendChild(q);
+                globalQOrder.incrementAndGet();
                 parsedCount++;
-                qOrder++;
             }
         }
 
         // Print Diagnostic Summary Log
-        log.info("Diagnostic Summary Log:");
-        log.info("  Found Candidates        : {}", candidateCount);
-        log.info("  Ignored Headers/Blocks  : {}", ignoredHeaders);
-        log.info("  Ignored Empty Containers: {}", ignoredEmpty);
-        log.info("  Parsed Questions Breakdown:");
+        log.info("Diagnostic Summary Log (Container Section {}):", secOrder);
+        log.info("  Found Candidates in Container: {}", candidateCount);
+        log.info("  Ignored Headers/Blocks       : {}", ignoredHeaders);
+        log.info("  Ignored Empty Containers     : {}", ignoredEmpty);
+        log.info("  Parsed Questions Breakdown   :");
         for (Map.Entry<String, Integer> entry : parsedTypeCounts.entrySet()) {
             log.info("    - {:18} : {}", entry.getKey(), entry.getValue());
         }
-        log.info("  Total Parsed Questions  : {}", parsedCount);
+        log.info("  Total Parsed Questions       : {}", parsedCount);
         log.info("==================================================");
     }
 
@@ -227,21 +251,39 @@ public class LmsHubHtmlLayoutConverter {
         return !hasInputs && !hasPrompt && !el.hasAttr("data-q-id");
     }
 
-    private Element parseRealQuestionContextAware(Document doc, Element qUi, int order) {
+    private Element parseRealQuestionContextAware(Document doc,
+                                                  Element qUi,
+                                                  int globalOrder,
+                                                  Set<String> globalQuestionIds,
+                                                  int secOrder) {
+
         // Multi-structure Prompt Extractor: .q-text, .question-text, .q-prompt, label.q-label, p, strong, h4, h3, h5, .statement
         String prompt = extractPromptText(qUi);
         if (prompt.isBlank()) {
-            log.info("Question #{}: Ignored. Reason: No prompt text found.", order);
+            log.info("Question Order #{}: Ignored. Reason: No prompt text found.", globalOrder);
             return null;
         }
+
+        // Globally unique question ID generation across entire exam (e.g. q_1, q_2, ... q_40)
+        String qId = "q_" + globalOrder;
+
+        // STRICT VALIDATION: Throw IllegalStateException if duplicate ID generated
+        if (globalQuestionIds.contains(qId)) {
+            throw new IllegalStateException("Duplicate question id detected during layout conversion: " + qId);
+        }
+
+        // LOG BEFORE ADDING QUESTION
+        log.info("Adding Question: ID='{}', Order={}, Text='{}', DOM Path='{}'",
+                qId, globalOrder, truncate(prompt, 60), qUi.cssSelector());
+
+        globalQuestionIds.add(qId);
 
         // Options Extractor: <select><option>, <input type="radio/checkbox">, label.choice, .option, .opt
         Elements optElements = qUi.select(".option, .opt, label.choice, label:has(input), select option");
 
         Element q = doc.createElement("lmshub-question");
-        String qId = qUi.attr("data-q-id").isEmpty() ? (qUi.id().isEmpty() ? "q_" + order : qUi.id()) : qUi.attr("data-q-id");
         q.attr("data-id", qId);
-        q.attr("data-order", String.valueOf(order));
+        q.attr("data-order", String.valueOf(globalOrder));
         q.attr("data-points", "1");
 
         // Question text tag
@@ -294,7 +336,7 @@ public class LmsHubHtmlLayoutConverter {
 
         // NO FAKE OPTIONS: If MCQ type has fewer than 2 options, reclassify to FILL_BLANK instead of adding dummy options!
         if ((qType.equals("SINGLE_CHOICE") || qType.equals("MULTIPLE_CHOICE")) && optionCount < 2) {
-            log.info("Question #{}: Reclassified from {} to FILL_BLANK due to insufficient options ({})", order, qType, optionCount);
+            log.info("Question Order #{}: Reclassified from {} to FILL_BLANK due to insufficient options ({})", globalOrder, qType, optionCount);
             qType = "FILL_BLANK";
         }
 
@@ -351,5 +393,10 @@ public class LmsHubHtmlLayoutConverter {
         o3.attr("data-correct", String.valueOf(opt3.equals(upperAns)));
         o3.text(opt3);
         q.appendChild(o3);
+    }
+
+    private String truncate(String text, int maxLength) {
+        if (text == null) return "";
+        return text.length() <= maxLength ? text : text.substring(0, maxLength) + "...";
     }
 }
