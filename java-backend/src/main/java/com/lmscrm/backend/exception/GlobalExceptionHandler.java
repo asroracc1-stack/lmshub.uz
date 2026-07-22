@@ -76,12 +76,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DataAccessException.class)
     public ResponseEntity<ErrorResponse> handleDataAccessException(DataAccessException ex, HttpServletRequest request) {
         log.error("Database access error occurred: {}", ex.getMessage(), ex);
+        
+        // Extract inner cause message for debugging
+        String causeMsg = ex.getCause() != null ? ex.getCause().getMessage() : ex.getMessage();
+        
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                 .error("Database Error")
-                .message("A database operation failed. Please check your request or try again later.")
+                .message("A database operation failed: " + causeMsg)
                 .path(request.getRequestURI())
                 .build();
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
