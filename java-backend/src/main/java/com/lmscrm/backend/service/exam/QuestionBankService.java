@@ -40,13 +40,17 @@ public class QuestionBankService {
     ) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
 
+        String formattedSearch = search != null && !search.isBlank()
+                ? "%" + search.trim().toLowerCase() + "%"
+                : null;
+
         Page<QuestionBankItem> items = questionBankRepository.findFiltered(
                 blankToNull(subject),
                 blankToNull(topic),
                 blankToNull(examCategory),
                 blankToNull(questionType),
                 blankToNull(difficulty),
-                blankToNull(search),
+                formattedSearch,
                 pageable
         );
 

@@ -32,8 +32,7 @@ public interface QuestionBankRepository extends JpaRepository<QuestionBankItem, 
           AND (:examCategory IS NULL OR q.examCategory = :examCategory)
           AND (:questionType IS NULL OR q.questionType = :questionType)
           AND (:difficulty IS NULL OR q.difficulty = :difficulty)
-          AND (:search IS NULL OR LOWER(q.text) LIKE LOWER(CONCAT('%', :search, '%'))
-               OR LOWER(q.tags) LIKE LOWER(CONCAT('%', :search, '%')))
+          AND (:search IS NULL OR LOWER(q.text) LIKE :search OR LOWER(q.tags) LIKE :search)
         ORDER BY q.createdAt DESC
         """)
     Page<QuestionBankItem> findFiltered(
