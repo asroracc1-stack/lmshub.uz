@@ -582,6 +582,11 @@ public class ExamService {
                     .setParameter("examId", id)
                     .executeUpdate();
         }
+        if (tableExists("student_answers") && tableExists("questions")) {
+            entityManager.createNativeQuery("DELETE FROM public.student_answers WHERE question_id IN (SELECT id FROM public.questions WHERE exam_id = :examId)")
+                    .setParameter("examId", id)
+                    .executeUpdate();
+        }
 
         // 2. Delete exam violations associated with attempts of this exam
         if (tableExists("exam_violations") && tableExists("student_attempts")) {
