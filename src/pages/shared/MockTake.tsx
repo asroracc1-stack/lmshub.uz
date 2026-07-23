@@ -216,9 +216,10 @@ function normalize(exam: ExamData, attemptSeed?: string | null): { sections: { t
           rawOpts = deterministicShuffle(rawOpts, q.id + attemptSeed);
         }
 
+        const pos = q.positionOrder ?? q.position_order ?? (questions.length + 1);
         questions.push({
           id: q.id,
-          position: questions.length + 1,
+          position: pos,
           section_index: sections.length - 1,
           prompt: q.text ?? q.prompt ?? "",
           qtype,
@@ -256,9 +257,10 @@ function normalize(exam: ExamData, attemptSeed?: string | null): { sections: { t
           rawOpts = deterministicShuffle(rawOpts, q.id + attemptSeed);
         }
 
+        const pos = q.positionOrder ?? q.position_order ?? (questions.length + 1);
         questions.push({
           id: q.id,
-          position: questions.length + 1,
+          position: pos,
           section_index: 0,
           prompt: q.text ?? q.prompt ?? "",
           qtype,
