@@ -11,30 +11,58 @@
     data-total-questions="14">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>IELTS Reading 7 - Phrenology: A Victorian Science</title>
+  <title>IELTS Reading Practice - Passage 1</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-    header { background: #3b1f5e; color: #fff; padding: 15px; text-align: center; font-size: 20px; flex-shrink: 0; }
-    #container { display: flex; flex: 1; height: 100%; }
-    #passage { flex: 2; padding: 20px; background: #f8f5fc; line-height: 1.6; overflow-y: auto; }
-    #questions { flex: 1; padding: 20px; background: #ede8f5; border-left: 2px solid #ccc; overflow-y: auto; }
-    #timer { font-size: 18px; font-weight: bold; margin-bottom: 15px; color: #b22222; text-align: center; position: sticky; top: 0; background: #ede8f5; padding: 5px; z-index: 10; }
-    .question { margin-bottom: 12px; }
-    label { display: block; margin-top: 10px; }
-    select { margin-top: 4px; padding: 4px 8px; border-radius: 4px; border: 1px solid #aaa; }
-    button { background: #3b1f5e; color: white; padding: 10px 15px; border: none; cursor: pointer; margin-top: 15px; border-radius: 4px; }
-    button:hover { background: #5e3a8a; }
-    #result { margin-top: 20px; font-size: 15px; }
-    .correct { color: green; } .incorrect { color: red; }
-    @media (max-width: 900px) { #container { flex-direction: column; } #questions { border-left: none; border-top: 2px solid #ccc; } }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      height: 100vh;
+    }
+    .container {
+      display: flex;
+      width: 100%;
+    }
+    .passage {
+      width: 60%;
+      padding: 20px;
+      border-right: 2px solid #ccc;
+      overflow-y: auto;
+      height: 100vh;
+    }
+    .questions {
+      width: 40%;
+      padding: 20px;
+      overflow-y: auto;
+      height: 100vh;
+    }
+    .timer {
+      position: fixed;
+      top: 10px;
+      right: 20px;
+      font-size: 18px;
+      background: #222;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 5px;
+    }
+    .result {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+    select, label {
+      display: block;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
-  <header>IELTS Reading 7 — Phrenology: A Victorian Science</header>
-  <div id="container">
-    <div id="passage">
-      <h3>Passage 1: PHRENOLOGY — A VICTORIAN SCIENCE</h3>
+  <div class="timer" id="timer">20:00</div>
+  <div class="container">
+    <div class="passage">
+      <h2>Passage 1</h2>
+      <h3>PHRENOLOGY - A VICTORIAN SCIENCE</h3>
       <p>Phrenology is the theory that psychological traits of personality, intellect, temperament, and character are ascertainable from analysis of the protrusions and depressions in the skull, an idea that was first developed by Franz Joseph Gall in 1796. Gall referred to his new idea in English as "cranioscopy". It was only after Gall's death that Johanne Spurzheim, one of Gall's students, labelled the idea "phrenology". The idea first came to Gall when he noticed that university classmates who could memorise great amounts of information with relative ease seemed to have prominent eyes and large foreheads. He speculated that other internal qualities, besides memory, might be indicated by an external feature as well. Gall theorised that traits might be located in particular regions of the brain. Enlargements or depressions in the brain in particular areas meant a greater than normal or less than normal quantity of the given trait. It was assumed that the external contour of the skull reflected accurately the external contour of the brain where traits were localised.</p>
       <p>Carl Cooter, another advocate of phrenology asserted that there were five major parts to the theory. The first was simply that the brain was the organ of the mind. The second was that the brain was not a homogeneous unit, but a compilation of mental organs with specific functions. The third was that the organs were topographically localised. The fourth was that the relative size of any one of the organs could be taken as a measure of that organ's influence on the person's behaviour. The fifth and final part of Cooter's theory was that external craniological features could be used to diagnose the internal state of the mental faculties. All of these parts were based on observations that he had made.</p>
       <p>Sebastian Leibl, one of Cooter's students, went further than his mentor and theorised that there could be anywhere between 27 and 38 regions on the skull indicative of the organs of the brain, each of which stood for a different personality trait. Leibl further theorised that the different regions of the brain would grow or shrink with usage, just as muscles increase in size when exercised. If a certain part of the brain grew due to increased use, the skull covering that part of the brain would bulge out to make room for the expanded brain tissue. With these assumptions, the bumps on one's skull could be felt and the abilities and personality traits of a person could be assessed.</p>
@@ -43,95 +71,216 @@
       <p>Pierre Flourens, a French physiologist, was also appalled by the shoddy methods of phrenologists and was determined to study the functions of the brain strictly by experiment. The specific technique used by Flourens, who was also a highly skilled surgeon, was ablation, the surgical removal of certain small parts of the brain. He ablated precisely determined portions of bird, rabbit, and dog brains and then observed the behaviour of his subjects. Since, for obvious ethical reasons, he was only able to use animals, he could not test uniquely human faculties. He never tested or measured any behaviour until he had nursed his subjects back to health after their operations. Flourens's subjects did show a lowering of all functions but not just one function as Gall's theory would have predicted. Gall asserted that he wiped out many organs all at once when he ablated part of the brain, which would explain the general lowering of all functions in many of Flourens's subjects.</p>
       <p>Despite attacks from Flourens and others, phrenology held its appeal for scientists in Europe, reaching a peak of popularity in the 1830s and 1840s. In the same period, the discipline was also introduced to America, where it flourished. In fact, public interest in phrenology in Britain had waned considerably when the idea was reintroduced to the country by a pair of enterprising brothers from the United States. Although phrenology has long since been discredited, some of its basic principles, such as the idea that specific functions are localised in particular areas of the brain, have been borne out by more recent research.</p>
     </div>
-    <div id="questions">
-      <div id="timer">Time left: 20:00</div>
-      <form id="quiz">
-        <h4>Questions 1–8 (Match the scientist)</h4>
-        <p style="font-size:13px;margin:0 0 8px">
-          <b>FG</b> Franz Joseph Gall &nbsp;|&nbsp;
-          <b>CC</b> Carl Cooter &nbsp;|&nbsp;
-          <b>SL</b> Sebastian Leibl &nbsp;|&nbsp;
-          <b>JS</b> Johanne Spurzheim &nbsp;|&nbsp;
-          <b>JF</b> John Fancher &nbsp;|&nbsp;
-          <b>PF</b> Pierre Flourens
-        </p>
-        <div class="question">1. This scientist did not use the term "phrenology".<br>
-          <select name="q1"><option value="">Select</option><option value="FG">FG</option><option value="CC">CC</option><option value="SL">SL</option><option value="JS">JS</option><option value="JF">JF</option><option value="PF">PF</option></select>
-        </div>
-        <div class="question">2. This scientist theorised that you could identify people's morality using phrenology.<br>
-          <select name="q2"><option value="">Select</option><option value="FG">FG</option><option value="CC">CC</option><option value="SL">SL</option><option value="JS">JS</option><option value="JF">JF</option><option value="PF">PF</option></select>
-        </div>
-        <div class="question">3. This scientist theorised that brain regions grow with use, like muscles.<br>
-          <select name="q3"><option value="">Select</option><option value="FG">FG</option><option value="CC">CC</option><option value="SL">SL</option><option value="JS">JS</option><option value="JF">JF</option><option value="PF">PF</option></select>
-        </div>
-        <div class="question">4. This scientist felt phrenology had both positive and negative features.<br>
-          <select name="q4"><option value="">Select</option><option value="FG">FG</option><option value="CC">CC</option><option value="SL">SL</option><option value="JS">JS</option><option value="JF">JF</option><option value="PF">PF</option></select>
-        </div>
-        <div class="question">5. This scientist theorised that organ size corresponds to its influence over a person's actions.<br>
-          <select name="q5"><option value="">Select</option><option value="FG">FG</option><option value="CC">CC</option><option value="SL">SL</option><option value="JS">JS</option><option value="JF">JF</option><option value="PF">PF</option></select>
-        </div>
-        <div class="question">6. This scientist theorised that the human brain was a collection of cerebral organs.<br>
-          <select name="q6"><option value="">Select</option><option value="FG">FG</option><option value="CC">CC</option><option value="SL">SL</option><option value="JS">JS</option><option value="JF">JF</option><option value="PF">PF</option></select>
-        </div>
-        <div class="question">7. This scientist was an expert at performing operations.<br>
-          <select name="q7"><option value="">Select</option><option value="FG">FG</option><option value="CC">CC</option><option value="SL">SL</option><option value="JS">JS</option><option value="JF">JF</option><option value="PF">PF</option></select>
-        </div>
-        <div class="question">8. This scientist proposed theories based on observations of fellow students.<br>
-          <select name="q8"><option value="">Select</option><option value="FG">FG</option><option value="CC">CC</option><option value="SL">SL</option><option value="JS">JS</option><option value="JF">JF</option><option value="PF">PF</option></select>
-        </div>
 
-        <h4>Questions 9–14 (TRUE / FALSE / NOT GIVEN)</h4>
-        <div class="question">9. Gall theorised that phrenology could only indicate memory ability.<br>
-          <select name="q9"><option value="">Select</option><option value="TRUE">TRUE</option><option value="FALSE">FALSE</option><option value="NOT GIVEN">NOT GIVEN</option></select>
-        </div>
-        <div class="question">10. Spurzheim believed phrenology could be used to label members of society.<br>
-          <select name="q10"><option value="">Select</option><option value="TRUE">TRUE</option><option value="FALSE">FALSE</option><option value="NOT GIVEN">NOT GIVEN</option></select>
-        </div>
-        <div class="question">11. Flourens worked with Fancher to investigate phrenology using scientific experiments.<br>
-          <select name="q11"><option value="">Select</option><option value="TRUE">TRUE</option><option value="FALSE">FALSE</option><option value="NOT GIVEN">NOT GIVEN</option></select>
-        </div>
-        <div class="question">12. Flourens conducted brain experiments on human patients.<br>
-          <select name="q12"><option value="">Select</option><option value="TRUE">TRUE</option><option value="FALSE">FALSE</option><option value="NOT GIVEN">NOT GIVEN</option></select>
-        </div>
-        <div class="question">13. Gall approved of Flourens's methods and results.<br>
-          <select name="q13"><option value="">Select</option><option value="TRUE">TRUE</option><option value="FALSE">FALSE</option><option value="NOT GIVEN">NOT GIVEN</option></select>
-        </div>
-        <div class="question">14. The theories of phrenology thrived in America.<br>
-          <select name="q14"><option value="">Select</option><option value="TRUE">TRUE</option><option value="FALSE">FALSE</option><option value="NOT GIVEN">NOT GIVEN</option></select>
-        </div>
+    <div class="questions">
+      <h3>Questions 1-8</h3>
+      <p>Choose the correct person for each statement:</p>
+      <ul>
+        <li>FG Franz Joseph Gall</li>
+        <li>CC Carl Cooter</li>
+        <li>SL Sebastian Leibl</li>
+        <li>JS Johanne Spurzheim</li>
+        <li>JF John Fancher</li>
+        <li>PF Pierre Flourens</li>
+      </ul>
+      <form id="quizForm">
+        <label>1. This scientist did not use the term "phrenology".
+          <select name="q1">
+            <option value="">Select</option>
+            <option value="FG">FG</option>
+            <option value="CC">CC</option>
+            <option value="SL">SL</option>
+            <option value="JS">JS</option>
+            <option value="JF">JF</option>
+            <option value="PF">PF</option>
+          </select>
+        </label>
+        <label>2. This scientist theorised that you could identify people's morality using phrenology.
+          <select name="q2">
+            <option value="">Select</option>
+            <option value="FG">FG</option>
+            <option value="CC">CC</option>
+            <option value="SL">SL</option>
+            <option value="JS">JS</option>
+            <option value="JF">JF</option>
+            <option value="PF">PF</option>
+          </select>
+        </label>
+        <label>3. This scientist theorised that the size of certain parts of human brains would increase if they were used a lot.
+          <select name="q3">
+            <option value="">Select</option>
+            <option value="FG">FG</option>
+            <option value="CC">CC</option>
+            <option value="SL">SL</option>
+            <option value="JS">JS</option>
+            <option value="JF">JF</option>
+            <option value="PF">PF</option>
+          </select>
+        </label>
+        <label>4. This scientist felt that the science of phrenology displayed both positive and negative features.
+          <select name="q4">
+            <option value="">Select</option>
+            <option value="FG">FG</option>
+            <option value="CC">CC</option>
+            <option value="SL">SL</option>
+            <option value="JS">JS</option>
+            <option value="JF">JF</option>
+            <option value="PF">PF</option>
+          </select>
+        </label>
+        <label>5. This scientist theorised that the size of a certain part of the brain corresponds to that part of the brain's influence over a person's actions.
+          <select name="q5">
+            <option value="">Select</option>
+            <option value="FG">FG</option>
+            <option value="CC">CC</option>
+            <option value="SL">SL</option>
+            <option value="JS">JS</option>
+            <option value="JF">JF</option>
+            <option value="PF">PF</option>
+          </select>
+        </label>
+        <label>6. This scientist theorised that the human brain was a collection of cerebral organs.
+          <select name="q6">
+            <option value="">Select</option>
+            <option value="FG">FG</option>
+            <option value="CC">CC</option>
+            <option value="SL">SL</option>
+            <option value="JS">JS</option>
+            <option value="JF">JF</option>
+            <option value="PF">PF</option>
+          </select>
+        </label>
+        <label>7. This scientist was an expert at performing operations.
+          <select name="q7">
+            <option value="">Select</option>
+            <option value="FG">FG</option>
+            <option value="CC">CC</option>
+            <option value="SL">SL</option>
+            <option value="JS">JS</option>
+            <option value="JF">JF</option>
+            <option value="PF">PF</option>
+          </select>
+        </label>
+        <label>8. This scientist proposed theories based on his observations of fellow students.
+          <select name="q8">
+            <option value="">Select</option>
+            <option value="FG">FG</option>
+            <option value="CC">CC</option>
+            <option value="SL">SL</option>
+            <option value="JS">JS</option>
+            <option value="JF">JF</option>
+            <option value="PF">PF</option>
+          </select>
+        </label>
+
+        <h3>Questions 9-14</h3>
+        <p>Choose TRUE / FALSE / NOT GIVEN</p>
+        <label>9. Gall theorised that phrenology could only indicate memory ability.
+          <select name="q9">
+            <option value="">Select</option>
+            <option value="TRUE">TRUE</option>
+            <option value="FALSE">FALSE</option>
+            <option value="NOT GIVEN">NOT GIVEN</option>
+          </select>
+        </label>
+        <label>10. Spurzheim believed phrenology could be used to label members of society.
+          <select name="q10">
+            <option value="">Select</option>
+            <option value="TRUE">TRUE</option>
+            <option value="FALSE">FALSE</option>
+            <option value="NOT GIVEN">NOT GIVEN</option>
+          </select>
+        </label>
+        <label>11. Flourens worked with Fancher to investigate phrenology using standard scientific experiments.
+          <select name="q11">
+            <option value="">Select</option>
+            <option value="TRUE">TRUE</option>
+            <option value="FALSE">FALSE</option>
+            <option value="NOT GIVEN">NOT GIVEN</option>
+          </select>
+        </label>
+        <label>12. Flourens conducted brain experiments on human patients.
+          <select name="q12">
+            <option value="">Select</option>
+            <option value="TRUE">TRUE</option>
+            <option value="FALSE">FALSE</option>
+            <option value="NOT GIVEN">NOT GIVEN</option>
+          </select>
+        </label>
+        <label>13. Gall approved of Flourens's methods and results.
+          <select name="q13">
+            <option value="">Select</option>
+            <option value="TRUE">TRUE</option>
+            <option value="FALSE">FALSE</option>
+            <option value="NOT GIVEN">NOT GIVEN</option>
+          </select>
+        </label>
+        <label>14. The theories of phrenology thrived in America.
+          <select name="q14">
+            <option value="">Select</option>
+            <option value="TRUE">TRUE</option>
+            <option value="FALSE">FALSE</option>
+            <option value="NOT GIVEN">NOT GIVEN</option>
+          </select>
+        </label>
 
         <button type="button" onclick="checkAnswers()">Submit</button>
       </form>
-      <div id="result"></div>
+      <div class="result" id="result"></div>
     </div>
   </div>
 
   <script>
+    // Javoblar
     const correctAnswers = {
-      q1: "FG", q2: "JS", q3: "SL", q4: "JF", q5: "CC", q6: "CC", q7: "PF", q8: "FG",
-      q9: "FALSE", q10: "TRUE", q11: "FALSE", q12: "FALSE", q13: "NOT GIVEN", q14: "TRUE"
+      q1: "FG",
+      q2: "JS",
+      q3: "SL",
+      q4: "JF",
+      q5: "CC",
+      q6: "CC",
+      q7: "PF",
+      q8: "FG",
+      q9: "FALSE",
+      q10: "TRUE",
+      q11: "FALSE",
+      q12: "FALSE",
+      q13: "NOT GIVEN",
+      q14: "TRUE"
     };
+
     function checkAnswers() {
-      let score = 0; let output = "";
-      const form = document.getElementById("quiz");
+      let score = 0;
+      let total = Object.keys(correctAnswers).length;
+      let resultHTML = "<h4>Results:</h4><ul>";
+
       for (let key in correctAnswers) {
-        const userAns = (form[key].value || "").trim();
-        const correctAns = correctAnswers[key];
-        if (userAns === correctAns) {
+        let userAnswer = document.querySelector(`[name="${key}"]`).value;
+        if (userAnswer === correctAnswers[key]) {
           score++;
-          output += `<p class="correct">${key.toUpperCase()}: Correct (${correctAns})</p>`;
+          resultHTML += `<li>${key}: Correct (${userAnswer})</li>`;
         } else {
-          output += `<p class="incorrect">${key.toUpperCase()}: Wrong (Your answer: ${userAns || 'blank'}, Correct: ${correctAns})</p>`;
+          resultHTML += `<li>${key}: Wrong (Your answer: ${userAnswer || "No answer"}, Correct: ${correctAnswers[key]})</li>`;
         }
       }
-      document.getElementById("result").innerHTML = `You got ${score}/14 correct.<br>${output}`;
+
+      resultHTML += `</ul><p>Your Score: ${score} / ${total}</p>`;
+      document.getElementById("result").innerHTML = resultHTML;
     }
-    let time = 20 * 60;
-    const timerEl = document.getElementById("timer");
-    setInterval(() => {
-      let minutes = Math.floor(time / 60); let seconds = time % 60;
-      timerEl.textContent = `Time left: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-      if (time > 0) time--;
+
+    // Timer
+    let time = 1200;
+    const timerElement = document.getElementById("timer");
+    const timerInterval = setInterval(() => {
+      let minutes = Math.floor(time / 60);
+      let seconds = time % 60;
+      timerElement.textContent = `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
+      if (time <= 0) {
+        clearInterval(timerInterval);
+        alert("Time is up!");
+        checkAnswers();
+      }
+      time--;
     }, 1000);
   </script>
 </body>
