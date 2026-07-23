@@ -96,13 +96,46 @@ public class LmsHubHtmlLayoutConverter {
 
         // 6. Partition sections
         List<Element> sectionsList = new ArrayList<>();
-        Elements explicitContainers = doc.select(".passage, .passage-block, section, article, [data-passage-id], .reading-text, #passage-content, .cambridge-passage, .bc-passage");
         
-        if (!explicitContainers.isEmpty()) {
-            for (Element el : explicitContainers) {
-                sectionsList.add(el.clone());
+        // Detect split panel text and questions first
+        Elements textSections = doc.select(".text-section, .text_section, .passage-section, .passage_section");
+        Elements questSections = doc.select(".question-section, .question_section, .questions-section, .questions_section");
+        
+        if (!textSections.isEmpty() && !questSections.isEmpty()) {
+            for (int i = 0; i < textSections.size(); i++) {
+                Element ts = textSections.get(i);
+                Element qs = i < questSections.size() ? questSections.get(i) : null;
+                
+                Element secContainer = doc.createElement("div");
+                Element header = ts.selectFirst("h1, h2, h3");
+                String title = header != null ? header.text().trim() : "";
+                secContainer.attr("data-title", title);
+                
+                Element pWrap = doc.createElement("div");
+                pWrap.addClass("passage-block");
+                pWrap.html(ts.html());
+                secContainer.appendChild(pWrap);
+                
+                if (qs != null) {
+                    Element qWrap = doc.createElement("div");
+                    qWrap.addClass("questions-block");
+                    qWrap.html(qs.html());
+                    secContainer.appendChild(qWrap);
+                }
+                sectionsList.add(secContainer);
             }
-        } else {
+        }
+        
+        if (sectionsList.isEmpty()) {
+            Elements explicitContainers = doc.select(".passage, .passage-block, section, article, [data-passage-id], .reading-text, #passage-content, .cambridge-passage, .bc-passage");
+            if (!explicitContainers.isEmpty()) {
+                for (Element el : explicitContainers) {
+                    sectionsList.add(el.clone());
+                }
+            }
+        }
+        
+        if (sectionsList.isEmpty()) {
             // Find splitting headings
             Elements siblings = body.children();
             Element currentSectionContainer = null;
@@ -158,17 +191,25 @@ public class LmsHubHtmlLayoutConverter {
             Element questionsEl = doc.createElement("div");
             questionsEl.addClass("questions-container");
 
-            boolean questionsStarted = false;
-            for (Element child : sectionContainer.children()) {
-                boolean isQuestionHeader = child.text().matches("(?i).*Questions?\\s+\\d+.*") || 
-                                           !child.select("input, select, textarea").isEmpty();
-                if (isQuestionHeader) {
-                    questionsStarted = true;
-                }
-                if (questionsStarted) {
-                    questionsEl.appendChild(child);
-                } else {
-                    passageEl.appendChild(child);
+            Element explicitPassageBlock = sectionContainer.selectFirst(".passage-block");
+            Element explicitQuestionsBlock = sectionContainer.selectFirst(".questions-block");
+            
+            if (explicitPassageBlock != null && explicitQuestionsBlock != null) {
+                passageEl.html(explicitPassageBlock.html());
+                questionsEl.html(explicitQuestionsBlock.html());
+            } else {
+                boolean questionsStarted = false;
+                for (Element child : sectionContainer.children()) {
+                    boolean isQuestionHeader = child.text().matches("(?i).*Questions?\\s+\\d+.*") || 
+                                               !child.select("input, select, textarea").isEmpty();
+                    if (isQuestionHeader) {
+                        questionsStarted = true;
+                    }
+                    if (questionsStarted) {
+                        questionsEl.appendChild(child);
+                    } else {
+                        passageEl.appendChild(child);
+                    }
                 }
             }
 
@@ -453,7 +494,7 @@ public class LmsHubHtmlLayoutConverter {
         for (Element cand : classCandidates) {
             boolean overlap = false;
             for (Element existing : seenContainers) {
-                if (elementContains(existing, cand) || elementContains(cand, existing)) {
+                if (existing == cand || elementContains(existing, cand) || elementContains(cand, existing)) {
                     overlap = true;
                     break;
                 }
