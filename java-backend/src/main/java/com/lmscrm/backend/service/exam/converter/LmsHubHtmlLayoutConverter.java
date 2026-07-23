@@ -329,6 +329,13 @@ public class LmsHubHtmlLayoutConverter {
                     q.appendChild(ansTag);
                 }
 
+                String groupInstr = extractInstructionText(dq.originalElement != null ? dq.originalElement : questionsEl);
+                if (!groupInstr.isBlank()) {
+                    Element expTag = doc.createElement("lmshub-explanation");
+                    expTag.text(groupInstr);
+                    q.appendChild(expTag);
+                }
+
                 sec.appendChild(q);
             }
 
@@ -696,6 +703,19 @@ public class LmsHubHtmlLayoutConverter {
             }
         }
         return fallbackIndex;
+    }
+
+    private String extractInstructionText(Element container) {
+        if (container == null) return "";
+        Element prev = container.previousElementSibling();
+        while (prev != null) {
+            String text = prev.text().trim();
+            if (prev.tagName().matches("h[1-4]") || text.matches("(?i).*Questions?\\s+\\d+.*")) {
+                return text;
+            }
+            prev = prev.previousElementSibling();
+        }
+        return "";
     }
 
     private String deduceQuestionTypeFromInstructions(Element container, String defaultType) {

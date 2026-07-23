@@ -226,6 +226,9 @@ public class LmsHubHtmlParser implements ExamParser {
                 ParseResult.ParsedQuestion pq = parsePlainQuestion(node, currentType, qOrder, jsAnswers);
                 if (pq != null && !pq.getRawText().isBlank()) {
                     pq.setOrder(qOrder++);
+                    if ((pq.getExplanation() == null || pq.getExplanation().isBlank()) && !currentInstructions.isBlank()) {
+                        pq.setExplanation(currentInstructions);
+                    }
                     section.getQuestions().add(pq);
                     // Set instructions on section from first group heading found
                     if (!currentInstructions.isBlank() && isBlank(section.getInstructions())) {

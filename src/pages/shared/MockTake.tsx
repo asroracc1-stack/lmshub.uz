@@ -2239,8 +2239,23 @@ export default function MockTake() {
                 const detailForQ = ieltsDetails.find((d: any) => String(d.questionId) === String(q.id));
                 const submittedAns = detailForQ ? detailForQ.userAns : undefined;
 
+                const groupInstruction = (q.explanation && (q.explanation.toLowerCase().includes("question") || q.explanation.toLowerCase().includes("choose") || q.explanation.toLowerCase().includes("complete")))
+                  ? q.explanation
+                  : null;
+
+                const showGroupInstruction = Boolean(
+                  groupInstruction && (qidx === 0 || sectionQuestions[qidx - 1]?.explanation !== groupInstruction)
+                );
+
                 return (
                   <Fragment key={q.id}>
+                    {showGroupInstruction && (
+                      <div className="bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 rounded-xl p-4 my-4 shadow-xs">
+                        <h3 className="font-bold text-xs sm:text-sm text-blue-900 dark:text-blue-200 leading-relaxed whitespace-pre-wrap">
+                          {groupInstruction}
+                        </h3>
+                      </div>
+                    )}
                     <div
                       ref={el => { questionRefs.current[q.id] = el; }}
                       className={cn(
