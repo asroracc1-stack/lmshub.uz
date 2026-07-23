@@ -14,7 +14,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import com.lmscrm.backend.dto.exam.ReadingHistoryItemDto;
+import com.lmscrm.backend.dto.exam.ReadingStatisticsDto;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -434,5 +437,102 @@ public class StudentAttemptService {
                     answerRepository.deleteByAttemptId(attempt.getId());
                     attemptRepository.delete(attempt);
                 });
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ReadingHistoryItemDto> getReadingHistory(User student, Pageable pageable) {
+        Page<StudentAttempt> page = attemptRepository.findCompletedAttemptsPage(student.getId(), ExamType.READING, pageable);
+        return page.map(sa -> {
+            Exam exam = sa.getExam();
+            String passageTitle = "";
+            if (exam.getPassages() != null && !exam.getPassages().isEmpty()) {
+                passageTitle = exam.getPassages().get(0).getTitle();
+            } else {
+                passageTitle = exam.getTitle();
+            }
+            return ReadingHistoryItemDto.builder()
+                    .attemptId(sa.getId())
+                    .examId(exam.getId())
+                    .testTitle(exam.getTitle())
+                    .passageTitle(passageTitle)
+                    .finishedAt(sa.getFinishedAt())
+                    .durationMinutes(exam.getDurationMinutes())
+                    .difficulty(exam.getDifficulty())
+                    .partType("full")
+                    .correctAnswers(sa.getTotalScore())
+                    .totalQuestions(sa.getMaxScore())
+                    .overallBand(sa.getOverallBand())
+                    .build();
+        });
+    }
+
+    @Transactional(readOnly = true)
+    public ReadingStatisticsDto getReadingStatistics(User student) {
+        UUID studentId = student.getId();
+        long totalStarted = attemptRepository.countByStudentIdAndExamType(studentId, ExamType.READING);
+        List<StudentAttempt> completed = attemptRepository.findCompletedAttemptsList(studentId, ExamType.READING);
+
+        if (completed.isEmpty()) {
+            return ReadingStatisticsDto.builder()
+                    .overallReadingBand(0.0)
+                    .totalTestsSolved(0)
+                    .totalCorrectAnswers(0)
+                    .totalQuestionsCount(0)
+                    .accuracy(0.0)
+                    .highestBand(0.0)
+                    .averageTimeMinutes(0)
+                    .completionRate(totalStarted > 0 ? 0.0 : 0.0)
+                    .build();
+        }
+
+        int totalCorrect = 0;
+        int totalQuestions = 0;
+        double maxBand = 0.0;
+        double sumBand = 0.0;
+        long sumTimeSeconds = 0;
+
+        for (StudentAttempt sa : completed) {
+            totalCorrect += sa.getTotalScore() != null ? sa.getTotalScore() : 0;
+            totalQuestions += sa.getMaxScore() != null ? sa.getMaxScore() : 0;
+            double band = sa.getOverallBand() != null ? sa.getOverallBand() : 0.0;
+            sumBand += band;
+            if (band > maxBand) {
+                maxBand = band;
+            }
+            sumTimeSeconds += sa.getTimeUsedSeconds() != null ? sa.getTimeUsedSeconds() : 0;
+        }
+
+        double avgBand = sumBand / completed.size();
+        double roundedBand = Math.round(avgBand * 2.0) / 2.0; // Round to nearest 0.5
+
+        double accuracy = totalQuestions > 0 ? (totalCorrect * 100.0 / totalQuestions) : 0.0;
+        accuracy = Math.round(accuracy * 10.0) / 10.0; // 1 decimal place
+
+        int avgTimeMin = (int) ((sumTimeSeconds / completed.size()) / 60);
+
+        double completionRate = totalStarted > 0 ? (completed.size() * 100.0 / totalStarted) : 0.0;
+        completionRate = Math.round(completionRate * 10.0) / 10.0;
+
+        return ReadingStatisticsDto.builder()
+                .overallReadingBand(roundedBand)
+                .totalTestsSolved(completed.size())
+                .totalCorrectAnswers(totalCorrect)
+                .totalQuestionsCount(totalQuestions)
+                .accuracy(accuracy)
+                .highestBand(maxBand)
+                .averageTimeMinutes(avgTimeMin)
+                .completionRate(completionRate)
+                .build();
+    }
+
+    @Transactional
+    public void deleteAttemptById(UUID attemptId, User student) {
+        StudentAttempt attempt = attemptRepository.findById(attemptId)
+                .orElseThrow(() -> new ResourceNotFoundException("Attempt not found: " + attemptId));
+        if (!attempt.getStudent().getId().equals(student.getId())) {
+            throw new org.springframework.security.access.AccessDeniedException("You do not have permission to delete this attempt");
+        }
+        answerRepository.deleteByAttemptId(attempt.getId());
+        attemptRepository.delete(attempt);
     }
 }

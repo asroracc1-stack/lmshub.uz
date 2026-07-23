@@ -17,7 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   ArrowLeft, ArrowRight, BookOpen, Clock, Crown, FileText, Headphones,
   Layers, Leaf, Loader2, Mic, PenLine, Plus, Search, Sparkles, Pencil, Trash2,
-  Target, Landmark, Lock, Zap, Star, CheckCircle2, ChevronLeft, ChevronRight
+  Target, Landmark, Lock, Zap, Star, CheckCircle2, ChevronLeft, ChevronRight, History
 } from "lucide-react";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -243,6 +243,19 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
             <CheckCircle2 className="h-4 w-4" />
             {t("mockCategory.completedBtn")} ({tests.filter(tst => attempts.some(a => String(a.examId) === String(tst.id))).length})
           </Button>
+
+          {kind === "reading" && (
+            <Button
+              asChild
+              variant="outline"
+              className="rounded-full gap-2 text-sm font-bold transition-all duration-200 border-emerald-500 text-emerald-650 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/20"
+            >
+              <Link to={`${basePath}/reading/history`}>
+                <History className="h-4 w-4" />
+                Bajarilganlar
+              </Link>
+            </Button>
+          )}
           {canManage && (
             <Button size="sm" asChild className="ml-2 rounded-xl">
               <Link to={`${basePath}/mocks/new`}><Plus className="h-4 w-4 mr-1" />{t("mockCategory.newBtn")}</Link>

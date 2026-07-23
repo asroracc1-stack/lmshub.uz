@@ -1,6 +1,9 @@
 package com.lmscrm.backend.repository;
 
 import com.lmscrm.backend.domain.entity.StudentAttempt;
+import com.lmscrm.backend.domain.enums.ExamType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -51,5 +54,13 @@ public interface StudentAttemptRepository extends JpaRepository<StudentAttempt, 
     @Query("SELECT AVG(sa.overallBand) FROM StudentAttempt sa " +
            "WHERE sa.student.id = :studentId AND sa.overallBand IS NOT NULL")
     Double findAverageOverallBandByStudentId(@Param("studentId") UUID studentId);
-}
 
+    @Query("SELECT sa FROM StudentAttempt sa WHERE sa.student.id = :studentId AND sa.exam.type = :type AND sa.finishedAt IS NOT NULL ORDER BY sa.finishedAt DESC")
+    Page<StudentAttempt> findCompletedAttemptsPage(@Param("studentId") UUID studentId, @Param("type") ExamType type, Pageable pageable);
+
+    @Query("SELECT sa FROM StudentAttempt sa WHERE sa.student.id = :studentId AND sa.exam.type = :type AND sa.finishedAt IS NOT NULL ORDER BY sa.finishedAt DESC")
+    List<StudentAttempt> findCompletedAttemptsList(@Param("studentId") UUID studentId, @Param("type") ExamType type);
+
+    @Query("SELECT COUNT(sa) FROM StudentAttempt sa WHERE sa.student.id = :studentId AND sa.exam.type = :type")
+    long countByStudentIdAndExamType(@Param("studentId") UUID studentId, @Param("type") ExamType type);
+}

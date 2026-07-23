@@ -192,6 +192,7 @@ const TelegramLinksPage = lazy(() => import("./pages/super-admin/TelegramLinks")
 const PMGrantCoins = lazy(() => import("./pages/pack-manager/GrantCoins"));
 const AdventureMapFull = lazy(() => import("./pages/student/Map/AdvancedAdventureMap"));
 const GamificationAdmin = lazy(() => import("./pages/admin/GamificationAdmin"));
+const ReadingHistory = lazy(() => import("./pages/user/ReadingHistory"));
 
 // Vocabulary Module Pages
 const VocabularyHome = lazy(() => import("./features/vocabulary/pages/VocabularyHome"));
@@ -437,6 +438,7 @@ const AppRoutes = () => {
           <Route path="profile" element={<SharedProfile />} />
           <Route path="mocks" element={<MockTests basePath="/student" />} />
           <Route path="mocks/c/:kind" element={<MockCategory basePath="/student" />} />
+          <Route path="reading/history" element={<ReadingHistory basePath="/student" />} />
           <Route path="mocks/take/:testId" element={<MockTake />} />
           <Route path="sat" element={<Navigate to="/student/mocks/c/sat" replace />} />
           <Route path="national-cert" element={<Navigate to="/student/mocks/c/national_cert" replace />} />
@@ -475,6 +477,7 @@ const AppRoutes = () => {
           <Route path="packs" element={<Packs />} />
           <Route path="mocks" element={<MockTests basePath="/user" />} />
           <Route path="mocks/c/:kind" element={<MockCategory basePath="/user" />} />
+          <Route path="reading/history" element={<ReadingHistory basePath="/user" />} />
           <Route path="mocks/take/:testId" element={<MockTake />} />
           <Route path="sat" element={<Navigate to="/user/mocks/c/sat" replace />} />
           <Route path="national-cert" element={<Navigate to="/user/mocks/c/national_cert" replace />} />
