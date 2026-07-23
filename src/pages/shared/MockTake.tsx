@@ -2042,7 +2042,13 @@ export default function MockTake() {
               alt="Passage context"
             />
           )}
-          <div className={cn("prose dark:prose-invert max-w-none font-sans leading-relaxed mt-8", cStyle.passageText, textSizeStyle.passage)}>
+          <div className={cn("prose dark:prose-invert max-w-none font-sans leading-relaxed mt-8 ielts-passage-container", cStyle.passageText, textSizeStyle.passage)}>
+            <style dangerouslySetInnerHTML={{ __html: `
+              .ielts-passage-container p {
+                margin-bottom: 1.5rem !important;
+                display: block !important;
+              }
+            `}} />
             {currentSection.passage && /<[a-z][\s\S]*>/i.test(currentSection.passage) ? (
               <div dangerouslySetInnerHTML={{ __html: currentSection.passage }} />
             ) : (
@@ -2194,7 +2200,7 @@ export default function MockTake() {
         className={cn("h-full overflow-hidden flex flex-col transition-colors relative", isBW ? "bg-white" : "bg-black")}
       >
         <div className="flex-1 overflow-y-auto p-6 md:p-8 xl:p-12 pb-32 animate-fade-in select-text">
-          <div className="max-w-3xl mx-auto">
+          <div className="max-w-2xl mx-auto">
             <div className="space-y-6 divide-y divide-slate-100 dark:divide-slate-800/40">
               {sectionQuestions.map((q, qidx) => {
                 const isQActive = q.position - 1 === activeQuestionIndex;

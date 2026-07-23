@@ -451,12 +451,12 @@ public class LmsHubHtmlLayoutConverter {
         Elements children = passageEl.children();
         for (Element child : children) {
             String text = child.text().trim();
-            Pattern pattern = Pattern.compile("^\\s*([A-H])(?:[\\.\\s\\)]|\\s*$|\\s+Paragraph|Paragraph\\s+)");
+            Pattern pattern = Pattern.compile("^\\s*([A-Z])(?:[\\.\\s\\)]|\\s*$|\\s+Paragraph|Paragraph\\s+)");
             Matcher m = pattern.matcher(text);
             
             Element firstBold = child.selectFirst("strong, b, span.paragraph-letter");
             String letter = "";
-            if (firstBold != null && firstBold.text().trim().matches("^[A-H]$")) {
+            if (firstBold != null && firstBold.text().trim().matches("^[A-Z]$")) {
                 letter = firstBold.text().trim().toUpperCase();
             } else if (m.find()) {
                 letter = m.group(1).toUpperCase();
