@@ -98,8 +98,8 @@ public class LmsHubHtmlLayoutConverter {
         List<Element> sectionsList = new ArrayList<>();
         
         // Detect split panel text and questions first
-        Elements textSections = doc.select(".text-section, .text_section, .passage-section, .passage_section");
-        Elements questSections = doc.select(".question-section, .question_section, .questions-section, .questions_section");
+        Elements textSections = doc.select(".text-section, .text_section, .passage-section, .passage_section, #passage");
+        Elements questSections = doc.select(".question-section, .question_section, .questions-section, .questions_section, #questions");
         
         if (!textSections.isEmpty() && !questSections.isEmpty()) {
             for (int i = 0; i < textSections.size(); i++) {
@@ -346,8 +346,8 @@ public class LmsHubHtmlLayoutConverter {
     private Map<Integer, String> resolveAnswerGraph(String rawHtml, Document doc) {
         Map<Integer, String> akMap = new HashMap<>();
 
-        // Match key-value mappings like "1": "TRUE"
-        Pattern pattern = Pattern.compile("[\"']?(\\d+)[\"']?\\s*:\\s*[\"']([^\"']+)[\"']", Pattern.CASE_INSENSITIVE);
+        // Match key-value mappings like "1": "TRUE" or q1: "TRUE"
+        Pattern pattern = Pattern.compile("[\"']?(?:q|question)?_?(\\d+)[\"']?\\s*:\\s*[\"']([^\"']+)[\"']", Pattern.CASE_INSENSITIVE);
         
         Elements scripts = doc.select("script");
         for (Element script : scripts) {
@@ -423,6 +423,7 @@ public class LmsHubHtmlLayoutConverter {
                 try {
                     int qNum = Integer.parseInt(m.group(1));
                     String ans = m.group(2).trim();
+                    log.info("Found fallback key: {} -> {}", qNum, ans);
                     if (!akMap.containsKey(qNum)) {
                         akMap.put(qNum, ans);
                     }
@@ -549,8 +550,11 @@ public class LmsHubHtmlLayoutConverter {
             int numBlanks = 1;
             if (dq.type.equals("FILL_BLANK")) {
                 int inputCount = container.select("input[type=text], textarea, select").size();
-                int placeholderCount = countBlankPlaceholders(dq.prompt);
-                numBlanks = Math.max(1, Math.max(inputCount, placeholderCount));
+                if (inputCount > 0) {
+                    numBlanks = inputCount;
+                } else {
+                    numBlanks = Math.max(1, countBlankPlaceholders(dq.prompt));
+                }
             }
 
             for (int b = 0; b < numBlanks; b++) {
@@ -684,10 +688,9 @@ public class LmsHubHtmlLayoutConverter {
 
     private String deduceQuestionTypeFromInstructions(Element container, String defaultType) {
         Element prev = container.previousElementSibling();
-        int maxLookBack = 4;
-        while (prev != null && maxLookBack > 0) {
+        while (prev != null) {
             String text = prev.text().toUpperCase();
-            if (text.matches("(?i).*Questions?\\s+\\d+.*") || prev.tagName().matches("h[1-4]")) {
+            if (prev.tagName().matches("h[1-4]") || text.matches("(?i).*Questions?\\s+\\d+.*")) {
                 if (text.contains("TRUE") || text.contains("FALSE") || text.contains("NOT GIVEN")) {
                     return "TRUE_FALSE_NG";
                 }
@@ -706,9 +709,9 @@ public class LmsHubHtmlLayoutConverter {
                 if (text.contains("MULTIPLE CHOICE") || text.contains("CHOOSE THE CORRECT LETTER")) {
                     return "SINGLE_CHOICE";
                 }
+                break; // Stop looking further if we hit another header or instruction block
             }
             prev = prev.previousElementSibling();
-            maxLookBack--;
         }
         return defaultType;
     }
