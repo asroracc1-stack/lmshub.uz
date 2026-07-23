@@ -934,6 +934,7 @@ export default function MockTake() {
   const [sectionIdx, setSectionIdx] = useState(0);
   const [activeQuestionIndex, setActiveQuestionIndex] = useState(0);
   const [showReviewScreen, setShowReviewScreen] = useState(false);
+  const [showIeltsSubmitModal, setShowIeltsSubmitModal] = useState(false);
   const [timeLeft, setTimeLeft] = useState(0);
   const [started, setStarted] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -1474,7 +1475,11 @@ export default function MockTake() {
   };
 
   const handleSubmitRequest = () => {
-    setShowReviewScreen(true);
+    if (isIeltsLayout) {
+      setShowIeltsSubmitModal(true);
+    } else {
+      setShowReviewScreen(true);
+    }
   };
 
   if (countdownNum !== null) {
@@ -3434,6 +3439,48 @@ export default function MockTake() {
             className="fixed inset-0 z-[9999]"
           >
             <PremiumLoaderOverlay examType={exam?.type || ""} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showIeltsSubmitModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 text-slate-800"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-lg shadow-2xl p-8 max-w-md w-full border border-slate-200 flex flex-col items-center justify-center text-center"
+            >
+              <h3 className="text-xl md:text-2xl font-bold text-slate-900 mb-3 font-sans leading-tight">
+                Submit reading test?
+              </h3>
+              <p className="text-slate-650 text-sm mb-8 leading-relaxed font-sans">
+                If you confirm, your answers will be submitted and you cannot continue this attempt.
+              </p>
+              <div className="flex items-center justify-center gap-4 w-full">
+                <button
+                  onClick={() => setShowIeltsSubmitModal(false)}
+                  className="px-5 py-2.5 border border-slate-300 rounded font-bold text-slate-700 hover:bg-slate-50 transition-all font-sans text-sm cursor-pointer shadow-xs bg-white"
+                >
+                  Back to test
+                </button>
+                <button
+                  onClick={() => {
+                    setShowIeltsSubmitModal(false);
+                    submit(false);
+                  }}
+                  className="px-8 py-2.5 bg-red-650 hover:bg-red-750 text-white rounded font-bold transition-all font-sans text-sm cursor-pointer shadow-xs border-none"
+                >
+                  Submit
+                </button>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
