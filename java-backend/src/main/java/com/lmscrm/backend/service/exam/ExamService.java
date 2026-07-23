@@ -578,7 +578,7 @@ public class ExamService {
     public void deleteExam(UUID id) {
         // 1. Delete student answers associated with attempts of this exam
         try {
-            entityManager.createNativeQuery("DELETE FROM public.student_answers WHERE attempt_id IN (SELECT id FROM public.student_attempts WHERE exam_id = :examId)")
+            entityManager.createNativeQuery("DELETE FROM public.student_answers WHERE attempt_id IN (SELECT id FROM public.student_attempts WHERE exam_id = CAST(:examId AS uuid))")
                     .setParameter("examId", id)
                     .executeUpdate();
         } catch (Exception e) {
@@ -587,7 +587,7 @@ public class ExamService {
 
         // 1b. Delete student answers referencing questions of this exam directly
         try {
-            entityManager.createNativeQuery("DELETE FROM public.student_answers WHERE question_id IN (SELECT id FROM public.questions WHERE exam_id = :examId)")
+            entityManager.createNativeQuery("DELETE FROM public.student_answers WHERE question_id IN (SELECT id FROM public.questions WHERE exam_id = CAST(:examId AS uuid))")
                     .setParameter("examId", id)
                     .executeUpdate();
         } catch (Exception e) {
@@ -596,7 +596,7 @@ public class ExamService {
 
         // 2. Delete exam violations associated with attempts of this exam
         try {
-            entityManager.createNativeQuery("DELETE FROM public.exam_violations WHERE attempt_id IN (SELECT id FROM public.student_attempts WHERE exam_id = :examId)")
+            entityManager.createNativeQuery("DELETE FROM public.exam_violations WHERE attempt_id IN (SELECT id FROM public.student_attempts WHERE exam_id = CAST(:examId AS uuid))")
                     .setParameter("examId", id)
                     .executeUpdate();
         } catch (Exception e) {
@@ -605,7 +605,7 @@ public class ExamService {
 
         // 2b. Delete attempt snapshots associated with attempts or exam
         try {
-            entityManager.createNativeQuery("DELETE FROM public.attempt_snapshots WHERE exam_id = :examId OR student_attempt_id IN (SELECT id FROM public.student_attempts WHERE exam_id = :examId)")
+            entityManager.createNativeQuery("DELETE FROM public.attempt_snapshots WHERE exam_id = CAST(:examId AS uuid) OR student_attempt_id IN (SELECT id FROM public.student_attempts WHERE exam_id = CAST(:examId AS uuid))")
                     .setParameter("examId", id)
                     .executeUpdate();
         } catch (Exception e) {
@@ -614,7 +614,7 @@ public class ExamService {
 
         // 3. Delete student attempts associated with this exam
         try {
-            entityManager.createNativeQuery("DELETE FROM public.student_attempts WHERE exam_id = :examId")
+            entityManager.createNativeQuery("DELETE FROM public.student_attempts WHERE exam_id = CAST(:examId AS uuid)")
                     .setParameter("examId", id)
                     .executeUpdate();
         } catch (Exception e) {
@@ -623,7 +623,7 @@ public class ExamService {
 
         // 4. Delete subscription pack associations
         try {
-            entityManager.createNativeQuery("DELETE FROM public.subscription_pack_exams WHERE exam_id = :examId")
+            entityManager.createNativeQuery("DELETE FROM public.subscription_pack_exams WHERE exam_id = CAST(:examId AS uuid)")
                     .setParameter("examId", id)
                     .executeUpdate();
         } catch (Exception e) {
@@ -632,7 +632,7 @@ public class ExamService {
 
         // 5. Delete question options associated with the questions of this exam
         try {
-            entityManager.createNativeQuery("DELETE FROM public.question_options WHERE question_id IN (SELECT id FROM public.questions WHERE exam_id = :examId)")
+            entityManager.createNativeQuery("DELETE FROM public.question_options WHERE question_id IN (SELECT id FROM public.questions WHERE exam_id = CAST(:examId AS uuid))")
                     .setParameter("examId", id)
                     .executeUpdate();
         } catch (Exception e) {
@@ -641,7 +641,7 @@ public class ExamService {
 
         // 5b. Delete answer keys associated with the questions of this exam
         try {
-            entityManager.createNativeQuery("DELETE FROM public.answer_keys WHERE question_id IN (SELECT id FROM public.questions WHERE exam_id = :examId)")
+            entityManager.createNativeQuery("DELETE FROM public.answer_keys WHERE question_id IN (SELECT id FROM public.questions WHERE exam_id = CAST(:examId AS uuid))")
                     .setParameter("examId", id)
                     .executeUpdate();
         } catch (Exception e) {
