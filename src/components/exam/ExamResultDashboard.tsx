@@ -409,17 +409,22 @@ export function ExamResultDashboard({ result, questions, exam, onReviewQuestion 
             {/* Show Correct Answers Toggle */}
             <div className="flex items-center space-x-2 bg-slate-100 dark:bg-[#140D23] border border-slate-200/60 dark:border-slate-800/40 px-3 py-1.5 rounded-xl">
               <span className="text-xs font-semibold text-slate-500">Show Correct Answers</span>
-              <button 
+              <button
+                type="button"
                 onClick={() => setShowCorrectAnswers(!showCorrectAnswers)}
+                aria-pressed={showCorrectAnswers}
+                aria-label="Toggle show correct answers"
                 className={cn(
                   "relative inline-flex h-5 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
                   showCorrectAnswers ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-700"
                 )}
               >
-                <span className={cn(
-                  "pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-xs ring-0 transition duration-200 ease-in-out",
-                  showCorrectAnswers ? "translate-x-5" : "translate-x-0"
-                )} />
+                <span
+                  className={cn(
+                    "pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-xs ring-0 transition duration-200 ease-in-out",
+                    showCorrectAnswers ? "translate-x-5" : "translate-x-0"
+                  )}
+                />
               </button>
             </div>
           </div>
