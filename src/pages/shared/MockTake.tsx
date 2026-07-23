@@ -2984,6 +2984,134 @@ export default function MockTake() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Cheating Warning Modal */}
+        <AlertDialog open={showCheatingWarning} onOpenChange={setShowCheatingWarning}>
+          <AlertDialogContent className={cn("rounded-3xl border text-white backdrop-blur-md max-w-md", 
+            isMilliy ? "border-amber-500/30 bg-[#0a192f]/95" : "border-amber-500/30 bg-[#160E26]/95"
+          )}>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-xl font-extrabold text-amber-400 flex items-center gap-2">
+                <AlertCircle className="h-6 w-6 text-amber-500 animate-bounce" /> {isMilliy ? "Ogohlantirish!" : "Warning!"}
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-slate-300 mt-2 text-sm leading-relaxed">
+                {isMilliy 
+                  ? "Siz imtihon oynasini tark etdingiz (Alt-Tab yoki boshqa ilovaga o'tish). Imtihon oynasini yana bir marta tark etsangiz, javoblaringiz avtomatik ravishda yuboriladi va imtihon yakunlanadi!" 
+                  : "You have navigated away from the exam window (Alt-Tab or switched applications). If you leave the exam window one more time, your responses will be automatically submitted and the exam will end!"
+                }
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="mt-6">
+              <AlertDialogAction
+                onClick={() => setShowCheatingWarning(false)}
+                className={cn("text-white font-bold rounded-xl py-2 w-full border-none shadow-lg", 
+                  isMilliy 
+                    ? "bg-[#059669] hover:bg-[#047857] shadow-emerald-500/20" 
+                    : "bg-amber-500 hover:bg-amber-600 shadow-amber-500/20"
+                )}
+              >
+                {isMilliy ? "Tushundim, imtihonni davom ettiraman" : "I understand, resume exam"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Cheating Locked Modal */}
+        <AnimatePresence>
+          {showCheatingLocked && (
+            <motion.div
+               initial={{ opacity: 0 }}
+               animate={{ opacity: 1 }}
+               className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/95 backdrop-blur-md"
+            >
+              <motion.div
+                initial={{ scale: 0.9, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                className={cn("w-full max-w-md rounded-3xl border p-8 text-center shadow-2xl", 
+                  isMilliy 
+                    ? "border-rose-500/30 bg-[#0a192f] shadow-rose-950/20" 
+                    : "border-rose-500/30 bg-[#160E26] shadow-rose-500/10"
+                )}
+              >
+                <div className="relative mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-rose-500/15">
+                  <Shield className="h-10 w-10 text-rose-500" />
+                </div>
+                <h3 className="text-2xl font-black tracking-tight text-white">
+                  {isMilliy ? "Imtihon Bloklandi! 🔒" : "Exam Locked! 🔒"}
+                </h3>
+                <p className="mt-3 text-sm text-slate-300 leading-relaxed">
+                  {isMilliy 
+                    ? "Tizim qoidalariga ko'ra, imtihon oynasini ikki marta tark etganingiz sababli imtihoningiz bloklandi va javoblaringiz avtomatik ravishda saqlab topshirildi." 
+                    : "According to system rules, because you left the exam window twice, your exam has been locked and your responses have been automatically submitted."
+                  }
+                </p>
+                <div className="mt-6 p-3 rounded-xl bg-rose-500/10 text-xs font-bold text-rose-400 border border-rose-500/20">
+                  {isMilliy ? "Imtihon faoliyati shubhali deb baholandi" : "Exam activity flagged as suspicious"}
+                </div>
+                <div className="mt-8">
+                  <Button
+                    onClick={() => {
+                      if (result) {
+                        setShowCheatingLocked(false);
+                      } else {
+                        toast.info(isMilliy ? "Tizim javoblarni yuklamoqda, kuting..." : "System is submitting responses, please wait...");
+                      }
+                    }}
+                    disabled={!result}
+                    className={cn("w-full h-12 text-white font-bold text-base rounded-xl transition-all border-none", 
+                      isMilliy ? "bg-[#059669] hover:bg-[#047857]" : "bg-rose-600 hover:bg-rose-700"
+                    )}
+                  >
+                    {isMilliy ? "Natijani ko'rish" : "View Result"}
+                  </Button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* IELTS Submit Confirmation Modal */}
+        <AnimatePresence>
+          {showIeltsSubmitModal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 text-slate-800"
+            >
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                className="bg-white rounded-lg shadow-2xl p-8 max-w-md w-full border border-slate-200 flex flex-col items-center justify-center text-center"
+              >
+                <h3 className="text-xl md:text-2xl font-bold text-slate-900 mb-3 font-sans leading-tight">
+                  Submit reading test?
+                </h3>
+                <p className="text-slate-650 text-sm mb-8 leading-relaxed font-sans">
+                  If you confirm, your answers will be submitted and you cannot continue this attempt.
+                </p>
+                <div className="flex items-center justify-center gap-4 w-full">
+                  <button
+                    onClick={() => setShowIeltsSubmitModal(false)}
+                    className="px-5 py-2.5 border border-slate-300 rounded font-bold text-slate-700 hover:bg-slate-50 transition-all font-sans text-sm cursor-pointer shadow-xs bg-white"
+                  >
+                    Back to test
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowIeltsSubmitModal(false);
+                      submit(false);
+                    }}
+                    className="px-8 py-2.5 bg-red-650 hover:bg-red-750 text-white rounded font-bold transition-all font-sans text-sm cursor-pointer shadow-xs border-none"
+                  >
+                    Submit
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     );
   };
