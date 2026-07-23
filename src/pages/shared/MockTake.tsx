@@ -1122,10 +1122,18 @@ export default function MockTake() {
             const completed = resAttempts.data.find(a => a.exam_id === testId && a.finished_at);
             if (completed) {
               setSearchParams({ attemptId: completed.id, review: "true" });
+            } else {
+              // No attempts found: immediately start a new attempt!
+              handleStartExam();
             }
           }
         })
-        .catch(console.error);
+        .catch((err) => {
+          console.error(err);
+          // If checking attempts fails, fallback to starting
+          handleStartExam();
+        });
+      return;
     }
 
     api.get<ExamData>(`/admin/exams/${testId}?t=${Date.now()}`)
