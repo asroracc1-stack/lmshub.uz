@@ -180,7 +180,11 @@ function normalize(exam: ExamData, attemptSeed?: string | null): { sections: { t
   const isIeltsOrSat = examTypeUpper.startsWith("IELTS")
     || examTypeUpper.startsWith("SAT")
     || examTypeUpper.startsWith("CEFR")
-    || examTypeUpper.startsWith("MILLIY");
+    || examTypeUpper.startsWith("MILLIY")
+    || examTypeUpper.includes("READING")
+    || examTypeUpper.includes("LISTENING")
+    || examTypeUpper.includes("WRITING")
+    || examTypeUpper.includes("SPEAKING");
 
   const passagesToUse = (attemptSeed && rawPassages.length > 0 && !isIeltsOrSat)
     ? deterministicShuffle(rawPassages, attemptSeed)
