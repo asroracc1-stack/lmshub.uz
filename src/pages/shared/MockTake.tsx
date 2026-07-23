@@ -3103,7 +3103,7 @@ export default function MockTake() {
                       setShowIeltsSubmitModal(false);
                       submit(false);
                     }}
-                    className="px-8 py-2.5 bg-red-650 hover:bg-red-750 text-white rounded font-bold transition-all font-sans text-sm cursor-pointer shadow-xs border-none"
+                    className="px-8 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded font-bold transition-all font-sans text-sm cursor-pointer shadow-xs border-none"
                   >
                     Submit
                   </button>
@@ -3616,7 +3616,7 @@ export default function MockTake() {
                     setShowIeltsSubmitModal(false);
                     submit(false);
                   }}
-                  className="px-8 py-2.5 bg-red-650 hover:bg-red-750 text-white rounded font-bold transition-all font-sans text-sm cursor-pointer shadow-xs border-none"
+                  className="px-8 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded font-bold transition-all font-sans text-sm cursor-pointer shadow-xs border-none"
                 >
                   Submit
                 </button>
