@@ -3053,12 +3053,14 @@ export default function MockTake() {
                     onClick={() => {
                       if (result) {
                         setShowCheatingLocked(false);
-                      } else {
+                      } else if (submitting) {
                         toast.info(isMilliy ? "Tizim javoblarni yuklamoqda, kuting..." : "System is submitting responses, please wait...");
+                      } else {
+                        toast.info(isMilliy ? "Javoblarni qayta yuborishga urinilmoqda..." : "Retrying response submission...");
+                        submit(true);
                       }
                     }}
-                    disabled={!result}
-                    className={cn("w-full h-12 text-white font-bold text-base rounded-xl transition-all border-none", 
+                    className={cn("w-full h-12 text-white font-bold text-base rounded-xl transition-all border-none cursor-pointer", 
                       isMilliy ? "bg-[#059669] hover:bg-[#047857]" : "bg-rose-600 hover:bg-rose-700"
                     )}
                   >
@@ -3553,12 +3555,14 @@ export default function MockTake() {
                   onClick={() => {
                     if (result) {
                       setShowCheatingLocked(false);
-                    } else {
+                    } else if (submitting) {
                       toast.info(isMilliy ? "Tizim javoblarni yuklamoqda, kuting..." : "System is submitting responses, please wait...");
+                    } else {
+                      toast.info(isMilliy ? "Javoblarni qayta yuborishga urinilmoqda..." : "Retrying response submission...");
+                      submit(true);
                     }
                   }}
-                  disabled={!result}
-                  className={cn("w-full h-12 text-white font-bold text-base rounded-xl transition-all border-none", 
+                  className={cn("w-full h-12 text-white font-bold text-base rounded-xl transition-all border-none cursor-pointer", 
                     isMilliy ? "bg-[#059669] hover:bg-[#047857]" : "bg-rose-600 hover:bg-rose-700"
                   )}
                 >
