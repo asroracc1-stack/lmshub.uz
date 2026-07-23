@@ -261,6 +261,38 @@ export function ExamResultDashboard({ result, questions, exam, onReviewQuestion 
           <p className="text-slate-500 dark:text-slate-400 text-base sm:text-lg">
             Here are your results.
           </p>
+
+          {/* ⭐ 5 Stars Animation */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            className="flex items-center justify-center gap-2 mt-2"
+          >
+            {[0, 1, 2, 3, 4].map((i) => (
+              <motion.span
+                key={i}
+                initial={{ scale: 0, rotate: -30, opacity: 0 }}
+                animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                transition={{
+                  type: "spring",
+                  stiffness: 260,
+                  damping: 12,
+                  delay: 0.5 + i * 0.12
+                }}
+              >
+                <Star className="w-8 h-8 fill-amber-400 text-amber-400 drop-shadow-[0_0_6px_rgba(251,191,36,0.7)]" />
+              </motion.span>
+            ))}
+          </motion.div>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.2, duration: 0.4 }}
+            className="text-xs font-semibold text-amber-500 dark:text-amber-400 tracking-wider uppercase mt-1"
+          >
+            +5 Stars Earned
+          </motion.p>
         </motion.div>
 
         {/* 2. Score Summary */}
