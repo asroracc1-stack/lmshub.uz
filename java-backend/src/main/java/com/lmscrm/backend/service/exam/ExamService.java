@@ -576,79 +576,92 @@ public class ExamService {
 
     @Transactional
     public void deleteExam(UUID id) {
-        // 1. Delete student answers associated with attempts of this exam
+        // 1. Find all student attempts associated with this exam
+        List<StudentAttempt> attempts = studentAttemptRepository.findByExamId(id);
+        
+        // 2. For each attempt, delete related child records via JPQL/Repository
+        for (StudentAttempt attempt : attempts) {
+            // Delete answers for this attempt
+            try {
+                studentAnswerRepository.deleteByAttemptId(attempt.getId());
+            } catch (Exception e) {
+                log.warn("Could not delete student answers for attempt {}: {}", attempt.getId(), e.getMessage());
+            }
+            
+            // Delete exam violations for this attempt
+            try {
+                entityManager.createQuery("DELETE FROM ExamViolation ev WHERE ev.attempt.id = :attemptId")
+                        .setParameter("attemptId", attempt.getId())
+                        .executeUpdate();
+            } catch (Exception e) {
+                log.warn("Could not delete exam violations for attempt {}: {}", attempt.getId(), e.getMessage());
+            }
+            
+            // Delete attempt snapshots for this attempt
+            try {
+                entityManager.createQuery("DELETE FROM AttemptSnapshot s WHERE s.studentAttempt.id = :attemptId")
+                        .setParameter("attemptId", attempt.getId())
+                        .executeUpdate();
+            } catch (Exception e) {
+                log.warn("Could not delete attempt snapshots for attempt {}: {}", attempt.getId(), e.getMessage());
+            }
+        }
+
+        // 3. Delete any remaining student answers referencing questions of this exam directly (just in case)
         try {
-            entityManager.createNativeQuery("DELETE FROM public.student_answers WHERE attempt_id IN (SELECT id FROM public.student_attempts WHERE exam_id = CAST(:examId AS uuid))")
+            entityManager.createQuery("DELETE FROM StudentAnswer sa WHERE sa.question.id IN (SELECT q.id FROM Question q WHERE q.exam.id = :examId)")
                     .setParameter("examId", id)
                     .executeUpdate();
         } catch (Exception e) {
-            log.warn("Could not delete student_answers by attempt: {}", e.getMessage());
+            log.warn("Could not delete student answers by question ID: {}", e.getMessage());
         }
 
-        // 1b. Delete student answers referencing questions of this exam directly
+        // 4. Delete attempt snapshots referencing the exam directly
         try {
-            entityManager.createNativeQuery("DELETE FROM public.student_answers WHERE question_id IN (SELECT id FROM public.questions WHERE exam_id = CAST(:examId AS uuid))")
+            entityManager.createQuery("DELETE FROM AttemptSnapshot s WHERE s.exam.id = :examId")
                     .setParameter("examId", id)
                     .executeUpdate();
         } catch (Exception e) {
-            log.warn("Could not delete student_answers by question: {}", e.getMessage());
+            log.warn("Could not delete attempt snapshots by exam ID: {}", e.getMessage());
         }
 
-        // 2. Delete exam violations associated with attempts of this exam
+        // 5. Delete all attempts associated with this exam
+        if (!attempts.isEmpty()) {
+            try {
+                studentAttemptRepository.deleteAllInBatch(attempts);
+            } catch (Exception e) {
+                log.warn("Could not delete student attempts: {}", e.getMessage());
+            }
+        }
+
+        // 6. Delete subscription pack association
         try {
-            entityManager.createNativeQuery("DELETE FROM public.exam_violations WHERE attempt_id IN (SELECT id FROM public.student_attempts WHERE exam_id = CAST(:examId AS uuid))")
+            entityManager.createNativeQuery("DELETE FROM subscription_pack_exams WHERE exam_id = CAST(:examId AS uuid)")
                     .setParameter("examId", id)
                     .executeUpdate();
         } catch (Exception e) {
-            log.warn("Could not delete exam_violations: {}", e.getMessage());
+            log.warn("Could not delete subscription pack exams: {}", e.getMessage());
         }
 
-        // 2b. Delete attempt snapshots associated with attempts or exam
+        // 7. Delete question options associated with the questions of this exam
         try {
-            entityManager.createNativeQuery("DELETE FROM public.attempt_snapshots WHERE exam_id = CAST(:examId AS uuid) OR student_attempt_id IN (SELECT id FROM public.student_attempts WHERE exam_id = CAST(:examId AS uuid))")
+            entityManager.createQuery("DELETE FROM QuestionOption qo WHERE qo.question.id IN (SELECT q.id FROM Question q WHERE q.exam.id = :examId)")
                     .setParameter("examId", id)
                     .executeUpdate();
         } catch (Exception e) {
-            log.warn("Could not delete attempt_snapshots: {}", e.getMessage());
+            log.warn("Could not delete question options: {}", e.getMessage());
         }
 
-        // 3. Delete student attempts associated with this exam
+        // 8. Delete answer keys associated with the questions of this exam
         try {
-            entityManager.createNativeQuery("DELETE FROM public.student_attempts WHERE exam_id = CAST(:examId AS uuid)")
+            entityManager.createQuery("DELETE FROM AnswerKey ak WHERE ak.question.id IN (SELECT q.id FROM Question q WHERE q.exam.id = :examId)")
                     .setParameter("examId", id)
                     .executeUpdate();
         } catch (Exception e) {
-            log.warn("Could not delete student_attempts: {}", e.getMessage());
+            log.warn("Could not delete answer keys: {}", e.getMessage());
         }
 
-        // 4. Delete subscription pack associations
-        try {
-            entityManager.createNativeQuery("DELETE FROM public.subscription_pack_exams WHERE exam_id = CAST(:examId AS uuid)")
-                    .setParameter("examId", id)
-                    .executeUpdate();
-        } catch (Exception e) {
-            log.warn("Could not delete subscription_pack_exams: {}", e.getMessage());
-        }
-
-        // 5. Delete question options associated with the questions of this exam
-        try {
-            entityManager.createNativeQuery("DELETE FROM public.question_options WHERE question_id IN (SELECT id FROM public.questions WHERE exam_id = CAST(:examId AS uuid))")
-                    .setParameter("examId", id)
-                    .executeUpdate();
-        } catch (Exception e) {
-            log.warn("Could not delete question_options: {}", e.getMessage());
-        }
-
-        // 5b. Delete answer keys associated with the questions of this exam
-        try {
-            entityManager.createNativeQuery("DELETE FROM public.answer_keys WHERE question_id IN (SELECT id FROM public.questions WHERE exam_id = CAST(:examId AS uuid))")
-                    .setParameter("examId", id)
-                    .executeUpdate();
-        } catch (Exception e) {
-            log.warn("Could not delete answer_keys: {}", e.getMessage());
-        }
-
-        // 6. Delete questions, passages, and the exam using JPA cascade
+        // 9. Finally, delete the exam (and questions/passages via JPA cascade)
         examRepository.findById(id).ifPresent(exam -> {
             examRepository.delete(exam);
             examRepository.flush(); // Flush the cascade delete to database immediately
