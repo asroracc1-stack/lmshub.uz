@@ -577,79 +577,82 @@ public class ExamService {
     @Transactional
     public void deleteExam(UUID id) {
         // 1. Delete student answers associated with attempts of this exam
-        if (tableExists("student_answers") && tableExists("student_attempts")) {
+        try {
             entityManager.createNativeQuery("DELETE FROM public.student_answers WHERE attempt_id IN (SELECT id FROM public.student_attempts WHERE exam_id = :examId)")
                     .setParameter("examId", id)
                     .executeUpdate();
+        } catch (Exception e) {
+            log.warn("Could not delete student_answers by attempt: {}", e.getMessage());
         }
-        if (tableExists("student_answers") && tableExists("questions")) {
+
+        // 1b. Delete student answers referencing questions of this exam directly
+        try {
             entityManager.createNativeQuery("DELETE FROM public.student_answers WHERE question_id IN (SELECT id FROM public.questions WHERE exam_id = :examId)")
                     .setParameter("examId", id)
                     .executeUpdate();
+        } catch (Exception e) {
+            log.warn("Could not delete student_answers by question: {}", e.getMessage());
         }
 
         // 2. Delete exam violations associated with attempts of this exam
-        if (tableExists("exam_violations") && tableExists("student_attempts")) {
+        try {
             entityManager.createNativeQuery("DELETE FROM public.exam_violations WHERE attempt_id IN (SELECT id FROM public.student_attempts WHERE exam_id = :examId)")
                     .setParameter("examId", id)
                     .executeUpdate();
+        } catch (Exception e) {
+            log.warn("Could not delete exam_violations: {}", e.getMessage());
         }
 
-        // 2.b. Delete attempt snapshots associated with attempts or exam
-        if (tableExists("attempt_snapshots")) {
+        // 2b. Delete attempt snapshots associated with attempts or exam
+        try {
             entityManager.createNativeQuery("DELETE FROM public.attempt_snapshots WHERE exam_id = :examId OR student_attempt_id IN (SELECT id FROM public.student_attempts WHERE exam_id = :examId)")
                     .setParameter("examId", id)
                     .executeUpdate();
+        } catch (Exception e) {
+            log.warn("Could not delete attempt_snapshots: {}", e.getMessage());
         }
 
         // 3. Delete student attempts associated with this exam
-        if (tableExists("student_attempts")) {
+        try {
             entityManager.createNativeQuery("DELETE FROM public.student_attempts WHERE exam_id = :examId")
                     .setParameter("examId", id)
                     .executeUpdate();
+        } catch (Exception e) {
+            log.warn("Could not delete student_attempts: {}", e.getMessage());
         }
 
         // 4. Delete subscription pack associations
-        if (tableExists("subscription_pack_exams")) {
+        try {
             entityManager.createNativeQuery("DELETE FROM public.subscription_pack_exams WHERE exam_id = :examId")
                     .setParameter("examId", id)
                     .executeUpdate();
+        } catch (Exception e) {
+            log.warn("Could not delete subscription_pack_exams: {}", e.getMessage());
         }
 
         // 5. Delete question options associated with the questions of this exam
-        if (tableExists("question_options") && tableExists("questions")) {
+        try {
             entityManager.createNativeQuery("DELETE FROM public.question_options WHERE question_id IN (SELECT id FROM public.questions WHERE exam_id = :examId)")
                     .setParameter("examId", id)
                     .executeUpdate();
+        } catch (Exception e) {
+            log.warn("Could not delete question_options: {}", e.getMessage());
         }
 
-        // 5.b. Delete answer keys associated with the questions of this exam
-        if (tableExists("answer_keys") && tableExists("questions")) {
+        // 5b. Delete answer keys associated with the questions of this exam
+        try {
             entityManager.createNativeQuery("DELETE FROM public.answer_keys WHERE question_id IN (SELECT id FROM public.questions WHERE exam_id = :examId)")
                     .setParameter("examId", id)
                     .executeUpdate();
+        } catch (Exception e) {
+            log.warn("Could not delete answer_keys: {}", e.getMessage());
         }
 
-        // 6. Delete questions associated with this exam
-        if (tableExists("questions")) {
-            entityManager.createNativeQuery("DELETE FROM public.questions WHERE exam_id = :examId")
-                    .setParameter("examId", id)
-                    .executeUpdate();
-        }
-
-        // 7. Delete passages associated with this exam
-        if (tableExists("passages")) {
-            entityManager.createNativeQuery("DELETE FROM public.passages WHERE exam_id = :examId")
-                    .setParameter("examId", id)
-                    .executeUpdate();
-        }
-
-        // 8. Delete the exam itself
-        if (tableExists("exams")) {
-            entityManager.createNativeQuery("DELETE FROM public.exams WHERE id = :examId")
-                    .setParameter("examId", id)
-                    .executeUpdate();
-        }
+        // 6. Delete questions, passages, and the exam using JPA cascade
+        examRepository.findById(id).ifPresent(exam -> {
+            examRepository.delete(exam);
+            examRepository.flush(); // Flush the cascade delete to database immediately
+        });
     }
 
     @Transactional
@@ -1037,6 +1040,99 @@ public class ExamService {
         } catch (Exception e) {
             org.slf4j.LoggerFactory.getLogger(ExamService.class).error("Failed to generate and save AI review asynchronously: ", e);
         }
+    }
+
+    @Transactional
+    public String getOrGenerateAiDiagnostic(UUID attemptId, User user) {
+        StudentAttempt attempt = studentAttemptRepository.findById(attemptId)
+                .orElseThrow(() -> new ResourceNotFoundException("Attempt not found"));
+
+        if (attempt.getAiCoachFeedback() != null && attempt.getAiCoachFeedback().contains("vocabularyAnalysis")) {
+            return attempt.getAiCoachFeedback();
+        }
+
+        List<Question> questions = questionRepository.findByExamIdAndStudentAttemptIsNullOrderByPositionOrderAsc(attempt.getExam().getId());
+        if (questions.isEmpty()) {
+            questions = questionRepository.findByStudentAttemptIdOrderByPositionOrderAsc(attempt.getId());
+        }
+        List<StudentAnswer> answers = studentAnswerRepository.findByAttemptId(attempt.getId());
+        java.util.Map<UUID, StudentAnswer> answerMap = answers.stream()
+                .filter(a -> a.getQuestion() != null)
+                .collect(Collectors.toMap(a -> a.getQuestion().getId(), a -> a, (a1, a2) -> a1));
+
+        Map<String, Object> data = new java.util.HashMap<>();
+        data.put("examTitle", attempt.getExam().getTitle());
+        data.put("overallBand", attempt.getOverallBand());
+        data.put("correctAnswersCount", attempt.getTotalScore());
+        data.put("totalQuestions", questions.size());
+
+        List<Map<String, Object>> qList = new java.util.ArrayList<>();
+        for (Question q : questions) {
+            Map<String, Object> qMap = new java.util.HashMap<>();
+            qMap.put("questionId", q.getId().toString());
+            qMap.put("number", q.getPositionOrder());
+            qMap.put("type", q.getQuestionType() != null ? q.getQuestionType() : "");
+            List<QuestionOption> options = optionRepository.findByQuestionIdOrderByPositionOrderAsc(q.getId());
+            String correctAnswer = options.stream()
+                    .filter(o -> Boolean.TRUE.equals(o.getIsCorrect()))
+                    .map(QuestionOption::getText)
+                    .findFirst()
+                    .orElse("");
+            qMap.put("correctAnswer", correctAnswer);
+            StudentAnswer sa = answerMap.get(q.getId());
+            qMap.put("userAnswer", sa != null ? sa.getUserAnswerText() : "");
+            qMap.put("isCorrect", sa != null && Boolean.TRUE.equals(sa.getIsCorrect()));
+            qMap.put("timeSpentSeconds", sa != null && sa.getTimeSpentSeconds() != null ? sa.getTimeSpentSeconds() : 0);
+            qList.add(qMap);
+        }
+        data.put("questions", qList);
+
+        String jsonInput;
+        try {
+            jsonInput = objectMapper.writeValueAsString(data);
+        } catch (Exception e) {
+            jsonInput = "{}";
+        }
+
+        String prompt = "You are an expert IELTS Reading Coach and Analyzer.\n" +
+                "I will provide a JSON containing the exam questions, correct answers, student's answers, and time spent.\n" +
+                "Evaluate the performance, identify patterns, and output ONLY a raw JSON object (no markdown, no backticks, no wrap) with this exact structure:\n" +
+                "{\n" +
+                "  \"strengths\": [\"Strength 1\", \"Strength 2\"],\n" +
+                "  \"weaknesses\": [\"Weakness 1\", \"Weakness 2\"],\n" +
+                "  \"questionTypeAnalysis\": [\"Type 1 analysis (e.g. True/False/Not Given): 80% accuracy, good speed.\", \"Type 2 analysis...\"],\n" +
+                "  \"vocabularyAnalysis\": \"Analysis of vocabulary usage, paraphrasing errors, and advice on key vocabulary improvements.\",\n" +
+                "  \"timeAnalysis\": \"Detailed analysis of student pacing and time management.\",\n" +
+                "  \"studyPlan\": \"A concise, step-by-step study recommendations plan.\",\n" +
+                "  \"estimatedNextBand\": \"e.g. 7.0 Band\",\n" +
+                "  \"studyPriority\": \"High / Medium / Low - target focus areas\"\n" +
+                "}\n" +
+                "Exam data:\n" + jsonInput;
+
+        String aiResponse = geminiService.executeWithRotation(prompt, 3);
+
+        if (aiResponse != null) {
+            aiResponse = aiResponse.trim();
+            if (aiResponse.startsWith("```json")) {
+                aiResponse = aiResponse.substring(7);
+            } else if (aiResponse.startsWith("```")) {
+                aiResponse = aiResponse.substring(3);
+            }
+            if (aiResponse.endsWith("```")) {
+                aiResponse = aiResponse.substring(0, aiResponse.length() - 3);
+            }
+            aiResponse = aiResponse.trim();
+
+            try {
+                objectMapper.readTree(aiResponse);
+                attempt.setAiCoachFeedback(aiResponse);
+                studentAttemptRepository.save(attempt);
+            } catch (Exception e) {
+                org.slf4j.LoggerFactory.getLogger(ExamService.class).error("Failed to parse Gemini diagnostic JSON: " + aiResponse, e);
+            }
+        }
+
+        return attempt.getAiCoachFeedback();
     }
 
     @Transactional

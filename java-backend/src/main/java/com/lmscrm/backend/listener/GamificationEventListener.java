@@ -132,13 +132,7 @@ public class GamificationEventListener {
 
         } else {
             double band = calculateIeltsBand(correctAnswers, totalQuestions, type);
-            if (band >= 7.5) {
-                coinReward = 10;
-            } else if (band >= 6.5) {
-                coinReward = 5;
-            } else if (band >= 5.5) {
-                coinReward = 3;
-            }
+            coinReward = 5;
             reason = String.format("IELTS Band %.1f/9.0", band);
         }
 
@@ -194,7 +188,7 @@ public class GamificationEventListener {
             xpEarned += finalScore * 3L;
         } else {
             double band = calculateIeltsBand(correctAnswers, totalQuestions, type);
-            xpEarned += (long) (band * 30.0);
+            xpEarned = 5L + (long) (band * 30.0);
         }
 
         student.setXp((student.getXp() != null ? student.getXp() : 0L) + xpEarned);

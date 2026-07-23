@@ -124,4 +124,13 @@ public class StudentExamController {
             @AuthenticationPrincipal User user) {
         return ResponseEntity.ok(examService.getExamResultByAttemptId(attemptId, user));
     }
+
+    @PostMapping("/attempts/{attemptId}/ai-diagnostic")
+    @PreAuthorize("hasAnyRole('STUDENT', 'USER')")
+    @Operation(summary = "Get or Generate AI Diagnostic for Completed Attempt", description = "Retrieves or generates structured AI coach review feedback for an attempt.")
+    public ResponseEntity<String> getOrGenerateAiDiagnostic(
+            @PathVariable UUID attemptId,
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(examService.getOrGenerateAiDiagnostic(attemptId, user));
+    }
 }

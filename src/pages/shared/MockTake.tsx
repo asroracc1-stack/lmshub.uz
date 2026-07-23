@@ -1524,7 +1524,7 @@ export default function MockTake() {
 
 
 
-  if (result) {
+  if (result && !isIeltsLayout) {
     return <ExamResultDashboard result={result} questions={questions} exam={exam} />;
   }
 
@@ -2992,7 +2992,20 @@ export default function MockTake() {
     if (isReviewOrAnalyze) {
       return renderIeltsLayout();
     } else {
-      return <ExamResultDashboard result={result} questions={questions} exam={exam} />;
+      return (
+        <ExamResultDashboard 
+          result={result} 
+          questions={questions} 
+          exam={exam} 
+          onReviewQuestion={(index) => {
+            setActiveQuestionIndex(index);
+            setSearchParams(prev => {
+              prev.set("review", "true");
+              return prev;
+            });
+          }}
+        />
+      );
     }
   }
 
