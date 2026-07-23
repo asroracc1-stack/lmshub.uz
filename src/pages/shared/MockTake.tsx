@@ -850,6 +850,71 @@ export default function MockTake() {
   const [isAnalyzeMode, setIsAnalyzeMode] = useState(false);
   const isReviewOrAnalyze = isReviewMode || isAnalyzeMode;
 
+  const hasInlineBlanks = (prompt?: string) => {
+    if (!prompt) return false;
+    return /\[_*\]|_{3,}/g.test(prompt);
+  };
+
+  const renderInlinePrompt = (q: any) => {
+    const prompt = q.prompt || "";
+    const regex = /\[_*\]|_{3,}/g;
+    const parts = prompt.split(regex);
+    
+    if (parts.length <= 1) {
+      return (
+        <div className={cn("font-bold leading-relaxed mb-3", textSizeStyle.prompt)}>
+          {formatMathText(prompt)}
+        </div>
+      );
+    }
+
+    const numBlanks = parts.length - 1;
+    const currentAnswerStr = answers[q.id] || "";
+    let valList: string[] = [];
+    if (numBlanks > 1) {
+      valList = currentAnswerStr.split(", ");
+    } else {
+      valList = [currentAnswerStr];
+    }
+    
+    while (valList.length < numBlanks) {
+      valList.push("");
+    }
+
+    return (
+      <div className={cn("font-bold leading-relaxed mb-3 flex flex-wrap items-center gap-y-2", textSizeStyle.prompt)}>
+        {parts.map((part, index) => {
+          const isLast = index === parts.length - 1;
+          const val = valList[index] || "";
+          
+          return (
+            <React.Fragment key={index}>
+              <span>{formatMathText(part)}</span>
+              {!isLast && (
+                <input
+                  type="text"
+                  disabled={isReviewOrAnalyze}
+                  className="mx-1.5 px-2 py-0.5 border border-slate-400 dark:border-slate-600 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-center w-[120px] h-7 inline-block font-bold bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 placeholder-slate-400/80 shadow-xs"
+                  placeholder={String(q.position + index)}
+                  value={val}
+                  onChange={(e) => {
+                    const newVal = e.target.value;
+                    const newAnswers = [...valList];
+                    newAnswers[index] = newVal;
+                    const joined = numBlanks > 1 ? newAnswers.join(", ") : newAnswers[0];
+                    onAnswer(q.id, joined);
+                    setActiveQuestionIndex(q.position - 1);
+                  }}
+                />
+              )}
+            </React.Fragment>
+          );
+        })}
+      </div>
+    );
+  };
+
+
   const ieltsDetails = useMemo(() => {
     if (!result) return [];
     const rawDetails = result.detail || result.details || [];
@@ -2171,9 +2236,7 @@ export default function MockTake() {
                       
                       <div className="flex-1 leading-relaxed">
                         <div className="flex justify-between items-start gap-4 flex-wrap">
-                          <div className={cn("font-bold leading-relaxed mb-3", textSizeStyle.prompt)}>
-                            {formatMathText(q.prompt)}
-                          </div>
+                          {renderInlinePrompt(q)}
                           <div className="flex items-center gap-2 select-none shrink-0">
                             {isReviewOrAnalyze && (
                               <span className={cn("text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-sm border", 
@@ -2323,16 +2386,18 @@ export default function MockTake() {
                                     </div>
                                   </div>
                                 ) : (
-                                  <input
-                                    type="text"
-                                    className={cn("w-full max-w-md p-2.5 font-semibold rounded-md border shadow-xs focus:outline-none focus:ring-0", cStyle.input, textSizeStyle.input)}
-                                    placeholder="Type your answer here..."
-                                    value={answers[q.id] || ""}
-                                    onChange={(e) => {
-                                      onAnswer(q.id, e.target.value);
-                                      setActiveQuestionIndex(q.position - 1);
-                                    }}
-                                  />
+                                  !hasInlineBlanks(q.prompt) && (
+                                    <input
+                                      type="text"
+                                      className={cn("w-full max-w-md p-2.5 font-semibold rounded-md border shadow-xs focus:outline-none focus:ring-0", cStyle.input, textSizeStyle.input)}
+                                      placeholder="Type your answer here..."
+                                      value={answers[q.id] || ""}
+                                      onChange={(e) => {
+                                        onAnswer(q.id, e.target.value);
+                                        setActiveQuestionIndex(q.position - 1);
+                                      }}
+                                    />
+                                  )
                                 )
                               )}
                             </div>
