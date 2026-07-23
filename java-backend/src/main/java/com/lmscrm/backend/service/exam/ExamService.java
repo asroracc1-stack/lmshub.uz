@@ -750,14 +750,14 @@ public class ExamService {
                     .build());
         }
 
-        String kind = exam.getType().name().toLowerCase();
+        String kind = exam.getType() != null ? exam.getType().name().toLowerCase() : "reading";
         double band = IeltsGradingUtils.rawToBand(kind, correctCount, questions.size());
         
         String examDataJson = "";
         try {
             // Build JSON for Gemini
             java.util.Map<String, Object> examDataMap = new java.util.HashMap<>();
-            examDataMap.put("examTitle", exam.getTitle());
+            examDataMap.put("examTitle", exam.getTitle() != null ? exam.getTitle() : "Mock Test");
             examDataMap.put("examType", kind);
             List<java.util.Map<String, Object>> qDataList = new java.util.ArrayList<>();
             for(ExamResultDto.QuestionDetail d : details) {
@@ -781,7 +781,8 @@ public class ExamService {
             attempt.setFinishedAt(java.time.LocalDateTime.now());
             attempt.setTotalScore(correctCount);
             attempt.setMaxScore(questions.size());
-            attempt.setIsPassed(correctCount >= exam.getPassingScore());
+            int passingScore = exam.getPassingScore() != null ? exam.getPassingScore() : 1;
+            attempt.setIsPassed(correctCount >= passingScore);
             attempt.setOverallBand(band);
             attempt.setTimeUsedSeconds((int) totalTimeSpent);
             attempt.setAiCoachFeedback(null);
@@ -807,10 +808,20 @@ public class ExamService {
 
             if (request.getViolations() != null && !request.getViolations().isEmpty()) {
                 for (ExamViolationDto vDto : request.getViolations()) {
+                    java.time.LocalDateTime vTs = java.time.LocalDateTime.now();
+                    if (vDto.getTimestamp() != null && !vDto.getTimestamp().isBlank()) {
+                        try {
+                            vTs = java.time.ZonedDateTime.parse(vDto.getTimestamp()).toLocalDateTime();
+                        } catch (Exception ex) {
+                            try {
+                                vTs = java.time.LocalDateTime.parse(vDto.getTimestamp());
+                            } catch (Exception ignored) {}
+                        }
+                    }
                     ExamViolation v = ExamViolation.builder()
                             .attempt(attempt)
                             .violationType(vDto.getViolationType())
-                            .timestamp(vDto.getTimestamp() != null ? java.time.LocalDateTime.parse(vDto.getTimestamp()) : java.time.LocalDateTime.now())
+                            .timestamp(vTs)
                             .details(vDto.getDetails())
                             .build();
                     attempt.getViolations().add(v);
@@ -819,7 +830,7 @@ public class ExamService {
             }
 
             for (Question q : questions) {
-                String userAns = request.getAnswers().get(q.getId().toString());
+                String userAns = answersMap.get(q.getId().toString());
                 List<QuestionOption> options = optionRepository.findByQuestionIdOrderByPositionOrderAsc(q.getId());
                 Long timeSpent = request.getTime_spent() != null ? request.getTime_spent().getOrDefault(q.getId().toString(), 0L) : 0L;
                 
