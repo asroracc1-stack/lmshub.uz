@@ -203,10 +203,11 @@ function normalize(exam: ExamData, attemptSeed?: string | null): { sections: { t
         let qtype = mapQtype(q.questionType ?? q.question_type);
         const instrStr = (q.instruction ?? (q as any).groupInstruction ?? q.explanation ?? "").toUpperCase();
         const promptStr = (q.text ?? (q as any).prompt ?? "").toUpperCase();
+        const correctStr = (q.correctAnswer ?? q.correct_answer ?? "").toUpperCase().trim();
 
-        if (instrStr.includes("YES/NO/NOT GIVEN") || instrStr.includes("YES / NO / NOT GIVEN") || promptStr.includes("YES/NO/NOT GIVEN")) {
+        if (instrStr.includes("YES/NO/NOT GIVEN") || instrStr.includes("YES / NO / NOT GIVEN") || promptStr.includes("YES/NO/NOT GIVEN") || correctStr === "YES" || correctStr === "NO" || (correctStr === "NOT GIVEN" && (qtype === "short" || qtype === "fill"))) {
           qtype = "ynng";
-        } else if (instrStr.includes("TRUE/FALSE/NOT GIVEN") || instrStr.includes("TRUE / FALSE / NOT GIVEN") || promptStr.includes("TRUE/FALSE/NOT GIVEN")) {
+        } else if (instrStr.includes("TRUE/FALSE/NOT GIVEN") || instrStr.includes("TRUE / FALSE / NOT GIVEN") || promptStr.includes("TRUE/FALSE/NOT GIVEN") || correctStr === "TRUE" || correctStr === "FALSE") {
           qtype = "tfng";
         }
 
@@ -236,13 +237,20 @@ function normalize(exam: ExamData, attemptSeed?: string | null): { sections: { t
         }
 
         const pos = q.positionOrder ?? q.position_order ?? (questions.length + 1);
+        let finalInstruction = q.instruction ?? (q as any).groupInstruction ?? q.explanation ?? "";
+        if (!finalInstruction && qtype === "ynng") {
+          finalInstruction = "Questions 15-20 (Choose YES, NO, or NOT GIVEN)";
+        } else if (!finalInstruction && qtype === "tfng") {
+          finalInstruction = "Questions (Choose TRUE, FALSE, or NOT GIVEN)";
+        }
+
         questions.push({
           id: q.id,
           position: pos,
           section_index: sections.length - 1,
           prompt: q.text ?? (q as any).prompt ?? "",
           qtype,
-          instruction: q.instruction ?? (q as any).groupInstruction ?? q.explanation ?? "",
+          instruction: finalInstruction,
           options: rawOpts,
           correct_answer: q.correctAnswer ?? q.correct_answer ?? null,
           points: q.points ?? 1,
@@ -264,10 +272,11 @@ function normalize(exam: ExamData, attemptSeed?: string | null): { sections: { t
         let qtype = mapQtype(q.questionType ?? q.question_type);
         const instrStr = (q.instruction ?? (q as any).groupInstruction ?? q.explanation ?? "").toUpperCase();
         const promptStr = (q.text ?? (q as any).prompt ?? "").toUpperCase();
+        const correctStr = (q.correctAnswer ?? q.correct_answer ?? "").toUpperCase().trim();
 
-        if (instrStr.includes("YES/NO/NOT GIVEN") || instrStr.includes("YES / NO / NOT GIVEN") || promptStr.includes("YES/NO/NOT GIVEN")) {
+        if (instrStr.includes("YES/NO/NOT GIVEN") || instrStr.includes("YES / NO / NOT GIVEN") || promptStr.includes("YES/NO/NOT GIVEN") || correctStr === "YES" || correctStr === "NO" || (correctStr === "NOT GIVEN" && (qtype === "short" || qtype === "fill"))) {
           qtype = "ynng";
-        } else if (instrStr.includes("TRUE/FALSE/NOT GIVEN") || instrStr.includes("TRUE / FALSE / NOT GIVEN") || promptStr.includes("TRUE/FALSE/NOT GIVEN")) {
+        } else if (instrStr.includes("TRUE/FALSE/NOT GIVEN") || instrStr.includes("TRUE / FALSE / NOT GIVEN") || promptStr.includes("TRUE/FALSE/NOT GIVEN") || correctStr === "TRUE" || correctStr === "FALSE") {
           qtype = "tfng";
         }
 
@@ -297,13 +306,20 @@ function normalize(exam: ExamData, attemptSeed?: string | null): { sections: { t
         }
 
         const pos = q.positionOrder ?? q.position_order ?? (questions.length + 1);
+        let finalInstruction = q.instruction ?? (q as any).groupInstruction ?? q.explanation ?? "";
+        if (!finalInstruction && qtype === "ynng") {
+          finalInstruction = "Questions (Choose YES, NO, or NOT GIVEN)";
+        } else if (!finalInstruction && qtype === "tfng") {
+          finalInstruction = "Questions (Choose TRUE, FALSE, or NOT GIVEN)";
+        }
+
         questions.push({
           id: q.id,
           position: pos,
           section_index: 0,
           prompt: q.text ?? (q as any).prompt ?? "",
           qtype,
-          instruction: q.instruction ?? (q as any).groupInstruction ?? q.explanation ?? "",
+          instruction: finalInstruction,
           options: rawOpts,
           correct_answer: q.correctAnswer ?? q.correct_answer ?? null,
           points: q.points ?? 1,
