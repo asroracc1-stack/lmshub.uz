@@ -110,8 +110,8 @@ public class LmsHubHtmlLayoutConverter {
         List<Element> sectionsList = new ArrayList<>();
         
         // Detect split panel text and questions first
-        Elements textSections = doc.select(".text-section, .text_section, .passage-section, .passage_section, #passage");
-        Elements questSections = doc.select(".question-section, .question_section, .questions-section, .questions_section, #questions");
+        Elements textSections = doc.select(".text-section, .text_section, .passage-section, .passage_section, #passage, .passage");
+        Elements questSections = doc.select(".question-section, .question_section, .questions-section, .questions_section, #questions, .questions");
         
         if (!textSections.isEmpty() && !questSections.isEmpty()) {
             for (int i = 0; i < textSections.size(); i++) {

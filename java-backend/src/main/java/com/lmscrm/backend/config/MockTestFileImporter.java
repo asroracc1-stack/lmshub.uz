@@ -8,6 +8,7 @@ import com.lmscrm.backend.repository.UserRepository;
 import com.lmscrm.backend.service.exam.converter.LmsHubHtmlLayoutConverter;
 import com.lmscrm.backend.service.exam.parser.ExamBuilderService;
 import com.lmscrm.backend.service.exam.parser.LmsHubHtmlParser;
+import com.lmscrm.backend.service.exam.ExamService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
@@ -32,6 +33,7 @@ public class MockTestFileImporter implements CommandLineRunner {
     private final LmsHubHtmlLayoutConverter layoutConverter;
     private final LmsHubHtmlParser htmlParser;
     private final ExamBuilderService examBuilderService;
+    private final ExamService examService;
 
     @Override
     @Transactional
@@ -79,8 +81,15 @@ public class MockTestFileImporter implements CommandLineRunner {
                     }
 
                     if (examRepository.existsByTitle(title)) {
-                        log.info("[MockTestFileImporter] Exam with title '{}' already exists in database. Skipping import.", title);
-                        continue;
+                        log.info("[MockTestFileImporter] Exam with title '{}' already exists in database. Deleting old version before re-import...", title);
+                        java.util.List<Exam> existing = examRepository.findByTitle(title);
+                        for (Exam e : existing) {
+                            try {
+                                examService.deleteExam(e.getId());
+                            } catch (Exception ex) {
+                                log.warn("[MockTestFileImporter] Failed to delete existing exam ID {}: {}", e.getId(), ex.getMessage());
+                            }
+                        }
                     }
 
                     log.info("[MockTestFileImporter] Importing exam '{}'...", title);
