@@ -18,7 +18,16 @@ public interface StudentAttemptRepository extends JpaRepository<StudentAttempt, 
 
     List<StudentAttempt> findByExamId(UUID examId);
 
-    Optional<StudentAttempt> findByExamIdAndStudentId(UUID examId, UUID studentId);
+    @Query("SELECT sa FROM StudentAttempt sa WHERE sa.exam.id = :examId AND sa.student.id = :studentId ORDER BY sa.startedAt DESC")
+    List<StudentAttempt> findAttempts(@Param("examId") UUID examId, @Param("studentId") UUID studentId);
+
+    default Optional<StudentAttempt> findByExamIdAndStudentId(UUID examId, UUID studentId) {
+        List<StudentAttempt> list = findAttempts(examId, studentId);
+        return list.isEmpty() ? Optional.empty() : Optional.of(list.get(0));
+    }
+
+    @Query("SELECT sa FROM StudentAttempt sa WHERE sa.exam.id = :examId AND sa.student.id = :studentId AND sa.finishedAt IS NULL")
+    Optional<StudentAttempt> findActiveAttempt(@Param("examId") UUID examId, @Param("studentId") UUID studentId);
 
     List<StudentAttempt> findTop5ByStudentIdAndFinishedAtIsNotNullOrderByFinishedAtAsc(UUID studentId);
 

@@ -109,6 +109,8 @@ databaseChangeLog:
       file: db/changelog/changes/v0054_fix_student_roles.yaml
   - include:
       file: db/changelog/changes/v0055_enterprise_exam_system.yaml
+  - include:
+      file: db/changelog/changes/v0056_remove_exam_attempt_unique_constraint.yaml
 
 
 

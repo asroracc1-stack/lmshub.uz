@@ -1189,6 +1189,12 @@ export default function MockTake() {
               const { sections: sRev, questions: qRev } = normalize(data, resultData.attempt_seed);
               setSections(sRev);
               setQuestions(qRev);
+
+              console.log("[MockTake Review Validation]", {
+                questionsLength: qRev.length,
+                attemptAnswersLength: resultData.detail?.length || resultData.details?.length || 0,
+                examQuestionsCount: data.rootQuestionsCount || data.questions?.length || 0
+              });
             })
             .catch(() => toast.error("Error loading result"));
         }

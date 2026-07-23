@@ -37,6 +37,16 @@ public class GamificationEventListener {
         StudentAttempt attempt = event.getAttempt();
         User student = event.getStudent();
         Exam exam = attempt.getExam();
+
+        boolean alreadyRewarded = attemptRepository.findAttempts(exam.getId(), student.getId()).stream()
+                .anyMatch(sa -> sa != null && !sa.getId().equals(attempt.getId()) && Boolean.TRUE.equals(sa.getRewardGranted()));
+
+        if (alreadyRewarded || Boolean.TRUE.equals(attempt.getRewardGranted())) {
+            log.info("Student {} was already rewarded for exam {}, skipping reward for retry attempt {}", 
+                    student.getEmail(), exam.getTitle(), attempt.getId());
+            return;
+        }
+
         ExamType type = exam.getType();
         int correctAnswers = event.getCorrectAnswers();
         int totalQuestions = event.getTotalQuestions();
@@ -211,6 +221,9 @@ public class GamificationEventListener {
                 coinService.addCoins(student, 5, "Great progress in exams", "PROGRESS_BONUS", null);
             }
         }
+
+        attempt.setRewardGranted(true);
+        attemptRepository.save(attempt);
     }
 
     private int getRWScore(int correctCount, int totalCount) {

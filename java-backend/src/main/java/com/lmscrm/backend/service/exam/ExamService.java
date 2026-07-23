@@ -725,13 +725,7 @@ public class ExamService {
             Long timeSpent = timeSpentMap != null ? timeSpentMap.getOrDefault(qIdStr, 0L) : 0L;
             if (timeSpent == null) timeSpent = 0L;
             
-            // Get correct answer from options
-            List<QuestionOption> options = optionRepository.findByQuestionIdOrderByPositionOrderAsc(q.getId());
-            String correctAns = options.stream()
-                    .filter(o -> Boolean.TRUE.equals(o.getIsCorrect()))
-                    .map(QuestionOption::getText)
-                    .findFirst()
-                    .orElse("");
+            String correctAns = getCorrectAnswerForQuestion(q);
 
             // Core Strategy Verification Engine Call
             com.lmscrm.backend.service.exam.scoring.ValidationResult verifyResult = null;
@@ -909,12 +903,7 @@ public class ExamService {
                 aiExpl = answer.getAiExplanation();
             }
 
-            List<QuestionOption> options = optionRepository.findByQuestionIdOrderByPositionOrderAsc(q.getId());
-            String correctAns = options.stream()
-                    .filter(o -> Boolean.TRUE.equals(o.getIsCorrect()))
-                    .map(QuestionOption::getText)
-                    .findFirst()
-                    .orElse("");
+            String correctAns = getCorrectAnswerForQuestion(q);
 
             details.add(ExamResultDto.QuestionDetail.builder()
                     .questionId(q.getId().toString())
@@ -979,12 +968,7 @@ public class ExamService {
                 aiExpl = answer.getAiExplanation();
             }
 
-            List<QuestionOption> options = optionRepository.findByQuestionIdOrderByPositionOrderAsc(q.getId());
-            String correctAns = options.stream()
-                    .filter(o -> Boolean.TRUE.equals(o.getIsCorrect()))
-                    .map(QuestionOption::getText)
-                    .findFirst()
-                    .orElse("");
+            String correctAns = getCorrectAnswerForQuestion(q);
 
             details.add(ExamResultDto.QuestionDetail.builder()
                     .questionId(q.getId().toString())
@@ -1577,6 +1561,26 @@ public class ExamService {
         if (lower.endsWith(".mp4")) return "video/mp4";
         if (lower.endsWith(".svg")) return "image/svg+xml";
         return "application/octet-stream";
+    }
+
+    private String getCorrectAnswerForQuestion(Question q) {
+        try {
+            return entityManager.createQuery(
+                "SELECT ak.correctAnswer FROM AnswerKey ak WHERE ak.question.id = :qId", String.class)
+                .setParameter("qId", q.getId())
+                .getSingleResult();
+        } catch (Exception e) {
+            try {
+                List<QuestionOption> options = optionRepository.findByQuestionIdOrderByPositionOrderAsc(q.getId());
+                return options.stream()
+                        .filter(o -> Boolean.TRUE.equals(o.getIsCorrect()))
+                        .map(QuestionOption::getText)
+                        .findFirst()
+                        .orElse("");
+            } catch (Exception ex) {
+                return "";
+            }
+        }
     }
 }
 

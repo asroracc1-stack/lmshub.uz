@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: remove-exam-attempt-unique-constraint
+      author: antigravity
+      changes:
+        - dropUniqueConstraint:
+            tableName: student_attempts
+            constraintName: uk_student_exam_attempt
+        - addColumn:
+            tableName: student_attempts
+            columns:
+              - column:
+                  name: reward_granted
+                  type: boolean
+                  defaultValueBoolean: false

@@ -63,15 +63,10 @@ public class StudentAttemptService {
             throw new BusinessException("Exam has already ended");
         }
 
-        java.util.Optional<StudentAttempt> existingOpt = attemptRepository.findByExamIdAndStudentId(examId, student.getId());
-        if (existingOpt.isPresent()) {
-            StudentAttempt existing = existingOpt.get();
-            if (existing.getFinishedAt() == null) {
-                // Resume existing attempt
-                return mapper.toStudentAttemptDto(existing);
-            } else {
-                throw new BusinessException("You have already attempted this exam");
-            }
+        java.util.Optional<StudentAttempt> activeOpt = attemptRepository.findActiveAttempt(examId, student.getId());
+        if (activeOpt.isPresent()) {
+            // Resume existing active attempt
+            return mapper.toStudentAttemptDto(activeOpt.get());
         }
 
         String attemptSeed = java.util.UUID.randomUUID().toString();

@@ -9,9 +9,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 @Entity
-@Table(name = "student_attempts", schema = "public", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"exam_id", "student_id"})
-})
+@Table(name = "student_attempts", schema = "public")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -63,6 +61,10 @@ public class StudentAttempt {
 
     @Column(name = "attempt_seed")
     private String attemptSeed;
+
+    @Column(name = "reward_granted")
+    @Builder.Default
+    private Boolean rewardGranted = false;
 
     @OneToMany(mappedBy = "attempt", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ExamViolation> violations = new ArrayList<>();

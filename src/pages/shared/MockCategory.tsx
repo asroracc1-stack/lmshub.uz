@@ -438,19 +438,13 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
                               </Link>
                             </Button>
                             <Button
+                              asChild
                               size="lg"
                               className="rounded-xl h-11 px-6 font-bold text-sm transition-all duration-300 bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/25 w-full sm:w-auto flex-1 sm:flex-none justify-center"
-                              onClick={async () => {
-                                try {
-                                  await api.delete(`/student/exams/${test.id}/attempt`);
-                                  loadAttempts();
-                                  toast.success(t("mockCategory.retakeSuccess", { defaultValue: "Avvalgi urinish bekor qilindi. Qaytadan topshirishingiz mumkin." }));
-                                } catch (e) {
-                                  toast.error(t("mockCategory.retakeError", { defaultValue: "Xatolik yuz berdi" }));
-                                }
-                              }}
                             >
-                              {t("mockCategory.retakeBtn")}
+                              <Link to={`${basePath}/mocks/take/${test.id}`}>
+                                {t("mockCategory.retakeBtn")}
+                              </Link>
                             </Button>
                           </>
                         ) : (

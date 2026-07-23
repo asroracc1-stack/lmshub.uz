@@ -31,12 +31,18 @@ public class TravelEngineService {
         GamificationConfig config = configRepository.findFirstByActiveTrueOrderByUpdatedAtDesc()
                 .orElseGet(GamificationConfig::new); // Fallback to defaults
 
+        double testSolvedMult = config.getTestSolvedMultiplier() != null ? config.getTestSolvedMultiplier() : 5.0;
+        double correctAnswerMult = config.getCorrectAnswerMultiplier() != null ? config.getCorrectAnswerMultiplier() : 2.0;
+        double streakDaysMult = config.getStreakDaysMultiplier() != null ? config.getStreakDaysMultiplier() : 20.0;
+        double achievementsMult = config.getAchievementsMultiplier() != null ? config.getAchievementsMultiplier() : 50.0;
+        double coinsDiv = config.getCoinsDivider() != null && config.getCoinsDivider() != 0.0 ? config.getCoinsDivider() : 10.0;
+
         long earnedPoints = (long) (
-                (testsSolved * config.getTestSolvedMultiplier()) +
-                (correctAnswers * config.getCorrectAnswerMultiplier()) +
-                (streakDays * config.getStreakDaysMultiplier()) +
-                (achievementsEarned * config.getAchievementsMultiplier()) +
-                (newCoins / config.getCoinsDivider())
+                (testsSolved * testSolvedMult) +
+                (correctAnswers * correctAnswerMult) +
+                (streakDays * streakDaysMult) +
+                (achievementsEarned * achievementsMult) +
+                (newCoins / coinsDiv)
         );
 
         UserTravelState state = travelStateRepository.findByUserId(user.getId())

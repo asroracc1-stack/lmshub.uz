@@ -184,10 +184,11 @@ export function ExamResultDashboard({ result, questions, exam, onReviewQuestion 
 
   // Load existing AI coach feedback if available on result object
   useEffect(() => {
-    if (result?.aiCoachFeedback) {
+    const feedback = result?.ai_coach_feedback || result?.aiCoachFeedback;
+    if (feedback) {
       try {
-        const parsed = JSON.parse(result.aiCoachFeedback);
-        if (parsed.vocabularyAnalysis || parsed.studyPlan) {
+        const parsed = typeof feedback === "string" ? JSON.parse(feedback) : feedback;
+        if (parsed && (parsed.vocabularyAnalysis || parsed.studyPlan || parsed.strengths)) {
           setAiReport(parsed);
         }
       } catch (e) {
@@ -201,7 +202,7 @@ export function ExamResultDashboard({ result, questions, exam, onReviewQuestion 
     if (loadingAi) return;
     setLoadingAi(true);
     try {
-      const attemptId = result?.attemptId || result?.id;
+      const attemptId = result?.attemptId || result?.attempt_id || result?.id;
       if (!attemptId) {
         toast.error("Attempt ID not found to run analysis.");
         setLoadingAi(false);
@@ -226,14 +227,8 @@ export function ExamResultDashboard({ result, questions, exam, onReviewQuestion 
   };
 
   const handleRetry = async () => {
-    if (window.confirm("Do you want to retry this mock test? Your current attempt data will be reset.")) {
-      try {
-        await api.delete(`/student/exams/${exam.id}/attempt`);
-        toast.success("Attempt reset successfully!");
-        window.location.reload();
-      } catch (err) {
-        toast.error("Failed to reset attempt. Please try again.");
-      }
+    if (window.confirm("Do you want to retry this mock test? A new attempt will be created, and your previous attempts will be preserved in your history.")) {
+      nav(`/student/exams/${exam.id}/take`);
     }
   };
 
@@ -432,10 +427,10 @@ export function ExamResultDashboard({ result, questions, exam, onReviewQuestion 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
             {questionResults.map((r) => {
               const itemColor = r.isCorrect 
-                ? "border-emerald-500/20 bg-emerald-500/[0.02] dark:bg-emerald-950/[0.05]"
+                ? "border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/10"
                 : r.isOmitted
-                ? "border-slate-350/40 bg-slate-500/[0.02]"
-                : "border-rose-500/20 bg-rose-500/[0.02] dark:bg-rose-950/[0.05]";
+                ? "border-slate-300 bg-slate-50 dark:bg-slate-900/10"
+                : "border-rose-500 bg-rose-50/50 dark:bg-rose-950/10";
               
               const badgeColor = r.isCorrect
                 ? "bg-emerald-500 text-white"
@@ -443,27 +438,39 @@ export function ExamResultDashboard({ result, questions, exam, onReviewQuestion 
                 ? "bg-slate-400 text-white"
                 : "bg-rose-500 text-white";
 
+              const qPos = r.question.position || r.question.positionOrder || r.question.position_order || (r.index + 1);
+
               return (
                 <motion.div
                   key={r.question.id}
                   whileHover={{ scale: 1.01, y: -1 }}
                   onClick={() => onReviewQuestion && onReviewQuestion(r.index)}
                   className={cn(
-                    "p-4 rounded-xl border flex items-center justify-between cursor-pointer transition-all duration-200 shadow-xs",
+                    "p-4 rounded-xl border-2 flex items-center justify-between cursor-pointer transition-all duration-200 shadow-xs",
                     itemColor
                   )}
                 >
-                  <div className="flex items-center space-x-3.5 min-w-0">
+                  <div className="flex items-center space-x-3.5 min-w-0 flex-1">
                     <span className={cn(
-                      "w-6 h-6 rounded-full flex items-center justify-center text-xs font-black shrink-0 shadow-xs",
-                      badgeColor
+                       "w-8 h-8 rounded-full flex items-center justify-center text-sm font-black shrink-0 shadow-xs",
+                       badgeColor
                     )}>
-                      {r.question.positionOrder || (r.index + 1)}
+                      {qPos}
                     </span>
-                    <div className="min-w-0">
-                      <p className="text-xs text-slate-400 font-semibold mb-0.5">User Answer</p>
-                      <p className="text-sm font-bold text-slate-800 dark:text-slate-200 truncate pr-2">
-                        {r.userAns ? r.userAns : <span className="text-slate-300 dark:text-slate-700 italic font-normal">Skipped</span>}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">User Answer</span>
+                        <span className={cn(
+                          "text-[9px] px-1.5 py-0.5 rounded font-black uppercase tracking-widest",
+                          r.isCorrect ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400" :
+                          r.isOmitted ? "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400" :
+                          "bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400"
+                        )}>
+                          {r.isCorrect ? "Correct" : r.isOmitted ? "Skipped" : "Wrong"}
+                        </span>
+                      </div>
+                      <p className="text-sm font-bold text-slate-800 dark:text-slate-200 truncate pr-2 mt-0.5">
+                        {r.userAns ? r.userAns : <span className="text-slate-400 dark:text-slate-600 italic font-normal">— No answer —</span>}
                       </p>
                     </div>
                   </div>
@@ -476,11 +483,11 @@ export function ExamResultDashboard({ result, questions, exam, onReviewQuestion 
                           initial={{ opacity: 0, x: 10 }}
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, x: 10 }}
-                          className="text-right"
+                          className="text-right mr-2"
                         >
-                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Correct</p>
-                          <p className="text-xs font-black text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-                            {r.correctAns}
+                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Correct Answer</p>
+                          <p className="text-sm font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20 mt-0.5">
+                            {r.correctAns || "TBD"}
                           </p>
                         </motion.div>
                       )}
@@ -488,14 +495,14 @@ export function ExamResultDashboard({ result, questions, exam, onReviewQuestion 
 
                     {/* Result Icon */}
                     <div className={cn(
-                      "w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border",
+                      "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border-2",
                       r.isCorrect 
-                        ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-500"
+                        ? "border-emerald-500 bg-emerald-500/10 text-emerald-650"
                         : r.isOmitted
-                        ? "border-slate-350 bg-slate-500/10 text-slate-400"
-                        : "border-rose-500/30 bg-rose-500/10 text-rose-500"
+                        ? "border-slate-400 bg-slate-500/10 text-slate-500"
+                        : "border-rose-500 bg-rose-500/10 text-rose-650"
                     )}>
-                      {r.isCorrect ? <Check className="w-4 h-4 stroke-[3]" /> : <X className="w-4 h-4 stroke-[3]" />}
+                      {r.isCorrect ? <Check className="w-5 h-5 stroke-[3]" /> : r.isOmitted ? <span className="text-xs font-bold text-slate-500">—</span> : <X className="w-5 h-5 stroke-[3]" />}
                     </div>
                   </div>
                 </motion.div>
