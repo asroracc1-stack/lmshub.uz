@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import React, { Fragment, useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useParams, useNavigate, useBlocker, useBeforeUnload, useSearchParams } from "react-router-dom";
 import {
   AlertDialog,
@@ -888,7 +888,7 @@ export default function MockTake() {
           const val = valList[index] || "";
           
           return (
-            <React.Fragment key={index}>
+            <Fragment key={index}>
               <span>{formatMathText(part)}</span>
               {!isLast && (
                 <input
@@ -907,7 +907,7 @@ export default function MockTake() {
                   }}
                 />
               )}
-            </React.Fragment>
+            </Fragment>
           );
         })}
       </div>
