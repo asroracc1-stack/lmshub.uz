@@ -1436,6 +1436,57 @@ export default function MockTake() {
 
   const toggleFlag = (qid: string) => setFlagged((p) => { const n = new Set(p); n.has(qid) ? n.delete(qid) : n.add(qid); return n; });
 
+  const handleViewResultOnCheatingLocked = useCallback(() => {
+    const zeroResult = {
+      score: 0,
+      totalScore: 0,
+      correctCount: 0,
+      correctAnswers: 0,
+      totalQuestions: questions.length,
+      percentage: 0,
+      bandScore: "0.0",
+      overallBand: "0.0",
+      band: "0.0",
+      readingBand: "0.0",
+      listeningBand: "0.0",
+      writingBand: "0.0",
+      speakingBand: "0.0",
+      isCheatingLocked: true,
+      violationFlagged: true,
+      details: questions.map(q => ({
+        questionId: q.id,
+        userAns: answers[q.id] || "",
+        correctAns: q.correct_answer || "",
+        ok: false,
+        score: 0
+      }))
+    };
+
+    const finalRes = result ? {
+      ...result,
+      score: 0,
+      totalScore: 0,
+      correctCount: 0,
+      correctAnswers: 0,
+      percentage: 0,
+      bandScore: "0.0",
+      overallBand: "0.0",
+      band: "0.0",
+      readingBand: "0.0",
+      listeningBand: "0.0",
+      writingBand: "0.0",
+      speakingBand: "0.0",
+      isCheatingLocked: true,
+      violationFlagged: true,
+      details: (result.details || []).map((d: any) => ({ ...d, ok: false, score: 0 }))
+    } : zeroResult;
+
+    setResult(finalRes);
+    setShowCheatingLocked(false);
+    setShowSuccessAnimation(false);
+    setSubmitting(false);
+  }, [answers, questions, result]);
+
   const submit = async (auto = false) => {
     if (submitting || !exam) return;
     setSubmitting(true);
@@ -1443,7 +1494,10 @@ export default function MockTake() {
 
     const isMilliyVal = exam?.type ? (exam.type.toLowerCase() === "national_cert" || exam.type.toLowerCase() === "milliy") : false;
 
-    setShowSuccessAnimation(true);
+    if (!auto) {
+      setSuccessAnimPhase('loading');
+      setShowSuccessAnimation(true);
+    }
 
     let apiResponseData: any = null;
     let apiError: any = null;
@@ -1475,11 +1529,39 @@ export default function MockTake() {
     const remainingTime = Math.max(0, 3000 - elapsedTime); // Keep visible for at least 3 seconds
 
     setTimeout(() => {
+      const isLockedViolation = showCheatingLocked || cheatingStrikes >= 2;
+
       if (apiError) {
+        if (isLockedViolation) {
+          handleViewResultOnCheatingLocked();
+          return;
+        }
         toast.error("Error submitting exam: " + (apiError.response?.data?.message || apiError.message));
         setShowSuccessAnimation(false);
         setSubmitting(false);
         return;
+      }
+
+      let finalData = apiResponseData;
+      if (isLockedViolation && finalData) {
+        finalData = {
+          ...finalData,
+          score: 0,
+          totalScore: 0,
+          correctCount: 0,
+          correctAnswers: 0,
+          percentage: 0,
+          bandScore: "0.0",
+          overallBand: "0.0",
+          band: "0.0",
+          readingBand: "0.0",
+          listeningBand: "0.0",
+          writingBand: "0.0",
+          speakingBand: "0.0",
+          isCheatingLocked: true,
+          violationFlagged: true,
+          details: (finalData.details || []).map((d: any) => ({ ...d, ok: false, score: 0 }))
+        };
       }
 
       // Play audio cues
@@ -1522,7 +1604,7 @@ export default function MockTake() {
       // Fade/Scale/Blur out loader first, then reveal results after 400ms transition
       setShowSuccessAnimation(false);
       setTimeout(() => {
-        setResult(apiResponseData);
+        setResult(finalData);
         setSubmitting(false);
       }, 400);
     }, remainingTime);
@@ -3119,16 +3201,7 @@ export default function MockTake() {
                 </div>
                 <div className="mt-8">
                   <Button
-                    onClick={() => {
-                      if (result) {
-                        setShowCheatingLocked(false);
-                      } else if (submitting) {
-                        toast.info(isMilliy ? "Tizim javoblarni yuklamoqda, kuting..." : "System is submitting responses, please wait...");
-                      } else {
-                        toast.info(isMilliy ? "Javoblarni qayta yuborishga urinilmoqda..." : "Retrying response submission...");
-                        submit(true);
-                      }
-                    }}
+                    onClick={handleViewResultOnCheatingLocked}
                     className={cn("w-full h-12 text-white font-bold text-base rounded-xl transition-all border-none cursor-pointer", 
                       isMilliy ? "bg-[#059669] hover:bg-[#047857]" : "bg-rose-600 hover:bg-rose-700"
                     )}
@@ -3621,16 +3694,7 @@ export default function MockTake() {
               </div>
               <div className="mt-8">
                 <Button
-                  onClick={() => {
-                    if (result) {
-                      setShowCheatingLocked(false);
-                    } else if (submitting) {
-                      toast.info(isMilliy ? "Tizim javoblarni yuklamoqda, kuting..." : "System is submitting responses, please wait...");
-                    } else {
-                      toast.info(isMilliy ? "Javoblarni qayta yuborishga urinilmoqda..." : "Retrying response submission...");
-                      submit(true);
-                    }
-                  }}
+                  onClick={handleViewResultOnCheatingLocked}
                   className={cn("w-full h-12 text-white font-bold text-base rounded-xl transition-all border-none cursor-pointer", 
                     isMilliy ? "bg-[#059669] hover:bg-[#047857]" : "bg-rose-600 hover:bg-rose-700"
                   )}
