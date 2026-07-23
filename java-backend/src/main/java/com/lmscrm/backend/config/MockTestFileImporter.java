@@ -35,15 +35,10 @@ public class MockTestFileImporter implements CommandLineRunner {
     private final ExamBuilderService examBuilderService;
     private final ExamService examService;
 
-    @jakarta.persistence.PersistenceContext
-    private jakarta.persistence.EntityManager entityManager;
-
     @Override
     @Transactional
     public void run(String... args) {
         log.info("📂 [MockTestFileImporter] Checking classpath*:import-mocks/*.html for programmatic automatic mock import...");
-
-        fixDatabaseQuestions();
 
         try {
             ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
@@ -86,15 +81,8 @@ public class MockTestFileImporter implements CommandLineRunner {
                     }
 
                     if (examRepository.existsByTitle(title)) {
-                        log.info("[MockTestFileImporter] Exam with title '{}' already exists in database. Deleting old version before re-import...", title);
-                        java.util.List<Exam> existing = examRepository.findByTitle(title);
-                        for (Exam e : existing) {
-                            try {
-                                examService.deleteExam(e.getId());
-                            } catch (Exception ex) {
-                                log.warn("[MockTestFileImporter] Failed to delete existing exam ID {}: {}", e.getId(), ex.getMessage());
-                            }
-                        }
+                        log.info("[MockTestFileImporter] Exam with title '{}' already exists in database. Skipping duplicate import...", title);
+                        continue;
                     }
 
                     log.info("[MockTestFileImporter] Importing exam '{}'...", title);
@@ -120,40 +108,6 @@ public class MockTestFileImporter implements CommandLineRunner {
 
         } catch (Exception e) {
             log.error("[MockTestFileImporter] Error scanning or importing mock test resources", e);
-        }
-    }
-
-    private void fixDatabaseQuestions() {
-        try {
-            entityManager.createNativeQuery(
-                "UPDATE questions SET question_type = 'YES_NO_NG' WHERE UPPER(correct_answer) IN ('YES', 'NO', 'NOT GIVEN') AND (question_type IS NULL OR LOWER(question_type) LIKE '%short%' OR LOWER(question_type) LIKE '%fill%')"
-            ).executeUpdate();
-
-            entityManager.createNativeQuery(
-                "UPDATE questions SET question_type = 'TRUE_FALSE_NG' WHERE UPPER(correct_answer) IN ('TRUE', 'FALSE') AND (question_type IS NULL OR LOWER(question_type) LIKE '%short%' OR LOWER(question_type) LIKE '%fill%')"
-            ).executeUpdate();
-
-            entityManager.createNativeQuery(
-                "INSERT INTO question_options (id, question_id, text, is_correct, position_order) " +
-                "SELECT gen_random_uuid(), q.id, opt.text, false, opt.pos " +
-                "FROM questions q " +
-                "CROSS JOIN (VALUES ('YES', 1), ('NO', 2), ('NOT GIVEN', 3)) AS opt(text, pos) " +
-                "WHERE (UPPER(q.question_type) = 'YES_NO_NG' OR UPPER(q.question_type) = 'YES_NO_NOT_GIVEN') " +
-                "AND NOT EXISTS (SELECT 1 FROM question_options qo WHERE qo.question_id = q.id)"
-            ).executeUpdate();
-
-            entityManager.createNativeQuery(
-                "INSERT INTO question_options (id, question_id, text, is_correct, position_order) " +
-                "SELECT gen_random_uuid(), q.id, opt.text, false, opt.pos " +
-                "FROM questions q " +
-                "CROSS JOIN (VALUES ('TRUE', 1), ('FALSE', 2), ('NOT GIVEN', 3)) AS opt(text, pos) " +
-                "WHERE (UPPER(q.question_type) = 'TRUE_FALSE_NG' OR UPPER(q.question_type) = 'TRUE_FALSE_NOT_GIVEN') " +
-                "AND NOT EXISTS (SELECT 1 FROM question_options qo WHERE qo.question_id = q.id)"
-            ).executeUpdate();
-
-            log.info("✅ [MockTestFileImporter] Auto-healed existing DB question types and options for YNNG/TFNG!");
-        } catch (Exception e) {
-            log.warn("[MockTestFileImporter] Auto-heal query skipped or deferred: {}", e.getMessage());
         }
     }
 }
