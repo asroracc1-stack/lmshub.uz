@@ -2198,6 +2198,7 @@ export default function MockTake() {
             <div className="space-y-6 divide-y divide-slate-100 dark:divide-slate-800/40">
               {sectionQuestions.map((q, qidx) => {
                 const isQActive = q.position - 1 === activeQuestionIndex;
+                const isLastQ = qidx === sectionQuestions.length - 1;
                 let opts = q.options;
                 if ((!opts || opts.length === 0) && (q.qtype === "tfng" || q.qtype === "ynng")) {
                   const labels = q.qtype === "tfng" ? ["TRUE", "FALSE", "NOT GIVEN"] : ["YES", "NO", "NOT GIVEN"];
@@ -2214,20 +2215,20 @@ export default function MockTake() {
                 const submittedAns = detailForQ ? detailForQ.userAns : undefined;
 
                 return (
-                  <div
-                    key={q.id}
-                    ref={el => { questionRefs.current[q.id] = el; }}
-                    className={cn(
-                      "py-6 px-1 transition-all scroll-mt-6 flex flex-col gap-3",
-                      isQActive ? "bg-slate-500/[0.03]" : "",
-                      cStyle.cardText
-                    )}
-                    onClick={() => {
-                      if (!isQActive) {
-                        setActiveQuestionIndex(q.position - 1);
-                      }
-                    }}
-                  >
+                  <Fragment key={q.id}>
+                    <div
+                      ref={el => { questionRefs.current[q.id] = el; }}
+                      className={cn(
+                        "py-6 px-1 transition-all scroll-mt-6 flex flex-col gap-3",
+                        isQActive ? "bg-slate-500/[0.03]" : "",
+                        cStyle.cardText
+                      )}
+                      onClick={() => {
+                        if (!isQActive) {
+                          setActiveQuestionIndex(q.position - 1);
+                        }
+                      }}
+                    >
                     {/* Prompt with Inline Number */}
                     <div className="flex items-start gap-3">
                       {isQActive ? (
@@ -2395,8 +2396,9 @@ export default function MockTake() {
                                   !hasInlineBlanks(q.prompt) && (
                                     <input
                                       type="text"
-                                      className={cn("w-full max-w-md p-2.5 font-semibold rounded-md border shadow-xs focus:outline-none focus:ring-0", cStyle.input, textSizeStyle.input)}
-                                      placeholder="Type your answer here..."
+                                      disabled={isReviewOrAnalyze}
+                                      className="px-3 py-1.5 border border-slate-400 dark:border-slate-600 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-center w-[150px] h-9 inline-block font-extrabold bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 placeholder-slate-400/80 shadow-xs mt-2"
+                                      placeholder={String(q.position)}
                                       value={answers[q.id] || ""}
                                       onChange={(e) => {
                                         onAnswer(q.id, e.target.value);
@@ -2411,7 +2413,9 @@ export default function MockTake() {
                         </div>
                       </div>
                     </div>
-                  </div>
+                    </div>
+                    {!isLastQ && <hr className="border-t border-slate-200/60 dark:border-slate-800/40 my-1" />}
+                  </Fragment>
                 );
               })}
             </div>
@@ -2435,7 +2439,7 @@ export default function MockTake() {
         </div>
 
         {/* Middle side: Square Pagination Buttons grouped by Part */}
-        <div className="flex-1 flex items-center gap-3 overflow-x-auto px-2 py-1 scrollbar-none select-none">
+        <div className="flex-1 flex items-center justify-center gap-3 overflow-x-auto px-2 py-1 scrollbar-none select-none">
           {Array.from({ length: 4 }).map((_, secIdx) => {
             const secQuestions = questions.filter(q => q.section_index === secIdx);
             if (secQuestions.length === 0) return null;
