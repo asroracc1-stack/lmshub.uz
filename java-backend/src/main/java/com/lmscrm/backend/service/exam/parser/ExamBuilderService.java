@@ -55,7 +55,8 @@ public class ExamBuilderService {
                 .isAiImported(false)
                 .status("PUBLISHED")
                 .version(1)
-                .requiredPack("free")
+                .requiredPack(result.getRequiredPack() != null ? result.getRequiredPack() : "free")
+                .difficulty(result.getDifficulty() != null ? result.getDifficulty() : "medium")
                 .createdBy(createdBy)
                 .build();
         examRepository.save(exam);
@@ -85,6 +86,7 @@ public class ExamBuilderService {
                 .autoNumbering(true)
                 .lockNavigation(false)
                 .questionRandomization(false)
+                .difficulty(result.getDifficulty() != null ? result.getDifficulty() : "medium")
                 .questions(new ArrayList<>())
                 .build();
         passageRepository.save(passage);

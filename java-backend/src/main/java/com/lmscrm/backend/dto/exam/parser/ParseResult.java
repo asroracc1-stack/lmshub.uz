@@ -14,6 +14,8 @@ public class ParseResult {
     private String subject;
     private String htmlVersion;      // e.g. "lmshub-v1"
     private Integer durationMinutes;
+    private String difficulty;       // e.g. "easy", "medium", "hard"
+    private String requiredPack;     // e.g. "free", "pro"
 
     // ─── Sections ─────────────────────────────────────────────────────────────
     private List<ParsedSection> sections = new ArrayList<>();

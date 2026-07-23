@@ -51,6 +51,22 @@ public class LmsHubHtmlParser implements ExamParser {
             if (!dur.isBlank()) {
                 try { result.setDurationMinutes(Integer.parseInt(dur)); } catch (NumberFormatException ignored) {}
             }
+            
+            // Difficulty and pack
+            String diff = htmlEl.attr("data-difficulty");
+            if (diff.isBlank()) {
+                String level = htmlEl.attr("data-level");
+                if (level.equalsIgnoreCase("easy") || level.equalsIgnoreCase("medium") || level.equalsIgnoreCase("hard")) {
+                    diff = level.toLowerCase();
+                }
+            }
+            result.setDifficulty(diff.isBlank() ? "medium" : diff.toLowerCase());
+            
+            String reqPack = htmlEl.attr("data-required-pack");
+            if (reqPack.isBlank()) {
+                reqPack = htmlEl.attr("data-pack");
+            }
+            result.setRequiredPack(reqPack.isBlank() ? "free" : reqPack.toLowerCase());
         }
 
         // Fallback: read <meta name="lmshub:*"> tags if html attributes missing

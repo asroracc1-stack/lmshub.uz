@@ -70,6 +70,18 @@ public class LmsHubHtmlLayoutConverter {
         if (!htmlEl.hasAttr("data-duration")) {
             htmlEl.attr("data-duration", "60");
         }
+        if (!htmlEl.hasAttr("data-difficulty")) {
+            String level = htmlEl.attr("data-level");
+            if (level.equalsIgnoreCase("easy") || level.equalsIgnoreCase("medium") || level.equalsIgnoreCase("hard")) {
+                htmlEl.attr("data-difficulty", level.toLowerCase());
+            } else {
+                htmlEl.attr("data-difficulty", "medium");
+            }
+        }
+        if (!htmlEl.hasAttr("data-required-pack")) {
+            String pack = htmlEl.attr("data-pack");
+            htmlEl.attr("data-required-pack", !pack.isBlank() ? pack.toLowerCase() : "free");
+        }
 
         // 2. Return unchanged if <lmshub-section> already present
         Elements existingSections = doc.select("lmshub-section");
