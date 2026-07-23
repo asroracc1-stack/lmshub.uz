@@ -6,6 +6,7 @@ import com.lmscrm.backend.repository.QuestionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,6 +37,37 @@ public class LmsHubHtmlExporterService {
     private final AnswerKeyRepository answerKeyRepository;
 
     public String generateCompliantHtml(Exam exam) {
+        // Enforce validation: guarantee that every FILL_BLANK question has a non-empty answer before export.
+        List<Question> questionsToCheck = getAllQuestionsForExam(exam);
+        for (Question q : questionsToCheck) {
+            String qType = q.getQuestionType();
+            if (qType != null && qType.toUpperCase().contains("FILL")) {
+                String correctAnswer = "";
+                if (q.getId() != null) {
+                    Optional<AnswerKey> akOpt = answerKeyRepository.findByQuestionId(q.getId());
+                    if (akOpt.isPresent() && akOpt.get().getCorrectAnswer() != null) {
+                        correctAnswer = akOpt.get().getCorrectAnswer().trim();
+                    }
+                }
+                if (correctAnswer.isEmpty() && q.getOptions() != null) {
+                    char l = 'A';
+                    for (QuestionOption opt : q.getOptions()) {
+                        if (Boolean.TRUE.equals(opt.getIsCorrect()) && opt.getText() != null) {
+                            correctAnswer = opt.getText().trim();
+                            if (correctAnswer.isEmpty()) {
+                                correctAnswer = String.valueOf(l);
+                            }
+                            break;
+                        }
+                        l++;
+                    }
+                }
+                if (correctAnswer.isEmpty()) {
+                    throw new IllegalStateException("Validation failed: FILL_BLANK question (ID: " + q.getId() + ") must have a non-empty correct answer before export.");
+                }
+            }
+        }
+
         StringBuilder html = new StringBuilder();
 
         String examType = exam.getType() != null ? exam.getType().name() : "IELTS";
@@ -226,5 +258,23 @@ public class LmsHubHtmlExporterService {
                     .replace(">", "&gt;")
                     .replace("\"", "&quot;")
                     .replace("'", "&apos;");
+    }
+
+    private List<Question> getAllQuestionsForExam(Exam exam) {
+        List<Question> questions = new ArrayList<>();
+        List<Passage> passages = exam.getPassages();
+        if (passages != null && !passages.isEmpty()) {
+            for (Passage passage : passages) {
+                if (passage.getQuestions() != null) {
+                    questions.addAll(passage.getQuestions());
+                }
+            }
+        } else if (exam.getId() != null) {
+            List<Question> directQuestions = questionRepository.findByExamIdOrderByPositionOrderAsc(exam.getId());
+            if (directQuestions != null) {
+                questions.addAll(directQuestions);
+            }
+        }
+        return questions;
     }
 }

@@ -395,13 +395,17 @@ public class ValidationEngine {
     // ─────────────────────────────────────────────────────────────────────────
 
     private void validateFillBlank(ParseResult.ParsedQuestion q, ValidationReport report, String qid) {
-        // Rule 34: Multiple blank answers consistency
-        if (q.getFillAnswers() != null && q.getFillAnswers().size() > 1) {
+        if (q.getFillAnswers() != null && !q.getFillAnswers().isEmpty()) {
             for (String ans : q.getFillAnswers()) {
                 if (ans == null || ans.isBlank()) {
                     error(report, "EmptyFillAnswerRule", qid,
                             "One of the fill-blank answers is empty.");
                 }
+            }
+        } else {
+            if (q.getCorrectAnswer() == null || q.getCorrectAnswer().isBlank()) {
+                error(report, "EmptyFillAnswerRule", qid,
+                        "The fill-blank answer is empty.");
             }
         }
     }

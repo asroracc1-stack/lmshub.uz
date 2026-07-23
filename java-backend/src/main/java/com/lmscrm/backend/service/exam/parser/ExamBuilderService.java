@@ -202,6 +202,9 @@ public class ExamBuilderService {
     }
 
     private String resolveCorrectAnswer(ParseResult.ParsedQuestion pq) {
+        if (pq.getFillAnswers() != null && !pq.getFillAnswers().isEmpty()) {
+            return String.join(", ", pq.getFillAnswers());
+        }
         if (pq.getCorrectAnswer() != null && !pq.getCorrectAnswer().isBlank()) {
             return pq.getCorrectAnswer();
         }

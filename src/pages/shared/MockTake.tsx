@@ -1971,8 +1971,14 @@ export default function MockTake() {
               alt="Passage context"
             />
           )}
-          <div className={cn("prose dark:prose-invert max-w-none font-sans leading-relaxed whitespace-pre-wrap mt-8", cStyle.passageText, textSizeStyle.passage)}>
-            {formatMathText(currentSection.passage)}
+          <div className={cn("prose dark:prose-invert max-w-none font-sans leading-relaxed mt-8", cStyle.passageText, textSizeStyle.passage)}>
+            {currentSection.passage && /<[a-z][\s\S]*>/i.test(currentSection.passage) ? (
+              <div dangerouslySetInnerHTML={{ __html: currentSection.passage }} />
+            ) : (
+              <div className="whitespace-pre-wrap">
+                {formatMathText(currentSection.passage)}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -2153,9 +2159,15 @@ export default function MockTake() {
                   >
                     {/* Prompt with Inline Number */}
                     <div className="flex items-start gap-3">
-                      <span className="font-extrabold text-sm shrink-0 bg-slate-100 dark:bg-slate-800 h-6 w-6 rounded-full flex items-center justify-center select-none text-slate-700 dark:text-slate-300">
-                        {q.position}
-                      </span>
+                      {isQActive ? (
+                        <span className="font-extrabold text-sm shrink-0 border border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/20 h-6 w-6 rounded-md flex items-center justify-center select-none">
+                          {q.position}
+                        </span>
+                      ) : (
+                        <span className="font-extrabold text-sm shrink-0 text-slate-800 dark:text-slate-200 select-none w-6 text-center">
+                          {q.position}
+                        </span>
+                      )}
                       
                       <div className="flex-1 leading-relaxed">
                         <div className="flex justify-between items-start gap-4 flex-wrap">
@@ -2225,6 +2237,10 @@ export default function MockTake() {
                                       ? "bg-[#2b0000] border-[#ffff00] text-[#ffff00]" 
                                       : "bg-rose-50 dark:bg-rose-955/20 border-rose-500 text-rose-700 dark:text-rose-455 font-bold";
                                   }
+                                } else if (isSelectedState) {
+                                  optBgHighlight = isYB 
+                                    ? "bg-[#002b55] border-[#ffff00] text-[#ffff00]" 
+                                    : "bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800/40 text-blue-700 dark:text-blue-300 font-semibold";
                                 }
 
                                 return (
@@ -2989,8 +3005,14 @@ export default function MockTake() {
             {sections[currentQuestion.section_index].imageUrl && (
               <img src={getFullImageUrl(sections[currentQuestion.section_index].imageUrl)} className={cn("max-w-full border mb-6", isMilliy ? "border-slate-200 dark:border-slate-800" : "border-slate-300 dark:border-slate-800")} />
             )}
-            <div className="prose prose-slate dark:prose-invert max-w-none text-slate-800 dark:text-slate-200 font-serif leading-loose text-lg whitespace-pre-wrap">
-              {formatMathText(sections[currentQuestion.section_index].passage)}
+            <div className="prose prose-slate dark:prose-invert max-w-none text-slate-800 dark:text-slate-200 font-serif leading-loose text-lg">
+              {sections[currentQuestion.section_index].passage && /<[a-z][\s\S]*>/i.test(sections[currentQuestion.section_index].passage) ? (
+                <div dangerouslySetInnerHTML={{ __html: sections[currentQuestion.section_index].passage }} />
+              ) : (
+                <div className="whitespace-pre-wrap">
+                  {formatMathText(sections[currentQuestion.section_index].passage)}
+                </div>
+              )}
             </div>
           </div>
         )}

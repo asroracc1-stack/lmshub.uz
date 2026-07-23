@@ -86,7 +86,7 @@ public class LmsHubHtmlParser implements ExamParser {
             if (passageEl != null) {
                 // Extract any embedded media from passage before getting text
                 extractMediaFromElement(passageEl, result);
-                section.setPassageText(passageEl.text().trim());
+                section.setPassageText(passageEl.html().trim());
                 // Check for image ref
                 Element mediaEl = passageEl.selectFirst("lmshub-media");
                 if (mediaEl != null) {
