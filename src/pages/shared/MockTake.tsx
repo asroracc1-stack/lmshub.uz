@@ -200,7 +200,16 @@ function normalize(exam: ExamData, attemptSeed?: string | null): { sections: { t
         : rawQuestions;
 
       questionsToUse.forEach((q) => {
-        const qtype = mapQtype(q.questionType ?? q.question_type);
+        let qtype = mapQtype(q.questionType ?? q.question_type);
+        const instrStr = (q.instruction ?? (q as any).groupInstruction ?? q.explanation ?? "").toUpperCase();
+        const promptStr = (q.text ?? (q as any).prompt ?? "").toUpperCase();
+
+        if (instrStr.includes("YES/NO/NOT GIVEN") || instrStr.includes("YES / NO / NOT GIVEN") || promptStr.includes("YES/NO/NOT GIVEN")) {
+          qtype = "ynng";
+        } else if (instrStr.includes("TRUE/FALSE/NOT GIVEN") || instrStr.includes("TRUE / FALSE / NOT GIVEN") || promptStr.includes("TRUE/FALSE/NOT GIVEN")) {
+          qtype = "tfng";
+        }
+
         let rawOpts = q.options && q.options.length > 0
           ? q.options.map(o => ({
               id: o.id,
@@ -212,6 +221,16 @@ function normalize(exam: ExamData, attemptSeed?: string | null): { sections: { t
             })).sort((a, b) => a.positionOrder - b.positionOrder)
           : null;
 
+        if ((!rawOpts || rawOpts.length < 3) && (qtype === "ynng" || qtype === "tfng")) {
+          const labels = qtype === "tfng" ? ["TRUE", "FALSE", "NOT GIVEN"] : ["YES", "NO", "NOT GIVEN"];
+          rawOpts = labels.map((l, i) => ({
+            id: `${q.id}_opt_${i}`,
+            text: l,
+            positionOrder: i,
+            isCorrect: false
+          }));
+        }
+
         if (attemptSeed && rawOpts && rawOpts.length > 0 && !isIeltsOrSat) {
           rawOpts = deterministicShuffle(rawOpts, q.id + attemptSeed);
         }
@@ -221,8 +240,9 @@ function normalize(exam: ExamData, attemptSeed?: string | null): { sections: { t
           id: q.id,
           position: pos,
           section_index: sections.length - 1,
-          prompt: q.text ?? q.prompt ?? "",
+          prompt: q.text ?? (q as any).prompt ?? "",
           qtype,
+          instruction: q.instruction ?? (q as any).groupInstruction ?? q.explanation ?? "",
           options: rawOpts,
           correct_answer: q.correctAnswer ?? q.correct_answer ?? null,
           points: q.points ?? 1,
@@ -241,7 +261,16 @@ function normalize(exam: ExamData, attemptSeed?: string | null): { sections: { t
     if (questionsToUse.length > 0) {
       sections.push({ title: exam.title ?? "Section 1", passage: "", imageUrl: "" });
       questionsToUse.forEach((q) => {
-        const qtype = mapQtype(q.questionType ?? q.question_type);
+        let qtype = mapQtype(q.questionType ?? q.question_type);
+        const instrStr = (q.instruction ?? (q as any).groupInstruction ?? q.explanation ?? "").toUpperCase();
+        const promptStr = (q.text ?? (q as any).prompt ?? "").toUpperCase();
+
+        if (instrStr.includes("YES/NO/NOT GIVEN") || instrStr.includes("YES / NO / NOT GIVEN") || promptStr.includes("YES/NO/NOT GIVEN")) {
+          qtype = "ynng";
+        } else if (instrStr.includes("TRUE/FALSE/NOT GIVEN") || instrStr.includes("TRUE / FALSE / NOT GIVEN") || promptStr.includes("TRUE/FALSE/NOT GIVEN")) {
+          qtype = "tfng";
+        }
+
         let rawOpts = q.options && q.options.length > 0
           ? q.options.map(o => ({
               id: o.id,
@@ -253,7 +282,17 @@ function normalize(exam: ExamData, attemptSeed?: string | null): { sections: { t
             })).sort((a, b) => a.positionOrder - b.positionOrder)
           : null;
 
-        if (attemptSeed && rawOpts && rawOpts.length > 0) {
+        if ((!rawOpts || rawOpts.length < 3) && (qtype === "ynng" || qtype === "tfng")) {
+          const labels = qtype === "tfng" ? ["TRUE", "FALSE", "NOT GIVEN"] : ["YES", "NO", "NOT GIVEN"];
+          rawOpts = labels.map((l, i) => ({
+            id: `${q.id}_opt_${i}`,
+            text: l,
+            positionOrder: i,
+            isCorrect: false
+          }));
+        }
+
+        if (attemptSeed && rawOpts && rawOpts.length > 0 && !isIeltsOrSat) {
           rawOpts = deterministicShuffle(rawOpts, q.id + attemptSeed);
         }
 
@@ -262,8 +301,9 @@ function normalize(exam: ExamData, attemptSeed?: string | null): { sections: { t
           id: q.id,
           position: pos,
           section_index: 0,
-          prompt: q.text ?? q.prompt ?? "",
+          prompt: q.text ?? (q as any).prompt ?? "",
           qtype,
+          instruction: q.instruction ?? (q as any).groupInstruction ?? q.explanation ?? "",
           options: rawOpts,
           correct_answer: q.correctAnswer ?? q.correct_answer ?? null,
           points: q.points ?? 1,
