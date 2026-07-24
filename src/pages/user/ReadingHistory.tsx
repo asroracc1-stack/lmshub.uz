@@ -153,7 +153,7 @@ export const ReadingHistory: React.FC<ReadingHistoryProps> = ({ basePath }) => {
             Orqaga
           </Button>
           <div>
-            <h1 className="text-2xl md:text-3xl font-display font-black text-emerald-600 dark:text-emerald-400 tracking-tight">
+            <h1 className="text-2xl md:text-3xl font-display font-black text-indigo-600 dark:text-indigo-400 tracking-tight">
               Bajarilgan Reading Testlari
             </h1>
           </div>
@@ -161,7 +161,7 @@ export const ReadingHistory: React.FC<ReadingHistoryProps> = ({ basePath }) => {
 
         {loading && historyItems.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 space-y-4">
-            <Loader2 className="h-10 w-10 text-emerald-500 animate-spin" />
+            <Loader2 className="h-10 w-10 text-indigo-500 animate-spin" />
             <p className="text-sm font-semibold text-slate-400">Natijalar yuklanmoqda...</p>
           </div>
         ) : (
@@ -171,12 +171,12 @@ export const ReadingHistory: React.FC<ReadingHistoryProps> = ({ basePath }) => {
             <div className="lg:col-span-2 space-y-4">
               {historyItems.length === 0 ? (
                 <Card className="p-12 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0d091a] text-center space-y-4 shadow-xs">
-                  <div className="w-16 h-16 mx-auto rounded-2xl bg-emerald-50 dark:bg-emerald-950/20 flex items-center justify-center text-emerald-500">
+                  <div className="w-16 h-16 mx-auto rounded-2xl bg-indigo-50 dark:bg-indigo-950/20 flex items-center justify-center text-indigo-500">
                     <FileText className="w-8 h-8" />
                   </div>
                   <h3 className="font-bold text-slate-700 dark:text-slate-200">Sizda hali bajarilgan testlar mavjud emas</h3>
                   <p className="text-xs text-slate-400 max-w-sm mx-auto">Tarixni shakllantirish uchun Reading mock testlaridan birini boshlang va yakunlang.</p>
-                  <Button asChild className="rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm">
+                  <Button asChild className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm">
                     <Link to={`${basePath}/mocks/c/reading`}>Testlarni ko'rish</Link>
                   </Button>
                 </Card>
@@ -199,24 +199,27 @@ export const ReadingHistory: React.FC<ReadingHistoryProps> = ({ basePath }) => {
                       >
                         {/* Top-right BEPUL Badge */}
                         <div className="absolute top-4 right-4">
-                          <span className="text-[10px] font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-300/60 dark:border-emerald-800/50 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                          <span className="text-[10px] font-extrabold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-300/60 dark:border-indigo-800/50 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
                             BEPUL
                           </span>
                         </div>
 
                         {/* Attempt Details */}
                         <div className="space-y-3 flex-1 min-w-0 pr-16">
-                          <h3 className="text-lg md:text-xl font-black text-emerald-600 dark:text-emerald-400 truncate">
-                            {item.testTitle.startsWith("Test") ? item.testTitle : `Test ${idx + 1} | ${item.testTitle}`}
+                          <h3 className="text-lg md:text-xl font-black text-indigo-600 dark:text-indigo-400 truncate">
+                            {(() => {
+                              const t = item.testTitle || (item as any).title || (item as any).examTitle || "Reading Test";
+                              return String(t).startsWith("Test") ? t : `Test ${idx + 1} | ${t}`;
+                            })()}
                           </h3>
 
                           <div className="flex flex-wrap items-center gap-2 text-xs">
-                            <Badge variant="outline" className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400 border-emerald-200/60 font-extrabold px-2.5 py-1 rounded-full">
-                              <CheckCircle2 className="h-3.5 w-3.5 mr-1 text-emerald-500" />
-                              {item.correctAnswers}/{item.totalQuestions} to'g'ri
+                            <Badge variant="outline" className="bg-indigo-50 text-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-400 border-indigo-200/60 font-extrabold px-2.5 py-1 rounded-full">
+                              <CheckCircle2 className="h-3.5 w-3.5 mr-1 text-indigo-500" />
+                              {item.correctAnswers || 0}/{item.totalQuestions || 0} to'g'ri
                             </Badge>
                             <Badge variant="outline" className="rounded-full bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 font-semibold px-2.5 py-1">
-                              📅 {new Date(item.finishedAt).toISOString().split('T')[0].replace(/-/g, ' M')}
+                              📅 {item.finishedAt ? new Date(item.finishedAt).toISOString().split('T')[0] : 'Yangi'}
                             </Badge>
                             <Badge variant="outline" className="rounded-full bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 font-semibold px-2.5 py-1">
                               <Clock className="h-3.5 w-3.5 mr-1 text-slate-400" />
@@ -237,7 +240,7 @@ export const ReadingHistory: React.FC<ReadingHistoryProps> = ({ basePath }) => {
                           <Button 
                             asChild
                             variant="outline"
-                            className="rounded-xl h-10 px-4 font-extrabold text-xs gap-1.5 border-emerald-500/50 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 shadow-xs"
+                            className="rounded-xl h-10 px-4 font-extrabold text-xs gap-1.5 border-indigo-500/50 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/20 shadow-xs"
                           >
                             <Link to={`${basePath}/mocks/take/${item.examId}?review=true&attemptId=${item.attemptId}`}>
                               <Eye className="h-4 w-4" />
@@ -247,7 +250,7 @@ export const ReadingHistory: React.FC<ReadingHistoryProps> = ({ basePath }) => {
                           
                           <Button 
                             asChild
-                            className="rounded-xl h-10 px-4 font-extrabold text-xs gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white shadow-md shadow-emerald-500/20"
+                            className="rounded-xl h-10 px-4 font-extrabold text-xs gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-500/20"
                           >
                             <Link to={`${basePath}/mocks/take/${item.examId}`}>
                               <RefreshCw className="h-4 w-4" />
@@ -295,7 +298,7 @@ export const ReadingHistory: React.FC<ReadingHistoryProps> = ({ basePath }) => {
                   className="rounded-3xl border border-slate-200/80 dark:border-slate-800/60 bg-white dark:bg-[#0c0817] p-6 shadow-sm space-y-6"
                 >
                   <div className="border-b border-slate-200/60 dark:border-slate-800/40 pb-3">
-                    <h2 className="text-xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight">
+                    <h2 className="text-xl font-black text-indigo-600 dark:text-indigo-400 tracking-tight">
                       Overall band score
                     </h2>
                     <p className="text-xs text-slate-400 font-semibold mt-0.5">
@@ -304,19 +307,19 @@ export const ReadingHistory: React.FC<ReadingHistoryProps> = ({ basePath }) => {
                   </div>
 
                   {/* Overall Band Card */}
-                  <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/40 rounded-3xl p-6 text-center relative overflow-hidden space-y-2">
-                    <span className="text-[11px] text-emerald-700 dark:text-emerald-400 font-black uppercase tracking-widest block">
+                  <div className="bg-indigo-50 dark:bg-indigo-950/20 border border-indigo-200 dark:border-indigo-800/40 rounded-3xl p-6 text-center relative overflow-hidden space-y-2">
+                    <span className="text-[11px] text-indigo-700 dark:text-indigo-400 font-black uppercase tracking-widest block">
                       READING OVERALL
                     </span>
-                    <h3 className="text-5xl font-black text-emerald-600 dark:text-emerald-400 leading-none">
+                    <h3 className="text-5xl font-black text-indigo-600 dark:text-indigo-400 leading-none">
                       {statistics.overallReadingBand.toFixed(1)} <span className="text-xl font-bold text-slate-400 dark:text-slate-500">/ 9</span>
                     </h3>
                     <p className="text-xs font-bold text-slate-500 dark:text-slate-400 pt-1">
                       {statistics.totalCorrectAnswers}/{statistics.totalQuestionsCount} ta to'g'ri javob
                     </p>
-                    <div className="w-full h-2 bg-emerald-200/60 dark:bg-emerald-900/40 rounded-full overflow-hidden mt-3">
+                    <div className="w-full h-2 bg-indigo-200/60 dark:bg-indigo-900/40 rounded-full overflow-hidden mt-3">
                       <div 
-                        className="h-full bg-emerald-500 rounded-full" 
+                        className="h-full bg-indigo-600 rounded-full" 
                         style={{ width: `${Math.min(100, (statistics.overallReadingBand / 9.0) * 100)}%` }} 
                       />
                     </div>
