@@ -2,17 +2,12 @@ databaseChangeLog:
   - changeSet:
       id: remove-exam-attempt-unique-constraint-v2
       author: antigravity
+      validCheckSum: ANY
       changes:
         - sql:
-            sql: >
-              ALTER TABLE public.student_attempts
-              DROP CONSTRAINT IF EXISTS ukoypddfe646se2f8apxyt2nsor;
-              ALTER TABLE public.student_attempts
-              DROP CONSTRAINT IF EXISTS uk_student_exam_attempt;
-        - addColumn:
-            tableName: student_attempts
-            columns:
-              - column:
-                  name: reward_granted
-                  type: boolean
-                  defaultValueBoolean: false
+            splitStatements: true
+            endDelimiter: ";"
+            sql: |
+              ALTER TABLE public.student_attempts DROP CONSTRAINT IF EXISTS ukoypddfe646se2f8apxyt2nsor;
+              ALTER TABLE public.student_attempts DROP CONSTRAINT IF EXISTS uk_student_exam_attempt;
+              ALTER TABLE public.student_attempts ADD COLUMN IF NOT EXISTS reward_granted BOOLEAN DEFAULT false;
