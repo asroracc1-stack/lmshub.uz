@@ -189,113 +189,103 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
 
   const categoryName = kind === "speaking" ? t("dynamic.speakingpartners.speaking") : kind === "national_cert" ? t("dynamic.usersmanager.milliy_sertifikat") : t(`mockCategory.sections.${kind}`);
 
-  return ( <div className="space-y-6 pb-8">
+  return (
+    <div className="space-y-6 pb-8">
 
       {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={() => nav(`${basePath}/practice`)}
-            className="rounded-xl hover:bg-slate-100 dark:hover:bg-white/5">
+          <Button variant="outline" size="sm" onClick={() => nav(`${basePath}/practice`)}
+            className="rounded-2xl border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c0817] text-slate-700 dark:text-slate-200 font-bold text-xs gap-1.5 h-11 px-4">
             <ArrowLeft className="h-4 w-4" />
+            {t("common.back")}
           </Button>
           <div>
-            <Badge variant="outline" className="mb-1.5 font-semibold">
-              <Icon className={`h-3 w-3 mr-1 ${meta.color}`} />{meta.group}
-            </Badge>
-            <h1 className={`text-3xl md:text-4xl font-display font-bold ${meta.color}`}>
+            <h1 className="text-3xl md:text-4xl font-display font-black text-emerald-600 dark:text-emerald-400 tracking-tight">
               {t("mockCategory.title", { name: meta.group === "IELTS" ? `IELTS ${categoryName}` : categoryName })}
             </h1>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
-          {/* Access filter pills */}
-          {([
-            { v: "all", l: t("mockCategory.filter.all"), cnt: tests.length, cls: "border-slate-200 dark:border-white/10" },
-            { v: "free", l: t("mockCategory.filter.free"), cnt: freeCnt,  cls: "border-purple-200 text-purple-700 dark:border-purple-800/60 dark:text-purple-400" },
-            { v: "pack", l: t("mockCategory.filter.pack"),  cnt: proCnt + eliteCnt, cls: "border-indigo-200 text-indigo-700 dark:border-indigo-800/60 dark:text-indigo-400" },
-          ] as const).map((a) => (
-            <button
-              key={a.v}
-              onClick={() => setAccess(a.v)}
-              className={cn(
-                "px-4 py-1.5 rounded-full text-sm font-bold border transition-all duration-200",
-                access === a.v
-                  ? a.v === "free" ? "bg-purple-500 text-white border-purple-500 shadow-md shadow-purple-500/20"
-                    : a.v === "pack" ? "bg-indigo-500 text-white border-indigo-500 shadow-md shadow-indigo-500/20"
-                    : "bg-slate-800 text-white border-slate-800 dark:bg-white dark:text-slate-900"
-                  : cn("bg-transparent hover:bg-slate-50 dark:hover:bg-white/5", a.cls)
-              )}
-            >
-              {a.l}
-              <span className="ml-1.5 opacity-60 text-xs">({a.cnt})</span>
-            </button>
-          ))}
-          <div className="w-px h-6 bg-slate-200 dark:bg-white/10 mx-1"></div>
+        <div className="flex items-center gap-3 flex-wrap">
+          {/* Top Bajarilganlar pill button */}
           <Button
-            variant={showOnlyCompleted ? "default" : "outline"}
-            onClick={() => setShowOnlyCompleted(!showOnlyCompleted)}
-            className={cn(
-              "rounded-full gap-2 text-sm font-bold transition-all duration-200 border-emerald-500 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/20",
-              showOnlyCompleted && "bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-500"
-            )}
+            asChild
+            className="rounded-full bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-xs px-4 py-2 shadow-md shadow-emerald-500/20"
           >
-            <CheckCircle2 className="h-4 w-4" />
-            {t("mockCategory.completedBtn")} ({tests.filter(tst => attempts.some(a => String(a.examId) === String(tst.id))).length})
+            <Link to={`${basePath}/reading/history`}>
+              <CheckCircle2 className="h-4 w-4 mr-1.5" />
+              Bajarilganlar ({attempts.length})
+            </Link>
           </Button>
 
-          {kind === "reading" && (
-            <Button
-              asChild
-              variant="outline"
-              className="rounded-full gap-2 text-sm font-bold transition-all duration-200 border-emerald-500 text-emerald-650 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/20"
-            >
-              <Link to={`${basePath}/reading/history`}>
-                <History className="h-4 w-4" />
-                Bajarilganlar
-              </Link>
-            </Button>
-          )}
           {canManage && (
-            <Button size="sm" asChild className="ml-2 rounded-xl">
+            <Button size="sm" asChild className="rounded-full bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs">
               <Link to={`${basePath}/mocks/new`}><Plus className="h-4 w-4 mr-1" />{t("mockCategory.newBtn")}</Link>
             </Button>
           )}
         </div>
       </div>
 
-      {/* Part filter chips */}
-      <div className="flex gap-2 flex-wrap">
-        {[
-          { v: "all",  l: t("mockCategory.part.all") },
-          { v: "1",    l: t("mockCategory.part.number", { num: 1 }) },
-          { v: "2",    l: t("mockCategory.part.number", { num: 2 }) },
-          { v: "3",    l: t("mockCategory.part.number", { num: 3 }) },
-          { v: "4",    l: t("mockCategory.part.number", { num: 4 }) },
-          { v: "full", l: t("mockCategory.part.full") },
-        ].map((c) => (
-          <Button
-            key={c.v}
-            size="sm"
-            variant={partType === c.v ? "default" : "outline"}
-            onClick={() => setPartType(c.v)}
-            className="rounded-full"
-          >
-            {c.l}
-          </Button>
-        ))}
+      {/* Category filter pills & Access filters */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 flex-wrap">
+        {/* Part filter chips */}
+        <div className="flex gap-2 flex-wrap">
+          {[
+            { v: "all",  l: "Barcha testlar" },
+            { v: "1",    l: "1-qism" },
+            { v: "2",    l: "2-qism" },
+            { v: "3",    l: "3-qism" },
+            { v: "full", l: "To'liq testlar" },
+          ].map((c) => (
+            <button
+              key={c.v}
+              onClick={() => setPartType(c.v)}
+              className={cn(
+                "px-4 py-2 rounded-full text-xs font-extrabold transition-all duration-200",
+                partType === c.v
+                  ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20"
+                  : "bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200"
+              )}
+            >
+              {c.l}
+            </button>
+          ))}
+        </div>
+
+        {/* Access filter pills */}
+        <div className="flex gap-2 flex-wrap">
+          {[
+            { v: "all", l: "Barchasi" },
+            { v: "free", l: "Bepul" },
+            { v: "pack", l: "Pack" },
+          ].map((a) => (
+            <button
+              key={a.v}
+              onClick={() => setAccess(a.v as any)}
+              className={cn(
+                "px-4 py-2 rounded-full text-xs font-extrabold transition-all duration-200 border",
+                access === a.v
+                  ? "bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/20"
+                  : "bg-white dark:bg-[#0c0817] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-50"
+              )}
+            >
+              {a.l}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div className="grid lg:grid-cols-[1fr_300px] gap-6">
+      <div className="grid lg:grid-cols-[1fr_320px] gap-6 items-start">
         {/* Test list */}
         <div className="space-y-4">
           {loading ? (
             <div className="p-12 flex flex-col items-center gap-3">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
               <p className="text-sm text-muted-foreground font-medium">{t("mockCategory.loading")}</p>
             </div>
           ) : paginatedTests.length === 0 ? (
-            <Card className="p-12 text-center text-muted-foreground rounded-2xl border-dashed">
+            <Card className="p-12 text-center text-muted-foreground rounded-3xl border-dashed">
               {t("mockCategory.noTests")}
             </Card>
           ) : (
@@ -303,13 +293,7 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
               const diff = DIFFICULTY_META[test.difficulty ?? "easy"] ?? DIFFICULTY_META.easy;
               const DIcon = diff.icon;
               const packType = getPackType(test.required_pack);
-              const theme = PACK_THEME[packType];
-              const BtnIcon = theme.buttonIcon;
-              const BadgeIconComp = theme.badgeIcon;
               const attempt = attempts.find(a => String(a.examId) === String(test.id));
-
-              // Check if user can access this test based on their subscription.
-              // NOTE: never lock while packAccess is still loading — avoids false-positive blocks.
               const isLocked = !packAccess.loading && !canAccessPack(packAccess, test.required_pack, canManage);
 
               return (
@@ -319,82 +303,79 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.04, duration: 0.3 }}
                 >
-                  <div className={cn(
-                    "relative rounded-2xl overflow-hidden transition-all duration-300",
-                    theme.card
-                  )}>
-                    {/* Top gradient bar for non-free */}
-                    {packType !== "free" && (
-                      <div className={cn(
-                        "absolute top-0 left-0 right-0 h-0.5",
-                        packType === "pro"
-                          ? "bg-gradient-to-r from-indigo-400 via-violet-500 to-purple-400"
-                          : "bg-gradient-to-r from-amber-400 via-orange-400 to-yellow-400"
-                      )} />
-                    )}
-
-                    {/* Lock overlay watermark for locked tests */}
-                    {isLocked && (
-                      <div className={cn(
-                        "absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center opacity-20",
-                        packType === "pro" ? "bg-indigo-500" : "bg-amber-500"
+                  <div className="relative rounded-3xl border border-slate-200/80 dark:border-slate-800/60 bg-white dark:bg-[#0c0817] p-6 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden">
+                    
+                    {/* Top Right Corner Badge */}
+                    <div className="absolute top-4 right-4">
+                      <span className={cn(
+                        "text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full border",
+                        packType === "free"
+                          ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border-emerald-300/60 dark:border-emerald-800/50"
+                          : packType === "pro"
+                          ? "bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 border-indigo-300/60 dark:border-indigo-800/50"
+                          : "bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 border-amber-300/60 dark:border-amber-800/50"
                       )}>
-                        <Lock className="h-4 w-4 text-white" />
-                      </div>
-                    )}
+                        {packType === "free" ? "BEPUL" : packType.toUpperCase()}
+                      </span>
+                    </div>
 
-                    <div className="p-5 md:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      {/* Left: info */}
-                      <div className="flex-1 min-w-0 space-y-3 w-full">
-                        <div className="flex items-center gap-3 flex-wrap">
-                          <h3 className={cn("font-display font-bold text-xl md:text-2xl", meta.color)}>
-                            {test.title}
-                          </h3>
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
+                      {/* Left: Info */}
+                      <div className="space-y-3 flex-1 min-w-0 pr-16">
+                        <h3 className="text-xl md:text-2xl font-black text-emerald-600 dark:text-emerald-400 truncate">
+                          {test.title.startsWith("Test") ? test.title : `Test ${i + 1} | ${test.title}`}
+                        </h3>
 
-                          {/* Pack badge */}
-                          <Badge className={cn("text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg flex items-center gap-1", theme.badge)}>
-                            {BadgeIconComp && <BadgeIconComp className="h-3 w-3" />}
-                            {"badgeLabelKey" in theme ? t(theme.badgeLabelKey as string) : theme.badgeLabel}
-                          </Badge>
-
-                          {!test.is_published && (
-                            <Badge variant="outline" className="uppercase text-muted-foreground border-dashed text-[9px]">
-                              Draft
+                        {/* Metadata badges row */}
+                        <div className="flex flex-wrap items-center gap-2 text-xs">
+                          {attempt ? (
+                            <Badge variant="outline" className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400 border-emerald-200/60 font-extrabold px-2.5 py-1 rounded-full">
+                              <CheckCircle2 className="h-3.5 w-3.5 mr-1 text-emerald-500" />
+                              Bajarildi · {attempt.totalScore ?? attempt.overallBand ?? 0}/{attempt.maxScore ?? 13}
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="bg-slate-50 dark:bg-white/5 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-800 font-semibold px-2.5 py-1 rounded-full">
+                              ⚡ Yechilmagan
                             </Badge>
                           )}
-                        </div>
 
-                        <div className="flex items-center gap-2 flex-wrap">
-                          {attempt && (
-                            <Badge className="rounded-full text-[11px] font-bold bg-emerald-500/15 text-emerald-700 border-emerald-500/30 dark:text-emerald-400">
-                              <CheckCircle2 className="h-3 w-3 mr-1" />
-                              {t("mockCategory.completedBadge", { score: attempt.totalScore ?? attempt.overallBand ?? 0, max: attempt.maxScore ?? (kind === "sat" ? 800 : (kind === "national_cert" ? 100 : 9.0)) })}
-                            </Badge>
-                          )}
-                          <Badge variant="outline" className="rounded-full text-[11px] font-medium bg-white/60 dark:bg-white/5">
-                            <Clock className="h-3 w-3 mr-1" /> {test.duration_minutes ?? 60} {t("mockCategory.minutesShort")}
+                          <Badge variant="outline" className="rounded-full bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 font-semibold px-2.5 py-1">
+                            <Clock className="h-3.5 w-3.5 mr-1 text-slate-400" />
+                            {test.duration_minutes ?? 20} daq
                           </Badge>
-                          <Badge variant="outline" className={cn("rounded-full text-[11px] font-medium", diff.cls)}>
-                            <DIcon className="h-3 w-3 mr-1" /> {t(diff.labelKey)}
+
+                          <Badge variant="outline" className={cn("rounded-full px-2.5 py-1 font-semibold", diff.cls)}>
+                            ⚡ {t(diff.labelKey)}
                           </Badge>
-                          <Badge variant="outline" className="rounded-full text-[11px] font-medium bg-white/60 dark:bg-white/5">
-                            <Layers className="h-3 w-3 mr-1" />
-                            {test.part_type === "full" ? t("mockCategory.part.fullLabel") : t("mockCategory.part.numberLabel", { num: test.part_type ?? 1 })}
+
+                          <Badge variant="outline" className="rounded-full bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 font-semibold px-2.5 py-1">
+                            <BookOpen className="h-3.5 w-3.5 mr-1 text-slate-400" />
+                            {test.part_type === "full" ? "To'liq test" : `${test.part_type ?? 1} qism`}
                           </Badge>
                         </div>
 
-                        {test.description && (
-                          <p className="text-sm text-muted-foreground line-clamp-1 opacity-80">#{test.description}</p>
-                        )}
+                        {/* Topic tags row */}
+                        <div className="flex flex-wrap gap-1.5 pt-1">
+                          <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-white/5 px-2.5 py-0.5 rounded-md">
+                            #To'g'ri/Noto'g'ri/Berilmagan
+                          </span>
+                          <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-white/5 px-2.5 py-0.5 rounded-md">
+                            #gap filling
+                          </span>
+                          {test.description && (
+                            <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-white/5 px-2.5 py-0.5 rounded-md">
+                              #{test.description}
+                            </span>
+                          )}
+                        </div>
                       </div>
 
-                      {/* Right: actions */}
-                      <div className="flex items-center gap-2 flex-wrap justify-end shrink-0 w-full sm:w-auto mt-2 sm:mt-0">
-                        {/* Admin controls */}
+                      {/* Right: Actions */}
+                      <div className="flex items-center gap-2.5 shrink-0 pt-2 md:pt-0">
                         {canManage && (
                           <>
                             <Button asChild size="icon" variant="outline"
-                              className="rounded-xl h-10 w-10 bg-white/60 dark:bg-white/5" title={t("common.edit")}>
+                              className="rounded-xl h-10 w-10 border-slate-200 dark:border-slate-800" title={t("common.edit")}>
                               <Link to={`${basePath}/mocks/edit/${test.id}`}>
                                 <Pencil className="h-4 w-4" />
                               </Link>
@@ -402,7 +383,7 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
                                 <Button size="icon" variant="outline"
-                                  className="rounded-xl h-10 w-10 text-destructive hover:bg-destructive/10 bg-white/60 dark:bg-white/5"
+                                  className="rounded-xl h-10 w-10 text-rose-500 border-rose-200 hover:bg-rose-50"
                                   title={t("common.delete")}>
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
@@ -416,8 +397,7 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
                                   <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => onDelete(test.id)}
-                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                  <AlertDialogAction onClick={() => onDelete(test.id)} className="bg-rose-500 text-white">
                                     {t("common.delete")}
                                   </AlertDialogAction>
                                 </AlertDialogFooter>
@@ -426,54 +406,44 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
                           </>
                         )}
 
-                        {/* Main CTA button */}
                         {isLocked ? (
                           <Button
                             size="lg"
-                            className={cn("rounded-xl h-11 px-6 font-bold text-sm transition-all duration-300 opacity-90 w-full sm:w-auto justify-center", theme.button)}
+                            className="rounded-xl h-11 px-6 font-bold text-xs bg-amber-500 hover:bg-amber-600 text-white shadow-md"
                             onClick={() => {
                               setRequiredPackType(test.required_pack || "pro");
                               setLockModalOpen(true);
                             }}
                           >
-                            {t("mockCategory.tryBtn")} <Lock className="h-4 w-4 ml-1.5" />
+                            Tarif kerak <Lock className="h-4 w-4 ml-1.5" />
                           </Button>
                         ) : attempt ? (
                           <>
                             <Button
                               asChild
-                              size="lg"
                               variant="outline"
-                              className="rounded-xl h-11 px-6 font-bold text-sm transition-all duration-300 border-emerald-500 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 w-full sm:w-auto flex-1 sm:flex-none justify-center"
+                              className="rounded-xl h-11 px-5 font-extrabold text-xs gap-1.5 border-emerald-500 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/20"
                             >
                               <Link to={`${basePath}/mocks/take/${test.id}?review=true&attemptId=${attempt.id}`}>
-                                {t("mockCategory.reviewBtn")}
+                                Ko'rib chiqish
                               </Link>
                             </Button>
                             <Button
                               asChild
-                              size="lg"
-                              className="rounded-xl h-11 px-6 font-bold text-sm transition-all duration-300 bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/25 w-full sm:w-auto flex-1 sm:flex-none justify-center"
+                              className="rounded-xl h-11 px-5 font-extrabold text-xs gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white shadow-md shadow-emerald-500/20"
                             >
                               <Link to={`${basePath}/mocks/take/${test.id}`}>
-                                {t("mockCategory.retakeBtn")}
+                                Qaytadan
                               </Link>
                             </Button>
                           </>
                         ) : (
                           <Button
                             asChild
-                            size="lg"
-                            className={cn(
-                              "rounded-xl h-11 px-6 font-bold text-sm transition-all duration-300 w-full sm:w-auto justify-center",
-                              canManage
-                                ? "bg-slate-800 hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 text-white"
-                                : theme.button
-                            )}
+                            className="rounded-xl h-11 px-6 font-extrabold text-xs bg-emerald-500 hover:bg-emerald-600 text-white shadow-md shadow-emerald-500/20"
                           >
                             <Link to={`${basePath}/mocks/take/${test.id}`}>
-                              {canManage ? t("mockCategory.tryBtn") : t(theme.buttonLabelKey)}
-                              <BtnIcon className="h-4 w-4 ml-1.5" />
+                              Boshlash <ArrowRight className="h-4 w-4 ml-1.5" />
                             </Link>
                           </Button>
                         )}
@@ -486,141 +456,72 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
           )}
         </div>
 
-        {totalPages > 1 && (
-          <div className="flex justify-center items-center gap-1 mt-8 pb-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
-              disabled={currentPage === 1}
-              className="rounded-xl gap-1 text-slate-500 hover:text-slate-800 dark:hover:text-white disabled:opacity-50"
-            >
-              <ChevronLeft className="h-4 w-4" /> {t("mockCategory.paginationPrev")}
-            </Button>
-            
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <button
-                key={page}
-                onClick={() => setCurrentPage(page)}
-                className={cn(
-                  "h-8 w-8 rounded-full text-sm font-bold flex items-center justify-center transition-all",
-                  currentPage === page
-                    ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20"
-                    : "text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-white/5"
-                )}
-              >
-                {page}
-              </button>
-            ))}
-            
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
-              disabled={currentPage === totalPages}
-              className="rounded-xl gap-1 text-slate-500 hover:text-slate-800 dark:hover:text-white disabled:opacity-50"
-            >
-              {t("mockCategory.paginationNext")} <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        )}
-
-        {/* Filters sidebar */}
-        <Card className="p-5 h-fit lg:sticky lg:top-4 space-y-5 rounded-2xl border shadow-sm">
+        {/* Right Filters sidebar */}
+        <Card className="p-6 h-fit lg:sticky lg:top-4 space-y-5 rounded-3xl border border-slate-200/80 dark:border-slate-800/60 bg-white dark:bg-[#0c0817] shadow-sm">
           <div>
-            <h3 className={cn("font-display font-bold text-lg", meta.color)}>{t("mockCategory.filter.title")}</h3>
-            <p className="text-xs text-muted-foreground mt-1">{t("mockCategory.filter.foundCount", { count: filtered.length })}</p>
-          </div>
-
-          {/* Pack type mini stats */}
-          <div className="grid grid-cols-3 gap-2">
-            {[
-              { label: t("mockCategory.filter.free"), cnt: freeCnt, cls: "bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-400 border border-purple-200 dark:border-purple-800/40" },
-              { label: "Pro",   cnt: proCnt,  cls: "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/40" },
-              { label: "Elite", cnt: eliteCnt,cls: "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200 dark:border-amber-800/40" },
-            ].map(s => (
-              <div key={s.label} className={cn("rounded-xl p-2 text-center", s.cls)}>
-                <p className="text-lg font-black">{s.cnt}</p>
-                <p className="text-[9px] font-bold uppercase tracking-wider opacity-70">{s.label}</p>
-              </div>
-            ))}
+            <h3 className="font-display font-black text-xl text-emerald-600 dark:text-emerald-400">
+              Testlarni filtrlash
+            </h3>
+            <p className="text-xs text-slate-400 font-semibold mt-1">
+              {filtered.length} ta test topildi
+            </p>
           </div>
 
           <div className="space-y-2">
-            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("common.search")}</Label>
+            <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Qidiruv</Label>
             <div className="relative">
-              <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder={t("mockCategory.filter.searchPlaceholder")}
-                className="pl-9 rounded-xl"
+                placeholder="Sarlavha yoki tag qidiring..."
+                className="pl-9 rounded-xl border-slate-200 dark:border-slate-800 focus:border-emerald-500"
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("mockCategory.filter.difficulty")}</Label>
+            <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Qiyinlik</Label>
             <Select value={difficulty} onValueChange={setDifficulty}>
-              <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="rounded-xl border-slate-200 dark:border-slate-800"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{t("mockCategory.filter.allLevels")}</SelectItem>
-                <SelectItem value="easy">{t("mockCategory.difficulty.easy")}</SelectItem>
-                <SelectItem value="medium">{t("mockCategory.difficulty.medium")}</SelectItem>
-                <SelectItem value="hard">{t("mockCategory.difficulty.hard")}</SelectItem>
+                <SelectItem value="all">Barcha darajalar</SelectItem>
+                <SelectItem value="easy">Oson</SelectItem>
+                <SelectItem value="medium">O'rta</SelectItem>
+                <SelectItem value="hard">Qiyin</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-2">
-            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("mockCategory.filter.partType")}</Label>
+            <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Savol turi</Label>
             <Select value={partType} onValueChange={setPartType}>
-              <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="rounded-xl border-slate-200 dark:border-slate-800"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{t("mockCategory.filter.allTypes")}</SelectItem>
-                <SelectItem value="1">{t("mockCategory.part.number", { num: 1 })}</SelectItem>
-                <SelectItem value="2">{t("mockCategory.part.number", { num: 2 })}</SelectItem>
-                <SelectItem value="3">{t("mockCategory.part.number", { num: 3 })}</SelectItem>
-                <SelectItem value="4">{t("mockCategory.part.number", { num: 4 })}</SelectItem>
-                <SelectItem value="full">{t("mockCategory.part.fullLabel")}</SelectItem>
+                <SelectItem value="all">Barcha turlar</SelectItem>
+                <SelectItem value="1">1-qism</SelectItem>
+                <SelectItem value="2">2-qism</SelectItem>
+                <SelectItem value="3">3-qism</SelectItem>
+                <SelectItem value="full">To'liq testlar</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 pt-2">
+            <Button
+              className="flex-1 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-xs h-11 shadow-md shadow-emerald-500/20"
+              onClick={() => setCurrentPage(1)}
+            >
+              Qo'llash
+            </Button>
             <Button
               variant="outline"
-              className="flex-1 rounded-xl"
+              className="rounded-xl border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 font-extrabold text-xs h-11 px-4"
               onClick={() => { setSearch(""); setDifficulty("all"); setPartType("all"); setAccess("all"); }}
             >
-              {t("mockCategory.filter.clearBtn")}
+              Tozalash
             </Button>
           </div>
-
-          {/* Pack upgrade promo box */}
-          {!canManage && (proCnt > 0 || eliteCnt > 0) && (
-            <div className="mt-2 p-4 rounded-2xl bg-gradient-to-br from-indigo-50 to-violet-50 dark:from-indigo-950/40 dark:to-violet-950/40 border border-indigo-200/70 dark:border-indigo-800/40 space-y-3">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/30">
-                  <Star className="h-4 w-4 text-white" />
-                </div>
-                <div>
-                  <p className="text-xs font-black text-indigo-700 dark:text-indigo-300 uppercase tracking-wider">{t("mockCategory.promo.premium")}</p>
-                  <p className="text-[10px] text-indigo-500/80 dark:text-indigo-400/80">{t("mockCategory.promo.testsAvailable", { count: proCnt + eliteCnt })}</p>
-                </div>
-              </div>
-              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
-                {t("mockCategory.promo.desc")}
-              </p>
-              <Button
-                size="sm"
-                className="w-full rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 text-white shadow-md hover:shadow-lg hover:from-indigo-600 hover:to-violet-700 font-bold text-xs"
-                onClick={() => nav(getPacksPath())}
-              >
-                <Crown className="h-3.5 w-3.5 mr-1.5" /> {t("mockCategory.promo.viewPlansBtn")}
-              </Button>
-            </div>
-          )}
         </Card>
       </div>
 
@@ -644,7 +545,7 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => { setLockModalOpen(false); nav(getPacksPath()); }}
-              className="bg-purple-600 hover:bg-purple-700 text-white rounded-xl h-12 px-6 font-black uppercase text-xs tracking-widest shadow-lg shadow-purple-500/20 flex-1 sm:flex-none"
+              className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl h-12 px-6 font-black uppercase text-xs tracking-widest shadow-lg shadow-emerald-500/20 flex-1 sm:flex-none"
             >
               Tariflarni ko'rish
             </AlertDialogAction>
