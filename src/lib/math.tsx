@@ -86,6 +86,11 @@ function isMathToken(token: string): boolean {
 export function formatMathText(text: string): React.ReactNode {
   if (!text) return "";
 
+  // Fast path: If string contains no LaTeX delimiters or math operators, return plain text
+  if (!/[\$\_\\\^\√\π\≤\≥\≠\±\×\÷\+\=\*]/.test(text)) {
+    return text;
+  }
+
   // Normalize unicode math first
   const normalized = normalizeMathUnicode(text);
 

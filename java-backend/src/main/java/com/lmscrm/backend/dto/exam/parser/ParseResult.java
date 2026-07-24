@@ -16,6 +16,7 @@ public class ParseResult {
     private Integer durationMinutes;
     private String difficulty;       // e.g. "easy", "medium", "hard"
     private String requiredPack;     // e.g. "free", "pro"
+    private String audioUrl;
 
     // ─── Sections ─────────────────────────────────────────────────────────────
     private List<ParsedSection> sections = new ArrayList<>();

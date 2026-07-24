@@ -455,6 +455,9 @@ public class LmsHubHtmlParser implements ExamParser {
 
             String reqPack = coalesce(htmlEl.attr("data-required-pack"), htmlEl.attr("data-pack"));
             result.setRequiredPack(reqPack.isBlank() ? "free" : reqPack.toLowerCase());
+
+            String audio = htmlEl.attr("data-audio");
+            if (!audio.isBlank()) result.setAudioUrl(audio);
         }
 
         // Fallback: <title> tag

@@ -46,6 +46,14 @@ public class ExamBuilderService {
 
         // ── 1. Create Exam (status="PUBLISHED" so it appears on Student User Panel) ──
         ExamType examType = resolveExamType(result.getExamType());
+        String audioUrl = result.getAudioUrl();
+        if ((audioUrl == null || audioUrl.isBlank()) && result.getSections() != null) {
+            audioUrl = result.getSections().stream()
+                    .map(ParseResult.ParsedSection::getPassageAudioRef)
+                    .filter(a -> a != null && !a.isBlank())
+                    .findFirst().orElse(null);
+        }
+
         Exam exam = Exam.builder()
                 .title(result.getExamTitle() != null ? result.getExamTitle() : "Imported Exam")
                 .type(examType)
@@ -55,6 +63,7 @@ public class ExamBuilderService {
                 .isAiImported(false)
                 .status("PUBLISHED")
                 .version(1)
+                .audioUrl(audioUrl)
                 .requiredPack(result.getRequiredPack() != null ? result.getRequiredPack() : "free")
                 .difficulty(result.getDifficulty() != null ? result.getDifficulty() : "medium")
                 .createdBy(createdBy)

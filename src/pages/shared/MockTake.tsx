@@ -2423,7 +2423,7 @@ export default function MockTake() {
   };
 
   const renderIeltsListeningControls = () => {
-    const audioUrl = exam?.audioUrl || exam?.audio_url;
+    const audioUrl = exam?.audioUrl || exam?.audio_url || exam?.passages?.[0]?.audioUrl || (exam as any)?.sections?.[0]?.audioUrl || (exam as any)?.passages?.[0]?.audio_url;
     if (kind !== "listening" || !audioUrl || isReviewOrAnalyze) return null;
     return (
       <div className="max-w-3xl mx-auto mb-6 px-4 md:px-0">
