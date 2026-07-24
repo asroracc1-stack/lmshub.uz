@@ -978,6 +978,7 @@ export default function MockTake() {
   const [timeLeft, setTimeLeft] = useState(0);
   const [started, setStarted] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [audioStarted, setAudioStarted] = useState(true);
   const [showCalculator, setShowCalculator] = useState(false);
   const [showScratchpad, setShowScratchpad] = useState(false);
   const [grading, setGrading] = useState(false);
@@ -1272,7 +1273,10 @@ export default function MockTake() {
       const elapsedSec = attempt.elapsed_seconds !== undefined && attempt.elapsed_seconds !== null
         ? attempt.elapsed_seconds
         : Math.floor((Date.now() - new Date(attempt.started_at).getTime()) / 1000);
-      const totalSec = (resExam.data.duration_minutes ?? resExam.data.durationMinutes ?? 60) * 60;
+      const isListeningExam = (resExam.data.type || "").toLowerCase().includes("listening");
+      const defaultDurationMins = isListeningExam ? 40 : 60;
+      const durationMins = resExam.data.duration_minutes ?? resExam.data.durationMinutes ?? defaultDurationMins;
+      const totalSec = durationMins * 60;
       setTimeLeft(Math.max(0, totalSec - elapsedSec));
     } catch (err: any) {
       const errMsg = err?.response?.data?.message || err?.response?.data || err?.message || "Failed to start exam";
