@@ -168,6 +168,17 @@ public class StudentAttemptService {
     private void analyzeProgressAndReward(StudentAttempt currentAttempt, boolean isPassed) {
         User student = currentAttempt.getStudent();
         Exam exam = currentAttempt.getExam();
+        
+        long previousFinishedAttemptsCount = attemptRepository.findAttempts(exam.getId(), student.getId()).stream()
+                .filter(a -> a.getFinishedAt() != null && !a.getId().equals(currentAttempt.getId()))
+                .count();
+        boolean isFirstCompletion = (previousFinishedAttemptsCount == 0);
+
+        if (!isFirstCompletion) {
+            // Retake attempt - 0 coins and 0 stars/XP
+            return;
+        }
+
         ExamType type = exam.getType();
         
         int correctAnswers = currentAttempt.getTotalScore() != null ? currentAttempt.getTotalScore() : 0;
