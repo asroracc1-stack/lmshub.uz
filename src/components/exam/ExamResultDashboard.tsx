@@ -113,6 +113,14 @@ export function ExamResultDashboard({ result, questions, exam, onReviewQuestion 
       ? Number(result.band_score)
       : calculatedBand;
 
+  const coinsEarned = result?.coinsEarned !== undefined 
+    ? result.coinsEarned 
+    : (result?.isFirstAttempt ? 3 : 0);
+
+  const starsEarned = result?.starsEarned !== undefined 
+    ? result.starsEarned 
+    : ((result?.isFirstAttempt && bandScore >= 5.0) ? 5 : 0);
+
   const timeUsedSeconds = result?.timeUsedSeconds ?? result?.elapsedSec ?? 0;
 
   // Format time
@@ -221,7 +229,7 @@ export function ExamResultDashboard({ result, questions, exam, onReviewQuestion 
           correctAnswers: correctCount,
           streakDays: 1,
           achievementsEarned: 0,
-          newCoins: 5
+          newCoins: coinsEarned
         });
         await refresh();
       } catch (err) {
@@ -229,7 +237,7 @@ export function ExamResultDashboard({ result, questions, exam, onReviewQuestion 
       }
     };
     awardUser();
-  }, [correctCount, refresh]);
+  }, [correctCount, coinsEarned, refresh]);
 
   // Load existing AI coach feedback if available on result object
   useEffect(() => {
@@ -448,7 +456,7 @@ export function ExamResultDashboard({ result, questions, exam, onReviewQuestion 
             </div>
             <div>
               <p className="text-xs font-medium text-slate-400">Coins Earned</p>
-              <h3 className="text-xl font-bold text-emerald-600 dark:text-emerald-400">+5 Coins</h3>
+              <h3 className="text-xl font-bold text-emerald-600 dark:text-emerald-400">+{coinsEarned} Coins</h3>
             </div>
           </Card>
 
@@ -459,7 +467,7 @@ export function ExamResultDashboard({ result, questions, exam, onReviewQuestion 
             </div>
             <div>
               <p className="text-xs font-medium text-slate-400">Stars Earned</p>
-              <h3 className="text-xl font-bold text-indigo-600 dark:text-indigo-400">+5 Stars</h3>
+              <h3 className="text-xl font-bold text-indigo-600 dark:text-indigo-400">+{starsEarned} Stars</h3>
             </div>
           </Card>
 

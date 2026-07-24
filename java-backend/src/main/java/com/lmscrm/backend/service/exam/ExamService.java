@@ -40,6 +40,9 @@ public class ExamService {
     private final StudentAttemptRepository studentAttemptRepository;
     private final StudentAnswerRepository studentAnswerRepository;
     private final PracticeSessionRepository practiceSessionRepository;
+    private final CoinTransactionRepository coinTransactionRepository;
+    private final XpTransactionRepository xpTransactionRepository;
+    private final UserRepository userRepository;
     private final ExamMapper mapper;
     private final GeminiService geminiService;
     private final ObjectMapper objectMapper;
@@ -684,10 +687,12 @@ public class ExamService {
 
         // Resolve StudentAttempt first
         StudentAttempt attempt = null;
+        boolean isFirstCompletion = false;
         if (user != null) {
             java.util.Optional<StudentAttempt> attemptOpt = studentAttemptRepository.findByExamIdAndStudentId(exam.getId(), user.getId());
             if (attemptOpt.isPresent()) {
                 attempt = attemptOpt.get();
+                isFirstCompletion = (attempt.getFinishedAt() == null);
                 studentAnswerRepository.deleteByAttemptId(attempt.getId());
             } else {
                 attempt = new StudentAttempt();
@@ -696,6 +701,7 @@ public class ExamService {
                 attempt.setAttemptSeed(java.util.UUID.randomUUID().toString());
                 attempt.setStartedAt(java.time.LocalDateTime.now().minusMinutes(exam.getDurationMinutes() != null ? exam.getDurationMinutes() : 60));
                 attempt = studentAttemptRepository.save(attempt);
+                isFirstCompletion = true;
             }
         }
 
@@ -777,7 +783,45 @@ public class ExamService {
             org.slf4j.LoggerFactory.getLogger(ExamService.class).error("Failed to build exam JSON: ", e);
         }
 
+        int coinsEarned = 0;
+        int starsEarned = 0;
+
         if (user != null && attempt != null) {
+            // Coins rule: 3 coins on first completion of mock test only, 0 on retries
+            if (isFirstCompletion) {
+                coinsEarned = 3;
+                user.setCoins((user.getCoins() != null ? user.getCoins() : 0L) + coinsEarned);
+                try {
+                    CoinTransaction coinTx = CoinTransaction.builder()
+                            .student(user)
+                            .amount(coinsEarned)
+                            .reason("Mock Test First Completion: " + exam.getTitle())
+                            .source("MOCK_TEST_REWARD")
+                            .organization(user.getOrganizationId() != null ? Organization.builder().id(user.getOrganizationId()).build() : null)
+                            .build();
+                    coinTransactionRepository.save(coinTx);
+                } catch (Exception e) {
+                    log.warn("Failed to save coin transaction: {}", e.getMessage());
+                }
+            }
+
+            // Stars rule: 5 stars ONLY IF band >= 5.0 and isFirstCompletion
+            if (isFirstCompletion && band >= 5.0) {
+                starsEarned = 5;
+                user.setXp((user.getXp() != null ? user.getXp() : 0L) + starsEarned);
+                try {
+                    XpTransaction xpTx = XpTransaction.builder()
+                            .user(user)
+                            .amount((long) starsEarned)
+                            .build();
+                    xpTransactionRepository.save(xpTx);
+                } catch (Exception e) {
+                    log.warn("Failed to save XP transaction: {}", e.getMessage());
+                }
+            }
+
+            userRepository.save(user);
+
             attempt.setFinishedAt(java.time.LocalDateTime.now());
             attempt.setTotalScore(correctCount);
             attempt.setMaxScore(questions.size());
@@ -884,6 +928,9 @@ public class ExamService {
                 .predictedScore(null)
                 .autoSubmitted(request.getAuto_submitted())
                 .violations(request.getViolations())
+                .isFirstAttempt(isFirstCompletion)
+                .coinsEarned(coinsEarned)
+                .starsEarned(starsEarned)
                 .build();
     }
 

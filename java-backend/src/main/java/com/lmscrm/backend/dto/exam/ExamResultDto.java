@@ -20,6 +20,9 @@ public class ExamResultDto {
     private String predictedScore;
     private List<ExamViolationDto> violations;
     private Boolean autoSubmitted;
+    private Boolean isFirstAttempt;
+    private Integer coinsEarned;
+    private Integer starsEarned;
 
     @Data
     @Builder
