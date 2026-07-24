@@ -80,6 +80,17 @@ public class MockTestFileImporter implements CommandLineRunner {
                         title = titleEl != null ? titleEl.text() : "Imported Exam";
                     }
 
+                    List<Exam> existingExams = examRepository.findByTitle(title);
+                    for (Exam existingExam : existingExams) {
+                        if (existingExam.getRawHtml() == null || !existingExam.getRawHtml().contains("<lmshub-section")) {
+                            log.info("[MockTestFileImporter] Archiving legacy broken version of exam '{}' (ID: {})", title, existingExam.getId());
+                            existingExam.setIsActive(false);
+                            existingExam.setStatus("ARCHIVED");
+                            existingExam.setTitle(title + " (Archived Legacy)");
+                            examRepository.save(existingExam);
+                        }
+                    }
+
                     if (examRepository.existsByTitle(title)) {
                         log.info("[MockTestFileImporter] Exam with title '{}' already exists in database. Skipping duplicate import...", title);
                         continue;
