@@ -912,12 +912,12 @@ export default function MockTake() {
 
   const hasInlineBlanks = (prompt?: string) => {
     if (!prompt) return false;
-    return /\[_*\]|_{3,}/g.test(prompt);
+    return /\[_*\]|_{3,}|\[blank\]/gi.test(prompt);
   };
 
   const renderInlinePrompt = (q: any) => {
     const prompt = q.prompt || "";
-    const regex = /\[_*\]|_{3,}/g;
+    const regex = /\[_*\]|_{3,}|\[blank\]/gi;
     const parts = prompt.split(regex);
     
     if (parts.length <= 1) {
@@ -942,7 +942,7 @@ export default function MockTake() {
     }
 
     return (
-      <div className={cn("font-bold leading-relaxed mb-3 flex flex-wrap items-center gap-y-2", textSizeStyle.prompt)}>
+      <div className={cn("font-bold leading-relaxed mb-3 flex flex-wrap items-center gap-y-2 gap-x-1.5", textSizeStyle.prompt)}>
         {parts.map((part, index) => {
           const isLast = index === parts.length - 1;
           const val = valList[index] || "";
@@ -950,7 +950,23 @@ export default function MockTake() {
           return (
             <Fragment key={index}>
               <span>{formatMathText(part)}</span>
-
+              {!isLast && (
+                <input
+                  type="text"
+                  disabled={isReviewOrAnalyze}
+                  className="px-3 py-1 border border-slate-400 dark:border-slate-600 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-center w-[140px] h-8 inline-block font-extrabold bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 placeholder-slate-400/80 shadow-xs mx-1"
+                  placeholder={String(q.position)}
+                  value={val}
+                  onChange={(e) => {
+                    const newVal = e.target.value;
+                    const nextList = [...valList];
+                    nextList[index] = newVal;
+                    const finalAns = numBlanks > 1 ? nextList.join(", ") : newVal;
+                    onAnswer(q.id, finalAns);
+                    setActiveQuestionIndex(q.position - 1);
+                  }}
+                />
+              )}
             </Fragment>
           );
         })}

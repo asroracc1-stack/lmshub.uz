@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0066-reimport-all-reading-mocks-rawhtml
+      author: lmshub
+      validCheckSum: ANY
+      changes:
+        - sql:
+            splitStatements: true
+            endDelimiter: ";"
+            sql: |
+              UPDATE public.exams
+              SET title = 'IELTS Reading (Old ' || id || ')',
+                  is_active = false,
+                  status = 'ARCHIVED'
+              WHERE (title = 'IELTS Reading 1' OR title = 'IELTS Reading 2' OR title = 'IELTS Reading 3');
