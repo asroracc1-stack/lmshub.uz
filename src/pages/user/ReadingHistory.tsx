@@ -139,8 +139,8 @@ export const ReadingHistory: React.FC<ReadingHistoryProps> = ({ basePath }) => {
   };
 
   return (
-    <div className="w-full min-h-screen bg-slate-50/60 dark:bg-[#070311] py-8 px-4 sm:px-6 lg:px-8 font-sans">
-      <div className="max-w-6xl mx-auto space-y-8">
+    <div className="w-full min-h-screen bg-transparent p-4 sm:p-6 font-sans">
+      <div className="max-w-6xl mx-auto space-y-6">
         
         {/* Top Header */}
         <div className="flex items-center gap-4">
@@ -224,14 +224,14 @@ export const ReadingHistory: React.FC<ReadingHistoryProps> = ({ basePath }) => {
                             </Badge>
                             <Badge variant="outline" className="rounded-full bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 font-semibold px-2.5 py-1">
                               <Clock className="h-3.5 w-3.5 mr-1 text-slate-400" />
-                              {item.durationMinutes} daq
+                              {item.durationMinutes || 20} daq
                             </Badge>
-                            <Badge variant="outline" className={cn("rounded-full px-2.5 py-1 font-semibold", getDifficultyColor(item.difficulty))}>
-                              ⚡ {item.difficulty}
+                            <Badge variant="outline" className={cn("rounded-full px-2.5 py-1 font-semibold", getDifficultyColor(item.difficulty || "medium"))}>
+                              ⚡ {item.difficulty || "medium"}
                             </Badge>
                             <Badge variant="outline" className="rounded-full bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 font-semibold px-2.5 py-1">
                               <BookOpen className="h-3.5 w-3.5 mr-1 text-slate-400" />
-                              {item.partType === "full" ? "To'liq test" : `${item.partType} qism`}
+                              {(!item.partType || item.partType === "full") ? "To'liq test" : `${item.partType}-qism`}
                             </Badge>
                           </div>
                         </div>
@@ -349,7 +349,7 @@ export const ReadingHistory: React.FC<ReadingHistoryProps> = ({ basePath }) => {
                     <div className="bg-slate-50/70 dark:bg-white/5 border border-slate-200/60 dark:border-slate-800/40 rounded-2xl p-4 space-y-1">
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Aniqlik</span>
                       <p className="text-xl font-black text-slate-800 dark:text-slate-100">
-                        {statistics.accuracy ?? 0}%
+                        {(statistics?.totalQuestionsCount ?? 0) > 0 ? (statistics?.accuracy ?? 0) : 0}%
                       </p>
                     </div>
 
