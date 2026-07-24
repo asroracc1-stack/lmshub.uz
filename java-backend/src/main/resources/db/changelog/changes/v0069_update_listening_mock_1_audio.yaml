@@ -1,0 +1,16 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0069-update-listening-mock-1-audio
+      author: lmshub
+      validCheckSum: ANY
+      changes:
+        - sql:
+            splitStatements: true
+            endDelimiter: ";"
+            sql: |
+              UPDATE public.exams
+              SET title = 'IELTS Listening Practice 1 (Archived Old Audio ' || id || ')',
+                  is_active = false,
+                  status = 'ARCHIVED'
+              WHERE title LIKE 'IELTS Listening Practice 1%'
+                AND status != 'ARCHIVED';
