@@ -58,12 +58,14 @@ public class ExamService {
     private EntityManager entityManager;
 
     @Transactional(readOnly = true)
-    @Cacheable(cacheNames = "examDetails", key = "#examId")
     public ExamDto getExamDetails(UUID examId) {
         Exam exam = examRepository.findById(examId)
                 .orElseThrow(() -> new ResourceNotFoundException("Exam not found: " + examId));
 
         ExamDto dto = mapper.toExamDto(exam);
+        if (exam.getRawHtml() != null && !exam.getRawHtml().isBlank()) {
+            dto.setRawHtml(exam.getRawHtml());
+        }
 
         // Har bir passage uchun questions + options ni yuklash
         List<Passage> passages = passageRepository.findByExamIdOrderByPositionOrderAsc(examId);
