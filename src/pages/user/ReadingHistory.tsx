@@ -313,7 +313,7 @@ export const ReadingHistory: React.FC<ReadingHistoryProps> = ({ basePath }) => {
                       READING OVERALL
                     </span>
                     <h3 className="text-5xl font-black text-indigo-600 dark:text-indigo-400 leading-none">
-                      {(Number(statistics.overallReadingBand) || 0).toFixed(1)} <span className="text-xl font-bold text-slate-400 dark:text-slate-500">/ 9</span>
+                      {(statistics?.overallReadingBand != null ? Number(statistics.overallReadingBand).toFixed(1) : "0.0")} <span className="text-xl font-bold text-slate-400 dark:text-slate-500">/ 9</span>
                     </h3>
                     <p className="text-xs font-bold text-slate-500 dark:text-slate-400 pt-1">
                       {statistics.totalCorrectAnswers ?? 0}/{statistics.totalQuestionsCount ?? 0} ta to'g'ri javob

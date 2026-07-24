@@ -952,23 +952,7 @@ export default function MockTake() {
           return (
             <Fragment key={index}>
               <span>{formatMathText(part)}</span>
-              {!isLast && (
-                <input
-                  type="text"
-                  disabled={isReviewOrAnalyze}
-                  className="mx-1.5 px-2 py-0.5 border border-slate-400 dark:border-slate-600 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-center w-[120px] h-7 inline-block font-bold bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 placeholder-slate-400/80 shadow-xs"
-                  placeholder={String(q.position + index)}
-                  value={val}
-                  onChange={(e) => {
-                    const newVal = e.target.value;
-                    const newAnswers = [...valList];
-                    newAnswers[index] = newVal;
-                    const joined = numBlanks > 1 ? newAnswers.join(", ") : newAnswers[0];
-                    onAnswer(q.id, joined);
-                    setActiveQuestionIndex(q.position - 1);
-                  }}
-                />
-              )}
+
             </Fragment>
           );
         })}
