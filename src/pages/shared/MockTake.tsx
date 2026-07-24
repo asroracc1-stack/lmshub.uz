@@ -1076,6 +1076,11 @@ export default function MockTake() {
         if (event.data.readOnly) {
           var allControls = document.querySelectorAll('input, select, textarea, button');
           allControls.forEach(function(el) { el.disabled = true; });
+          setTimeout(function() {
+            if (typeof window.showResults === 'function') {
+              try { window.showResults(); } catch(e) {}
+            }
+          }, 300);
         }
       }
       if (event.data.type === 'LMSHUB_TIMER_SYNC') {
@@ -3443,6 +3448,7 @@ export default function MockTake() {
           exam={exam} 
           onReviewQuestion={(index) => {
             setActiveQuestionIndex(index);
+            setIsAnalyzeMode(true);
             setSearchParams(prev => {
               prev.set("review", "true");
               return prev;

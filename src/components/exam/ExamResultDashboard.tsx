@@ -756,12 +756,15 @@ export function ExamResultDashboard({ result, questions, exam, onReviewQuestion 
           </Button>
 
           <Button 
-            onClick={handleAiAnalyze}
-            disabled={loadingAi || !!aiReport}
-            className="rounded-xl bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white font-bold text-xs uppercase tracking-wider px-5 py-2.5 flex items-center gap-2"
+            onClick={() => {
+              if (onReviewQuestion) {
+                onReviewQuestion(0);
+              }
+            }}
+            className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-wider px-5 py-2.5 flex items-center gap-2 shadow-md shadow-indigo-500/20 cursor-pointer"
           >
             <BrainCircuit className="w-3.5 h-3.5" />
-            Analyze
+            Analyze & Review
           </Button>
 
           <Button 
