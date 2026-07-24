@@ -404,7 +404,6 @@ export default function UserDashboard() {
   }, []);
 
   // Compute stats for all 7 modules based on real database records
-  const location = useLocation();
   const basePath = location.pathname.startsWith("/student") ? "/student" : "/user";
 
   const composedChartData = useMemo(() => {
