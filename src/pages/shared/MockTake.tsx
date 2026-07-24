@@ -1022,55 +1022,107 @@ export default function MockTake() {
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [leftWidth, setLeftWidth] = useState(50);
   const isResizingRef = useRef(false);
-  const htmlContainerRef = useRef<HTMLDivElement>(null);
-  const [audioStarted, setAudioStarted] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  const preparedIframeHtml = useMemo(() => {
+    if (!exam?.rawHtml) return "";
+
+    const bridgeScript = `
+<script>
+  (function() {
+    function sendAnswers() {
+      var answers = {};
+      var textInputs = document.querySelectorAll('input[type=text], textarea');
+      textInputs.forEach(function(el) {
+        var k = el.name || el.id;
+        if (k && el.value.trim()) answers[k] = el.value.trim();
+      });
+      var radios = document.querySelectorAll('input[type=radio]:checked');
+      radios.forEach(function(el) {
+        var k = el.name || el.id;
+        if (k && el.value) answers[k] = el.value;
+      });
+      var checkboxes = document.querySelectorAll('input[type=checkbox]:checked');
+      checkboxes.forEach(function(el) {
+        var k = el.name || el.id;
+        if (k && el.value) answers[k] = el.value;
+      });
+      var selects = document.querySelectorAll('select');
+      selects.forEach(function(el) {
+        var k = el.name || el.id;
+        if (k && el.value && el.value.toLowerCase() !== 'select') answers[k] = el.value;
+      });
+      window.parent.postMessage({ type: 'LMSHUB_ANSWERS_UPDATE', answers: answers }, '*');
+    }
+
+    document.addEventListener('input', sendAnswers);
+    document.addEventListener('change', sendAnswers);
+
+    window.addEventListener('message', function(event) {
+      if (!event.data) return;
+      if (event.data.type === 'LMSHUB_RESTORE_ANSWERS') {
+        var ans = event.data.answers || {};
+        for (var k in ans) {
+          var val = ans[k];
+          var textEl = document.querySelector('input[name="' + k + '"], textarea[name="' + k + '"], input[id="' + k + '"]');
+          if (textEl) textEl.value = val;
+
+          var radioEl = document.querySelector('input[name="' + k + '"][value="' + val + '"]');
+          if (radioEl) radioEl.checked = true;
+
+          var selectEl = document.querySelector('select[name="' + k + '"], select[id="' + k + '"]');
+          if (selectEl) selectEl.value = val;
+        }
+        if (event.data.readOnly) {
+          var allControls = document.querySelectorAll('input, select, textarea, button');
+          allControls.forEach(function(el) { el.disabled = true; });
+        }
+      }
+    });
+  })();
+</script>
+`;
+
+    if (exam.rawHtml.includes("</body>")) {
+      return exam.rawHtml.replace("</body>", `${bridgeScript}</body>`);
+    }
+    return exam.rawHtml + bridgeScript;
+  }, [exam?.rawHtml]);
 
   useEffect(() => {
-    if (!exam?.rawHtml || !htmlContainerRef.current) return;
-    const container = htmlContainerRef.current;
-
-    const syncFormInputs = () => {
-      const captured: Record<string, string> = {};
-
-      // 1. Text Inputs & Textareas
-      const textInputs = container.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>("input[type=text], textarea");
-      textInputs.forEach((el) => {
-        const key = el.name || el.id;
-        if (key && el.value.trim()) {
-          captured[key] = el.value.trim();
-        }
-      });
-
-      // 2. Radio Buttons
-      const radios = container.querySelectorAll<HTMLInputElement>("input[type=radio]:checked");
-      radios.forEach((el) => {
-        const key = el.name || el.id;
-        if (key && el.value) {
-          captured[key] = el.value;
-        }
-      });
-
-      // 3. Select Dropdowns
-      const selects = container.querySelectorAll<HTMLSelectElement>("select");
-      selects.forEach((el) => {
-        const key = el.name || el.id;
-        if (key && el.value && el.value.toLowerCase() !== "select") {
-          captured[key] = el.value;
-        }
-      });
-
-      setAnswers((prev) => ({ ...prev, ...captured }));
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data && event.data.type === 'LMSHUB_ANSWERS_UPDATE') {
+        setAnswers((prev) => ({ ...prev, ...event.data.answers }));
+      }
     };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
 
-    container.addEventListener("input", syncFormInputs);
-    container.addEventListener("change", syncFormInputs);
-    syncFormInputs();
+  const handleIframeLoad = () => {
+    if (!iframeRef.current || !iframeRef.current.contentWindow) return;
+    iframeRef.current.contentWindow.postMessage(
+      {
+        type: 'LMSHUB_RESTORE_ANSWERS',
+        answers,
+        readOnly: isReviewOrAnalyze
+      },
+      '*'
+    );
+  };
 
-    return () => {
-      container.removeEventListener("input", syncFormInputs);
-      container.removeEventListener("change", syncFormInputs);
-    };
-  }, [exam?.rawHtml]);
+  useEffect(() => {
+    if (iframeRef.current && iframeRef.current.contentWindow) {
+      iframeRef.current.contentWindow.postMessage(
+        {
+          type: 'LMSHUB_RESTORE_ANSWERS',
+          answers,
+          readOnly: isReviewOrAnalyze
+        },
+        '*'
+      );
+    }
+  }, [answers, isReviewOrAnalyze]);
 
   const startResizing = useCallback(() => {
     isResizingRef.current = true;
@@ -3167,10 +3219,12 @@ export default function MockTake() {
         {/* Main Content Area */}
         <main className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
           {exam?.rawHtml ? (
-            <div 
-              ref={htmlContainerRef} 
-              className="flex-1 w-full h-full overflow-auto bg-white dark:bg-black p-4 select-text"
-              dangerouslySetInnerHTML={{ __html: exam.rawHtml }}
+            <iframe
+              ref={iframeRef}
+              srcDoc={preparedIframeHtml}
+              title={exam.title || "Mock Test"}
+              className="flex-1 w-full h-full border-none bg-white"
+              onLoad={handleIframeLoad}
             />
           ) : (
             <>
