@@ -2431,22 +2431,7 @@ export default function MockTake() {
     if (kind !== "listening" || !audioUrl || isReviewOrAnalyze) return null;
     return (
       <div className="max-w-3xl mx-auto mb-6 px-4 md:px-0">
-        {!audioStarted ? (
-          <div className={cn("border p-8 rounded-xl text-center shadow-sm flex flex-col items-center justify-center", cStyle.cardBg, cStyle.cardBorder, cStyle.text)}>
-            <Headphones className="h-12 w-12 text-blue-555 animate-bounce mb-4 text-blue-600" />
-            <p className={cn("max-w-md text-xs font-semibold leading-relaxed mb-6", cStyle.cardSubtext)}>
-              You will be listening to an audio clip during this test. You will not be permitted to pause or rewind the audio while answering the questions. To continue, click Play.
-            </p>
-            <Button 
-              onClick={() => setAudioStarted(true)} 
-              className={cn("text-white font-bold px-8 py-2 rounded-lg flex items-center gap-2 shadow-sm border-none cursor-pointer", isYB ? "bg-[#ffff00] !text-black hover:bg-[#dddd00]" : "bg-blue-650 hover:bg-blue-700")}
-            >
-              <Play className="h-4 w-4 fill-current" /> Play Audio
-            </Button>
-          </div>
-        ) : (
-          <CustomAudioPlayer src={audioUrl} />
-        )}
+        <CustomAudioPlayer src={audioUrl} />
       </div>
     );
   };
@@ -3576,28 +3561,10 @@ export default function MockTake() {
                 : "bg-white dark:bg-[#140D23] border-slate-300 dark:border-slate-800"
             )}
           >
-            {/* Listening Headphones overlay prompt */}
-            {kind === "listening" && (exam.audioUrl || exam.audio_url) && !audioStarted && (
-              <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md flex flex-col items-center justify-center p-8 text-center text-white z-30">
-                <div className="relative mx-auto mb-8 flex h-40 w-40 items-center justify-center rounded-full border border-white/10 bg-white/5 shadow-inner">
-                  <Headphones className="h-16 w-16 text-blue-500 animate-bounce" />
-                </div>
-                <p className="max-w-md text-sm font-semibold leading-relaxed mb-6 text-slate-300">
-                  You will be listening to an audio clip during this test. You will not be permitted to pause or rewind the audio while answering the questions. To continue, click Play.
-                </p>
-                <Button 
-                  onClick={() => setAudioStarted(true)} 
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-3 rounded-xl flex items-center gap-2 shadow-lg shadow-blue-500/20"
-                >
-                  <Play className="h-4 w-4 fill-current" /> Play
-                </Button>
-              </div>
-            )}
-
             {/* Listening Sticky player */}
-            {kind === "listening" && (exam.audioUrl || exam.audio_url) && audioStarted && (
+            {kind === "listening" && (exam.audioUrl || exam.audio_url || exam.passages?.[0]?.audioUrl || (exam as any)?.sections?.[0]?.audioUrl) && (
               <div className="mb-6 z-20">
-                <CustomAudioPlayer src={exam.audioUrl || exam.audio_url} />
+                <CustomAudioPlayer src={exam.audioUrl || exam.audio_url || exam.passages?.[0]?.audioUrl || (exam as any)?.sections?.[0]?.audioUrl} />
               </div>
             )}
           
