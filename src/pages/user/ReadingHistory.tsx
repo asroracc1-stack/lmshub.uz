@@ -303,7 +303,7 @@ export const ReadingHistory: React.FC<ReadingHistoryProps> = ({ basePath }) => {
                       Overall band score
                     </h2>
                     <p className="text-xs text-slate-400 font-semibold mt-0.5">
-                      {statistics.totalTestsSolved} ta bajarilgan test asosida
+                      {statistics.totalTestsSolved ?? 0} ta bajarilgan test asosida
                     </p>
                   </div>
 
@@ -313,15 +313,15 @@ export const ReadingHistory: React.FC<ReadingHistoryProps> = ({ basePath }) => {
                       READING OVERALL
                     </span>
                     <h3 className="text-5xl font-black text-indigo-600 dark:text-indigo-400 leading-none">
-                      {statistics.overallReadingBand.toFixed(1)} <span className="text-xl font-bold text-slate-400 dark:text-slate-500">/ 9</span>
+                      {(Number(statistics.overallReadingBand) || 0).toFixed(1)} <span className="text-xl font-bold text-slate-400 dark:text-slate-500">/ 9</span>
                     </h3>
                     <p className="text-xs font-bold text-slate-500 dark:text-slate-400 pt-1">
-                      {statistics.totalCorrectAnswers}/{statistics.totalQuestionsCount} ta to'g'ri javob
+                      {statistics.totalCorrectAnswers ?? 0}/{statistics.totalQuestionsCount ?? 0} ta to'g'ri javob
                     </p>
                     <div className="w-full h-2 bg-indigo-200/60 dark:bg-indigo-900/40 rounded-full overflow-hidden mt-3">
                       <div 
                         className="h-full bg-indigo-600 rounded-full" 
-                        style={{ width: `${Math.min(100, (statistics.overallReadingBand / 9.0) * 100)}%` }} 
+                        style={{ width: `${Math.min(100, ((Number(statistics.overallReadingBand) || 0) / 9.0) * 100)}%` }} 
                       />
                     </div>
                   </div>
@@ -333,7 +333,7 @@ export const ReadingHistory: React.FC<ReadingHistoryProps> = ({ basePath }) => {
                     <div className="bg-slate-50/70 dark:bg-white/5 border border-slate-200/60 dark:border-slate-800/40 rounded-2xl p-4 space-y-1">
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Testlar</span>
                       <p className="text-xl font-black text-slate-800 dark:text-slate-100">
-                        {statistics.totalTestsSolved}
+                        {statistics.totalTestsSolved ?? 0}
                       </p>
                     </div>
 
@@ -341,7 +341,7 @@ export const ReadingHistory: React.FC<ReadingHistoryProps> = ({ basePath }) => {
                     <div className="bg-slate-50/70 dark:bg-white/5 border border-slate-200/60 dark:border-slate-800/40 rounded-2xl p-4 space-y-1">
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">To'g'ri javoblar</span>
                       <p className="text-xl font-black text-slate-800 dark:text-slate-100">
-                        {statistics.totalCorrectAnswers}/{statistics.totalQuestionsCount}
+                        {statistics.totalCorrectAnswers ?? 0}/{statistics.totalQuestionsCount ?? 0}
                       </p>
                     </div>
 
@@ -349,7 +349,7 @@ export const ReadingHistory: React.FC<ReadingHistoryProps> = ({ basePath }) => {
                     <div className="bg-slate-50/70 dark:bg-white/5 border border-slate-200/60 dark:border-slate-800/40 rounded-2xl p-4 space-y-1">
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Aniqlik</span>
                       <p className="text-xl font-black text-slate-800 dark:text-slate-100">
-                        {statistics.accuracy}%
+                        {statistics.accuracy ?? 0}%
                       </p>
                     </div>
 
@@ -357,7 +357,7 @@ export const ReadingHistory: React.FC<ReadingHistoryProps> = ({ basePath }) => {
                     <div className="bg-slate-50/70 dark:bg-white/5 border border-slate-200/60 dark:border-slate-800/40 rounded-2xl p-4 space-y-1">
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Eng yuqori band</span>
                       <p className="text-xl font-black text-slate-800 dark:text-slate-100">
-                        {statistics.highestBand.toFixed(1)} / 9
+                        {(Number(statistics.highestBand) || 0).toFixed(1)} / 9
                       </p>
                     </div>
 
