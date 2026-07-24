@@ -2139,68 +2139,68 @@ export default function MockTake() {
     cardBg: isBW ? "bg-white" : isWB ? "bg-[#141c2e]" : "bg-black",
     cardBorder: isBW ? "border-slate-200" : isWB ? "border-slate-850" : "border-[#333300]",
     cardActiveBorder: isBW 
-      ? "border-l-4 border-l-blue-600 border-slate-300" 
+      ? "border-l-4 border-l-[#0f1115] border-slate-300" 
       : isWB 
-        ? "border-l-4 border-l-blue-500 border-slate-700" 
+        ? "border-l-4 border-l-white border-slate-700" 
         : "border-l-4 border-l-[#ffff00] border-[#ffff00]",
-    cardText: isBW ? "text-slate-900" : isWB ? "text-white" : "text-[#ffff00]",
+    cardText: isBW ? "text-[#0f1115]" : isWB ? "text-white" : "text-[#ffff00]",
     cardSubtext: isBW ? "text-slate-500" : isWB ? "text-slate-400" : "text-[#ffff00]",
     
     // Option item
     optHover: isBW 
-      ? "hover:bg-slate-50" 
+      ? "hover:bg-[#f9fafb]" 
       : isWB 
         ? "hover:bg-slate-800/40" 
         : "hover:bg-[#222200]",
     optRadioCircle: isBW 
-      ? "border-slate-300 bg-white" 
+      ? "border-slate-400 bg-white" 
       : isWB 
         ? "border-slate-700 bg-slate-900" 
         : "border-[#ffff00] bg-black",
     optRadioCircleSelected: isBW 
-      ? "border-slate-800 bg-white" 
+      ? "border-[#0f1115] bg-white" 
       : isWB 
         ? "border-slate-200 bg-slate-900" 
         : "border-[#ffff00] bg-black",
-    optRadioDot: isBW ? "bg-slate-800" : isWB ? "bg-slate-200" : "bg-[#ffff00]",
+    optRadioDot: isBW ? "bg-[#0f1115]" : isWB ? "bg-slate-200" : "bg-[#ffff00]",
     
     // Input fields
     input: isBW 
-      ? "bg-white border-slate-300 text-slate-900 focus:border-blue-500" 
+      ? "bg-white border-[#cbd0d6] text-[#0f1115] focus:border-[#0f1115] focus:ring-1 focus:ring-[#0f1115]" 
       : isWB 
-        ? "bg-slate-950 border-slate-700 text-white focus:border-blue-500" 
+        ? "bg-slate-950 border-slate-700 text-white focus:border-white" 
         : "bg-black border-[#ffff00] text-[#ffff00] focus:border-[#ffff00]",
     
     // Floating Nav
-    floatBg: isBW ? "bg-[#1e2022] border-slate-700" : isWB ? "bg-slate-900 border-slate-855" : "bg-black border-[#ffff00]",
+    floatBg: isBW ? "bg-[#0f1115] border-slate-700" : isWB ? "bg-slate-900 border-slate-855" : "bg-black border-[#ffff00]",
     floatDivider: isBW ? "divide-slate-700" : isWB ? "divide-slate-800" : "divide-[#ffff00]",
-    floatBtnHover: isBW ? "hover:bg-slate-800" : isWB ? "hover:bg-slate-800" : "hover:bg-[#222200]",
+    floatBtnHover: isBW ? "hover:bg-black" : isWB ? "hover:bg-slate-800" : "hover:bg-[#222200]",
     floatBtnText: isBW ? "text-white" : isWB ? "text-white" : "text-[#ffff00]",
 
     // Part Banner
-    bannerBg: isBW ? "bg-[#f0f2f5] border-slate-200" : isWB ? "bg-[#141c2e] border-slate-850" : "bg-black border-[#ffff00]",
+    bannerBg: isBW ? "bg-[#f1f2f4] border-slate-200" : isWB ? "bg-[#141c2e] border-slate-850" : "bg-black border-[#ffff00]",
     
     // Footer
-    footerBg: isBW ? "bg-[#f0f2f5]" : "bg-black",
-    footerBorder: isBW ? "border-slate-300" : isWB ? "border-slate-850" : "border-[#333300]",
-    footerText: isBW ? "text-slate-700" : isWB ? "text-slate-300" : "text-[#ffff00]",
+    footerBg: isBW ? "bg-white" : "bg-black",
+    footerBorder: isBW ? "border-slate-200" : isWB ? "border-slate-850" : "border-[#333300]",
+    footerText: isBW ? "text-[#0f1115]" : isWB ? "text-slate-300" : "text-[#ffff00]",
     
-    // Pagination
+    // Pagination (IELTS CBT official question pills: answered = solid #0f1115 black, active = 1.5px #0f1115 border)
     pagUnanswered: isBW 
-      ? "bg-white border-slate-300 text-slate-600 hover:bg-slate-50" 
+      ? "bg-white border-[#e5e7eb] text-[#374151] hover:bg-[#f3f4f6]" 
       : isWB 
         ? "bg-slate-900 border-slate-750 text-slate-400 hover:bg-slate-800" 
         : "bg-black border-[#ffff00] text-[#ffff00] hover:bg-[#222200]",
     pagActive: isBW 
-      ? "border-blue-600 bg-blue-50 text-blue-600 border-2" 
+      ? "border-[1.5px] border-[#0f1115] bg-white text-[#0f1115] font-black" 
       : isWB 
-        ? "border-blue-500 bg-blue-950/20 text-blue-400 border-2" 
-        : "border-[#ffff00] bg-black text-[#ffff00] border-2",
+        ? "border-white bg-slate-950 text-white font-black" 
+        : "border-[#ffff00] bg-black text-[#ffff00] font-black",
     pagAnswered: isBW 
-      ? "border-blue-300 bg-blue-50/30 text-slate-700 border-b-4 border-b-blue-600" 
+      ? "bg-[#0f1115] text-white border-[#0f1115] font-black" 
       : isWB 
-        ? "border-blue-800/40 bg-blue-950/10 text-slate-300 border-b-4 border-b-blue-500" 
-        : "border-[#ffff00] bg-black text-[#ffff00] border-b-4 border-b-[#ffff00]",
+        ? "bg-white text-black border-white font-black" 
+        : "bg-[#ffff00] text-black border-[#ffff00] font-black",
     pagFlagged: isBW 
       ? "bg-amber-500/10 border-amber-500 text-amber-600" 
       : isWB 
@@ -2773,12 +2773,12 @@ export default function MockTake() {
                 className={cn(
                   "flex items-center gap-1.5 px-2 py-1 rounded-md transition-all border shrink-0",
                   isCurrentSection 
-                    ? "border-blue-500/30 bg-blue-500/5 dark:border-blue-400/30 dark:bg-blue-400/5" 
+                    ? "border-slate-300/60 bg-slate-100/60 dark:border-slate-700/60 dark:bg-slate-800/60" 
                     : "border-transparent"
                 )}
               >
                 <span className={cn("text-[10px] font-black uppercase tracking-wider mr-1 shrink-0",
-                  isCurrentSection ? "text-blue-600 dark:text-blue-450" : "text-slate-405 dark:text-slate-500"
+                  isCurrentSection ? "text-[#0f1115] dark:text-white" : "text-slate-500 dark:text-slate-400"
                 )}>
                   Part {secIdx + 1}:
                 </span>
@@ -2809,7 +2809,7 @@ export default function MockTake() {
                           : "border-slate-300 dark:border-slate-750 text-slate-500 dark:text-slate-400 bg-slate-100/30";
                       }
                       if (isCurrent) {
-                        btnStyle = cn(btnStyle, "ring-2 ring-blue-500 ring-offset-1");
+                        btnStyle = cn(btnStyle, "ring-2 ring-[#0f1115] ring-offset-1");
                       }
                     } else {
                       if (isCurrent) {
@@ -2831,7 +2831,7 @@ export default function MockTake() {
                             el.scrollIntoView({ behavior: "smooth", block: "center" });
                           }
                         }}
-                        className={cn("h-7 w-7 sm:h-8 sm:w-8 text-[10px] font-black transition-all duration-150 border flex items-center justify-center rounded-sm shrink-0 cursor-pointer", btnStyle)}
+                        className={cn("h-7 w-7 sm:h-8 sm:w-8 text-[10px] font-black transition-all duration-150 border flex items-center justify-center rounded-md shrink-0 cursor-pointer", btnStyle)}
                       >
                         {q.position}
                       </button>
@@ -2854,7 +2854,7 @@ export default function MockTake() {
                   setSearchParams({ attemptId: result?.id || attemptId, review: "false" });
                 }
               }}
-              className={cn("h-10 px-6 rounded-sm font-bold text-xs uppercase tracking-widest cursor-pointer border-none text-white", isYB ? "bg-[#ffff00] !text-black hover:bg-[#dddd00]" : "bg-slate-700 hover:bg-slate-800")}
+              className={cn("h-10 px-6 rounded-md font-bold text-xs uppercase tracking-widest cursor-pointer border-none text-white", isYB ? "bg-[#ffff00] !text-black hover:bg-[#dddd00]" : "bg-[#0f1115] hover:bg-black")}
             >
               Back
             </Button>
@@ -2862,10 +2862,10 @@ export default function MockTake() {
             <Button 
               size="lg" 
               onClick={handleSubmitRequest}
-              className={cn("h-10 w-10 p-0 rounded-sm text-white flex items-center justify-center shadow-md transition-colors border-none cursor-pointer", isYB ? "bg-[#ffff00] !text-black hover:bg-[#dddd00]" : "bg-emerald-600 hover:bg-emerald-700")}
+              className={cn("h-10 w-10 p-0 rounded-lg flex items-center justify-center shadow-xs transition-colors cursor-pointer", isYB ? "bg-[#ffff00] !text-black hover:bg-[#dddd00]" : "bg-[#dcfce7] text-[#166534] border border-[#bbf7d0] hover:bg-[#bbf7d0]")}
               title="Submit Exam"
             >
-              <span className="text-xl font-bold font-sans">✓</span>
+              <span className="text-xl font-black font-sans text-[#166534]">✓</span>
             </Button>
           )}
         </div>
