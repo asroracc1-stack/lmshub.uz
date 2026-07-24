@@ -1654,7 +1654,14 @@ export default function MockTake() {
     // Call submit API
     try {
       const kind = (exam.type ?? "").toLowerCase();
-      const elapsedSec = Math.floor((Date.now() - startedAt.current) / 1000);
+      let elapsedSec = 0;
+      if (startedAt.current > 0) {
+        elapsedSec = Math.floor((Date.now() - startedAt.current) / 1000);
+      }
+      const maxDurationSec = ((exam?.duration_minutes || exam?.durationMinutes || 60) * 60);
+      if (elapsedSec <= 0 || elapsedSec > maxDurationSec) {
+        elapsedSec = Math.max(1, maxDurationSec - timeLeft);
+      }
 
       const payload = {
         exam_id: exam.id,
@@ -2879,7 +2886,12 @@ export default function MockTake() {
     const durationStr = elapsedMinutes > 0 ? `${elapsedMinutes}m ${elapsedSecondsRem}s` : `${elapsedSeconds}s`;
 
     // Convert raw correct count to Band score
-    const bandScoreVal = result.score !== undefined ? Number(result.score).toFixed(1) : Number(rawToBand(kind, correctAns, totalQ)).toFixed(1);
+    const kindVal = (exam?.type ?? "reading").toLowerCase();
+    const bandScoreVal = (result.bandScore !== undefined && Number(result.bandScore) > 0)
+      ? Number(result.bandScore).toFixed(1)
+      : (result.band_score !== undefined && Number(result.band_score) > 0)
+        ? Number(result.band_score).toFixed(1)
+        : rawToBand(kindVal, correctAns, totalQ).toFixed(1);
 
     // Performance feedback message
     let scoreFeedback = "You need to put in much more work — start from the basics and practice daily. 📚";

@@ -15,6 +15,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
 import { api } from "@/lib/axios";
 
+import { rawToBand } from "@/lib/ielts";
+
+function cleanAnswerText(val: string): string {
+  if (!val) return "";
+  const parts = val.split(",").map(s => s.trim()).filter(Boolean);
+  const unique = Array.from(new Set(parts));
+  return unique.join(" / ");
+}
+
 interface QuestionDetail {
   questionId: string;
   userAns: string;
@@ -43,7 +52,7 @@ export function ExamResultDashboard({ result, questions, exam, onReviewQuestion 
   const details: QuestionDetail[] = rawDetails.map((d: any) => ({
     questionId: d.questionId || d.question_id || d.id,
     userAns: d.userAns !== undefined ? d.userAns : (d.user_ans !== undefined ? d.user_ans : ""),
-    correctAns: d.correctAns !== undefined ? d.correctAns : (d.correct_ans !== undefined ? d.correct_ans : ""),
+    correctAns: cleanAnswerText(d.correctAns !== undefined ? d.correctAns : (d.correct_ans !== undefined ? d.correct_ans : "")),
     ok: d.ok !== undefined ? d.ok : false,
     timeSpentSeconds: d.timeSpentSeconds !== undefined ? d.timeSpentSeconds : (d.time_spent_seconds !== undefined ? d.time_spent_seconds : 0),
     aiExplanation: d.aiExplanation || d.ai_explanation || d.explanation || ""
@@ -56,14 +65,15 @@ export function ExamResultDashboard({ result, questions, exam, onReviewQuestion 
     const detail = details.find((d) => String(d.questionId) === String(q.id));
     const userAns = detail ? detail.userAns : "";
     
-    let correctAns = q.correctAnswer || q.correct_answer || "";
-    if (!correctAns && q.options && q.options.length > 0) {
+    let rawCorr = q.correctAnswer || q.correct_answer || "";
+    if (!rawCorr && q.options && q.options.length > 0) {
       const corrOpt = q.options.find((o: any) => o.isCorrect || o.is_correct);
-      if (corrOpt) correctAns = corrOpt.text;
+      if (corrOpt) rawCorr = corrOpt.text;
     }
-    if (!correctAns && detail) {
-      correctAns = detail.correctAns;
+    if (!rawCorr && detail) {
+      rawCorr = detail.correctAns;
     }
+    const correctAns = cleanAnswerText(rawCorr);
 
     let isCorrect = false;
     let isOmitted = false;
@@ -94,28 +104,47 @@ export function ExamResultDashboard({ result, questions, exam, onReviewQuestion 
 
   const correctCount = questionResults.filter(r => r.isCorrect).length;
   const accuracy = Math.round((correctCount / totalQuestions) * 100);
-  const bandScore = Number(result?.bandScore) || 0.0;
+  
+  const kindName = (exam?.type || "reading").toLowerCase();
+  const calculatedBand = rawToBand(kindName, correctCount, totalQuestions);
+  const bandScore = (result?.bandScore !== undefined && Number(result.bandScore) > 0)
+    ? Number(result.bandScore)
+    : (result?.band_score !== undefined && Number(result.band_score) > 0)
+      ? Number(result.band_score)
+      : calculatedBand;
+
   const timeUsedSeconds = result?.timeUsedSeconds ?? result?.elapsedSec ?? 0;
 
   // Format time
   const formatTime = (secs: number) => {
-    const m = Math.floor(secs / 60);
-    const s = secs % 60;
+    const validSecs = (secs > 0 && secs < 86400) ? secs : 0;
+    const m = Math.floor(validSecs / 60);
+    const s = validSecs % 60;
     if (m === 0) return `${s}s`;
     return `${m}m ${s}s`;
   };
 
-  // Determine Band colors & metadata
+  // Determine Band colors & metadata matching official IELTS bands
   const getBandMeta = (band: number) => {
-    if (band >= 8.0) {
+    if (band >= 8.5) {
       return {
-        level: "Outstanding",
+        level: "Expert User",
         cefr: "C2",
         gradient: "from-emerald-500/10 to-teal-500/10 border-emerald-500/30",
         text: "text-emerald-500 dark:text-emerald-400",
         badge: "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400",
         bar: "bg-emerald-500",
-        advice: "Incredible mastery! You perform like an expert user. Keep practicing to maintain your peak shape."
+        advice: "Incredible mastery! You perform like a native expert user."
+      };
+    } else if (band >= 7.5) {
+      return {
+        level: "Very Good User",
+        cefr: "C1+",
+        gradient: "from-teal-500/10 to-emerald-500/10 border-teal-500/30",
+        text: "text-teal-500 dark:text-teal-400",
+        badge: "bg-teal-500/20 text-teal-600 dark:text-teal-400",
+        bar: "bg-teal-500",
+        advice: "Excellent score! You have fully operational command of the language."
       };
     } else if (band >= 6.5) {
       return {
@@ -125,27 +154,47 @@ export function ExamResultDashboard({ result, questions, exam, onReviewQuestion 
         text: "text-blue-500 dark:text-blue-400",
         badge: "bg-blue-500/20 text-blue-600 dark:text-blue-400",
         bar: "bg-blue-500",
-        advice: "Solid performance! You show strong upper-intermediate skills. Focus on fine-tuning details to reach Band 8+."
+        advice: "Solid performance! You show strong upper-intermediate reading skills."
       };
-    } else if (band >= 5.0) {
+    } else if (band >= 5.5) {
       return {
-        level: "Developing",
+        level: "Competent User",
         cefr: "B2",
+        gradient: "from-indigo-500/10 to-purple-500/10 border-indigo-500/30",
+        text: "text-indigo-500 dark:text-indigo-400",
+        badge: "bg-indigo-500/20 text-indigo-600 dark:text-indigo-400",
+        bar: "bg-indigo-500",
+        advice: "Good effort! Practice complex texts and academic vocabulary for Band 7+."
+      };
+    } else if (band >= 4.5) {
+      return {
+        level: "Modest User",
+        cefr: "B1",
         gradient: "from-amber-500/10 to-orange-500/10 border-amber-500/30",
         text: "text-amber-500 dark:text-amber-400",
         badge: "bg-amber-500/20 text-amber-600 dark:text-amber-400",
         bar: "bg-amber-500",
-        advice: "Good progress! You show developing reading competence. Practice structured passages to target higher scores."
+        advice: "Partial command of language. Practice passage scanning and keyword matching."
+      };
+    } else if (band >= 3.5) {
+      return {
+        level: "Limited User",
+        cefr: "A2",
+        gradient: "from-orange-500/10 to-rose-500/10 border-orange-500/30",
+        text: "text-orange-500 dark:text-orange-400",
+        badge: "bg-orange-500/20 text-orange-600 dark:text-orange-400",
+        bar: "bg-orange-500",
+        advice: "Basic understanding. Focus on building core English vocabulary and grammar."
       };
     } else {
       return {
-        level: "Needs Improvement",
-        cefr: "B1",
+        level: "Extremely Limited User",
+        cefr: "A1",
         gradient: "from-rose-500/10 to-red-500/10 border-rose-500/30",
         text: "text-rose-500 dark:text-rose-400",
         badge: "bg-rose-500/20 text-rose-600 dark:text-rose-400",
         bar: "bg-rose-500",
-        advice: "Need more practice. Concentrate on basic reading strategies, skimming/scanning, and vocabulary expansion."
+        advice: "Needs structured preparation. Concentrate on essential reading strategies and daily vocabulary."
       };
     }
   };
@@ -494,22 +543,22 @@ export function ExamResultDashboard({ result, questions, exam, onReviewQuestion 
                     )}>
                       {qPos}
                     </span>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">User Answer</span>
-                        <span className={cn(
-                          "text-[9px] px-1.5 py-0.5 rounded font-black uppercase tracking-widest",
-                          r.isCorrect ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400" :
-                          r.isOmitted ? "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400" :
-                          "bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400"
-                        )}>
-                          {r.isCorrect ? "Correct" : r.isOmitted ? "Skipped" : "Wrong"}
-                        </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider whitespace-nowrap shrink-0">User Answer</span>
+                          <span className={cn(
+                            "text-[9px] px-1.5 py-0.5 rounded font-black uppercase tracking-widest shrink-0",
+                            r.isCorrect ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400" :
+                            r.isOmitted ? "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400" :
+                            "bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400"
+                          )}>
+                            {r.isCorrect ? "Correct" : r.isOmitted ? "Skipped" : "Wrong"}
+                          </span>
+                        </div>
+                        <p className="text-sm font-bold text-slate-800 dark:text-slate-200 truncate pr-2 mt-0.5">
+                          {r.userAns ? r.userAns : <span className="text-slate-400 dark:text-slate-600 italic font-normal">— No answer —</span>}
+                        </p>
                       </div>
-                      <p className="text-sm font-bold text-slate-800 dark:text-slate-200 truncate pr-2 mt-0.5">
-                        {r.userAns ? r.userAns : <span className="text-slate-400 dark:text-slate-600 italic font-normal">— No answer —</span>}
-                      </p>
-                    </div>
                   </div>
 
                   <div className="flex items-center space-x-3 pr-1 shrink-0">

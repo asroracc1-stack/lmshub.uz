@@ -215,14 +215,14 @@ export class CustomExamCalculator implements ScoreCalculator {
 }
 
 export function getExamCalculator(kind: string): ScoreCalculator {
-  const k = kind.toLowerCase();
-  if (k === "sat") {
+  const k = (kind || "").toLowerCase();
+  if (k.includes("sat")) {
     return new SATCalculator();
   }
-  if (k === "ielts" || k === "reading" || k === "listening") {
+  if (k.includes("ielts") || k.includes("reading") || k.includes("listening")) {
     return new IELTSCalculator();
   }
-  if (k === "national_cert" || k === "milliy") {
+  if (k.includes("national") || k.includes("milliy") || k.includes("cert")) {
     return new NationalCertificateCalculator();
   }
   return new CustomExamCalculator();
