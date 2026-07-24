@@ -64,6 +64,7 @@ export default function UserDashboard() {
   const { theme } = useTheme();
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [stats, setStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -111,7 +112,9 @@ export default function UserDashboard() {
       }
     };
     fetchAttempts();
-  }, []);
+  // Re-fetch every time user navigates back to this page
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.key]);
 
   const computeDaysLeft = (dateStr: string): number | null => {
     if (!dateStr) return null;
@@ -182,6 +185,7 @@ export default function UserDashboard() {
 
   useEffect(() => {
     const fetchStats = async () => {
+      setLoading(true);
       try {
         const [statsRes, contribRes] = await Promise.allSettled([
           api.get("/user/stats"),
@@ -234,7 +238,11 @@ export default function UserDashboard() {
       }
     };
     fetchStats();
-  }, []);
+  // location.key changes on every React Router navigation — this ensures
+  // the dashboard re-fetches fresh stats whenever the user returns to this page
+  // after completing a mock test, without needing a full page reload.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.key]);
 
   useEffect(() => {
     const savedExamDate = localStorage.getItem("lmshub_exam_date");
