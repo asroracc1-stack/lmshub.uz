@@ -1078,6 +1078,19 @@ export default function MockTake() {
           allControls.forEach(function(el) { el.disabled = true; });
         }
       }
+      if (event.data.type === 'LMSHUB_TIMER_SYNC') {
+        var t = event.data.timeLeft;
+        if (typeof t === 'number' && t >= 0) {
+          var m = Math.floor(t / 60);
+          var s = t % 60;
+          var mStr = m < 10 ? '0' + m : m;
+          var sStr = s < 10 ? '0' + s : s;
+          var txtEl = document.getElementById('timer-txt') || document.getElementById('timer');
+          if (txtEl) txtEl.textContent = mStr + ':' + sStr;
+          var leftEl = document.getElementById('time-left');
+          if (leftEl) leftEl.textContent = m + ' minutes remaining';
+        }
+      }
     });
   })();
 </script>
@@ -1109,6 +1122,13 @@ export default function MockTake() {
       },
       '*'
     );
+    iframeRef.current.contentWindow.postMessage(
+      {
+        type: 'LMSHUB_TIMER_SYNC',
+        timeLeft
+      },
+      '*'
+    );
   };
 
   useEffect(() => {
@@ -1123,6 +1143,18 @@ export default function MockTake() {
       );
     }
   }, [answers, isReviewOrAnalyze]);
+
+  useEffect(() => {
+    if (iframeRef.current && iframeRef.current.contentWindow) {
+      iframeRef.current.contentWindow.postMessage(
+        {
+          type: 'LMSHUB_TIMER_SYNC',
+          timeLeft
+        },
+        '*'
+      );
+    }
+  }, [timeLeft]);
 
   const startResizing = useCallback(() => {
     isResizingRef.current = true;
