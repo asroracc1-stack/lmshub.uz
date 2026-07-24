@@ -93,7 +93,7 @@ public class StudentAttemptService {
             existing.setAiCoachFeedback(null);
             existing.setPredictedScore(null);
             existing.setAutoSubmitted(false);
-            existing.setRewardGranted(false);
+            // Do NOT reset rewardGranted — coins/stars should only be awarded once per exam
             existing = attemptRepository.save(existing);
 
             // Re-generate question snapshot for this retake
@@ -200,13 +200,9 @@ public class StudentAttemptService {
         User student = currentAttempt.getStudent();
         Exam exam = currentAttempt.getExam();
         
-        long previousFinishedAttemptsCount = attemptRepository.findAttempts(exam.getId(), student.getId()).stream()
-                .filter(a -> a.getFinishedAt() != null && !a.getId().equals(currentAttempt.getId()))
-                .count();
-        boolean isFirstCompletion = (previousFinishedAttemptsCount == 0);
-
-        if (!isFirstCompletion) {
-            // Retake attempt - 0 coins and 0 stars/XP
+        // Use rewardGranted flag to prevent double-awarding on retakes
+        // (with single-row reuse, counting other finished attempts no longer works)
+        if (Boolean.TRUE.equals(currentAttempt.getRewardGranted())) {
             return;
         }
 
@@ -397,6 +393,10 @@ public class StudentAttemptService {
                 coinService.addCoins(student, 5, "Great progress in exams", "PROGRESS_BONUS", null);
             }
         }
+
+        // Mark rewards as granted so retakes won't re-award
+        currentAttempt.setRewardGranted(true);
+        attemptRepository.save(currentAttempt);
     }
 
     private int getRWScore(int correctCount, int totalCount) {

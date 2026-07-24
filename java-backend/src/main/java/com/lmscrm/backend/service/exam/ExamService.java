@@ -692,7 +692,9 @@ public class ExamService {
             java.util.Optional<StudentAttempt> attemptOpt = studentAttemptRepository.findByExamIdAndStudentId(exam.getId(), user.getId());
             if (attemptOpt.isPresent()) {
                 attempt = attemptOpt.get();
-                isFirstCompletion = (attempt.getFinishedAt() == null);
+                // Use rewardGranted flag to prevent double coin/star awards on retakes
+                // (startExam resets finishedAt to null but sets rewardGranted = false)
+                isFirstCompletion = !Boolean.TRUE.equals(attempt.getRewardGranted());
                 studentAnswerRepository.deleteByAttemptId(attempt.getId());
             } else {
                 attempt = new StudentAttempt();
@@ -818,6 +820,11 @@ public class ExamService {
                 } catch (Exception e) {
                     log.warn("Failed to save XP transaction: {}", e.getMessage());
                 }
+            }
+
+            // Mark rewards as granted so retakes won't re-award coins/stars
+            if (isFirstCompletion) {
+                attempt.setRewardGranted(true);
             }
 
             userRepository.save(user);
