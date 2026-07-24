@@ -977,6 +977,7 @@ export default function MockTake() {
   const [showIeltsSubmitModal, setShowIeltsSubmitModal] = useState(false);
   const [timeLeft, setTimeLeft] = useState(0);
   const [started, setStarted] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const [audioStarted, setAudioStarted] = useState(false);
   const [audioVolume, setAudioVolume] = useState(1);
   const bgAudioRef = useRef<HTMLAudioElement | null>(null);
