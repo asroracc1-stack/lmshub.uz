@@ -99,6 +99,8 @@ public class MockTestFileImporter implements CommandLineRunner {
 
                     // 3. Save to database
                     Exam savedExam = examBuilderService.buildAndSave(parseResult, creator);
+                    savedExam.setRawHtml(rawHtml);
+                    savedExam = examRepository.save(savedExam);
                     log.info("[MockTestFileImporter] Programmatically successfully imported exam '{}' with ID: {}", savedExam.getTitle(), savedExam.getId());
 
                 } catch (Exception e) {

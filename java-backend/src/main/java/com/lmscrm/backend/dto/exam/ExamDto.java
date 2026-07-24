@@ -28,6 +28,7 @@ public class ExamDto {
     private LocalDateTime publishedAt;
     private String requiredPack;
     private String pdfUrl;
+    private String rawHtml;
     // Exam player uchun - passages va ichidagi questions
     private List<PassageDto> passages;
 }

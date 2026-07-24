@@ -1022,7 +1022,55 @@ export default function MockTake() {
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [leftWidth, setLeftWidth] = useState(50);
   const isResizingRef = useRef(false);
+  const htmlContainerRef = useRef<HTMLDivElement>(null);
   const [audioStarted, setAudioStarted] = useState(false);
+
+  useEffect(() => {
+    if (!exam?.rawHtml || !htmlContainerRef.current) return;
+    const container = htmlContainerRef.current;
+
+    const syncFormInputs = () => {
+      const captured: Record<string, string> = {};
+
+      // 1. Text Inputs & Textareas
+      const textInputs = container.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>("input[type=text], textarea");
+      textInputs.forEach((el) => {
+        const key = el.name || el.id;
+        if (key && el.value.trim()) {
+          captured[key] = el.value.trim();
+        }
+      });
+
+      // 2. Radio Buttons
+      const radios = container.querySelectorAll<HTMLInputElement>("input[type=radio]:checked");
+      radios.forEach((el) => {
+        const key = el.name || el.id;
+        if (key && el.value) {
+          captured[key] = el.value;
+        }
+      });
+
+      // 3. Select Dropdowns
+      const selects = container.querySelectorAll<HTMLSelectElement>("select");
+      selects.forEach((el) => {
+        const key = el.name || el.id;
+        if (key && el.value && el.value.toLowerCase() !== "select") {
+          captured[key] = el.value;
+        }
+      });
+
+      setAnswers((prev) => ({ ...prev, ...captured }));
+    };
+
+    container.addEventListener("input", syncFormInputs);
+    container.addEventListener("change", syncFormInputs);
+    syncFormInputs();
+
+    return () => {
+      container.removeEventListener("input", syncFormInputs);
+      container.removeEventListener("change", syncFormInputs);
+    };
+  }, [exam?.rawHtml]);
 
   const startResizing = useCallback(() => {
     isResizingRef.current = true;
@@ -3118,18 +3166,28 @@ export default function MockTake() {
         
         {/* Main Content Area */}
         <main className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
-          {(!isMobile || mobileTab === 'passage') && (isReading || kind === "writing") && renderIeltsPassagePanel(currentSectionIdx)}
-          
-          {!isMobile && (isReading || kind === "writing") && renderIeltsDivider()}
-          
-          {(!isMobile || mobileTab === 'questions') && (
+          {exam?.rawHtml ? (
             <div 
-              style={{ width: (!isMobile && (isReading || kind === "writing")) ? `${100 - leftWidth}%` : "100%" }}
-              className="flex-1 flex flex-col overflow-hidden relative"
-            >
-              {kind === "listening" && renderIeltsListeningControls()}
-              {renderIeltsQuestionsPanel(currentSectionIdx)}
-            </div>
+              ref={htmlContainerRef} 
+              className="flex-1 w-full h-full overflow-auto bg-white dark:bg-black p-4 select-text"
+              dangerouslySetInnerHTML={{ __html: exam.rawHtml }}
+            />
+          ) : (
+            <>
+              {(!isMobile || mobileTab === 'passage') && (isReading || kind === "writing") && renderIeltsPassagePanel(currentSectionIdx)}
+              
+              {!isMobile && (isReading || kind === "writing") && renderIeltsDivider()}
+              
+              {(!isMobile || mobileTab === 'questions') && (
+                <div 
+                  style={{ width: (!isMobile && (isReading || kind === "writing")) ? `${100 - leftWidth}%` : "100%" }}
+                  className="flex-1 flex flex-col overflow-hidden relative"
+                >
+                  {kind === "listening" && renderIeltsListeningControls()}
+                  {renderIeltsQuestionsPanel(currentSectionIdx)}
+                </div>
+              )}
+            </>
           )}
         </main>
 

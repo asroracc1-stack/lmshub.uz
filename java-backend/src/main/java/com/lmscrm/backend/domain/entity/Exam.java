@@ -91,6 +91,9 @@ public class Exam {
     @Column(name = "pdf_url")
     private String pdfUrl;
 
+    @Column(name = "raw_html", columnDefinition = "TEXT")
+    private String rawHtml;
+
     @OneToMany(mappedBy = "exam", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Passage> passages;
 
