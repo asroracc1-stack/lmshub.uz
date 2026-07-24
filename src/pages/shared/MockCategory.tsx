@@ -432,7 +432,7 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
                               asChild
                               className="rounded-xl h-11 px-5 font-extrabold text-xs gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-500/20"
                             >
-                              <Link to={`${basePath}/mocks/take/${test.id}`}>
+                              <Link to={`${basePath}/mocks/take/${test.id}?retake=true`}>
                                 Qaytadan
                               </Link>
                             </Button>

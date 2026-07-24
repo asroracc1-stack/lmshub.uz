@@ -1303,7 +1303,9 @@ export default function MockTake() {
     setLoading(true);
     setLoadError(null);
 
-    // If not review mode and not already started/resumed, check for active or completed attempt
+
+
+    const isRetakeMode = searchParams.get("retake") === "true";
     if (!isReviewMode && !attemptId) {
       api.get<any[]>('/student/exams/attempts')
         .then((resAttempts) => {
@@ -1313,17 +1315,15 @@ export default function MockTake() {
             setStarted(true);
           } else {
             const completed = resAttempts.data.find(a => a.exam_id === testId && a.finished_at);
-            if (completed) {
+            if (completed && !isRetakeMode) {
               setSearchParams({ attemptId: completed.id, review: "true" });
             } else {
-              // No attempts found: immediately start a new attempt!
               handleStartExam();
             }
           }
         })
         .catch((err) => {
           console.error(err);
-          // If checking attempts fails, fallback to starting
           handleStartExam();
         });
       return;

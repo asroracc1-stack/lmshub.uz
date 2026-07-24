@@ -253,7 +253,7 @@ export const ReadingHistory: React.FC<ReadingHistoryProps> = ({ basePath }) => {
                             asChild
                             className="rounded-xl h-10 px-4 font-extrabold text-xs gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-500/20"
                           >
-                            <Link to={`${basePath}/mocks/take/${item.examId}`}>
+                            <Link to={`${basePath}/mocks/take/${item.examId}?retake=true`}>
                               <RefreshCw className="h-4 w-4" />
                               Qaytadan
                             </Link>
