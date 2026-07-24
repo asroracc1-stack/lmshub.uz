@@ -1,0 +1,16 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0068-reimport-reading-mock-5-layout-fix
+      author: lmshub
+      validCheckSum: ANY
+      changes:
+        - sql:
+            splitStatements: true
+            endDelimiter: ";"
+            sql: |
+              UPDATE public.exams
+              SET title = 'IELTS Reading Practice 5 (Old Layout ' || id || ')',
+                  is_active = false,
+                  status = 'ARCHIVED'
+              WHERE title LIKE 'IELTS Reading Practice 5%'
+                AND status != 'ARCHIVED';

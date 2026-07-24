@@ -133,6 +133,8 @@ databaseChangeLog:
       file: db/changelog/changes/v0066_reimport_all_reading_mocks_rawhtml.yaml
   - include:
       file: db/changelog/changes/v0067_reimport_reading_mock_4_full_text.yaml
+  - include:
+      file: db/changelog/changes/v0068_reimport_reading_mock_5_layout_fix.yaml
 
 
 
