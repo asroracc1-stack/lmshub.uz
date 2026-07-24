@@ -131,6 +131,8 @@ databaseChangeLog:
       file: db/changelog/changes/v0065_update_listening_mock_2_audio.yaml
   - include:
       file: db/changelog/changes/v0066_reimport_all_reading_mocks_rawhtml.yaml
+  - include:
+      file: db/changelog/changes/v0067_reimport_reading_mock_4_full_text.yaml
 
 
 
