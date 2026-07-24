@@ -117,6 +117,8 @@ databaseChangeLog:
       file: db/changelog/changes/v0058_force_reimport_listening_mock.yaml
   - include:
       file: db/changelog/changes/v0059_purge_and_reimport_listening_mock.yaml
+  - include:
+      file: db/changelog/changes/v0060_reimport_full_table_listening_mock.yaml
 
 
 

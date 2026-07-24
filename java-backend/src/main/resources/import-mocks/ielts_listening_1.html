@@ -9,284 +9,520 @@
       data-title="IELTS Listening Practice 1">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>IELTS Listening Practice 1</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+    --bg-color: #ffffff;
+    --text-color: #333333;
+    --border-color: #e0e0e0;
+    --frame-color: #666666;
+    --primary-color: #1e6de6;
+    --secondary-bg: #f8f9fa;
+    --correct-color: #28a745;
+    --incorrect-color: #dc3545;
+    --highlight-color: #ffe066;
+    --highlight-text-color: #333333;
+    --telegram-color: #1e6de6;
+    --font-size: 16px;
+    --input-bg: #ffffff;
+    --input-text: #333333;
+    --track-color: #dddddd;
+    --accent-color: #4a6cf7;
+}
+
+[data-theme="dark"] {
+    --bg-color: #1a1a1a;
+    --text-color: #f0f0f0;
+    --border-color: #444444;
+    --frame-color: #8a8a8a;
+    --primary-color: #4a90e2;
+    --secondary-bg: #2d2d2d;
+    --correct-color: #2ecc71;
+    --incorrect-color: #e74c3c;
+    --highlight-color: #ffd700;
+    --highlight-text-color: #000000;
+    --telegram-color: #4a90e2;
+    --input-bg: #2d2d2d;
+    --input-text: #ffffff;
+    --track-color: #4a4a4a;
+    --accent-color: #6d8bff;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    line-height: 1.4;
+    font-size: var(--font-size);
+    padding-bottom: 90px;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.main-container { margin-top: 20px; display: flex; background: var(--bg-color); padding-bottom: 100px; }
+.left-panel { width: 100%; padding: 20px; }
+
+/* ===== Notes table (Part 1) ===== */
+.notes-table { width: 100%; max-width: 780px; border-collapse: collapse; border: 1px solid var(--frame-color); margin: 0 auto 26px; }
+.notes-table td { border: none; padding: 8px 14px; vertical-align: top; line-height: 2.0; }
+.notes-table .table-title { text-align: center; font-size: 18px; font-weight: bold; padding: 14px 12px 6px; }
+.notes-table .example-cell { font-weight: bold; padding-bottom: 0; }
+.notes-table .label-cell { width: 42%; font-weight: bold; }
+.notes-table ul { list-style: none; padding-left: 0; margin: 0; }
+.notes-table li { margin-bottom: 6px; }
+.notes-table li::before { content: "\2013\00a0\00a0"; }
+
+/* ===== Framed notes (Part 4) ===== */
+.framed-notes { border: 1px solid var(--frame-color); padding: 24px 28px; max-width: 780px; margin: 0 auto; }
+.framed-notes h3 { text-align: center; font-size: 20px; margin-bottom: 18px; }
+.framed-notes .group-head { font-weight: bold; margin: 18px 0 8px; }
+.framed-notes ul { list-style: disc; padding-left: 40px; }
+.framed-notes li { margin-bottom: 12px; line-height: 2.0; }
+
+/* ===== Flow chart (Part 3) ===== */
+.flow-chart { max-width: 780px; margin: 0 auto; }
+.flow-box {
+    border: 2px solid var(--frame-color); padding: 14px 18px;
+    text-align: center; line-height: 2.0;
+}
+.flow-arrow { text-align: center; font-size: 26px; line-height: 1.2; margin: 6px 0; font-weight: bold; }
+
+/* ===== Text inputs ===== */
+.answer-input {
+    border: 1px solid #9aa3ad; border-radius: 4px;
+    background-color: var(--input-bg); color: var(--input-text);
+    padding: 4px 8px; font-size: 16px; text-align: left; margin-right: 4px;
+    width: 150px; max-width: 170px; min-width: 120px;
+    height: 28px; line-height: 1.2; vertical-align: middle;
+    font-weight: 600;
+}
+
+.multi-choice-option {
+    display: block; width: 100%; padding: 12px 14px;
+    background-color: var(--bg-color); border: 1px solid #e0e0e0;
+    margin-bottom: 5px; border-radius: 4px;
+}
+.multi-choice-option label { display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 16px; width: 100%; }
+.multi-choice-option .opt-letter { font-weight: bold; min-width: 20px; }
+
+.mcq-item { margin-bottom: 24px; }
+.mcq-item .q-stem { margin-bottom: 8px; }
+
+.question-part { margin-bottom: 40px; }
+.part-header {
+    background-color: var(--secondary-bg); padding: 15px; border-radius: 5px;
+    margin-bottom: 20px; border: 1px solid var(--border-color);
+}
+</style>
 </head>
 <body>
 
-<!-- ================= PART 1 ================= -->
-<lmshub-section data-id="part-1" data-title="Part 1" data-order="1" data-audio="https://ia600807.us.archive.org/7/items/0719_20260723/0719.MP3">
-    <lmshub-instructions>Questions 1-10. Complete the notes below. Write ONE WORD AND/OR A NUMBER for each answer.</lmshub-instructions>
-    <lmshub-passage>
-        <h2>Section 1: Incident Report</h2>
-        <p>Listen and fill in the missing information for the incident report (Questions 1-10).</p>
-        <p><strong>Name:</strong> Anna Lumley</p>
-    </lmshub-passage>
+<div class="main-container">
+    <div class="left-panel">
 
-    <lmshub-question data-id="q1" data-type="FILL_IN_BLANK" data-order="1">
-        <lmshub-text>Telephone: 1. [blank]</lmshub-text>
-        <lmshub-answer>07704123596</lmshub-answer>
-    </lmshub-question>
+        <!-- ================= PART 1 ================= -->
+        <lmshub-section data-id="part-1" data-title="Part 1" data-order="1">
+            <div class="part-header">
+                <p><strong>Section 1</strong></p>
+                <p>Listen and answer questions 1-10.</p>
+            </div>
+            <div class="questions-container">
+                <div class="question">
+                    <div class="question-prompt">
+                        <p><strong>Questions 1-10</strong></p>
+                        <p>Complete the notes below.</p>
+                        <p>Write <strong>ONE WORD ONLY</strong> for each answer.</p>
+                    </div>
 
-    <lmshub-question data-id="q2" data-type="FILL_IN_BLANK" data-order="2">
-        <lmshub-text>Date of arrival: 2. [blank]</lmshub-text>
-        <lmshub-answer>21st September</lmshub-answer>
-    </lmshub-question>
+                    <table class="notes-table">
+                        <tr><td class="table-title" colspan="2">Incident report</td></tr>
+                        <tr><td class="example-cell" colspan="2">Example</td></tr>
+                        <tr><td class="label-cell">Name:</td><td>Anna Lumley</td></tr>
+                        <tr><td class="label-cell">Telephone:</td><td>
+                            <lmshub-question data-id="q1" data-type="FILL_IN_BLANK" data-order="1">
+                                <strong>1.</strong> <input type="text" name="q1" id="q1" class="answer-input" placeholder="1" autocomplete="off">
+                                <lmshub-answer>07704123596</lmshub-answer>
+                            </lmshub-question>
+                        </td></tr>
+                        <tr><td class="label-cell">Date of arrival:</td><td>
+                            <lmshub-question data-id="q2" data-type="FILL_IN_BLANK" data-order="2">
+                                <strong>2.</strong> <input type="text" name="q2" id="q2" class="answer-input" placeholder="2" autocomplete="off">
+                                <lmshub-answer>21st September</lmshub-answer>
+                            </lmshub-question>
+                        </td></tr>
+                        <tr><td class="label-cell">Address:</td><td>235 
+                            <lmshub-question data-id="q3" data-type="FILL_IN_BLANK" data-order="3">
+                                <strong>3.</strong> <input type="text" name="q3" id="q3" class="answer-input" placeholder="3" autocomplete="off">
+                                <lmshub-answer>Clean</lmshub-answer>
+                            </lmshub-question> Road, East Sea
+                        </td></tr>
+                        <tr><td class="label-cell">The total value of insurance:</td><td>$ 
+                            <lmshub-question data-id="q4" data-type="FILL_IN_BLANK" data-order="4">
+                                <strong>4.</strong> <input type="text" name="q4" id="q4" class="answer-input" placeholder="4" autocomplete="off">
+                                <lmshub-answer>4000</lmshub-answer>
+                            </lmshub-question>
+                        </td></tr>
+                        <tr><td class="label-cell">Missing items:</td>
+                            <td>
+                                <ul>
+                                    <li>lamps and chairs (not expensive)</li>
+                                    <li>furniture and 
+                                        <lmshub-question data-id="q5" data-type="FILL_IN_BLANK" data-order="5">
+                                            <strong>5.</strong> <input type="text" name="q5" id="q5" class="answer-input" placeholder="5" autocomplete="off">
+                                            <lmshub-answer>toys</lmshub-answer>
+                                        </lmshub-question>
+                                    </li>
+                                    <li>a rocking horse, some 
+                                        <lmshub-question data-id="q6" data-type="FILL_IN_BLANK" data-order="6">
+                                            <strong>6.</strong> <input type="text" name="q6" id="q6" class="answer-input" placeholder="6" autocomplete="off">
+                                            <lmshub-answer>books</lmshub-answer>
+                                        </lmshub-question> and fruit bowls
+                                    </li>
+                                </ul>
+                            </td>
+                        </tr>
+                        <tr><td class="label-cell">Items ordered:</td>
+                            <td>
+                                <ul>
+                                    <li>a clock</li>
+                                    <li>a 
+                                        <lmshub-question data-id="q7" data-type="FILL_IN_BLANK" data-order="7">
+                                            <strong>7.</strong> <input type="text" name="q7" id="q7" class="answer-input" placeholder="7" autocomplete="off">
+                                            <lmshub-answer>mirror</lmshub-answer>
+                                        </lmshub-question>
+                                    </li>
+                                </ul>
+                            </td>
+                        </tr>
+                        <tr><td class="label-cell">Damaged items:</td>
+                            <td>
+                                <ul>
+                                    <li>the 
+                                        <lmshub-question data-id="q8" data-type="FILL_IN_BLANK" data-order="8">
+                                            <strong>8.</strong> <input type="text" name="q8" id="q8" class="answer-input" placeholder="8" autocomplete="off">
+                                            <lmshub-answer>desk</lmshub-answer>
+                                        </lmshub-question> needs to be replaced
+                                    </li>
+                                    <li>a 
+                                        <lmshub-question data-id="q9" data-type="FILL_IN_BLANK" data-order="9">
+                                            <strong>9.</strong> <input type="text" name="q9" id="q9" class="answer-input" placeholder="9" autocomplete="off">
+                                            <lmshub-answer>leg</lmshub-answer>
+                                        </lmshub-question> of one of the dining chairs is split
+                                    </li>
+                                    <li>four 
+                                        <lmshub-question data-id="q10" data-type="FILL_IN_BLANK" data-order="10">
+                                            <strong>10.</strong> <input type="text" name="q10" id="q10" class="answer-input" placeholder="10" autocomplete="off">
+                                            <lmshub-answer>plates</lmshub-answer>
+                                        </lmshub-question> were broken
+                                    </li>
+                                </ul>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </lmshub-section>
 
-    <lmshub-question data-id="q3" data-type="FILL_IN_BLANK" data-order="3">
-        <lmshub-text>Address: 235 3. [blank] Road, East Sea</lmshub-text>
-        <lmshub-answer>Oak</lmshub-answer>
-    </lmshub-question>
+        <!-- ================= PART 2 ================= -->
+        <lmshub-section data-id="part-2" data-title="Part 2" data-order="2">
+            <div class="part-header">
+                <p><strong>Section 2</strong></p>
+                <p>Listen and answer questions 11-20.</p>
+            </div>
+            <div class="questions-container">
+                <div class="question" id="grp-1112">
+                    <div class="question-prompt">
+                        <p><strong>Questions 11 and 12</strong></p>
+                        <p>Choose <strong>TWO</strong> letters, <strong>A-E</strong>.</p>
+                        <p>Which <strong>TWO</strong> characteristics of the dinosaur exhibits does the speaker highlight?</p>
+                    </div>
+                    <lmshub-question data-id="q11_12" data-type="MULTIPLE_CHOICE" data-order="11">
+                        <div class="options">
+                            <div class="multi-choice-option"><label><input type="checkbox" name="q11_12" value="C"><span class="opt-letter">C</span> interactive activities</label></div>
+                            <div class="multi-choice-option"><label><input type="checkbox" name="q11_12" value="D"><span class="opt-letter">D</span> re-creations of creatures</label></div>
+                        </div>
+                        <lmshub-answer>C, D</lmshub-answer>
+                    </lmshub-question>
+                </div>
 
-    <lmshub-question data-id="q4" data-type="FILL_IN_BLANK" data-order="4">
-        <lmshub-text>The total value of insurance: $ 4. [blank]</lmshub-text>
-        <lmshub-answer>3500</lmshub-answer>
-    </lmshub-question>
+                <div class="question">
+                    <div class="question-prompt" style="margin-top: 30px;">
+                        <p><strong>Questions 13-18</strong></p>
+                        <p>Choose the correct letter, <strong>A</strong>, <strong>B</strong> or <strong>C</strong>.</p>
+                    </div>
 
-    <lmshub-question data-id="q5" data-type="FILL_IN_BLANK" data-order="5">
-        <lmshub-text>Missing items: furniture and 5. [blank]</lmshub-text>
-        <lmshub-answer>paintings</lmshub-answer>
-    </lmshub-question>
+                    <lmshub-question data-id="q13" data-type="MULTIPLE_CHOICE" data-order="13">
+                        <p class="q-stem"><strong>13.</strong> What is special about the Under the Sea exhibit?</p>
+                        <div class="options">
+                            <div class="multi-choice-option"><label><input type="radio" name="q13" value="B"><span class="opt-letter">B</span> It contains a life-size display of a blue whale.</label></div>
+                        </div>
+                        <lmshub-answer>B</lmshub-answer>
+                    </lmshub-question>
 
-    <lmshub-question data-id="q6" data-type="FILL_IN_BLANK" data-order="6">
-        <lmshub-text>Missing items: a rocking horse, some 6. [blank] and fruit bowls</lmshub-text>
-        <lmshub-answer>mirrors</lmshub-answer>
-    </lmshub-question>
+                    <lmshub-question data-id="q14" data-type="MULTIPLE_CHOICE" data-order="14">
+                        <p class="q-stem"><strong>14.</strong> What aspect of sharks does the model display in the shark area focus on?</p>
+                        <div class="options">
+                            <div class="multi-choice-option"><label><input type="radio" name="q14" value="A"><span class="opt-letter">A</span> their nature as hunters</label></div>
+                        </div>
+                        <lmshub-answer>A</lmshub-answer>
+                    </lmshub-question>
 
-    <lmshub-question data-id="q7" data-type="FILL_IN_BLANK" data-order="7">
-        <lmshub-text>Items ordered: a clock and a 7. [blank]</lmshub-text>
-        <lmshub-answer>table</lmshub-answer>
-    </lmshub-question>
+                    <lmshub-question data-id="q15" data-type="MULTIPLE_CHOICE" data-order="15">
+                        <p class="q-stem"><strong>15.</strong> The plant life exhibits allow visitors to view displays of</p>
+                        <div class="options">
+                            <div class="multi-choice-option"><label><input type="radio" name="q15" value="B"><span class="opt-letter">B</span> flora from diverse environments.</label></div>
+                        </div>
+                        <lmshub-answer>B</lmshub-answer>
+                    </lmshub-question>
 
-    <lmshub-question data-id="q8" data-type="FILL_IN_BLANK" data-order="8">
-        <lmshub-text>Damaged items: the 8. [blank] needs to be replaced</lmshub-text>
-        <lmshub-answer>door</lmshub-answer>
-    </lmshub-question>
+                    <lmshub-question data-id="q16" data-type="MULTIPLE_CHOICE" data-order="16">
+                        <p class="q-stem"><strong>16.</strong> At the Activity zone, human development is depicted through</p>
+                        <div class="options">
+                            <div class="multi-choice-option"><label><input type="radio" name="q16" value="B"><span class="opt-letter">B</span> three-dimensional presentations.</label></div>
+                        </div>
+                        <lmshub-answer>B</lmshub-answer>
+                    </lmshub-question>
 
-    <lmshub-question data-id="q9" data-type="FILL_IN_BLANK" data-order="9">
-        <lmshub-text>Damaged items: a 9. [blank] of one of the dining chairs is split</lmshub-text>
-        <lmshub-answer>leg</lmshub-answer>
-    </lmshub-question>
+                    <lmshub-question data-id="q17" data-type="MULTIPLE_CHOICE" data-order="17">
+                        <p class="q-stem"><strong>17.</strong> Alice's biometric access system will</p>
+                        <div class="options">
+                            <div class="multi-choice-option"><label><input type="radio" name="q17" value="A"><span class="opt-letter">A</span> use drivers' thumbprints to open car locks.</label></div>
+                        </div>
+                        <lmshub-answer>A</lmshub-answer>
+                    </lmshub-question>
 
-    <lmshub-question data-id="q10" data-type="FILL_IN_BLANK" data-order="10">
-        <lmshub-text>Damaged items: four 10. [blank] were broken</lmshub-text>
-        <lmshub-answer>glasses</lmshub-answer>
-    </lmshub-question>
-</lmshub-section>
+                    <lmshub-question data-id="q18" data-type="MULTIPLE_CHOICE" data-order="18">
+                        <p class="q-stem"><strong>18.</strong> The sponsorship from the university includes</p>
+                        <div class="options">
+                            <div class="multi-choice-option"><label><input type="radio" name="q18" value="A"><span class="opt-letter">A</span> financial support.</label></div>
+                        </div>
+                        <lmshub-answer>A</lmshub-answer>
+                    </lmshub-question>
+                </div>
 
-<!-- ================= PART 2 ================= -->
-<lmshub-section data-id="part-2" data-title="Part 2" data-order="2" data-audio="https://ia600807.us.archive.org/7/items/0719_20260723/0719.MP3">
-    <lmshub-instructions>Questions 11-20. Listen and answer the multiple-choice questions.</lmshub-instructions>
-    <lmshub-passage>
-        <h2>Section 2: Exhibition Center Tour</h2>
-        <p>Listen to the guide talking about dinosaur, marine, and plant life exhibits.</p>
-    </lmshub-passage>
+                <div class="question" id="grp-1920">
+                    <div class="question-prompt" style="margin-top: 30px;">
+                        <p><strong>Questions 19 and 20</strong></p>
+                        <p>Choose <strong>TWO</strong> letters, <strong>A-E</strong>.</p>
+                        <p>Which <strong>TWO</strong> characteristics of the proposal have specific requirements?</p>
+                    </div>
+                    <lmshub-question data-id="q19_20" data-type="MULTIPLE_CHOICE" data-order="19">
+                        <div class="options">
+                            <div class="multi-choice-option"><label><input type="checkbox" name="q19_20" value="A"><span class="opt-letter">A</span> length</label></div>
+                            <div class="multi-choice-option"><label><input type="checkbox" name="q19_20" value="C"><span class="opt-letter">C</span> file format</label></div>
+                        </div>
+                        <lmshub-answer>A, C</lmshub-answer>
+                    </lmshub-question>
+                </div>
+            </div>
+        </lmshub-section>
 
-    <lmshub-question data-id="q11" data-type="MULTIPLE_CHOICE" data-order="11">
-        <lmshub-text>Which TWO characteristics of the dinosaur exhibits does the speaker highlight? (Select first option)</lmshub-text>
-        <lmshub-option data-label="A">bone displays</lmshub-option>
-        <lmshub-option data-label="B">posted drawings</lmshub-option>
-        <lmshub-option data-label="C" data-correct="true">interactive activities</lmshub-option>
-        <lmshub-option data-label="D">re-creations of creatures</lmshub-option>
-        <lmshub-option data-label="E">explanatory timelines</lmshub-option>
-    </lmshub-question>
+        <!-- ================= PART 3 ================= -->
+        <lmshub-section data-id="part-3" data-title="Part 3" data-order="3">
+            <div class="part-header">
+                <p><strong>Section 3</strong></p>
+                <p>Listen and answer questions 21-30.</p>
+            </div>
+            <div class="questions-container">
+                <div class="question">
+                    <div class="question-prompt">
+                        <p><strong>Questions 21-25</strong></p>
+                        <p>Choose the correct letter, <strong>A</strong>, <strong>B</strong> or <strong>C</strong>.</p>
+                    </div>
 
-    <lmshub-question data-id="q12" data-type="MULTIPLE_CHOICE" data-order="12">
-        <lmshub-text>Which TWO characteristics of the dinosaur exhibits does the speaker highlight? (Select second option)</lmshub-text>
-        <lmshub-option data-label="A">bone displays</lmshub-option>
-        <lmshub-option data-label="B">posted drawings</lmshub-option>
-        <lmshub-option data-label="C">interactive activities</lmshub-option>
-        <lmshub-option data-label="D" data-correct="true">re-creations of creatures</lmshub-option>
-        <lmshub-option data-label="E">explanatory timelines</lmshub-option>
-    </lmshub-question>
+                    <lmshub-question data-id="q21" data-type="MULTIPLE_CHOICE" data-order="21">
+                        <p class="q-stem"><strong>21.</strong> Which topics does the speaker say he will talk about first?</p>
+                        <div class="options">
+                            <div class="multi-choice-option"><label><input type="radio" name="q21" value="B"><span class="opt-letter">B</span> the origin and effects of dioxins</label></div>
+                        </div>
+                        <lmshub-answer>B</lmshub-answer>
+                    </lmshub-question>
 
-    <lmshub-question data-id="q13" data-type="MULTIPLE_CHOICE" data-order="13">
-        <lmshub-text>What is special about the Under the Sea exhibit?</lmshub-text>
-        <lmshub-option data-label="A">It shows how dolphins swim by using models.</lmshub-option>
-        <lmshub-option data-label="B" data-correct="true">It contains a life-size display of a blue whale.</lmshub-option>
-        <lmshub-option data-label="C">It compares the evolution of fish and other species.</lmshub-option>
-    </lmshub-question>
+                    <lmshub-question data-id="q22" data-type="MULTIPLE_CHOICE" data-order="22">
+                        <p class="q-stem"><strong>22.</strong> The 'Dirty Dozen' is a group of chemicals which is very</p>
+                        <div class="options">
+                            <div class="multi-choice-option"><label><input type="radio" name="q22" value="A"><span class="opt-letter">A</span> dangerous to the environment.</label></div>
+                        </div>
+                        <lmshub-answer>A</lmshub-answer>
+                    </lmshub-question>
 
-    <lmshub-question data-id="q14" data-type="MULTIPLE_CHOICE" data-order="14">
-        <lmshub-text>What aspect of sharks does the model display in the shark area focus on?</lmshub-text>
-        <lmshub-option data-label="A" data-correct="true">their nature as hunters</lmshub-option>
-        <lmshub-option data-label="B">how they raise infants</lmshub-option>
-        <lmshub-option data-label="C">their cycle of life</lmshub-option>
-    </lmshub-question>
+                    <lmshub-question data-id="q23" data-type="MULTIPLE_CHOICE" data-order="23">
+                        <p class="q-stem"><strong>23.</strong> Dioxins can be created by a number of human activities including</p>
+                        <div class="options">
+                            <div class="multi-choice-option"><label><input type="radio" name="q23" value="B"><span class="opt-letter">B</span> the burning of trash.</label></div>
+                        </div>
+                        <lmshub-answer>B</lmshub-answer>
+                    </lmshub-question>
 
-    <lmshub-question data-id="q15" data-type="MULTIPLE_CHOICE" data-order="15">
-        <lmshub-text>The plant life exhibits allow visitors to view displays of</lmshub-text>
-        <lmshub-option data-label="A">gardening mechanics.</lmshub-option>
-        <lmshub-option data-label="B" data-correct="true">flora from diverse environments.</lmshub-option>
-        <lmshub-option data-label="C">rare wildflower seeds.</lmshub-option>
-    </lmshub-question>
+                    <lmshub-question data-id="q24" data-type="MULTIPLE_CHOICE" data-order="24">
+                        <p class="q-stem"><strong>24.</strong> Most of human exposure to dioxins</p>
+                        <div class="options">
+                            <div class="multi-choice-option"><label><input type="radio" name="q24" value="A"><span class="opt-letter">A</span> is from the food they consume.</label></div>
+                        </div>
+                        <lmshub-answer>A</lmshub-answer>
+                    </lmshub-question>
 
-    <lmshub-question data-id="q16" data-type="MULTIPLE_CHOICE" data-order="16">
-        <lmshub-text>At the Activity zone, human development is depicted through</lmshub-text>
-        <lmshub-option data-label="A">movie screenings.</lmshub-option>
-        <lmshub-option data-label="B" data-correct="true">three-dimensional presentations.</lmshub-option>
-        <lmshub-option data-label="C">staged demonstrations.</lmshub-option>
-    </lmshub-question>
+                    <lmshub-question data-id="q25" data-type="MULTIPLE_CHOICE" data-order="25">
+                        <p class="q-stem"><strong>25.</strong> High levels of dioxins in poultry</p>
+                        <div class="options">
+                            <div class="multi-choice-option"><label><input type="radio" name="q25" value="B"><span class="opt-letter">B</span> were caused by the food given to animals.</label></div>
+                        </div>
+                        <lmshub-answer>B</lmshub-answer>
+                    </lmshub-question>
+                </div>
 
-    <lmshub-question data-id="q17" data-type="MULTIPLE_CHOICE" data-order="17">
-        <lmshub-text>Alice's biometric access system will</lmshub-text>
-        <lmshub-option data-label="A" data-correct="true">use drivers' thumbprints to open car locks.</lmshub-option>
-        <lmshub-option data-label="B">scan the driver's eyes to unlock the car.</lmshub-option>
-        <lmshub-option data-label="C">turn on the ignition when someone sits in the car.</lmshub-option>
-    </lmshub-question>
+                <div class="question">
+                    <div class="question-prompt" style="margin-top: 30px;">
+                        <p><strong>Questions 26-30</strong></p>
+                        <p>Complete the flow chart below.</p>
+                        <p>Write <strong>ONE WORD ONLY</strong> for each answer.</p>
+                    </div>
 
-    <lmshub-question data-id="q18" data-type="MULTIPLE_CHOICE" data-order="18">
-        <lmshub-text>The sponsorship from the university includes</lmshub-text>
-        <lmshub-option data-label="A" data-correct="true">financial support.</lmshub-option>
-        <lmshub-option data-label="B">personal advising.</lmshub-option>
-        <lmshub-option data-label="C">laboratory training.</lmshub-option>
-    </lmshub-question>
+                    <div class="flow-chart">
+                        <div class="flow-box">Wrasse fish get together 
+                            <lmshub-question data-id="q26" data-type="FILL_IN_BLANK" data-order="26">
+                                <strong>26.</strong> <input type="text" name="q26" id="q26" class="answer-input" placeholder="26" autocomplete="off">
+                                <lmshub-answer>above</lmshub-answer>
+                            </lmshub-question> the reef and wait for other fish.
+                        </div>
+                        <div class="flow-arrow">&#11015;</div>
+                        <div class="flow-box">Wrasse fish come towards the moray eels when they are 
+                            <lmshub-question data-id="q27" data-type="FILL_IN_BLANK" data-order="27">
+                                <strong>27.</strong> <input type="text" name="q27" id="q27" class="answer-input" placeholder="27" autocomplete="off">
+                                <lmshub-answer>resting</lmshub-answer>
+                            </lmshub-question>
+                        </div>
+                        <div class="flow-arrow">&#11015;</div>
+                        <div class="flow-box">The cleaner fish eat parasites and 
+                            <lmshub-question data-id="q28" data-type="FILL_IN_BLANK" data-order="28">
+                                <strong>28.</strong> <input type="text" name="q28" id="q28" class="answer-input" placeholder="28" autocomplete="off">
+                                <lmshub-answer>bacteria</lmshub-answer>
+                            </lmshub-question> from the eels' gills.
+                        </div>
+                        <div class="flow-arrow">&#11015;</div>
+                        <div class="flow-box">Dead 
+                            <lmshub-question data-id="q29" data-type="FILL_IN_BLANK" data-order="29">
+                                <strong>29.</strong> <input type="text" name="q29" id="q29" class="answer-input" placeholder="29" autocomplete="off">
+                                <lmshub-answer>tissue</lmshub-answer>
+                            </lmshub-question> are picked off the eels by the wrasse fish.
+                        </div>
+                        <div class="flow-arrow">&#11015;</div>
+                        <div class="flow-box">The eels allow the wrasse fish to clean the interiors of their 
+                            <lmshub-question data-id="q30" data-type="FILL_IN_BLANK" data-order="30">
+                                <strong>30.</strong> <input type="text" name="q30" id="q30" class="answer-input" placeholder="30" autocomplete="off">
+                                <lmshub-answer>mouths</lmshub-answer>
+                            </lmshub-question>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </lmshub-section>
 
-    <lmshub-question data-id="q19" data-type="MULTIPLE_CHOICE" data-order="19">
-        <lmshub-text>Which TWO characteristics of the proposal have specific requirements? (Select first option)</lmshub-text>
-        <lmshub-option data-label="A" data-correct="true">length</lmshub-option>
-        <lmshub-option data-label="B">punctuation</lmshub-option>
-        <lmshub-option data-label="C">file format</lmshub-option>
-        <lmshub-option data-label="D">graphics</lmshub-option>
-        <lmshub-option data-label="E">references</lmshub-option>
-    </lmshub-question>
+        <!-- ================= PART 4 ================= -->
+        <lmshub-section data-id="part-4" data-title="Part 4" data-order="4">
+            <div class="part-header">
+                <p><strong>Section 4</strong></p>
+                <p>Listen and answer questions 31-40.</p>
+            </div>
+            <div class="questions-container">
+                <div class="question">
+                    <div class="question-prompt">
+                        <p><strong>Questions 31-40</strong></p>
+                        <p>Complete the notes below.</p>
+                        <p>Write <strong>ONE WORD ONLY</strong> for each answer.</p>
+                    </div>
 
-    <lmshub-question data-id="q20" data-type="MULTIPLE_CHOICE" data-order="20">
-        <lmshub-text>Which TWO characteristics of the proposal have specific requirements? (Select second option)</lmshub-text>
-        <lmshub-option data-label="A">length</lmshub-option>
-        <lmshub-option data-label="B">punctuation</lmshub-option>
-        <lmshub-option data-label="C" data-correct="true">file format</lmshub-option>
-        <lmshub-option data-label="D">graphics</lmshub-option>
-        <lmshub-option data-label="E">references</lmshub-option>
-    </lmshub-question>
-</lmshub-section>
+                    <div class="framed-notes">
+                        <h3>HISTORY AND DEVELOPMENT OF RAILWAYS</h3>
 
-<!-- ================= PART 3 ================= -->
-<lmshub-section data-id="part-3" data-title="Part 3" data-order="3" data-audio="https://ia600807.us.archive.org/7/items/0719_20260723/0719.MP3">
-    <lmshub-instructions>Questions 21-30. Listen and answer Questions 21-25 and complete the Flow Chart 26-30.</lmshub-instructions>
-    <lmshub-passage>
-        <h2>Section 3: Dioxins and Marine Biology</h2>
-        <p>Listen to a lecture about environmental chemicals and the cleaner wrasse fish relationship with moray eels.</p>
-    </lmshub-passage>
+                        <p class="group-head">Railway development in Great Britain</p>
+                        <ul>
+                            <li>The first locomotive invented by Richard Trevithick was not a 
+                                <lmshub-question data-id="q31" data-type="FILL_IN_BLANK" data-order="31">
+                                    <strong>31.</strong> <input type="text" name="q31" id="q31" class="answer-input" placeholder="31" autocomplete="off">
+                                    <lmshub-answer>commercial</lmshub-answer>
+                                </lmshub-question> success.
+                            </li>
+                            <li>Large-scale rail construction began in the UK in the 1830s due to industrialisation. Industrial areas needed 
+                                <lmshub-question data-id="q32" data-type="FILL_IN_BLANK" data-order="32">
+                                    <strong>32.</strong> <input type="text" name="q32" id="q32" class="answer-input" placeholder="32" autocomplete="off">
+                                    <lmshub-answer>connections</lmshub-answer>
+                                </lmshub-question> to port cities, which trains provided cheaply and quickly.
+                            </li>
+                        </ul>
 
-    <lmshub-question data-id="q21" data-type="MULTIPLE_CHOICE" data-order="21">
-        <lmshub-text>Which topics does the speaker say he will talk about first?</lmshub-text>
-        <lmshub-option data-label="A">how to limit the dioxins we consume</lmshub-option>
-        <lmshub-option data-label="B" data-correct="true">the origin and effects of dioxins</lmshub-option>
-        <lmshub-option data-label="C">why people in the US don't know about dioxins</lmshub-option>
-    </lmshub-question>
+                        <p class="group-head">Global expansion of railway systems</p>
+                        <ul>
+                            <li>Global railway construction allowed 
+                                <lmshub-question data-id="q33" data-type="FILL_IN_BLANK" data-order="33">
+                                    <strong>33.</strong> <input type="text" name="q33" id="q33" class="answer-input" placeholder="33" autocomplete="off">
+                                    <lmshub-answer>international</lmshub-answer>
+                                </lmshub-question> trade to grow rapidly. Rapid railway development occurred in North America in the 19th century.
+                            </li>
+                            <li>
+                                <lmshub-question data-id="q34" data-type="FILL_IN_BLANK" data-order="34">
+                                    <strong>34.</strong> <input type="text" name="q34" id="q34" class="answer-input" placeholder="34" autocomplete="off">
+                                    <lmshub-answer>Gold</lmshub-answer>
+                                </lmshub-question> discovery in the West provided further motivation for building railroads across the continent.
+                            </li>
+                        </ul>
 
-    <lmshub-question data-id="q22" data-type="MULTIPLE_CHOICE" data-order="22">
-        <lmshub-text>The 'Dirty Dozen' is a group of chemicals which is very</lmshub-text>
-        <lmshub-option data-label="A" data-correct="true">dangerous to the environment.</lmshub-option>
-        <lmshub-option data-label="B">instrumental in harming food production.</lmshub-option>
-        <lmshub-option data-label="C">common in nature.</lmshub-option>
-    </lmshub-question>
+                        <p class="group-head">Historic occasions affecting railways</p>
+                        <ul>
+                            <li>Introduced in 1912, diesel fuel allowed locomotives to transport larger weights much faster.</li>
+                            <li>Extremely long journeys could now be made in a few 
+                                <lmshub-question data-id="q35" data-type="FILL_IN_BLANK" data-order="35">
+                                    <strong>35.</strong> <input type="text" name="q35" id="q35" class="answer-input" placeholder="35" autocomplete="off">
+                                    <lmshub-answer>days</lmshub-answer>
+                                </lmshub-question>
+                            </li>
+                            <li>Railways were military 
+                                <lmshub-question data-id="q36" data-type="FILL_IN_BLANK" data-order="36">
+                                    <strong>36.</strong> <input type="text" name="q36" id="q36" class="answer-input" placeholder="36" autocomplete="off">
+                                    <lmshub-answer>targets</lmshub-answer>
+                                </lmshub-question> during the two world wars and were rebuilt afterward.
+                            </li>
+                        </ul>
 
-    <lmshub-question data-id="q23" data-type="MULTIPLE_CHOICE" data-order="23">
-        <lmshub-text>Dioxins can be created by a number of human activities including</lmshub-text>
-        <lmshub-option data-label="A">the use of chemical pesticides on farms.</lmshub-option>
-        <lmshub-option data-label="B" data-correct="true">the burning of trash.</lmshub-option>
-        <lmshub-option data-label="C">the burying garbage.</lmshub-option>
-    </lmshub-question>
+                        <p class="group-head">Reasons for growth in train transport</p>
+                        <ul>
+                            <li>
+                                <lmshub-question data-id="q37" data-type="FILL_IN_BLANK" data-order="37">
+                                    <strong>37.</strong> <input type="text" name="q37" id="q37" class="answer-input" placeholder="37" autocomplete="off">
+                                    <lmshub-answer>Manufacturers</lmshub-answer>
+                                </lmshub-question> needed a more efficient way of moving their goods during periods of industrialisation.
+                            </li>
+                            <li>Railways also allowed some Europeans to manage their 
+                                <lmshub-question data-id="q38" data-type="FILL_IN_BLANK" data-order="38">
+                                    <strong>38.</strong> <input type="text" name="q38" id="q38" class="answer-input" placeholder="38" autocomplete="off">
+                                    <lmshub-answer>empires</lmshub-answer>
+                                </lmshub-question>
+                            </li>
+                        </ul>
 
-    <lmshub-question data-id="q24" data-type="MULTIPLE_CHOICE" data-order="24">
-        <lmshub-text>Most of human exposure to dioxins</lmshub-text>
-        <lmshub-option data-label="A" data-correct="true">is from the food they consume.</lmshub-option>
-        <lmshub-option data-label="B">comes from contaminated soil.</lmshub-option>
-        <lmshub-option data-label="C">results from handling pesticides and herbicides.</lmshub-option>
-    </lmshub-question>
-
-    <lmshub-question data-id="q25" data-type="MULTIPLE_CHOICE" data-order="25">
-        <lmshub-text>High levels of dioxins in poultry</lmshub-text>
-        <lmshub-option data-label="A">were traced back to Belgium.</lmshub-option>
-        <lmshub-option data-label="B" data-correct="true">were caused by the food given to animals.</lmshub-option>
-        <lmshub-option data-label="C">were the result of hazardous waste.</lmshub-option>
-    </lmshub-question>
-
-    <lmshub-question data-id="q26" data-type="FILL_IN_BLANK" data-order="26">
-        <lmshub-text>Flow Chart: Wrasse fish get together 26. [blank] the reef and wait for other fish.</lmshub-text>
-        <lmshub-answer>above</lmshub-answer>
-    </lmshub-question>
-
-    <lmshub-question data-id="q27" data-type="FILL_IN_BLANK" data-order="27">
-        <lmshub-text>Flow Chart: Wrasse fish come towards the moray eels when they are 27. [blank]</lmshub-text>
-        <lmshub-answer>resting</lmshub-answer>
-    </lmshub-question>
-
-    <lmshub-question data-id="q28" data-type="FILL_IN_BLANK" data-order="28">
-        <lmshub-text>Flow Chart: The cleaner fish eat parasites and 28. [blank] from the eels' gills.</lmshub-text>
-        <lmshub-answer>bacteria</lmshub-answer>
-    </lmshub-question>
-
-    <lmshub-question data-id="q29" data-type="FILL_IN_BLANK" data-order="29">
-        <lmshub-text>Flow Chart: Dead 29. [blank] are picked off the eels by the wrasse fish.</lmshub-text>
-        <lmshub-answer>skin</lmshub-answer>
-    </lmshub-question>
-
-    <lmshub-question data-id="q30" data-type="FILL_IN_BLANK" data-order="30">
-        <lmshub-text>Flow Chart: The eels allow the wrasse fish to clean the interiors of their 30. [blank]</lmshub-text>
-        <lmshub-answer>mouths</lmshub-answer>
-    </lmshub-question>
-</lmshub-section>
-
-<!-- ================= PART 4 ================= -->
-<lmshub-section data-id="part-4" data-title="Part 4" data-order="4" data-audio="https://ia600807.us.archive.org/7/items/0719_20260723/0719.MP3">
-    <lmshub-instructions>Questions 31-40. Complete the notes below. Write ONE WORD ONLY for each answer.</lmshub-instructions>
-    <lmshub-passage>
-        <h2>Section 4: History and Development of Railways</h2>
-        <p>Listen to a talk about the origin, expansion, and environmental future of railway systems.</p>
-    </lmshub-passage>
-
-    <lmshub-question data-id="q31" data-type="FILL_IN_BLANK" data-order="31">
-        <lmshub-text>The first locomotive invented by Richard Trevithick was not a 31. [blank] success.</lmshub-text>
-        <lmshub-answer>commercial</lmshub-answer>
-    </lmshub-question>
-
-    <lmshub-question data-id="q32" data-type="FILL_IN_BLANK" data-order="32">
-        <lmshub-text>Industrial areas needed 32. [blank] to port cities, which trains provided cheaply and quickly.</lmshub-text>
-        <lmshub-answer>connections</lmshub-answer>
-    </lmshub-question>
-
-    <lmshub-question data-id="q33" data-type="FILL_IN_BLANK" data-order="33">
-        <lmshub-text>Global railway construction allowed 33. [blank] trade to grow rapidly.</lmshub-text>
-        <lmshub-answer>international</lmshub-answer>
-    </lmshub-question>
-
-    <lmshub-question data-id="q34" data-type="FILL_IN_BLANK" data-order="34">
-        <lmshub-text>34. [blank] discovery in the West provided further motivation for building railroads across the continent.</lmshub-text>
-        <lmshub-answer>Gold</lmshub-answer>
-    </lmshub-question>
-
-    <lmshub-question data-id="q35" data-type="FILL_IN_BLANK" data-order="35">
-        <lmshub-text>Extremely long journeys could now be made in a few 35. [blank]</lmshub-text>
-        <lmshub-answer>days</lmshub-answer>
-    </lmshub-question>
-
-    <lmshub-question data-id="q36" data-type="FILL_IN_BLANK" data-order="36">
-        <lmshub-text>Railways were military 36. [blank] during the two world wars and were rebuilt afterward.</lmshub-text>
-        <lmshub-answer>targets</lmshub-answer>
-    </lmshub-question>
-
-    <lmshub-question data-id="q37" data-type="FILL_IN_BLANK" data-order="37">
-        <lmshub-text>37. [blank] needed a more efficient way of moving their goods during periods of industrialisation.</lmshub-text>
-        <lmshub-answer>Factories</lmshub-answer>
-    </lmshub-question>
-
-    <lmshub-question data-id="q38" data-type="FILL_IN_BLANK" data-order="38">
-        <lmshub-text>Railways also allowed some Europeans to manage their 38. [blank]</lmshub-text>
-        <lmshub-answer>colonies</lmshub-answer>
-    </lmshub-question>
-
-    <lmshub-question data-id="q39" data-type="FILL_IN_BLANK" data-order="39">
-        <lmshub-text>The fuels used for trains are now 39. [blank] and better for the environment.</lmshub-text>
-        <lmshub-answer>cleaner</lmshub-answer>
-    </lmshub-question>
-
-    <lmshub-question data-id="q40" data-type="FILL_IN_BLANK" data-order="40">
-        <lmshub-text>The rapid improvement of 40. [blank] railway networks in several continents made rail highly popular.</lmshub-text>
-        <lmshub-answer>high-speed</lmshub-answer>
-    </lmshub-question>
-</lmshub-section>
+                        <p class="group-head">Current trains and railway systems</p>
+                        <ul>
+                            <li>The fuels used for trains are now 
+                                <lmshub-question data-id="q39" data-type="FILL_IN_BLANK" data-order="39">
+                                    <strong>39.</strong> <input type="text" name="q39" id="q39" class="answer-input" placeholder="39" autocomplete="off">
+                                    <lmshub-answer>cleaner</lmshub-answer>
+                                </lmshub-question> and better for the environment.
+                            </li>
+                            <li>The rapid improvement of 
+                                <lmshub-question data-id="q40" data-type="FILL_IN_BLANK" data-order="40">
+                                    <strong>40.</strong> <input type="text" name="q40" id="q40" class="answer-input" placeholder="40" autocomplete="off">
+                                    <lmshub-answer>high-speed</lmshub-answer>
+                                </lmshub-question> railway networks in several continents made rail highly popular.
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </lmshub-section>
+    </div>
+</div>
 
 </body>
 </html>

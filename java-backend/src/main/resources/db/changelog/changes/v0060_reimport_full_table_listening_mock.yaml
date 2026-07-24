@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0060-reimport-full-table-listening-mock
+      author: lmshub
+      validCheckSum: ANY
+      changes:
+        - sql:
+            splitStatements: true
+            endDelimiter: ";"
+            sql: |
+              UPDATE public.exams
+              SET title = 'IELTS Listening Practice 1 (Old Spec ' || id || ')',
+                  is_active = false,
+                  status = 'ARCHIVED'
+              WHERE title LIKE 'IELTS Listening Practice 1%';
