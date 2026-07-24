@@ -54,6 +54,7 @@ public class LmsHubHtmlParser implements ExamParser {
     public ParseResult parse(byte[] fileBytes, String fileName) throws Exception {
         ParseResult result = new ParseResult();
         String html = new String(fileBytes, StandardCharsets.UTF_8);
+        result.setRawHtml(html);
         Document doc = Jsoup.parse(html);
 
         // ── 1. Exam-level metadata ─────────────────────────────────────────────

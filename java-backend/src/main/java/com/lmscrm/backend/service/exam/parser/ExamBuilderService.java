@@ -64,6 +64,7 @@ public class ExamBuilderService {
                 .status("PUBLISHED")
                 .version(1)
                 .audioUrl(audioUrl)
+                .rawHtml(result.getRawHtml())
                 .requiredPack(result.getRequiredPack() != null ? result.getRequiredPack() : "free")
                 .difficulty(result.getDifficulty() != null ? result.getDifficulty() : "medium")
                 .createdBy(createdBy)

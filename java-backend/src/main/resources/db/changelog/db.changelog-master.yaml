@@ -115,6 +115,8 @@ databaseChangeLog:
       file: db/changelog/changes/v0057_restore_archived_legacy_exam_titles.yaml
   - include:
       file: db/changelog/changes/v0058_force_reimport_listening_mock.yaml
+  - include:
+      file: db/changelog/changes/v0059_purge_and_reimport_listening_mock.yaml
 
 
 
