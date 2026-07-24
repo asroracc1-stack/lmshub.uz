@@ -66,12 +66,43 @@ public class StudentAttemptService {
             throw new BusinessException("Exam has already ended");
         }
 
+        // 1. Resume an already-started (unfinished) attempt
         java.util.Optional<StudentAttempt> activeOpt = attemptRepository.findActiveAttempt(examId, student.getId());
         if (activeOpt.isPresent()) {
-            // Resume existing active attempt
             return mapper.toStudentAttemptDto(activeOpt.get());
         }
 
+        // 2. Retake: reset an existing finished attempt instead of inserting a new row
+        //    (inserting would violate the UNIQUE (exam_id, student_id) constraint)
+        java.util.Optional<StudentAttempt> existingOpt = attemptRepository.findByExamIdAndStudentId(examId, student.getId());
+        if (existingOpt.isPresent()) {
+            StudentAttempt existing = existingOpt.get();
+
+            // Clear previous answers
+            answerRepository.deleteByAttemptId(existing.getId());
+
+            // Reset attempt fields for a fresh retake
+            existing.setFinishedAt(null);
+            existing.setStartedAt(LocalDateTime.now());
+            existing.setAttemptSeed(java.util.UUID.randomUUID().toString());
+            existing.setTotalScore(null);
+            existing.setMaxScore(null);
+            existing.setOverallBand(null);
+            existing.setIsPassed(null);
+            existing.setTimeUsedSeconds(null);
+            existing.setAiCoachFeedback(null);
+            existing.setPredictedScore(null);
+            existing.setAutoSubmitted(false);
+            existing.setRewardGranted(false);
+            existing = attemptRepository.save(existing);
+
+            // Re-generate question snapshot for this retake
+            runtimeExamGenerator.generateExamQuestions(exam, existing);
+
+            return mapper.toStudentAttemptDto(existing);
+        }
+
+        // 3. First time: create a brand-new attempt
         String attemptSeed = java.util.UUID.randomUUID().toString();
 
         StudentAttempt attempt = StudentAttempt.builder()
