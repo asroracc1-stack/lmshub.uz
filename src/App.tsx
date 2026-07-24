@@ -192,7 +192,9 @@ const TelegramLinksPage = lazy(() => import("./pages/super-admin/TelegramLinks")
 const PMGrantCoins = lazy(() => import("./pages/pack-manager/GrantCoins"));
 const AdventureMapFull = lazy(() => import("./pages/student/Map/AdvancedAdventureMap"));
 const GamificationAdmin = lazy(() => import("./pages/admin/GamificationAdmin"));
-const ReadingHistory = lazy(() => import("./pages/user/ReadingHistory"));
+const ReadingHistory = lazy(() => import("./pages/user/ReadingHistory").then(m => ({ default: m.ReadingHistory })));
+const ListeningHistory = lazy(() => import("./pages/user/ListeningHistory").then(m => ({ default: m.ListeningHistory })));
+const WritingHistory = lazy(() => import("./pages/user/WritingHistory").then(m => ({ default: m.WritingHistory })));
 
 // Vocabulary Module Pages
 const VocabularyHome = lazy(() => import("./features/vocabulary/pages/VocabularyHome"));
@@ -478,6 +480,8 @@ const AppRoutes = () => {
           <Route path="mocks" element={<MockTests basePath="/user" />} />
           <Route path="mocks/c/:kind" element={<MockCategory basePath="/user" />} />
           <Route path="reading/history" element={<ReadingHistory basePath="/user" />} />
+          <Route path="listening/history" element={<ListeningHistory />} />
+          <Route path="writing/history" element={<WritingHistory />} />
           <Route path="mocks/take/:testId" element={<MockTake />} />
           <Route path="sat" element={<Navigate to="/user/mocks/c/sat" replace />} />
           <Route path="national-cert" element={<Navigate to="/user/mocks/c/national_cert" replace />} />

@@ -483,7 +483,17 @@ public class StudentAttemptService {
 
     @Transactional(readOnly = true)
     public Page<ReadingHistoryItemDto> getReadingHistory(User student, Pageable pageable) {
-        Page<StudentAttempt> page = attemptRepository.findCompletedAttemptsPage(student.getId(), ExamType.READING, pageable);
+        return getExamHistory(student, ExamType.READING, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public ReadingStatisticsDto getReadingStatistics(User student) {
+        return getExamStatistics(student, ExamType.READING);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ReadingHistoryItemDto> getExamHistory(User student, ExamType type, Pageable pageable) {
+        Page<StudentAttempt> page = attemptRepository.findCompletedAttemptsPage(student.getId(), type, pageable);
         return page.map(sa -> {
             Exam exam = sa.getExam();
             String passageTitle = "";
@@ -492,6 +502,12 @@ public class StudentAttemptService {
             } else {
                 passageTitle = exam.getTitle();
             }
+            int totalQ = (sa.getMaxScore() != null && sa.getMaxScore() > 0) 
+                    ? sa.getMaxScore() 
+                    : (exam.getQuestions() != null && !exam.getQuestions().isEmpty() ? exam.getQuestions().size() : 40);
+            int correctQ = sa.getTotalScore() != null ? sa.getTotalScore() : 0;
+            double band = sa.getOverallBand() != null ? sa.getOverallBand() : IeltsGradingUtils.rawToBand(type.name(), correctQ, totalQ);
+
             return ReadingHistoryItemDto.builder()
                     .attemptId(sa.getId())
                     .examId(exam.getId())
@@ -501,18 +517,18 @@ public class StudentAttemptService {
                     .durationMinutes(exam.getDurationMinutes())
                     .difficulty(exam.getDifficulty())
                     .partType("full")
-                    .correctAnswers(sa.getTotalScore())
-                    .totalQuestions(sa.getMaxScore())
-                    .overallBand(sa.getOverallBand())
+                    .correctAnswers(correctQ)
+                    .totalQuestions(totalQ)
+                    .overallBand(band)
                     .build();
         });
     }
 
     @Transactional(readOnly = true)
-    public ReadingStatisticsDto getReadingStatistics(User student) {
+    public ReadingStatisticsDto getExamStatistics(User student, ExamType type) {
         UUID studentId = student.getId();
-        long totalStarted = attemptRepository.countByStudentIdAndExamType(studentId, ExamType.READING);
-        List<StudentAttempt> completed = attemptRepository.findCompletedAttemptsList(studentId, ExamType.READING);
+        long totalStarted = attemptRepository.countByStudentIdAndExamType(studentId, type);
+        List<StudentAttempt> completed = attemptRepository.findCompletedAttemptsList(studentId, type);
 
         if (completed.isEmpty()) {
             return ReadingStatisticsDto.builder()
@@ -534,9 +550,15 @@ public class StudentAttemptService {
         long sumTimeSeconds = 0;
 
         for (StudentAttempt sa : completed) {
-            totalCorrect += sa.getTotalScore() != null ? sa.getTotalScore() : 0;
-            totalQuestions += sa.getMaxScore() != null ? sa.getMaxScore() : 0;
-            double band = sa.getOverallBand() != null ? sa.getOverallBand() : 0.0;
+            Exam exam = sa.getExam();
+            int totalQ = (sa.getMaxScore() != null && sa.getMaxScore() > 0) 
+                    ? sa.getMaxScore() 
+                    : (exam.getQuestions() != null && !exam.getQuestions().isEmpty() ? exam.getQuestions().size() : 40);
+            int correctQ = sa.getTotalScore() != null ? sa.getTotalScore() : 0;
+            double band = sa.getOverallBand() != null ? sa.getOverallBand() : IeltsGradingUtils.rawToBand(type.name(), correctQ, totalQ);
+
+            totalCorrect += correctQ;
+            totalQuestions += totalQ;
             sumBand += band;
             if (band > maxBand) {
                 maxBand = band;
@@ -545,10 +567,10 @@ public class StudentAttemptService {
         }
 
         double avgBand = sumBand / completed.size();
-        double roundedBand = Math.round(avgBand * 2.0) / 2.0; // Round to nearest 0.5
+        double roundedBand = Math.round(avgBand * 2.0) / 2.0;
 
         double accuracy = totalQuestions > 0 ? (totalCorrect * 100.0 / totalQuestions) : 0.0;
-        accuracy = Math.round(accuracy * 10.0) / 10.0; // 1 decimal place
+        accuracy = Math.round(accuracy * 10.0) / 10.0;
 
         int avgTimeMin = (int) ((sumTimeSeconds / completed.size()) / 60);
 

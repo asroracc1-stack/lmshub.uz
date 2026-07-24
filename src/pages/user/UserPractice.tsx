@@ -633,7 +633,7 @@ export default function UserPractice() {
                     </div>
 
                     {/* Start practice 3D Button matching individual card theme */}
-                    <div className="mt-auto pt-6">
+                    <div className="mt-auto pt-6 flex items-center gap-3 flex-wrap">
                       <button
                         onClick={() => navigate(skill.path)}
                         className={cn(
@@ -653,6 +653,13 @@ export default function UserPractice() {
                         >
                           <path d="M5 12h14M13 5l7 7-7 7" />
                         </svg>
+                      </button>
+
+                      <button
+                        onClick={() => navigate(`${basePath}/${skill.id}/history`)}
+                        className="px-4 py-3.5 rounded-2xl text-xs font-extrabold bg-white/90 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all shadow-xs"
+                      >
+                        Bajarilganlar 📊
                       </button>
                     </div>
                   </div>
