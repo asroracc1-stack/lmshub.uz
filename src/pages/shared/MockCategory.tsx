@@ -183,6 +183,10 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
     return `${basePath}/packs`;
   };
 
+  const completedCategoryCount = useMemo(() => {
+    return tests.filter(t => attempts.some(a => String(a.examId) === String(t.id))).length;
+  }, [tests, attempts]);
+
   const freeCnt = tests.filter(t => getPackType(t.required_pack) === "free").length;
   const proCnt  = tests.filter(t => getPackType(t.required_pack) === "pro").length;
   const eliteCnt= tests.filter(t => getPackType(t.required_pack) === "elite").length;
@@ -208,16 +212,31 @@ export default function MockCategory({ basePath = "/user", forcedKind }: { baseP
         </div>
 
         <div className="flex items-center gap-3 flex-wrap">
-          {/* Top Bajarilganlar pill button */}
-          <Button
-            asChild
-            className="rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs px-4 py-2 shadow-md shadow-indigo-500/20"
-          >
-            <Link to={`${basePath}/reading/history`}>
+          {/* Top Bajarilganlar button (Category-aware) */}
+          {kind === "reading" ? (
+            <Button
+              asChild
+              className="rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs px-4 py-2 shadow-md shadow-indigo-500/20 cursor-pointer"
+            >
+              <Link to={`${basePath}/reading/history`}>
+                <CheckCircle2 className="h-4 w-4 mr-1.5" />
+                Bajarilganlar ({completedCategoryCount})
+              </Link>
+            </Button>
+          ) : (
+            <Button
+              onClick={() => setShowOnlyCompleted(prev => !prev)}
+              className={cn(
+                "rounded-full font-extrabold text-xs px-4 py-2 shadow-md transition-all cursor-pointer",
+                showOnlyCompleted
+                  ? "bg-emerald-600 hover:bg-emerald-700 text-white ring-2 ring-emerald-400"
+                  : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-500/20"
+              )}
+            >
               <CheckCircle2 className="h-4 w-4 mr-1.5" />
-              Bajarilganlar ({attempts.length})
-            </Link>
-          </Button>
+              Bajarilganlar ({completedCategoryCount})
+            </Button>
+          )}
 
           {canManage && (
             <Button size="sm" asChild className="rounded-full bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs">
