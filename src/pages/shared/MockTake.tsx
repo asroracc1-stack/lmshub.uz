@@ -980,6 +980,7 @@ export default function MockTake() {
   const [isPaused, setIsPaused] = useState(false);
   const [audioStarted, setAudioStarted] = useState(false);
   const [audioVolume, setAudioVolume] = useState(1);
+  const [showCalculator, setShowCalculator] = useState(false);
   const bgAudioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
