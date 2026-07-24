@@ -1171,7 +1171,7 @@ export default function MockTake() {
     const handleMouseMove = (e: MouseEvent) => {
       if (!isResizingRef.current) return;
       const percentage = (e.clientX / window.innerWidth) * 100;
-      if (percentage > 20 && percentage < 80) {
+      if (percentage > 15 && percentage < 85) {
         setLeftWidth(percentage);
       }
     };
@@ -2332,7 +2332,7 @@ export default function MockTake() {
         style={{ width: isMobile ? "100%" : `${leftWidth}%`, flexShrink: 0 }}
         className={cn("h-full overflow-y-auto border-r p-8 xl:p-12 transition-colors select-text", cStyle.passageBg, cStyle.passageBorder, cStyle.text)}
       >
-        <div className="max-w-3xl mx-auto">
+        <div className="w-full max-w-none">
           <h2 className={cn("text-3xl font-extrabold text-center font-sans mb-2 leading-tight", cStyle.passageTitle)}>
             {currentSection.title}
           </h2>
@@ -2501,7 +2501,7 @@ export default function MockTake() {
         className={cn("h-full overflow-hidden flex flex-col transition-colors relative", isBW ? "bg-white" : "bg-black")}
       >
         <div className="flex-1 overflow-y-auto p-6 md:p-8 xl:p-12 pb-32 animate-fade-in select-text">
-          <div className="max-w-2xl mx-auto">
+          <div className="w-full max-w-none">
             <div className="space-y-6 divide-y divide-slate-100 dark:divide-slate-800/40">
               {sectionQuestions.map((q, qidx) => {
                 const isQActive = q.position - 1 === activeQuestionIndex;
