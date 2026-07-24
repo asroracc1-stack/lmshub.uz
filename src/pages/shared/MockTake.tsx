@@ -345,10 +345,8 @@ const getFullAudioUrl = (url?: string) => {
   // Agar URL allaqachon /api bilan boshlansa, uni o'zgartirmaymiz
   if (cleanPath.startsWith("api/")) return `/${cleanPath}`;
 
-  // Agar bu /uploads bilan boshlanadigan eski format bo'lsa
-  if (cleanPath.startsWith("uploads/")) {
-    // Uni /api/v1/files/view formatiga o'tkazishga harakat qilamiz 
-    // yoki to'g'ridan-to'g'ri /uploads orqali so'raymiz (proxy orqali)
+  // Agar bu /uploads yoki /audio bilan boshlanadigan format bo'lsa
+  if (cleanPath.startsWith("uploads/") || cleanPath.startsWith("audio/") || cleanPath.startsWith("static/")) {
     return `/${cleanPath}`;
   }
 
