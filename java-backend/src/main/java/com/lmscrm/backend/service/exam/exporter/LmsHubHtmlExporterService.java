@@ -90,8 +90,11 @@ public class LmsHubHtmlExporterService {
         html.append(String.format("  <meta name=\"lmshub:exam\" content=\"%s\">\n", examType));
         html.append(String.format("  <meta name=\"lmshub:title\" content=\"%s\">\n", examTitle));
         html.append(String.format("  <title>%s</title>\n", examTitle));
+        html.append("  <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n");
+        html.append("  <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n");
+        html.append("  <link href=\"https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap\" rel=\"stylesheet\">\n");
         html.append("  <style>\n");
-        html.append("    body { font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 20px; background: #f8fafc; color: #0f172a; }\n");
+        html.append("    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; padding: 20px; background: #f8fafc; color: #0f172a; -webkit-font-smoothing: antialiased; }\n");
         html.append("    .lmshub-container { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }\n");
         html.append("    .passage-card { background: white; padding: 24px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow-y: auto; max-height: 85vh; }\n");
         html.append("    .questions-card { background: white; padding: 24px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow-y: auto; max-height: 85vh; }\n");
