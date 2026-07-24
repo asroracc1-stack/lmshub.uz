@@ -111,6 +111,8 @@ databaseChangeLog:
       file: db/changelog/changes/v0055_enterprise_exam_system.yaml
   - include:
       file: db/changelog/changes/v0056_remove_exam_attempt_unique_constraint.yaml
+  - include:
+      file: db/changelog/changes/v0057_restore_archived_legacy_exam_titles.yaml
 
 
 

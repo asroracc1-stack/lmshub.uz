@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0057-restore-archived-legacy-exam-titles
+      author: lmshub
+      validCheckSum: ANY
+      changes:
+        - sql:
+            splitStatements: true
+            endDelimiter: ";"
+            sql: |
+              UPDATE public.exams
+              SET title = TRIM(REPLACE(title, '(Archived Legacy)', '')),
+                  is_active = true,
+                  status = 'PUBLISHED'
+              WHERE title LIKE '%(Archived Legacy)%';

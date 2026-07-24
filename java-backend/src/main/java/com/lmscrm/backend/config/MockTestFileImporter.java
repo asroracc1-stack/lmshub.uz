@@ -57,6 +57,19 @@ public class MockTestFileImporter implements CommandLineRunner {
                 return;
             }
 
+            // Cleanup: Restore any exam titles that were previously given '(Archived Legacy)' suffix
+            List<Exam> legacyExams = examRepository.findAll().stream()
+                    .filter(e -> e.getTitle() != null && e.getTitle().contains("(Archived Legacy)"))
+                    .toList();
+            for (Exam legacy : legacyExams) {
+                String cleanTitle = legacy.getTitle().replace(" (Archived Legacy)", "").trim();
+                legacy.setTitle(cleanTitle);
+                legacy.setIsActive(true);
+                legacy.setStatus("PUBLISHED");
+                examRepository.save(legacy);
+                log.info("[MockTestFileImporter] Restored exam '{}' (ID: {}) back to clean PUBLISHED status.", cleanTitle, legacy.getId());
+            }
+
             for (Resource resource : resources) {
                 String fileName = resource.getFilename();
                 log.info("[MockTestFileImporter] Found file to import: {}", fileName);
@@ -78,17 +91,6 @@ public class MockTestFileImporter implements CommandLineRunner {
                     if (title.isEmpty()) {
                         org.jsoup.nodes.Element titleEl = doc.selectFirst("title");
                         title = titleEl != null ? titleEl.text() : "Imported Exam";
-                    }
-
-                    List<Exam> existingExams = examRepository.findByTitle(title);
-                    for (Exam existingExam : existingExams) {
-                        if (existingExam.getRawHtml() == null || !existingExam.getRawHtml().contains("<lmshub-section")) {
-                            log.info("[MockTestFileImporter] Archiving legacy broken version of exam '{}' (ID: {})", title, existingExam.getId());
-                            existingExam.setIsActive(false);
-                            existingExam.setStatus("ARCHIVED");
-                            existingExam.setTitle(title + " (Archived Legacy)");
-                            examRepository.save(existingExam);
-                        }
                     }
 
                     if (examRepository.existsByTitle(title)) {
