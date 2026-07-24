@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0070-fix-all-listening-exam-audio-urls
+      author: lmshub
+      validCheckSum: ANY
+      changes:
+        - sql:
+            splitStatements: true
+            endDelimiter: ";"
+            sql: |
+              UPDATE public.exams
+              SET audio_url = '/audio/ielts_listening_1.mp3'
+              WHERE type = 'LISTENING'
+                AND (audio_url LIKE '%archive.org%' OR audio_url IS NULL OR audio_url = '' OR audio_url = 'https://ia600807.us.archive.org/7/items/0719_20260723/0719.MP3');

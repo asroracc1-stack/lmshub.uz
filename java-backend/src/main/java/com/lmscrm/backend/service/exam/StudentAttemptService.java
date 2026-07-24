@@ -18,6 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import com.lmscrm.backend.dto.exam.ReadingHistoryItemDto;
 import com.lmscrm.backend.dto.exam.ReadingStatisticsDto;
+import com.lmscrm.backend.util.IeltsGradingUtils;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -502,9 +503,7 @@ public class StudentAttemptService {
             } else {
                 passageTitle = exam.getTitle();
             }
-            int totalQ = (sa.getMaxScore() != null && sa.getMaxScore() > 0) 
-                    ? sa.getMaxScore() 
-                    : (exam.getQuestions() != null && !exam.getQuestions().isEmpty() ? exam.getQuestions().size() : 40);
+            int totalQ = (sa.getMaxScore() != null && sa.getMaxScore() > 0) ? sa.getMaxScore() : 40;
             int correctQ = sa.getTotalScore() != null ? sa.getTotalScore() : 0;
             double band = sa.getOverallBand() != null ? sa.getOverallBand() : IeltsGradingUtils.rawToBand(type.name(), correctQ, totalQ);
 
@@ -550,10 +549,7 @@ public class StudentAttemptService {
         long sumTimeSeconds = 0;
 
         for (StudentAttempt sa : completed) {
-            Exam exam = sa.getExam();
-            int totalQ = (sa.getMaxScore() != null && sa.getMaxScore() > 0) 
-                    ? sa.getMaxScore() 
-                    : (exam.getQuestions() != null && !exam.getQuestions().isEmpty() ? exam.getQuestions().size() : 40);
+            int totalQ = (sa.getMaxScore() != null && sa.getMaxScore() > 0) ? sa.getMaxScore() : 40;
             int correctQ = sa.getTotalScore() != null ? sa.getTotalScore() : 0;
             double band = sa.getOverallBand() != null ? sa.getOverallBand() : IeltsGradingUtils.rawToBand(type.name(), correctQ, totalQ);
 

@@ -137,6 +137,8 @@ databaseChangeLog:
       file: db/changelog/changes/v0068_reimport_reading_mock_5_layout_fix.yaml
   - include:
       file: db/changelog/changes/v0069_update_listening_mock_1_audio.yaml
+  - include:
+      file: db/changelog/changes/v0070_fix_all_listening_exam_audio_urls.yaml
 
 
 
