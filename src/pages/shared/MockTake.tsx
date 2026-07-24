@@ -977,9 +977,22 @@ export default function MockTake() {
   const [showIeltsSubmitModal, setShowIeltsSubmitModal] = useState(false);
   const [timeLeft, setTimeLeft] = useState(0);
   const [started, setStarted] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
-  const [audioStarted, setAudioStarted] = useState(true);
-  const [showCalculator, setShowCalculator] = useState(false);
+  const [audioStarted, setAudioStarted] = useState(false);
+  const [audioVolume, setAudioVolume] = useState(1);
+  const bgAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    if (bgAudioRef.current) {
+      bgAudioRef.current.volume = audioVolume;
+    }
+  }, [audioVolume]);
+
+  const handleStartListeningAudio = () => {
+    setAudioStarted(true);
+    if (bgAudioRef.current) {
+      bgAudioRef.current.play().catch((err) => console.log("Audio play error:", err));
+    }
+  };
   const [showScratchpad, setShowScratchpad] = useState(false);
   const [grading, setGrading] = useState(false);
   const [countdownNum, setCountdownNum] = useState<number | null>(null);
@@ -2244,6 +2257,24 @@ export default function MockTake() {
 
         {/* Right: Actions */}
         <div className="flex items-center gap-1 sm:gap-1.5">
+          {kind === "listening" && (exam?.audioUrl || exam?.audio_url || exam?.passages?.[0]?.audioUrl || (exam as any)?.sections?.[0]?.audioUrl) && (
+            <div className="flex items-center gap-2 text-xs font-semibold mr-2 bg-slate-100 dark:bg-slate-800/80 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 select-none">
+              <Volume2 className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+              <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200 hidden md:inline whitespace-nowrap">
+                {audioStarted ? "Audio is playing" : "Audio muted"}
+              </span>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.05"
+                value={audioVolume}
+                onChange={(e) => setAudioVolume(Number(e.target.value))}
+                className="w-16 sm:w-20 h-1.5 accent-blue-600 cursor-pointer"
+                title="Adjust Volume"
+              />
+            </div>
+          )}
           <Button 
             variant="ghost" 
             size="icon" 
@@ -2429,10 +2460,31 @@ export default function MockTake() {
   const renderIeltsListeningControls = () => {
     const audioUrl = exam?.audioUrl || exam?.audio_url || exam?.passages?.[0]?.audioUrl || (exam as any)?.sections?.[0]?.audioUrl || (exam as any)?.passages?.[0]?.audio_url;
     if (kind !== "listening" || !audioUrl || isReviewOrAnalyze) return null;
+
     return (
-      <div className="max-w-3xl mx-auto mb-6 px-4 md:px-0">
-        <CustomAudioPlayer src={audioUrl} />
-      </div>
+      <>
+        <audio
+          ref={bgAudioRef}
+          src={getFullAudioUrl(audioUrl)}
+          preload="auto"
+        />
+        {!audioStarted && (
+          <div className="fixed inset-0 z-50 bg-slate-900/85 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center text-white select-none">
+            <div className="mb-6 flex h-28 w-28 items-center justify-center rounded-full bg-white/10 border border-white/20 shadow-2xl">
+              <Headphones className="h-16 w-16 text-slate-100 animate-pulse" />
+            </div>
+            <p className="max-w-lg text-sm md:text-base font-medium leading-relaxed mb-8 text-slate-200">
+              You will be listening to an audio clip during this test. You will not be permitted to pause or rewind the audio while answering the questions. To continue, click Play.
+            </p>
+            <Button
+              onClick={handleStartListeningAudio}
+              className="bg-black hover:bg-slate-900 text-white font-bold text-base px-8 py-3.5 rounded-lg flex items-center gap-2.5 shadow-2xl border border-slate-700 cursor-pointer transition-transform hover:scale-105 active:scale-95"
+            >
+              <Play className="h-5 w-5 fill-current" /> Play
+            </Button>
+          </div>
+        )}
+      </>
     );
   };
 
@@ -3561,12 +3613,7 @@ export default function MockTake() {
                 : "bg-white dark:bg-[#140D23] border-slate-300 dark:border-slate-800"
             )}
           >
-            {/* Listening Sticky player */}
-            {kind === "listening" && (exam.audioUrl || exam.audio_url || exam.passages?.[0]?.audioUrl || (exam as any)?.sections?.[0]?.audioUrl) && (
-              <div className="mb-6 z-20">
-                <CustomAudioPlayer src={exam.audioUrl || exam.audio_url || exam.passages?.[0]?.audioUrl || (exam as any)?.sections?.[0]?.audioUrl} />
-              </div>
-            )}
+
           
           <div className="w-full flex-1 flex flex-col">
             {currentQuestion && (
