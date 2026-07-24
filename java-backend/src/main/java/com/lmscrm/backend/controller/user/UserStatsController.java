@@ -53,8 +53,14 @@ public class UserStatsController {
 
         List<StudentAttempt> attempts = studentAttemptRepository.findAllByStudentId(user.getId());
         List<UserDashboardStatsDto.DailyDataDto> weeklyData = new ArrayList<>();
-        for (int i = 6; i >= 0; i--) {
-            LocalDate date = LocalDate.now().minusDays(i);
+
+        // Use current calendar week Mon–Sun so the chart bars always align with the frontend
+        LocalDate today = LocalDate.now();
+        int todayDow = today.getDayOfWeek().getValue(); // Mon=1 … Sun=7
+        LocalDate monday = today.minusDays(todayDow - 1);
+
+        for (int i = 0; i < 7; i++) {
+            LocalDate date = monday.plusDays(i);
             String dayName = date.getDayOfWeek().getDisplayName(TextStyle.SHORT, Locale.ENGLISH).toUpperCase();
             Double minsVal = dailyMinutes.get(date);
             double mins = minsVal != null ? minsVal : 0.0;
@@ -173,8 +179,9 @@ public class UserStatsController {
                         .getAsDouble() * 10.0) / 10.0 : null;
 
         Double totalMinutes = 0.0;
+        // Sum practice minutes for current calendar week (Mon–Sun)
         for (int i = 0; i < 7; i++) {
-            Double mins = dailyMinutes.get(LocalDate.now().minusDays(i));
+            Double mins = dailyMinutes.get(monday.plusDays(i));
             if (mins != null) {
                 totalMinutes += mins;
             }

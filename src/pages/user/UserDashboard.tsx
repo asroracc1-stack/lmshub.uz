@@ -414,14 +414,13 @@ export default function UserDashboard() {
     return days.map((dayName, index) => {
       const dateKey = currentWeekDays[index];
       
-      // Find raw stats for this day from stats Res (fallback practice time)
+      // Match by day name only — positional fallback caused wrong-day data on wrong bar
       const rawItem = rawWeekly.find(d => mapDay(d.day) === dayName) || 
-                      rawWeekly[index] || 
                       { minutes: 0, reading: null, listening: null, writing: null, speaking: null, sat: null, national_cert: null };
 
-      // Find attempts created on this weekday
+      // Find attempts finished on this weekday (finishedAt is the correct field)
       const dayAttempts = attempts.filter(a => {
-        const dateVal = a.createdAt || a.created_at || a.attemptDate || a.attempt_date || a.date;
+        const dateVal = a.finished_at || a.finishedAt || a.started_at || a.startedAt;
         if (!dateVal) return false;
         try {
           const attemptDateStr = new Date(dateVal).toLocaleDateString("en-CA");
@@ -475,6 +474,7 @@ export default function UserDashboard() {
       };
     });
   }, [stats, attempts, currentWeekDays]);
+
 
   // Check if there is data for the selected chart tab
   const hasDataForActiveTab = useMemo(() => {
