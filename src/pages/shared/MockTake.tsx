@@ -25,7 +25,7 @@ import {
   Volume2, VolumeX, Maximize2, Minimize2, Mic, Calculator, X, PenLine, XCircle,
   Award, Target, ThumbsUp, Lightbulb, BookMarked, Sun, Moon,
   Shield, Grid, CheckSquare, Menu, ArrowRight, ArrowLeft, Bookmark, GripHorizontal,
-  BarChart3, Bell, ChevronsLeftRight
+  BarChart3, Bell, ChevronsLeftRight, HelpCircle
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
