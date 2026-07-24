@@ -3308,7 +3308,7 @@ export default function MockTake() {
               
               {!isMobile && (isReading || kind === "writing") && renderIeltsDivider()}
               
-              {(!isMobile || mobileTab === 'questions') && (
+              {(!isMobile || mobileTab === 'questions' || (!isReading && kind !== "writing")) && (
                 <div 
                   style={{ width: (!isMobile && (isReading || kind === "writing")) ? `${100 - leftWidth}%` : "100%" }}
                   className="flex-1 flex flex-col overflow-hidden relative"
@@ -3604,7 +3604,7 @@ export default function MockTake() {
           </div>
         )}
 
-        {(!isMobile || mobileTab === 'questions') && (
+        {(!isMobile || mobileTab === 'questions' || (!isReading && kind !== "writing")) && (
           <div
             style={{ width: (!isMobile && (isReading || kind === "writing")) ? `${100 - leftWidth}%` : "100%" }}
             className={cn(
