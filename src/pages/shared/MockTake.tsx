@@ -2105,7 +2105,7 @@ export default function MockTake() {
     // Header
     headerBg: isBW ? "bg-white" : "bg-black",
     headerBorder: isBW ? "border-slate-200" : isWB ? "border-slate-800" : "border-[#333300]",
-    logoText: isBW ? "text-[#e11d48]" : isWB ? "text-red-500" : "text-[#ffff00]",
+    logoText: isBW ? "text-[#E30613]" : isWB ? "text-red-500" : "text-[#ffff00]",
     
     // Timer Box
     timerBox: isBW 
@@ -2223,13 +2223,13 @@ export default function MockTake() {
     return (
       <header className={cn("h-[65px] shrink-0 border-b flex items-center justify-between px-3 sm:px-6 z-40 select-none", cStyle.headerBg, cStyle.headerBorder, cStyle.text)}>
         {/* Left: Logo and Test Title */}
-        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
-          <span className={cn("font-black text-2xl sm:text-3xl tracking-tighter shrink-0 select-none", cStyle.logoText)}>
-            IELTS
+        <div className="flex items-center gap-4 sm:gap-6 min-w-0">
+          <span className={cn("font-black text-2xl sm:text-3xl tracking-tighter shrink-0 select-none flex items-start gap-0.5", cStyle.logoText)}>
+            IELTS<sup className="text-[10px] font-bold mt-1">TM</sup>
           </span>
           <div className={cn("h-6 w-[1px] hidden sm:block shrink-0", isYB ? "bg-[#ffff00]" : "bg-slate-200 dark:bg-slate-800")} />
           <div className="min-w-0 leading-tight">
-            <h1 className="font-extrabold text-xs sm:text-sm truncate max-w-[80px] xs:max-w-[120px] sm:max-w-none">
+            <h1 className="font-bold text-xs sm:text-sm truncate max-w-[80px] xs:max-w-[120px] sm:max-w-none text-slate-900 dark:text-white">
               {exam?.title || "IELTS Practice Test"}
             </h1>
             <div className="flex items-center gap-2 text-[11px] mt-0.5 font-bold text-slate-500 dark:text-slate-400 opacity-90 select-none hidden sm:flex">
