@@ -37,7 +37,6 @@ public class MockTestFileImporter implements CommandLineRunner {
     private final ExamService examService;
 
     @Override
-    @Transactional
     public void run(String... args) {
         log.info("📂 [MockTestFileImporter] Checking classpath*:import-mocks/*.html for programmatic automatic mock import...");
 
@@ -79,16 +78,6 @@ public class MockTestFileImporter implements CommandLineRunner {
                     if (title.isEmpty()) {
                         org.jsoup.nodes.Element titleEl = doc.selectFirst("title");
                         title = titleEl != null ? titleEl.text() : "Imported Exam";
-                    }
-
-                    List<Exam> existingExams = examRepository.findByTitle(title);
-                    for (Exam existingExam : existingExams) {
-                        try {
-                            examRepository.delete(existingExam);
-                            log.info("[MockTestFileImporter] Deleted previous version of exam '{}' to re-import updated file...", title);
-                        } catch (Exception e) {
-                            log.warn("[MockTestFileImporter] Could not delete existing exam '{}': {}", title, e.getMessage());
-                        }
                     }
 
                     if (examRepository.existsByTitle(title)) {
