@@ -123,6 +123,8 @@ databaseChangeLog:
       file: db/changelog/changes/v0061_force_reimport_full_descriptive_listening_mock.yaml
   - include:
       file: db/changelog/changes/v0062_import_reading_mock_4.yaml
+  - include:
+      file: db/changelog/changes/v0063_import_reading_mock_5.yaml
 
 
 

@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0063-import-reading-mock-5
+      author: lmshub
+      validCheckSum: ANY
+      changes:
+        - sql:
+            splitStatements: true
+            endDelimiter: ";"
+            sql: |
+              UPDATE public.exams
+              SET title = 'IELTS Reading Practice 5 (Legacy Archived ' || id || ')',
+                  is_active = false,
+                  status = 'ARCHIVED'
+              WHERE title LIKE 'IELTS Reading Practice 5%';
